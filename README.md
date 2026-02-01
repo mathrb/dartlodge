@@ -8,6 +8,12 @@ A **local-first**, open-source darts application for Android and iOS, built with
 - **Auto-Scoring (Optional)**: Use a self-hosted backend to detect darts via computer vision.
 - **Cross-Platform**: Available on Android and iOS.
 
+## Documentation
+
+For detailed technical information, see:
+- [Data Structure](docs/DATA.md) - Database schema and data models
+- [System Architecture](docs/ARCHITECTURE.md) - Technical architecture and design
+
 ## Architecture
 ### Frontend (Flutter)
 - **Local Storage**: Uses SQLite (via sqflite package) to store statistics offline. SQLite was chosen for its relational capabilities, complex query support, and better long-term maintainability for statistics tracking.
