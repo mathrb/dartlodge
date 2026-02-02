@@ -8,6 +8,13 @@ A **local-first**, open-source darts application for Android and iOS, built with
 - **Auto-Scoring (Optional)**: Use a self-hosted backend to detect darts via computer vision.
 - **Cross-Platform**: Available on Android and iOS.
 
+## Advanced Features
+
+For advanced functionality including remote multiplayer, authentication, and complex synchronization, see [Backend Integration](docs/BACKEND_INTEGRATION.md).
+
+### Multiplayer Support
+This application supports both local (hotseat) and remote multiplayer modes. Detailed architecture and implementation guidance is available in the backend integration documentation.
+
 ## Documentation
 
 For detailed technical information, see:
@@ -23,7 +30,7 @@ For detailed technical information, see:
 ### Backend (Optional, Self-Hosted)
 - **REST API**: For syncing statistics and auto-scoring.
 - **Computer Vision**: Detects darts using PyTorch or ONNX models (Rust/Python).
-- **Self-Hosted**: Users can run their own backend (Python, Node.js, or Rust).
+- **Self-Hosted**: Users can run their own backend (Python or Rust).
 
 ## Getting Started
 ### Prerequisites

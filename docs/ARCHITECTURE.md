@@ -4,14 +4,7 @@ This document provides a detailed architectural overview aligned with the existi
 
 ## Global Architecture Overview
 
-```mermaid
-graph TD
-    A[Flutter UI] --> B[Flutter Business Logic]
-    B --> C[SQLite Database]
-    B --> D[Optional Backend API]
-    D --> E[Computer Vision]
-    E --> F[PyTorch/ONNX Models]
-```
+The Darts App follows a layered architecture with clear separation of concerns. The Flutter UI layer handles user interaction, the business logic layer processes game rules and statistics, the data layer manages local persistence via SQLite, and an optional backend layer provides advanced features like auto-scoring and synchronization.
 
 ## Layered Architecture
 
@@ -56,387 +49,98 @@ graph TD
 
 ## Flutter-Specific Architecture
 
-### Package Structure
 
-```
-lib/
-├── main.dart                    # App entry point
-├── app/                        # App configuration
-│   ├── routes.dart              # Navigation routes
-│   └── theme.dart               # App theming
-├── features/                   # Feature modules
-│   ├── games/                  # Game features
-│   │   ├── x01/                # X01 game module
-│   │   ├── cricket/            # Cricket game module
-│   │   └── shared/             # Shared game components
-│   ├── statistics/             # Statistics features
-│   ├── history/                # Game history
-│   └── settings/               # App settings
-├── data/                       # Data layer
-│   ├── models/                 # Data models
-│   ├── repositories/           # Data repositories
-│   ├── datasources/            # Data sources
-│   └── database/               # SQLite database
-├── domain/                     # Business logic
-│   ├── entities/               # Business entities
-│   ├── repositories/           # Repository interfaces
-│   ├── usecases/               # Use cases
-│   └── services/               # Domain services
-└── presentation/               # UI layer
-    ├── widgets/                # Reusable widgets
-    ├── screens/                # App screens
-    └── components/             # UI components
-```
 
 ### Key Flutter Components
 
 #### Game Engine
 
-```dart
-abstract class Game {
-  String get gameType;
-  GameConfiguration get config;
-  List<Player> get players;
-  Player? get currentPlayer;
-  GameState get currentState;
-  
-  void processDart(DartThrow dart);
-  void undoLastThrow();
-  void redoLastThrow();
-  Player? determineWinner();
-  Map<String, dynamic> serialize();
-  void deserialize(Map<String, dynamic> data);
-}
+The Game Engine follows an abstract base class pattern with concrete implementations for each game type (X01, Cricket, etc.). Each game implementation handles its specific rules, scoring logic, and win conditions while providing a consistent interface for the application to interact with games uniformly.
 
-class X01Game extends Game {
-  int _startingScore;
-  InStrategy _inStrategy;
-  OutStrategy _outStrategy;
-  Map<String, int> _playerHandicaps;
-  
-  X01Game({required config, required players}) {
-    // Initialize game with configuration
-  }
-  
-  @override
-  void processDart(DartThrow dart) {
-    // X01-specific dart processing
-    // Handle bust, checkout validation, etc.
-  }
-  
-  bool _checkBust(int score) {
-    // Bust logic
-  }
-  
-  bool _validateCheckout(DartThrow dart) {
-    // Checkout validation
-  }
-}
-
-class CricketGame extends Game {
-  CricketVariant _variant;
-  Set<int> _numbersInPlay;
-  Map<String, Set<int>> _closedNumbers;
-  
-  @override
-  void processDart(DartThrow dart) {
-    // Cricket-specific processing
-    // Handle number closing and scoring
-  }
-  
-  void _closeNumber(String playerId, int number) {
-    // Close number logic
-  }
-}
-```
+Key responsibilities:
+- Process dart throws according to game-specific rules
+- Manage game state and player turns
+- Validate game-specific conditions (busts, checkouts, etc.)
+- Determine winners based on game completion criteria
+- Provide serialization/deserialization for game state persistence
 
 #### Statistics Engine
 
-```dart
-class StatisticsEngine {
-  final DatabaseHelper _db;
-  
-  StatisticsEngine(this._db);
-  
-  Future<PlayerStats> calculatePlayerStats(String playerId) async {
-    // Compute statistics from raw dart data
-    final darts = await _db.getPlayerDarts(playerId);
-    
-    return PlayerStats(
-      totalGames: darts.length,
-      averageScore: _calculateAverage(darts),
-      highestCheckout: _findHighestCheckout(darts),
-      // ... other computed stats
-    );
-  }
-  
-  Future<GameStats> calculateGameStats(String gameId) async {
-    // Compute game-specific statistics
-  }
-  
-  Future<List<TrendData>> getPerformanceTrends(String playerId) async {
-    // Compute historical trends
-  }
-}
-```
+The Statistics Engine is responsible for computing various metrics and analytics from raw game data. It follows a compute-on-demand pattern rather than storing pre-calculated statistics, ensuring data consistency and flexibility.
+
+Key responsibilities:
+- Calculate player statistics (averages, high scores, win rates, etc.)
+- Generate game-specific metrics and performance indicators
+- Compute historical trends and progress over time
+- Provide data for visualizations and dashboards
+- Support various analytical queries for different game types
 
 ## Database Schema (SQLite)
 
-### Core Tables
+For the complete database schema and detailed table structures, refer to the [Data Structure](docs/DATA.md) documentation. This provides the authoritative source for all data models and relationships.
 
-```sql
--- Players Table
-CREATE TABLE players (
-    player_id TEXT PRIMARY KEY, -- UUID
-    name TEXT NOT NULL,
-    created_at TEXT NOT NULL,   -- ISO 8601 timestamp
-    last_active TEXT NOT NULL   -- ISO 8601 timestamp
-);
+### Key Tables Overview
 
--- Games Table
-CREATE TABLE games (
-    game_id TEXT PRIMARY KEY,   -- UUID
-    game_type TEXT NOT NULL,    -- 'x01', 'cricket', etc.
-    game_config TEXT NOT NULL,  -- JSON configuration
-    start_time TEXT NOT NULL,   -- ISO 8601 timestamp
-    end_time TEXT,              -- ISO 8601 timestamp (nullable)
-    winner TEXT,                -- player_id or team_id (nullable)
-    is_completed INTEGER DEFAULT 0,
-    game_state TEXT             -- JSON state for resuming
-);
+The database follows a relational design with these core entities:
 
--- Teams Table (for team games)
-CREATE TABLE teams (
-    team_id TEXT PRIMARY KEY,   -- UUID
-    team_name TEXT NOT NULL,
-    game_id TEXT NOT NULL,
-    FOREIGN KEY (game_id) REFERENCES games(game_id)
-);
+- **Players**: Stores player information with UUID identification
+- **Games**: Tracks game sessions with configuration and state
+- **Teams**: Manages team compositions for team-based games
+- **Darts**: Records every dart throw with detailed scoring information
+- **Game Participants**: Links players/teams to specific games
 
--- Team Members Table
-CREATE TABLE team_members (
-    team_id TEXT NOT NULL,
-    player_id TEXT NOT NULL,
-    team_order INTEGER NOT NULL,
-    PRIMARY KEY (team_id, player_id),
-    FOREIGN KEY (team_id) REFERENCES teams(team_id),
-    FOREIGN KEY (player_id) REFERENCES players(player_id)
-);
+### Design Principles
 
--- Darts Table (core statistical data)
-CREATE TABLE darts (
-    dart_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    game_id TEXT NOT NULL,
-    player_id TEXT NOT NULL,
-    turn_number INTEGER NOT NULL,
-    dart_number INTEGER NOT NULL, -- 1, 2, or 3
-    score INTEGER NOT NULL,
-    segment TEXT NOT NULL,       -- '20', 'T20', 'D16', 'SB', 'DB'
-    x REAL,                      -- Optional coordinate
-    y REAL,                      -- Optional coordinate
-    FOREIGN KEY (game_id) REFERENCES games(game_id),
-    FOREIGN KEY (player_id) REFERENCES players(player_id)
-);
-
--- Game Participants Table
-CREATE TABLE game_participants (
-    game_id TEXT NOT NULL,
-    participant_id TEXT NOT NULL, -- player_id or team_id
-    participant_type TEXT NOT NULL, -- 'player' or 'team'
-    PRIMARY KEY (game_id, participant_id),
-    FOREIGN KEY (game_id) REFERENCES games(game_id)
-);
-```
+- **Relational Integrity**: Proper foreign key relationships between tables
+- **Data Normalization**: Minimal redundancy with proper table relationships
+- **Performance**: Indexes on frequently queried columns
+- **Extensibility**: Support for additional game types and features
 
 ## Data Access Layer
 
 ### Database Helper
 
-```dart
-class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
-  
-  static Database? _database;
-  
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
-  
-  Future<Database> _initDatabase() async {
-    final docsDir = await getApplicationDocumentsDirectory();
-    final path = join(docsDir.path, 'darts_app.db');
-    
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
-  }
-  
-  Future<void> _onCreate(Database db, int version) async {
-    // Create all tables
-    await db.execute('''
-      CREATE TABLE players (
-        player_id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        last_active TEXT NOT NULL
-      )
-    ''');
-    
-    // Other table creation statements...
-  }
-  
-  // Player CRUD operations
-  Future<String> insertPlayer(Player player) async {
-    final db = await database;
-    await db.insert('players', player.toMap());
-    return player.playerId;
-  }
-  
-  Future<List<Player>> getAllPlayers() async {
-    final db = await database;
-    final maps = await db.query('players');
-    return List.generate(maps.length, (i) => Player.fromMap(maps[i]));
-  }
-  
-  // Game operations
-  Future<String> insertGame(Game game) async {
-    final db = await database;
-    await db.insert('games', game.toMap());
-    return game.gameId;
-  }
-  
-  // Dart operations
-  Future<int> insertDart(Dart dart) async {
-    final db = await database;
-    return await db.insert('darts', dart.toMap());
-  }
-  
-  Future<List<Dart>> getGameDarts(String gameId) async {
-    final db = await database;
-    final maps = await db.query(
-      'darts',
-      where: 'game_id = ?',
-      whereArgs: [gameId],
-      orderBy: 'turn_number, dart_number'
-    );
-    return List.generate(maps.length, (i) => Dart.fromMap(maps[i]));
-  }
-}
-```
+The Database Helper provides a singleton interface for SQLite database operations, handling all CRUD operations and ensuring proper database initialization. It follows the repository pattern to abstract database operations from the business logic layer.
+
+Key responsibilities:
+- Database initialization and schema management
+- Singleton access pattern for database connections
+- CRUD operations for all data entities
+- Transaction management and error handling
+- Data model mapping between Dart objects and database records
+
+The implementation uses the `sqflite` package for SQLite operations and `path_provider` for platform-specific file system access.
 
 ## Backend Integration (Optional)
 
+For detailed information about backend integration, including multiplayer functionality and authentication systems, refer to the [Backend Integration](docs/BACKEND_INTEGRATION.md) documentation.
+
 ### Backend Service
 
-```dart
-class BackendService {
-  final String baseUrl;
-  final Dio _dio;
-  
-  BackendService({required this.baseUrl}) : _dio = Dio(BaseOptions(baseUrl: baseUrl));
-  
-  Future<Map<String, dynamic>> autoScoreImage(File image) async {
-    try {
-      final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(image.path),
-      });
-      
-      final response = await _dio.post('/auto-score', data: formData);
-      return response.data;
-    } catch (e) {
-      // Handle errors
-      rethrow;
-    }
-  }
-  
-  Future<void> syncGameData(Game game) async {
-    // Sync game data to backend
-  }
-  
-  Future<List<DartDetection>> detectDarts(File image) async {
-    // Call computer vision endpoint
-  }
-}
-```
+The Backend Service provides optional integration with self-hosted backend servers for advanced features. It handles communication with REST APIs and manages data synchronization between local storage and remote servers.
+
+Key responsibilities:
+- REST API communication for data synchronization
+- Image upload for computer vision auto-scoring
+- Error handling and retry logic
+- Network connectivity management
 
 ## State Management
 
 ### Game State Management
 
-```dart
-class GameProvider with ChangeNotifier {
-  Game? _currentGame;
-  List<DartThrow> _currentTurnDarts = [];
-  bool _isGamePaused = false;
-  
-  Game? get currentGame => _currentGame;
-  List<DartThrow> get currentTurnDarts => _currentTurnDarts;
-  bool get isGamePaused => _isGamePaused;
-  
-  Future<void> startNewGame(GameConfiguration config, List<Player> players) async {
-    _currentGame = GameFactory.createGame(config, players);
-    _currentTurnDarts.clear();
-    _isGamePaused = false;
-    notifyListeners();
-  }
-  
-  Future<void> loadGame(String gameId) async {
-    final db = DatabaseHelper();
-    final gameData = await db.getGame(gameId);
-    _currentGame = GameFactory.deserializeGame(gameData);
-    notifyListeners();
-  }
-  
-  Future<void> processDart(DartThrow dart) async {
-    if (_currentGame == null) return;
-    
-    _currentTurnDarts.add(dart);
-    _currentGame!.processDart(dart);
-    
-    // Save to database
-    final db = DatabaseHelper();
-    await db.insertDart(dart);
-    
-    if (_currentTurnDarts.length >= 3 || dart.dartNumber == 3) {
-      await _endTurn();
-    }
-    
-    notifyListeners();
-  }
-  
-  Future<void> _endTurn() async {
-    // End turn logic
-    _currentTurnDarts.clear();
-    
-    // Check for game completion
-    final winner = _currentGame!.determineWinner();
-    if (winner != null) {
-      await _completeGame(winner);
-    }
-  }
-  
-  Future<void> _completeGame(Player winner) async {
-    // Game completion logic
-    _currentGame!.winner = winner;
-    _currentGame!.isCompleted = true;
-    
-    // Update in database
-    final db = DatabaseHelper();
-    await db.updateGame(_currentGame!);
-    
-    // Update statistics
-    final statsEngine = StatisticsEngine(db);
-    await statsEngine.updatePlayerStats(winner.playerId);
-    
-    notifyListeners();
-  }
-}
-```
+The Game State Management system follows the Provider pattern with ChangeNotifier to manage application state reactively. It maintains the current game state, handles game lifecycle events, and provides a consistent interface for UI components.
+
+**Key Responsibilities**:
+- Current game state management and persistence
+- Game lifecycle operations (creation, loading, completion)
+- Dart processing and turn management
+- Game state serialization and deserialization
+- Database integration for state persistence
+- Statistics updates on game completion
+- Reactive state notifications for UI updates
+
+The state management system ensures consistent game state across the application and provides a single source of truth for all game-related data.
 
 ## Key Architectural Decisions
 

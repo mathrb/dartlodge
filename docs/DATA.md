@@ -23,7 +23,6 @@ This document defines the data structure for storing player information, game co
 - `darts_sequence`: Array of all darts thrown in order
 - `winner`: Player ID, team ID, or null if game interrupted
 - `game_state`: Current game state for resuming interrupted games
-- `is_completed`: Boolean indicating if game was completed
 
 ### Dart Throw Data Fields (within darts_sequence)
 - `player_id`: Player who threw the dart (string)
