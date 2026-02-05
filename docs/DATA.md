@@ -1,4 +1,4 @@
-# 🎯 Darts Game Data Specification (Revised)
+# 🎯 Darts Game Data Specification
 
 This document defines the data model for storing darts games, players, competitors (solo or team), and dart throws, optimized for **relational storage (SQLite)** and **statistical analysis**.
 
@@ -59,7 +59,7 @@ A single dart thrown by a player and credited to a competitor.
 
 * A game owns its competitors.
 * Players cannot change competitors during a game.
-* Finished games are read-only.
+* Finished games are read-only; immutability is enforced by application logic.
 
 ---
 
@@ -126,34 +126,7 @@ A dart throw is the fundamental event used for scoring and statistics.
 
 ---
 
-## 7. Winner
-
-### Winner Fields
-
-* `competitor_id` — UUID
-* `winning_player_id` — UUID (nullable)
-* `method` — string
-  (`"checkout"`, `"points"`, `"elimination"`, `"timeout"`, etc.)
-
-### Rules
-
-* Solo games: competitor and player are the same.
-* Team games: `winning_player_id` is optional but recommended.
-
----
-
-## 8. Game Configuration (JSON)
-
-Game configuration is stored as **opaque JSON**, as it varies by game type and is not used for statistical queries.
-
-### General Rules
-
-* Configuration is immutable once the game starts.
-* Interpretation depends on `game_type`.
-
----
-
-### X01 Configuration
+## 7. Game Configuration (JSON)
 
 ```json
 {
@@ -204,7 +177,7 @@ Game configuration is stored as **opaque JSON**, as it varies by game type and i
 
 ---
 
-## 9. Game State (JSON, Runtime Only)
+## 8. Game State (JSON, Runtime Only)
 
 Game state represents the **current, resumable state** of an active game.
 
@@ -225,7 +198,7 @@ Game state represents the **current, resumable state** of an active game.
 
 ---
 
-## 10. Data Storage Guidelines
+## 9. Data Storage Guidelines
 
 ### Relational (SQLite Tables)
 
@@ -236,7 +209,6 @@ Use relational tables for:
 * competitors
 * competitor_players
 * dart_throws
-* winners
 
 ### JSON Fields (TEXT columns)
 
@@ -247,7 +219,7 @@ Use JSON only for:
 
 ---
 
-## 11. Data Integrity Rules
+## 10. Data Integrity Rules
 
 * All foreign keys must be enforced.
 * Games are immutable after completion.
@@ -256,7 +228,7 @@ Use JSON only for:
 
 ---
 
-## 12. Non-Goals (Explicitly Out of Scope)
+## 11. Non-Goals (Explicitly Out of Scope)
 
 * Legs / sets
 * Uneven teams
@@ -264,3 +236,4 @@ Use JSON only for:
 * Post-game edits
 * Automatic data deletion
 * Encryption or anonymization
+* **Remote Multiplayer Data Modeling:** While remote multiplayer is a planned feature, its specific data modeling and synchronization mechanisms are detailed in the backend integration documentation (`docs/BACKEND_INTEGRATION.md`) and are out of scope for this core data specification.
