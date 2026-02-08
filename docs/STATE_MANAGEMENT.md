@@ -332,7 +332,7 @@ class ActiveGame extends _$ActiveGame {
 
 ### 3.5 StreamProvider (Real-time Data)
 
-Used for: Subscribing to data streams (multiplayer, sync)
+Used for: Subscribing to data streams (database changes, event logs)
 
 ```dart
 @riverpod
@@ -345,20 +345,32 @@ Stream<List<GameEvent>> gameEventsStream(
 }
 
 @riverpod
+Stream<GameStats> liveGameStats(
+  LiveGameStatsRef ref,
+  String gameId,
+) {
+  final repository = ref.watch(statisticsRepositoryProvider);
+  return repository.watchGameStats(gameId);
+}
+```
+
+**When to use:**
+- Database change streams (SQLite triggers)
+- Event log monitoring
+- Live statistics updates during local games
+
+**Future: WebSocket Support (Phase 2)**
+```dart
+// When remote multiplayer is implemented:
+@riverpod
 Stream<MultiplayerGameState> multiplayerGameStream(
   MultiplayerGameStreamRef ref,
   String sessionId,
 ) {
   final service = ref.watch(multiplayerServiceProvider);
-  return service.watchSession(sessionId);
+  return service.watchSession(sessionId); // WebSocket-based
 }
 ```
-
-**When to use:**
-- WebSocket connections
-- Database change streams
-- Real-time multiplayer updates
-- Live statistics updates
 
 ---
 
@@ -1089,22 +1101,36 @@ Stream<GameStats> liveGameStats(
 
 ---
 
-### 11.4 Sync and Multiplayer
+### 11.4 Sync and Authentication
 
 ```dart
 @riverpod
 class SyncStatus extends _$SyncStatus {
-  // Current sync state
-}
-
-@riverpod
-class MultiplayerSession extends _$MultiplayerSession {
-  // Active multiplayer session
+  // Current sync state (REST API based)
 }
 
 @Riverpod(keepAlive: true)
 class AuthState extends _$AuthState {
   // User authentication state
+}
+```
+
+**Future Feature (Phase 2):**
+```dart
+// Note: Real-time multiplayer is a planned future feature
+// These providers will be implemented when WebSocket support is added
+
+@riverpod
+class MultiplayerSession extends _$MultiplayerSession {
+  // Active multiplayer session (WebSocket-based)
+}
+
+@riverpod
+Stream<MultiplayerGameState> multiplayerGameStream(
+  MultiplayerGameStreamRef ref,
+  String sessionId,
+) {
+  // Real-time game state updates via WebSocket
 }
 ```
 
@@ -1228,3 +1254,11 @@ class PlayersCache extends _$PlayersCache {
 7. Derive state when possible
 8. Handle all AsyncValue states
 
+**Next Steps:**
+1. Set up dependencies (riverpod, freezed, build_runner)
+2. Create core providers (database, repositories)
+3. Implement feature-specific providers
+4. Add tests for critical providers
+5. Document provider relationships
+
+This architecture provides a solid foundation for the entire application while remaining flexible for future enhancements
