@@ -177,10 +177,3 @@ The state management system ensures consistent game state across the application
 5. **Add Optional Backend**: Computer vision integration
 6. **Testing**: Unit tests, integration tests, UI tests
 
-## Questions for Architecture Review
-
-1. Should we implement a game replay feature with animation?
-2. What level of undo/redo functionality is needed for dart throws?
-3. Should we support real-time multiplayer (local network) in addition to hotseat?
-4. What authentication method should we use for backend sync (if any)?
-5. Should we implement data migration strategies for future schema changes?
