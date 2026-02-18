@@ -6,7 +6,7 @@ A **local-first**, open-source darts application for Android and iOS, built with
 - **Local-First**: Works offline by default, with optional backend sync.
 - **Statistics Tracking**: Save and view game statistics locally.
 - **Auto-Scoring (Optional)**: Use a self-hosted backend to detect darts via computer vision.
-- **Cross-Platform**: Available on Android and iOS.
+- **Cross-Platform**: Targets Android and iOS; Flutter Web is supported as a development/debug target.
 
 ## Advanced Features
 
@@ -23,7 +23,7 @@ For detailed technical information, see:
 
 ## Architecture
 ### Frontend (Flutter)
-- **Local Storage**: Uses SQLite (via sqflite package) to store statistics offline. SQLite was chosen for its relational capabilities, complex query support, and better long-term maintainability for statistics tracking.
+- **Local Storage**: Uses SQLite (via sqflite package) to store statistics offline on mobile. SQLite was chosen for its relational capabilities, complex query support, and better long-term maintainability for statistics tracking. On web, a compatible alternative (e.g. `drift` with IndexedDB) is used via repository abstraction.
 - **UI**: Built with Flutter widgets for a native-like experience.
 - **Optional Backend Sync**: Connects to a self-hosted backend if configured.
 
@@ -33,12 +33,44 @@ For detailed technical information, see:
 - **Self-Hosted**: Users can run their own backend (Python or Rust).
 
 ## Getting Started
+
 ### Prerequisites
-- Flutter SDK (for mobile app development).
+- Flutter SDK (with web support enabled for headless development).
 - Python or Rust (for backend, if used).
 - Optional: LibTorch or ONNX runtime (for computer vision).
 
-### Install the Mobile App
+### Running on Web (Headless / Development)
+
+Flutter Web is the recommended way to iterate quickly in a headless environment without a connected device. Game logic, UI, and backend API calls all behave identically to the mobile target. Native-only features (camera, SQLite) are stubbed on web.
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/darts-app.git
+   cd darts-app
+   ```
+2. Install Flutter dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Enable Flutter Web if not already active:
+   ```bash
+   flutter config --enable-web
+   ```
+4. Run in Chrome (requires a display) or build and serve for remote access:
+   ```bash
+   # Option A — run directly in Chrome
+   flutter run -d chrome
+
+   # Option B — build and serve over the network (headless-friendly)
+   flutter build web
+   cd build/web && python3 -m http.server 8080
+   # Then open http://<your-machine-ip>:8080 in any browser
+   ```
+
+> **Note**: `sqflite` is not supported on web. When running the web build, the data layer falls back to a browser-compatible storage backend. Data entered in the web build does not persist to the mobile SQLite database.
+
+### Install on Mobile (Android / iOS)
+
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/darts-app.git
@@ -53,7 +85,7 @@ For detailed technical information, see:
    flutter pub add sqflite
    flutter pub add path_provider
    ```
-4. Run the app:
+4. Connect a physical device or start an emulator, then run:
    ```bash
    flutter run
    ```
@@ -79,27 +111,3 @@ For detailed technical information, see:
    ```bash
    cargo add tract-onnx
    ```
-3. Run the backend:
-   ```bash
-   cargo run --release
-   ```
-
-## Computer Vision (Auto-Scoring)
-### PyTorch Model
-- Export your PyTorch model to ONNX:
-  ```python
-  torch.onnx.export(model, dummy_input, "model.onnx")
-  ```
-- Load the model in Rust using `tract-onnx` or `tch-rs`.
-
-### ONNX Model
-- Use `tract-onnx` for pure Rust inference:
-  ```rust
-  let model = onnx().model_for_path("model.onnx")?.into_runnable()?;
-  ```
-
-## Contributing
-Contributions are welcome! Open an issue or submit a pull request.
-
-## License
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
