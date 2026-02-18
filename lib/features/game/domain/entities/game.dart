@@ -11,13 +11,21 @@ part 'game.g.dart';
 @freezed
 class Game with _$Game {
   const factory Game({
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'game_id') required String gameId,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) required GameType gameType,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'config_json', fromJson: _parseJsonMap, toJson: _stringifyJsonMap) required Map<String, dynamic> config,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'start_time') required DateTime startTime,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'end_time') DateTime? endTime,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'winner_competitor_id') String? winnerCompetitorId,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'is_complete', fromJson: _parseBoolFromInt, toJson: _convertBoolToInt) bool? isComplete,
+    // ignore: invalid_annotation_target
     @JsonKey(name: 'game_state_json', fromJson: _parseNullableJsonMap, toJson: _stringifyNullableJsonMap) Map<String, dynamic>? activeState,
   }) = _Game;
 

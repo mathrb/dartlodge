@@ -33,7 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: ':gameId',
             name: 'game_detail',
             builder: (context, state) {
-              final gameId = state.pathParams['gameId']!;
+              final gameId = state.uri.pathSegments.last;
               return GameSelectionScreen(gameId: gameId);
             },
           ),

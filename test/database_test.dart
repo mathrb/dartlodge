@@ -10,7 +10,6 @@ import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 
@@ -42,37 +41,30 @@ class FakePathProviderPlatform extends PathProviderPlatform {
     return null;
   }
 
-  @override
   Future<String?> getExternalStoragePath() async {
     return null;
   }
 
-  @override
   Future<String?> getExternalCachePath() async {
     return null;
   }
 
-  @override
   Future<String?> getExternalStorageDirectories({StorageDirectory? type}) async {
     return null;
   }
 
-  @override
   Future<List<String>?> getApplicationCacheDirectories() async {
     return null;
   }
 
-  @override
   Future<List<String>?> getApplicationSupportDirectories() async {
     return null;
   }
 
-  @override
   Future<List<String>?> getExternalCacheDirectories() async {
     return null;
   }
 
-  @override
   Future<String?> getTemporaryPath() async {
     return Directory.systemTemp.path;
   }

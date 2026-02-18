@@ -66,7 +66,6 @@ class PlayerRepositoryImpl implements PlayerRepository {
     );
   }
 
-  @override
   Future<void> updatePlayer(Player player) async {
     final db = await _dbHelper.database;
 
@@ -93,7 +92,6 @@ class PlayerRepositoryImpl implements PlayerRepository {
     );
   }
 
-  @override
   Future<void> deletePlayer(String playerId) async {
     final db = await _dbHelper.database;
 
@@ -132,7 +130,6 @@ class PlayerRepositoryImpl implements PlayerRepository {
     );
   }
 
-  @override
   Future<void> updatePlayerLastActive(String playerId, DateTime lastActive) async {
     final db = await _dbHelper.database;
 
