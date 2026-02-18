@@ -9,7 +9,7 @@ The Darts App follows a layered architecture with clear separation of concerns. 
 ## Layered Architecture
 
 ### 1. Presentation Layer (Flutter UI)
-- **Platform**: Android and iOS via Flutter
+- **Platform**: Android and iOS (production targets); Web (development/debug target)
 - **Responsibility**: User interface and interaction
 - **Key Components**:
   - Game selection screens
@@ -29,7 +29,7 @@ The Darts App follows a layered architecture with clear separation of concerns. 
 
 ### 3. Data Layer (SQLite)
 - **Responsibility**: Local data persistence
-- **Implementation**: SQLite via `sqflite` and `path_provider` packages
+- **Implementation**: SQLite via `sqflite` and `path_provider` packages on mobile; web-compatible storage (e.g. `drift` with IndexedDB) when running as a web debug target
 - **Key Components**:
   - Database schema management
   - Data Access Objects (DAOs)
@@ -48,8 +48,6 @@ The Darts App follows a layered architecture with clear separation of concerns. 
   - Data synchronization
 
 ## Flutter-Specific Architecture
-
-
 
 ### Key Flutter Components
 
@@ -70,26 +68,20 @@ The Statistics Engine is responsible for computing various metrics and analytics
 
 Key responsibilities:
 - Calculate player statistics (averages, high scores, win rates, etc.)
-- Generate game-specific metrics and performance indicators
-- Compute historical trends and progress over time
-- Provide data for visualizations and dashboards
-- Support various analytical queries for different game types
 
-## Database Schema (SQLite)
+## Database Schema
 
 For the complete database schema and detailed table structures, refer to the [Data Structure](docs/DATA.md) documentation. This provides the authoritative source for all data models and relationships.
 
 ### Key Tables Overview
 
 The database follows a relational design with these core entities:
-
 - **Players**: Stores player information with UUID identification
-- **Games**: Tracks game sessions with configuration and state.
-- **Competitors**: Represents competing entities (solo players or teams) within a game.
-- **Competitor Players**: Links players to specific competitors, defining team composition.
+- **Games**: Tracks game sessions with configuration and state
+- **Competitors**: Represents competing entities (solo players or teams) within a game
+- **Competitor Players**: Links players to specific competitors, defining team composition
 
 ### Design Principles
-
 - **Relational Integrity**: Proper foreign key relationships between tables
 - **Data Normalization**: Minimal redundancy with proper table relationships
 - **Performance**: Indexes on frequently queried columns
@@ -99,7 +91,7 @@ The database follows a relational design with these core entities:
 
 ### Database Helper
 
-The Database Helper provides a singleton interface for SQLite database operations, handling all CRUD operations and ensuring proper database initialization. It follows the repository pattern to abstract database operations from the business logic layer.
+The Database Helper provides a singleton interface for all database operations, handling all CRUD operations and ensuring proper database initialization. It follows the repository pattern to abstract database operations from the business logic layer, with the underlying storage implementation varying by platform (SQLite via `sqflite` on mobile, a web-compatible backend such as `drift` with IndexedDB on web).
 
 Key responsibilities:
 - Database initialization and schema management
@@ -108,7 +100,7 @@ Key responsibilities:
 - Transaction management and error handling
 - Data model mapping between Dart objects and database records
 
-The implementation uses the `sqflite` package for SQLite operations and `path_provider` for platform-specific file system access.
+The domain layer defines repository interfaces that are platform-agnostic. Concrete implementations are wired at the dependency injection root, ensuring all game logic and statistics code remains identical across platforms regardless of the underlying storage engine.
 
 ## Backend Integration (Optional)
 
@@ -149,21 +141,27 @@ The state management system ensures consistent game state across the application
 - **Benefits**: Works without internet, user privacy, no server costs
 
 ### 2. Flutter for Cross-Platform
-- **Rationale**: Single codebase for Android and iOS
-- **Implementation**: Flutter widgets with platform-specific adaptations
-- **Benefits**: Faster development, consistent UI, hot reload
+- **Rationale**: Single codebase for Android and iOS, with web support for development iteration
+- **Implementation**: Flutter widgets with platform-specific adaptations; Flutter Web used as a debug target in headless environments
+- **Benefits**: Faster development, consistent UI, hot reload, no physical device required during early development
 
-### 3. SQLite for Data Storage
+### 3. Repository Abstraction for Platform-Conditional Storage
+- **Rationale**: `sqflite` does not support Flutter Web; the data layer must be abstracted to allow platform-appropriate implementations
+- **Implementation**: Repository interfaces defined in the domain layer; mobile resolves to `sqflite`, web resolves to a compatible alternative (e.g. `drift` with a web worker and IndexedDB). Conditional wiring happens at the dependency injection root (`main.dart`)
+- **Benefits**: Game logic and UI remain identical across platforms; storage implementation is swappable without touching business logic
+- **Web limitations**: The web build is a development/debug target only. Features requiring native APIs (camera for computer vision, native file system) are not available on web and should be stubbed or disabled when running in a browser
+
+### 4. SQLite for Data Storage (Mobile)
 - **Rationale**: Relational data, complex queries for statistics
 - **Implementation**: sqflite package with proper schema
 - **Benefits**: Better for statistics, long-term maintainability
 
-### 4. Game Engine Pattern
+### 5. Game Engine Pattern
 - **Rationale**: Separate game logic from UI
 - **Implementation**: Abstract Game class with concrete implementations
 - **Benefits**: Easy to add new game types, consistent rules
 
-### 5. Statistics Computation
+### 6. Statistics Computation
 - **Rationale**: Compute from raw data, not pre-calculated
 - **Implementation**: StatisticsEngine with various algorithms
 - **Benefits**: Flexible analysis, no data duplication
@@ -171,9 +169,8 @@ The state management system ensures consistent game state across the application
 ## Next Steps
 
 1. **Implement Core Game Types**: X01, Cricket, Around the Clock
-2. **Develop Database Layer**: Complete SQLite implementation
+2. **Develop Database Layer**: Complete SQLite implementation with repository abstraction for web compatibility
 3. **Build UI Components**: Game boards, score displays, statistics views
 4. **Implement Statistics Engine**: Compute various metrics from dart data
 5. **Add Optional Backend**: Computer vision integration
 6. **Testing**: Unit tests, integration tests, UI tests
-
