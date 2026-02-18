@@ -1,0 +1,63 @@
+name: my_darts
+description: A comprehensive darts scoring and statistics application
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.8.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State management
+  flutter_riverpod: ^3.2.1
+  riverpod_annotation: ^4.0.2
+  
+  # Routing
+  go_router: ^17.1.0
+  
+  # Local database
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  
+  # Utility packages
+  uuid: ^4.5.2
+  intl: ^0.20.2
+  
+  # UI components
+  flutter_svg: ^2.0.7
+  
+  # Code generation
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.10.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  # Code generation
+  build_runner: ^2.11.1
+  riverpod_generator: ^4.0.3
+  freezed: ^3.2.5
+  json_serializable: ^6.12.0
+  
+  # Linting
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # Assets configuration
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  # Fonts configuration
+  fonts:
+    - family: DartFont
+      fonts:
+        - asset: assets/fonts/DartFont-Regular.ttf
+        - asset: assets/fonts/DartFont-Bold.ttf
+          weight: 700
