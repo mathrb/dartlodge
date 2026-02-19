@@ -6,21 +6,20 @@ part of 'competitor.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$CompetitorImpl _$$CompetitorImplFromJson(Map<String, dynamic> json) =>
-    _$CompetitorImpl(
-      competitorId: json['competitorId'] as String,
-      gameId: json['gameId'] as String,
-      type: $enumDecode(_$CompetitorTypeEnumMap, json['type']),
-      name: json['name'] as String,
-      players: (json['players'] as List<dynamic>)
-          .map((e) => CompetitorPlayer.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+_Competitor _$CompetitorFromJson(Map<String, dynamic> json) => _Competitor(
+  competitorId: json['competitor_id'] as String,
+  gameId: json['game_id'] as String,
+  type: $enumDecode(_$CompetitorTypeEnumMap, json['type']),
+  name: json['name'] as String,
+  players: (json['players'] as List<dynamic>)
+      .map((e) => CompetitorPlayer.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
-Map<String, dynamic> _$$CompetitorImplToJson(_$CompetitorImpl instance) =>
+Map<String, dynamic> _$CompetitorToJson(_Competitor instance) =>
     <String, dynamic>{
-      'competitorId': instance.competitorId,
-      'gameId': instance.gameId,
+      'competitor_id': instance.competitorId,
+      'game_id': instance.gameId,
       'type': _$CompetitorTypeEnumMap[instance.type]!,
       'name': instance.name,
       'players': instance.players,
@@ -31,16 +30,14 @@ const _$CompetitorTypeEnumMap = {
   CompetitorType.team: 'team',
 };
 
-_$CompetitorPlayerImpl _$$CompetitorPlayerImplFromJson(
-        Map<String, dynamic> json) =>
-    _$CompetitorPlayerImpl(
-      playerId: json['playerId'] as String,
-      rotationPosition: (json['rotationPosition'] as num).toInt(),
+_CompetitorPlayer _$CompetitorPlayerFromJson(Map<String, dynamic> json) =>
+    _CompetitorPlayer(
+      playerId: json['player_id'] as String,
+      rotationPosition: (json['rotation_position'] as num).toInt(),
     );
 
-Map<String, dynamic> _$$CompetitorPlayerImplToJson(
-        _$CompetitorPlayerImpl instance) =>
+Map<String, dynamic> _$CompetitorPlayerToJson(_CompetitorPlayer instance) =>
     <String, dynamic>{
-      'playerId': instance.playerId,
-      'rotationPosition': instance.rotationPosition,
+      'player_id': instance.playerId,
+      'rotation_position': instance.rotationPosition,
     };

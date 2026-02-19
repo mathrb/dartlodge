@@ -3,6 +3,7 @@
 
 import '../entities/game.dart';
 import '../entities/competitor.dart';
+import '../models/game_state_snapshot.dart';
 import '../../../../core/utils/constants.dart';
 
 abstract interface class GameRepository {
@@ -38,7 +39,7 @@ abstract interface class GameRepository {
   /// Overwrites the [activeState] column for [gameId].
   /// Throws [GameNotFoundException] if [gameId] does not exist.
   /// Throws [GameAlreadyCompleteException] if the game is already marked complete.
-  Future<void> saveGameState(String gameId, Map<String, dynamic> state);
+  Future<void> saveGameState(String gameId, GameStateSnapshot state);
 
   /// Marks the game as complete: sets [isComplete = true], [endTime],
   /// and [winnerCompetitorId]. Clears [activeState].

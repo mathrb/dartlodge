@@ -75,7 +75,7 @@ class ApiConstants {
 }
 
 // Game Configuration Constants
-class GameConfig {
+class GameConfigurationConstants {
   static const List<int> x01StartingScores = [301, 501, 701, 901];
   static const List<String> x01InStrategies = ['straight', 'double', 'master'];
   static const List<String> x01OutStrategies = ['straight', 'double', 'master'];

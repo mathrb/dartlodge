@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,220 +9,278 @@ part of 'player.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-Player _$PlayerFromJson(Map<String, dynamic> json) {
-  return _Player.fromJson(json);
-}
 
 /// @nodoc
 mixin _$Player {
-  @JsonKey(name: 'player_id')
-  String get playerId => throw _privateConstructorUsedError;
-  @JsonKey(name: 'name')
-  String get name => throw _privateConstructorUsedError;
-  @JsonKey(name: 'created_at')
-  DateTime get createdAt => throw _privateConstructorUsedError;
-  @JsonKey(name: 'last_active')
-  DateTime get lastActive => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $PlayerCopyWith<Player> get copyWith => throw _privateConstructorUsedError;
+@JsonKey(name: 'player_id') String get playerId;@JsonKey(name: 'name') String get name;@JsonKey(name: 'created_at') DateTime get createdAt;@JsonKey(name: 'last_active') DateTime get lastActive;
+/// Create a copy of Player
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PlayerCopyWith<Player> get copyWith => _$PlayerCopyWithImpl<Player>(this as Player, _$identity);
+
+  /// Serializes this Player to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Player&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActive, lastActive) || other.lastActive == lastActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,playerId,name,createdAt,lastActive);
+
+@override
+String toString() {
+  return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $PlayerCopyWith<$Res> {
-  factory $PlayerCopyWith(Player value, $Res Function(Player) then) =
-      _$PlayerCopyWithImpl<$Res, Player>;
-  @useResult
-  $Res call(
-      {@JsonKey(name: 'player_id') String playerId,
-      @JsonKey(name: 'name') String name,
-      @JsonKey(name: 'created_at') DateTime createdAt,
-      @JsonKey(name: 'last_active') DateTime lastActive});
-}
+abstract mixin class $PlayerCopyWith<$Res>  {
+  factory $PlayerCopyWith(Player value, $Res Function(Player) _then) = _$PlayerCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'player_id') String playerId,@JsonKey(name: 'name') String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'last_active') DateTime lastActive
+});
 
+
+
+
+}
 /// @nodoc
-class _$PlayerCopyWithImpl<$Res, $Val extends Player>
+class _$PlayerCopyWithImpl<$Res>
     implements $PlayerCopyWith<$Res> {
-  _$PlayerCopyWithImpl(this._value, this._then);
+  _$PlayerCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final Player _self;
+  final $Res Function(Player) _then;
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? playerId = null,
-    Object? name = null,
-    Object? createdAt = null,
-    Object? lastActive = null,
-  }) {
-    return _then(_value.copyWith(
-      playerId: null == playerId
-          ? _value.playerId
-          : playerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      lastActive: null == lastActive
-          ? _value.lastActive
-          : lastActive // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ) as $Val);
-  }
+/// Create a copy of Player
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? name = null,Object? createdAt = null,Object? lastActive = null,}) {
+  return _then(_self.copyWith(
+playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastActive: null == lastActive ? _self.lastActive : lastActive // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
 }
 
-/// @nodoc
-abstract class _$$PlayerImplCopyWith<$Res> implements $PlayerCopyWith<$Res> {
-  factory _$$PlayerImplCopyWith(
-          _$PlayerImpl value, $Res Function(_$PlayerImpl) then) =
-      __$$PlayerImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {@JsonKey(name: 'player_id') String playerId,
-      @JsonKey(name: 'name') String name,
-      @JsonKey(name: 'created_at') DateTime createdAt,
-      @JsonKey(name: 'last_active') DateTime lastActive});
 }
 
-/// @nodoc
-class __$$PlayerImplCopyWithImpl<$Res>
-    extends _$PlayerCopyWithImpl<$Res, _$PlayerImpl>
-    implements _$$PlayerImplCopyWith<$Res> {
-  __$$PlayerImplCopyWithImpl(
-      _$PlayerImpl _value, $Res Function(_$PlayerImpl) _then)
-      : super(_value, _then);
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? playerId = null,
-    Object? name = null,
-    Object? createdAt = null,
-    Object? lastActive = null,
-  }) {
-    return _then(_$PlayerImpl(
-      playerId: null == playerId
-          ? _value.playerId
-          : playerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      name: null == name
-          ? _value.name
-          : name // ignore: cast_nullable_to_non_nullable
-              as String,
-      createdAt: null == createdAt
-          ? _value.createdAt
-          : createdAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      lastActive: null == lastActive
-          ? _value.lastActive
-          : lastActive // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-    ));
-  }
+/// Adds pattern-matching-related methods to [Player].
+extension PlayerPatterns on Player {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _Player value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _Player() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _Player value)  $default,){
+final _that = this;
+switch (_that) {
+case _Player():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _Player value)?  $default,){
+final _that = this;
+switch (_that) {
+case _Player() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'name')  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'last_active')  DateTime lastActive)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _Player() when $default != null:
+return $default(_that.playerId,_that.name,_that.createdAt,_that.lastActive);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'name')  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'last_active')  DateTime lastActive)  $default,) {final _that = this;
+switch (_that) {
+case _Player():
+return $default(_that.playerId,_that.name,_that.createdAt,_that.lastActive);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'name')  String name, @JsonKey(name: 'created_at')  DateTime createdAt, @JsonKey(name: 'last_active')  DateTime lastActive)?  $default,) {final _that = this;
+switch (_that) {
+case _Player() when $default != null:
+return $default(_that.playerId,_that.name,_that.createdAt,_that.lastActive);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$PlayerImpl implements _Player {
-  const _$PlayerImpl(
-      {@JsonKey(name: 'player_id') required this.playerId,
-      @JsonKey(name: 'name') required this.name,
-      @JsonKey(name: 'created_at') required this.createdAt,
-      @JsonKey(name: 'last_active') required this.lastActive});
 
-  factory _$PlayerImpl.fromJson(Map<String, dynamic> json) =>
-      _$$PlayerImplFromJson(json);
+class _Player implements Player {
+  const _Player({@JsonKey(name: 'player_id') required this.playerId, @JsonKey(name: 'name') required this.name, @JsonKey(name: 'created_at') required this.createdAt, @JsonKey(name: 'last_active') required this.lastActive});
+  factory _Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 
-  @override
-  @JsonKey(name: 'player_id')
-  final String playerId;
-  @override
-  @JsonKey(name: 'name')
-  final String name;
-  @override
-  @JsonKey(name: 'created_at')
-  final DateTime createdAt;
-  @override
-  @JsonKey(name: 'last_active')
-  final DateTime lastActive;
+@override@JsonKey(name: 'player_id') final  String playerId;
+@override@JsonKey(name: 'name') final  String name;
+@override@JsonKey(name: 'created_at') final  DateTime createdAt;
+@override@JsonKey(name: 'last_active') final  DateTime lastActive;
 
-  @override
-  String toString() {
-    return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
-  }
+/// Create a copy of Player
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$PlayerCopyWith<_Player> get copyWith => __$PlayerCopyWithImpl<_Player>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$PlayerImpl &&
-            (identical(other.playerId, playerId) ||
-                other.playerId == playerId) &&
-            (identical(other.name, name) || other.name == name) &&
-            (identical(other.createdAt, createdAt) ||
-                other.createdAt == createdAt) &&
-            (identical(other.lastActive, lastActive) ||
-                other.lastActive == lastActive));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode =>
-      Object.hash(runtimeType, playerId, name, createdAt, lastActive);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$PlayerImplCopyWith<_$PlayerImpl> get copyWith =>
-      __$$PlayerImplCopyWithImpl<_$PlayerImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$PlayerImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$PlayerToJson(this, );
 }
 
-abstract class _Player implements Player {
-  const factory _Player(
-          {@JsonKey(name: 'player_id') required final String playerId,
-          @JsonKey(name: 'name') required final String name,
-          @JsonKey(name: 'created_at') required final DateTime createdAt,
-          @JsonKey(name: 'last_active') required final DateTime lastActive}) =
-      _$PlayerImpl;
-
-  factory _Player.fromJson(Map<String, dynamic> json) = _$PlayerImpl.fromJson;
-
-  @override
-  @JsonKey(name: 'player_id')
-  String get playerId;
-  @override
-  @JsonKey(name: 'name')
-  String get name;
-  @override
-  @JsonKey(name: 'created_at')
-  DateTime get createdAt;
-  @override
-  @JsonKey(name: 'last_active')
-  DateTime get lastActive;
-  @override
-  @JsonKey(ignore: true)
-  _$$PlayerImplCopyWith<_$PlayerImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Player&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActive, lastActive) || other.lastActive == lastActive));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,playerId,name,createdAt,lastActive);
+
+@override
+String toString() {
+  return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$PlayerCopyWith<$Res> implements $PlayerCopyWith<$Res> {
+  factory _$PlayerCopyWith(_Player value, $Res Function(_Player) _then) = __$PlayerCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'player_id') String playerId,@JsonKey(name: 'name') String name,@JsonKey(name: 'created_at') DateTime createdAt,@JsonKey(name: 'last_active') DateTime lastActive
+});
+
+
+
+
+}
+/// @nodoc
+class __$PlayerCopyWithImpl<$Res>
+    implements _$PlayerCopyWith<$Res> {
+  __$PlayerCopyWithImpl(this._self, this._then);
+
+  final _Player _self;
+  final $Res Function(_Player) _then;
+
+/// Create a copy of Player
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? playerId = null,Object? name = null,Object? createdAt = null,Object? lastActive = null,}) {
+  return _then(_Player(
+playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
+as DateTime,lastActive: null == lastActive ? _self.lastActive : lastActive // ignore: cast_nullable_to_non_nullable
+as DateTime,
+  ));
+}
+
+
+}
+
+// dart format on

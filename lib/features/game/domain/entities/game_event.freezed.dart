@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,284 +9,293 @@ part of 'game_event.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-GameEvent _$GameEventFromJson(Map<String, dynamic> json) {
-  return _GameEvent.fromJson(json);
-}
 
 /// @nodoc
 mixin _$GameEvent {
-  String get eventId => throw _privateConstructorUsedError;
-  String get gameId => throw _privateConstructorUsedError;
-  String get eventType => throw _privateConstructorUsedError;
-  int get localSequence => throw _privateConstructorUsedError;
-  DateTime get occurredAt => throw _privateConstructorUsedError;
-  Map<String, dynamic> get payload => throw _privateConstructorUsedError;
-  bool get synced => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $GameEventCopyWith<GameEvent> get copyWith =>
-      throw _privateConstructorUsedError;
+@JsonKey(name: 'event_id') String get eventId;@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'event_type') String get eventType;@JsonKey(name: 'local_sequence') int get localSequence;@JsonKey(name: 'occurred_at') DateTime get occurredAt;@JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) Map<String, dynamic> get payload;@JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) bool get synced;
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GameEventCopyWith<GameEvent> get copyWith => _$GameEventCopyWithImpl<GameEvent>(this as GameEvent, _$identity);
+
+  /// Serializes this GameEvent to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameEvent&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.localSequence, localSequence) || other.localSequence == localSequence)&&(identical(other.occurredAt, occurredAt) || other.occurredAt == occurredAt)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.synced, synced) || other.synced == synced));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,eventId,gameId,eventType,localSequence,occurredAt,const DeepCollectionEquality().hash(payload),synced);
+
+@override
+String toString() {
+  return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $GameEventCopyWith<$Res> {
-  factory $GameEventCopyWith(GameEvent value, $Res Function(GameEvent) then) =
-      _$GameEventCopyWithImpl<$Res, GameEvent>;
-  @useResult
-  $Res call(
-      {String eventId,
-      String gameId,
-      String eventType,
-      int localSequence,
-      DateTime occurredAt,
-      Map<String, dynamic> payload,
-      bool synced});
-}
+abstract mixin class $GameEventCopyWith<$Res>  {
+  factory $GameEventCopyWith(GameEvent value, $Res Function(GameEvent) _then) = _$GameEventCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'event_type') String eventType,@JsonKey(name: 'local_sequence') int localSequence,@JsonKey(name: 'occurred_at') DateTime occurredAt,@JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) Map<String, dynamic> payload,@JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) bool synced
+});
 
+
+
+
+}
 /// @nodoc
-class _$GameEventCopyWithImpl<$Res, $Val extends GameEvent>
+class _$GameEventCopyWithImpl<$Res>
     implements $GameEventCopyWith<$Res> {
-  _$GameEventCopyWithImpl(this._value, this._then);
+  _$GameEventCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final GameEvent _self;
+  final $Res Function(GameEvent) _then;
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? eventId = null,
-    Object? gameId = null,
-    Object? eventType = null,
-    Object? localSequence = null,
-    Object? occurredAt = null,
-    Object? payload = null,
-    Object? synced = null,
-  }) {
-    return _then(_value.copyWith(
-      eventId: null == eventId
-          ? _value.eventId
-          : eventId // ignore: cast_nullable_to_non_nullable
-              as String,
-      gameId: null == gameId
-          ? _value.gameId
-          : gameId // ignore: cast_nullable_to_non_nullable
-              as String,
-      eventType: null == eventType
-          ? _value.eventType
-          : eventType // ignore: cast_nullable_to_non_nullable
-              as String,
-      localSequence: null == localSequence
-          ? _value.localSequence
-          : localSequence // ignore: cast_nullable_to_non_nullable
-              as int,
-      occurredAt: null == occurredAt
-          ? _value.occurredAt
-          : occurredAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      payload: null == payload
-          ? _value.payload
-          : payload // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>,
-      synced: null == synced
-          ? _value.synced
-          : synced // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ) as $Val);
-  }
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? eventId = null,Object? gameId = null,Object? eventType = null,Object? localSequence = null,Object? occurredAt = null,Object? payload = null,Object? synced = null,}) {
+  return _then(_self.copyWith(
+eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
+as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
+as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
+as String,localSequence: null == localSequence ? _self.localSequence : localSequence // ignore: cast_nullable_to_non_nullable
+as int,occurredAt: null == occurredAt ? _self.occurredAt : occurredAt // ignore: cast_nullable_to_non_nullable
+as DateTime,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,synced: null == synced ? _self.synced : synced // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
 }
 
-/// @nodoc
-abstract class _$$GameEventImplCopyWith<$Res>
-    implements $GameEventCopyWith<$Res> {
-  factory _$$GameEventImplCopyWith(
-          _$GameEventImpl value, $Res Function(_$GameEventImpl) then) =
-      __$$GameEventImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String eventId,
-      String gameId,
-      String eventType,
-      int localSequence,
-      DateTime occurredAt,
-      Map<String, dynamic> payload,
-      bool synced});
 }
 
-/// @nodoc
-class __$$GameEventImplCopyWithImpl<$Res>
-    extends _$GameEventCopyWithImpl<$Res, _$GameEventImpl>
-    implements _$$GameEventImplCopyWith<$Res> {
-  __$$GameEventImplCopyWithImpl(
-      _$GameEventImpl _value, $Res Function(_$GameEventImpl) _then)
-      : super(_value, _then);
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? eventId = null,
-    Object? gameId = null,
-    Object? eventType = null,
-    Object? localSequence = null,
-    Object? occurredAt = null,
-    Object? payload = null,
-    Object? synced = null,
-  }) {
-    return _then(_$GameEventImpl(
-      eventId: null == eventId
-          ? _value.eventId
-          : eventId // ignore: cast_nullable_to_non_nullable
-              as String,
-      gameId: null == gameId
-          ? _value.gameId
-          : gameId // ignore: cast_nullable_to_non_nullable
-              as String,
-      eventType: null == eventType
-          ? _value.eventType
-          : eventType // ignore: cast_nullable_to_non_nullable
-              as String,
-      localSequence: null == localSequence
-          ? _value.localSequence
-          : localSequence // ignore: cast_nullable_to_non_nullable
-              as int,
-      occurredAt: null == occurredAt
-          ? _value.occurredAt
-          : occurredAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
-      payload: null == payload
-          ? _value._payload
-          : payload // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>,
-      synced: null == synced
-          ? _value.synced
-          : synced // ignore: cast_nullable_to_non_nullable
-              as bool,
-    ));
-  }
+/// Adds pattern-matching-related methods to [GameEvent].
+extension GameEventPatterns on GameEvent {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _GameEvent value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _GameEvent() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _GameEvent value)  $default,){
+final _that = this;
+switch (_that) {
+case _GameEvent():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _GameEvent value)?  $default,){
+final _that = this;
+switch (_that) {
+case _GameEvent() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'event_type')  String eventType, @JsonKey(name: 'local_sequence')  int localSequence, @JsonKey(name: 'occurred_at')  DateTime occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload)  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt)  bool synced)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _GameEvent() when $default != null:
+return $default(_that.eventId,_that.gameId,_that.eventType,_that.localSequence,_that.occurredAt,_that.payload,_that.synced);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'event_type')  String eventType, @JsonKey(name: 'local_sequence')  int localSequence, @JsonKey(name: 'occurred_at')  DateTime occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload)  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt)  bool synced)  $default,) {final _that = this;
+switch (_that) {
+case _GameEvent():
+return $default(_that.eventId,_that.gameId,_that.eventType,_that.localSequence,_that.occurredAt,_that.payload,_that.synced);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'event_id')  String eventId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'event_type')  String eventType, @JsonKey(name: 'local_sequence')  int localSequence, @JsonKey(name: 'occurred_at')  DateTime occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload)  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt)  bool synced)?  $default,) {final _that = this;
+switch (_that) {
+case _GameEvent() when $default != null:
+return $default(_that.eventId,_that.gameId,_that.eventType,_that.localSequence,_that.occurredAt,_that.payload,_that.synced);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$GameEventImpl implements _GameEvent {
-  const _$GameEventImpl(
-      {required this.eventId,
-      required this.gameId,
-      required this.eventType,
-      required this.localSequence,
-      required this.occurredAt,
-      required final Map<String, dynamic> payload,
-      required this.synced})
-      : _payload = payload;
 
-  factory _$GameEventImpl.fromJson(Map<String, dynamic> json) =>
-      _$$GameEventImplFromJson(json);
+class _GameEvent implements GameEvent {
+  const _GameEvent({@JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'event_type') required this.eventType, @JsonKey(name: 'local_sequence') required this.localSequence, @JsonKey(name: 'occurred_at') required this.occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) required final  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) required this.synced}): _payload = payload;
+  factory _GameEvent.fromJson(Map<String, dynamic> json) => _$GameEventFromJson(json);
 
-  @override
-  final String eventId;
-  @override
-  final String gameId;
-  @override
-  final String eventType;
-  @override
-  final int localSequence;
-  @override
-  final DateTime occurredAt;
-  final Map<String, dynamic> _payload;
-  @override
-  Map<String, dynamic> get payload {
-    if (_payload is EqualUnmodifiableMapView) return _payload;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_payload);
-  }
-
-  @override
-  final bool synced;
-
-  @override
-  String toString() {
-    return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$GameEventImpl &&
-            (identical(other.eventId, eventId) || other.eventId == eventId) &&
-            (identical(other.gameId, gameId) || other.gameId == gameId) &&
-            (identical(other.eventType, eventType) ||
-                other.eventType == eventType) &&
-            (identical(other.localSequence, localSequence) ||
-                other.localSequence == localSequence) &&
-            (identical(other.occurredAt, occurredAt) ||
-                other.occurredAt == occurredAt) &&
-            const DeepCollectionEquality().equals(other._payload, _payload) &&
-            (identical(other.synced, synced) || other.synced == synced));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      eventId,
-      gameId,
-      eventType,
-      localSequence,
-      occurredAt,
-      const DeepCollectionEquality().hash(_payload),
-      synced);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$GameEventImplCopyWith<_$GameEventImpl> get copyWith =>
-      __$$GameEventImplCopyWithImpl<_$GameEventImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$GameEventImplToJson(
-      this,
-    );
-  }
+@override@JsonKey(name: 'event_id') final  String eventId;
+@override@JsonKey(name: 'game_id') final  String gameId;
+@override@JsonKey(name: 'event_type') final  String eventType;
+@override@JsonKey(name: 'local_sequence') final  int localSequence;
+@override@JsonKey(name: 'occurred_at') final  DateTime occurredAt;
+ final  Map<String, dynamic> _payload;
+@override@JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) Map<String, dynamic> get payload {
+  if (_payload is EqualUnmodifiableMapView) return _payload;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_payload);
 }
 
-abstract class _GameEvent implements GameEvent {
-  const factory _GameEvent(
-      {required final String eventId,
-      required final String gameId,
-      required final String eventType,
-      required final int localSequence,
-      required final DateTime occurredAt,
-      required final Map<String, dynamic> payload,
-      required final bool synced}) = _$GameEventImpl;
+@override@JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) final  bool synced;
 
-  factory _GameEvent.fromJson(Map<String, dynamic> json) =
-      _$GameEventImpl.fromJson;
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$GameEventCopyWith<_GameEvent> get copyWith => __$GameEventCopyWithImpl<_GameEvent>(this, _$identity);
 
-  @override
-  String get eventId;
-  @override
-  String get gameId;
-  @override
-  String get eventType;
-  @override
-  int get localSequence;
-  @override
-  DateTime get occurredAt;
-  @override
-  Map<String, dynamic> get payload;
-  @override
-  bool get synced;
-  @override
-  @JsonKey(ignore: true)
-  _$$GameEventImplCopyWith<_$GameEventImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+Map<String, dynamic> toJson() {
+  return _$GameEventToJson(this, );
 }
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameEvent&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.localSequence, localSequence) || other.localSequence == localSequence)&&(identical(other.occurredAt, occurredAt) || other.occurredAt == occurredAt)&&const DeepCollectionEquality().equals(other._payload, _payload)&&(identical(other.synced, synced) || other.synced == synced));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,eventId,gameId,eventType,localSequence,occurredAt,const DeepCollectionEquality().hash(_payload),synced);
+
+@override
+String toString() {
+  return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$GameEventCopyWith<$Res> implements $GameEventCopyWith<$Res> {
+  factory _$GameEventCopyWith(_GameEvent value, $Res Function(_GameEvent) _then) = __$GameEventCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'event_id') String eventId,@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'event_type') String eventType,@JsonKey(name: 'local_sequence') int localSequence,@JsonKey(name: 'occurred_at') DateTime occurredAt,@JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) Map<String, dynamic> payload,@JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) bool synced
+});
+
+
+
+
+}
+/// @nodoc
+class __$GameEventCopyWithImpl<$Res>
+    implements _$GameEventCopyWith<$Res> {
+  __$GameEventCopyWithImpl(this._self, this._then);
+
+  final _GameEvent _self;
+  final $Res Function(_GameEvent) _then;
+
+/// Create a copy of GameEvent
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? eventId = null,Object? gameId = null,Object? eventType = null,Object? localSequence = null,Object? occurredAt = null,Object? payload = null,Object? synced = null,}) {
+  return _then(_GameEvent(
+eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
+as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
+as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
+as String,localSequence: null == localSequence ? _self.localSequence : localSequence // ignore: cast_nullable_to_non_nullable
+as int,occurredAt: null == occurredAt ? _self.occurredAt : occurredAt // ignore: cast_nullable_to_non_nullable
+as DateTime,payload: null == payload ? _self._payload : payload // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>,synced: null == synced ? _self.synced : synced // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+// dart format on

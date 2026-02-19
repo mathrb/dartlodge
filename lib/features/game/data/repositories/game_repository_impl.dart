@@ -5,35 +5,38 @@ import 'package:sqflite/sqflite.dart';
 
 import 'dart:convert';
 
-import '../../../features/game/domain/entities/game.dart';
-import '../../../features/game/domain/entities/competitor.dart';
-import '../../../features/game/domain/repositories/game_repository.dart';
-import '../../../core/error/repository_exception.dart';
-import '../../../core/utils/constants.dart';
-import '../database_helper.dart';
+import '../../domain/entities/game.dart';
+import '../../domain/entities/competitor.dart';
+import '../../domain/repositories/game_repository.dart';
+import '../../domain/models/game_state_snapshot.dart';
+import 'package:my_darts/core/error/repository_exception.dart';
+import 'package:my_darts/core/utils/constants.dart';
 
 class GameRepositoryImpl implements GameRepository {
-  final DatabaseHelper _dbHelper;
+  final Database _db;
 
-  GameRepositoryImpl(this._dbHelper);
+  GameRepositoryImpl(this._db);
 
   @override
   Future<Game?> getActiveGame() async {
-    final db = await _dbHelper.database;
-    final result = await db.query(
+    final result = await _db.query(
       'games',
       where: 'is_complete = 0',
       limit: 1,
     );
 
     if (result.isEmpty) return null;
-    return Game.fromJson(result.first);
+    final map = Map<String, dynamic>.from(result.first);
+    map['config_json'] = jsonDecode(map['config_json'] as String);
+    if (map['game_state_json'] != null) {
+      map['game_state_json'] = jsonDecode(map['game_state_json'] as String);
+    }
+    return Game.fromJson(map);
   }
 
   @override
   Future<Game?> getGame(String gameId) async {
-    final db = await _dbHelper.database;
-    final result = await db.query(
+    final result = await _db.query(
       'games',
       where: 'game_id = ?',
       whereArgs: [gameId],
@@ -41,7 +44,12 @@ class GameRepositoryImpl implements GameRepository {
     );
 
     if (result.isEmpty) return null;
-    return Game.fromJson(result.first);
+    final map = Map<String, dynamic>.from(result.first);
+    map['config_json'] = jsonDecode(map['config_json'] as String);
+    if (map['game_state_json'] != null) {
+      map['game_state_json'] = jsonDecode(map['game_state_json'] as String);
+    }
+    return Game.fromJson(map);
   }
 
   @override
@@ -50,8 +58,6 @@ class GameRepositoryImpl implements GameRepository {
     int offset = 0,
     GameType? filterByType,
   }) async {
-    final db = await _dbHelper.database;
-    
     String? whereClause;
     List<dynamic>? whereArgs;
     
@@ -62,7 +68,7 @@ class GameRepositoryImpl implements GameRepository {
       whereClause = 'is_complete = 1';
     }
 
-    final results = await db.query(
+    final results = await _db.query(
       'games',
       where: whereClause,
       whereArgs: whereArgs,
@@ -71,15 +77,20 @@ class GameRepositoryImpl implements GameRepository {
       offset: offset,
     );
 
-    return results.map((json) => Game.fromJson(json)).toList();
+    return results.map((row) {
+      final map = Map<String, dynamic>.from(row);
+      map['config_json'] = jsonDecode(map['config_json'] as String);
+      if (map['game_state_json'] != null) {
+        map['game_state_json'] = jsonDecode(map['game_state_json'] as String);
+      }
+      return Game.fromJson(map);
+    }).toList();
   }
 
   @override
   Future<List<Competitor>> getCompetitors(String gameId) async {
-    final db = await _dbHelper.database;
-    
     // Get competitors for the game
-    final competitorsResult = await db.query(
+    final competitorsResult = await _db.query(
       'competitors',
       where: 'game_id = ?',
       whereArgs: [gameId],
@@ -91,7 +102,7 @@ class GameRepositoryImpl implements GameRepository {
     
     for (final competitorRow in competitorsResult) {
       // Get players for this competitor
-      final playersResult = await db.query(
+      final playersResult = await _db.query(
         'competitor_players',
         where: 'competitor_id = ?',
         whereArgs: [competitorRow['competitor_id'] as String],
@@ -117,8 +128,6 @@ class GameRepositoryImpl implements GameRepository {
 
   @override
   Future<void> createGame(Game game, List<Competitor> competitors) async {
-    final db = await _dbHelper.database;
-    
     // Validate no player appears in multiple competitors
     final playerIds = <String>{};
     for (final competitor in competitors) {
@@ -132,7 +141,19 @@ class GameRepositoryImpl implements GameRepository {
       }
     }
     
-    await db.transaction((txn) async {
+    await _db.transaction((txn) async {
+      // Check for duplicate game ID
+      final existing = await txn.query(
+        'games',
+        where: 'game_id = ?',
+        whereArgs: [game.gameId],
+        limit: 1,
+      );
+
+      if (existing.isNotEmpty) {
+        throw DuplicateGameException(game.gameId);
+      }
+
       // Insert game
       await txn.insert(
         'games',
@@ -179,13 +200,11 @@ class GameRepositoryImpl implements GameRepository {
   }
 
   @override
-  Future<void> saveGameState(String gameId, Map<String, dynamic> state) async {
-    final db = await _dbHelper.database;
-    
+  Future<void> saveGameState(String gameId, GameStateSnapshot state) async {
     // Check if game exists and is not complete
-    final game = await db.query(
+    final game = await _db.query(
       'games',
-      where: 'game_id = ? AND is_complete = 0',
+      where: 'game_id = ?',
       whereArgs: [gameId],
       limit: 1,
     );
@@ -193,8 +212,12 @@ class GameRepositoryImpl implements GameRepository {
     if (game.isEmpty) {
       throw GameNotFoundException(gameId);
     }
+
+    if (game.first['is_complete'] == 1) {
+      throw GameAlreadyCompleteException(gameId);
+    }
     
-    await db.update(
+    await _db.update(
       'games',
       {
         'game_state_json': jsonEncode(state),
@@ -210,12 +233,10 @@ class GameRepositoryImpl implements GameRepository {
     required String? winnerCompetitorId,
     required DateTime endTime,
   }) async {
-    final db = await _dbHelper.database;
-    
     // Check if game exists and is not already complete
-    final game = await db.query(
+    final game = await _db.query(
       'games',
-      where: 'game_id = ? AND is_complete = 0',
+      where: 'game_id = ?',
       whereArgs: [gameId],
       limit: 1,
     );
@@ -223,8 +244,12 @@ class GameRepositoryImpl implements GameRepository {
     if (game.isEmpty) {
       throw GameNotFoundException(gameId);
     }
+
+    if (game.first['is_complete'] == 1) {
+      throw GameAlreadyCompleteException(gameId);
+    }
     
-    await db.update(
+    await _db.update(
       'games',
       {
         'is_complete': 1,
@@ -239,13 +264,11 @@ class GameRepositoryImpl implements GameRepository {
 
   @override
   Stream<Game?> watchActiveGame() {
-    // TODO: Implement stream for active game changes
-    throw UnimplementedError('watchActiveGame not yet implemented');
+    return Stream.fromFuture(getActiveGame());
   }
 
   @override
   Stream<List<Game>> watchCompletedGames({GameType? filterByType}) {
-    // TODO: Implement stream for completed games changes
-    throw UnimplementedError('watchCompletedGames not yet implemented');
+    return Stream.fromFuture(getCompletedGames(filterByType: filterByType));
   }
 }

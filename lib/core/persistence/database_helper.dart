@@ -61,3 +61,17 @@ Future<String> getDatabasesPath() async {
   final directory = await getApplicationDocumentsDirectory();
   return directory.path;
 }
+
+extension DatabaseExceptionExtensions on sqflite.DatabaseException {
+  bool isUniqueConstraintError() {
+    return result == 1555 || // SQLITE_CONSTRAINT_PRIMARYKEY
+           result == 2067 || // SQLITE_CONSTRAINT_UNIQUE
+           toString().toLowerCase().contains('unique constraint failed') ||
+           toString().toLowerCase().contains('primary key constraint failed');
+  }
+
+  bool isForeignKeyConstraintError() {
+    return result == 787 || // SQLITE_CONSTRAINT_FOREIGNKEY
+           toString().toLowerCase().contains('foreign key constraint failed');
+  }
+}
