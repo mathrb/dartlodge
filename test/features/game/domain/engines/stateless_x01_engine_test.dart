@@ -611,4 +611,175 @@ void main() {
       expect(engine.isValid(state, event), false);
     });
   });
+
+  group('DART-002 Acceptance Criteria - Bust Recovery Scenarios', () {
+    test('should restore score to turnStartScore on bust during dart 2', () {
+      // Setup: Player starts turn with 381, throws one dart (score 361), then busts on dart 2
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 381, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].turnStartScore, 381);
+      
+      // Dart 1: throw 20 (score becomes 361)
+      final dart1 = GameEvent(
+        eventId: 'dart1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, dart1);
+      expect(state.competitors[0].score, 361);
+      expect(state.dartsThrownInTurn, 1);
+      
+      // Simulate score before dart 2 (for bust scenario)
+      state = state.copyWith(
+        competitors: [
+          state.competitors[0].copyWith(score: 10), // Set to 10 for bust
+        ],
+      );
+      
+      // Dart 2: bust (throw 20 when score is 10)
+      final bustDart = GameEvent(
+        eventId: 'bust',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, bustDart);
+      
+      // Verify bust recovery
+      expect(state.competitors[0].score, 381); // Restored to turnStartScore
+      expect(state.dartsThrownInTurn, 3); // Turn ended
+    });
+
+    test('should restore score to turnStartScore on bust during dart 3', () {
+      // Setup: Player starts turn with 381, throws two darts, then busts on dart 3
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 381, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].turnStartScore, 381);
+      
+      // Dart 1: throw 20
+      final dart1 = GameEvent(
+        eventId: 'dart1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, dart1);
+      
+      // Dart 2: throw 10
+      final dart2 = GameEvent(
+        eventId: 'dart2',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 10, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, dart2);
+      
+      // Simulate score before dart 3 (for bust scenario)
+      state = state.copyWith(
+        competitors: [
+          state.competitors[0].copyWith(score: 10), // Set to 10 for bust
+        ],
+      );
+      
+      // Dart 3: bust (throw 20 when score is 10)
+      final bustDart = GameEvent(
+        eventId: 'bust',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 4,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, bustDart);
+      
+      // Verify bust recovery
+      expect(state.competitors[0].score, 381); // Restored to turnStartScore
+      expect(state.dartsThrownInTurn, 3); // Turn ended
+    });
+
+    test('should handle bust on dart 1 correctly (score unchanged)', () {
+      // Setup: Player starts turn with 381, busts immediately on dart 1
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 10, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].turnStartScore, 10);
+      
+      // Dart 1: bust immediately
+      final bustDart = GameEvent(
+        eventId: 'bust',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+      state = engine.apply(state, bustDart);
+      
+      // Verify bust recovery
+      expect(state.competitors[0].score, 10); // Restored to turnStartScore
+      expect(state.dartsThrownInTurn, 3); // Turn ended
+    });
+  });
 }
