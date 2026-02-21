@@ -39,11 +39,20 @@ Note: the engine needs access to `inStrategy` from game config — this also req
 
 ### Acceptance criteria
 
-- [ ] Straight-in: any first dart starts scoring
-- [ ] Double-in: single/triple on first dart → no score, dart counted, turn continues
-- [ ] Double-in: double/bull on first dart → `isIn = true`, score applied
-- [ ] Master-in: single on first dart → no score, turn continues
-- [ ] Master-in: double or triple → `isIn = true`, score applied
-- [ ] Failed in-strategy dart does NOT end the turn (spec Note 1)
-- [ ] Unit tests cover all six in-strategy × hit-type combinations
+- [x] Straight-in: any first dart starts scoring
+- [x] Double-in: single/triple on first dart → no score, dart counted, turn continues
+- [x] Double-in: double/bull on first dart → `isIn = true`, score applied
+- [x] Master-in: single on first dart → no score, turn continues
+- [x] Master-in: double or triple → `isIn = true`, score applied
+- [x] Failed in-strategy dart does NOT end the turn (spec Note 1)
+- [x] Unit tests cover all six in-strategy × hit-type combinations
+- [x] **NEW**: Qualifying darts are properly recorded in `dartThrows` history
+
+### Review result (2026-02-21)
+
+Review completed. The implementation correctly gates scoring behind an `isIn` check based on the `inStrategy` (Straight, Double, Master). The logic correctly increments dart counts and records both failed and successful attempts in the `dartThrows` history. The `DoubleBull` segment is correctly handled as a double for in-strategy purposes. Unit tests in `test/features/game/domain/engines/stateless_x01_engine_test.dart` comprehensively cover all acceptance criteria.
+
+The dependency on `DART-006` (access to `inStrategy` in `GameState`) was addressed by adding `inStrategy` and `outStrategy` as fields in `GameState`, allowing the engine to function correctly without hardcoded rules.
+
+**Status:** Approved.
 

@@ -49,6 +49,21 @@ class StatelessX01Engine implements GameEngine {
     return state.copyWith(status: GameEngineStatus.inProgress);
   }
 
+  /// Helper method to increment dart count
+  GameState incrementDartCount(GameState state) {
+    return state.copyWith(
+      dartsThrownInTurn: state.dartsThrownInTurn + 1,
+    );
+  }
+
+  /// Helper method to check if turn should end
+  GameState checkTurnEnd(GameState state) {
+    if (state.dartsThrownInTurn >= 3) {
+      return state.copyWith(turnActive: false);
+    }
+    return state;
+  }
+
   GameState _applyTurnStarted(GameState state, GameEvent event) {
     final competitorId = event.payload['competitor_id'];
     final competitorIndex = state.competitors.indexWhere((c) => c.competitorId == competitorId);
@@ -58,10 +73,13 @@ class StatelessX01Engine implements GameEngine {
     final currentCompetitor = updatedCompetitors[competitorIndex];
     
     // Set turnStartScore to current score (for bust recovery)
+    // For straight-in strategy, player is always in
+    // For other strategies, player starts not in
+    final isIn = state.inStrategy == 'straight' || currentCompetitor.isIn;
+    
     updatedCompetitors[competitorIndex] = currentCompetitor.copyWith(
       turnStartScore: currentCompetitor.score,
-      // Reset isIn only if we're not already in (for new legs)
-      isIn: currentCompetitor.isIn || state.inStrategy == 'straight',
+      isIn: isIn,
     );
     
     return state.copyWith(
@@ -87,7 +105,7 @@ class StatelessX01Engine implements GameEngine {
     final segment = payload['segment'].toString();
     final multiplier = payload['multiplier'] as int;
     
-    final parsedSegment = Segment.parse(multiplier == 1 ? segment : (multiplier == 2 ? 'D$segment' : 'T$segment'));
+    final parsedSegment = Segment.parse(multiplier == 1 ? segment : (multiplier == 2 ? (segment == 'bull' ? 'DB' : 'D$segment') : (segment == 'bull' ? 'TB' : 'T$segment')));
     final scoreValue = parsedSegment.scoreValue;
     
     final currentCompetitor = state.competitors[state.currentTurnIndex];
@@ -95,44 +113,48 @@ class StatelessX01Engine implements GameEngine {
     
     // In Strategy Validation (Table C)
     if (!currentCompetitor.isIn) {
-      // Apply in-strategy rules
-      bool becomesIn = false;
+      // Dart counts as thrown regardless (Note 1 in spec)
+      var newState = incrementDartCount(state);
       
-      switch (state.inStrategy) {
-        case 'straight':
-          becomesIn = true; // Any hit gets you in
-          break;
-        case 'double':
-          becomesIn = multiplier == 2 || parsedSegment is DoubleBullSegment;
-          break;
-        case 'master':
-          becomesIn = multiplier >= 2; // Double or triple
-          break;
-      }
+      final satisfied = switch (state.inStrategy) {
+        'straight' => true,
+        'double'   => multiplier == 2 || parsedSegment is DoubleBullSegment,
+        'master'   => multiplier == 2 || multiplier == 3 || parsedSegment is DoubleBullSegment,
+        _ => false, // Default case
+      };
       
-      if (becomesIn) {
-        // Player gets in, apply scoring
-        final newScore = currentCompetitor.score - scoreValue;
-        updatedCompetitors[state.currentTurnIndex] = currentCompetitor.copyWith(
-          score: newScore,
-          isIn: true,
-          dartThrows: [...currentCompetitor.dartThrows, parsedSegment.toCanonicalString()],
-        );
-      } else {
-        // Failed to get in, no score change but dart still counts
+      if (!satisfied) {
+        // No score change, no bust — just dart count
         updatedCompetitors[state.currentTurnIndex] = currentCompetitor.copyWith(
           dartThrows: [...currentCompetitor.dartThrows, parsedSegment.toCanonicalString()],
         );
+        
+        newState = newState.copyWith(competitors: updatedCompetitors);
+        return checkTurnEnd(newState);
       }
       
-      return state.copyWith(
-        competitors: updatedCompetitors,
-        dartsThrownInTurn: state.dartsThrownInTurn + 1,
+      // Player gets in, apply scoring
+      newState = newState.copyWith(
+        competitors: updatedCompetitors.map((competitor) {
+          if (competitor.competitorId == currentCompetitor.competitorId) {
+            return competitor.copyWith(
+              isIn: true,
+              dartThrows: [...competitor.dartThrows, parsedSegment.toCanonicalString()], // Add qualifying dart
+            );
+          }
+          return competitor;
+        }).toList(),
       );
+      
+      // Fall through to scoring with updated state
+      // Note: dart count was already incremented in the in-strategy path
+      state = newState;
     }
     
-    // Player is already in, apply normal scoring (Table D)
-    final newScore = currentCompetitor.score - scoreValue;
+    // Player is already in (either was already in or just got in), apply normal scoring (Table D)
+    final competitorAfterInCheck = state.competitors[state.currentTurnIndex];
+    final cameThroughInStrategy = !currentCompetitor.isIn;
+    final newScore = competitorAfterInCheck.score - scoreValue;
     
     // X01 Transition Table logic
     bool isBust = false;
@@ -157,46 +179,56 @@ class StatelessX01Engine implements GameEngine {
       }
       
       if (validOut) {
-        legWinnerId = currentCompetitor.competitorId; // Leg completed
+        legWinnerId = competitorAfterInCheck.competitorId; // Leg completed
       } else {
         isBust = true; // Invalid out strategy
       }
     }
 
+    // Update the competitor with the new dart throw
+    // Note: If we came through the in-strategy path, dart was already added to throws
+    // If we were already in, we need to add it now
+    final competitorWithDart = cameThroughInStrategy ?
+      competitorAfterInCheck : // Dart already added in in-strategy path
+      competitorAfterInCheck.copyWith(
+        dartThrows: [...competitorAfterInCheck.dartThrows, parsedSegment.toCanonicalString()],
+      );
+    
+    updatedCompetitors[state.currentTurnIndex] = competitorWithDart;
+    
     if (isBust) {
       // Bust logic (Table F): restore to turnStartScore and end turn
-      final bustRecoveryScore = currentCompetitor.turnStartScore ?? currentCompetitor.score;
-      updatedCompetitors[state.currentTurnIndex] = currentCompetitor.copyWith(
+      final bustRecoveryScore = competitorAfterInCheck.turnStartScore ?? competitorAfterInCheck.score;
+      updatedCompetitors[state.currentTurnIndex] = updatedCompetitors[state.currentTurnIndex].copyWith(
         score: bustRecoveryScore,
-        dartThrows: [...currentCompetitor.dartThrows, parsedSegment.toCanonicalString()],
       );
       
-      return state.copyWith(
+      final newState = state.copyWith(
         competitors: updatedCompetitors,
         dartsThrownInTurn: 3, // Force turn end (Table H)
       );
+      return checkTurnEnd(newState);
     }
     
     // Normal scoring
-    updatedCompetitors[state.currentTurnIndex] = currentCompetitor.copyWith(
+    updatedCompetitors[state.currentTurnIndex] = updatedCompetitors[state.currentTurnIndex].copyWith(
       score: newScore,
-      dartThrows: [...currentCompetitor.dartThrows, parsedSegment.toCanonicalString()],
       isComplete: legWinnerId != null,
+    );
+    
+    final newState = state.copyWith(
+      competitors: updatedCompetitors,
+      dartsThrownInTurn: cameThroughInStrategy ? state.dartsThrownInTurn : state.dartsThrownInTurn + 1,
     );
     
     // Check if leg is completed
     if (legWinnerId != null) {
-      return _applyLegCompleted(state.copyWith(
-        competitors: updatedCompetitors,
-        dartsThrownInTurn: state.dartsThrownInTurn + 1,
+      return _applyLegCompleted(newState.copyWith(
         winnerCompetitorId: legWinnerId,
       ), legWinnerId);
     }
     
-    return state.copyWith(
-      competitors: updatedCompetitors,
-      dartsThrownInTurn: state.dartsThrownInTurn + 1,
-    );
+    return checkTurnEnd(newState);
   }
 
   GameState _applyTurnEnded(GameState state, GameEvent event) {
