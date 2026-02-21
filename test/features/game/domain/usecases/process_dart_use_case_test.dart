@@ -28,17 +28,24 @@ void main() {
   });
 
   test('should process a valid dart throw', () async {
-    final initialState = GameState(
+    // Start with turn not active
+    var initialState = GameState(
       gameId: 'g1',
       gameType: GameType.x01,
       competitors: [
-        const CompetitorState(competitorId: 'c1', name: 'P1', playerIds: ['p1'], score: 501),
+        const CompetitorState(competitorId: 'c1', name: 'P1', playerIds: ['p1'], score: 501, isIn: true),
       ],
       currentTurnIndex: 0,
       dartsThrownInTurn: 0,
       isComplete: false,
       status: GameEngineStatus.inProgress,
+      turnActive: false, // Turn not active initially
+      inStrategy: 'straight',
+      outStrategy: 'double',
     );
+    
+    // Start the turn first
+    initialState = initialState.copyWith(turnActive: true);
 
     final dartThrow = DartThrow(
       dartId: 'd1',

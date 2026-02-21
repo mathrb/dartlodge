@@ -19,18 +19,28 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
   status:
       $enumDecodeNullable(_$GameEngineStatusEnumMap, json['status']) ??
       GameEngineStatus.initialized,
+  turnActive: json['turnActive'] as bool? ?? false,
+  legsToWin: (json['legsToWin'] as num?)?.toInt() ?? 1,
+  currentLegIndex: (json['currentLegIndex'] as num?)?.toInt() ?? 0,
+  inStrategy: json['inStrategy'] as String? ?? 'straight',
+  outStrategy: json['outStrategy'] as String? ?? 'double',
 );
 
 Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
     <String, dynamic>{
       'gameId': instance.gameId,
       'gameType': _$GameTypeEnumMap[instance.gameType]!,
-      'competitors': instance.competitors,
+      'competitors': instance.competitors.map((e) => _$CompetitorStateToJson(e as _CompetitorState)).toList(),
       'currentTurnIndex': instance.currentTurnIndex,
       'dartsThrownInTurn': instance.dartsThrownInTurn,
       'isComplete': instance.isComplete,
       'winnerCompetitorId': instance.winnerCompetitorId,
       'status': _$GameEngineStatusEnumMap[instance.status]!,
+      'turnActive': instance.turnActive,
+      'legsToWin': instance.legsToWin,
+      'currentLegIndex': instance.currentLegIndex,
+      'inStrategy': instance.inStrategy,
+      'outStrategy': instance.outStrategy,
     };
 
 const _$GameTypeEnumMap = {
@@ -72,6 +82,9 @@ _CompetitorState _$CompetitorStateFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      isIn: json['isIn'] as bool? ?? false,
+      legsWon: (json['legsWon'] as num?)?.toInt() ?? 0,
+      turnStartScore: (json['turnStartScore'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
@@ -82,4 +95,7 @@ Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
       'score': instance.score,
       'isComplete': instance.isComplete,
       'dartThrows': instance.dartThrows,
+      'isIn': instance.isIn,
+      'legsWon': instance.legsWon,
+      'turnStartScore': instance.turnStartScore,
     };
