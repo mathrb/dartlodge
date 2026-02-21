@@ -16,6 +16,11 @@ abstract class GameState with _$GameState {
     required bool isComplete,
     String? winnerCompetitorId,
     @Default(GameEngineStatus.initialized) GameEngineStatus status,
+    @Default(false) bool turnActive,
+    @Default(1) int legsToWin,
+    @Default(0) int currentLegIndex,
+    @Default('straight') String inStrategy,
+    @Default('double') String outStrategy,
   }) = _GameState;
 
   factory GameState.fromJson(Map<String, dynamic> json) => _$GameStateFromJson(json);
@@ -30,6 +35,9 @@ abstract class CompetitorState with _$CompetitorState {
     required int score,
     @Default(false) bool isComplete,
     @Default([]) List<String> dartThrows, // Canonical segment strings
+    @Default(false) bool isIn,
+    @Default(0) int legsWon,
+    int? turnStartScore, // Null means same as score
   }) = _CompetitorState;
 
   factory CompetitorState.fromJson(Map<String, dynamic> json) => _$CompetitorStateFromJson(json);
