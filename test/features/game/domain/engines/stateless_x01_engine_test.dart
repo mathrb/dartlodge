@@ -306,6 +306,210 @@ void main() {
       expect(newState.turnActive, false);
       expect(newState.dartsThrownInTurn, 0);
     });
+
+    test('DART-004 should advance currentTurnIndex to next player on TurnEnded', () {
+      // Start with player 0
+      var state = initialState.copyWith(currentTurnIndex: 0);
+      
+      // Start turn for player 0
+      state = engine.apply(state, GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      ));
+      expect(state.currentTurnIndex, 0);
+      
+      // End turn - should advance to player 1
+      final turnEndEvent = GameEvent(
+        eventId: 'e2',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {},
+        synced: false,
+      );
+      
+      final newState = engine.apply(state, turnEndEvent);
+      expect(newState.currentTurnIndex, 1);
+      expect(newState.turnActive, false);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+
+    test('DART-004 should wrap currentTurnIndex to 0 after last player', () {
+      // Create a 2-player game starting with player 1 (last player)
+      var state = initialState.copyWith(currentTurnIndex: 1);
+      
+      // Start turn for player 1
+      state = engine.apply(state, GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c2'},
+        synced: false,
+      ));
+      expect(state.currentTurnIndex, 1);
+      
+      // End turn - should wrap to player 0
+      final turnEndEvent = GameEvent(
+        eventId: 'e2',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {},
+        synced: false,
+      );
+      
+      final newState = engine.apply(state, turnEndEvent);
+      expect(newState.currentTurnIndex, 0);
+      expect(newState.turnActive, false);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+
+    test('DART-004 two-player game should alternate players correctly', () {
+      var state = initialState.copyWith(currentTurnIndex: 0);
+      
+      // Turn 1: Player 0
+      state = engine.apply(state, GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e2',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {},
+        synced: false,
+      ));
+      expect(state.currentTurnIndex, 1);
+      
+      // Turn 2: Player 1
+      state = engine.apply(state, GameEvent(
+        eventId: 'e3',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c2'},
+        synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e4',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 4,
+        occurredAt: DateTime.now(),
+        payload: {},
+        synced: false,
+      ));
+      expect(state.currentTurnIndex, 0);
+      
+      // Turn 3: Back to Player 0
+      state = engine.apply(state, GameEvent(
+        eventId: 'e5',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 5,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      ));
+      expect(state.currentTurnIndex, 0);
+    });
+
+    test('DART-004 four-player game should rotate through all players', () {
+      // Create a 4-player game
+      final fourPlayerState = initialState.copyWith(
+        competitors: [
+          ...initialState.competitors,
+          const CompetitorState(
+            competitorId: 'c3',
+            name: 'Player 3',
+            playerIds: ['p3'],
+            score: 501,
+            isIn: false,
+            legsWon: 0,
+          ),
+          const CompetitorState(
+            competitorId: 'c4',
+            name: 'Player 4',
+            playerIds: ['p4'],
+            score: 501,
+            isIn: false,
+            legsWon: 0,
+          ),
+        ],
+        currentTurnIndex: 0,
+      );
+      
+      var state = fourPlayerState;
+      
+      // Player 0 -> Player 1
+      state = engine.apply(state, GameEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'}, synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e2', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {}, synced: false,
+      ));
+      expect(state.currentTurnIndex, 1);
+      
+      // Player 1 -> Player 2
+      state = engine.apply(state, GameEvent(
+        eventId: 'e3', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c2'}, synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e4', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 4, occurredAt: DateTime.now(),
+        payload: {}, synced: false,
+      ));
+      expect(state.currentTurnIndex, 2);
+      
+      // Player 2 -> Player 3
+      state = engine.apply(state, GameEvent(
+        eventId: 'e5', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 5, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c3'}, synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e6', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 6, occurredAt: DateTime.now(),
+        payload: {}, synced: false,
+      ));
+      expect(state.currentTurnIndex, 3);
+      
+      // Player 3 -> Player 0 (wrap around)
+      state = engine.apply(state, GameEvent(
+        eventId: 'e7', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 7, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c4'}, synced: false,
+      ));
+      state = engine.apply(state, GameEvent(
+        eventId: 'e8', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 8, occurredAt: DateTime.now(),
+        payload: {}, synced: false,
+      ));
+      expect(state.currentTurnIndex, 0);
+    });
   });
 
   group('In Strategy Validation (Table C)', () {

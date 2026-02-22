@@ -31,9 +31,21 @@ GameState _applyTurnEnded(GameState state, GameEvent event) {
 
 ### Acceptance criteria
 
-- [ ] After a 3-dart turn, `currentTurnIndex` increments
-- [ ] After the last competitor's turn, index wraps to 0
-- [ ] `turnActive` is set to `false` on TurnEnded
-- [ ] Two-player game: players alternate correctly across multiple turns
-- [ ] Four-player game: rotation visits all four players in order
+- [x] After a 3-dart turn, `currentTurnIndex` increments
+- [x] After the last competitor's turn, index wraps to 0
+- [x] `turnActive` is set to `false` on TurnEnded
+- [x] Two-player game: players alternate correctly across multiple turns
+- [x] Four-player game: rotation visits all four players in order
+
+### Review
+
+The fix for `DART-004` has been implemented in `lib/features/game/domain/engines/stateless_x01_engine.dart`. The `_applyTurnEnded` method now correctly calculates the next player index using modulo operator, resets the dart count, and deactivates the turn.
+
+Unit tests in `test/features/game/domain/engines/stateless_x01_engine_test.dart` specifically verify these requirements:
+- `DART-004 should advance currentTurnIndex to next player on TurnEnded`
+- `DART-004 should wrap currentTurnIndex to 0 after last player`
+- `DART-004 two-player game should alternate players correctly`
+- `DART-004 four-player game should rotate through all players`
+
+All tests passed successfully.
 

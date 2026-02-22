@@ -232,9 +232,11 @@ class StatelessX01Engine implements GameEngine {
   }
 
   GameState _applyTurnEnded(GameState state, GameEvent event) {
+    final nextIndex = (state.currentTurnIndex + 1) % state.competitors.length;
     return state.copyWith(
       dartsThrownInTurn: 0,
       turnActive: false,
+      currentTurnIndex: nextIndex,
     );
   }
 
