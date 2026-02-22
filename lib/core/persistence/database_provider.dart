@@ -14,6 +14,7 @@ import '../../features/game/domain/repositories/game_event_repository.dart';
 import '../../features/game/data/repositories/game_event_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
+import '../../features/game/domain/engines/stateless_x01_engine.dart';
 
 part 'database_provider.g.dart';
 
@@ -50,4 +51,9 @@ GameEventRepository gameEventRepository(Ref ref) {
 StatisticsRepository statisticsRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
   return StatisticsRepositoryImpl(db);
+}
+
+@Riverpod(keepAlive: true)
+StatelessX01Engine x01Engine(Ref ref) {
+  return StatelessX01Engine();
 }

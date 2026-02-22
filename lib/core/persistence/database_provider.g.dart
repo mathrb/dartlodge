@@ -273,3 +273,50 @@ final class StatisticsRepositoryProvider
 
 String _$statisticsRepositoryHash() =>
     r'1ce759818ddaea94f4372436d742f2aa16fe93a7';
+
+@ProviderFor(x01Engine)
+final x01EngineProvider = X01EngineProvider._();
+
+final class X01EngineProvider
+    extends
+        $FunctionalProvider<
+          StatelessX01Engine,
+          StatelessX01Engine,
+          StatelessX01Engine
+        >
+    with $Provider<StatelessX01Engine> {
+  X01EngineProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'x01EngineProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$x01EngineHash();
+
+  @$internal
+  @override
+  $ProviderElement<StatelessX01Engine> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  StatelessX01Engine create(Ref ref) {
+    return x01Engine(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StatelessX01Engine value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StatelessX01Engine>(value),
+    );
+  }
+}
+
+String _$x01EngineHash() => r'126e7436f179afa83ad44aafb9015041be29bff1';

@@ -30,7 +30,7 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
     <String, dynamic>{
       'gameId': instance.gameId,
       'gameType': _$GameTypeEnumMap[instance.gameType]!,
-      'competitors': instance.competitors.map((e) => _$CompetitorStateToJson(e as _CompetitorState)).toList(),
+      'competitors': instance.competitors,
       'currentTurnIndex': instance.currentTurnIndex,
       'dartsThrownInTurn': instance.dartsThrownInTurn,
       'isComplete': instance.isComplete,

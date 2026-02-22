@@ -4,6 +4,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/entities/dart_throw.dart';
+import '../../domain/entities/competitor.dart';
 import '../../domain/usecases/process_dart_use_case.dart';
 import '../../../../core/persistence/database_provider.dart';
 
@@ -17,10 +18,25 @@ class ActiveGame extends _$ActiveGame {
     final activeGame = await gameRepository.getActiveGame();
     
     if (activeGame == null) return null;
+
+    // Get competitors for the game
+    final competitors = await gameRepository.getCompetitors(activeGame.gameId);
     
-    // In a real implementation, we would reconstruct the GameState from events
-    // For now, we return null to avoid errors until reconstruction is implemented
-    return null;
+    // Get all events for the game
+    final gameEventRepository = ref.watch(gameEventRepositoryProvider);
+    final events = await gameEventRepository.getEventsForGame(activeGame.gameId);
+    
+    if (events.isEmpty) return null;
+
+    // Reconstruct game state by replaying all events
+    final engine = ref.watch(x01EngineProvider);
+    var state = GameState.initial(activeGame, competitors);
+    
+    for (final event in events) {
+      state = engine.apply(state, event);
+    }
+    
+    return state;
   }
 
   Future<void> processDart(DartThrow dartThrow) async {
