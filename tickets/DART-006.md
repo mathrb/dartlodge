@@ -36,9 +36,9 @@ abstract class GameState with _$GameState {
 
 ### Acceptance criteria
 
-- [ ] Engine can read `inStrategy` and `outStrategy` without hardcoding
-- [ ] Straight-out game: any segment reaching 0 completes the leg
-- [ ] Double-out game: only a double (or double bull) reaching 0 completes the leg
-- [ ] Master-out game: double or triple reaching 0 completes the leg
-- [ ] Config is serialised/deserialised correctly as part of GameState JSON
+- [x] Engine can read `inStrategy` and `outStrategy` without hardcoding
+- [x] Straight-out game: any segment reaching 0 completes the leg
+- [x] Double-out game: only a double (or double bull) reaching 0 completes the leg
+- [x] Master-out game: double or triple reaching 0 completes the leg
+- [x] Config is serialised/deserialised correctly as part of GameState JSON
 

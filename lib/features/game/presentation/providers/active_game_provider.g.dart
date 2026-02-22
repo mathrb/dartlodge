@@ -33,7 +33,7 @@ final class ActiveGameProvider
   ActiveGame create() => ActiveGame();
 }
 
-String _$activeGameHash() => r'fc329d4975adef54c252aa0ab275ef2c5cbf19c1';
+String _$activeGameHash() => r'79f452b9a29de93733845d5cf8e00081dda06183';
 
 abstract class _$ActiveGame extends $AsyncNotifier<GameState?> {
   FutureOr<GameState?> build();

@@ -24,6 +24,7 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
   currentLegIndex: (json['currentLegIndex'] as num?)?.toInt() ?? 0,
   inStrategy: json['inStrategy'] as String? ?? 'straight',
   outStrategy: json['outStrategy'] as String? ?? 'double',
+  startingScore: (json['startingScore'] as num?)?.toInt() ?? 501,
 );
 
 Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
@@ -41,6 +42,7 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
       'currentLegIndex': instance.currentLegIndex,
       'inStrategy': instance.inStrategy,
       'outStrategy': instance.outStrategy,
+      'startingScore': instance.startingScore,
     };
 
 const _$GameTypeEnumMap = {

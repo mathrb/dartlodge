@@ -24,6 +24,7 @@ abstract class GameState with _$GameState {
     @Default(0) int currentLegIndex,
     @Default('straight') String inStrategy,
     @Default('double') String outStrategy,
+    @Default(501) int startingScore,
   }) = _GameState;
 
   factory GameState.fromJson(Map<String, dynamic> json) => _$GameStateFromJson(json);
@@ -32,7 +33,7 @@ abstract class GameState with _$GameState {
   /// This is used for state reconstruction from events
   factory GameState.initial(Game game, List<Competitor> competitors) {
     // Extract configuration from game config
-    int startingScore;
+    int startingScore = 501; // Default for X01 games
     String inStrategy = 'straight';
     String outStrategy = 'straight';
 
@@ -74,6 +75,7 @@ abstract class GameState with _$GameState {
       currentLegIndex: 0,
       inStrategy: inStrategy,
       outStrategy: outStrategy,
+      startingScore: startingScore,
     );
   }
 }

@@ -273,9 +273,8 @@ class StatelessX01Engine implements GameEngine {
   }
   
   GameState _resetLeg(GameState state) {
-    // Reset scores to starting score (assuming 501 for now)
-    // TODO: Get actual starting score from game config
-    const startingScore = 501;
+    // Reset scores to starting score from game state
+    final startingScore = state.startingScore;
     
     final resetCompetitors = state.competitors.map((competitor) {
       return competitor.copyWith(

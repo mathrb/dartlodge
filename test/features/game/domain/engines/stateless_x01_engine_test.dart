@@ -1266,5 +1266,52 @@ void main() {
       expect(state.competitors[0].score, 10); // Restored to turnStartScore
       expect(state.dartsThrownInTurn, 3); // Turn ended
     });
+
+    test('DART-006: Leg reset should use startingScore from config, not hardcoded 501', () {
+      // Create a game with 301 starting score (not 501)
+      var state = initialState.copyWith(
+        startingScore: 301, // Custom starting score
+        legsToWin: 2, // Multi-leg game to test reset
+        currentLegIndex: 0,
+        competitors: [
+          initialState.competitors[0].copyWith(score: 40, isIn: true, legsWon: 0),
+          initialState.competitors[1].copyWith(score: 100, isIn: true, legsWon: 0),
+        ],
+      );
+
+      // Start turn for player 1
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+
+      // Player 1 wins the leg with double 20 (40 - 40 = 0)
+      final winEvent = GameEvent(
+        eventId: 'win1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 2},
+        synced: false,
+      );
+
+      state = engine.apply(state, winEvent);
+
+      // Verify that scores were reset to 301 (not hardcoded 501)
+      expect(state.competitors[0].score, 301, reason: 'Player 1 score should reset to startingScore (301)');
+      expect(state.competitors[1].score, 301, reason: 'Player 2 score should reset to startingScore (301)');
+      expect(state.competitors[0].isIn, false, reason: 'isIn should be reset');
+      expect(state.competitors[1].isIn, false, reason: 'isIn should be reset');
+      expect(state.competitors[0].legsWon, 1, reason: 'Legs won should be incremented');
+      expect(state.currentLegIndex, 1, reason: 'Current leg index should increment');
+      expect(state.isComplete, false, reason: 'Game should not be complete yet (only 1/2 legs won)');
+    });
   });
 }
