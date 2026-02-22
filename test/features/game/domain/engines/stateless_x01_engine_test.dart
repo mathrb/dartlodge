@@ -60,7 +60,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       final event = GameEvent(
         eventId: 'e1',
@@ -72,7 +73,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 481);
       expect(newState.dartsThrownInTurn, 1);
     });
@@ -89,7 +91,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       final event = GameEvent(
         eventId: 'e1',
@@ -101,7 +104,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 441);
     });
   });
@@ -125,7 +129,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       final event = GameEvent(
         eventId: 'e1',
@@ -137,7 +142,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       // Bust logic: score stays same, turn ends
       expect(newState.competitors[0].score, 10);
       expect(newState.dartsThrownInTurn, 3);
@@ -161,7 +167,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       final event = GameEvent(
         eventId: 'e1',
@@ -173,7 +180,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 21);
       expect(newState.dartsThrownInTurn, 3);
     });
@@ -199,7 +207,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.turnActive, true);
       expect(state.competitors[0].turnStartScore, 40);
 
@@ -213,7 +222,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 0);
       expect(newState.isComplete, true);
       expect(newState.winnerCompetitorId, 'c1');
@@ -238,7 +248,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       final event = GameEvent(
         eventId: 'e1',
@@ -250,7 +261,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 20); // Remained at 20 due to bust
       expect(newState.isComplete, false);
       expect(newState.dartsThrownInTurn, 3); // Turn ended due to bust
@@ -269,7 +281,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(initialState, event);
+      final result = engine.apply(initialState, event);
+      final newState = result.state;
       expect(newState.turnActive, true);
       expect(newState.dartsThrownInTurn, 0);
       expect(newState.currentTurnIndex, 0);
@@ -288,7 +301,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnStartEvent);
+      final result = engine.apply(state, turnStartEvent);
+      state = result.state;
       expect(state.turnActive, true);
 
       // Now end the turn
@@ -302,7 +316,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, turnEndEvent);
+      final result2 = engine.apply(state, turnEndEvent);
+      final newState = result2.state;
       expect(newState.turnActive, false);
       expect(newState.dartsThrownInTurn, 0);
     });
@@ -312,7 +327,7 @@ void main() {
       var state = initialState.copyWith(currentTurnIndex: 0);
       
       // Start turn for player 0
-      state = engine.apply(state, GameEvent(
+      final result = engine.apply(state, GameEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
@@ -321,6 +336,7 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       ));
+      state = result.state;
       expect(state.currentTurnIndex, 0);
       
       // End turn - should advance to player 1
@@ -334,7 +350,8 @@ void main() {
         synced: false,
       );
       
-      final newState = engine.apply(state, turnEndEvent);
+      final result2 = engine.apply(state, turnEndEvent);
+      final newState = result2.state;
       expect(newState.currentTurnIndex, 1);
       expect(newState.turnActive, false);
       expect(newState.dartsThrownInTurn, 0);
@@ -345,7 +362,7 @@ void main() {
       var state = initialState.copyWith(currentTurnIndex: 1);
       
       // Start turn for player 1
-      state = engine.apply(state, GameEvent(
+      final result = engine.apply(state, GameEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
@@ -354,6 +371,7 @@ void main() {
         payload: {'competitor_id': 'c2'},
         synced: false,
       ));
+      state = result.state;
       expect(state.currentTurnIndex, 1);
       
       // End turn - should wrap to player 0
@@ -367,7 +385,8 @@ void main() {
         synced: false,
       );
       
-      final newState = engine.apply(state, turnEndEvent);
+      final result2 = engine.apply(state, turnEndEvent);
+      final newState = result2.state;
       expect(newState.currentTurnIndex, 0);
       expect(newState.turnActive, false);
       expect(newState.dartsThrownInTurn, 0);
@@ -377,7 +396,7 @@ void main() {
       var state = initialState.copyWith(currentTurnIndex: 0);
       
       // Turn 1: Player 0
-      state = engine.apply(state, GameEvent(
+      final result1 = engine.apply(state, GameEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
@@ -386,7 +405,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result1.state;
+      final result2 = engine.apply(state, GameEvent(
         eventId: 'e2',
         gameId: 'test-game',
         eventType: 'TurnEnded',
@@ -395,10 +415,11 @@ void main() {
         payload: {},
         synced: false,
       ));
+      state = result2.state;
       expect(state.currentTurnIndex, 1);
       
       // Turn 2: Player 1
-      state = engine.apply(state, GameEvent(
+      final result3 = engine.apply(state, GameEvent(
         eventId: 'e3',
         gameId: 'test-game',
         eventType: 'TurnStarted',
@@ -407,7 +428,8 @@ void main() {
         payload: {'competitor_id': 'c2'},
         synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result3.state;
+      final result4 = engine.apply(state, GameEvent(
         eventId: 'e4',
         gameId: 'test-game',
         eventType: 'TurnEnded',
@@ -416,10 +438,11 @@ void main() {
         payload: {},
         synced: false,
       ));
+      state = result4.state;
       expect(state.currentTurnIndex, 0);
       
       // Turn 3: Back to Player 0
-      state = engine.apply(state, GameEvent(
+      final result5 = engine.apply(state, GameEvent(
         eventId: 'e5',
         gameId: 'test-game',
         eventType: 'TurnStarted',
@@ -459,55 +482,63 @@ void main() {
       var state = fourPlayerState;
       
       // Player 0 -> Player 1
-      state = engine.apply(state, GameEvent(
+      final result1 = engine.apply(state, GameEvent(
         eventId: 'e1', gameId: 'test-game', eventType: 'TurnStarted',
         localSequence: 1, occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'}, synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result1.state;
+      final result2 = engine.apply(state, GameEvent(
         eventId: 'e2', gameId: 'test-game', eventType: 'TurnEnded',
         localSequence: 2, occurredAt: DateTime.now(),
         payload: {}, synced: false,
       ));
+      state = result2.state;
       expect(state.currentTurnIndex, 1);
       
       // Player 1 -> Player 2
-      state = engine.apply(state, GameEvent(
+      final result3 = engine.apply(state, GameEvent(
         eventId: 'e3', gameId: 'test-game', eventType: 'TurnStarted',
         localSequence: 3, occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c2'}, synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result3.state;
+      final result4 = engine.apply(state, GameEvent(
         eventId: 'e4', gameId: 'test-game', eventType: 'TurnEnded',
         localSequence: 4, occurredAt: DateTime.now(),
         payload: {}, synced: false,
       ));
+      state = result4.state;
       expect(state.currentTurnIndex, 2);
       
       // Player 2 -> Player 3
-      state = engine.apply(state, GameEvent(
+      final result5 = engine.apply(state, GameEvent(
         eventId: 'e5', gameId: 'test-game', eventType: 'TurnStarted',
         localSequence: 5, occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c3'}, synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result5.state;
+      final result6 = engine.apply(state, GameEvent(
         eventId: 'e6', gameId: 'test-game', eventType: 'TurnEnded',
         localSequence: 6, occurredAt: DateTime.now(),
         payload: {}, synced: false,
       ));
+      state = result6.state;
       expect(state.currentTurnIndex, 3);
       
       // Player 3 -> Player 0 (wrap around)
-      state = engine.apply(state, GameEvent(
+      final result7 = engine.apply(state, GameEvent(
         eventId: 'e7', gameId: 'test-game', eventType: 'TurnStarted',
         localSequence: 7, occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c4'}, synced: false,
       ));
-      state = engine.apply(state, GameEvent(
+      state = result7.state;
+      final result8 = engine.apply(state, GameEvent(
         eventId: 'e8', gameId: 'test-game', eventType: 'TurnEnded',
         localSequence: 8, occurredAt: DateTime.now(),
         payload: {}, synced: false,
       ));
+      state = result8.state;
       expect(state.currentTurnIndex, 0);
     });
   });
@@ -526,7 +557,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].isIn, true); // Straight in starts as in
       
       // Throw a dart
@@ -540,7 +572,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true);
       expect(newState.competitors[0].score, 481); // Score reduced
     });
@@ -564,7 +597,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].isIn, false); // Not in yet
       
       // Throw a single (should not get in)
@@ -578,7 +612,8 @@ void main() {
         synced: false,
       );
 
-      var newState = engine.apply(state, singleEvent);
+      final result2 = engine.apply(state, singleEvent);
+      var newState = result2.state;
       expect(newState.competitors[0].isIn, false); // Still not in
       expect(newState.competitors[0].score, 501); // No score change
       expect(newState.dartsThrownInTurn, 1); // Dart still counted
@@ -594,7 +629,8 @@ void main() {
         synced: false,
       );
 
-      newState = engine.apply(newState, doubleEvent);
+      final result3 = engine.apply(newState, doubleEvent);
+      newState = result3.state;
       expect(newState.competitors[0].isIn, true); // Now in
       expect(newState.competitors[0].score, 461); // Score reduced
     });
@@ -614,7 +650,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw any dart (single 20)
       final event = GameEvent(
@@ -627,7 +664,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true);
       expect(newState.competitors[0].score, 481); // Score reduced
       expect(newState.dartsThrownInTurn, 1);
@@ -647,7 +685,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw single 20 (should not get in)
       final event = GameEvent(
@@ -660,7 +699,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, false); // Still not in
       expect(newState.competitors[0].score, 501); // No score change
       expect(newState.dartsThrownInTurn, 1); // Dart counted
@@ -681,7 +721,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw double 20 (should get in and score)
       final event = GameEvent(
@@ -694,7 +735,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true); // Now in
       expect(newState.competitors[0].score, 461); // Score applied
       expect(newState.dartsThrownInTurn, 1);
@@ -714,7 +756,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw double bull (should get in and score)
       final event = GameEvent(
@@ -727,7 +770,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true); // Now in
       expect(newState.competitors[0].score, 451); // Score applied (501 - 50)
       expect(newState.dartsThrownInTurn, 1);
@@ -747,7 +791,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw single 20 (should not get in)
       final event = GameEvent(
@@ -760,7 +805,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, false); // Still not in
       expect(newState.competitors[0].score, 501); // No score change
       expect(newState.dartsThrownInTurn, 1); // Dart counted
@@ -780,7 +826,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw double 20 (should get in and score)
       final event = GameEvent(
@@ -793,7 +840,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true); // Now in
       expect(newState.competitors[0].score, 461); // Score applied
       expect(newState.dartsThrownInTurn, 1);
@@ -813,7 +861,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw triple 20 (should get in and score)
       final event = GameEvent(
@@ -826,7 +875,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true); // Now in
       expect(newState.competitors[0].score, 441); // Score applied
       expect(newState.dartsThrownInTurn, 1);
@@ -846,7 +896,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw single 20 (should not get in, but turn should continue)
       final event = GameEvent(
@@ -859,7 +910,8 @@ void main() {
         synced: false,
       );
 
-      var newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      var newState = result2.state;
       expect(newState.turnActive, true); // Turn should still be active
       expect(newState.dartsThrownInTurn, 1); // Only 1 dart thrown
       expect(newState.competitors[0].dartThrows, ['20']); // Failed attempt recorded
@@ -875,7 +927,8 @@ void main() {
         synced: false,
       );
 
-      newState = engine.apply(newState, event2);
+      final result3 = engine.apply(newState, event2);
+      newState = result3.state;
       expect(newState.turnActive, true); // Turn should still be active
       expect(newState.dartsThrownInTurn, 2); // Now 2 darts thrown
     });
@@ -900,7 +953,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].turnStartScore, 10);
       
       // Throw a dart that would bust
@@ -914,7 +968,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 10); // Recovered to turnStartScore
       expect(newState.dartsThrownInTurn, 3); // Turn ended
     });
@@ -937,7 +992,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Throw 20 to leave 1 (bust condition)
       final event = GameEvent(
@@ -950,7 +1006,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 21); // Recovered to turnStartScore
       expect(newState.dartsThrownInTurn, 3); // Turn ended
     });
@@ -977,7 +1034,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Player 1 wins the leg with double 20
       final event = GameEvent(
@@ -990,7 +1048,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].legsWon, 1); // Leg won incremented
       expect(newState.competitors[1].legsWon, 0);
       expect(newState.isComplete, false); // Game not complete yet
@@ -1020,7 +1079,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       
       // Player 1 wins their second leg
       final event = GameEvent(
@@ -1033,7 +1093,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].legsWon, 2); // Second leg won
       expect(newState.isComplete, true); // Game complete
       expect(newState.winnerCompetitorId, 'c1');
@@ -1055,7 +1116,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result = engine.apply(state, event);
+      final newState = result.state;
       // State should be unchanged
       expect(newState.competitors[0].score, 501);
       expect(newState.dartsThrownInTurn, 0);
@@ -1074,7 +1136,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result = engine.apply(state, event);
+      final newState = result.state;
       // State should be unchanged
       expect(newState.competitors[0].score, 501);
       expect(newState.dartsThrownInTurn, 3);
@@ -1117,7 +1180,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].turnStartScore, 381);
       
       // Dart 1: throw 20 (score becomes 361)
@@ -1130,7 +1194,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, dart1);
+      final result2 = engine.apply(state, dart1);
+      state = result2.state;
       expect(state.competitors[0].score, 361);
       expect(state.dartsThrownInTurn, 1);
       
@@ -1151,7 +1216,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, bustDart);
+      final result3 = engine.apply(state, bustDart);
+      state = result3.state;
       
       // Verify bust recovery
       expect(state.competitors[0].score, 381); // Restored to turnStartScore
@@ -1177,7 +1243,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].turnStartScore, 381);
       
       // Dart 1: throw 20
@@ -1190,7 +1257,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, dart1);
+      final result2 = engine.apply(state, dart1);
+      state = result2.state;
       
       // Dart 2: throw 10
       final dart2 = GameEvent(
@@ -1202,7 +1270,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 10, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, dart2);
+      final result3 = engine.apply(state, dart2);
+      state = result3.state;
       
       // Simulate score before dart 3 (for bust scenario)
       state = state.copyWith(
@@ -1221,7 +1290,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, bustDart);
+      final result4 = engine.apply(state, bustDart);
+      state = result4.state;
       
       // Verify bust recovery
       expect(state.competitors[0].score, 381); // Restored to turnStartScore
@@ -1247,7 +1317,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].turnStartScore, 10);
       
       // Dart 1: bust immediately
@@ -1260,7 +1331,8 @@ void main() {
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         synced: false,
       );
-      state = engine.apply(state, bustDart);
+      final result2 = engine.apply(state, bustDart);
+      state = result2.state;
       
       // Verify bust recovery
       expect(state.competitors[0].score, 10); // Restored to turnStartScore
@@ -1289,7 +1361,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       // Player 1 wins the leg with double 20 (40 - 40 = 0)
       final winEvent = GameEvent(
@@ -1302,7 +1375,8 @@ void main() {
         synced: false,
       );
 
-      state = engine.apply(state, winEvent);
+      final result2 = engine.apply(state, winEvent);
+      state = result2.state;
 
       // Verify that scores were reset to 301 (not hardcoded 501)
       expect(state.competitors[0].score, 301, reason: 'Player 1 score should reset to startingScore (301)');
@@ -1334,7 +1408,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       // Throw single bull (should parse correctly and score 25 points)
       final event = GameEvent(
@@ -1347,7 +1422,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 476); // 501 - 25 = 476
       expect(newState.dartsThrownInTurn, 1);
       expect(newState.competitors[0].dartThrows, ['SB']); // Should be recorded as 'SB'
@@ -1372,7 +1448,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].isIn, false); // Not in yet
 
       // Throw single bull (should NOT get player in, no score change)
@@ -1386,7 +1463,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, false); // Still not in (single bull doesn't satisfy double-in)
       expect(newState.competitors[0].score, 501); // No score change
       expect(newState.dartsThrownInTurn, 1); // Dart still counted
@@ -1412,7 +1490,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].isIn, false); // Not in yet
 
       // Throw single bull (should NOT get player in, no score change)
@@ -1426,7 +1505,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, false); // Still not in (single bull doesn't satisfy master-in)
       expect(newState.competitors[0].score, 501); // No score change
       expect(newState.dartsThrownInTurn, 1); // Dart still counted
@@ -1452,7 +1532,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].isIn, true); // Straight in starts as in
 
       // Throw single bull (should score 25 points)
@@ -1466,7 +1547,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].isIn, true); // Still in
       expect(newState.competitors[0].score, 476); // 501 - 25 = 476
       expect(newState.dartsThrownInTurn, 1);
@@ -1491,7 +1573,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
       expect(state.competitors[0].turnStartScore, 25);
 
       // Throw single bull (25 points) when score is 25 should bust (leaves 0 but not on double)
@@ -1505,7 +1588,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 25); // Restored to turnStartScore due to bust
       expect(newState.dartsThrownInTurn, 3); // Turn ended due to bust
       expect(newState.turnActive, false);
@@ -1529,7 +1613,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       // Throw double bull (should score 50 points)
       final event = GameEvent(
@@ -1542,7 +1627,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 451); // 501 - 50 = 451
       expect(newState.dartsThrownInTurn, 1);
       expect(newState.competitors[0].dartThrows, ['DB']); // Should be recorded as 'DB'
@@ -1566,7 +1652,8 @@ void main() {
         payload: {'competitor_id': 'c1'},
         synced: false,
       );
-      state = engine.apply(state, turnEvent);
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
 
       // Throw single 20 (should score 20 points)
       final event = GameEvent(
@@ -1579,7 +1666,8 @@ void main() {
         synced: false,
       );
 
-      final newState = engine.apply(state, event);
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
       expect(newState.competitors[0].score, 481); // 501 - 20 = 481
       expect(newState.dartsThrownInTurn, 1);
       expect(newState.competitors[0].dartThrows, ['20']); // Should be recorded as '20'

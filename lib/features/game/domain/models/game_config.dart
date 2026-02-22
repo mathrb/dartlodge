@@ -52,13 +52,13 @@ abstract class Segment with _$Segment {
   const Segment._();
 
   /// Parse segment from canonical string format
-  /// Supported formats: '20', 'D20', 'T20', 'SB', 'DB', 'MISS'
+  /// Supported formats: '20', 'D20', 'T20', 'SB', 'DB', 'MISS', '0'
   static Segment parse(String segmentString) {
     segmentString = segmentString.trim().toUpperCase();
 
     if (segmentString == 'SB') return const Segment.singleBull();
     if (segmentString == 'DB') return const Segment.doubleBull();
-    if (segmentString == 'MISS') return const Segment.miss();
+    if (segmentString == 'MISS' || segmentString == '0') return const Segment.miss();
 
     // Parse regular segments
     if (segmentString.startsWith('T') && segmentString.length > 1) {
@@ -126,6 +126,18 @@ abstract class Segment with _$Segment {
       singleBull: () => 25,
       doubleBull: () => 25,
       miss: () => 0,
+    );
+  }
+
+  /// Check if this segment is a miss
+  bool get isMiss {
+    return when(
+      single: (_) => false,
+      doubleSegment: (_) => false,
+      triple: (_) => false,
+      singleBull: () => false,
+      doubleBull: () => false,
+      miss: () => true,
     );
   }
 }

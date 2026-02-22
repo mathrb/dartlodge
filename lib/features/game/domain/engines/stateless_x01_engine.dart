@@ -45,6 +45,15 @@ class StatelessX01Engine implements GameEngine {
       case 'DartThrown':
         final competitorId = event.payload['competitor_id'];
         final currentCompetitor = state.competitors[state.currentTurnIndex];
+        final segment = event.payload['segment'] as int;
+        final multiplier = event.payload['multiplier'] as int;
+        
+        // Validate segment and multiplier
+        if (segment == 0 && multiplier != 1) return false; // invalid miss
+        if (segment == 25 && multiplier == 3) return false; // no triple bull
+        if (segment < 0 || segment > 25) return false;     // out of range
+        if (multiplier < 1 || multiplier > 3) return false; // invalid multiplier
+        
         return !state.isComplete && 
                currentCompetitor.competitorId == competitorId &&
                state.dartsThrownInTurn < 3 &&
@@ -118,6 +127,16 @@ class StatelessX01Engine implements GameEngine {
     final multiplier = payload['multiplier'] as int;
     
     final parsedSegment = Segment.parse(multiplier == 1 ? (segment == 'bull' ? 'SB' : segment) : (multiplier == 2 ? (segment == 'bull' ? 'DB' : 'D$segment') : (segment == 'bull' ? 'TB' : 'T$segment')));
+    
+    // Miss guard (Table 5 - Note 5)
+    if (parsedSegment.isMiss) {
+      // Table G only — increment dart count, check turn end
+      final newState = state.copyWith(
+        dartsThrownInTurn: state.dartsThrownInTurn + 1,
+      );
+      return (checkTurnEnd(newState), LegOutcome.none, null);
+    }
+    
     final scoreValue = parsedSegment.scoreValue;
     
     final currentCompetitor = state.competitors[state.currentTurnIndex];
@@ -235,9 +254,39 @@ class StatelessX01Engine implements GameEngine {
     
     // Check if leg is completed
     if (legWinnerId != null) {
-      return (newState.copyWith(
-        winnerCompetitorId: legWinnerId,
-      ), LegOutcome.legCompleted, legWinnerId);
+      // Update competitors to increment legsWon for winner
+      final updatedCompetitors = List<CompetitorState>.from(newState.competitors);
+      final winnerIndex = updatedCompetitors.indexWhere((c) => c.competitorId == legWinnerId);
+      if (winnerIndex >= 0) {
+        final winner = updatedCompetitors[winnerIndex];
+        updatedCompetitors[winnerIndex] = winner.copyWith(
+          legsWon: winner.legsWon + 1,
+        );
+      }
+      
+      // Check if game is completed (single leg game)
+      final winner = updatedCompetitors.firstWhere((c) => c.competitorId == legWinnerId);
+      final isGameComplete = winner.legsWon >= newState.legsToWin;
+      
+      if (isGameComplete) {
+        return (newState.copyWith(
+          competitors: updatedCompetitors,
+          winnerCompetitorId: legWinnerId,
+          isComplete: true,
+          status: GameEngineStatus.completed,
+          turnActive: false,
+        ), LegOutcome.gameCompleted, legWinnerId);
+      } else {
+        // Reset leg for next leg (Table K)
+        final stateBeforeReset = newState.copyWith(
+          competitors: updatedCompetitors,
+          currentLegIndex: newState.currentLegIndex + 1, // Increment for next leg
+          turnActive: false,
+          winnerCompetitorId: legWinnerId,
+        );
+        final resetState = _resetLeg(stateBeforeReset);
+        return (resetState, LegOutcome.legCompleted, legWinnerId);
+      }
     }
     
     return (checkTurnEnd(newState), LegOutcome.none, null);
