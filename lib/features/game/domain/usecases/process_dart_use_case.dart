@@ -7,6 +7,8 @@ import '../repositories/game_event_repository.dart';
 import '../repositories/dart_throw_repository.dart';
 import '../engines/game_engine_factory.dart';
 import '../models/game_state.dart';
+import '../engines/base_game_engine.dart';
+import 'package:uuid/uuid.dart';
 
 class ProcessDartUseCase {
   final GameEventRepository _eventRepository;
@@ -18,9 +20,10 @@ class ProcessDartUseCase {
   );
 
   Future<GameState> execute(GameState currentState, DartThrow dartThrow) async {
-    // 1. Validate the throw using the engine
+    // 1. Get engine and validate
     final engine = GameEngineFactory.createEngine(currentState.gameType);
     
+    // 2. Parse multiplier
     int multiplier = 1;
     if (dartThrow.segment.startsWith('D')) {
       multiplier = 2;
@@ -30,11 +33,15 @@ class ProcessDartUseCase {
       multiplier = 2;
     }
 
-    final event = GameEvent(
+    // 3. Fetch sequence counter ONCE
+    int nextSeq = await _eventRepository.getLatestSequence(currentState.gameId) + 1;
+
+    // 4. Create DartThrown event
+    final dartEvent = GameEvent(
       eventId: dartThrow.dartId,
       gameId: currentState.gameId,
       eventType: 'DartThrown',
-      localSequence: await _eventRepository.getLatestSequence(currentState.gameId) + 1,
+      localSequence: nextSeq++, // Use counter
       occurredAt: DateTime.now(),
       payload: {
         'competitor_id': dartThrow.competitorId,
@@ -45,23 +52,53 @@ class ProcessDartUseCase {
       synced: false,
     );
 
-    if (!engine.isValid(currentState, event)) {
+    if (!engine.isValid(currentState, dartEvent)) {
       throw Exception('Invalid dart throw for current game state');
     }
 
-    // 2. Persist the dart throw
+    // 5. Apply and orchestrate
+    var result = engine.apply(currentState, dartEvent);
+    final eventsToStore = [dartEvent];
+
+    // Handle leg completion
+    if (result.outcome == LegOutcome.legCompleted) {
+      final legEvent = GameEvent(
+        eventId: const Uuid().v4(),
+        gameId: currentState.gameId,
+        eventType: 'LegCompleted',
+        localSequence: nextSeq++, // Use counter
+        occurredAt: DateTime.now(),
+        payload: {
+          'winner_competitor_id': result.winnerCompetitorId,
+        },
+        synced: false,
+      );
+
+      result = engine.apply(result.state, legEvent);
+      eventsToStore.add(legEvent);
+    }
+
+    // Handle game completion
+    if (result.outcome == LegOutcome.gameCompleted) {
+      final gameEvent = GameEvent(
+        eventId: const Uuid().v4(),
+        gameId: currentState.gameId,
+        eventType: 'GameCompleted',
+        localSequence: nextSeq++, // Use counter
+        occurredAt: DateTime.now(),
+        payload: {
+          'winner_id': result.winnerCompetitorId,
+        },
+        synced: false,
+      );
+
+      result = engine.apply(result.state, gameEvent);
+      eventsToStore.add(gameEvent);
+    }
+
+    // 6. Persist and return
     await _dartThrowRepository.insertDart(dartThrow);
-
-    // 3. Append the event
-    await _eventRepository.appendEvent(event);
-
-    // 4. Apply the event to get the new state
-    final newState = engine.apply(currentState, event);
-
-    // 5. Update game state in database if needed (derived state)
-    // In this architecture, game_state_json is just a snapshot for resumption
-    // We can save it here or wait for a specific trigger
-    
-    return newState;
+    await _eventRepository.appendEvents(eventsToStore);
+    return result.state;
   }
 }

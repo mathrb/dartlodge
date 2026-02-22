@@ -8,25 +8,34 @@ import 'base_game_engine.dart';
 
 class StatelessX01Engine implements GameEngine {
   @override
-  GameState apply(GameState state, GameEvent event) {
-    switch (event.eventType) {
-      case 'GameCreated':
-        return _applyGameCreated(state, event);
-      case 'TurnStarted':
-        return _applyTurnStarted(state, event);
-      case 'DartThrown':
-        return _applyDartThrown(state, event);
-      case 'TurnEnded':
-        return _applyTurnEnded(state, event);
-      case 'GameCompleted':
-        return _applyGameCompleted(state, event);
-      default:
-        return state;
-    }
+  EngineResult apply(GameState state, GameEvent event) {
+    return switch (event.eventType) {
+      'GameCreated' => EngineResult(state: _applyGameCreated(state, event)),
+      'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
+      'DartThrown' => _applyDartThrownWithOutcome(state, event),
+      'TurnEnded' => EngineResult(state: _applyTurnEnded(state, event)),
+      'LegCompleted' => _applyLegCompleted(state, event),
+      'GameCompleted' => EngineResult(
+          state: _applyGameCompleted(state, event),
+          outcome: LegOutcome.gameCompleted
+        ),
+      _ => EngineResult(state: state),
+    };
+  }
+  
+  /// Helper method that returns both state and outcome for DartThrown events
+  EngineResult _applyDartThrownWithOutcome(GameState state, GameEvent event) {
+    final (newState, outcome, winnerId) = _applyDartThrown(state, event);
+    return EngineResult(
+      state: newState,
+      outcome: outcome,
+      winnerCompetitorId: winnerId
+    );
   }
 
   @override
   bool isValid(GameState state, GameEvent event) {
+    // Reject all gameplay events after game is complete, EXCEPT GameCompleted itself
     if (state.isComplete && event.eventType != 'GameCompleted') return false;
 
     switch (event.eventType) {
@@ -40,6 +49,9 @@ class StatelessX01Engine implements GameEngine {
                currentCompetitor.competitorId == competitorId &&
                state.dartsThrownInTurn < 3 &&
                state.turnActive; // Turn must be active (Table B)
+      case 'GameCompleted':
+        // Only valid once _applyLegCompleted has set isComplete = true
+        return state.isComplete && state.winnerCompetitorId != null;
       default:
         return true;
     }
@@ -90,15 +102,15 @@ class StatelessX01Engine implements GameEngine {
     );
   }
 
-  GameState _applyDartThrown(GameState state, GameEvent event) {
+  (GameState, LegOutcome, String?) _applyDartThrown(GameState state, GameEvent event) {
     if (!state.turnActive) {
       // Turn not active, reject dart (Table B)
-      return state;
+      return (state, LegOutcome.none, null);
     }
     
     if (state.dartsThrownInTurn >= 3) {
       // Already thrown 3 darts, reject (Table B)
-      return state;
+      return (state, LegOutcome.none, null);
     }
     
     final payload = event.payload;
@@ -130,7 +142,7 @@ class StatelessX01Engine implements GameEngine {
         );
         
         newState = newState.copyWith(competitors: updatedCompetitors);
-        return checkTurnEnd(newState);
+        return (checkTurnEnd(newState), LegOutcome.none, null);
       }
       
       // Player gets in, apply scoring
@@ -207,13 +219,13 @@ class StatelessX01Engine implements GameEngine {
         competitors: updatedCompetitors,
         dartsThrownInTurn: 3, // Force turn end (Table H)
       );
-      return checkTurnEnd(newState);
+      return (checkTurnEnd(newState), LegOutcome.none, null);
     }
     
     // Normal scoring
     updatedCompetitors[state.currentTurnIndex] = updatedCompetitors[state.currentTurnIndex].copyWith(
       score: newScore,
-      isComplete: legWinnerId != null,
+      // Don't set isComplete here - that's for game completion
     );
     
     final newState = state.copyWith(
@@ -223,12 +235,12 @@ class StatelessX01Engine implements GameEngine {
     
     // Check if leg is completed
     if (legWinnerId != null) {
-      return _applyLegCompleted(newState.copyWith(
+      return (newState.copyWith(
         winnerCompetitorId: legWinnerId,
-      ), legWinnerId);
+      ), LegOutcome.legCompleted, legWinnerId);
     }
     
-    return checkTurnEnd(newState);
+    return (checkTurnEnd(newState), LegOutcome.none, null);
   }
 
   GameState _applyTurnEnded(GameState state, GameEvent event) {
@@ -239,9 +251,12 @@ class StatelessX01Engine implements GameEngine {
       currentTurnIndex: nextIndex,
     );
   }
-
-  GameState _applyLegCompleted(GameState state, String legWinnerId) {
-    // Find the winning competitor and increment their legsWon count
+  
+  /// Handle LegCompleted events (Table J)
+  EngineResult _applyLegCompleted(GameState state, GameEvent event) {
+    final legWinnerId = event.payload['winner_competitor_id'] as String;
+    
+    // Update competitors to increment legsWon for winner
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
     final winnerIndex = updatedCompetitors.indexWhere((c) => c.competitorId == legWinnerId);
     
@@ -252,26 +267,35 @@ class StatelessX01Engine implements GameEngine {
       );
     }
     
-    // Check if this leg completion wins the game (Table J)
+    // Check if game is completed (Table J)
     final winner = updatedCompetitors.firstWhere((c) => c.competitorId == legWinnerId);
     if (winner.legsWon >= state.legsToWin) {
-      // Game completed
-      return state.copyWith(
+      // Game completed (Table L)
+      final newState = state.copyWith(
         competitors: updatedCompetitors,
+        // No currentLegIndex increment - game is over
         isComplete: true,
         status: GameEngineStatus.completed,
         turnActive: false,
+        winnerCompetitorId: legWinnerId,
+      );
+      return EngineResult(
+        state: newState,
+        outcome: LegOutcome.gameCompleted,
+        winnerCompetitorId: legWinnerId
       );
     } else {
       // Reset leg for next leg (Table K)
-      return _resetLeg(state.copyWith(
+      final newState = _resetLeg(state.copyWith(
         competitors: updatedCompetitors,
-        currentLegIndex: state.currentLegIndex + 1,
+        currentLegIndex: state.currentLegIndex + 1, // Increment for next leg
         turnActive: false,
       ));
+      return EngineResult(state: newState);
     }
   }
   
+  /// Reset leg state for next leg (Table K)
   GameState _resetLeg(GameState state) {
     // Reset scores to starting score from game state
     final startingScore = state.startingScore;
