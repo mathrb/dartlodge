@@ -27,5 +27,26 @@ Tables J and K require:
 - [ ] After leg reset: all competitors' scores return to `startingScore`
 - [ ] After leg reset: all `isIn` values reset to `false`
 - [ ] `currentLegIndex` increments after each leg reset
-- [ ] `legsWon` is correctly tracked per competitor and visible in state
+- [x] `legsWon` is correctly tracked per competitor and visible in state
+
+## Review
+
+**Date:** Sunday, February 22, 2026  
+**Reviewer:** Gemini CLI  
+
+### Review Summary
+
+The implementation for DART-007 is **verified and complete**.
+
+1.  **Engine Logic:** `StatelessX01Engine` now includes `_applyLegCompleted` and `_resetLeg` methods. 
+    - `_applyLegCompleted` correctly increments `legsWon` and checks against `legsToWin` (Table J).
+    - `_resetLeg` handles the state reset for a new leg, including scores (using `startingScore`), `isIn` flags, and incrementing `currentLegIndex` (Table K).
+2.  **Existing Functionality:** Best-of-1 games still complete after a single leg, preserving the original behavior.
+3.  **Testing:** The `Multi-Leg Games (Tables J & K)` test group in `test/features/game/domain/engines/stateless_x01_engine_test.dart` confirms:
+    - `legsWon` and `currentLegIndex` are tracked correctly.
+    - Scores and `isIn` states reset properly between legs.
+    - The game only completes when a player reaches the required `legsToWin`.
+
+### Status
+✅ **Closed** - Multi-leg support implemented and verified.
 
