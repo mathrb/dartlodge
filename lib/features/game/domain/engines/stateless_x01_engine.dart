@@ -105,7 +105,7 @@ class StatelessX01Engine implements GameEngine {
     final segment = payload['segment'].toString();
     final multiplier = payload['multiplier'] as int;
     
-    final parsedSegment = Segment.parse(multiplier == 1 ? segment : (multiplier == 2 ? (segment == 'bull' ? 'DB' : 'D$segment') : (segment == 'bull' ? 'TB' : 'T$segment')));
+    final parsedSegment = Segment.parse(multiplier == 1 ? (segment == 'bull' ? 'SB' : segment) : (multiplier == 2 ? (segment == 'bull' ? 'DB' : 'D$segment') : (segment == 'bull' ? 'TB' : 'T$segment')));
     final scoreValue = parsedSegment.scoreValue;
     
     final currentCompetitor = state.competitors[state.currentTurnIndex];

@@ -1314,4 +1314,275 @@ void main() {
       expect(state.isComplete, false, reason: 'Game should not be complete yet (only 1/2 legs won)');
     });
   });
+
+  group('DART-006.1 - Single Bull Segment Parsing Bug Fix', () {
+    test('should parse single bull correctly (multiplier=1, segment=\'bull\')', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+
+      // Throw single bull (should parse correctly and score 25 points)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].score, 476); // 501 - 25 = 476
+      expect(newState.dartsThrownInTurn, 1);
+      expect(newState.competitors[0].dartThrows, ['SB']); // Should be recorded as 'SB'
+    });
+
+    test('should handle single bull in double-in strategy (does NOT get player in)', () {
+      var state = initialState.copyWith(
+        inStrategy: 'double',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].isIn, false); // Not in yet
+
+      // Throw single bull (should NOT get player in, no score change)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].isIn, false); // Still not in (single bull doesn't satisfy double-in)
+      expect(newState.competitors[0].score, 501); // No score change
+      expect(newState.dartsThrownInTurn, 1); // Dart still counted
+      expect(newState.competitors[0].dartThrows, ['SB']); // Failed attempt recorded
+    });
+
+    test('should handle single bull in master-in strategy (does NOT get player in)', () {
+      var state = initialState.copyWith(
+        inStrategy: 'master',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].isIn, false); // Not in yet
+
+      // Throw single bull (should NOT get player in, no score change)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].isIn, false); // Still not in (single bull doesn't satisfy master-in)
+      expect(newState.competitors[0].score, 501); // No score change
+      expect(newState.dartsThrownInTurn, 1); // Dart still counted
+      expect(newState.competitors[0].dartThrows, ['SB']); // Failed attempt recorded
+    });
+
+    test('should handle single bull in straight-in strategy (scores immediately)', () {
+      var state = initialState.copyWith(
+        inStrategy: 'straight',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].isIn, true); // Straight in starts as in
+
+      // Throw single bull (should score 25 points)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].isIn, true); // Still in
+      expect(newState.competitors[0].score, 476); // 501 - 25 = 476
+      expect(newState.dartsThrownInTurn, 1);
+      expect(newState.competitors[0].dartThrows, ['SB']); // Should be recorded as 'SB'
+    });
+
+    test('should handle single bull bust scenario', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 25, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+      expect(state.competitors[0].turnStartScore, 25);
+
+      // Throw single bull (25 points) when score is 25 should bust (leaves 0 but not on double)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].score, 25); // Restored to turnStartScore due to bust
+      expect(newState.dartsThrownInTurn, 3); // Turn ended due to bust
+      expect(newState.turnActive, false);
+    });
+
+    test('should still handle double bull correctly (existing functionality)', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+
+      // Throw double bull (should score 50 points)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 2},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].score, 451); // 501 - 50 = 451
+      expect(newState.dartsThrownInTurn, 1);
+      expect(newState.competitors[0].dartThrows, ['DB']); // Should be recorded as 'DB'
+    });
+
+    test('should still handle regular numbers correctly (existing functionality)', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = GameEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+        synced: false,
+      );
+      state = engine.apply(state, turnEvent);
+
+      // Throw single 20 (should score 20 points)
+      final event = GameEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+        synced: false,
+      );
+
+      final newState = engine.apply(state, event);
+      expect(newState.competitors[0].score, 481); // 501 - 20 = 481
+      expect(newState.dartsThrownInTurn, 1);
+      expect(newState.competitors[0].dartThrows, ['20']); // Should be recorded as '20'
+    });
+  });
 }
