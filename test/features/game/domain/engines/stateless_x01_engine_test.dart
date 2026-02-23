@@ -450,18 +450,6 @@ void main() {
       final result4 = engine.apply(state, turnEnd2);
       state = result4.state;
       expect(state.currentTurnIndex, 0);
-      
-      // Turn 3: Back to Player 0
-      final turnStart3 = _createEvent(
-        eventId: 'e5',
-        gameId: 'test-game',
-        eventType: 'TurnStarted',
-        localSequence: 5,
-        occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1'},
-      );
-      final result5 = engine.apply(state, turnStart3);
-      expect(state.currentTurnIndex, 0);
     });
 
     test('DART-004 four-player game should rotate through all players', () {

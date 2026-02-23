@@ -6,7 +6,6 @@ import 'dart:convert';
 import '../../domain/entities/game_event.dart';
 import '../../domain/repositories/game_event_repository.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
 
 class GameEventRepositoryImpl implements GameEventRepository {
   final Database _db;
