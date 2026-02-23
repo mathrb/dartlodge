@@ -7,6 +7,7 @@ import '../repositories/game_event_repository.dart';
 import '../repositories/dart_throw_repository.dart';
 import '../engines/game_engine_factory.dart';
 import '../models/game_state.dart';
+import '../models/game_config.dart';
 import '../engines/base_game_engine.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,15 +24,10 @@ class ProcessDartUseCase {
     // 1. Get engine and validate
     final engine = GameEngineFactory.createEngine(currentState.gameType);
     
-    // 2. Parse multiplier
-    int multiplier = 1;
-    if (dartThrow.segment.startsWith('D')) {
-      multiplier = 2;
-    } else if (dartThrow.segment.startsWith('T')) {
-      multiplier = 3;
-    } else if (dartThrow.segment == 'DB') {
-      multiplier = 2;
-    }
+    // 2. Parse segment to extract base number and multiplier
+    final parsedSegment = Segment.parse(dartThrow.segment);
+    final segmentValue = parsedSegment.baseNumber;
+    final multiplier = parsedSegment.multiplier;
 
     // 3. Fetch sequence counter ONCE
     int nextSeq = await _eventRepository.getLatestSequence(currentState.gameId) + 1;
@@ -45,7 +41,7 @@ class ProcessDartUseCase {
       occurredAt: DateTime.now(),
       payload: {
         'competitor_id': dartThrow.competitorId,
-        'segment': dartThrow.segment,
+        'segment': segmentValue,
         'multiplier': multiplier,
         'input_method': 'manual',
       },

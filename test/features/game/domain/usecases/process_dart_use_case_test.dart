@@ -68,6 +68,6 @@ void main() {
     expect(newState.dartsThrownInTurn, 1);
 
     verify(mockDartRepo.insertDart(dartThrow)).called(1);
-    verify(mockEventRepo.appendEvent(any)).called(1);
+    verify(mockEventRepo.appendEvents(any)).called(1);
   });
 }
