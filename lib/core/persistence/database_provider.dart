@@ -15,6 +15,7 @@ import '../../features/game/data/repositories/game_event_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/game/domain/engines/stateless_x01_engine.dart';
+import '../../features/game/domain/usecases/process_dart_use_case.dart';
 
 part 'database_provider.g.dart';
 
@@ -56,4 +57,12 @@ StatisticsRepository statisticsRepository(Ref ref) {
 @Riverpod(keepAlive: true)
 StatelessX01Engine x01Engine(Ref ref) {
   return StatelessX01Engine();
+}
+
+@Riverpod(keepAlive: true)
+ProcessDartUseCase processDartUseCase(Ref ref) {
+  return ProcessDartUseCase(
+    ref.watch(gameEventRepositoryProvider),
+    ref.watch(dartThrowRepositoryProvider),
+  );
 }
