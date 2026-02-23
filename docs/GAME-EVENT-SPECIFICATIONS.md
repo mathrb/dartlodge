@@ -124,7 +124,8 @@ reason           Enum {normal, bust, disconnect}
 
 ```text
 competitor_id    UUID
-segment          Enum {1–20, bull}
+segment          Enum {0, 1–20, bull}
+                 0 = miss (dart did not hit a scoring segment)
 multiplier       Integer {1, 2, 3}
 input_method     Enum {manual, vision}
 ```
@@ -135,6 +136,8 @@ input_method     Enum {manual, vision}
 * Must occur during active turn
 * Segment × multiplier must be valid
 * Rejected if game is complete
+
+> A miss (`segment = 0, multiplier = 1`) is a valid throw. It scores zero, does not trigger in-strategy resolution, and does not cause a bust. The dart counts toward `darts_thrown_in_turn`.
 
 ---
 

@@ -8,7 +8,7 @@ part 'player_stats.freezed.dart';
 part 'player_stats.g.dart';
 
 @freezed
-class PlayerStats with _$PlayerStats {
+abstract class PlayerStats with _$PlayerStats {
   const factory PlayerStats({
     required String playerId,
     required GameType gameType,
@@ -16,13 +16,14 @@ class PlayerStats with _$PlayerStats {
     required int gamesWon,
     required double winRate,
     required double threeDartAverage,
-    double? checkoutPercentage,    // null for non-X01 games
+    double? checkoutPercentage, // null for non-X01 games
     int? highestCheckout,
     required int highestTurnScore,
     required int totalDartsThrown,
     required double dartsPerLeg,
-    required double bustRate,       // 0.0–1.0
+    required double bustRate, // 0.0–1.0
   }) = _PlayerStats;
 
-  factory PlayerStats.fromJson(Map<String, dynamic> json) => _$PlayerStatsFromJson(json);
+  factory PlayerStats.fromJson(Map<String, dynamic> json) =>
+      _$PlayerStatsFromJson(json);
 }

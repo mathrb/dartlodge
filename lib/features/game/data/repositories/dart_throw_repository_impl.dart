@@ -3,20 +3,18 @@
 
 import 'package:sqflite/sqflite.dart';
 
-import '../../../features/game/domain/entities/dart_throw.dart';
-import '../../../features/game/domain/repositories/dart_throw_repository.dart';
-import '../../../core/error/repository_exception.dart';
-import '../database_helper.dart';
+import '../../domain/entities/dart_throw.dart';
+import '../../domain/repositories/dart_throw_repository.dart';
+import 'package:my_darts/core/error/repository_exception.dart';
 
 class DartThrowRepositoryImpl implements DartThrowRepository {
-  final DatabaseHelper _dbHelper;
+  final Database _db;
 
-  DartThrowRepositoryImpl(this._dbHelper);
+  DartThrowRepositoryImpl(this._db);
 
   @override
   Future<List<DartThrow>> getDartsForGame(String gameId) async {
-    final db = await _dbHelper.database;
-    final results = await db.query(
+    final results = await _db.query(
       'dart_throws',
       where: 'game_id = ?',
       whereArgs: [gameId],
@@ -29,8 +27,7 @@ class DartThrowRepositoryImpl implements DartThrowRepository {
   @override
   Future<List<DartThrow>> getDartsForCompetitor(
       String gameId, String competitorId) async {
-    final db = await _dbHelper.database;
-    final results = await db.query(
+    final results = await _db.query(
       'dart_throws',
       where: 'game_id = ? AND competitor_id = ?',
       whereArgs: [gameId, competitorId],
@@ -46,12 +43,11 @@ class DartThrowRepositoryImpl implements DartThrowRepository {
     int limit = 100,
     int offset = 0,
   }) async {
-    final db = await _dbHelper.database;
-    final results = await db.query(
+    final results = await _db.query(
       'dart_throws',
       where: 'player_id = ?',
       whereArgs: [playerId],
-      orderBy: 'game_id DESC, turn_number DESC, dart_number DESC',
+      orderBy: 'dart_id DESC', // Or insertion order if preferred
       limit: limit,
       offset: offset,
     );
@@ -61,85 +57,101 @@ class DartThrowRepositoryImpl implements DartThrowRepository {
 
   @override
   Future<void> insertDart(DartThrow dart) async {
-    final db = await _dbHelper.database;
-
     // Verify game exists and is not complete
-    final game = await db.query(
+    final game = await _db.query(
       'games',
-      where: 'game_id = ? AND is_complete = 0',
+      where: 'game_id = ?',
       whereArgs: [dart.gameId],
       limit: 1,
     );
 
     if (game.isEmpty) {
+      throw GameNotFoundException(dart.gameId);
+    }
+
+    if (game.first['is_complete'] == 1) {
       throw GameAlreadyCompleteException(dart.gameId);
     }
 
-    await db.insert(
-      'dart_throws',
-      {
-        'dart_id': dart.dartId,
-        'game_id': dart.gameId,
-        'competitor_id': dart.competitorId,
-        'player_id': dart.playerId,
-        'turn_number': dart.turnNumber,
-        'dart_number': dart.dartNumber,
-        'segment': dart.segment,
-        'score': dart.score,
-        'x': dart.x,
-        'y': dart.y,
-      },
-      conflictAlgorithm: ConflictAlgorithm.fail,
-    );
+    try {
+      await _db.insert(
+        'dart_throws',
+        {
+          'dart_id': dart.dartId,
+          'game_id': dart.gameId,
+          'competitor_id': dart.competitorId,
+          'player_id': dart.playerId,
+          'turn_number': dart.turnNumber,
+          'dart_number': dart.dartNumber,
+          'segment': dart.segment,
+          'score': dart.score,
+          'x': dart.x,
+          'y': dart.y,
+        },
+        conflictAlgorithm: ConflictAlgorithm.fail,
+      );
+    } on DatabaseException catch (e) {
+      if (e.isUniqueConstraintError()) {
+        throw DuplicateDartException(dart.dartId);
+      }
+      rethrow;
+    }
   }
 
   @override
   Future<void> insertDarts(List<DartThrow> darts) async {
     if (darts.isEmpty) return;
 
-    final db = await _dbHelper.database;
-
     // Verify all darts belong to the same game and it's not complete
     final gameId = darts.first.gameId;
-    final game = await db.query(
+    final game = await _db.query(
       'games',
-      where: 'game_id = ? AND is_complete = 0',
+      where: 'game_id = ?',
       whereArgs: [gameId],
       limit: 1,
     );
 
     if (game.isEmpty) {
+      throw GameNotFoundException(gameId);
+    }
+
+    if (game.first['is_complete'] == 1) {
       throw GameAlreadyCompleteException(gameId);
     }
 
-    await db.transaction((txn) async {
+    await _db.transaction((txn) async {
       for (final dart in darts) {
-        await txn.insert(
-          'dart_throws',
-          {
-            'dart_id': dart.dartId,
-            'game_id': dart.gameId,
-            'competitor_id': dart.competitorId,
-            'player_id': dart.playerId,
-            'turn_number': dart.turnNumber,
-            'dart_number': dart.dartNumber,
-            'segment': dart.segment,
-            'score': dart.score,
-            'x': dart.x,
-            'y': dart.y,
-          },
-          conflictAlgorithm: ConflictAlgorithm.fail,
-        );
+        try {
+          await txn.insert(
+            'dart_throws',
+            {
+              'dart_id': dart.dartId,
+              'game_id': dart.gameId,
+              'competitor_id': dart.competitorId,
+              'player_id': dart.playerId,
+              'turn_number': dart.turnNumber,
+              'dart_number': dart.dartNumber,
+              'segment': dart.segment,
+              'score': dart.score,
+              'x': dart.x,
+              'y': dart.y,
+            },
+            conflictAlgorithm: ConflictAlgorithm.fail,
+          );
+        } on DatabaseException catch (e) {
+          if (e.isUniqueConstraintError()) {
+            throw DuplicateDartException(dart.dartId);
+          }
+          rethrow;
+        }
       }
     });
   }
 
   @override
   Future<void> deleteDart(String dartId) async {
-    final db = await _dbHelper.database;
-
     // Get the dart to verify it exists and get game info
-    final dart = await db.query(
+    final dart = await _db.query(
       'dart_throws',
       where: 'dart_id = ?',
       whereArgs: [dartId],
@@ -153,18 +165,22 @@ class DartThrowRepositoryImpl implements DartThrowRepository {
     final gameId = dart.first['game_id'] as String;
 
     // Verify game is not complete
-    final game = await db.query(
+    final game = await _db.query(
       'games',
-      where: 'game_id = ? AND is_complete = 0',
+      where: 'game_id = ?',
       whereArgs: [gameId],
       limit: 1,
     );
 
     if (game.isEmpty) {
+      throw GameNotFoundException(gameId);
+    }
+
+    if (game.first['is_complete'] == 1) {
       throw GameAlreadyCompleteException(gameId);
     }
 
-    await db.delete(
+    await _db.delete(
       'dart_throws',
       where: 'dart_id = ?',
       whereArgs: [dartId],

@@ -6,24 +6,29 @@ part of 'game_event.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$GameEventImpl _$$GameEventImplFromJson(Map<String, dynamic> json) =>
-    _$GameEventImpl(
-      eventId: json['eventId'] as String,
-      gameId: json['gameId'] as String,
-      eventType: json['eventType'] as String,
-      localSequence: (json['localSequence'] as num).toInt(),
-      occurredAt: DateTime.parse(json['occurredAt'] as String),
-      payload: json['payload'] as Map<String, dynamic>,
-      synced: json['synced'] as bool,
-    );
+_GameEvent _$GameEventFromJson(Map<String, dynamic> json) => _GameEvent(
+  eventId: json['event_id'] as String,
+  gameId: json['game_id'] as String,
+  eventType: json['event_type'] as String,
+  localSequence: (json['local_sequence'] as num).toInt(),
+  occurredAt: DateTime.parse(json['occurred_at'] as String),
+  payload: _parsePayload(json['payload_json']),
+  synced: _parseBool(json['synced']),
+  actorId: json['actor_id'] as String,
+  globalSequence: (json['global_sequence'] as num?)?.toInt(),
+  source: _parseSource(json['source']),
+);
 
-Map<String, dynamic> _$$GameEventImplToJson(_$GameEventImpl instance) =>
+Map<String, dynamic> _$GameEventToJson(_GameEvent instance) =>
     <String, dynamic>{
-      'eventId': instance.eventId,
-      'gameId': instance.gameId,
-      'eventType': instance.eventType,
-      'localSequence': instance.localSequence,
-      'occurredAt': instance.occurredAt.toIso8601String(),
-      'payload': instance.payload,
-      'synced': instance.synced,
+      'event_id': instance.eventId,
+      'game_id': instance.gameId,
+      'event_type': instance.eventType,
+      'local_sequence': instance.localSequence,
+      'occurred_at': instance.occurredAt.toIso8601String(),
+      'payload_json': _stringifyPayload(instance.payload),
+      'synced': _boolToInt(instance.synced),
+      'actor_id': instance.actorId,
+      'global_sequence': instance.globalSequence,
+      'source': _sourceToInt(instance.source),
     };

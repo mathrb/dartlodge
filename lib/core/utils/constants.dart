@@ -49,10 +49,29 @@ class DartSegments {
   ];
 }
 
+// Event Source Enum
+enum EventSource {
+  client(0),
+  server(1),
+  vision(2);
+  
+  final int value;
+  const EventSource(this.value);
+  
+  static EventSource fromValue(int value) {
+    switch (value) {
+      case 0: return EventSource.client;
+      case 1: return EventSource.server;
+      case 2: return EventSource.vision;
+      default: throw ArgumentError('Invalid EventSource value: $value');
+    }
+  }
+}
+
 // Database Constants
 class DatabaseConstants {
   static const String databaseName = 'darts_app.db';
-  static const int databaseVersion = 1;
+  static const int databaseVersion = 3;
   
   // Table names
   static const String playersTable = 'players';
@@ -75,7 +94,7 @@ class ApiConstants {
 }
 
 // Game Configuration Constants
-class GameConfig {
+class GameConfigurationConstants {
   static const List<int> x01StartingScores = [301, 501, 701, 901];
   static const List<String> x01InStrategies = ['straight', 'double', 'master'];
   static const List<String> x01OutStrategies = ['straight', 'double', 'master'];

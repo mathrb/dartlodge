@@ -36,6 +36,10 @@ abstract interface class GameEventRepository {
   /// Silently skips IDs that are already marked synced or do not exist.
   Future<void> markSynced(List<String> eventIds);
 
+  /// Updates the [globalSequence] for specific events after server confirmation.
+  /// Silently skips IDs that do not exist.
+  Future<void> updateGlobalSequences(Map<String, int> eventIdToSequence);
+
   // Streams
 
   /// Emits the full ordered event list for [gameId] whenever a new event

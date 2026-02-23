@@ -6,23 +6,22 @@ part of 'player_stats.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$PlayerStatsImpl _$$PlayerStatsImplFromJson(Map<String, dynamic> json) =>
-    _$PlayerStatsImpl(
-      playerId: json['playerId'] as String,
-      gameType: $enumDecode(_$GameTypeEnumMap, json['gameType']),
-      totalGames: (json['totalGames'] as num).toInt(),
-      gamesWon: (json['gamesWon'] as num).toInt(),
-      winRate: (json['winRate'] as num).toDouble(),
-      threeDartAverage: (json['threeDartAverage'] as num).toDouble(),
-      checkoutPercentage: (json['checkoutPercentage'] as num?)?.toDouble(),
-      highestCheckout: (json['highestCheckout'] as num?)?.toInt(),
-      highestTurnScore: (json['highestTurnScore'] as num).toInt(),
-      totalDartsThrown: (json['totalDartsThrown'] as num).toInt(),
-      dartsPerLeg: (json['dartsPerLeg'] as num).toDouble(),
-      bustRate: (json['bustRate'] as num).toDouble(),
-    );
+_PlayerStats _$PlayerStatsFromJson(Map<String, dynamic> json) => _PlayerStats(
+  playerId: json['playerId'] as String,
+  gameType: $enumDecode(_$GameTypeEnumMap, json['gameType']),
+  totalGames: (json['totalGames'] as num).toInt(),
+  gamesWon: (json['gamesWon'] as num).toInt(),
+  winRate: (json['winRate'] as num).toDouble(),
+  threeDartAverage: (json['threeDartAverage'] as num).toDouble(),
+  checkoutPercentage: (json['checkoutPercentage'] as num?)?.toDouble(),
+  highestCheckout: (json['highestCheckout'] as num?)?.toInt(),
+  highestTurnScore: (json['highestTurnScore'] as num).toInt(),
+  totalDartsThrown: (json['totalDartsThrown'] as num).toInt(),
+  dartsPerLeg: (json['dartsPerLeg'] as num).toDouble(),
+  bustRate: (json['bustRate'] as num).toDouble(),
+);
 
-Map<String, dynamic> _$$PlayerStatsImplToJson(_$PlayerStatsImpl instance) =>
+Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
     <String, dynamic>{
       'playerId': instance.playerId,
       'gameType': _$GameTypeEnumMap[instance.gameType]!,

@@ -107,6 +107,9 @@ class GameEvent {
   final DateTime occurredAt;
   final Map<String, dynamic> payload;
   final bool synced;
+  final String actorId;
+  final int? globalSequence;
+  final EventSource source;
 }
 
 // lib/features/statistics/domain/entities/player_stats.dart
@@ -496,6 +499,16 @@ final class GameAlreadyCompleteException extends RepositoryException {
   final String gameId;
   const GameAlreadyCompleteException(this.gameId)
       : super('Game is already complete: $gameId');
+}
+
+final class MultipleActiveGamesException extends RepositoryException {
+  const MultipleActiveGamesException()
+      : super('Multiple active games detected - only one game can be active at a time');
+}
+
+final class ActiveGameAlreadyExistsException extends RepositoryException {
+  const ActiveGameAlreadyExistsException()
+      : super('An active game already exists - only one game can be active at a time');
 }
 
 final class InvalidCompetitorException extends RepositoryException {

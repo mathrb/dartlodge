@@ -1,5 +1,5 @@
-// coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
+// coverage:ignore-file
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,336 +9,302 @@ part of 'dart_throw.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// dart format off
 T _$identity<T>(T value) => value;
-
-final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
-
-DartThrow _$DartThrowFromJson(Map<String, dynamic> json) {
-  return _DartThrow.fromJson(json);
-}
 
 /// @nodoc
 mixin _$DartThrow {
-  String get dartId => throw _privateConstructorUsedError;
-  String get gameId => throw _privateConstructorUsedError;
-  String get competitorId => throw _privateConstructorUsedError;
-  String get playerId => throw _privateConstructorUsedError;
-  int get turnNumber => throw _privateConstructorUsedError;
-  int get dartNumber => throw _privateConstructorUsedError; // 1, 2, or 3
-  String get segment =>
-      throw _privateConstructorUsedError; // canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
-  int get score => throw _privateConstructorUsedError;
-  double? get x =>
-      throw _privateConstructorUsedError; // coordinates for auto-scoring
-  double? get y => throw _privateConstructorUsedError;
 
-  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
-  @JsonKey(ignore: true)
-  $DartThrowCopyWith<DartThrow> get copyWith =>
-      throw _privateConstructorUsedError;
+@JsonKey(name: 'dart_id') String get dartId;@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'competitor_id') String get competitorId;@JsonKey(name: 'player_id') String get playerId;@JsonKey(name: 'turn_number') int get turnNumber;@JsonKey(name: 'dart_number') int get dartNumber;// 1, 2, or 3
+@JsonKey(name: 'segment') String get segment;// canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
+@JsonKey(name: 'score') int get score;@JsonKey(name: 'x') double? get x;// coordinates for auto-scoring
+@JsonKey(name: 'y') double? get y;
+/// Create a copy of DartThrow
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DartThrowCopyWith<DartThrow> get copyWith => _$DartThrowCopyWithImpl<DartThrow>(this as DartThrow, _$identity);
+
+  /// Serializes this DartThrow to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartThrow&&(identical(other.dartId, dartId) || other.dartId == dartId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.turnNumber, turnNumber) || other.turnNumber == turnNumber)&&(identical(other.dartNumber, dartNumber) || other.dartNumber == dartNumber)&&(identical(other.segment, segment) || other.segment == segment)&&(identical(other.score, score) || other.score == score)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,dartId,gameId,competitorId,playerId,turnNumber,dartNumber,segment,score,x,y);
+
+@override
+String toString() {
+  return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
+}
+
+
 }
 
 /// @nodoc
-abstract class $DartThrowCopyWith<$Res> {
-  factory $DartThrowCopyWith(DartThrow value, $Res Function(DartThrow) then) =
-      _$DartThrowCopyWithImpl<$Res, DartThrow>;
-  @useResult
-  $Res call(
-      {String dartId,
-      String gameId,
-      String competitorId,
-      String playerId,
-      int turnNumber,
-      int dartNumber,
-      String segment,
-      int score,
-      double? x,
-      double? y});
-}
+abstract mixin class $DartThrowCopyWith<$Res>  {
+  factory $DartThrowCopyWith(DartThrow value, $Res Function(DartThrow) _then) = _$DartThrowCopyWithImpl;
+@useResult
+$Res call({
+@JsonKey(name: 'dart_id') String dartId,@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'competitor_id') String competitorId,@JsonKey(name: 'player_id') String playerId,@JsonKey(name: 'turn_number') int turnNumber,@JsonKey(name: 'dart_number') int dartNumber,@JsonKey(name: 'segment') String segment,@JsonKey(name: 'score') int score,@JsonKey(name: 'x') double? x,@JsonKey(name: 'y') double? y
+});
 
+
+
+
+}
 /// @nodoc
-class _$DartThrowCopyWithImpl<$Res, $Val extends DartThrow>
+class _$DartThrowCopyWithImpl<$Res>
     implements $DartThrowCopyWith<$Res> {
-  _$DartThrowCopyWithImpl(this._value, this._then);
+  _$DartThrowCopyWithImpl(this._self, this._then);
 
-  // ignore: unused_field
-  final $Val _value;
-  // ignore: unused_field
-  final $Res Function($Val) _then;
+  final DartThrow _self;
+  final $Res Function(DartThrow) _then;
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? dartId = null,
-    Object? gameId = null,
-    Object? competitorId = null,
-    Object? playerId = null,
-    Object? turnNumber = null,
-    Object? dartNumber = null,
-    Object? segment = null,
-    Object? score = null,
-    Object? x = freezed,
-    Object? y = freezed,
-  }) {
-    return _then(_value.copyWith(
-      dartId: null == dartId
-          ? _value.dartId
-          : dartId // ignore: cast_nullable_to_non_nullable
-              as String,
-      gameId: null == gameId
-          ? _value.gameId
-          : gameId // ignore: cast_nullable_to_non_nullable
-              as String,
-      competitorId: null == competitorId
-          ? _value.competitorId
-          : competitorId // ignore: cast_nullable_to_non_nullable
-              as String,
-      playerId: null == playerId
-          ? _value.playerId
-          : playerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      turnNumber: null == turnNumber
-          ? _value.turnNumber
-          : turnNumber // ignore: cast_nullable_to_non_nullable
-              as int,
-      dartNumber: null == dartNumber
-          ? _value.dartNumber
-          : dartNumber // ignore: cast_nullable_to_non_nullable
-              as int,
-      segment: null == segment
-          ? _value.segment
-          : segment // ignore: cast_nullable_to_non_nullable
-              as String,
-      score: null == score
-          ? _value.score
-          : score // ignore: cast_nullable_to_non_nullable
-              as int,
-      x: freezed == x
-          ? _value.x
-          : x // ignore: cast_nullable_to_non_nullable
-              as double?,
-      y: freezed == y
-          ? _value.y
-          : y // ignore: cast_nullable_to_non_nullable
-              as double?,
-    ) as $Val);
-  }
+/// Create a copy of DartThrow
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? dartId = null,Object? gameId = null,Object? competitorId = null,Object? playerId = null,Object? turnNumber = null,Object? dartNumber = null,Object? segment = null,Object? score = null,Object? x = freezed,Object? y = freezed,}) {
+  return _then(_self.copyWith(
+dartId: null == dartId ? _self.dartId : dartId // ignore: cast_nullable_to_non_nullable
+as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
+as String,competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
+as String,playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
+as String,turnNumber: null == turnNumber ? _self.turnNumber : turnNumber // ignore: cast_nullable_to_non_nullable
+as int,dartNumber: null == dartNumber ? _self.dartNumber : dartNumber // ignore: cast_nullable_to_non_nullable
+as int,segment: null == segment ? _self.segment : segment // ignore: cast_nullable_to_non_nullable
+as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,x: freezed == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
+as double?,y: freezed == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
+as double?,
+  ));
 }
 
-/// @nodoc
-abstract class _$$DartThrowImplCopyWith<$Res>
-    implements $DartThrowCopyWith<$Res> {
-  factory _$$DartThrowImplCopyWith(
-          _$DartThrowImpl value, $Res Function(_$DartThrowImpl) then) =
-      __$$DartThrowImplCopyWithImpl<$Res>;
-  @override
-  @useResult
-  $Res call(
-      {String dartId,
-      String gameId,
-      String competitorId,
-      String playerId,
-      int turnNumber,
-      int dartNumber,
-      String segment,
-      int score,
-      double? x,
-      double? y});
 }
 
-/// @nodoc
-class __$$DartThrowImplCopyWithImpl<$Res>
-    extends _$DartThrowCopyWithImpl<$Res, _$DartThrowImpl>
-    implements _$$DartThrowImplCopyWith<$Res> {
-  __$$DartThrowImplCopyWithImpl(
-      _$DartThrowImpl _value, $Res Function(_$DartThrowImpl) _then)
-      : super(_value, _then);
 
-  @pragma('vm:prefer-inline')
-  @override
-  $Res call({
-    Object? dartId = null,
-    Object? gameId = null,
-    Object? competitorId = null,
-    Object? playerId = null,
-    Object? turnNumber = null,
-    Object? dartNumber = null,
-    Object? segment = null,
-    Object? score = null,
-    Object? x = freezed,
-    Object? y = freezed,
-  }) {
-    return _then(_$DartThrowImpl(
-      dartId: null == dartId
-          ? _value.dartId
-          : dartId // ignore: cast_nullable_to_non_nullable
-              as String,
-      gameId: null == gameId
-          ? _value.gameId
-          : gameId // ignore: cast_nullable_to_non_nullable
-              as String,
-      competitorId: null == competitorId
-          ? _value.competitorId
-          : competitorId // ignore: cast_nullable_to_non_nullable
-              as String,
-      playerId: null == playerId
-          ? _value.playerId
-          : playerId // ignore: cast_nullable_to_non_nullable
-              as String,
-      turnNumber: null == turnNumber
-          ? _value.turnNumber
-          : turnNumber // ignore: cast_nullable_to_non_nullable
-              as int,
-      dartNumber: null == dartNumber
-          ? _value.dartNumber
-          : dartNumber // ignore: cast_nullable_to_non_nullable
-              as int,
-      segment: null == segment
-          ? _value.segment
-          : segment // ignore: cast_nullable_to_non_nullable
-              as String,
-      score: null == score
-          ? _value.score
-          : score // ignore: cast_nullable_to_non_nullable
-              as int,
-      x: freezed == x
-          ? _value.x
-          : x // ignore: cast_nullable_to_non_nullable
-              as double?,
-      y: freezed == y
-          ? _value.y
-          : y // ignore: cast_nullable_to_non_nullable
-              as double?,
-    ));
-  }
+/// Adds pattern-matching-related methods to [DartThrow].
+extension DartThrowPatterns on DartThrow {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DartThrow value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DartThrow() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DartThrow value)  $default,){
+final _that = this;
+switch (_that) {
+case _DartThrow():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DartThrow value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DartThrow() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'dart_id')  String dartId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'competitor_id')  String competitorId, @JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'turn_number')  int turnNumber, @JsonKey(name: 'dart_number')  int dartNumber, @JsonKey(name: 'segment')  String segment, @JsonKey(name: 'score')  int score, @JsonKey(name: 'x')  double? x, @JsonKey(name: 'y')  double? y)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DartThrow() when $default != null:
+return $default(_that.dartId,_that.gameId,_that.competitorId,_that.playerId,_that.turnNumber,_that.dartNumber,_that.segment,_that.score,_that.x,_that.y);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'dart_id')  String dartId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'competitor_id')  String competitorId, @JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'turn_number')  int turnNumber, @JsonKey(name: 'dart_number')  int dartNumber, @JsonKey(name: 'segment')  String segment, @JsonKey(name: 'score')  int score, @JsonKey(name: 'x')  double? x, @JsonKey(name: 'y')  double? y)  $default,) {final _that = this;
+switch (_that) {
+case _DartThrow():
+return $default(_that.dartId,_that.gameId,_that.competitorId,_that.playerId,_that.turnNumber,_that.dartNumber,_that.segment,_that.score,_that.x,_that.y);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'dart_id')  String dartId, @JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'competitor_id')  String competitorId, @JsonKey(name: 'player_id')  String playerId, @JsonKey(name: 'turn_number')  int turnNumber, @JsonKey(name: 'dart_number')  int dartNumber, @JsonKey(name: 'segment')  String segment, @JsonKey(name: 'score')  int score, @JsonKey(name: 'x')  double? x, @JsonKey(name: 'y')  double? y)?  $default,) {final _that = this;
+switch (_that) {
+case _DartThrow() when $default != null:
+return $default(_that.dartId,_that.gameId,_that.competitorId,_that.playerId,_that.turnNumber,_that.dartNumber,_that.segment,_that.score,_that.x,_that.y);case _:
+  return null;
+
+}
+}
+
 }
 
 /// @nodoc
 @JsonSerializable()
-class _$DartThrowImpl implements _DartThrow {
-  const _$DartThrowImpl(
-      {required this.dartId,
-      required this.gameId,
-      required this.competitorId,
-      required this.playerId,
-      required this.turnNumber,
-      required this.dartNumber,
-      required this.segment,
-      required this.score,
-      this.x,
-      this.y});
 
-  factory _$DartThrowImpl.fromJson(Map<String, dynamic> json) =>
-      _$$DartThrowImplFromJson(json);
+class _DartThrow implements DartThrow {
+  const _DartThrow({@JsonKey(name: 'dart_id') required this.dartId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'competitor_id') required this.competitorId, @JsonKey(name: 'player_id') required this.playerId, @JsonKey(name: 'turn_number') required this.turnNumber, @JsonKey(name: 'dart_number') required this.dartNumber, @JsonKey(name: 'segment') required this.segment, @JsonKey(name: 'score') required this.score, @JsonKey(name: 'x') this.x, @JsonKey(name: 'y') this.y});
+  factory _DartThrow.fromJson(Map<String, dynamic> json) => _$DartThrowFromJson(json);
 
-  @override
-  final String dartId;
-  @override
-  final String gameId;
-  @override
-  final String competitorId;
-  @override
-  final String playerId;
-  @override
-  final int turnNumber;
-  @override
-  final int dartNumber;
+@override@JsonKey(name: 'dart_id') final  String dartId;
+@override@JsonKey(name: 'game_id') final  String gameId;
+@override@JsonKey(name: 'competitor_id') final  String competitorId;
+@override@JsonKey(name: 'player_id') final  String playerId;
+@override@JsonKey(name: 'turn_number') final  int turnNumber;
+@override@JsonKey(name: 'dart_number') final  int dartNumber;
 // 1, 2, or 3
-  @override
-  final String segment;
+@override@JsonKey(name: 'segment') final  String segment;
 // canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
-  @override
-  final int score;
-  @override
-  final double? x;
+@override@JsonKey(name: 'score') final  int score;
+@override@JsonKey(name: 'x') final  double? x;
 // coordinates for auto-scoring
-  @override
-  final double? y;
+@override@JsonKey(name: 'y') final  double? y;
 
-  @override
-  String toString() {
-    return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
-  }
+/// Create a copy of DartThrow
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DartThrowCopyWith<_DartThrow> get copyWith => __$DartThrowCopyWithImpl<_DartThrow>(this, _$identity);
 
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other.runtimeType == runtimeType &&
-            other is _$DartThrowImpl &&
-            (identical(other.dartId, dartId) || other.dartId == dartId) &&
-            (identical(other.gameId, gameId) || other.gameId == gameId) &&
-            (identical(other.competitorId, competitorId) ||
-                other.competitorId == competitorId) &&
-            (identical(other.playerId, playerId) ||
-                other.playerId == playerId) &&
-            (identical(other.turnNumber, turnNumber) ||
-                other.turnNumber == turnNumber) &&
-            (identical(other.dartNumber, dartNumber) ||
-                other.dartNumber == dartNumber) &&
-            (identical(other.segment, segment) || other.segment == segment) &&
-            (identical(other.score, score) || other.score == score) &&
-            (identical(other.x, x) || other.x == x) &&
-            (identical(other.y, y) || other.y == y));
-  }
-
-  @JsonKey(ignore: true)
-  @override
-  int get hashCode => Object.hash(runtimeType, dartId, gameId, competitorId,
-      playerId, turnNumber, dartNumber, segment, score, x, y);
-
-  @JsonKey(ignore: true)
-  @override
-  @pragma('vm:prefer-inline')
-  _$$DartThrowImplCopyWith<_$DartThrowImpl> get copyWith =>
-      __$$DartThrowImplCopyWithImpl<_$DartThrowImpl>(this, _$identity);
-
-  @override
-  Map<String, dynamic> toJson() {
-    return _$$DartThrowImplToJson(
-      this,
-    );
-  }
+@override
+Map<String, dynamic> toJson() {
+  return _$DartThrowToJson(this, );
 }
 
-abstract class _DartThrow implements DartThrow {
-  const factory _DartThrow(
-      {required final String dartId,
-      required final String gameId,
-      required final String competitorId,
-      required final String playerId,
-      required final int turnNumber,
-      required final int dartNumber,
-      required final String segment,
-      required final int score,
-      final double? x,
-      final double? y}) = _$DartThrowImpl;
-
-  factory _DartThrow.fromJson(Map<String, dynamic> json) =
-      _$DartThrowImpl.fromJson;
-
-  @override
-  String get dartId;
-  @override
-  String get gameId;
-  @override
-  String get competitorId;
-  @override
-  String get playerId;
-  @override
-  int get turnNumber;
-  @override
-  int get dartNumber;
-  @override // 1, 2, or 3
-  String get segment;
-  @override // canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
-  int get score;
-  @override
-  double? get x;
-  @override // coordinates for auto-scoring
-  double? get y;
-  @override
-  @JsonKey(ignore: true)
-  _$$DartThrowImplCopyWith<_$DartThrowImpl> get copyWith =>
-      throw _privateConstructorUsedError;
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartThrow&&(identical(other.dartId, dartId) || other.dartId == dartId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.turnNumber, turnNumber) || other.turnNumber == turnNumber)&&(identical(other.dartNumber, dartNumber) || other.dartNumber == dartNumber)&&(identical(other.segment, segment) || other.segment == segment)&&(identical(other.score, score) || other.score == score)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
 }
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,dartId,gameId,competitorId,playerId,turnNumber,dartNumber,segment,score,x,y);
+
+@override
+String toString() {
+  return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DartThrowCopyWith<$Res> implements $DartThrowCopyWith<$Res> {
+  factory _$DartThrowCopyWith(_DartThrow value, $Res Function(_DartThrow) _then) = __$DartThrowCopyWithImpl;
+@override @useResult
+$Res call({
+@JsonKey(name: 'dart_id') String dartId,@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'competitor_id') String competitorId,@JsonKey(name: 'player_id') String playerId,@JsonKey(name: 'turn_number') int turnNumber,@JsonKey(name: 'dart_number') int dartNumber,@JsonKey(name: 'segment') String segment,@JsonKey(name: 'score') int score,@JsonKey(name: 'x') double? x,@JsonKey(name: 'y') double? y
+});
+
+
+
+
+}
+/// @nodoc
+class __$DartThrowCopyWithImpl<$Res>
+    implements _$DartThrowCopyWith<$Res> {
+  __$DartThrowCopyWithImpl(this._self, this._then);
+
+  final _DartThrow _self;
+  final $Res Function(_DartThrow) _then;
+
+/// Create a copy of DartThrow
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? dartId = null,Object? gameId = null,Object? competitorId = null,Object? playerId = null,Object? turnNumber = null,Object? dartNumber = null,Object? segment = null,Object? score = null,Object? x = freezed,Object? y = freezed,}) {
+  return _then(_DartThrow(
+dartId: null == dartId ? _self.dartId : dartId // ignore: cast_nullable_to_non_nullable
+as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
+as String,competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
+as String,playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
+as String,turnNumber: null == turnNumber ? _self.turnNumber : turnNumber // ignore: cast_nullable_to_non_nullable
+as int,dartNumber: null == dartNumber ? _self.dartNumber : dartNumber // ignore: cast_nullable_to_non_nullable
+as int,segment: null == segment ? _self.segment : segment // ignore: cast_nullable_to_non_nullable
+as String,score: null == score ? _self.score : score // ignore: cast_nullable_to_non_nullable
+as int,x: freezed == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
+as double?,y: freezed == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
+as double?,
+  ));
+}
+
+
+}
+
+// dart format on
