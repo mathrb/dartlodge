@@ -37,13 +37,14 @@ class DatabaseHelper {
   }
 
   Future _createDB(sqflite.Database db, int version) async {
-    await DatabaseMigrations.createVersion1(db);
+    await DatabaseMigrations.createFullMigrationScript(db);
   }
 
   Future _upgradeDB(sqflite.Database db, int oldVersion, int newVersion) async {
     for (int i = oldVersion; i < newVersion; i++) {
       final upgradeVersion = i + 1;
       if (upgradeVersion == 2) {
+        await DatabaseMigrations.createVersion2Migration(db);
         await DatabaseMigrations.createVersion2(db);
       }
       // Add future version upgrades here
