@@ -31,7 +31,8 @@ class ActiveGame extends _$ActiveGame {
     var state = GameState.initial(activeGame, competitors);
     
     for (final event in events) {
-      state = engine.apply(state, event);
+      final result = engine.apply(state, event);
+      state = result.state;
     }
     
     return state;

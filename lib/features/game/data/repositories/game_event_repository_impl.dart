@@ -127,6 +127,10 @@ class GameEventRepositoryImpl implements GameEventRepository {
   Future<void> appendEvents(List<GameEvent> events) async {
     if (events.isEmpty) return;
 
+    // Validate all events belong to the same game
+    assert(events.map((e) => e.gameId).toSet().length == 1,
+        'appendEvents requires all events to belong to the same game');
+
     // Verify all events belong to existing games
     // For simplicity, we'll check the first gameId
     final gameId = events.first.gameId;

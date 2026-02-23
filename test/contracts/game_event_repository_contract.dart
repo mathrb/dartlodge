@@ -112,6 +112,63 @@ void runGameEventRepositoryContractTests({
     });
   });
 
+  group('appendEvents', () {
+    test('should throw assertion error when events from different games are mixed', () async {
+      final gameId1 = 'g1';
+      final gameId2 = 'g2';
+
+      await gameRepo.createGame(
+        Game(
+          gameId: gameId1,
+          gameType: GameType.x01,
+          config: const GameConfig.x01(startingScore: 501, inStrategy: 'straight', outStrategy: 'double'),
+          startTime: DateTime.now(),
+        ),
+        [],
+      );
+
+      await gameRepo.createGame(
+        Game(
+          gameId: gameId2,
+          gameType: GameType.x01,
+          config: const GameConfig.x01(startingScore: 501, inStrategy: 'straight', outStrategy: 'double'),
+          startTime: DateTime.now(),
+        ),
+        [],
+      );
+
+      final events = [
+        GameEvent(
+          eventId: 'e1',
+          gameId: gameId1,
+          eventType: 'GameCreated',
+          localSequence: 0,
+          occurredAt: DateTime.now(),
+          payload: {'ruleset': 'X01'},
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        ),
+        GameEvent(
+          eventId: 'e2',
+          gameId: gameId2, // Different game!
+          eventType: 'GameCreated',
+          localSequence: 0,
+          occurredAt: DateTime.now(),
+          payload: {'ruleset': 'X01'},
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        ),
+      ];
+
+      expect(
+        () => repo.appendEvents(events),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+  });
+
   group('markSynced', () {
     test('should mark events as synced', () async {
       final gameId = 'g1';

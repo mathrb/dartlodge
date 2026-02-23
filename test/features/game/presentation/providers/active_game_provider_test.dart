@@ -12,6 +12,33 @@ import 'package:my_darts/features/game/domain/models/game_state.dart';
 import 'package:my_darts/features/game/presentation/providers/active_game_provider.dart';
 import 'package:riverpod/riverpod.dart';
 
+/// Helper function to create GameEvent with required new fields
+GameEvent _createEvent({
+  required String eventId,
+  required String gameId,
+  required String eventType,
+  required int localSequence,
+  required DateTime occurredAt,
+  required Map<String, dynamic> payload,
+  bool synced = false,
+  String actorId = 'test-actor',
+  EventSource source = EventSource.client,
+  int? globalSequence,
+}) {
+  return GameEvent(
+    eventId: eventId,
+    gameId: gameId,
+    eventType: eventType,
+    localSequence: localSequence,
+    occurredAt: occurredAt,
+    payload: payload,
+    synced: synced,
+    actorId: actorId,
+    source: source,
+    globalSequence: globalSequence,
+  );
+}
+
 void main() {
   group('DART-005 GameState.initial() factory method', () {
     test('should create initial state from Game and competitors', () {
@@ -183,65 +210,60 @@ void main() {
       
       // Simulate game events (as would be stored in the database)
       final events = [
-        GameEvent(
+        _createEvent(
           eventId: 'e1',
           gameId: 'integration-test',
           eventType: 'GameCreated',
           localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {},
-          synced: false,
         ),
-        GameEvent(
+        _createEvent(
           eventId: 'e2',
           gameId: 'integration-test',
           eventType: 'TurnStarted',
           localSequence: 2,
           occurredAt: DateTime.now(),
           payload: {'competitor_id': 'c1'},
-          synced: false,
         ),
-        GameEvent(
+        _createEvent(
           eventId: 'e3',
           gameId: 'integration-test',
           eventType: 'DartThrown',
           localSequence: 3,
           occurredAt: DateTime.now(),
-          payload: {'competitor_id': 'c1', 'segment': '20', 'multiplier': 1},
-          synced: false,
+          payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
         ),
-        GameEvent(
+        _createEvent(
           eventId: 'e4',
           gameId: 'integration-test',
           eventType: 'DartThrown',
           localSequence: 4,
           occurredAt: DateTime.now(),
-          payload: {'competitor_id': 'c1', 'segment': '16', 'multiplier': 3},
-          synced: false,
+          payload: {'competitor_id': 'c1', 'segment': 16, 'multiplier': 3},
         ),
-        GameEvent(
+        _createEvent(
           eventId: 'e5',
           gameId: 'integration-test',
           eventType: 'DartThrown',
           localSequence: 5,
           occurredAt: DateTime.now(),
-          payload: {'competitor_id': 'c1', 'segment': '19', 'multiplier': 2}, // Double 19 instead of double bull
-          synced: false,
+          payload: {'competitor_id': 'c1', 'segment': 19, 'multiplier': 2}, // Double 19 instead of double bull
         ),
-        GameEvent(
+        _createEvent(
           eventId: 'e6',
           gameId: 'integration-test',
           eventType: 'TurnEnded',
           localSequence: 6,
           occurredAt: DateTime.now(),
           payload: {},
-          synced: false,
         ),
       ];
 
       // Replay all events (simulating what ActiveGameProvider.build() does)
       for (final event in events) {
-        state = engine.apply(state, event);
+        final result = engine.apply(state, event);
+        state = result.state;
       }
 
       // Verify final state after event replay
