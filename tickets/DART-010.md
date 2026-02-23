@@ -35,3 +35,16 @@ await _eventRepository.appendEvent(turnStarted);
 - [ ] Engine applies `TurnStarted` and sets `turnActive = true`
 - [ ] First `DartThrown` is accepted without rejection
 
+
+---
+
+## Review Comments (2026-02-22)
+
+The implementation successfully addresses the missing TurnStarted event:
+
+- **UseCase:** ✅ `CreateGameUseCase` now appends both `GameCreated` (sequence 0) and `TurnStarted` (sequence 1) for the first competitor.
+- **Payload:** ✅ The `TurnStarted` payload correctly identifies the first competitor and set `turn_index: 0`.
+- **Engine:** ✅ `StatelessX01Engine` correctly applies the `TurnStarted` event to set `turnActive = true` and initialize the current competitor's state.
+- **Acceptance:** ✅ First `DartThrown` will now be accepted by the engine's active turn guard.
+
+**Verdict:** ✅ Implementation complete and verified against acceptance criteria.
