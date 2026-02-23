@@ -8,6 +8,33 @@ import 'package:my_darts/features/game/domain/entities/game_event.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
 
+/// Helper function to create GameEvent with required new fields
+GameEvent _createEvent({
+  required String eventId,
+  required String gameId,
+  required String eventType,
+  required int localSequence,
+  required DateTime occurredAt,
+  required Map<String, dynamic> payload,
+  bool synced = false,
+  String actorId = 'test-actor',
+  EventSource source = EventSource.client,
+  int? globalSequence,
+}) {
+  return GameEvent(
+    eventId: eventId,
+    gameId: gameId,
+    eventType: eventType,
+    localSequence: localSequence,
+    occurredAt: occurredAt,
+    payload: payload,
+    synced: synced,
+    actorId: actorId,
+    source: source,
+    globalSequence: globalSequence,
+  );
+}
+
 void main() {
   late StatelessX01Engine engine;
   late GameState initialState;
@@ -1399,27 +1426,25 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
 
       // Throw single bull (should parse correctly and score 25 points)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1439,28 +1464,26 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
       expect(state.competitors[0].isIn, false); // Not in yet
 
       // Throw single bull (should NOT get player in, no score change)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1481,28 +1504,26 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
       expect(state.competitors[0].isIn, false); // Not in yet
 
       // Throw single bull (should NOT get player in, no score change)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1523,28 +1544,26 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
       expect(state.competitors[0].isIn, true); // Straight in starts as in
 
       // Throw single bull (should score 25 points)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1564,28 +1583,26 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
       expect(state.competitors[0].turnStartScore, 25);
 
       // Throw single bull (25 points) when score is 25 should bust (leaves 0 but not on double)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1604,27 +1621,25 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
 
       // Throw double bull (should score 50 points)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 2},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1643,27 +1658,25 @@ void main() {
       );
 
       // Start turn
-      final turnEvent = GameEvent(
+      final turnEvent = _createEvent(
         eventId: 'turn1',
         gameId: 'test-game',
         eventType: 'TurnStarted',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1'},
-        synced: false,
       );
       final result = engine.apply(state, turnEvent);
       state = result.state;
 
       // Throw single 20 (should score 20 points)
-      final event = GameEvent(
+      final event = _createEvent(
         eventId: 'e1',
         gameId: 'test-game',
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
-        synced: false,
       );
 
       final result2 = engine.apply(state, event);
@@ -1671,6 +1684,409 @@ void main() {
       expect(newState.competitors[0].score, 481); // 501 - 20 = 481
       expect(newState.dartsThrownInTurn, 1);
       expect(newState.competitors[0].dartThrows, ['20']); // Should be recorded as '20'
+    });
+  });
+
+  group('DART-012 - Realistic Bust Recovery Scenarios', () {
+    test('should handle bust on dart 2 with realistic score progression', () {
+      // Setup: Player starts turn with 381, throws one dart (score 361), then busts on dart 2
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 381, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = _createEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
+      expect(state.competitors[0].turnStartScore, 381);
+
+      // Dart 1: throw 20 (score becomes 361)
+      final dart1 = _createEvent(
+        eventId: 'dart1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      );
+      final result2 = engine.apply(state, dart1);
+      state = result2.state;
+      expect(state.competitors[0].score, 361);
+      expect(state.dartsThrownInTurn, 1);
+
+      // Dart 2: bust (throw 400 when score is 361 - would go to -39)
+      final bustDart = _createEvent(
+        eventId: 'bust',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 20}, // 400 points
+      );
+      final result3 = engine.apply(state, bustDart);
+      state = result3.state;
+
+      // Verify bust recovery
+      expect(state.competitors[0].score, 381); // Restored to turnStartScore
+      expect(state.dartsThrownInTurn, 3); // Turn ended
+      expect(state.turnActive, false);
+    });
+
+    test('should handle bust on dart 3 with realistic score progression', () {
+      // Setup: Player starts turn with 381, throws two darts, then busts on dart 3
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 381, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn
+      final turnEvent = _createEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
+      expect(state.competitors[0].turnStartScore, 381);
+
+      // Dart 1: throw 20
+      final dart1 = _createEvent(
+        eventId: 'dart1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      );
+      final result2 = engine.apply(state, dart1);
+      state = result2.state;
+
+      // Dart 2: throw 10
+      final dart2 = _createEvent(
+        eventId: 'dart2',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 10, 'multiplier': 1},
+      );
+      final result3 = engine.apply(state, dart2);
+      state = result3.state;
+
+      // Dart 3: bust (throw 400 when score is 351 - would go to -49)
+      final bustDart = _createEvent(
+        eventId: 'bust',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 4,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 20}, // 400 points
+      );
+      final result4 = engine.apply(state, bustDart);
+      state = result4.state;
+
+      // Verify bust recovery
+      expect(state.competitors[0].score, 381); // Restored to turnStartScore
+      expect(state.dartsThrownInTurn, 3); // Turn ended
+      expect(state.turnActive, false);
+    });
+  });
+
+  group('DART-012 - Player Rotation Verification', () {
+    test('two-player game should rotate players correctly', () {
+      var state = initialState.copyWith(currentTurnIndex: 0);
+
+      // Turn 1: Player 0
+      final result1 = engine.apply(state, _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      ));
+      state = result1.state;
+      final result2 = engine.apply(state, _createEvent(
+        eventId: 'e2',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result2.state;
+      expect(state.currentTurnIndex, 1);
+
+      // Turn 2: Player 1
+      final result3 = engine.apply(state, _createEvent(
+        eventId: 'e3',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 3,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c2'},
+      ));
+      state = result3.state;
+      final result4 = engine.apply(state, _createEvent(
+        eventId: 'e4',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 4,
+        occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result4.state;
+      expect(state.currentTurnIndex, 0); // Wraps back to player 0
+    });
+
+    test('four-player game should rotate through all players', () {
+      // Create a 4-player game
+      final fourPlayerState = initialState.copyWith(
+        competitors: [
+          ...initialState.competitors,
+          const CompetitorState(
+            competitorId: 'c3',
+            name: 'Player 3',
+            playerIds: ['p3'],
+            score: 501,
+            isIn: false,
+            legsWon: 0,
+          ),
+          const CompetitorState(
+            competitorId: 'c4',
+            name: 'Player 4',
+            playerIds: ['p4'],
+            score: 501,
+            isIn: false,
+            legsWon: 0,
+          ),
+        ],
+        currentTurnIndex: 0,
+      );
+
+      var state = fourPlayerState;
+
+      // Player 0 -> Player 1
+      final result1 = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      ));
+      state = result1.state;
+      final result2 = engine.apply(state, _createEvent(
+        eventId: 'e2', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result2.state;
+      expect(state.currentTurnIndex, 1);
+
+      // Player 1 -> Player 2
+      final result3 = engine.apply(state, _createEvent(
+        eventId: 'e3', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c2'},
+      ));
+      state = result3.state;
+      final result4 = engine.apply(state, _createEvent(
+        eventId: 'e4', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 4, occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result4.state;
+      expect(state.currentTurnIndex, 2);
+
+      // Player 2 -> Player 3
+      final result5 = engine.apply(state, _createEvent(
+        eventId: 'e5', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 5, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c3'},
+      ));
+      state = result5.state;
+      final result6 = engine.apply(state, _createEvent(
+        eventId: 'e6', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 6, occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result6.state;
+      expect(state.currentTurnIndex, 3);
+
+      // Player 3 -> Player 0 (wrap around)
+      final result7 = engine.apply(state, _createEvent(
+        eventId: 'e7', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 7, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c4'},
+      ));
+      state = result7.state;
+      final result8 = engine.apply(state, _createEvent(
+        eventId: 'e8', gameId: 'test-game', eventType: 'TurnEnded',
+        localSequence: 8, occurredAt: DateTime.now(),
+        payload: {},
+      ));
+      state = result8.state;
+      expect(state.currentTurnIndex, 0);
+    });
+  });
+
+  group('DART-012 - In-Strategy Edge Cases', () {
+    test('double-in: single on leg-start does not change score', () {
+      var state = initialState.copyWith(
+        inStrategy: 'double',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn (new leg)
+      final turnEvent = _createEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
+      expect(state.competitors[0].isIn, false); // Not in yet
+
+      // Throw single 20 (should not get in, no score change)
+      final event = _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      );
+
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
+      expect(newState.competitors[0].isIn, false); // Still not in
+      expect(newState.competitors[0].score, 501); // No score change
+      expect(newState.dartsThrownInTurn, 1);
+    });
+
+    test('double-in: double on leg-start sets isIn and applies score', () {
+      var state = initialState.copyWith(
+        inStrategy: 'double',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 501, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+
+      // Start turn (new leg)
+      final turnEvent = _createEvent(
+        eventId: 'turn1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+      final result = engine.apply(state, turnEvent);
+      state = result.state;
+
+      // Throw double 20 (should get in and score)
+      final event = _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 2},
+      );
+
+      final result2 = engine.apply(state, event);
+      final newState = result2.state;
+      expect(newState.competitors[0].isIn, true); // Now in
+      expect(newState.competitors[0].score, 461); // Score applied (501 - 40)
+      expect(newState.dartsThrownInTurn, 1);
+    });
+  });
+
+  group('DART-012 - Turn Active State Management', () {
+    test('turnActive should be true after TurnStarted', () {
+      final event = _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+
+      final result = engine.apply(initialState, event);
+      final newState = result.state;
+      expect(newState.turnActive, true);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+
+    test('turnActive should be false after TurnEnded', () {
+      // First start a turn
+      var state = initialState;
+      final turnStartEvent = _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'TurnStarted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      );
+      final result = engine.apply(state, turnStartEvent);
+      state = result.state;
+      expect(state.turnActive, true);
+
+      // Now end the turn
+      final turnEndEvent = _createEvent(
+        eventId: 'e2',
+        gameId: 'test-game',
+        eventType: 'TurnEnded',
+        localSequence: 2,
+        occurredAt: DateTime.now(),
+        payload: {},
+      );
+
+      final result2 = engine.apply(state, turnEndEvent);
+      final newState = result2.state;
+      expect(newState.turnActive, false);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+
+    test('DartThrown should be rejected when turnActive is false', () {
+      final state = initialState.copyWith(turnActive: false);
+
+      final event = _createEvent(
+        eventId: 'e1',
+        gameId: 'test-game',
+        eventType: 'DartThrown',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      );
+
+      final result = engine.apply(state, event);
+      final newState = result.state;
+      // State should be unchanged
+      expect(newState.competitors[0].score, 501);
+      expect(newState.dartsThrownInTurn, 0);
     });
   });
 }
