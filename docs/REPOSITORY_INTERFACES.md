@@ -107,6 +107,9 @@ class GameEvent {
   final DateTime occurredAt;
   final Map<String, dynamic> payload;
   final bool synced;
+  final String actorId;
+  final int? globalSequence;
+  final EventSource source;
 }
 
 // lib/features/statistics/domain/entities/player_stats.dart
