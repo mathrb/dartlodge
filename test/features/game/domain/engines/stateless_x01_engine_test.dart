@@ -766,7 +766,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 2},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 2},
         synced: false,
       );
 
@@ -1390,7 +1390,7 @@ void main() {
   });
 
   group('DART-006.1 - Single Bull Segment Parsing Bug Fix', () {
-    test('should parse single bull correctly (multiplier=1, segment=\'bull\')', () {
+    test('should parse single bull correctly (multiplier=1, segment=25)', () {
       var state = initialState.copyWith(
         competitors: [
           initialState.competitors[0].copyWith(score: 501, isIn: true),
@@ -1418,7 +1418,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
         synced: false,
       );
 
@@ -1459,7 +1459,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
         synced: false,
       );
 
@@ -1501,7 +1501,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
         synced: false,
       );
 
@@ -1543,7 +1543,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
         synced: false,
       );
 
@@ -1584,7 +1584,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 1},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 1},
         synced: false,
       );
 
@@ -1623,7 +1623,7 @@ void main() {
         eventType: 'DartThrown',
         localSequence: 1,
         occurredAt: DateTime.now(),
-        payload: {'competitor_id': 'c1', 'segment': 'bull', 'multiplier': 2},
+        payload: {'competitor_id': 'c1', 'segment': 25, 'multiplier': 2},
         synced: false,
       );
 

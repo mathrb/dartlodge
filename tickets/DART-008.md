@@ -46,3 +46,16 @@ final payload = {
 - [ ] Bull: `segment = 25, multiplier = 1` (single bull) and `segment = 25, multiplier = 2` (double bull)
 - [ ] Existing engine tests updated to use new payload shape
 
+
+---
+
+## Review Comments (2026-02-22)
+
+The implementation successfully addresses the payload format issue:
+
+- **UseCase:** ✅ `ProcessDartUseCase` now parses the canonical string and extracts `baseNumber` and `multiplier` as integers for the `DartThrown` payload.
+- **Engine:** ✅ `StatelessX01Engine` correctly processes the integer-based payload and reconstructs the `Segment` object using the mapping for both regular segments (1-20) and bull (25).
+- **Bull Handling:** ✅ Bull is correctly represented as `segment: 25` with `multiplier: 1` (SB) or `2` (DB).
+- **Tests:** ✅ `stateless_x01_engine_test.dart` has been updated to use the new payload format across all test cases.
+
+**Verdict:** ✅ Implementation complete and verified against acceptance criteria.
