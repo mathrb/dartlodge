@@ -56,6 +56,11 @@ final class InvalidCompetitorException extends RepositoryException {
   const InvalidCompetitorException(super.reason);
 }
 
+// Statistics Exceptions
+final class StatisticsException extends RepositoryException {
+  const StatisticsException(super.message);
+}
+
 // Dart Throw Exceptions
 final class DartNotFoundException extends RepositoryException {
   final String dartId;
