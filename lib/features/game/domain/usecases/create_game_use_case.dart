@@ -7,6 +7,7 @@ import '../entities/game_event.dart';
 import '../repositories/game_repository.dart';
 import '../repositories/game_event_repository.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/utils/constants.dart';
 
 class CreateGameUseCase {
   final GameRepository _gameRepository;
@@ -31,9 +32,29 @@ class CreateGameUseCase {
         'competitors': competitors.map((c) => c.competitorId).toList(),
       },
       synced: false,
+      actorId: 'system',
+      source: EventSource.client,
     );
 
     await _eventRepository.appendEvent(event);
+
+    // 3. Append TurnStarted event for the first competitor
+    final turnStartedEvent = GameEvent(
+      eventId: const Uuid().v4(),
+      gameId: game.gameId,
+      eventType: 'TurnStarted',
+      localSequence: 1,
+      occurredAt: DateTime.now(),
+      payload: {
+        'competitor_id': competitors.first.competitorId,
+        'turn_index': 0,
+      },
+      synced: false,
+      actorId: 'system',
+      source: EventSource.client,
+    );
+
+    await _eventRepository.appendEvent(turnStartedEvent);
 
     return game;
   }
