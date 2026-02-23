@@ -4,8 +4,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/entities/dart_throw.dart';
-import '../../domain/entities/competitor.dart';
-import '../../domain/usecases/process_dart_use_case.dart';
 import '../../../../core/persistence/database_provider.dart';
 
 part 'active_game_provider.g.dart';
@@ -46,10 +44,7 @@ class ActiveGame extends _$ActiveGame {
     state = const AsyncValue.loading();
     
     state = await AsyncValue.guard(() async {
-      final useCase = ProcessDartUseCase(
-        ref.read(gameEventRepositoryProvider),
-        ref.read(dartThrowRepositoryProvider),
-      );
+      final useCase = ref.read(processDartUseCaseProvider);
       
       return await useCase.execute(currentState, dartThrow);
     });

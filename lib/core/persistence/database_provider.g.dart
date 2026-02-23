@@ -320,3 +320,51 @@ final class X01EngineProvider
 }
 
 String _$x01EngineHash() => r'126e7436f179afa83ad44aafb9015041be29bff1';
+
+@ProviderFor(processDartUseCase)
+final processDartUseCaseProvider = ProcessDartUseCaseProvider._();
+
+final class ProcessDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ProcessDartUseCase,
+          ProcessDartUseCase,
+          ProcessDartUseCase
+        >
+    with $Provider<ProcessDartUseCase> {
+  ProcessDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'processDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$processDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ProcessDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ProcessDartUseCase create(Ref ref) {
+    return processDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ProcessDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ProcessDartUseCase>(value),
+    );
+  }
+}
+
+String _$processDartUseCaseHash() =>
+    r'8b1adf2660c7301ac096246aac3c0bdc6d0289de';
