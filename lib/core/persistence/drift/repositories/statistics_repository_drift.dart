@@ -3,6 +3,7 @@
 
 import 'package:drift/drift.dart';
 import 'package:my_darts/core/utils/constants.dart';
+import 'package:my_darts/core/error/repository_exception.dart';
 import 'package:my_darts/features/statistics/domain/repositories/statistics_repository.dart';
 import 'package:my_darts/features/statistics/domain/entities/player_stats.dart';
 import 'package:my_darts/features/statistics/domain/entities/game_stats.dart';
@@ -15,21 +16,29 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
   @override
   Future<GameStats> getGameStats(String gameId) async {
+    // Verify game exists
+    final gameExists = await (_db.select(_db.games)
+      ..where((g) => g.gameId.equals(gameId))
+      ..limit(1))
+      .getSingleOrNull() != null;
+    
+    if (!gameExists) {
+      throw GameNotFoundException(gameId);
+    }
+
     // Count darts in game
     final dartCountQuery = _db.selectOnly(_db.dartThrows)
       ..addColumns([_db.dartThrows.dartId.count()])
       ..where(_db.dartThrows.gameId.equals(gameId));
 
-    final dartCountResult = await dartCountQuery.getSingle();
-    final dartCount = dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
+    // Count darts in game (not used in simplified implementation, but query is executed)
+    await dartCountQuery.getSingle();
 
-    // Count events in game
+    // Count events in game (not used in simplified implementation, but query is executed)
     final eventCountQuery = _db.selectOnly(_db.gameEvents)
       ..addColumns([_db.gameEvents.eventId.count()])
       ..where(_db.gameEvents.gameId.equals(gameId));
-
-    final eventCountResult = await eventCountQuery.getSingle();
-    final eventCount = eventCountResult.read(_db.gameEvents.eventId.count()) ?? 0;
+    await eventCountQuery.getSingle();
 
     // Return a simplified GameStats with empty competitor data
     // A full implementation would calculate proper statistics
@@ -56,25 +65,34 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     DateTime? from,
     DateTime? to,
   }) async {
+    // Verify player exists
+    final playerExists = await (_db.select(_db.players)
+      ..where((p) => p.playerId.equals(playerId))
+      ..limit(1))
+      .getSingleOrNull() != null;
+    
+    if (!playerExists) {
+      throw PlayerNotFoundException(playerId);
+    }
+
     // Count total darts thrown by player
     final dartCountQuery = _db.selectOnly(_db.dartThrows)
       ..addColumns([_db.dartThrows.dartId.count()])
       ..where(_db.dartThrows.playerId.equals(playerId));
 
-    final GameType effectiveGameType = gameType ?? GameType.x01;
-    
+    // Handle filtering with proper join capture
     if (gameType != null || from != null || to != null) {
-      dartCountQuery.join([
+      final joinedDartCountQuery = dartCountQuery.join([
         innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
       ]);
       if (gameType != null) {
-        dartCountQuery.where(_db.games.gameType.equals(gameType.name));
+        joinedDartCountQuery.where(_db.games.gameType.equals(gameType.name));
       }
       if (from != null) {
-        dartCountQuery.where(_db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
+        joinedDartCountQuery.where(_db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
       }
       if (to != null) {
-        dartCountQuery.where(_db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
+        joinedDartCountQuery.where(_db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
       }
     }
 
@@ -86,23 +104,30 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       ..addColumns([_db.dartThrows.score.avg()])
       ..where(_db.dartThrows.playerId.equals(playerId));
 
+    // Handle filtering with proper join capture
     if (gameType != null || from != null || to != null) {
-      avgScoreQuery.join([
+      final joinedAvgScoreQuery = avgScoreQuery.join([
         innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
       ]);
       if (gameType != null) {
-        avgScoreQuery.where(_db.games.gameType.equals(gameType.name));
+        joinedAvgScoreQuery.where(_db.games.gameType.equals(gameType.name));
       }
       if (from != null) {
-        avgScoreQuery.where(_db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
+        joinedAvgScoreQuery.where(_db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
       }
       if (to != null) {
-        avgScoreQuery.where(_db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
+        joinedAvgScoreQuery.where(_db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
       }
     }
 
     final avgScoreResult = await avgScoreQuery.getSingle();
     final avgScore = avgScoreResult.read(_db.dartThrows.score.avg()) ?? 0;
+
+    // Determine effective game type
+    // Note: When gameType is null (aggregating all types), we default to x01
+    // as required by the PlayerStats entity. This is a limitation since
+    // PlayerStats.gameType is non-nullable and there's no "All Types" enum value.
+    final GameType effectiveGameType = gameType ?? GameType.x01;
 
     // Return a simplified PlayerStats with minimal data
     // A full implementation would calculate proper statistics
