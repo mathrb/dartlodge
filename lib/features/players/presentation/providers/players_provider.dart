@@ -27,6 +27,74 @@ Future<Player?> player(Ref ref, String id) async {
 }
 
 @riverpod
+class EditPlayerNotifier extends _$EditPlayerNotifier {
+  @override
+  PlayerFormState build() => PlayerFormState.initial();
+
+  void setName(String name) {
+    state = state.copyWith(name: name, nameError: null);
+  }
+
+  Future<void> submit(String playerId) async {
+    final name = state.name.trim();
+
+    if (name.isEmpty) {
+      state = state.copyWith(nameError: 'Name cannot be empty');
+      return;
+    }
+    if (name.length > 30) {
+      state = state.copyWith(nameError: 'Name must be 30 characters or fewer');
+      return;
+    }
+
+    state = state.copyWith(isSubmitting: true, nameError: null);
+
+    final result = await AsyncValue.guard(() async {
+      final repo = ref.read(playerRepositoryProvider);
+      final existing = await repo.getAllPlayers();
+      if (existing.any(
+        (p) =>
+            p.playerId != playerId &&
+            p.name.toLowerCase() == name.toLowerCase(),
+      )) {
+        throw DuplicatePlayerException(name);
+      }
+      await repo.updatePlayerName(playerId, name);
+    });
+
+    result.when(
+      data: (_) {
+        state = state.copyWith(isSubmitting: false);
+        ref.invalidate(allPlayersProvider);
+        ref.invalidate(playerProvider(playerId));
+      },
+      error: (e, _) {
+        final msg = e is DuplicatePlayerException
+            ? 'A player with this name already exists'
+            : e.toString();
+        state = state.copyWith(isSubmitting: false, nameError: msg);
+      },
+      loading: () {},
+    );
+  }
+
+  /// Returns true on success, false when player has game history.
+  Future<bool> deletePlayer(String playerId) async {
+    final result = await AsyncValue.guard(() async {
+      await ref.read(playerRepositoryProvider).deletePlayer(playerId);
+    });
+
+    if (result.hasValue) {
+      ref.invalidate(allPlayersProvider);
+      return true;
+    }
+    if (result.error is PlayerHasGameHistoryException) return false;
+    state = state.copyWith(nameError: result.error.toString());
+    return false;
+  }
+}
+
+@riverpod
 class CreatePlayerNotifier extends _$CreatePlayerNotifier {
   @override
   PlayerFormState build() => PlayerFormState.initial();

@@ -5,11 +5,20 @@ import 'package:my_darts/features/players/domain/entities/player.dart';
 class PlayerCardWidget extends StatelessWidget {
   final Player player;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
-  const PlayerCardWidget({super.key, required this.player, required this.onTap});
+  const PlayerCardWidget({
+    super.key,
+    required this.player,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final hasMenu = onEdit != null || onDelete != null;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: ListTile(
@@ -21,7 +30,20 @@ class PlayerCardWidget extends StatelessWidget {
           'Last active: ${_formatLastActive(player.lastActive)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: hasMenu
+            ? PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'edit') onEdit?.call();
+                  if (value == 'delete') onDelete?.call();
+                },
+                itemBuilder: (_) => [
+                  if (onEdit != null)
+                    const PopupMenuItem(value: 'edit', child: Text('Edit')),
+                  if (onDelete != null)
+                    const PopupMenuItem(value: 'delete', child: Text('Delete')),
+                ],
+              )
+            : const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
     );

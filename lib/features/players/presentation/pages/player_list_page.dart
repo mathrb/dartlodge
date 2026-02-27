@@ -70,13 +70,13 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-class _PlayerList extends StatelessWidget {
+class _PlayerList extends ConsumerWidget {
   final List<Player> players;
 
   const _PlayerList({required this.players});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return ListView.builder(
       itemCount: players.length,
       itemBuilder: (context, index) {
@@ -84,9 +84,57 @@ class _PlayerList extends StatelessWidget {
         return PlayerCardWidget(
           player: p,
           onTap: () => context.push('/players/${p.playerId}'),
+          onEdit: () => context.push(
+            '/players/${p.playerId}/edit',
+            extra: p.name,
+          ),
+          onDelete: () => _showDeleteConfirmation(context, ref, p),
         );
       },
     );
+  }
+
+  Future<void> _showDeleteConfirmation(
+    BuildContext context,
+    WidgetRef ref,
+    Player player,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete player?'),
+        content: Text('Delete ${player.name}? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final ok = await ref
+        .read(editPlayerProvider.notifier)
+        .deletePlayer(player.playerId);
+
+    if (!context.mounted) return;
+    if (!ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete a player with game history'),
+        ),
+      );
+    }
   }
 }
 

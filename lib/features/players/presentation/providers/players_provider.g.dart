@@ -121,6 +121,59 @@ final class PlayerFamily extends $Family
   String toString() => r'playerProvider';
 }
 
+@ProviderFor(EditPlayerNotifier)
+final editPlayerProvider = EditPlayerNotifierProvider._();
+
+final class EditPlayerNotifierProvider
+    extends $NotifierProvider<EditPlayerNotifier, PlayerFormState> {
+  EditPlayerNotifierProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'editPlayerProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$editPlayerNotifierHash();
+
+  @$internal
+  @override
+  EditPlayerNotifier create() => EditPlayerNotifier();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PlayerFormState value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PlayerFormState>(value),
+    );
+  }
+}
+
+String _$editPlayerNotifierHash() =>
+    r'b6658bc22302830288ebfd156bf8cf7244cdfee3';
+
+abstract class _$EditPlayerNotifier extends $Notifier<PlayerFormState> {
+  PlayerFormState build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<PlayerFormState, PlayerFormState>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PlayerFormState, PlayerFormState>,
+              PlayerFormState,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(CreatePlayerNotifier)
 final createPlayerProvider = CreatePlayerNotifierProvider._();
 

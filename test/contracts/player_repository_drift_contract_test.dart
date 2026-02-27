@@ -2,6 +2,7 @@
 // Runs the shared contract tests against both SQLite and Drift implementations
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_darts/core/persistence/drift/database.dart' as drift_db;
 import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
@@ -56,7 +57,7 @@ void main() {
 
         await repo.createPlayer(player);
         final retrieved = await repo.getPlayer('p1');
-        
+
         expect(retrieved, isNotNull);
         expect(retrieved?.name, 'Alice');
       });
@@ -70,7 +71,7 @@ void main() {
         );
 
         await repo.createPlayer(player);
-        
+
         expect(
           () => repo.createPlayer(player.copyWith(name: 'Bob')),
           throwsA(isA<DuplicatePlayerException>()),
@@ -123,5 +124,78 @@ void main() {
         expect(updated!.lastActive.isAfter(player.lastActive), isTrue);
       });
     });
+
+    group('deletePlayer', () {
+      test('should delete a player with no history', () async {
+        final player = Player(
+          playerId: 'p1',
+          name: 'Alice',
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        );
+
+        await repo.createPlayer(player);
+        await repo.deletePlayer('p1');
+
+        expect(await repo.getPlayer('p1'), isNull);
+      });
+
+      test('should throw PlayerNotFoundException for unknown player', () async {
+        expect(
+          () => repo.deletePlayer('unknown'),
+          throwsA(isA<PlayerNotFoundException>()),
+        );
+      });
+
+      test('should throw PlayerHasGameHistoryException when history exists',
+          () async {
+        final player = Player(
+          playerId: 'p1',
+          name: 'Alice',
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        );
+
+        await repo.createPlayer(player);
+        await _insertHistory(base, 'p1');
+
+        expect(
+          () => repo.deletePlayer('p1'),
+          throwsA(isA<PlayerHasGameHistoryException>()),
+        );
+      });
+    });
   });
+}
+
+Future<void> _insertHistory(DatabaseTestBase base, String playerId) async {
+  if (base is DriftTestBase) {
+    await base.db.into(base.db.competitors).insert(
+      drift_db.CompetitorsCompanion.insert(
+        competitorId: 'c1',
+        gameId: 'g1',
+        type: 'human',
+        name: 'Alice',
+      ),
+    );
+    await base.db.into(base.db.competitorPlayers).insert(
+      drift_db.CompetitorPlayersCompanion.insert(
+        competitorId: 'c1',
+        playerId: playerId,
+        rotationPosition: 0,
+      ),
+    );
+  } else if (base is SqfliteTestBase) {
+    await base.db.insert('competitors', {
+      'competitor_id': 'c1',
+      'game_id': 'g1',
+      'type': 'human',
+      'name': 'Alice',
+    });
+    await base.db.insert('competitor_players', {
+      'competitor_id': 'c1',
+      'player_id': playerId,
+      'rotation_position': 0,
+    });
+  }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/players/presentation/pages/create_player_page.dart';
+import '../features/players/presentation/pages/edit_player_page.dart';
 import '../features/players/presentation/screens/players_screen.dart';
 import '../features/game/presentation/screens/game_selection_screen.dart';
 import '../features/statistics/presentation/screens/statistics_screen.dart';
@@ -33,6 +34,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 body: const Center(child: Text('Player detail — coming soon')),
               );
             },
+            routes: [
+              GoRoute(
+                path: 'edit',
+                name: 'edit_player',
+                builder: (context, state) {
+                  final playerId = state.pathParameters['playerId']!;
+                  final currentName = state.extra as String? ?? '';
+                  return EditPlayerPage(
+                    playerId: playerId,
+                    currentName: currentName,
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

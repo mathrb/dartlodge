@@ -21,15 +21,31 @@ void main() {
   setUp(() async {
     // Open an in-memory database for each test
     db = await openDatabase(inMemoryDatabasePath);
-    
-    // Create tables manually or via migration helper
-    // We'll use a simplified version of createVersion1 for speed
+
     await db.execute('''
       CREATE TABLE players (
         player_id   TEXT    NOT NULL PRIMARY KEY,
         name        TEXT    NOT NULL,
         created_at  TEXT    NOT NULL,
         last_active TEXT    NOT NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE competitors (
+        competitor_id TEXT NOT NULL PRIMARY KEY,
+        game_id       TEXT NOT NULL,
+        type          TEXT NOT NULL,
+        name          TEXT NOT NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE competitor_players (
+        competitor_id     TEXT    NOT NULL,
+        player_id         TEXT    NOT NULL,
+        rotation_position INTEGER NOT NULL,
+        PRIMARY KEY (competitor_id, player_id)
       );
     ''');
 
@@ -40,5 +56,20 @@ void main() {
     await db.close();
   });
 
-  runPlayerRepositoryContractTests(factory);
+  runPlayerRepositoryContractTests(
+    factory,
+    insertHistory: (playerId) async {
+      await db.insert('competitors', {
+        'competitor_id': 'c1',
+        'game_id': 'g1',
+        'type': 'human',
+        'name': 'Alice',
+      });
+      await db.insert('competitor_players', {
+        'competitor_id': 'c1',
+        'player_id': playerId,
+        'rotation_position': 0,
+      });
+    },
+  );
 }

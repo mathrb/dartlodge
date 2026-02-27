@@ -6,7 +6,12 @@ import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
 
-void runPlayerRepositoryContractTests(Future<PlayerRepository> Function() factory) {
+/// [insertHistory] is an optional callback that inserts a competitor_players row
+/// for [playerId], enabling the history-check test. If null, that test is skipped.
+void runPlayerRepositoryContractTests(
+  Future<PlayerRepository> Function() factory, {
+  Future<void> Function(String playerId)? insertHistory,
+}) {
   late PlayerRepository repo;
 
   setUp(() async {
@@ -119,5 +124,47 @@ void runPlayerRepositoryContractTests(Future<PlayerRepository> Function() factor
       final updated = await repo.getPlayer('p1');
       expect(updated!.lastActive.isAfter(player.lastActive), isTrue);
     });
+  });
+
+  group('deletePlayer', () {
+    test('should delete a player with no history', () async {
+      final player = Player(
+        playerId: 'p1',
+        name: 'Alice',
+        createdAt: DateTime.now(),
+        lastActive: DateTime.now(),
+      );
+
+      await repo.createPlayer(player);
+      await repo.deletePlayer('p1');
+
+      expect(await repo.getPlayer('p1'), isNull);
+    });
+
+    test('should throw PlayerNotFoundException for unknown player', () async {
+      expect(
+        () => repo.deletePlayer('unknown'),
+        throwsA(isA<PlayerNotFoundException>()),
+      );
+    });
+
+    if (insertHistory != null)
+      test('should throw PlayerHasGameHistoryException when history exists',
+          () async {
+        final player = Player(
+          playerId: 'p1',
+          name: 'Alice',
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        );
+
+        await repo.createPlayer(player);
+        await insertHistory('p1');
+
+        expect(
+          () => repo.deletePlayer('p1'),
+          throwsA(isA<PlayerHasGameHistoryException>()),
+        );
+      });
   });
 }

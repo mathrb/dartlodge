@@ -90,6 +90,25 @@ class PlayerRepositoryImpl implements PlayerRepository {
   }
 
   @override
+  Future<void> deletePlayer(String playerId) async {
+    final result = await _db.rawQuery(
+      'SELECT COUNT(*) AS cnt FROM competitor_players WHERE player_id = ?',
+      [playerId],
+    );
+    final count = Sqflite.firstIntValue(result) ?? 0;
+    if (count > 0) {
+      throw const PlayerHasGameHistoryException('Player has game history');
+    }
+
+    final rowsAffected = await _db.delete(
+      'players',
+      where: 'player_id = ?',
+      whereArgs: [playerId],
+    );
+    if (rowsAffected == 0) throw PlayerNotFoundException(playerId);
+  }
+
+  @override
   Stream<List<Player>> watchAllPlayers() {
     return Stream.fromFuture(getAllPlayers());
   }

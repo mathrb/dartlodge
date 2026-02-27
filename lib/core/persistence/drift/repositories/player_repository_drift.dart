@@ -100,6 +100,23 @@ class PlayerRepositoryDrift implements PlayerRepository {
   }
 
   @override
+  Future<void> deletePlayer(String playerId) async {
+    final rows = await (_db.select(_db.competitorPlayers)
+          ..where((t) => t.playerId.equals(playerId)))
+        .get();
+
+    if (rows.isNotEmpty) {
+      throw const PlayerHasGameHistoryException('Player has game history');
+    }
+
+    final rowsAffected = await (_db.delete(_db.players)
+          ..where((t) => t.playerId.equals(playerId)))
+        .go();
+
+    if (rowsAffected == 0) throw PlayerNotFoundException(playerId);
+  }
+
+  @override
   Stream<List<Player>> watchAllPlayers() {
     return (_db.select(_db.players)
       ..orderBy([(t) => OrderingTerm(expression: t.lastActive, mode: OrderingMode.desc)]))

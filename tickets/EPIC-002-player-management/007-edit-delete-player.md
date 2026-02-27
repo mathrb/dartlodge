@@ -1,6 +1,6 @@
 # TICKET-007: Edit & Delete Player
 
-**Status:** Todo
+**Status:** Done
 **Epic:** EPIC-002 — Player Management
 
 ---
@@ -38,3 +38,17 @@ Allow a player's name to be edited inline or from the detail screen, and allow s
 - If a player has any row in the `competitors` table, the soft-delete should still proceed (the competitors record remains for historical data). The hard-delete path (not exposed to the UI) would be blocked by `ON DELETE RESTRICT` at the SQLite level.
 - Uniqueness check on edit must exclude the player being edited: `any((p) => p.playerId != playerId && p.name.toLowerCase() == name.toLowerCase())`.
 - The confirmation dialog text: "Delete [name]? This cannot be undone." with "Cancel" and "Delete" (destructive style) actions.
+
+---
+
+## Implementation Notes (2026-02-27)
+
+- Hard delete (not soft delete) was used — `DATABASE_DDL.md` has no `is_active` column.
+- `deletePlayer` added to `PlayerRepository` interface and both SQLite and Drift implementations.
+- History check: `SELECT COUNT(*) FROM competitor_players WHERE player_id = ?` before DELETE.
+- `EditPlayerNotifier` added to `players_provider.dart`; generates as `editPlayerProvider`.
+- `EditPlayerPage` created at `lib/features/players/presentation/pages/edit_player_page.dart`.
+- `PlayerCardWidget` gains optional `onEdit`/`onDelete` callbacks; shows `PopupMenuButton` when provided.
+- `PlayerListPage._PlayerList` converted to `ConsumerWidget` to support inline delete from list.
+- Route `/players/:playerId/edit` added as sub-route of `:playerId` in `app_router.dart`.
+- Contract tests: 3 `deletePlayer` cases added to both `player_repository_contract.dart` (standalone) and `player_repository_drift_contract_test.dart` (hybrid SQLite+Drift). All 22 hybrid tests pass.

@@ -22,6 +22,11 @@ abstract interface class PlayerRepository {
   /// Throws [PlayerNotFoundException] if the player does not exist.
   Future<void> touchPlayer(String playerId);
 
+  /// Deletes the player with [playerId].
+  /// Throws [PlayerNotFoundException] if not found.
+  /// Throws [PlayerHasGameHistoryException] if the player has any competitor history.
+  Future<void> deletePlayer(String playerId);
+
   /// Emits the full player list whenever any player row changes.
   /// Used by player selection screens to stay reactive without polling.
   Stream<List<Player>> watchAllPlayers();
