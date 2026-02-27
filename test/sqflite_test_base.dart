@@ -133,7 +133,8 @@ class SqfliteTestBase implements DatabaseTestBase {
         synced INTEGER NOT NULL DEFAULT 0,
         actor_id TEXT NOT NULL,
         global_sequence INTEGER,
-        source INTEGER NOT NULL DEFAULT 0
+        source INTEGER NOT NULL DEFAULT 0,
+        UNIQUE (game_id, local_sequence)
       )
     ''');
   }

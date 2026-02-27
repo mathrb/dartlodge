@@ -5,11 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 
-void main() async {
-  // Ensure Flutter binding is initialized
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Run the app with Riverpod provider scope
   runApp(
     const ProviderScope(
       child: DartsApp(),

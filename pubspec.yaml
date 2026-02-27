@@ -63,10 +63,3 @@ flutter:
     - assets/images/
     - assets/icons/
   
-  # Fonts configuration
-  fonts:
-    - family: DartFont
-      fonts:
-        - asset: assets/fonts/DartFont-Regular.ttf
-        - asset: assets/fonts/DartFont-Bold.ttf
-          weight: 700

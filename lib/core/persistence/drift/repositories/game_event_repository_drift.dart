@@ -53,6 +53,13 @@ class GameEventRepositoryDrift implements GameEventRepository {
 
   @override
   Future<void> appendEvent(GameEvent event) async {
+    // Check if game exists
+    final gameRow = await (_db.select(_db.games)
+      ..where((t) => t.gameId.equals(event.gameId))
+      ..limit(1))
+      .getSingleOrNull();
+    if (gameRow == null) throw GameNotFoundException(event.gameId);
+
     try {
       await _db.into(_db.gameEvents).insert(
         drift_db.GameEventsCompanion.insert(
@@ -70,15 +77,28 @@ class GameEventRepositoryDrift implements GameEventRepository {
         mode: InsertMode.insertOrFail,
       );
     } on Exception catch (e) {
-      // Handle drift-specific exceptions using DriftWrappedException
-      if (e is DriftWrappedException) {
-        final cause = e.cause.toString();
-        
-        // Sequence-specific constraint detection for game events
-        if (cause.contains('game_events_local_sequence_key') ||
-            cause.contains('local_sequence') ||
-            cause.contains('UNIQUE constraint failed') ||
-            cause.contains('unique constraint failed')) {
+      final errStr = e.toString();
+      final isUniqueError = errStr.contains('UNIQUE constraint failed') ||
+          errStr.contains('unique constraint failed') ||
+          (e is DriftWrappedException &&
+              e.cause.toString().contains('constraint failed'));
+
+      if (isUniqueError) {
+        // Check if it's an idempotent insert (same event_id already exists)
+        final existing = await (_db.select(_db.gameEvents)
+          ..where((t) => t.eventId.equals(event.eventId))
+          ..limit(1))
+          .getSingleOrNull();
+        if (existing != null) return; // Idempotent success
+
+        // Check if it's a sequence conflict (different event_id, same sequence)
+        final seqExisting = await (_db.select(_db.gameEvents)
+          ..where((t) =>
+              t.gameId.equals(event.gameId) &
+              t.localSequence.equals(event.localSequence))
+          ..limit(1))
+          .getSingleOrNull();
+        if (seqExisting != null && seqExisting.eventId != event.eventId) {
           throw SequenceConflictException(event.gameId, event.localSequence);
         }
       }
@@ -89,6 +109,16 @@ class GameEventRepositoryDrift implements GameEventRepository {
   @override
   Future<void> appendEvents(List<GameEvent> events) async {
     if (events.isEmpty) return;
+
+    assert(events.map((e) => e.gameId).toSet().length == 1,
+        'appendEvents requires all events to belong to the same game');
+
+    final gameId = events.first.gameId;
+    final gameRow = await (_db.select(_db.games)
+      ..where((t) => t.gameId.equals(gameId))
+      ..limit(1))
+      .getSingleOrNull();
+    if (gameRow == null) throw GameNotFoundException(gameId);
 
     await _db.transaction(() async {
       for (final event in events) {
@@ -109,15 +139,28 @@ class GameEventRepositoryDrift implements GameEventRepository {
             mode: InsertMode.insertOrFail,
           );
         } on Exception catch (e) {
-          // Handle drift-specific exceptions using DriftWrappedException
-          if (e is DriftWrappedException) {
-            final cause = e.cause.toString();
-            
-            // Sequence-specific constraint detection for game events
-            if (cause.contains('game_events_local_sequence_key') ||
-                cause.contains('local_sequence') ||
-                cause.contains('UNIQUE constraint failed') ||
-                cause.contains('unique constraint failed')) {
+          final errStr = e.toString();
+          final isUniqueError = errStr.contains('UNIQUE constraint failed') ||
+              errStr.contains('unique constraint failed') ||
+              (e is DriftWrappedException &&
+                  e.cause.toString().contains('constraint failed'));
+
+          if (isUniqueError) {
+            // Check if it's an idempotent insert (same event_id already exists)
+            final existing = await (_db.select(_db.gameEvents)
+              ..where((t) => t.eventId.equals(event.eventId))
+              ..limit(1))
+              .getSingleOrNull();
+            if (existing != null) continue; // Idempotent success
+
+            // Check if it's a sequence conflict
+            final seqExisting = await (_db.select(_db.gameEvents)
+              ..where((t) =>
+                  t.gameId.equals(event.gameId) &
+                  t.localSequence.equals(event.localSequence))
+              ..limit(1))
+              .getSingleOrNull();
+            if (seqExisting != null && seqExisting.eventId != event.eventId) {
               throw SequenceConflictException(event.gameId, event.localSequence);
             }
           }

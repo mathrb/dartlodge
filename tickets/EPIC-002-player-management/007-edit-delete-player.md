@@ -1,0 +1,40 @@
+# TICKET-007: Edit & Delete Player
+
+**Status:** Todo
+**Epic:** EPIC-002 — Player Management
+
+---
+
+## Description
+
+Allow a player's name to be edited inline or from the detail screen, and allow soft-deletion when the player has no game history. Hard deletion is blocked at the repository level by `ON DELETE RESTRICT`.
+
+---
+
+## Acceptance Criteria
+
+- [ ] `EditPlayerNotifier` — `@riverpod` notifier exposing `setName()` and `submit(String playerId)`; reuses `PlayerFormState`
+- [ ] `submit()` calls `updatePlayerName(playerId, name)` on the repository after the same validation rules as create (non-empty, ≤ 30 chars, unique)
+- [ ] On success, pops the edit UI and invalidates `allPlayersProvider` and `playerProvider(playerId)`
+- [ ] `deletePlayer(String playerId)` method on a `PlayerActionsNotifier` (or co-located on `EditPlayerNotifier`)
+- [ ] `deletePlayer` calls `repository.deletePlayer(playerId)` (soft delete: sets `is_active = 0`)
+- [ ] If the player has game history, the repository throws an appropriate `RepositoryException`; the UI shows a snackbar "Cannot delete a player with game history"
+- [ ] Delete action requires a confirmation dialog before proceeding
+- [ ] On successful delete, navigates back to the player list; list updates automatically
+
+---
+
+## Files
+
+- `lib/features/players/presentation/providers/players_provider.dart` — update (add `EditPlayerNotifier`, `deletePlayer`)
+- `lib/features/players/presentation/providers/players_provider.g.dart` — regenerate
+
+---
+
+## Implementation Notes
+
+- The `PlayerRepository` interface does not currently have a `deletePlayer` method — it needs to be added to the interface and implemented in both sqflite and Drift repositories before this ticket can be completed.
+- Soft delete sets `is_active = 0`. The Drift `watchAllPlayers()` stream already filters `is_active = true`, so deleted players disappear from the list automatically.
+- If a player has any row in the `competitors` table, the soft-delete should still proceed (the competitors record remains for historical data). The hard-delete path (not exposed to the UI) would be blocked by `ON DELETE RESTRICT` at the SQLite level.
+- Uniqueness check on edit must exclude the player being edited: `any((p) => p.playerId != playerId && p.name.toLowerCase() == name.toLowerCase())`.
+- The confirmation dialog text: "Delete [name]? This cannot be undone." with "Cancel" and "Delete" (destructive style) actions.

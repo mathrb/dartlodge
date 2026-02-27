@@ -13,8 +13,8 @@ part of 'database_provider.dart';
 final databaseProvider = DatabaseProvider._();
 
 final class DatabaseProvider
-    extends $FunctionalProvider<AsyncValue<Object>, Object, FutureOr<Object>>
-    with $FutureModifier<Object>, $FutureProvider<Object> {
+    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
+    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
   DatabaseProvider._()
     : super(
         from: null,
@@ -31,16 +31,16 @@ final class DatabaseProvider
 
   @$internal
   @override
-  $FutureProviderElement<Object> $createElement($ProviderPointer pointer) =>
+  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
       $FutureProviderElement(pointer);
 
   @override
-  FutureOr<Object> create(Ref ref) {
+  FutureOr<dynamic> create(Ref ref) {
     return database(ref);
   }
 }
 
-String _$databaseHash() => r'acc4c4713e99924000bb39f036996b9300c7deb1';
+String _$databaseHash() => r'ef53a182f91de0d4e4ceabd6c422edf7b00dddb1';
 
 @ProviderFor(playerRepository)
 final playerRepositoryProvider = PlayerRepositoryProvider._();

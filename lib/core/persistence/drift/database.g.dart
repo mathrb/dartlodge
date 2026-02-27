@@ -2383,6 +2383,10 @@ class $GameEventsTable extends GameEvents
   @override
   Set<GeneratedColumn> get $primaryKey => {eventId};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {gameId, localSequence},
+  ];
+  @override
   GameEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return GameEvent(

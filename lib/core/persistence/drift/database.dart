@@ -82,6 +82,11 @@ class GameEvents extends Table {
 
   @override
   Set<Column> get primaryKey => {eventId};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {gameId, localSequence},
+  ];
 }
 
 class Accounts extends Table {

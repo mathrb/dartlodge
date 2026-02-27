@@ -1,0 +1,84 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../providers/players_provider.dart';
+import '../state/player_form_state.dart';
+
+class CreatePlayerPage extends ConsumerStatefulWidget {
+  const CreatePlayerPage({super.key});
+
+  @override
+  ConsumerState<CreatePlayerPage> createState() => _CreatePlayerPageState();
+}
+
+class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
+  late final TextEditingController _controller;
+  late final FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+    _focusNode = FocusNode();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _focusNode.requestFocus();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    ref.invalidate(createPlayerProvider);
+    super.dispose();
+  }
+
+  void _submit() {
+    ref.read(createPlayerProvider.notifier).submit();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<PlayerFormState>(createPlayerProvider, (prev, next) {
+      final wasSubmitting = prev?.isSubmitting ?? false;
+      if (wasSubmitting && !next.isSubmitting && next.nameError == null) {
+        context.pop();
+      }
+    });
+
+    final state = ref.watch(createPlayerProvider);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('New Player')),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              autofocus: true,
+              maxLength: 30,
+              inputFormatters: [LengthLimitingTextInputFormatter(30)],
+              onChanged: (v) =>
+                  ref.read(createPlayerProvider.notifier).setName(v),
+              onSubmitted: (_) => _submit(),
+              decoration: InputDecoration(
+                labelText: 'Name',
+                errorText: state.nameError,
+              ),
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: state.isSubmitting ? null : _submit,
+              child: const Text('Create Player'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
