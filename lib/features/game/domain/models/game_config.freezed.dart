@@ -90,7 +90,12 @@ GameConfig _$GameConfigFromJson(
 /// @nodoc
 mixin _$GameConfig {
 
-
+ String? get startingPlayerId;
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GameConfigCopyWith<GameConfig> get copyWith => _$GameConfigCopyWithImpl<GameConfig>(this as GameConfig, _$identity);
 
   /// Serializes this GameConfig to a JSON map.
   Map<String, dynamic> toJson();
@@ -98,24 +103,50 @@ mixin _$GameConfig {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig()';
+  return 'GameConfig(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
 /// @nodoc
-class $GameConfigCopyWith<$Res>  {
-$GameConfigCopyWith(GameConfig _, $Res Function(GameConfig) __);
+abstract mixin class $GameConfigCopyWith<$Res>  {
+  factory $GameConfigCopyWith(GameConfig value, $Res Function(GameConfig) _then) = _$GameConfigCopyWithImpl;
+@useResult
+$Res call({
+ String? startingPlayerId
+});
+
+
+
+
+}
+/// @nodoc
+class _$GameConfigCopyWithImpl<$Res>
+    implements $GameConfigCopyWith<$Res> {
+  _$GameConfigCopyWithImpl(this._self, this._then);
+
+  final GameConfig _self;
+  final $Res Function(GameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(_self.copyWith(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
 }
 
 
@@ -239,24 +270,24 @@ return chaseTheDragon(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin)?  x01,TResult Function( String variant,  List<String> numbers,  int pointsToWin)?  cricket,TResult Function()?  aroundTheClock,TResult Function()?  killer,TResult Function()?  baseball,TResult Function()?  golf,TResult Function()?  shanghai,TResult Function()?  scram,TResult Function()?  halveIt,TResult Function()?  highScore,TResult Function()?  blindCricket,TResult Function()?  blindGolf,TResult Function()?  blindKiller,TResult Function()?  blindShanghai,TResult Function()?  chaseTheDragon,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  String? startingPlayerId)?  x01,TResult Function( String variant,  List<String> numbers,  int pointsToWin,  String? startingPlayerId)?  cricket,TResult Function( String? startingPlayerId)?  aroundTheClock,TResult Function( String? startingPlayerId)?  killer,TResult Function( String? startingPlayerId)?  baseball,TResult Function( String? startingPlayerId)?  golf,TResult Function( String? startingPlayerId)?  shanghai,TResult Function( String? startingPlayerId)?  scram,TResult Function( String? startingPlayerId)?  halveIt,TResult Function( String? startingPlayerId)?  highScore,TResult Function( String? startingPlayerId)?  blindCricket,TResult Function( String? startingPlayerId)?  blindGolf,TResult Function( String? startingPlayerId)?  blindKiller,TResult Function( String? startingPlayerId)?  blindShanghai,TResult Function( String? startingPlayerId)?  chaseTheDragon,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case X01GameConfig() when x01 != null:
-return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin);case CricketGameConfig() when cricket != null:
-return cricket(_that.variant,_that.numbers,_that.pointsToWin);case AroundTheClockGameConfig() when aroundTheClock != null:
-return aroundTheClock();case KillerGameConfig() when killer != null:
-return killer();case BaseballGameConfig() when baseball != null:
-return baseball();case GolfGameConfig() when golf != null:
-return golf();case ShanghaiGameConfig() when shanghai != null:
-return shanghai();case ScramGameConfig() when scram != null:
-return scram();case HalveItGameConfig() when halveIt != null:
-return halveIt();case HighScoreGameConfig() when highScore != null:
-return highScore();case BlindCricketGameConfig() when blindCricket != null:
-return blindCricket();case BlindGolfGameConfig() when blindGolf != null:
-return blindGolf();case BlindKillerGameConfig() when blindKiller != null:
-return blindKiller();case BlindShanghaiGameConfig() when blindShanghai != null:
-return blindShanghai();case ChaseTheDragonGameConfig() when chaseTheDragon != null:
-return chaseTheDragon();case _:
+return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.startingPlayerId);case CricketGameConfig() when cricket != null:
+return cricket(_that.variant,_that.numbers,_that.pointsToWin,_that.startingPlayerId);case AroundTheClockGameConfig() when aroundTheClock != null:
+return aroundTheClock(_that.startingPlayerId);case KillerGameConfig() when killer != null:
+return killer(_that.startingPlayerId);case BaseballGameConfig() when baseball != null:
+return baseball(_that.startingPlayerId);case GolfGameConfig() when golf != null:
+return golf(_that.startingPlayerId);case ShanghaiGameConfig() when shanghai != null:
+return shanghai(_that.startingPlayerId);case ScramGameConfig() when scram != null:
+return scram(_that.startingPlayerId);case HalveItGameConfig() when halveIt != null:
+return halveIt(_that.startingPlayerId);case HighScoreGameConfig() when highScore != null:
+return highScore(_that.startingPlayerId);case BlindCricketGameConfig() when blindCricket != null:
+return blindCricket(_that.startingPlayerId);case BlindGolfGameConfig() when blindGolf != null:
+return blindGolf(_that.startingPlayerId);case BlindKillerGameConfig() when blindKiller != null:
+return blindKiller(_that.startingPlayerId);case BlindShanghaiGameConfig() when blindShanghai != null:
+return blindShanghai(_that.startingPlayerId);case ChaseTheDragonGameConfig() when chaseTheDragon != null:
+return chaseTheDragon(_that.startingPlayerId);case _:
   return orElse();
 
 }
@@ -274,24 +305,24 @@ return chaseTheDragon();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin)  x01,required TResult Function( String variant,  List<String> numbers,  int pointsToWin)  cricket,required TResult Function()  aroundTheClock,required TResult Function()  killer,required TResult Function()  baseball,required TResult Function()  golf,required TResult Function()  shanghai,required TResult Function()  scram,required TResult Function()  halveIt,required TResult Function()  highScore,required TResult Function()  blindCricket,required TResult Function()  blindGolf,required TResult Function()  blindKiller,required TResult Function()  blindShanghai,required TResult Function()  chaseTheDragon,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  String? startingPlayerId)  x01,required TResult Function( String variant,  List<String> numbers,  int pointsToWin,  String? startingPlayerId)  cricket,required TResult Function( String? startingPlayerId)  aroundTheClock,required TResult Function( String? startingPlayerId)  killer,required TResult Function( String? startingPlayerId)  baseball,required TResult Function( String? startingPlayerId)  golf,required TResult Function( String? startingPlayerId)  shanghai,required TResult Function( String? startingPlayerId)  scram,required TResult Function( String? startingPlayerId)  halveIt,required TResult Function( String? startingPlayerId)  highScore,required TResult Function( String? startingPlayerId)  blindCricket,required TResult Function( String? startingPlayerId)  blindGolf,required TResult Function( String? startingPlayerId)  blindKiller,required TResult Function( String? startingPlayerId)  blindShanghai,required TResult Function( String? startingPlayerId)  chaseTheDragon,}) {final _that = this;
 switch (_that) {
 case X01GameConfig():
-return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin);case CricketGameConfig():
-return cricket(_that.variant,_that.numbers,_that.pointsToWin);case AroundTheClockGameConfig():
-return aroundTheClock();case KillerGameConfig():
-return killer();case BaseballGameConfig():
-return baseball();case GolfGameConfig():
-return golf();case ShanghaiGameConfig():
-return shanghai();case ScramGameConfig():
-return scram();case HalveItGameConfig():
-return halveIt();case HighScoreGameConfig():
-return highScore();case BlindCricketGameConfig():
-return blindCricket();case BlindGolfGameConfig():
-return blindGolf();case BlindKillerGameConfig():
-return blindKiller();case BlindShanghaiGameConfig():
-return blindShanghai();case ChaseTheDragonGameConfig():
-return chaseTheDragon();case _:
+return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.startingPlayerId);case CricketGameConfig():
+return cricket(_that.variant,_that.numbers,_that.pointsToWin,_that.startingPlayerId);case AroundTheClockGameConfig():
+return aroundTheClock(_that.startingPlayerId);case KillerGameConfig():
+return killer(_that.startingPlayerId);case BaseballGameConfig():
+return baseball(_that.startingPlayerId);case GolfGameConfig():
+return golf(_that.startingPlayerId);case ShanghaiGameConfig():
+return shanghai(_that.startingPlayerId);case ScramGameConfig():
+return scram(_that.startingPlayerId);case HalveItGameConfig():
+return halveIt(_that.startingPlayerId);case HighScoreGameConfig():
+return highScore(_that.startingPlayerId);case BlindCricketGameConfig():
+return blindCricket(_that.startingPlayerId);case BlindGolfGameConfig():
+return blindGolf(_that.startingPlayerId);case BlindKillerGameConfig():
+return blindKiller(_that.startingPlayerId);case BlindShanghaiGameConfig():
+return blindShanghai(_that.startingPlayerId);case ChaseTheDragonGameConfig():
+return chaseTheDragon(_that.startingPlayerId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -308,24 +339,24 @@ return chaseTheDragon();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin)?  x01,TResult? Function( String variant,  List<String> numbers,  int pointsToWin)?  cricket,TResult? Function()?  aroundTheClock,TResult? Function()?  killer,TResult? Function()?  baseball,TResult? Function()?  golf,TResult? Function()?  shanghai,TResult? Function()?  scram,TResult? Function()?  halveIt,TResult? Function()?  highScore,TResult? Function()?  blindCricket,TResult? Function()?  blindGolf,TResult? Function()?  blindKiller,TResult? Function()?  blindShanghai,TResult? Function()?  chaseTheDragon,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  String? startingPlayerId)?  x01,TResult? Function( String variant,  List<String> numbers,  int pointsToWin,  String? startingPlayerId)?  cricket,TResult? Function( String? startingPlayerId)?  aroundTheClock,TResult? Function( String? startingPlayerId)?  killer,TResult? Function( String? startingPlayerId)?  baseball,TResult? Function( String? startingPlayerId)?  golf,TResult? Function( String? startingPlayerId)?  shanghai,TResult? Function( String? startingPlayerId)?  scram,TResult? Function( String? startingPlayerId)?  halveIt,TResult? Function( String? startingPlayerId)?  highScore,TResult? Function( String? startingPlayerId)?  blindCricket,TResult? Function( String? startingPlayerId)?  blindGolf,TResult? Function( String? startingPlayerId)?  blindKiller,TResult? Function( String? startingPlayerId)?  blindShanghai,TResult? Function( String? startingPlayerId)?  chaseTheDragon,}) {final _that = this;
 switch (_that) {
 case X01GameConfig() when x01 != null:
-return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin);case CricketGameConfig() when cricket != null:
-return cricket(_that.variant,_that.numbers,_that.pointsToWin);case AroundTheClockGameConfig() when aroundTheClock != null:
-return aroundTheClock();case KillerGameConfig() when killer != null:
-return killer();case BaseballGameConfig() when baseball != null:
-return baseball();case GolfGameConfig() when golf != null:
-return golf();case ShanghaiGameConfig() when shanghai != null:
-return shanghai();case ScramGameConfig() when scram != null:
-return scram();case HalveItGameConfig() when halveIt != null:
-return halveIt();case HighScoreGameConfig() when highScore != null:
-return highScore();case BlindCricketGameConfig() when blindCricket != null:
-return blindCricket();case BlindGolfGameConfig() when blindGolf != null:
-return blindGolf();case BlindKillerGameConfig() when blindKiller != null:
-return blindKiller();case BlindShanghaiGameConfig() when blindShanghai != null:
-return blindShanghai();case ChaseTheDragonGameConfig() when chaseTheDragon != null:
-return chaseTheDragon();case _:
+return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.startingPlayerId);case CricketGameConfig() when cricket != null:
+return cricket(_that.variant,_that.numbers,_that.pointsToWin,_that.startingPlayerId);case AroundTheClockGameConfig() when aroundTheClock != null:
+return aroundTheClock(_that.startingPlayerId);case KillerGameConfig() when killer != null:
+return killer(_that.startingPlayerId);case BaseballGameConfig() when baseball != null:
+return baseball(_that.startingPlayerId);case GolfGameConfig() when golf != null:
+return golf(_that.startingPlayerId);case ShanghaiGameConfig() when shanghai != null:
+return shanghai(_that.startingPlayerId);case ScramGameConfig() when scram != null:
+return scram(_that.startingPlayerId);case HalveItGameConfig() when halveIt != null:
+return halveIt(_that.startingPlayerId);case HighScoreGameConfig() when highScore != null:
+return highScore(_that.startingPlayerId);case BlindCricketGameConfig() when blindCricket != null:
+return blindCricket(_that.startingPlayerId);case BlindGolfGameConfig() when blindGolf != null:
+return blindGolf(_that.startingPlayerId);case BlindKillerGameConfig() when blindKiller != null:
+return blindKiller(_that.startingPlayerId);case BlindShanghaiGameConfig() when blindShanghai != null:
+return blindShanghai(_that.startingPlayerId);case ChaseTheDragonGameConfig() when chaseTheDragon != null:
+return chaseTheDragon(_that.startingPlayerId);case _:
   return null;
 
 }
@@ -337,7 +368,7 @@ return chaseTheDragon();case _:
 @JsonSerializable()
 
 class X01GameConfig implements GameConfig {
-  const X01GameConfig({required this.startingScore, required this.inStrategy, required this.outStrategy, this.legsToWin = 1, final  String? $type}): $type = $type ?? 'x01';
+  const X01GameConfig({required this.startingScore, required this.inStrategy, required this.outStrategy, this.legsToWin = 1, this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'x01';
   factory X01GameConfig.fromJson(Map<String, dynamic> json) => _$X01GameConfigFromJson(json);
 
  final  int startingScore;
@@ -346,6 +377,7 @@ class X01GameConfig implements GameConfig {
  final  String outStrategy;
 // 'straight', 'double', 'master'
 @JsonKey() final  int legsToWin;
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -353,7 +385,7 @@ final String $type;
 
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $X01GameConfigCopyWith<X01GameConfig> get copyWith => _$X01GameConfigCopyWithImpl<X01GameConfig>(this, _$identity);
 
@@ -364,16 +396,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is X01GameConfig&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.inStrategy, inStrategy) || other.inStrategy == inStrategy)&&(identical(other.outStrategy, outStrategy) || other.outStrategy == outStrategy)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is X01GameConfig&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.inStrategy, inStrategy) || other.inStrategy == inStrategy)&&(identical(other.outStrategy, outStrategy) || other.outStrategy == outStrategy)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingScore,inStrategy,outStrategy,legsToWin);
+int get hashCode => Object.hash(runtimeType,startingScore,inStrategy,outStrategy,legsToWin,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.x01(startingScore: $startingScore, inStrategy: $inStrategy, outStrategy: $outStrategy, legsToWin: $legsToWin)';
+  return 'GameConfig.x01(startingScore: $startingScore, inStrategy: $inStrategy, outStrategy: $outStrategy, legsToWin: $legsToWin, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -382,9 +414,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $X01GameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
   factory $X01GameConfigCopyWith(X01GameConfig value, $Res Function(X01GameConfig) _then) = _$X01GameConfigCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- int startingScore, String inStrategy, String outStrategy, int legsToWin
+ int startingScore, String inStrategy, String outStrategy, int legsToWin, String? startingPlayerId
 });
 
 
@@ -401,13 +433,14 @@ class _$X01GameConfigCopyWithImpl<$Res>
 
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? startingScore = null,Object? inStrategy = null,Object? outStrategy = null,Object? legsToWin = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? startingScore = null,Object? inStrategy = null,Object? outStrategy = null,Object? legsToWin = null,Object? startingPlayerId = freezed,}) {
   return _then(X01GameConfig(
 startingScore: null == startingScore ? _self.startingScore : startingScore // ignore: cast_nullable_to_non_nullable
 as int,inStrategy: null == inStrategy ? _self.inStrategy : inStrategy // ignore: cast_nullable_to_non_nullable
 as String,outStrategy: null == outStrategy ? _self.outStrategy : outStrategy // ignore: cast_nullable_to_non_nullable
 as String,legsToWin: null == legsToWin ? _self.legsToWin : legsToWin // ignore: cast_nullable_to_non_nullable
-as int,
+as int,startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -418,7 +451,7 @@ as int,
 @JsonSerializable()
 
 class CricketGameConfig implements GameConfig {
-  const CricketGameConfig({required this.variant, required final  List<String> numbers, required this.pointsToWin, final  String? $type}): _numbers = numbers,$type = $type ?? 'cricket';
+  const CricketGameConfig({required this.variant, required final  List<String> numbers, required this.pointsToWin, this.startingPlayerId = null, final  String? $type}): _numbers = numbers,$type = $type ?? 'cricket';
   factory CricketGameConfig.fromJson(Map<String, dynamic> json) => _$CricketGameConfigFromJson(json);
 
  final  String variant;
@@ -433,6 +466,7 @@ class CricketGameConfig implements GameConfig {
 
 // ['15', '16', '17', '18', '19', '20', 'bull']
  final  int pointsToWin;
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -440,7 +474,7 @@ final String $type;
 
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
 $CricketGameConfigCopyWith<CricketGameConfig> get copyWith => _$CricketGameConfigCopyWithImpl<CricketGameConfig>(this, _$identity);
 
@@ -451,16 +485,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CricketGameConfig&&(identical(other.variant, variant) || other.variant == variant)&&const DeepCollectionEquality().equals(other._numbers, _numbers)&&(identical(other.pointsToWin, pointsToWin) || other.pointsToWin == pointsToWin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CricketGameConfig&&(identical(other.variant, variant) || other.variant == variant)&&const DeepCollectionEquality().equals(other._numbers, _numbers)&&(identical(other.pointsToWin, pointsToWin) || other.pointsToWin == pointsToWin)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,variant,const DeepCollectionEquality().hash(_numbers),pointsToWin);
+int get hashCode => Object.hash(runtimeType,variant,const DeepCollectionEquality().hash(_numbers),pointsToWin,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.cricket(variant: $variant, numbers: $numbers, pointsToWin: $pointsToWin)';
+  return 'GameConfig.cricket(variant: $variant, numbers: $numbers, pointsToWin: $pointsToWin, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -469,9 +503,9 @@ String toString() {
 /// @nodoc
 abstract mixin class $CricketGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
   factory $CricketGameConfigCopyWith(CricketGameConfig value, $Res Function(CricketGameConfig) _then) = _$CricketGameConfigCopyWithImpl;
-@useResult
+@override @useResult
 $Res call({
- String variant, List<String> numbers, int pointsToWin
+ String variant, List<String> numbers, int pointsToWin, String? startingPlayerId
 });
 
 
@@ -488,12 +522,13 @@ class _$CricketGameConfigCopyWithImpl<$Res>
 
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? variant = null,Object? numbers = null,Object? pointsToWin = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? variant = null,Object? numbers = null,Object? pointsToWin = null,Object? startingPlayerId = freezed,}) {
   return _then(CricketGameConfig(
 variant: null == variant ? _self.variant : variant // ignore: cast_nullable_to_non_nullable
 as String,numbers: null == numbers ? _self._numbers : numbers // ignore: cast_nullable_to_non_nullable
 as List<String>,pointsToWin: null == pointsToWin ? _self.pointsToWin : pointsToWin // ignore: cast_nullable_to_non_nullable
-as int,
+as int,startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -504,15 +539,20 @@ as int,
 @JsonSerializable()
 
 class AroundTheClockGameConfig implements GameConfig {
-  const AroundTheClockGameConfig({final  String? $type}): $type = $type ?? 'aroundTheClock';
+  const AroundTheClockGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'aroundTheClock';
   factory AroundTheClockGameConfig.fromJson(Map<String, dynamic> json) => _$AroundTheClockGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$AroundTheClockGameConfigCopyWith<AroundTheClockGameConfig> get copyWith => _$AroundTheClockGameConfigCopyWithImpl<AroundTheClockGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -521,37 +561,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.aroundTheClock()';
+  return 'GameConfig.aroundTheClock(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $AroundTheClockGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $AroundTheClockGameConfigCopyWith(AroundTheClockGameConfig value, $Res Function(AroundTheClockGameConfig) _then) = _$AroundTheClockGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$AroundTheClockGameConfigCopyWithImpl<$Res>
+    implements $AroundTheClockGameConfigCopyWith<$Res> {
+  _$AroundTheClockGameConfigCopyWithImpl(this._self, this._then);
+
+  final AroundTheClockGameConfig _self;
+  final $Res Function(AroundTheClockGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(AroundTheClockGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class KillerGameConfig implements GameConfig {
-  const KillerGameConfig({final  String? $type}): $type = $type ?? 'killer';
+  const KillerGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'killer';
   factory KillerGameConfig.fromJson(Map<String, dynamic> json) => _$KillerGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$KillerGameConfigCopyWith<KillerGameConfig> get copyWith => _$KillerGameConfigCopyWithImpl<KillerGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -560,37 +634,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is KillerGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KillerGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.killer()';
+  return 'GameConfig.killer(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $KillerGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $KillerGameConfigCopyWith(KillerGameConfig value, $Res Function(KillerGameConfig) _then) = _$KillerGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$KillerGameConfigCopyWithImpl<$Res>
+    implements $KillerGameConfigCopyWith<$Res> {
+  _$KillerGameConfigCopyWithImpl(this._self, this._then);
+
+  final KillerGameConfig _self;
+  final $Res Function(KillerGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(KillerGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class BaseballGameConfig implements GameConfig {
-  const BaseballGameConfig({final  String? $type}): $type = $type ?? 'baseball';
+  const BaseballGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'baseball';
   factory BaseballGameConfig.fromJson(Map<String, dynamic> json) => _$BaseballGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BaseballGameConfigCopyWith<BaseballGameConfig> get copyWith => _$BaseballGameConfigCopyWithImpl<BaseballGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -599,37 +707,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BaseballGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BaseballGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.baseball()';
+  return 'GameConfig.baseball(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $BaseballGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $BaseballGameConfigCopyWith(BaseballGameConfig value, $Res Function(BaseballGameConfig) _then) = _$BaseballGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$BaseballGameConfigCopyWithImpl<$Res>
+    implements $BaseballGameConfigCopyWith<$Res> {
+  _$BaseballGameConfigCopyWithImpl(this._self, this._then);
+
+  final BaseballGameConfig _self;
+  final $Res Function(BaseballGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(BaseballGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class GolfGameConfig implements GameConfig {
-  const GolfGameConfig({final  String? $type}): $type = $type ?? 'golf';
+  const GolfGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'golf';
   factory GolfGameConfig.fromJson(Map<String, dynamic> json) => _$GolfGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$GolfGameConfigCopyWith<GolfGameConfig> get copyWith => _$GolfGameConfigCopyWithImpl<GolfGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -638,37 +780,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GolfGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GolfGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.golf()';
+  return 'GameConfig.golf(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $GolfGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $GolfGameConfigCopyWith(GolfGameConfig value, $Res Function(GolfGameConfig) _then) = _$GolfGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$GolfGameConfigCopyWithImpl<$Res>
+    implements $GolfGameConfigCopyWith<$Res> {
+  _$GolfGameConfigCopyWithImpl(this._self, this._then);
+
+  final GolfGameConfig _self;
+  final $Res Function(GolfGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(GolfGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class ShanghaiGameConfig implements GameConfig {
-  const ShanghaiGameConfig({final  String? $type}): $type = $type ?? 'shanghai';
+  const ShanghaiGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'shanghai';
   factory ShanghaiGameConfig.fromJson(Map<String, dynamic> json) => _$ShanghaiGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ShanghaiGameConfigCopyWith<ShanghaiGameConfig> get copyWith => _$ShanghaiGameConfigCopyWithImpl<ShanghaiGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -677,37 +853,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.shanghai()';
+  return 'GameConfig.shanghai(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $ShanghaiGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $ShanghaiGameConfigCopyWith(ShanghaiGameConfig value, $Res Function(ShanghaiGameConfig) _then) = _$ShanghaiGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$ShanghaiGameConfigCopyWithImpl<$Res>
+    implements $ShanghaiGameConfigCopyWith<$Res> {
+  _$ShanghaiGameConfigCopyWithImpl(this._self, this._then);
+
+  final ShanghaiGameConfig _self;
+  final $Res Function(ShanghaiGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(ShanghaiGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class ScramGameConfig implements GameConfig {
-  const ScramGameConfig({final  String? $type}): $type = $type ?? 'scram';
+  const ScramGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'scram';
   factory ScramGameConfig.fromJson(Map<String, dynamic> json) => _$ScramGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ScramGameConfigCopyWith<ScramGameConfig> get copyWith => _$ScramGameConfigCopyWithImpl<ScramGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -716,37 +926,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScramGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ScramGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.scram()';
+  return 'GameConfig.scram(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $ScramGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $ScramGameConfigCopyWith(ScramGameConfig value, $Res Function(ScramGameConfig) _then) = _$ScramGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$ScramGameConfigCopyWithImpl<$Res>
+    implements $ScramGameConfigCopyWith<$Res> {
+  _$ScramGameConfigCopyWithImpl(this._self, this._then);
+
+  final ScramGameConfig _self;
+  final $Res Function(ScramGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(ScramGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class HalveItGameConfig implements GameConfig {
-  const HalveItGameConfig({final  String? $type}): $type = $type ?? 'halveIt';
+  const HalveItGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'halveIt';
   factory HalveItGameConfig.fromJson(Map<String, dynamic> json) => _$HalveItGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HalveItGameConfigCopyWith<HalveItGameConfig> get copyWith => _$HalveItGameConfigCopyWithImpl<HalveItGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -755,37 +999,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HalveItGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HalveItGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.halveIt()';
+  return 'GameConfig.halveIt(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $HalveItGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $HalveItGameConfigCopyWith(HalveItGameConfig value, $Res Function(HalveItGameConfig) _then) = _$HalveItGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$HalveItGameConfigCopyWithImpl<$Res>
+    implements $HalveItGameConfigCopyWith<$Res> {
+  _$HalveItGameConfigCopyWithImpl(this._self, this._then);
+
+  final HalveItGameConfig _self;
+  final $Res Function(HalveItGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(HalveItGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class HighScoreGameConfig implements GameConfig {
-  const HighScoreGameConfig({final  String? $type}): $type = $type ?? 'highScore';
+  const HighScoreGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'highScore';
   factory HighScoreGameConfig.fromJson(Map<String, dynamic> json) => _$HighScoreGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$HighScoreGameConfigCopyWith<HighScoreGameConfig> get copyWith => _$HighScoreGameConfigCopyWithImpl<HighScoreGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -794,37 +1072,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HighScoreGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HighScoreGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.highScore()';
+  return 'GameConfig.highScore(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $HighScoreGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $HighScoreGameConfigCopyWith(HighScoreGameConfig value, $Res Function(HighScoreGameConfig) _then) = _$HighScoreGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$HighScoreGameConfigCopyWithImpl<$Res>
+    implements $HighScoreGameConfigCopyWith<$Res> {
+  _$HighScoreGameConfigCopyWithImpl(this._self, this._then);
+
+  final HighScoreGameConfig _self;
+  final $Res Function(HighScoreGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(HighScoreGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class BlindCricketGameConfig implements GameConfig {
-  const BlindCricketGameConfig({final  String? $type}): $type = $type ?? 'blindCricket';
+  const BlindCricketGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'blindCricket';
   factory BlindCricketGameConfig.fromJson(Map<String, dynamic> json) => _$BlindCricketGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlindCricketGameConfigCopyWith<BlindCricketGameConfig> get copyWith => _$BlindCricketGameConfigCopyWithImpl<BlindCricketGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -833,37 +1145,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindCricketGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindCricketGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.blindCricket()';
+  return 'GameConfig.blindCricket(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $BlindCricketGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $BlindCricketGameConfigCopyWith(BlindCricketGameConfig value, $Res Function(BlindCricketGameConfig) _then) = _$BlindCricketGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$BlindCricketGameConfigCopyWithImpl<$Res>
+    implements $BlindCricketGameConfigCopyWith<$Res> {
+  _$BlindCricketGameConfigCopyWithImpl(this._self, this._then);
+
+  final BlindCricketGameConfig _self;
+  final $Res Function(BlindCricketGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(BlindCricketGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class BlindGolfGameConfig implements GameConfig {
-  const BlindGolfGameConfig({final  String? $type}): $type = $type ?? 'blindGolf';
+  const BlindGolfGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'blindGolf';
   factory BlindGolfGameConfig.fromJson(Map<String, dynamic> json) => _$BlindGolfGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlindGolfGameConfigCopyWith<BlindGolfGameConfig> get copyWith => _$BlindGolfGameConfigCopyWithImpl<BlindGolfGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -872,37 +1218,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindGolfGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindGolfGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.blindGolf()';
+  return 'GameConfig.blindGolf(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $BlindGolfGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $BlindGolfGameConfigCopyWith(BlindGolfGameConfig value, $Res Function(BlindGolfGameConfig) _then) = _$BlindGolfGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$BlindGolfGameConfigCopyWithImpl<$Res>
+    implements $BlindGolfGameConfigCopyWith<$Res> {
+  _$BlindGolfGameConfigCopyWithImpl(this._self, this._then);
+
+  final BlindGolfGameConfig _self;
+  final $Res Function(BlindGolfGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(BlindGolfGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class BlindKillerGameConfig implements GameConfig {
-  const BlindKillerGameConfig({final  String? $type}): $type = $type ?? 'blindKiller';
+  const BlindKillerGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'blindKiller';
   factory BlindKillerGameConfig.fromJson(Map<String, dynamic> json) => _$BlindKillerGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlindKillerGameConfigCopyWith<BlindKillerGameConfig> get copyWith => _$BlindKillerGameConfigCopyWithImpl<BlindKillerGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -911,37 +1291,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindKillerGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindKillerGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.blindKiller()';
+  return 'GameConfig.blindKiller(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $BlindKillerGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $BlindKillerGameConfigCopyWith(BlindKillerGameConfig value, $Res Function(BlindKillerGameConfig) _then) = _$BlindKillerGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$BlindKillerGameConfigCopyWithImpl<$Res>
+    implements $BlindKillerGameConfigCopyWith<$Res> {
+  _$BlindKillerGameConfigCopyWithImpl(this._self, this._then);
+
+  final BlindKillerGameConfig _self;
+  final $Res Function(BlindKillerGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(BlindKillerGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class BlindShanghaiGameConfig implements GameConfig {
-  const BlindShanghaiGameConfig({final  String? $type}): $type = $type ?? 'blindShanghai';
+  const BlindShanghaiGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'blindShanghai';
   factory BlindShanghaiGameConfig.fromJson(Map<String, dynamic> json) => _$BlindShanghaiGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$BlindShanghaiGameConfigCopyWith<BlindShanghaiGameConfig> get copyWith => _$BlindShanghaiGameConfigCopyWithImpl<BlindShanghaiGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -950,37 +1364,71 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindShanghaiGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BlindShanghaiGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.blindShanghai()';
+  return 'GameConfig.blindShanghai(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $BlindShanghaiGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $BlindShanghaiGameConfigCopyWith(BlindShanghaiGameConfig value, $Res Function(BlindShanghaiGameConfig) _then) = _$BlindShanghaiGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$BlindShanghaiGameConfigCopyWithImpl<$Res>
+    implements $BlindShanghaiGameConfigCopyWith<$Res> {
+  _$BlindShanghaiGameConfigCopyWithImpl(this._self, this._then);
+
+  final BlindShanghaiGameConfig _self;
+  final $Res Function(BlindShanghaiGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(BlindShanghaiGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 @JsonSerializable()
 
 class ChaseTheDragonGameConfig implements GameConfig {
-  const ChaseTheDragonGameConfig({final  String? $type}): $type = $type ?? 'chaseTheDragon';
+  const ChaseTheDragonGameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'chaseTheDragon';
   factory ChaseTheDragonGameConfig.fromJson(Map<String, dynamic> json) => _$ChaseTheDragonGameConfigFromJson(json);
 
-
+@override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
 
 
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ChaseTheDragonGameConfigCopyWith<ChaseTheDragonGameConfig> get copyWith => _$ChaseTheDragonGameConfigCopyWithImpl<ChaseTheDragonGameConfig>(this, _$identity);
 
 @override
 Map<String, dynamic> toJson() {
@@ -989,23 +1437,52 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChaseTheDragonGameConfig);
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChaseTheDragonGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode => Object.hash(runtimeType,startingPlayerId);
 
 @override
 String toString() {
-  return 'GameConfig.chaseTheDragon()';
+  return 'GameConfig.chaseTheDragon(startingPlayerId: $startingPlayerId)';
 }
 
 
 }
 
+/// @nodoc
+abstract mixin class $ChaseTheDragonGameConfigCopyWith<$Res> implements $GameConfigCopyWith<$Res> {
+  factory $ChaseTheDragonGameConfigCopyWith(ChaseTheDragonGameConfig value, $Res Function(ChaseTheDragonGameConfig) _then) = _$ChaseTheDragonGameConfigCopyWithImpl;
+@override @useResult
+$Res call({
+ String? startingPlayerId
+});
 
 
+
+
+}
+/// @nodoc
+class _$ChaseTheDragonGameConfigCopyWithImpl<$Res>
+    implements $ChaseTheDragonGameConfigCopyWith<$Res> {
+  _$ChaseTheDragonGameConfigCopyWithImpl(this._self, this._then);
+
+  final ChaseTheDragonGameConfig _self;
+  final $Res Function(ChaseTheDragonGameConfig) _then;
+
+/// Create a copy of GameConfig
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,}) {
+  return _then(ChaseTheDragonGameConfig(
+startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 mixin _$Segment {

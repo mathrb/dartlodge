@@ -367,3 +367,50 @@ final class ProcessDartUseCaseProvider
 
 String _$processDartUseCaseHash() =>
     r'86971dd7466c710d1ec08b129845697e70f286cf';
+
+@ProviderFor(createGameUseCase)
+final createGameUseCaseProvider = CreateGameUseCaseProvider._();
+
+final class CreateGameUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreateGameUseCase,
+          CreateGameUseCase,
+          CreateGameUseCase
+        >
+    with $Provider<CreateGameUseCase> {
+  CreateGameUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createGameUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createGameUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreateGameUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreateGameUseCase create(Ref ref) {
+    return createGameUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreateGameUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreateGameUseCase>(value),
+    );
+  }
+}
+
+String _$createGameUseCaseHash() => r'86611391ecef89b26d6bee8e7b688815809a9146';

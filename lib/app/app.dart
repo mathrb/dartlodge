@@ -28,7 +28,7 @@ class DartsApp extends ConsumerWidget {
         ),
       ),
       data: (_) {
-        final router = ref.watch(appRouterProvider);
+        final router = ref.watch(routerProvider);
         return MaterialApp.router(
           title: 'Darts App',
           debugShowCheckedModeBanner: false,

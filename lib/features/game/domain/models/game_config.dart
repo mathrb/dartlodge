@@ -14,27 +14,55 @@ abstract class GameConfig with _$GameConfig {
     required String inStrategy, // 'straight', 'double', 'master'
     required String outStrategy, // 'straight', 'double', 'master'
     @Default(1) int legsToWin,
+    @Default(null) String? startingPlayerId,
   }) = X01GameConfig;
 
   const factory GameConfig.cricket({
     required String variant, // 'standard', 'cut-throat', 'no-score'
     required List<String> numbers, // ['15', '16', '17', '18', '19', '20', 'bull']
     required int pointsToWin,
+    @Default(null) String? startingPlayerId,
   }) = CricketGameConfig;
 
-  const factory GameConfig.aroundTheClock() = AroundTheClockGameConfig;
-  const factory GameConfig.killer() = KillerGameConfig;
-  const factory GameConfig.baseball() = BaseballGameConfig;
-  const factory GameConfig.golf() = GolfGameConfig;
-  const factory GameConfig.shanghai() = ShanghaiGameConfig;
-  const factory GameConfig.scram() = ScramGameConfig;
-  const factory GameConfig.halveIt() = HalveItGameConfig;
-  const factory GameConfig.highScore() = HighScoreGameConfig;
-  const factory GameConfig.blindCricket() = BlindCricketGameConfig;
-  const factory GameConfig.blindGolf() = BlindGolfGameConfig;
-  const factory GameConfig.blindKiller() = BlindKillerGameConfig;
-  const factory GameConfig.blindShanghai() = BlindShanghaiGameConfig;
-  const factory GameConfig.chaseTheDragon() = ChaseTheDragonGameConfig;
+  const factory GameConfig.aroundTheClock({
+    @Default(null) String? startingPlayerId,
+  }) = AroundTheClockGameConfig;
+  const factory GameConfig.killer({
+    @Default(null) String? startingPlayerId,
+  }) = KillerGameConfig;
+  const factory GameConfig.baseball({
+    @Default(null) String? startingPlayerId,
+  }) = BaseballGameConfig;
+  const factory GameConfig.golf({
+    @Default(null) String? startingPlayerId,
+  }) = GolfGameConfig;
+  const factory GameConfig.shanghai({
+    @Default(null) String? startingPlayerId,
+  }) = ShanghaiGameConfig;
+  const factory GameConfig.scram({
+    @Default(null) String? startingPlayerId,
+  }) = ScramGameConfig;
+  const factory GameConfig.halveIt({
+    @Default(null) String? startingPlayerId,
+  }) = HalveItGameConfig;
+  const factory GameConfig.highScore({
+    @Default(null) String? startingPlayerId,
+  }) = HighScoreGameConfig;
+  const factory GameConfig.blindCricket({
+    @Default(null) String? startingPlayerId,
+  }) = BlindCricketGameConfig;
+  const factory GameConfig.blindGolf({
+    @Default(null) String? startingPlayerId,
+  }) = BlindGolfGameConfig;
+  const factory GameConfig.blindKiller({
+    @Default(null) String? startingPlayerId,
+  }) = BlindKillerGameConfig;
+  const factory GameConfig.blindShanghai({
+    @Default(null) String? startingPlayerId,
+  }) = BlindShanghaiGameConfig;
+  const factory GameConfig.chaseTheDragon({
+    @Default(null) String? startingPlayerId,
+  }) = ChaseTheDragonGameConfig;
 
   factory GameConfig.fromJson(Map<String, dynamic> json) => _$GameConfigFromJson(json);
 }
