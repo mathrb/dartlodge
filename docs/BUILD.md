@@ -69,21 +69,21 @@ Both `drift_worker.dart.js` and `sqlite3.wasm` will be copied into `build/web/` 
 
 ### Serving locally
 
-`python3 -m http.server` serves `.wasm` files with the wrong MIME type (`text/html` instead of `application/wasm`), which causes the browser to reject them. Use the custom server script at the repo root instead:
+Use Flutter's built-in web server to serve the app with correct MIME types:
 
 ```bash
-cd build/web && python3 ../../serve.py
+flutter run -d web-server --web-port 8087 --web-hostname 0.0.0.0
 ```
 
-`serve.py` overrides the MIME type for `.wasm` files and binds to `0.0.0.0` so the app is reachable from other machines on the network.
+This serves the app from the `build/web` directory with proper `.wasm` MIME type handling and binds to `0.0.0.0` so the app is reachable from other machines on the network.
 
-Then open `http://<machine-ip>:<port>` in any browser.
+Then open `http://<machine-ip>:8087` in any browser.
 
 ### Troubleshooting
 
 | Error | Cause | Fix |
 |---|---|---|
-| `TypeError: Response has unsupported MIME type 'text/html' expected 'application/wasm'` | Serving with plain `python3 -m http.server` | Use `serve.py` instead |
+| `TypeError: Response has unsupported MIME type 'text/html' expected 'application/wasm'` | Serving with plain `python3 -m http.server` | Use `flutter run -d web-server` instead |
 | `GET /sqlite3.wasm 404` | `web/sqlite3.wasm` not downloaded | Run the `curl` download step above |
 | `GET /drift_worker.dart.js 404` | Worker not compiled | Run `dart compile js` step above |
 | `ProviderException: Tried to use a provider that is in error state` | Any of the above asset errors cause the database provider to fail | Fix the underlying 404 first |
