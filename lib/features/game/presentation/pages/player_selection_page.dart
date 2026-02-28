@@ -6,6 +6,7 @@ import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/pages/game_config_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 import 'package:my_darts/features/game/presentation/widgets/player_selection_list_widget.dart';
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
 
@@ -60,7 +61,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               );
               if (config == null) return;
 
-              final players = ref.read(allPlayersProvider).valueOrNull ?? [];
+              final players = ref.read(allPlayersProvider).value ?? [];
               final panelPlayers = players
                   .where((p) => selectedIds.contains(p.playerId))
                   .map((p) => (id: p.playerId, name: p.name))

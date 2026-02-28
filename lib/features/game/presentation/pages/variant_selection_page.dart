@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 import 'package:my_darts/features/game/presentation/widgets/variant_pill_widget.dart';
 
 class VariantSelectionPage extends ConsumerWidget {
