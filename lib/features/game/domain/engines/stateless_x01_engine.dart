@@ -140,9 +140,15 @@ class StatelessX01Engine implements GameEngine {
     
     // Miss guard (Table 5 - Note 5)
     if (parsedSegment.isMiss) {
-      // Table G only — increment dart count, check turn end
+      // Table G only — increment dart count, record miss in dartThrows, check turn end
+      final missCompetitor = state.competitors[state.currentTurnIndex];
+      final missCompetitors = List<CompetitorState>.from(state.competitors);
+      missCompetitors[state.currentTurnIndex] = missCompetitor.copyWith(
+        dartThrows: [...missCompetitor.dartThrows, parsedSegment.toCanonicalString()],
+      );
       final newState = state.copyWith(
         dartsThrownInTurn: state.dartsThrownInTurn + 1,
+        competitors: missCompetitors,
       );
       return (checkTurnEnd(newState), LegOutcome.none, null, false);
     }

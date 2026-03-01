@@ -2924,4 +2924,63 @@ void main() {
       expect(result.outcome, LegOutcome.none);
     });
   });
+
+  group('Miss tracking in dartThrows (PPR denominator)', () {
+    // Helper: start a turn for c1 on initialState
+    GameState _startTurn(GameState state) {
+      return engine.apply(state, _createEvent(
+        eventId: 'turn-miss', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+    }
+
+    test('miss adds MISS to competitor dartThrows', () {
+      var state = _startTurn(initialState);
+
+      final result = engine.apply(state, _createEvent(
+        eventId: 'miss1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 0, 'multiplier': 1},
+      ));
+
+      expect(result.state.competitors[0].dartThrows, contains('MISS'));
+      expect(result.state.competitors[0].dartThrows.length, 1);
+    });
+
+    test('miss dart counts in dartThrows length alongside scoring darts', () {
+      var state = _startTurn(initialState);
+
+      // Throw a scoring dart (single 20)
+      state = engine.apply(state, _createEvent(
+        eventId: 'dart1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      )).state;
+
+      // Then throw a miss
+      state = engine.apply(state, _createEvent(
+        eventId: 'dart2', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 0, 'multiplier': 1},
+      )).state;
+
+      // dartThrows must contain both the scoring dart and the miss
+      expect(state.competitors[0].dartThrows.length, 2);
+      expect(state.competitors[0].dartThrows, containsAll(['20', 'MISS']));
+    });
+
+    test('score does not change on miss', () {
+      var state = _startTurn(initialState);
+
+      final result = engine.apply(state, _createEvent(
+        eventId: 'miss1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 0, 'multiplier': 1},
+      ));
+
+      expect(result.state.competitors[0].score, 501); // unchanged
+      expect(result.state.dartsThrownInTurn, 1);
+    });
+  });
 }
