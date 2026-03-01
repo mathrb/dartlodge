@@ -15,6 +15,7 @@ import 'package:my_darts/features/players/presentation/pages/player_detail_page.
 import 'package:my_darts/features/players/presentation/pages/player_list_page.dart';
 import 'package:my_darts/features/settings/presentation/pages/settings_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/stats_tab_page.dart';
+import 'package:my_darts/features/game/presentation/pages/x01_board_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 
@@ -91,9 +92,8 @@ Widget _editPlayerPage(BuildContext _, GoRouterState s) =>
 Widget _variantSelectionPage(BuildContext _, GoRouterState s) =>
     VariantSelectionPage(category: s.pathParameters['category']!);
 Widget _playerSelectionPage(BuildContext _, GoRouterState __) => const PlayerSelectionPage();
-Widget _x01BoardPage(BuildContext _, GoRouterState __) => Scaffold(
-    appBar: AppBar(title: const Text('X01')),
-    body: const Center(child: Text('X01 Board — coming in EPIC-005')));
+Widget _x01BoardPage(BuildContext _, GoRouterState s) =>
+    X01BoardPage(gameId: s.pathParameters['gameId']!);
 Widget _cricketBoardPage(BuildContext _, GoRouterState __) => Scaffold(
     appBar: AppBar(title: const Text('Cricket')),
     body: const Center(child: Text('Cricket Board — coming in EPIC-006')));
