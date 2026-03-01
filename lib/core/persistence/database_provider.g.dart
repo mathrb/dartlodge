@@ -368,6 +368,54 @@ final class ProcessDartUseCaseProvider
 String _$processDartUseCaseHash() =>
     r'86971dd7466c710d1ec08b129845697e70f286cf';
 
+@ProviderFor(undoLastDartUseCase)
+final undoLastDartUseCaseProvider = UndoLastDartUseCaseProvider._();
+
+final class UndoLastDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UndoLastDartUseCase,
+          UndoLastDartUseCase,
+          UndoLastDartUseCase
+        >
+    with $Provider<UndoLastDartUseCase> {
+  UndoLastDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'undoLastDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$undoLastDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UndoLastDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UndoLastDartUseCase create(Ref ref) {
+    return undoLastDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UndoLastDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UndoLastDartUseCase>(value),
+    );
+  }
+}
+
+String _$undoLastDartUseCaseHash() =>
+    r'ce3e43ff7caec4c1884ca2731374fd3dbd8b1dee';
+
 @ProviderFor(createGameUseCase)
 final createGameUseCaseProvider = CreateGameUseCaseProvider._();
 

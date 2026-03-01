@@ -24,6 +24,7 @@ import '../../features/statistics/domain/repositories/statistics_repository.dart
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/game/domain/engines/stateless_x01_engine.dart';
 import '../../features/game/domain/usecases/process_dart_use_case.dart';
+import '../../features/game/domain/usecases/undo_last_dart_use_case.dart';
 import '../../features/game/domain/usecases/create_game_use_case.dart';
 
 part 'database_provider.g.dart';
@@ -103,6 +104,16 @@ StatelessX01Engine x01Engine(Ref ref) {
 @Riverpod(keepAlive: true)
 ProcessDartUseCase processDartUseCase(Ref ref) {
   return ProcessDartUseCase(
+    ref.watch(gameRepositoryProvider),
+    ref.watch(gameEventRepositoryProvider),
+    ref.watch(dartThrowRepositoryProvider),
+    ref.watch(x01EngineProvider),
+  );
+}
+
+@Riverpod(keepAlive: true)
+UndoLastDartUseCase undoLastDartUseCase(Ref ref) {
+  return UndoLastDartUseCase(
     ref.watch(gameRepositoryProvider),
     ref.watch(gameEventRepositoryProvider),
     ref.watch(dartThrowRepositoryProvider),
