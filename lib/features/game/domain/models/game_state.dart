@@ -94,6 +94,8 @@ abstract class CompetitorState with _$CompetitorState {
     @Default(false) bool isIn,
     @Default(0) int legsWon,
     int? turnStartScore, // Null means same as score
+    @Default(<String, int>{}) Map<String, int> marksPerNumber,
+    int? closeOrder,
   }) = _CompetitorState;
 
   factory CompetitorState.fromJson(Map<String, dynamic> json) => _$CompetitorStateFromJson(json);

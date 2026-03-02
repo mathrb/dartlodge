@@ -87,6 +87,12 @@ _CompetitorState _$CompetitorStateFromJson(Map<String, dynamic> json) =>
       isIn: json['isIn'] as bool? ?? false,
       legsWon: (json['legsWon'] as num?)?.toInt() ?? 0,
       turnStartScore: (json['turnStartScore'] as num?)?.toInt(),
+      marksPerNumber:
+          (json['marksPerNumber'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          const <String, int>{},
+      closeOrder: (json['closeOrder'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
@@ -100,4 +106,6 @@ Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
       'isIn': instance.isIn,
       'legsWon': instance.legsWon,
       'turnStartScore': instance.turnStartScore,
+      'marksPerNumber': instance.marksPerNumber,
+      'closeOrder': instance.closeOrder,
     };

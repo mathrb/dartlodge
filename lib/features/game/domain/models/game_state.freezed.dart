@@ -324,7 +324,8 @@ as int,
 mixin _$CompetitorState {
 
  String get competitorId; String get name; List<String> get playerIds; int get score; bool get isComplete; List<String> get dartThrows;// Canonical segment strings
- bool get isIn; int get legsWon; int? get turnStartScore;
+ bool get isIn; int get legsWon; int? get turnStartScore;// Null means same as score
+ Map<String, int> get marksPerNumber; int? get closeOrder;
 /// Create a copy of CompetitorState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -337,16 +338,16 @@ $CompetitorStateCopyWith<CompetitorState> get copyWith => _$CompetitorStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorState&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.playerIds, playerIds)&&(identical(other.score, score) || other.score == score)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&const DeepCollectionEquality().equals(other.dartThrows, dartThrows)&&(identical(other.isIn, isIn) || other.isIn == isIn)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.turnStartScore, turnStartScore) || other.turnStartScore == turnStartScore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorState&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.playerIds, playerIds)&&(identical(other.score, score) || other.score == score)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&const DeepCollectionEquality().equals(other.dartThrows, dartThrows)&&(identical(other.isIn, isIn) || other.isIn == isIn)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.turnStartScore, turnStartScore) || other.turnStartScore == turnStartScore)&&const DeepCollectionEquality().equals(other.marksPerNumber, marksPerNumber)&&(identical(other.closeOrder, closeOrder) || other.closeOrder == closeOrder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,name,const DeepCollectionEquality().hash(playerIds),score,isComplete,const DeepCollectionEquality().hash(dartThrows),isIn,legsWon,turnStartScore);
+int get hashCode => Object.hash(runtimeType,competitorId,name,const DeepCollectionEquality().hash(playerIds),score,isComplete,const DeepCollectionEquality().hash(dartThrows),isIn,legsWon,turnStartScore,const DeepCollectionEquality().hash(marksPerNumber),closeOrder);
 
 @override
 String toString() {
-  return 'CompetitorState(competitorId: $competitorId, name: $name, playerIds: $playerIds, score: $score, isComplete: $isComplete, dartThrows: $dartThrows, isIn: $isIn, legsWon: $legsWon, turnStartScore: $turnStartScore)';
+  return 'CompetitorState(competitorId: $competitorId, name: $name, playerIds: $playerIds, score: $score, isComplete: $isComplete, dartThrows: $dartThrows, isIn: $isIn, legsWon: $legsWon, turnStartScore: $turnStartScore, marksPerNumber: $marksPerNumber, closeOrder: $closeOrder)';
 }
 
 
@@ -357,7 +358,7 @@ abstract mixin class $CompetitorStateCopyWith<$Res>  {
   factory $CompetitorStateCopyWith(CompetitorState value, $Res Function(CompetitorState) _then) = _$CompetitorStateCopyWithImpl;
 @useResult
 $Res call({
- String competitorId, String name, List<String> playerIds, int score, bool isComplete, List<String> dartThrows, bool isIn, int legsWon, int? turnStartScore
+ String competitorId, String name, List<String> playerIds, int score, bool isComplete, List<String> dartThrows, bool isIn, int legsWon, int? turnStartScore, Map<String, int> marksPerNumber, int? closeOrder
 });
 
 
@@ -374,7 +375,7 @@ class _$CompetitorStateCopyWithImpl<$Res>
 
 /// Create a copy of CompetitorState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? name = null,Object? playerIds = null,Object? score = null,Object? isComplete = null,Object? dartThrows = null,Object? isIn = null,Object? legsWon = null,Object? turnStartScore = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? name = null,Object? playerIds = null,Object? score = null,Object? isComplete = null,Object? dartThrows = null,Object? isIn = null,Object? legsWon = null,Object? turnStartScore = freezed,Object? marksPerNumber = null,Object? closeOrder = freezed,}) {
   return _then(_self.copyWith(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -385,6 +386,8 @@ as bool,dartThrows: null == dartThrows ? _self.dartThrows : dartThrows // ignore
 as List<String>,isIn: null == isIn ? _self.isIn : isIn // ignore: cast_nullable_to_non_nullable
 as bool,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
 as int,turnStartScore: freezed == turnStartScore ? _self.turnStartScore : turnStartScore // ignore: cast_nullable_to_non_nullable
+as int?,marksPerNumber: null == marksPerNumber ? _self.marksPerNumber : marksPerNumber // ignore: cast_nullable_to_non_nullable
+as Map<String, int>,closeOrder: freezed == closeOrder ? _self.closeOrder : closeOrder // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -470,10 +473,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore,  Map<String, int> marksPerNumber,  int? closeOrder)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CompetitorState() when $default != null:
-return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore);case _:
+return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore,_that.marksPerNumber,_that.closeOrder);case _:
   return orElse();
 
 }
@@ -491,10 +494,10 @@ return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore,  Map<String, int> marksPerNumber,  int? closeOrder)  $default,) {final _that = this;
 switch (_that) {
 case _CompetitorState():
-return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore);case _:
+return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore,_that.marksPerNumber,_that.closeOrder);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -511,10 +514,10 @@ return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String competitorId,  String name,  List<String> playerIds,  int score,  bool isComplete,  List<String> dartThrows,  bool isIn,  int legsWon,  int? turnStartScore,  Map<String, int> marksPerNumber,  int? closeOrder)?  $default,) {final _that = this;
 switch (_that) {
 case _CompetitorState() when $default != null:
-return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore);case _:
+return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.isComplete,_that.dartThrows,_that.isIn,_that.legsWon,_that.turnStartScore,_that.marksPerNumber,_that.closeOrder);case _:
   return null;
 
 }
@@ -526,7 +529,7 @@ return $default(_that.competitorId,_that.name,_that.playerIds,_that.score,_that.
 @JsonSerializable()
 
 class _CompetitorState implements CompetitorState {
-  const _CompetitorState({required this.competitorId, required this.name, required final  List<String> playerIds, required this.score, this.isComplete = false, final  List<String> dartThrows = const [], this.isIn = false, this.legsWon = 0, this.turnStartScore}): _playerIds = playerIds,_dartThrows = dartThrows;
+  const _CompetitorState({required this.competitorId, required this.name, required final  List<String> playerIds, required this.score, this.isComplete = false, final  List<String> dartThrows = const [], this.isIn = false, this.legsWon = 0, this.turnStartScore, final  Map<String, int> marksPerNumber = const <String, int>{}, this.closeOrder}): _playerIds = playerIds,_dartThrows = dartThrows,_marksPerNumber = marksPerNumber;
   factory _CompetitorState.fromJson(Map<String, dynamic> json) => _$CompetitorStateFromJson(json);
 
 @override final  String competitorId;
@@ -551,6 +554,16 @@ class _CompetitorState implements CompetitorState {
 @override@JsonKey() final  bool isIn;
 @override@JsonKey() final  int legsWon;
 @override final  int? turnStartScore;
+// Null means same as score
+ final  Map<String, int> _marksPerNumber;
+// Null means same as score
+@override@JsonKey() Map<String, int> get marksPerNumber {
+  if (_marksPerNumber is EqualUnmodifiableMapView) return _marksPerNumber;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(_marksPerNumber);
+}
+
+@override final  int? closeOrder;
 
 /// Create a copy of CompetitorState
 /// with the given fields replaced by the non-null parameter values.
@@ -565,16 +578,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorState&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._playerIds, _playerIds)&&(identical(other.score, score) || other.score == score)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&const DeepCollectionEquality().equals(other._dartThrows, _dartThrows)&&(identical(other.isIn, isIn) || other.isIn == isIn)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.turnStartScore, turnStartScore) || other.turnStartScore == turnStartScore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorState&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._playerIds, _playerIds)&&(identical(other.score, score) || other.score == score)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&const DeepCollectionEquality().equals(other._dartThrows, _dartThrows)&&(identical(other.isIn, isIn) || other.isIn == isIn)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.turnStartScore, turnStartScore) || other.turnStartScore == turnStartScore)&&const DeepCollectionEquality().equals(other._marksPerNumber, _marksPerNumber)&&(identical(other.closeOrder, closeOrder) || other.closeOrder == closeOrder));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,name,const DeepCollectionEquality().hash(_playerIds),score,isComplete,const DeepCollectionEquality().hash(_dartThrows),isIn,legsWon,turnStartScore);
+int get hashCode => Object.hash(runtimeType,competitorId,name,const DeepCollectionEquality().hash(_playerIds),score,isComplete,const DeepCollectionEquality().hash(_dartThrows),isIn,legsWon,turnStartScore,const DeepCollectionEquality().hash(_marksPerNumber),closeOrder);
 
 @override
 String toString() {
-  return 'CompetitorState(competitorId: $competitorId, name: $name, playerIds: $playerIds, score: $score, isComplete: $isComplete, dartThrows: $dartThrows, isIn: $isIn, legsWon: $legsWon, turnStartScore: $turnStartScore)';
+  return 'CompetitorState(competitorId: $competitorId, name: $name, playerIds: $playerIds, score: $score, isComplete: $isComplete, dartThrows: $dartThrows, isIn: $isIn, legsWon: $legsWon, turnStartScore: $turnStartScore, marksPerNumber: $marksPerNumber, closeOrder: $closeOrder)';
 }
 
 
@@ -585,7 +598,7 @@ abstract mixin class _$CompetitorStateCopyWith<$Res> implements $CompetitorState
   factory _$CompetitorStateCopyWith(_CompetitorState value, $Res Function(_CompetitorState) _then) = __$CompetitorStateCopyWithImpl;
 @override @useResult
 $Res call({
- String competitorId, String name, List<String> playerIds, int score, bool isComplete, List<String> dartThrows, bool isIn, int legsWon, int? turnStartScore
+ String competitorId, String name, List<String> playerIds, int score, bool isComplete, List<String> dartThrows, bool isIn, int legsWon, int? turnStartScore, Map<String, int> marksPerNumber, int? closeOrder
 });
 
 
@@ -602,7 +615,7 @@ class __$CompetitorStateCopyWithImpl<$Res>
 
 /// Create a copy of CompetitorState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? competitorId = null,Object? name = null,Object? playerIds = null,Object? score = null,Object? isComplete = null,Object? dartThrows = null,Object? isIn = null,Object? legsWon = null,Object? turnStartScore = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? competitorId = null,Object? name = null,Object? playerIds = null,Object? score = null,Object? isComplete = null,Object? dartThrows = null,Object? isIn = null,Object? legsWon = null,Object? turnStartScore = freezed,Object? marksPerNumber = null,Object? closeOrder = freezed,}) {
   return _then(_CompetitorState(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -613,6 +626,8 @@ as bool,dartThrows: null == dartThrows ? _self._dartThrows : dartThrows // ignor
 as List<String>,isIn: null == isIn ? _self.isIn : isIn // ignore: cast_nullable_to_non_nullable
 as bool,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
 as int,turnStartScore: freezed == turnStartScore ? _self.turnStartScore : turnStartScore // ignore: cast_nullable_to_non_nullable
+as int?,marksPerNumber: null == marksPerNumber ? _self._marksPerNumber : marksPerNumber // ignore: cast_nullable_to_non_nullable
+as Map<String, int>,closeOrder: freezed == closeOrder ? _self.closeOrder : closeOrder // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
