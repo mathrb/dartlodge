@@ -416,6 +416,150 @@ final class UndoLastDartUseCaseProvider
 String _$undoLastDartUseCaseHash() =>
     r'ce3e43ff7caec4c1884ca2731374fd3dbd8b1dee';
 
+@ProviderFor(cricketEngine)
+final cricketEngineProvider = CricketEngineProvider._();
+
+final class CricketEngineProvider
+    extends
+        $FunctionalProvider<
+          StatelessCricketEngine,
+          StatelessCricketEngine,
+          StatelessCricketEngine
+        >
+    with $Provider<StatelessCricketEngine> {
+  CricketEngineProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cricketEngineProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cricketEngineHash();
+
+  @$internal
+  @override
+  $ProviderElement<StatelessCricketEngine> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  StatelessCricketEngine create(Ref ref) {
+    return cricketEngine(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(StatelessCricketEngine value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<StatelessCricketEngine>(value),
+    );
+  }
+}
+
+String _$cricketEngineHash() => r'6419c2b51a8e480ef55b1f5a97c74a32c76246b9';
+
+@ProviderFor(processCricketDartUseCase)
+final processCricketDartUseCaseProvider = ProcessCricketDartUseCaseProvider._();
+
+final class ProcessCricketDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          ProcessCricketDartUseCase,
+          ProcessCricketDartUseCase,
+          ProcessCricketDartUseCase
+        >
+    with $Provider<ProcessCricketDartUseCase> {
+  ProcessCricketDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'processCricketDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$processCricketDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<ProcessCricketDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ProcessCricketDartUseCase create(Ref ref) {
+    return processCricketDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ProcessCricketDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ProcessCricketDartUseCase>(value),
+    );
+  }
+}
+
+String _$processCricketDartUseCaseHash() =>
+    r'b111854dd94e7798a2b933e929ebf10f213be926';
+
+@ProviderFor(undoCricketLastDartUseCase)
+final undoCricketLastDartUseCaseProvider =
+    UndoCricketLastDartUseCaseProvider._();
+
+final class UndoCricketLastDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          UndoLastDartUseCase,
+          UndoLastDartUseCase,
+          UndoLastDartUseCase
+        >
+    with $Provider<UndoLastDartUseCase> {
+  UndoCricketLastDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'undoCricketLastDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$undoCricketLastDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<UndoLastDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  UndoLastDartUseCase create(Ref ref) {
+    return undoCricketLastDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UndoLastDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UndoLastDartUseCase>(value),
+    );
+  }
+}
+
+String _$undoCricketLastDartUseCaseHash() =>
+    r'44d8322a30d5419bf5d9c2c405d6eb4d0c066349';
+
 @ProviderFor(createGameUseCase)
 final createGameUseCaseProvider = CreateGameUseCaseProvider._();
 

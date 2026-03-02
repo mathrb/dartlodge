@@ -23,7 +23,9 @@ import '../../features/game/data/repositories/game_event_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/game/domain/engines/stateless_x01_engine.dart';
+import '../../features/game/domain/engines/stateless_cricket_engine.dart';
 import '../../features/game/domain/usecases/process_dart_use_case.dart';
+import '../../features/game/domain/usecases/process_cricket_dart_use_case.dart';
 import '../../features/game/domain/usecases/undo_last_dart_use_case.dart';
 import '../../features/game/domain/usecases/create_game_use_case.dart';
 
@@ -120,6 +122,27 @@ UndoLastDartUseCase undoLastDartUseCase(Ref ref) {
     ref.watch(x01EngineProvider),
   );
 }
+
+@Riverpod(keepAlive: true)
+StatelessCricketEngine cricketEngine(Ref ref) => StatelessCricketEngine();
+
+@Riverpod(keepAlive: true)
+ProcessCricketDartUseCase processCricketDartUseCase(Ref ref) =>
+    ProcessCricketDartUseCase(
+      ref.watch(gameRepositoryProvider),
+      ref.watch(gameEventRepositoryProvider),
+      ref.watch(dartThrowRepositoryProvider),
+      ref.watch(cricketEngineProvider),
+    );
+
+@Riverpod(keepAlive: true)
+UndoLastDartUseCase undoCricketLastDartUseCase(Ref ref) =>
+    UndoLastDartUseCase(
+      ref.watch(gameRepositoryProvider),
+      ref.watch(gameEventRepositoryProvider),
+      ref.watch(dartThrowRepositoryProvider),
+      ref.watch(cricketEngineProvider),
+    );
 
 @Riverpod(keepAlive: true)
 CreateGameUseCase createGameUseCase(Ref ref) {
