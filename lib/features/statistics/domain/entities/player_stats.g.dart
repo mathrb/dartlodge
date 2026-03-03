@@ -53,4 +53,7 @@ const _$GameTypeEnumMap = {
   GameType.blindKiller: 'blindKiller',
   GameType.blindShanghai: 'blindShanghai',
   GameType.chaseTheDragon: 'chaseTheDragon',
+  GameType.catch40: 'catch40',
+  GameType.bobs27: 'bobs27',
+  GameType.checkoutPractice: 'checkoutPractice',
 };

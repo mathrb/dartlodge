@@ -49,6 +49,7 @@ Map<String, dynamic> _$CricketGameConfigToJson(CricketGameConfig instance) =>
 AroundTheClockGameConfig _$AroundTheClockGameConfigFromJson(
   Map<String, dynamic> json,
 ) => AroundTheClockGameConfig(
+  variant: json['variant'] as String? ?? 'standard',
   startingPlayerId: json['startingPlayerId'] as String? ?? null,
   $type: json['runtimeType'] as String?,
 );
@@ -56,6 +57,7 @@ AroundTheClockGameConfig _$AroundTheClockGameConfigFromJson(
 Map<String, dynamic> _$AroundTheClockGameConfigToJson(
   AroundTheClockGameConfig instance,
 ) => <String, dynamic>{
+  'variant': instance.variant,
   'startingPlayerId': instance.startingPlayerId,
   'runtimeType': instance.$type,
 };
@@ -98,12 +100,14 @@ Map<String, dynamic> _$GolfGameConfigToJson(GolfGameConfig instance) =>
 
 ShanghaiGameConfig _$ShanghaiGameConfigFromJson(Map<String, dynamic> json) =>
     ShanghaiGameConfig(
+      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? 7,
       startingPlayerId: json['startingPlayerId'] as String? ?? null,
       $type: json['runtimeType'] as String?,
     );
 
 Map<String, dynamic> _$ShanghaiGameConfigToJson(ShanghaiGameConfig instance) =>
     <String, dynamic>{
+      'totalRounds': instance.totalRounds,
       'startingPlayerId': instance.startingPlayerId,
       'runtimeType': instance.$type,
     };
@@ -211,5 +215,53 @@ Map<String, dynamic> _$ChaseTheDragonGameConfigToJson(
   ChaseTheDragonGameConfig instance,
 ) => <String, dynamic>{
   'startingPlayerId': instance.startingPlayerId,
+  'runtimeType': instance.$type,
+};
+
+Catch40GameConfig _$Catch40GameConfigFromJson(Map<String, dynamic> json) =>
+    Catch40GameConfig(
+      startingPlayerId: json['startingPlayerId'] as String,
+      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? 8,
+      roundTargets:
+          (json['roundTargets'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const [10, 15, 20, 25, 30, 35, 40, 45],
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$Catch40GameConfigToJson(Catch40GameConfig instance) =>
+    <String, dynamic>{
+      'startingPlayerId': instance.startingPlayerId,
+      'totalRounds': instance.totalRounds,
+      'roundTargets': instance.roundTargets,
+      'runtimeType': instance.$type,
+    };
+
+Bobs27GameConfig _$Bobs27GameConfigFromJson(Map<String, dynamic> json) =>
+    Bobs27GameConfig(
+      startingPlayerId: json['startingPlayerId'] as String,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$Bobs27GameConfigToJson(Bobs27GameConfig instance) =>
+    <String, dynamic>{
+      'startingPlayerId': instance.startingPlayerId,
+      'runtimeType': instance.$type,
+    };
+
+CheckoutPracticeGameConfig _$CheckoutPracticeGameConfigFromJson(
+  Map<String, dynamic> json,
+) => CheckoutPracticeGameConfig(
+  startingPlayerId: json['startingPlayerId'] as String,
+  randomOrder: json['randomOrder'] as bool? ?? false,
+  $type: json['runtimeType'] as String?,
+);
+
+Map<String, dynamic> _$CheckoutPracticeGameConfigToJson(
+  CheckoutPracticeGameConfig instance,
+) => <String, dynamic>{
+  'startingPlayerId': instance.startingPlayerId,
+  'randomOrder': instance.randomOrder,
   'runtimeType': instance.$type,
 };

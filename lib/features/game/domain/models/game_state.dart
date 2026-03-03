@@ -26,6 +26,8 @@ abstract class GameState with _$GameState {
     @Default('double') String outStrategy,
     @Default(501) int startingScore,
     @Default('standard') String cricketVariant,
+    @Default('standard') String aroundTheClockVariant,
+    @Default(7) int shanghaiTotalRounds,
   }) = _GameState;
 
   factory GameState.fromJson(Map<String, dynamic> json) => _$GameStateFromJson(json);
@@ -40,6 +42,9 @@ abstract class GameState with _$GameState {
 
     // Use runtime type checking to extract configuration
     String cricketVariant = 'standard';
+    String aroundTheClockVariant = 'standard';
+    int shanghaiTotalRounds = 7;
+
     if (game.config is X01GameConfig) {
       final x01Config = game.config as X01GameConfig;
       startingScore = x01Config.startingScore;
@@ -48,9 +53,24 @@ abstract class GameState with _$GameState {
     } else if (game.config is CricketGameConfig) {
       startingScore = 0;
       cricketVariant = (game.config as CricketGameConfig).variant;
-    } else {
-      // For non-X01/Cricket games, use default values
+    } else if (game.config is AroundTheClockGameConfig) {
       startingScore = 0;
+      aroundTheClockVariant = (game.config as AroundTheClockGameConfig).variant;
+    } else if (game.config is ShanghaiGameConfig) {
+      startingScore = 0;
+      shanghaiTotalRounds = (game.config as ShanghaiGameConfig).totalRounds;
+    } else if (game.config is Bobs27GameConfig) {
+      startingScore = 27;
+    } else {
+      startingScore = 0;
+    }
+
+    // Per-competitor initial target depends on game type
+    int? initialTarget;
+    if (game.config is AroundTheClockGameConfig) {
+      initialTarget = aroundTheClockVariant == 'reverse' ? 20 : 1;
+    } else if (game.config is CheckoutPracticeGameConfig) {
+      initialTarget = 170;
     }
 
     // Convert competitors to competitor states
@@ -58,12 +78,14 @@ abstract class GameState with _$GameState {
       competitorId: competitor.competitorId,
       name: competitor.name,
       playerIds: competitor.players.map((player) => player.playerId).toList(),
-      score: startingScore, // Score is set based on game type above
+      score: startingScore,
       isComplete: false,
       dartThrows: const [],
       isIn: false,
       legsWon: 0,
       turnStartScore: null,
+      currentTarget: initialTarget,
+      practiceRound: 1,
     )).toList();
 
     return GameState(
@@ -84,6 +106,8 @@ abstract class GameState with _$GameState {
       outStrategy: outStrategy,
       startingScore: startingScore,
       cricketVariant: cricketVariant,
+      aroundTheClockVariant: aroundTheClockVariant,
+      shanghaiTotalRounds: shanghaiTotalRounds,
     );
   }
 }
@@ -102,6 +126,10 @@ abstract class CompetitorState with _$CompetitorState {
     int? turnStartScore, // Null means same as score
     @Default(<String, int>{}) Map<String, int> marksPerNumber,
     int? closeOrder,
+    int? currentTarget,
+    @Default(1) int practiceRound,
+    @Default(0) int practiceAttempts,
+    @Default(0) int practiceSuccesses,
   }) = _CompetitorState;
 
   factory CompetitorState.fromJson(Map<String, dynamic> json) => _$CompetitorStateFromJson(json);

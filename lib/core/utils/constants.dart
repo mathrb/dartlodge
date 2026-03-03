@@ -18,6 +18,9 @@ enum GameType {
   blindKiller,
   blindShanghai,
   chaseTheDragon,
+  catch40,
+  bobs27,
+  checkoutPractice,
 }
 
 // Competitor Types

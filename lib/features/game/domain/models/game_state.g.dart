@@ -26,6 +26,8 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
   outStrategy: json['outStrategy'] as String? ?? 'double',
   startingScore: (json['startingScore'] as num?)?.toInt() ?? 501,
   cricketVariant: json['cricketVariant'] as String? ?? 'standard',
+  aroundTheClockVariant: json['aroundTheClockVariant'] as String? ?? 'standard',
+  shanghaiTotalRounds: (json['shanghaiTotalRounds'] as num?)?.toInt() ?? 7,
 );
 
 Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
@@ -45,6 +47,8 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
       'outStrategy': instance.outStrategy,
       'startingScore': instance.startingScore,
       'cricketVariant': instance.cricketVariant,
+      'aroundTheClockVariant': instance.aroundTheClockVariant,
+      'shanghaiTotalRounds': instance.shanghaiTotalRounds,
     };
 
 const _$GameTypeEnumMap = {
@@ -63,6 +67,9 @@ const _$GameTypeEnumMap = {
   GameType.blindKiller: 'blindKiller',
   GameType.blindShanghai: 'blindShanghai',
   GameType.chaseTheDragon: 'chaseTheDragon',
+  GameType.catch40: 'catch40',
+  GameType.bobs27: 'bobs27',
+  GameType.checkoutPractice: 'checkoutPractice',
 };
 
 const _$GameEngineStatusEnumMap = {
@@ -95,6 +102,10 @@ _CompetitorState _$CompetitorStateFromJson(Map<String, dynamic> json) =>
           ) ??
           const <String, int>{},
       closeOrder: (json['closeOrder'] as num?)?.toInt(),
+      currentTarget: (json['currentTarget'] as num?)?.toInt(),
+      practiceRound: (json['practiceRound'] as num?)?.toInt() ?? 1,
+      practiceAttempts: (json['practiceAttempts'] as num?)?.toInt() ?? 0,
+      practiceSuccesses: (json['practiceSuccesses'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
@@ -110,4 +121,8 @@ Map<String, dynamic> _$CompetitorStateToJson(_CompetitorState instance) =>
       'turnStartScore': instance.turnStartScore,
       'marksPerNumber': instance.marksPerNumber,
       'closeOrder': instance.closeOrder,
+      'currentTarget': instance.currentTarget,
+      'practiceRound': instance.practiceRound,
+      'practiceAttempts': instance.practiceAttempts,
+      'practiceSuccesses': instance.practiceSuccesses,
     };

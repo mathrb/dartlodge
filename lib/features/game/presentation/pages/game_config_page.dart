@@ -51,6 +51,9 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         blindKiller: (c) => c.startingPlayerId,
         blindShanghai: (c) => c.startingPlayerId,
         chaseTheDragon: (c) => c.startingPlayerId,
+        catch40: (c) => c.startingPlayerId,
+        bobs27: (c) => c.startingPlayerId,
+        checkoutPractice: (c) => c.startingPlayerId,
       );
 
   void _updateStartingPlayerId(String? id) {
@@ -71,6 +74,9 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         blindKiller: (c) => c.copyWith(startingPlayerId: id),
         blindShanghai: (c) => c.copyWith(startingPlayerId: id),
         chaseTheDragon: (c) => c.copyWith(startingPlayerId: id),
+        catch40: (c) => c.copyWith(startingPlayerId: id),
+        bobs27: (c) => c.copyWith(startingPlayerId: id),
+        checkoutPractice: (c) => c.copyWith(startingPlayerId: id),
       );
     });
   }
@@ -142,6 +148,9 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       blindKiller: (_) => [],
       blindShanghai: (_) => [],
       chaseTheDragon: (_) => [],
+      catch40: (_) => [],
+      bobs27: (_) => [],
+      checkoutPractice: (_) => [],
     );
   }
 

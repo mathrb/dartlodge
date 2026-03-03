@@ -25,6 +25,7 @@ abstract class GameConfig with _$GameConfig {
   }) = CricketGameConfig;
 
   const factory GameConfig.aroundTheClock({
+    @Default('standard') String variant, // 'standard', 'reverse', 'doublesOnly'
     @Default(null) String? startingPlayerId,
   }) = AroundTheClockGameConfig;
   const factory GameConfig.killer({
@@ -37,6 +38,7 @@ abstract class GameConfig with _$GameConfig {
     @Default(null) String? startingPlayerId,
   }) = GolfGameConfig;
   const factory GameConfig.shanghai({
+    @Default(7) int totalRounds,
     @Default(null) String? startingPlayerId,
   }) = ShanghaiGameConfig;
   const factory GameConfig.scram({
@@ -63,6 +65,21 @@ abstract class GameConfig with _$GameConfig {
   const factory GameConfig.chaseTheDragon({
     @Default(null) String? startingPlayerId,
   }) = ChaseTheDragonGameConfig;
+
+  const factory GameConfig.catch40({
+    required String startingPlayerId,
+    @Default(8) int totalRounds,
+    @Default([10, 15, 20, 25, 30, 35, 40, 45]) List<int> roundTargets,
+  }) = Catch40GameConfig;
+
+  const factory GameConfig.bobs27({
+    required String startingPlayerId,
+  }) = Bobs27GameConfig;
+
+  const factory GameConfig.checkoutPractice({
+    required String startingPlayerId,
+    @Default(false) bool randomOrder,
+  }) = CheckoutPracticeGameConfig;
 
   factory GameConfig.fromJson(Map<String, dynamic> json) => _$GameConfigFromJson(json);
 }
