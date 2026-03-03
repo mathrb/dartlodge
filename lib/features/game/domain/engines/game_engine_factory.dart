@@ -2,6 +2,7 @@ import 'base_game_engine.dart';
 import 'stateless_x01_engine.dart';
 import 'stateless_cricket_engine.dart';
 import 'stateless_around_the_clock_engine.dart';
+import 'stateless_bobs_27_engine.dart';
 import 'package:my_darts/core/utils/constants.dart';
 
 /// Game Engine Factory
@@ -16,6 +17,8 @@ class GameEngineFactory {
         return StatelessCricketEngine();
       case GameType.aroundTheClock:
         return StatelessAroundTheClockEngine();
+      case GameType.bobs27:
+        return StatelessBobs27Engine();
       default:
         throw GameEngineException('Game type $gameType not supported');
     }
@@ -27,6 +30,7 @@ class GameEngineFactory {
       GameType.x01,
       GameType.cricket,
       GameType.aroundTheClock,
+      GameType.bobs27,
     ];
   }
   
