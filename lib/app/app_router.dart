@@ -16,6 +16,7 @@ import 'package:my_darts/features/players/presentation/pages/player_list_page.da
 import 'package:my_darts/features/settings/presentation/pages/settings_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/stats_tab_page.dart';
 import 'package:my_darts/features/game/presentation/pages/cricket_board_page.dart';
+import 'package:my_darts/features/game/presentation/pages/practice_board_page.dart';
 import 'package:my_darts/features/game/presentation/pages/x01_board_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
@@ -30,7 +31,7 @@ abstract final class GameRoutes {
   static const playerSelection  = '/game/player-selection';
   static const activeX01        = '/game/active/x01';
   static const activeCricket    = '/game/active/cricket';
-  static const activePractice   = '/game/active/practice';
+  static const activePractice   = '/practice-board';
 }
 
 // ── Branch navigator keys ─────────────────────────────────────────────────────
@@ -97,9 +98,8 @@ Widget _x01BoardPage(BuildContext _, GoRouterState s) =>
     X01BoardPage(gameId: s.pathParameters['gameId']!);
 Widget _cricketBoardPage(BuildContext _, GoRouterState s) =>
     CricketBoardPage(gameId: s.pathParameters['gameId']!);
-Widget _practiceBoardPage(BuildContext _, GoRouterState __) => Scaffold(
-    appBar: AppBar(title: const Text('Practice')),
-    body: const Center(child: Text('Practice Board — coming in EPIC-007')));
+Widget _practiceBoardPage(BuildContext _, GoRouterState s) =>
+    PracticeBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _errorPage(BuildContext _, GoRouterState s) => Scaffold(
     appBar: AppBar(title: const Text('Error')),
     body: Center(child: Text('Page not found: ${s.uri}')));

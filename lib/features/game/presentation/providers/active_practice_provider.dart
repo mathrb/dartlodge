@@ -1,6 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/dart_throw.dart';
+import '../../domain/entities/game_event.dart';
+import '../../domain/engines/base_game_engine.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 import '../state/active_practice_state.dart';
@@ -115,6 +117,72 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         _ => throw UnsupportedError(
             'Unsupported practice game type: ${gs.gameType}'),
       };
+      return ActivePracticeState(gameState: newGs);
+    });
+  }
+
+  GameEngine _engineFor(GameType type) => switch (type) {
+    GameType.aroundTheClock => ref.read(aroundTheClockEngineProvider),
+    GameType.bobs27 => ref.read(bobs27EngineProvider),
+    GameType.shanghai => ref.read(shanghaiEngineProvider),
+    GameType.catch40 => ref.read(catch40EngineProvider),
+    GameType.checkoutPractice => ref.read(checkoutPracticeEngineProvider),
+    _ => throw UnsupportedError('Unsupported practice game type: $type'),
+  };
+
+  Future<void> startNextTurn() async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+
+    state = await AsyncValue.guard(() async {
+      final engine = _engineFor(gs.gameType);
+      int nextSeq =
+          await ref.read(gameEventRepositoryProvider).getLatestSequence(gs.gameId) + 1;
+
+      final currentCompetitor = gs.competitors[gs.currentTurnIndex];
+      final actorId = currentCompetitor.playerIds.isNotEmpty
+          ? currentCompetitor.playerIds.first
+          : 'system';
+
+      final turnEndedEvent = GameEvent(
+        eventId: const Uuid().v4(),
+        gameId: gs.gameId,
+        eventType: 'TurnEnded',
+        localSequence: nextSeq++,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': currentCompetitor.competitorId},
+        synced: false,
+        actorId: actorId,
+        source: EventSource.client,
+      );
+
+      var newGs = engine.apply(gs, turnEndedEvent).state;
+
+      final nextCompetitor = newGs.competitors[newGs.currentTurnIndex];
+      final nextActorId = nextCompetitor.playerIds.isNotEmpty
+          ? nextCompetitor.playerIds.first
+          : 'system';
+
+      final turnStartedEvent = GameEvent(
+        eventId: const Uuid().v4(),
+        gameId: gs.gameId,
+        eventType: 'TurnStarted',
+        localSequence: nextSeq++,
+        occurredAt: DateTime.now(),
+        payload: {'competitor_id': nextCompetitor.competitorId},
+        synced: false,
+        actorId: nextActorId,
+        source: EventSource.client,
+      );
+
+      newGs = engine.apply(newGs, turnStartedEvent).state;
+
+      await ref
+          .read(gameEventRepositoryProvider)
+          .appendEvents([turnEndedEvent, turnStartedEvent]);
+
       return ActivePracticeState(gameState: newGs);
     });
   }
