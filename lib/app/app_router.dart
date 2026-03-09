@@ -20,6 +20,7 @@ import 'package:my_darts/features/game/presentation/pages/practice_board_page.da
 import 'package:my_darts/features/game/presentation/pages/x01_board_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
+import 'package:my_darts/features/statistics/presentation/pages/career_stats_page.dart';
 
 part 'app_router.g.dart';
 
@@ -100,6 +101,8 @@ Widget _cricketBoardPage(BuildContext _, GoRouterState s) =>
     CricketBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _practiceBoardPage(BuildContext _, GoRouterState s) =>
     PracticeBoardPage(gameId: s.pathParameters['gameId']!);
+Widget _careerStatsPage(BuildContext _, GoRouterState s) =>
+    CareerStatsPage(playerId: s.pathParameters['playerId']!);
 Widget _errorPage(BuildContext _, GoRouterState s) => Scaffold(
     appBar: AppBar(title: const Text('Error')),
     body: Center(child: Text('Page not found: ${s.uri}')));
@@ -155,4 +158,7 @@ List<RouteBase> _buildRoutes() => [
       GoRoute(
           path: '${GameRoutes.activePractice}/:gameId',
           builder: _practiceBoardPage),
+      GoRoute(
+          path: '/stats/player/:playerId',
+          builder: _careerStatsPage),
     ];

@@ -83,7 +83,7 @@ class _PlayerList extends ConsumerWidget {
         final p = players[index];
         return PlayerCardWidget(
           player: p,
-          onTap: () => context.push('/players/${p.playerId}'),
+          onTap: () => context.go('/stats/player/${p.playerId}'),
           trailing: PopupMenuButton<String>(
             onSelected: (value) {
               if (value == 'edit') {
