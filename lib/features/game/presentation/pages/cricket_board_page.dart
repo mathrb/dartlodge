@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../features/statistics/presentation/widgets/stats_overlay_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cricket_grid_widget.dart';
 import '../widgets/cricket_score_sidebar_widget.dart';
@@ -10,14 +11,21 @@ import '../widgets/dart_indicator_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 
-class CricketBoardPage extends ConsumerWidget {
+class CricketBoardPage extends ConsumerStatefulWidget {
   const CricketBoardPage({required this.gameId, super.key});
 
   final String gameId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState = ref.watch(activeCricketGameProvider(gameId));
+  ConsumerState<CricketBoardPage> createState() => _CricketBoardPageState();
+}
+
+class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
+  bool _showStatsOverlay = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncState = ref.watch(activeCricketGameProvider(widget.gameId));
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -48,7 +56,7 @@ class CricketBoardPage extends ConsumerWidget {
                 winnerName: winner.name,
                 legNumber: gameState.currentLegIndex,
                 onNextLeg: () => ref
-                    .read(activeCricketGameProvider(gameId).notifier)
+                    .read(activeCricketGameProvider(widget.gameId).notifier)
                     .dismissLegModal(),
               ),
             );
@@ -65,7 +73,7 @@ class CricketBoardPage extends ConsumerWidget {
               builder: (_) => GameCompleteModalWidget(
                 winnerName: winner.name,
                 onNewGame: () => context.go(GameRoutes.home),
-                onViewStats: () => context.go('/stats'),
+                onViewStats: () => context.go('/post-game/${widget.gameId}'),
               ),
             );
           });
@@ -76,6 +84,59 @@ class CricketBoardPage extends ConsumerWidget {
           'no-score' => 'No Score',
           _ => 'Standard',
         };
+
+        final boardBody = Column(
+          children: [
+            DartIndicatorWidget(dartsThrown: gameState.dartsThrownInTurn),
+            CricketScoreSidebarWidget(gameState: gameState),
+            Expanded(
+              child: CricketGridWidget(
+                gameState: gameState,
+                onSegmentTapped: gameState.isComplete
+                    ? (_) {}
+                    : (segment) => ref
+                        .read(activeCricketGameProvider(widget.gameId).notifier)
+                        .processDart(segment),
+              ),
+            ),
+            _BottomBar(
+              enabled: !gameState.isComplete,
+              canUndo: !gameState.isComplete &&
+                  (gameState.dartsThrownInTurn > 0 ||
+                      gameState.competitors
+                          .any((c) => c.dartThrows.isNotEmpty)),
+              onUndo: () => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .undoDart(),
+              onMiss: () => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .processDart('MISS'),
+              onNextRound: () => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .dismissLegModal(),
+            ),
+          ],
+        );
+
+        final stackChildren = <Widget>[boardBody];
+
+        if (_showStatsOverlay) {
+          stackChildren.add(
+            GestureDetector(
+              onTap: () => setState(() => _showStatsOverlay = false),
+              child: Container(color: Colors.black.withValues(alpha: 0.3)),
+            ),
+          );
+          stackChildren.add(
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: StatsOverlayWidget(
+                gameId: widget.gameId,
+                onDismiss: () => setState(() => _showStatsOverlay = false),
+              ),
+            ),
+          );
+        }
 
         return Scaffold(
           appBar: AppBar(
@@ -96,37 +157,13 @@ class CricketBoardPage extends ConsumerWidget {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              DartIndicatorWidget(dartsThrown: gameState.dartsThrownInTurn),
-              CricketScoreSidebarWidget(gameState: gameState),
-              Expanded(
-                child: CricketGridWidget(
-                  gameState: gameState,
-                  onSegmentTapped: gameState.isComplete
-                      ? (_) {}
-                      : (segment) => ref
-                          .read(activeCricketGameProvider(gameId).notifier)
-                          .processDart(segment),
-                ),
-              ),
-              _BottomBar(
-                enabled: !gameState.isComplete,
-                canUndo: !gameState.isComplete &&
-                    (gameState.dartsThrownInTurn > 0 ||
-                        gameState.competitors
-                            .any((c) => c.dartThrows.isNotEmpty)),
-                onUndo: () => ref
-                    .read(activeCricketGameProvider(gameId).notifier)
-                    .undoDart(),
-                onMiss: () => ref
-                    .read(activeCricketGameProvider(gameId).notifier)
-                    .processDart('MISS'),
-                onNextRound: () => ref
-                    .read(activeCricketGameProvider(gameId).notifier)
-                    .dismissLegModal(),
-              ),
-            ],
+          floatingActionButton: FloatingActionButton.small(
+            onPressed: () => setState(() => _showStatsOverlay = !_showStatsOverlay),
+            child: const Icon(Icons.bar_chart),
+          ),
+          body: Stack(
+            fit: StackFit.expand,
+            children: stackChildren,
           ),
         );
       },

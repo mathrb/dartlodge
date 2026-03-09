@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../features/statistics/presentation/widgets/stats_overlay_widget.dart';
 import '../providers/active_game_provider.dart';
 import '../widgets/bust_overlay_widget.dart';
 import '../widgets/dart_indicator_widget.dart';
@@ -11,14 +12,21 @@ import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/player_score_section_widget.dart';
 
-class X01BoardPage extends ConsumerWidget {
+class X01BoardPage extends ConsumerStatefulWidget {
   const X01BoardPage({required this.gameId, super.key});
 
   final String gameId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState = ref.watch(activeGameProvider(gameId));
+  ConsumerState<X01BoardPage> createState() => _X01BoardPageState();
+}
+
+class _X01BoardPageState extends ConsumerState<X01BoardPage> {
+  bool _showStatsOverlay = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncState = ref.watch(activeGameProvider(widget.gameId));
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -49,7 +57,7 @@ class X01BoardPage extends ConsumerWidget {
                 winnerName: winner.name,
                 legNumber: gameState.currentLegIndex,
                 onNextLeg: () => ref
-                    .read(activeGameProvider(gameId).notifier)
+                    .read(activeGameProvider(widget.gameId).notifier)
                     .dismissLegModal(),
               ),
             );
@@ -66,7 +74,7 @@ class X01BoardPage extends ConsumerWidget {
               builder: (_) => GameCompleteModalWidget(
                 winnerName: winner.name,
                 onNewGame: () => context.go(GameRoutes.home),
-                onViewStats: () => context.go('/stats'),
+                onViewStats: () => context.go('/post-game/${widget.gameId}'),
               ),
             );
           });
@@ -79,7 +87,7 @@ class X01BoardPage extends ConsumerWidget {
             Expanded(
               child: DartInputGridWidget(
                 onSegmentTapped: (segment) => ref
-                    .read(activeGameProvider(gameId).notifier)
+                    .read(activeGameProvider(widget.gameId).notifier)
                     .processDart(segment),
                 enabled: !gameState.isComplete,
               ),
@@ -90,10 +98,10 @@ class X01BoardPage extends ConsumerWidget {
                       gameState.competitors
                           .any((c) => c.dartThrows.isNotEmpty)),
               onUndo: () =>
-                  ref.read(activeGameProvider(gameId).notifier).undoDart(),
+                  ref.read(activeGameProvider(widget.gameId).notifier).undoDart(),
               onNextRound: () {
                 final notifier =
-                    ref.read(activeGameProvider(gameId).notifier);
+                    ref.read(activeGameProvider(widget.gameId).notifier);
                 notifier.dismissBust();
                 notifier.dismissLegModal();
               },
@@ -101,17 +109,33 @@ class X01BoardPage extends ConsumerWidget {
           ],
         );
 
+        final stackChildren = <Widget>[body];
+
         if (activeGameState.showBust) {
-          body = Stack(
-            fit: StackFit.expand,
-            children: [
-              body,
-              BustOverlayWidget(
-                onDismiss: () => ref
-                    .read(activeGameProvider(gameId).notifier)
-                    .dismissBust(),
+          stackChildren.add(
+            BustOverlayWidget(
+              onDismiss: () => ref
+                  .read(activeGameProvider(widget.gameId).notifier)
+                  .dismissBust(),
+            ),
+          );
+        }
+
+        if (_showStatsOverlay) {
+          stackChildren.add(
+            GestureDetector(
+              onTap: () => setState(() => _showStatsOverlay = false),
+              child: Container(color: Colors.black.withValues(alpha: 0.3)),
+            ),
+          );
+          stackChildren.add(
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: StatsOverlayWidget(
+                gameId: widget.gameId,
+                onDismiss: () => setState(() => _showStatsOverlay = false),
               ),
-            ],
+            ),
           );
         }
 
@@ -138,7 +162,14 @@ class X01BoardPage extends ConsumerWidget {
               ),
             ],
           ),
-          body: body,
+          floatingActionButton: FloatingActionButton.small(
+            onPressed: () => setState(() => _showStatsOverlay = !_showStatsOverlay),
+            child: const Icon(Icons.bar_chart),
+          ),
+          body: Stack(
+            fit: StackFit.expand,
+            children: stackChildren,
+          ),
         );
       },
     );
