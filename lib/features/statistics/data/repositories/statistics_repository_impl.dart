@@ -5,11 +5,25 @@
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math' show min;
 import '../../domain/entities/player_stats.dart';
 import '../../domain/entities/game_stats.dart';
 import '../../domain/repositories/statistics_repository.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/core/error/repository_exception.dart' hide DatabaseException;
+import 'package:my_darts/features/game/domain/entities/game_event.dart';
+import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
+import 'package:my_darts/features/statistics/domain/engines/projection_runner.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_average_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_legs_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
 
 
 class StatisticsRepositoryImpl implements StatisticsRepository {
@@ -160,93 +174,18 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         throw PlayerNotFoundException(playerId);
       }
 
-      // Build query for dart throws
-      String query = 'SELECT * FROM dart_throws WHERE player_id = ?';
-      List<dynamic> whereArgs = [playerId];
-
-      // Filter by game type if specified
-      if (gameType != null) {
-        query += ' AND game_id IN (SELECT game_id FROM games WHERE game_type = ?)';
-        whereArgs.add(gameType.name);
-      }
-
-      // Filter by date range if specified
-      if (from != null || to != null) {
-        query += ' AND game_id IN (SELECT game_id FROM games WHERE 1=1';
-        if (from != null) {
-          query += ' AND start_time >= ?';
-          whereArgs.add(from.toIso8601String());
-        }
-        if (to != null) {
-          query += ' AND start_time <= ?';
-          whereArgs.add(to.toIso8601String());
-        }
-        query += ')';
-      }
-
-      query += ' ORDER BY game_id, turn_number, dart_number';
-
-      final dartThrows = await _db.rawQuery(query, whereArgs);
-
-      if (dartThrows.isEmpty) {
-        return _createEmptyPlayerStats(playerId, gameType);
-      }
-
-      // Calculate basic statistics
-      int totalDarts = dartThrows.length;
-      int totalScore = dartThrows.fold(0, (sum, throwData) => sum + (throwData['score'] as int));
-      double threeDartAverage = totalDarts > 0 ? (totalScore / totalDarts) * 3 : 0.0;
-
-      // Get distinct game count
-      final gamesQuery = 'SELECT COUNT(DISTINCT game_id) as game_count FROM dart_throws WHERE player_id = ?';
-      final gamesResult = await _db.rawQuery(gamesQuery, [playerId]);
-      int totalGames = gamesResult.first['game_count'] as int;
-
-      // Get games won count
-      final gamesWon = await _getGamesWonByPlayer(playerId, gameType);
-      double winRate = totalGames > 0 ? gamesWon / totalGames : 0.0;
-
-      // Calculate checkout percentage (X01 specific)
-      double? checkoutPercentage;
-      int? highestCheckout;
-      
-      if (gameType == GameType.x01 || gameType == null) {
-        final x01Stats = await _calculateX01Statistics(playerId, gameType);
-        checkoutPercentage = x01Stats['checkoutPercentage'];
-        highestCheckout = x01Stats['highestCheckout'];
-      }
-
-      // Calculate highest turn score
-      final highestTurnScore = await _calculateHighestTurnScore(playerId, gameType);
-
-      // Calculate darts per leg
-      final legsWon = await _getLegsWonByPlayer(playerId, gameType);
-      double dartsPerLeg = legsWon > 0 ? totalDarts / legsWon : 0.0;
-
-      // Calculate bust rate
-      final bustRate = await _calculateBustRate(playerId, gameType);
-
-      return PlayerStats(
-        playerId: playerId,
-        gameType: gameType ?? GameType.x01,
-        totalGames: totalGames,
-        gamesWon: gamesWon,
-        winRate: winRate,
-        threeDartAverage: threeDartAverage,
-        checkoutPercentage: checkoutPercentage,
-        highestCheckout: highestCheckout,
-        highestTurnScore: highestTurnScore,
-        totalDartsThrown: totalDarts,
-        dartsPerLeg: dartsPerLeg,
-        bustRate: bustRate,
+      final stats = await _buildPlayerStatsViaProjection(
+        playerId,
+        gameType: gameType,
+        from: from,
+        to: to,
       );
+      return stats ?? _createEmptyPlayerStats(playerId, gameType);
     } on RepositoryException {
       rethrow;
     } on DatabaseException catch (e) {
-      print('Database error in getPlayerStats: ${e.toString()}');
       throw StatisticsException('Failed to retrieve player statistics: ${e.toString()}');
     } catch (e) {
-      print('Unexpected error in getPlayerStats: ${e.toString()}');
       throw StatisticsException('Failed to retrieve player statistics');
     }
   }
@@ -349,10 +288,11 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
   @override
   Stream<PlayerStats> watchPlayerStats(String playerId, {GameType? gameType}) {
-    // Implement a polling mechanism since sqflite doesn't have built-in change detection
-    // This provides a stream that updates periodically
     return Stream.periodic(const Duration(seconds: 5), (_) {})
-      .asyncMap((_) async => getPlayerStats(playerId, gameType: gameType))
+      .asyncMap((_) async {
+        final stats = await _buildPlayerStatsViaProjection(playerId, gameType: gameType);
+        return stats ?? _createEmptyPlayerStats(playerId, gameType);
+      })
       .distinct()
       .handleError((error) {
         if (error is RepositoryException) throw error;
@@ -419,6 +359,130 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       totalDartsThrown: 0,
       dartsPerLeg: 0.0,
       bustRate: 0.0,
+    );
+  }
+
+  Future<PlayerStats?> _buildPlayerStatsViaProjection(
+    String playerId, {
+    GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    // 1. Query games involving this player
+    String gamesQuery = '''
+      SELECT DISTINCT g.game_id, g.config_json, g.game_type, g.start_time
+      FROM games g
+      JOIN competitors c ON g.game_id = c.game_id
+      JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
+      WHERE cp.player_id = ?
+    ''';
+    final List<dynamic> gamesArgs = [playerId];
+
+    if (gameType != null) {
+      gamesQuery += ' AND g.game_type = ?';
+      gamesArgs.add(gameType.name);
+    }
+    if (from != null) {
+      gamesQuery += ' AND g.start_time >= ?';
+      gamesArgs.add(from.toIso8601String());
+    }
+    if (to != null) {
+      gamesQuery += ' AND g.start_time <= ?';
+      gamesArgs.add(to.toIso8601String());
+    }
+
+    final gamesResult = await _db.rawQuery(gamesQuery, gamesArgs);
+    if (gamesResult.isEmpty) return null;
+
+    final gameIds = gamesResult.map((r) => r['game_id'] as String).toList();
+    final totalGames = gameIds.length;
+    final effectiveGameType = gameType ?? GameType.x01;
+
+    // 2. Get totalDartsThrown from dart_throws (SQL fallback — projections
+    //    count DartThrown events, but contract tests insert throws without events)
+    final placeholders = gameIds.map((_) => '?').join(',');
+    final throwsResult = await _db.rawQuery(
+      'SELECT COUNT(*) as cnt FROM dart_throws WHERE player_id = ? AND game_id IN ($placeholders)',
+      [playerId, ...gameIds],
+    );
+    final totalDartsThrown = throwsResult.first['cnt'] as int? ?? 0;
+
+    // 3. Query all events for those games ordered by local_sequence
+    final eventsResult = await _db.rawQuery(
+      'SELECT * FROM game_events WHERE game_id IN ($placeholders) ORDER BY local_sequence ASC',
+      gameIds,
+    );
+    final events = eventsResult.map((row) => GameEvent.fromJson(row)).toList();
+
+    // 4. Extract in/out strategy from most recent game's config_json
+    String inStrategy = 'straight';
+    String outStrategy = 'double';
+    final sortedGames = [...gamesResult]
+      ..sort((a, b) => (b['start_time'] as String).compareTo(a['start_time'] as String));
+    final latestConfigJson = sortedGames.first['config_json'] as String?;
+    if (latestConfigJson != null) {
+      try {
+        final config = jsonDecode(latestConfigJson) as Map<String, dynamic>;
+        inStrategy = config['in_strategy'] as String? ?? inStrategy;
+        outStrategy = config['out_strategy'] as String? ?? outStrategy;
+      } catch (_) {}
+    }
+
+    // 5. Build context and run projections
+    final context = ProjectionContext(
+      playerId: playerId,
+      gameType: effectiveGameType,
+      inStrategy: inStrategy,
+      outStrategy: outStrategy,
+      playerIds: [playerId],
+    );
+
+    final runner = ProjectionRunner([
+      X01AverageProjection(),
+      X01BustRateProjection(),
+      X01CheckoutProjection(),
+      X01DartsPerLegProjection(),
+      X01DoubleOutProjection(),
+      X01FirstDartInProjection(),
+      X01HighestCheckoutProjection(),
+      X01HighestTurnScoreProjection(),
+      X01LegsProjection(),
+      X01WinRateProjection(),
+    ]);
+
+    runner.init(context);
+    runner.run(events);
+
+    // 6. Handle DartCorrected events
+    final correctedEvents = events.where((e) => e.eventType == 'DartCorrected').toList();
+    if (correctedEvents.isNotEmpty) {
+      final minSeq = correctedEvents.map((e) => e.localSequence).reduce(min);
+      runner.replayFrom(events, minSeq);
+    }
+
+    // 7. Map snapshots to PlayerStats
+    final snap = runner.snapshot();
+    final avgSnap = snap['x01_average'] ?? {};
+    final bustSnap = snap['x01_bust_rate'] ?? {};
+    final checkoutSnap = snap['x01_checkout'] ?? {};
+    final dartsPerLegSnap = snap['x01.dartsPerLeg'] ?? {};
+    final highestCheckoutSnap = snap['x01_highest_checkout'] ?? {};
+    final highestTurnSnap = snap['x01_highest_turn_score'] ?? {};
+    final winSnap = snap['x01.winRate'] ?? {};
+
+    return PlayerStats(
+      playerId: playerId,
+      gameType: effectiveGameType,
+      totalGames: totalGames,
+      totalDartsThrown: totalDartsThrown,
+      threeDartAverage: (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0,
+      bustRate: (bustSnap['bustRate'] as num?)?.toDouble() ?? 0.0,
+      checkoutPercentage: (checkoutSnap['checkoutPercentage'] as num?)?.toDouble(),
+      highestCheckout: highestCheckoutSnap['highestCheckout'] as int?,
+      highestTurnScore: highestTurnSnap['highestTurnScore'] as int? ?? 0,
+      dartsPerLeg: (dartsPerLegSnap['dartsPerLeg'] as num?)?.toDouble() ?? 0.0,
+      winRate: (winSnap['winRate'] as num?)?.toDouble() ?? 0.0,
+      gamesWon: winSnap['gamesWon'] as int? ?? 0,
     );
   }
 
