@@ -82,7 +82,9 @@ Before implementing anything, check the relevant spec. These documents are the s
 | Around the Clock transitions | `docs/games/around-the-clock.md` |
 | Statistics definitions and formulas | `docs/statistics/x01.projections.md`, `docs/statistics/statistics.architecture.md` |
 | Riverpod providers, state classes, patterns | `docs/STATE_MANAGEMENT.md` |
-| Screen layouts, navigation, UI components | `docs/UI_SCREEN_FLOWS_V3_FINAL.md` |
+| Navigation flows, screen index, cross-screen patterns | `docs/UI_SCREEN_FLOWS_V3_FINAL.md` |
+| Screen layout details, typography, color usage per screen | `docs/design/SCREEN_SPECS.md` |
+| Design tokens, color palette, typography scale, spacing | `docs/design/DESIGN_SYSTEM.md` |
 | Data entities, JSON configs, field names | `docs/DATA.md` |
 | Backend REST endpoints (optional feature) | `docs/API_CONTRACT.md` |
 
