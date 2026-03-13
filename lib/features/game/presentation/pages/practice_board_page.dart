@@ -72,7 +72,13 @@ class PracticeBoardPage extends ConsumerWidget {
         final notifier = ref.read(activePracticeProvider(gameId).notifier);
         final competitor = gs.competitors[gs.currentTurnIndex];
         final isAtc = gs.gameType == GameType.aroundTheClock;
+        final isBobs27 = gs.gameType == GameType.bobs27;
+        final isCatch40 = gs.gameType == GameType.catch40;
         final doublesOnly = isAtc && gs.aroundTheClockVariant == 'doublesOnly';
+        final effectiveTarget = isBobs27 ? competitor.practiceRound : competitor.currentTarget;
+        final roundScore = isCatch40
+            ? _computeRoundScore(competitor.dartThrows, gs.dartsThrownInTurn)
+            : 0;
 
         // Completion modal
         if (practiceState.pendingGameWinnerId != null) {
@@ -91,7 +97,7 @@ class PracticeBoardPage extends ConsumerWidget {
                   insetPadding: const EdgeInsets.symmetric(horizontal: 24),
                   title: Text(
                     'Drill Complete!',
-                    style: AppTextStyles.headingSmall.copyWith(
+                    style: AppTextStyles.headingLarge.copyWith(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
@@ -125,7 +131,12 @@ class PracticeBoardPage extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                   insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-                  title: Text('${winner.name} wins!'),
+                  title: Text(
+                    '${winner.name} wins!',
+                    style: AppTextStyles.headingLarge.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
                   actions: [
                     FilledButton(
                       onPressed: () {
@@ -140,7 +151,7 @@ class PracticeBoardPage extends ConsumerWidget {
               );
             }
           });
-        } else if (gs.isComplete) {
+        } else if (isCatch40 && gs.isComplete) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!context.mounted) return;
             showDialog<void>(
@@ -151,10 +162,19 @@ class PracticeBoardPage extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                 ),
                 insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-                title: const Text('Drill complete!'),
+                title: Text(
+                  'Drill Complete!',
+                  style: AppTextStyles.headingLarge.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 content: Text(
-                  'Attempts: ${competitor.practiceAttempts}\n'
-                  'Successes: ${competitor.practiceSuccesses}',
+                  'Rounds attempted: ${gs.catch40TotalRounds}\n'
+                  'Rounds passed (≥40): ${competitor.practiceSuccesses}\n'
+                  'Total score across all rounds: ${competitor.score}',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 actions: [
                   FilledButton(
@@ -168,6 +188,80 @@ class PracticeBoardPage extends ConsumerWidget {
                 ],
               ),
             );
+          });
+        } else if (gs.isComplete) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
+            if (isBobs27) {
+              final score = competitor.score;
+              final drillEnded = score <= 0;
+              final roundReached = competitor.practiceRound - 1;
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    drillEnded ? 'Drill Ended' : 'Drill Complete!',
+                    style: AppTextStyles.headingLarge.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  content: Text(
+                    drillEnded
+                        ? 'Your score went to zero. You reached round $roundReached. Final score: $score'
+                        : 'Final score: $score',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  actions: [
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go(GameRoutes.home);
+                        notifier.dismissGameModal();
+                      },
+                      child: const Text('NEW DRILL'),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    'Drill complete!',
+                    style: AppTextStyles.headingLarge.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  content: Text(
+                    'Attempts: ${competitor.practiceAttempts}\n'
+                    'Successes: ${competitor.practiceSuccesses}',
+                  ),
+                  actions: [
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go(GameRoutes.home);
+                        notifier.dismissGameModal();
+                      },
+                      child: const Text('NEW DRILL'),
+                    ),
+                  ],
+                ),
+              );
+            }
           });
         }
 
@@ -219,22 +313,25 @@ class PracticeBoardPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: DartboardHighlightWidget(
-                  currentTarget: competitor.currentTarget,
+                  currentTarget: effectiveTarget,
                   doublesOnly: doublesOnly,
+                  bobs27: isBobs27,
+                  noHighlight: isCatch40,
                 ),
               ),
               PracticeTargetDisplayWidget(
                 gameType: gs.gameType,
-                currentTarget: competitor.currentTarget,
+                currentTarget: effectiveTarget,
                 practiceRound: competitor.practiceRound,
                 totalRounds: _totalRounds(gs),
                 score: competitor.score,
                 practiceAttempts: competitor.practiceAttempts,
                 practiceSuccesses: competitor.practiceSuccesses,
+                roundScore: roundScore,
               ),
               PracticeInputButtonsWidget(
                 gameType: gs.gameType,
-                currentTarget: competitor.currentTarget,
+                currentTarget: effectiveTarget,
                 doublesOnly: doublesOnly,
                 enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
                 onDartThrown: (seg) => notifier.processDart(seg),
@@ -258,6 +355,21 @@ class PracticeBoardPage extends ConsumerWidget {
     );
   }
 
+  static int _computeRoundScore(List<String> dartThrows, int dartsThrownInTurn) {
+    if (dartsThrownInTurn == 0) return 0;
+    final current = dartThrows.sublist(dartThrows.length - dartsThrownInTurn);
+    return current.map(_dartScoreValue).fold(0, (a, b) => a + b);
+  }
+
+  static int _dartScoreValue(String s) {
+    if (s == 'MISS') return 0;
+    if (s == 'DB') return 50;
+    if (s == 'SB') return 25;
+    if (s.startsWith('D')) return int.parse(s.substring(1)) * 2;
+    if (s.startsWith('T')) return int.parse(s.substring(1)) * 3;
+    return int.parse(s);
+  }
+
   static String _modeName(GameType type) => switch (type) {
         GameType.aroundTheClock => 'Around the Clock',
         GameType.bobs27 => "Bob's 27",
@@ -270,11 +382,11 @@ class PracticeBoardPage extends ConsumerWidget {
   static String _progressText(GameState gs, CompetitorState c) =>
       switch (gs.gameType) {
         GameType.aroundTheClock => 'Number: ${c.practiceRound} / 20',
-        GameType.bobs27 => 'Target: D${c.currentTarget ?? 1}',
+        GameType.bobs27 => 'Target: D${c.practiceRound}',
         GameType.shanghai =>
           'Round: ${c.practiceRound} / ${gs.shanghaiTotalRounds}',
         GameType.catch40 =>
-          'Round: ${c.practiceRound} / ${gs.catch40TotalRounds}',
+          'Round ${c.practiceRound} / ${gs.catch40TotalRounds}',
         GameType.checkoutPractice =>
           '${c.practiceSuccesses}/${c.practiceAttempts} checkouts',
         _ => '',

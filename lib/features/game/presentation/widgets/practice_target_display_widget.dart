@@ -11,6 +11,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     required this.score,
     required this.practiceAttempts,
     required this.practiceSuccesses,
+    this.roundScore = 0,
     super.key,
   });
 
@@ -21,8 +22,10 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   final int score;
   final int practiceAttempts;
   final int practiceSuccesses;
+  final int roundScore;
 
   String get _targetLabel {
+    if (gameType == GameType.catch40) return '≥40 pts';
     final n = currentTarget;
     if (n == null) return '—';
     return switch (gameType) {
@@ -40,7 +43,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
       GameType.shanghai =>
         'Score: $score | Round $practiceRound/$totalRounds',
       GameType.catch40 =>
-        'Score: $score | Round $practiceRound/$totalRounds',
+        'Round $practiceRound/$totalRounds · scored: $roundScore',
       GameType.checkoutPractice => _checkoutRate(),
       _ => '',
     };
@@ -55,6 +58,11 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final secondaryColor = gameType == GameType.catch40 && roundScore >= 40
+        ? colorScheme.primary
+        : (gameType == GameType.bobs27 && score < 0)
+            ? colorScheme.error
+            : colorScheme.onSurfaceVariant;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -70,7 +78,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
         Text(
           _secondaryMetric,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
+            color: secondaryColor,
           ),
           textAlign: TextAlign.center,
         ),

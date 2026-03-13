@@ -6,10 +6,14 @@ class DartboardHighlightWidget extends StatelessWidget {
     super.key,
     required this.currentTarget,
     required this.doublesOnly,
+    this.bobs27 = false,
+    this.noHighlight = false,
   });
 
   final int? currentTarget; // 1–20 or null (bull)
   final bool doublesOnly;
+  final bool bobs27;
+  final bool noHighlight;
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +24,8 @@ class DartboardHighlightWidget extends StatelessWidget {
         painter: _DartboardPainter(
           currentTarget: currentTarget,
           doublesOnly: doublesOnly,
+          bobs27: bobs27,
+          noHighlight: noHighlight,
           colorScheme: colorScheme,
         ),
       ),
@@ -32,10 +38,14 @@ class _DartboardPainter extends CustomPainter {
     required this.currentTarget,
     required this.doublesOnly,
     required this.colorScheme,
+    this.bobs27 = false,
+    this.noHighlight = false,
   });
 
   final int? currentTarget;
   final bool doublesOnly;
+  final bool bobs27;
+  final bool noHighlight;
   final ColorScheme colorScheme;
 
   // Clockwise segment order starting from top (20 at top)
@@ -60,6 +70,7 @@ class _DartboardPainter extends CustomPainter {
   static final Color _bullDouble = Colors.red[700]!;
 
   bool get _hasHighlight {
+    if (noHighlight) return false;
     if (currentTarget == null) return true;
     final t = currentTarget!;
     return t >= 1 && t <= 20;
@@ -78,7 +89,7 @@ class _DartboardPainter extends CustomPainter {
       final isTarget = currentTarget != null && currentTarget == number;
       final isDark = i.isEven;
       final baseColor = isDark ? _darkBase : _lightBase;
-      final opacity = highlighting && !isTarget ? 0.35 : 1.0;
+      final opacity = highlighting && !isTarget ? 0.35 : (isTarget && bobs27 ? 0.40 : 1.0);
 
       final startAngle = _segmentStartAngle(i);
       const sweepAngle = pi / 10; // 18 degrees
@@ -110,9 +121,12 @@ class _DartboardPainter extends CustomPainter {
 
       Color color;
       double opacity;
-      if (isTarget && !doublesOnly) {
+      if (isTarget && !doublesOnly && !bobs27) {
         color = colorScheme.primary;
         opacity = 1.0;
+      } else if (isTarget && bobs27) {
+        color = isDark ? _darkColored : _lightColored;
+        opacity = 0.40;
       } else {
         color = isDark ? _darkColored : _lightColored;
         opacity = highlighting && !isTarget ? 0.35 : 1.0;
@@ -140,9 +154,12 @@ class _DartboardPainter extends CustomPainter {
 
       Color color;
       double opacity;
-      if (isTarget && !doublesOnly) {
+      if (isTarget && !doublesOnly && !bobs27) {
         color = colorScheme.primary;
         opacity = 1.0;
+      } else if (isTarget && bobs27) {
+        color = baseColor;
+        opacity = 0.40;
       } else {
         color = baseColor;
         opacity = highlighting && !isTarget ? 0.35 : 1.0;
@@ -275,7 +292,7 @@ class _DartboardPainter extends CustomPainter {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
         ..style = PaintingStyle.fill;
 
-      final innerR = doublesOnly ? radius * _rDoubleInner : radius * _rSingleBull;
+      final innerR = (doublesOnly || bobs27) ? radius * _rDoubleInner : radius * _rSingleBull;
 
       final path = Path();
       path.moveTo(
@@ -393,6 +410,8 @@ class _DartboardPainter extends CustomPainter {
   @override
   bool shouldRepaint(_DartboardPainter oldDelegate) {
     return oldDelegate.currentTarget != currentTarget ||
-        oldDelegate.doublesOnly != doublesOnly;
+        oldDelegate.doublesOnly != doublesOnly ||
+        oldDelegate.bobs27 != bobs27 ||
+        oldDelegate.noHighlight != noHighlight;
   }
 }

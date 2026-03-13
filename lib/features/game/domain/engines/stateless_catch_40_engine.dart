@@ -101,8 +101,13 @@ class StatelessCatch40Engine implements GameEngine {
     final newRound = competitor.practiceRound + 1;
 
     final updatedCompetitors2 = List<CompetitorState>.from(newState.competitors);
-    updatedCompetitors2[newState.currentTurnIndex] =
-        competitor.copyWith(score: newScore, practiceRound: newRound);
+    updatedCompetitors2[newState.currentTurnIndex] = competitor.copyWith(
+      score: newScore,
+      practiceRound: newRound,
+      practiceAttempts: competitor.practiceAttempts + 1,
+      practiceSuccesses:
+          competitor.practiceSuccesses + (turnTotal >= roundTarget ? 1 : 0),
+    );
 
     newState = newState.copyWith(
       competitors: updatedCompetitors2,

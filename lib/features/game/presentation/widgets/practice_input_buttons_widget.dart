@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
+import 'dart_input_grid_widget.dart';
 
 class PracticeInputButtonsWidget extends StatelessWidget {
   const PracticeInputButtonsWidget({
@@ -19,10 +22,23 @@ class PracticeInputButtonsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (gameType == GameType.aroundTheClock) {
+    if (gameType == GameType.catch40) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          child: DartInputGridWidget(
+            onSegmentTapped: onDartThrown,
+            enabled: enabled,
+          ),
+        ),
+      );
+    }
+
+    if (gameType == GameType.aroundTheClock || gameType == GameType.bobs27) {
       return _AroundTheClockInputBar(
         n: currentTarget,
-        doublesOnly: doublesOnly,
+        doublesOnly: gameType == GameType.bobs27 || doublesOnly,
         enabled: enabled,
         onDartThrown: onDartThrown,
       );
@@ -188,12 +204,8 @@ class _AtcInputCell extends StatelessWidget {
                     children: [
                       Text(
                         label,
-                        style: TextStyle(
-                          fontFamily: 'DMSans',
-                          fontSize: 18,
-                          fontWeight: FontWeight.w600,
+                        style: AppTextStyles.segmentButton.copyWith(
                           color: fgColor,
-                          height: 1.0,
                         ),
                       ),
                       if (dotCount > 0) ...[
