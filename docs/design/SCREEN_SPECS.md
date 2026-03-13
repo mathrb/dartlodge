@@ -324,7 +324,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 - Active player panel: `colorActivePlayerBg` background, 4dp left border `colorActivePlayer`
 - Active player score: `colorPrimary`
 - Inactive player panel: `colorSurface`
-- Segment grid outer container: `colorSurface` background, `radiusMedium` clip. Fills width within the `space4` horizontal page margin.
+- Segment grid outer container: `colorSurface` background, `radiusNone`. Fills full screen width (edge-to-edge).
 - Individual cells: `radiusNone`. Each cell draws only its right and bottom 1dp `colorOutline` hairline border.
 - Tier boundaries (rows 2→3, rows 4→5): 1dp `colorOutlineVariant` separator (slightly stronger than `colorOutline`).
 - Row 0 / rows 1–2 (singles): `colorSurface` background, `colorOnSurface` text.
@@ -339,7 +339,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 ### Special Notes
 - **Score must never wrap or truncate.** Score panel width must be wide enough for "501" at 80sp. On narrow screens, reduce inactive score to `textScoreMedium` (48sp) before truncating.
 - **Dart indicator row** sits between AppBar and scoreboard. Round sum on the left (bold, `colorPrimary`), then up to 3 chips — thrown darts show the segment label (e.g. "T20", "SB", "14"), remaining slots show an empty outline circle. Sum increments as darts land.
-- **Segment input grid (contiguous tile layout):** The input area is a `ClipRRect` container with `radiusMedium` outer corners. No padding inside the container — cells are flush against each other and against the container walls. No spacing between cells.
+- **Segment input grid (contiguous tile layout):** The input area spans the full screen width (edge-to-edge, no horizontal margin). No padding inside the container — cells are flush against each other and against the container walls. No spacing between cells. Parent container: `radiusNone` (flat bar).
 
   Row 0: MISS / SB / DB — 3 equal-width cells. Rows 1–2: singles 20→11 and 10→1, 10 cells per row. Rows 3–4: doubles, same number order, 10 cells per row. Rows 5–6: triples, same number order, 10 cells per row. Cell heights flex equally across all 7 rows to fill available vertical space; minimum cell height 48dp.
 

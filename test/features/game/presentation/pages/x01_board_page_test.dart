@@ -423,17 +423,17 @@ void main() {
     expect(find.byIcon(Icons.lightbulb_outline), findsNothing);
   });
 
-  // ── 14. Grid row 0: MISS, SB·25, DB·50 ──────────────────────────────────────
+  // ── 14. Grid row 0: MISS, SB, DB ──────────────────────────────────────────
 
-  testWidgets('14. Segment grid row 0 has MISS, SB·25, DB·50', (tester) async {
+  testWidgets('14. Segment grid row 0 has MISS, SB, DB', (tester) async {
     _setPhoneViewport(tester);
     final notifier = _FakeActiveGameNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
     expect(find.text('MISS'), findsOneWidget);
-    expect(find.text('SB·25'), findsOneWidget);
-    expect(find.text('DB·50'), findsOneWidget);
+    expect(find.text('SB'), findsOneWidget);
+    expect(find.text('DB'), findsOneWidget);
   });
 
   // ── 15. Doubles rows have primaryContainer background ────────────────────────
@@ -486,7 +486,7 @@ void main() {
         .whereType<String>()
         .toSet();
     expect(labels, contains('Triple 20'));
-    expect(labels, contains('Double Bull, 50 points'));
+    expect(labels, contains('Double Bull'));
   });
 
   // ── 18. Tapping segment calls processDart ────────────────────────────────────

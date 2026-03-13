@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
+import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 
 class PlayerScoreSectionWidget extends StatelessWidget {
@@ -15,21 +16,44 @@ class PlayerScoreSectionWidget extends StatelessWidget {
   final Animation<double> bustFlashAnim;
 
   String _pprDisplay(CompetitorState cs) {
-    if (cs.dartThrows.length < 3) return '—';
+    if (cs.dartThrows.isEmpty) return '—';
     final totalReduction = gameState.startingScore - cs.score;
     return ((totalReduction / cs.dartThrows.length) * 3).toStringAsFixed(1);
   }
 
-  TextStyle _scoreStyle(BuildContext context) {
+  TextStyle _activeScoreStyle(BuildContext context) {
     final n = gameState.competitors.length;
-    if (n <= 2) return AppTextStyles.scoreActive(context);
+    if (n == 1) return AppTextStyles.scoreActive(context);
+    if (n == 2) return AppTextStyles.scoreLarge(context);
     if (n <= 4) return AppTextStyles.scoreMedium(context);
     return AppTextStyles.scoreSmall(context);
   }
 
+  TextStyle _inactiveScoreStyle(BuildContext context) {
+    final n = gameState.competitors.length;
+    if (n == 1) return AppTextStyles.scoreInactive(context); // N/A
+    if (n == 2) return AppTextStyles.scoreInactive(context);
+    if (n <= 4) return AppTextStyles.scoreSmall(context);
+    return AppTextStyles.scoreSmall(context);
+  }
+
+  int _roundSum(CompetitorState cs, bool isActive) {
+    if (!isActive) return 0;
+    final n = gameState.dartsThrownInTurn;
+    if (n == 0) return 0;
+    final darts = cs.dartThrows.length < n
+        ? cs.dartThrows
+        : cs.dartThrows.sublist(cs.dartThrows.length - n);
+    return darts
+        .map((s) => Segment.parse(s).scoreValue)
+        .fold(0, (a, b) => a + b);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scoreStyle = _scoreStyle(context);
+    final activeStyle = _activeScoreStyle(context);
+    final inactiveStyle = _inactiveScoreStyle(context);
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -39,7 +63,13 @@ class PlayerScoreSectionWidget extends StatelessWidget {
               child: _PlayerColumn(
                 competitor: gameState.competitors[i],
                 isActive: i == gameState.currentTurnIndex,
-                scoreStyle: scoreStyle,
+                scoreStyle: i == gameState.currentTurnIndex
+                    ? activeStyle
+                    : inactiveStyle,
+                roundSum: _roundSum(
+                  gameState.competitors[i],
+                  i == gameState.currentTurnIndex,
+                ),
                 pprDisplay: _pprDisplay(gameState.competitors[i]),
                 bustFlashAnim: bustFlashAnim,
               ),
@@ -55,6 +85,7 @@ class _PlayerColumn extends StatelessWidget {
     required this.competitor,
     required this.isActive,
     required this.scoreStyle,
+    required this.roundSum,
     required this.pprDisplay,
     required this.bustFlashAnim,
   });
@@ -62,6 +93,7 @@ class _PlayerColumn extends StatelessWidget {
   final CompetitorState competitor;
   final bool isActive;
   final TextStyle scoreStyle;
+  final int roundSum;
   final String pprDisplay;
   final Animation<double> bustFlashAnim;
 
@@ -85,6 +117,8 @@ class _PlayerColumn extends StatelessWidget {
     final nameText =
         '${competitor.name.toUpperCase()}${isActive ? ' ▶' : ''}';
 
+    final scoreColor = isActive ? cs.primary : AppColors.inactiveScore;
+
     return Stack(
       children: [
         Container(
@@ -94,7 +128,24 @@ class _PlayerColumn extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _AnimatedScore(score: competitor.score, style: scoreStyle),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  if (isActive && roundSum > 0) ...[
+                    Text(
+                      '[$roundSum]',
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
+                  _AnimatedScore(
+                    score: competitor.score,
+                    style: scoreStyle.copyWith(color: scoreColor),
+                  ),
+                ],
+              ),
               Text(
                 nameText,
                 style: AppTextStyles.playerName.copyWith(color: nameColor),

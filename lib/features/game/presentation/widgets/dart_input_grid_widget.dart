@@ -19,44 +19,42 @@ class DartInputGridWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return ClipRRect(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: Column(
-          children: [
-            // Row 0: special segments
-            Row(children: [
-              _GridCell(
-                label: 'MISS',
-                segment: 'MISS',
-                semanticLabel: 'Miss',
-                bgColor: cs.surface,
-                textColor: cs.onSurface,
-                dots: 0,
-                onTap: onSegmentTapped,
-                enabled: enabled,
-              ),
-              _GridCell(
-                label: 'SB·25',
-                segment: 'SB',
-                semanticLabel: 'Single Bull, 25 points',
-                bgColor: cs.surface,
-                textColor: cs.onSurface,
-                dots: 0,
-                onTap: onSegmentTapped,
-                enabled: enabled,
-              ),
-              _GridCell(
-                label: 'DB·50',
-                segment: 'DB',
-                semanticLabel: 'Double Bull, 50 points',
-                bgColor: cs.surface,
-                textColor: cs.onSurface,
-                dots: 0,
-                onTap: onSegmentTapped,
-                enabled: enabled,
-              ),
-            ]),
-            const _TierSeparator(),
+    return Column(
+      children: [
+        // Row 0: special segments
+        Row(children: [
+          _GridCell(
+            label: 'MISS',
+            segment: 'MISS',
+            semanticLabel: 'Miss',
+            bgColor: cs.surface,
+            textColor: cs.onSurface,
+            dots: 0,
+            onTap: onSegmentTapped,
+            enabled: enabled,
+          ),
+          _GridCell(
+            label: 'SB',
+            segment: 'SB',
+            semanticLabel: 'Single Bull',
+            bgColor: cs.surface,
+            textColor: cs.onSurface,
+            dots: 0,
+            onTap: onSegmentTapped,
+            enabled: enabled,
+          ),
+          _GridCell(
+            label: 'DB',
+            segment: 'DB',
+            semanticLabel: 'Double Bull',
+            bgColor: cs.surface,
+            textColor: cs.onSurface,
+            dots: 0,
+            onTap: onSegmentTapped,
+            enabled: enabled,
+          ),
+        ]),
+        const _TierSeparator(),
             // Singles rows
             Row(children: [
               for (final n in _row1)
@@ -141,8 +139,7 @@ class DartInputGridWidget extends StatelessWidget {
                 ),
             ]),
           ],
-        ),
-    );
+        );
   }
 }
 
@@ -234,7 +231,7 @@ class _DotRow extends StatelessWidget {
             height: 4,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.7),
+              color: color,
             ),
           ),
         ),

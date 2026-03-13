@@ -172,17 +172,18 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
+            centerTitle: true,
             title: Column(
               children: [
                 Text(
                   '${gameState.startingScore}',
                   style: AppTextStyles.headingSmall
-                      .copyWith(color: cs.onSurface),
+                      .copyWith(color: cs.onBackground),
                 ),
                 Text(
                   'Leg ${gameState.currentLegIndex + 1} of ${gameState.legsToWin}',
-                  style: tt.bodySmall
-                      ?.copyWith(color: cs.onSurfaceVariant),
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -221,7 +222,6 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     ),
                   ),
                   _BottomActionBar(
-                    dartsThrownInTurn: dartsThrownInTurn,
                     canUndo: canUndo,
                     canNext: canNext,
                     onUndo: () => ref
@@ -242,6 +242,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                 child: _WinBannerWidget(
                   visible: pendingGameWinnerId != null,
                   winnerName: winnerName ?? '',
+                  lastDart: gameState.competitors
+                      .expand((c) => [if (c.competitorId == pendingGameWinnerId && c.dartThrows.isNotEmpty) c.dartThrows.last])
+                      .firstOrNull,
                   onPostGame: () =>
                       context.go('/post-game/${widget.gameId}'),
                   onPlayAgain: () => context.go(GameRoutes.home),
@@ -278,16 +281,15 @@ class _CheckoutBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final visible = score >= 2 && score <= 170;
 
     return AnimatedSize(
-      duration: Duration.zero,
+      duration: const Duration(milliseconds: 200),
       child: Visibility(
         visible: visible,
         child: Container(
           decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
+            color: cs.surfaceVariant,
             border: Border(
               left: BorderSide(color: cs.primary, width: 2),
             ),
@@ -299,7 +301,7 @@ class _CheckoutBanner extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 checkoutSuggestion(score) ?? '',
-                style: tt.bodyMedium?.copyWith(color: cs.onSurface),
+                style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
               ),
             ],
           ),
@@ -311,14 +313,12 @@ class _CheckoutBanner extends StatelessWidget {
 
 class _BottomActionBar extends StatelessWidget {
   const _BottomActionBar({
-    required this.dartsThrownInTurn,
     required this.canUndo,
     required this.canNext,
     required this.onUndo,
     required this.onNextRound,
   });
 
-  final int dartsThrownInTurn;
   final bool canUndo;
   final bool canNext;
   final VoidCallback onUndo;
@@ -326,26 +326,29 @@ class _BottomActionBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Tooltip(
-              message: 'No darts to undo',
-              child: TextButton.icon(
-                icon: const Icon(Icons.undo),
-                label: const Text('Undo'),
-                onPressed: canUndo ? onUndo : null,
+            TextButton.icon(
+              icon: Icon(
+                Icons.undo,
+                color: canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38),
               ),
+              label: Text(
+                'Undo',
+                style: TextStyle(
+                  color: canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38),
+                ),
+              ),
+              onPressed: canUndo ? onUndo : null,
             ),
-            Tooltip(
-              message: 'Throw all 3 darts first',
-              child: FilledButton(
-                onPressed: canNext ? onNextRound : null,
-                child: const Text('NEXT ROUND'),
-              ),
+            FilledButton(
+              onPressed: canNext ? onNextRound : null,
+              child: const Text('NEXT ROUND'),
             ),
           ],
         ),
@@ -358,12 +361,14 @@ class _WinBannerWidget extends StatelessWidget {
   const _WinBannerWidget({
     required this.visible,
     required this.winnerName,
+    required this.lastDart,
     required this.onPostGame,
     required this.onPlayAgain,
   });
 
   final bool visible;
   final String winnerName;
+  final String? lastDart;
   final VoidCallback onPostGame;
   final VoidCallback onPlayAgain;
 
@@ -385,10 +390,16 @@ class _WinBannerWidget extends StatelessWidget {
             children: [
               Text(
                 winnerName.toUpperCase(),
-                style: AppTextStyles.displayLarge
-                    .copyWith(color: AppColors.win),
+                style: AppTextStyles.displayLarge.copyWith(color: AppColors.win),
               ),
-              const SizedBox(height: 24),
+              if (lastDart != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Final Score: 0  ·  Checkout: $lastDart',
+                  style: AppTextStyles.headingMedium.copyWith(color: AppColors.win),
+                ),
+              ],
+              const SizedBox(height: 32),
               FilledButton(
                 onPressed: onPostGame,
                 child: const Text('Post-Game Summary'),

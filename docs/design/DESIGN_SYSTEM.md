@@ -177,7 +177,7 @@ Base unit: **4dp**
 
 Do not add shadows to interactive controls (buttons, chips). Shadows communicate elevation, not interactivity.
 
-**Contiguous grid containers:** When a group of interactive cells forms a flush tile grid (no gaps, no individual border-radius), a parent `ClipRRect` at `radiusMedium` (12dp) gives the group rounded corners as a unit. Individual cells use `radiusNone`. Cell borders are 1dp `colorOutline` hairlines — not padding or spacing. Each cell draws only its trailing (right) and bottom edge, so shared borders between adjacent cells remain 1dp.
+**Contiguous grid containers:** When a group of interactive cells forms a flush tile grid (no gaps, no individual border-radius), a parent `ClipRRect` at `radiusMedium` (12dp) gives the group rounded corners as a unit. **Exception:** Game board input grids (X01, Practice) span the full screen width (edge-to-edge) and use `radiusNone` to maximize tap area and visual clarity. Cell borders are 1dp `colorOutline` hairlines — not padding or spacing. Each cell draws only its trailing (right) and bottom edge, so shared borders between adjacent cells remain 1dp.
 
 ---
 

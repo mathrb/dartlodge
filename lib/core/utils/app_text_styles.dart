@@ -13,6 +13,10 @@ abstract final class AppTextStyles {
       GoogleFonts.oswald(fontSize: 80, fontWeight: FontWeight.w700, height: 1.0);
 
   // ignore: avoid_unused_parameters
+  static TextStyle scoreLarge(BuildContext context) =>
+      GoogleFonts.oswald(fontSize: 64, fontWeight: FontWeight.w700, height: 1.0);
+
+  // ignore: avoid_unused_parameters
   static TextStyle scoreInactive(BuildContext context) =>
       GoogleFonts.oswald(fontSize: 56, fontWeight: FontWeight.w700, height: 1.0);
 
