@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 
 class PracticeTargetDisplayWidget extends StatelessWidget {
@@ -53,7 +54,6 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -61,17 +61,16 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
       children: [
         Text(
           _targetLabel,
-          style: (textTheme.displayLarge ?? textTheme.displayMedium)?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+          style: AppTextStyles.scoreMedium(context).copyWith(
+            color: colorScheme.primary,
           ),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           _secondaryMetric,
-          style: textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurface.withOpacity(0.6),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
           ),
           textAlign: TextAlign.center,
         ),

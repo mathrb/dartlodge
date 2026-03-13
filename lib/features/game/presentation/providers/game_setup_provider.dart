@@ -74,6 +74,21 @@ class GameSetupNotifier extends _$GameSetupNotifier {
     );
   }
 
+  /// Reorders selected players by moving the item at [oldIndex] to [newIndex].
+  /// No-ops if not in selectingPlayers.
+  void reorderPlayers(int oldIndex, int newIndex) {
+    state.maybeMap(
+      selectingPlayers: (s) {
+        final ids = List<String>.from(s.selectedPlayerIds);
+        if (newIndex > oldIndex) newIndex -= 1;
+        final id = ids.removeAt(oldIndex);
+        ids.insert(newIndex, id);
+        state = s.copyWith(selectedPlayerIds: ids);
+      },
+      orElse: () {},
+    );
+  }
+
   /// Adds or removes playerId. No-ops if not in selectingPlayers or if locked.
   void togglePlayer(String playerId) {
     state.maybeMap(

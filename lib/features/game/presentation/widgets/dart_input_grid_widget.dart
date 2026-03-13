@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-const _dartboardOrder = [
-  20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
-  10, 9, 8, 7, 6, 5, 4, 3, 2, 1,
-];
+import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_theme.dart';
+
+const _row1 = [20, 19, 18, 17, 16, 15, 14, 13, 12, 11];
+const _row2 = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
 
 class DartInputGridWidget extends StatelessWidget {
   const DartInputGridWidget({
@@ -17,155 +18,223 @@ class DartInputGridWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF5E6D3),
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildSpecialRow(),
-          const SizedBox(height: 8),
-          _buildMultiplierRow('S', '', (n) => '$n'),
-          const SizedBox(height: 8),
-          _buildMultiplierRow('D', '··', (n) => 'D$n'),
-          const SizedBox(height: 8),
-          _buildMultiplierRow('T', '···', (n) => 'T$n'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSpecialRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: _SegmentButton(
-            label: 'MISS',
-            dots: '',
-            onTap: () => onSegmentTapped('MISS'),
-            enabled: enabled,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _SegmentButton(
-            label: 'BULL\n25',
-            dots: '',
-            onTap: () => onSegmentTapped('SB'),
-            enabled: enabled,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: _SegmentButton(
-            label: 'BULL\n50',
-            dots: '',
-            onTap: () => onSegmentTapped('DB'),
-            enabled: enabled,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMultiplierRow(
-    String header,
-    String dots,
-    String Function(int) segmentBuilder,
-  ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 24,
-          child: Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              header,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF2C2C2C),
+    final cs = Theme.of(context).colorScheme;
+    return ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        child: Column(
+          children: [
+            // Row 0: special segments
+            Row(children: [
+              _GridCell(
+                label: 'MISS',
+                segment: 'MISS',
+                semanticLabel: 'Miss',
+                bgColor: cs.surface,
+                textColor: cs.onSurface,
+                dots: 0,
+                onTap: onSegmentTapped,
+                enabled: enabled,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Expanded(
-          child: Wrap(
-            spacing: 4,
-            runSpacing: 4,
-            children: _dartboardOrder.map((n) {
-              return SizedBox(
-                width: 48,
-                height: 56,
-                child: _SegmentButton(
+              _GridCell(
+                label: 'SB·25',
+                segment: 'SB',
+                semanticLabel: 'Single Bull, 25 points',
+                bgColor: cs.surface,
+                textColor: cs.onSurface,
+                dots: 0,
+                onTap: onSegmentTapped,
+                enabled: enabled,
+              ),
+              _GridCell(
+                label: 'DB·50',
+                segment: 'DB',
+                semanticLabel: 'Double Bull, 50 points',
+                bgColor: cs.surface,
+                textColor: cs.onSurface,
+                dots: 0,
+                onTap: onSegmentTapped,
+                enabled: enabled,
+              ),
+            ]),
+            const _TierSeparator(),
+            // Singles rows
+            Row(children: [
+              for (final n in _row1)
+                _GridCell(
                   label: '$n',
-                  dots: dots,
-                  onTap: () => onSegmentTapped(segmentBuilder(n)),
+                  segment: '$n',
+                  semanticLabel: 'Single $n',
+                  bgColor: cs.surface,
+                  textColor: cs.onSurface,
+                  dots: 0,
+                  onTap: onSegmentTapped,
                   enabled: enabled,
                 ),
-              );
-            }).toList(),
-          ),
+            ]),
+            Row(children: [
+              for (final n in _row2)
+                _GridCell(
+                  label: '$n',
+                  segment: '$n',
+                  semanticLabel: 'Single $n',
+                  bgColor: cs.surface,
+                  textColor: cs.onSurface,
+                  dots: 0,
+                  onTap: onSegmentTapped,
+                  enabled: enabled,
+                ),
+            ]),
+            const _TierSeparator(),
+            // Doubles rows
+            Row(children: [
+              for (final n in _row1)
+                _GridCell(
+                  label: 'D$n',
+                  segment: 'D$n',
+                  semanticLabel: 'Double $n',
+                  bgColor: cs.primaryContainer,
+                  textColor: cs.onPrimaryContainer,
+                  dots: 2,
+                  onTap: onSegmentTapped,
+                  enabled: enabled,
+                ),
+            ]),
+            Row(children: [
+              for (final n in _row2)
+                _GridCell(
+                  label: 'D$n',
+                  segment: 'D$n',
+                  semanticLabel: 'Double $n',
+                  bgColor: cs.primaryContainer,
+                  textColor: cs.onPrimaryContainer,
+                  dots: 2,
+                  onTap: onSegmentTapped,
+                  enabled: enabled,
+                ),
+            ]),
+            const _TierSeparator(),
+            // Triples rows
+            Row(children: [
+              for (final n in _row1)
+                _GridCell(
+                  label: 'T$n',
+                  segment: 'T$n',
+                  semanticLabel: 'Triple $n',
+                  bgColor: cs.primary,
+                  textColor: cs.onPrimary,
+                  dots: 3,
+                  onTap: onSegmentTapped,
+                  enabled: enabled,
+                ),
+            ]),
+            Row(children: [
+              for (final n in _row2)
+                _GridCell(
+                  label: 'T$n',
+                  segment: 'T$n',
+                  semanticLabel: 'Triple $n',
+                  bgColor: cs.primary,
+                  textColor: cs.onPrimary,
+                  dots: 3,
+                  onTap: onSegmentTapped,
+                  enabled: enabled,
+                ),
+            ]),
+          ],
         ),
-      ],
     );
   }
 }
 
-class _SegmentButton extends StatelessWidget {
-  const _SegmentButton({
+class _TierSeparator extends StatelessWidget {
+  const _TierSeparator();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 1,
+      child: ColoredBox(color: cs.outlineVariant),
+    );
+  }
+}
+
+class _GridCell extends StatelessWidget {
+  const _GridCell({
     required this.label,
+    required this.segment,
+    required this.semanticLabel,
+    required this.bgColor,
+    required this.textColor,
     required this.dots,
     required this.onTap,
     required this.enabled,
   });
 
   final String label;
-  final String dots;
-  final VoidCallback? onTap;
+  final String segment;
+  final String semanticLabel;
+  final Color bgColor;
+  final Color textColor;
+  final int dots;
+  final void Function(String) onTap;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: enabled ? 1.0 : 0.4,
-      child: Material(
-        color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(6),
+    final cs = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Semantics(
+        label: semanticLabel,
         child: InkWell(
-          onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(6),
+          onTap: enabled ? () => onTap(segment) : null,
           child: Container(
+            constraints: const BoxConstraints(minHeight: 48),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(6),
+              color: bgColor,
+              border: Border(
+                right: BorderSide(color: cs.outline, width: 1),
+                bottom: BorderSide(color: cs.outline, width: 1),
+              ),
             ),
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C2C2C),
-                  ),
-                  textAlign: TextAlign.center,
+                  style: AppTextStyles.segmentButton.copyWith(color: textColor),
                 ),
-                if (dots.isNotEmpty)
-                  Text(
-                    dots,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF9E9E9E),
-                    ),
-                  ),
+                if (dots > 0) _DotRow(count: dots, color: textColor),
               ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DotRow extends StatelessWidget {
+  const _DotRow({required this.count, required this.color});
+
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        count,
+        (_) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 1),
+          child: Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.7),
             ),
           ),
         ),

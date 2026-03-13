@@ -98,4 +98,38 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   void dismissGameModal() {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
   }
+
+  Future<void> nextPlayer() async {
+    final current = state.value;
+    if (current == null) return;
+    var updated = current.gameState;
+    while (updated.dartsThrownInTurn < 3 && !updated.isComplete) {
+      updated = await ref.read(processCricketDartUseCaseProvider).execute(
+            updated,
+            _makeMissDart(updated),
+          );
+    }
+    final pendingGameWinnerId =
+        updated.isComplete ? updated.winnerCompetitorId : null;
+    state = AsyncData(ActiveCricketGameState(
+      gameState: updated,
+      pendingGameWinnerId: pendingGameWinnerId,
+    ));
+  }
+
+  DartThrow _makeMissDart(GameState gs) {
+    final competitor = gs.competitors[gs.currentTurnIndex];
+    return DartThrow(
+      dartId: const Uuid().v4(),
+      gameId: gs.gameId,
+      competitorId: competitor.competitorId,
+      playerId: competitor.playerIds.isNotEmpty
+          ? competitor.playerIds.first
+          : 'sentinel',
+      turnNumber: gs.currentLegIndex,
+      dartNumber: gs.dartsThrownInTurn + 1,
+      segment: 'MISS',
+      score: 0,
+    );
+  }
 }

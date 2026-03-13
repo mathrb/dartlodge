@@ -178,7 +178,7 @@ final class LeaderboardProvider
   Leaderboard create() => Leaderboard();
 }
 
-String _$leaderboardHash() => r'98abb16d37529cd7a8fe9cae8602a7d25df38522';
+String _$leaderboardHash() => r'7b6f55eccbfe5f25a03e6785a2985f33ce5a6b46';
 
 abstract class _$Leaderboard extends $AsyncNotifier<List<PlayerStats>> {
   FutureOr<List<PlayerStats>> build();

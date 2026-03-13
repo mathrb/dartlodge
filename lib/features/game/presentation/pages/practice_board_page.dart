@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
 import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
 import '../widgets/dartboard_highlight_widget.dart';
 import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
+
+enum _DrillAction { resetDrill, endDrill }
 
 class PracticeBoardPage extends ConsumerWidget {
   const PracticeBoardPage({required this.gameId, super.key});
@@ -26,10 +30,25 @@ class PracticeBoardPage extends ConsumerWidget {
       error: (err, _) => Scaffold(
         body: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text('Error: $err'),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Failed to load drill.',
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 8),
             TextButton(
               onPressed: () => ref.invalidate(activePracticeProvider(gameId)),
-              child: const Text('Retry'),
+              child: Text(
+                'Retry',
+                style: TextStyle(color: Theme.of(context).colorScheme.primary),
+              ),
             ),
           ]),
         ),
@@ -41,58 +60,104 @@ class PracticeBoardPage extends ConsumerWidget {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Text('Game not found'),
                 TextButton(
-                    onPressed: () => context.go('/'),
-                    child: const Text('Back')),
+                  onPressed: () => context.go('/'),
+                  child: const Text('Back'),
+                ),
               ]),
             ),
           );
         }
 
         final gs = practiceState.gameState;
-        final notifier =
-            ref.read(activePracticeProvider(gameId).notifier);
+        final notifier = ref.read(activePracticeProvider(gameId).notifier);
         final competitor = gs.competitors[gs.currentTurnIndex];
+        final isAtc = gs.gameType == GameType.aroundTheClock;
+        final doublesOnly = isAtc && gs.aroundTheClockVariant == 'doublesOnly';
 
-        // Game winner modal
+        // Completion modal
         if (practiceState.pendingGameWinnerId != null) {
-          final winner = gs.competitors.firstWhere(
-            (c) => c.competitorId == practiceState.pendingGameWinnerId,
-          );
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!context.mounted) return;
-            showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => AlertDialog(
-                title: Text('${winner.name} wins!'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go(GameRoutes.home);
-                      notifier.dismissGameModal();
-                    },
-                    child: const Text('NEW DRILL'),
+            if (isAtc) {
+              final totalDarts = competitor.dartThrows.length;
+              final totalTurns = (totalDarts + 2) ~/ 3;
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                   ),
-                ],
-              ),
-            );
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text(
+                    'Drill Complete!',
+                    style: AppTextStyles.headingSmall.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  content: Text(
+                    'You completed Around the Clock in $totalTurns turns ($totalDarts darts)',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  actions: [
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go(GameRoutes.home);
+                        notifier.dismissGameModal();
+                      },
+                      child: const Text('NEW DRILL'),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              final winner = gs.competitors.firstWhere(
+                (c) => c.competitorId == practiceState.pendingGameWinnerId,
+              );
+              showDialog<void>(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                  insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+                  title: Text('${winner.name} wins!'),
+                  actions: [
+                    FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.go(GameRoutes.home);
+                        notifier.dismissGameModal();
+                      },
+                      child: const Text('NEW DRILL'),
+                    ),
+                  ],
+                ),
+              );
+            }
           });
         } else if (gs.isComplete) {
-          // Drill complete without a winner (e.g. endDrill called)
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!context.mounted) return;
             showDialog<void>(
               context: context,
               barrierDismissible: false,
               builder: (_) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                ),
+                insetPadding: const EdgeInsets.symmetric(horizontal: 24),
                 title: const Text('Drill complete!'),
                 content: Text(
                   'Attempts: ${competitor.practiceAttempts}\n'
                   'Successes: ${competitor.practiceSuccesses}',
                 ),
                 actions: [
-                  TextButton(
+                  FilledButton(
                     onPressed: () {
                       Navigator.of(context).pop();
                       context.go(GameRoutes.home);
@@ -106,23 +171,49 @@ class PracticeBoardPage extends ConsumerWidget {
           });
         }
 
-        final doublesOnly = (gs.gameType == GameType.aroundTheClock &&
-                gs.aroundTheClockVariant == 'doublesOnly') ||
-            gs.gameType == GameType.bobs27;
-
         return Scaffold(
           appBar: AppBar(
+            leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_modeName(gs.gameType)),
+                Text(
+                  _modeName(gs.gameType),
+                  style: AppTextStyles.headingSmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 Text(
                   _progressText(gs, competitor),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
-            leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+            actions: [
+              PopupMenuButton<_DrillAction>(
+                onSelected: (action) async {
+                  switch (action) {
+                    case _DrillAction.resetDrill:
+                      await notifier.resetDrill();
+                    case _DrillAction.endDrill:
+                      await notifier.endDrill();
+                      if (context.mounted) context.go(GameRoutes.home);
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: _DrillAction.resetDrill,
+                    child: Text('Reset Drill'),
+                  ),
+                  PopupMenuItem(
+                    value: _DrillAction.endDrill,
+                    child: Text('End Drill'),
+                  ),
+                ],
+              ),
+            ],
           ),
           body: Column(
             children: [
@@ -141,21 +232,18 @@ class PracticeBoardPage extends ConsumerWidget {
                 practiceAttempts: competitor.practiceAttempts,
                 practiceSuccesses: competitor.practiceSuccesses,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: PracticeInputButtonsWidget(
-                  gameType: gs.gameType,
-                  currentTarget: competitor.currentTarget,
-                  enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
-                  onDartThrown: (seg) => notifier.processDart(seg),
-                ),
+              PracticeInputButtonsWidget(
+                gameType: gs.gameType,
+                currentTarget: competitor.currentTarget,
+                doublesOnly: doublesOnly,
+                enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
+                onDartThrown: (seg) => notifier.processDart(seg),
               ),
               _BottomBar(
                 gameType: gs.gameType,
                 canUndo: !gs.isComplete &&
                     (gs.dartsThrownInTurn > 0 ||
-                        gs.competitors
-                            .any((c) => c.dartThrows.isNotEmpty)),
+                        gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
                 inputEnabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
                 showNextRound: gs.dartsThrownInTurn == 3 && !gs.isComplete,
                 onUndo: notifier.undoDart,
@@ -225,32 +313,54 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isCheckout = gameType == GameType.checkoutPractice;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: canUndo ? onUndo : null,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        border: Border(
+          top: BorderSide(color: colorScheme.outline, width: 1),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.undo),
+                label: Text(
+                  'Undo',
+                  style: AppTextStyles.labelLarge.copyWith(
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                onPressed: canUndo ? onUndo : null,
+              ),
+              OutlinedButton(
+                onPressed: inputEnabled ? onMiss : null,
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: colorScheme.surface,
+                  side: BorderSide(color: colorScheme.outline),
+                ),
+                child: const Text('MISS'),
+              ),
+              if (isCheckout)
+                FilledButton(
+                  onPressed: showNextRound ? onEndDrill : null,
+                  child: const Text('END DRILL'),
+                )
+              else
+                FilledButton(
+                  onPressed: showNextRound ? onNextRound : null,
+                  child: const Text('NEXT ROUND'),
+                ),
+            ],
           ),
-          OutlinedButton(
-            onPressed: inputEnabled ? onMiss : null,
-            child: const Text('MISS'),
-          ),
-          if (isCheckout)
-            FilledButton(
-              onPressed: showNextRound ? onEndDrill : null,
-              child: const Text('END DRILL'),
-            )
-          else
-            FilledButton(
-              onPressed: showNextRound ? onNextRound : null,
-              child: const Text('NEXT ROUND'),
-            ),
-        ],
+        ),
       ),
     );
   }

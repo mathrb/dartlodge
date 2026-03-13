@@ -5,8 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../features/statistics/presentation/widgets/stats_overlay_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
-import '../widgets/cricket_grid_widget.dart';
-import '../widgets/cricket_score_sidebar_widget.dart';
+import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/dart_indicator_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
@@ -85,37 +84,32 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           _ => 'Standard',
         };
 
-        final boardBody = Column(
-          children: [
-            DartIndicatorWidget(dartsThrown: gameState.dartsThrownInTurn),
-            CricketScoreSidebarWidget(gameState: gameState),
-            Expanded(
-              child: CricketGridWidget(
+        final activeCompetitor =
+            gameState.competitors[gameState.currentTurnIndex];
+        final allDarts = activeCompetitor.dartThrows;
+        final n = gameState.dartsThrownInTurn;
+        final currentTurnDarts = n == 0 || allDarts.length < n
+            ? <String>[]
+            : allDarts.sublist(allDarts.length - n);
+
+        final notifier =
+            ref.read(activeCricketGameProvider(widget.gameId).notifier);
+
+        final boardBody = SingleChildScrollView(
+          child: Column(
+            children: [
+              DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
+              CricketUnifiedTableWidget(
                 gameState: gameState,
                 onSegmentTapped: gameState.isComplete
                     ? (_) {}
-                    : (segment) => ref
-                        .read(activeCricketGameProvider(widget.gameId).notifier)
-                        .processDart(segment),
+                    : (segment) => notifier.processDart(segment),
+                onMiss: () => notifier.processDart('MISS'),
+                onUndo: () => notifier.undoDart(),
+                onNextPlayer: () => notifier.nextPlayer(),
               ),
-            ),
-            _BottomBar(
-              enabled: !gameState.isComplete,
-              canUndo: !gameState.isComplete &&
-                  (gameState.dartsThrownInTurn > 0 ||
-                      gameState.competitors
-                          .any((c) => c.dartThrows.isNotEmpty)),
-              onUndo: () => ref
-                  .read(activeCricketGameProvider(widget.gameId).notifier)
-                  .undoDart(),
-              onMiss: () => ref
-                  .read(activeCricketGameProvider(widget.gameId).notifier)
-                  .processDart('MISS'),
-              onNextRound: () => ref
-                  .read(activeCricketGameProvider(widget.gameId).notifier)
-                  .dismissLegModal(),
-            ),
-          ],
+            ],
+          ),
         );
 
         final stackChildren = <Widget>[boardBody];
@@ -151,14 +145,26 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               ],
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.more_vert),
-                onPressed: () {},
+              PopupMenuButton<String>(
+                onSelected: (v) {
+                  if (v == 'end') _showEndGameDialog(context);
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(
+                    value: 'end',
+                    child: Text('End Game'),
+                  ),
+                ],
               ),
             ],
           ),
           floatingActionButton: FloatingActionButton.small(
-            onPressed: () => setState(() => _showStatsOverlay = !_showStatsOverlay),
+            backgroundColor:
+                Theme.of(context).colorScheme.secondaryContainer,
+            foregroundColor:
+                Theme.of(context).colorScheme.onSecondaryContainer,
+            onPressed: () =>
+                setState(() => _showStatsOverlay = !_showStatsOverlay),
             child: const Icon(Icons.bar_chart),
           ),
           body: Stack(
@@ -169,44 +175,54 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
       },
     );
   }
+
+  void _showEndGameDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _EndGameDialog(
+        onConfirm: () {
+          Navigator.of(dialogContext).pop();
+          context.go(GameRoutes.home);
+        },
+        onCancel: () => Navigator.of(dialogContext).pop(),
+      ),
+    );
+  }
 }
 
-class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.enabled,
-    required this.canUndo,
-    required this.onUndo,
-    required this.onMiss,
-    required this.onNextRound,
+class _EndGameDialog extends StatelessWidget {
+  const _EndGameDialog({
+    required this.onConfirm,
+    required this.onCancel,
   });
 
-  final bool enabled;
-  final bool canUndo;
-  final VoidCallback onUndo;
-  final VoidCallback onMiss;
-  final VoidCallback onNextRound;
+  final VoidCallback onConfirm;
+  final VoidCallback onCancel;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.undo),
-            onPressed: canUndo ? onUndo : null,
-          ),
-          OutlinedButton(
-            onPressed: enabled ? onMiss : null,
-            child: const Text('MISS'),
-          ),
-          FilledButton(
-            onPressed: enabled ? onNextRound : null,
-            child: const Text('NEXT ROUND'),
-          ),
-        ],
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return AlertDialog(
+      title: const Text('End Game?'),
+      content: Text(
+        'The current game will be abandoned.',
+        style: tt.bodyMedium,
       ),
+      actions: [
+        TextButton(
+          onPressed: onCancel,
+          child: Text(
+            'Cancel',
+            style: TextStyle(color: cs.onSurface),
+          ),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: cs.error),
+          onPressed: onConfirm,
+          child: const Text('End Game'),
+        ),
+      ],
     );
   }
 }

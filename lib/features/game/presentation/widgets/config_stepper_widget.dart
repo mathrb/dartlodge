@@ -18,17 +18,39 @@ class ConfigStepperWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    ButtonStyle buttonStyle(bool enabled) {
+      return OutlinedButton.styleFrom(
+        minimumSize: const Size(40, 40),
+        padding: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ).copyWith(
+        side: WidgetStateProperty.all(
+          BorderSide(color: enabled ? cs.primary : cs.outlineVariant),
+        ),
+        foregroundColor: WidgetStateProperty.all(
+          enabled ? cs.primary : cs.onSurface.withValues(alpha: 0.38),
+        ),
+      );
+    }
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          icon: const Icon(Icons.remove),
+        OutlinedButton(
           onPressed: value > min ? onDecrement : null,
+          style: buttonStyle(value > min),
+          child: const Icon(Icons.remove),
         ),
-        Text('$value', style: Theme.of(context).textTheme.titleMedium),
-        IconButton(
-          icon: const Icon(Icons.add),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text('$value', style: Theme.of(context).textTheme.titleLarge),
+        ),
+        OutlinedButton(
           onPressed: value < max ? onIncrement : null,
+          style: buttonStyle(value < max),
+          child: const Icon(Icons.add),
         ),
       ],
     );

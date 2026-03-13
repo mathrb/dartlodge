@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:my_darts/core/utils/app_spacing.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/widgets/config_stepper_widget.dart';
 
 /// A bottom-sheet panel that lets the user adjust game configuration.
 /// Uses a copy-on-open (draft) pattern: edits are local until Apply is tapped.
-/// Returns the updated [GameConfig] via [Navigator.pop] on both Apply and
-/// swipe-dismiss, so the caller always receives the latest draft.
+/// Returns the updated [GameConfig] via [Navigator.pop] on Apply, or null on
+/// discard (drag handle tap / swipe dismiss).
 class GameConfigPanel extends StatefulWidget {
   const GameConfigPanel({
     super.key,
     required this.initialConfig,
-    required this.players,
   });
 
   final GameConfig initialConfig;
-
-  /// Selected players available as starting-player options.
-  /// Each record carries both the display name and the player ID.
-  final List<({String id, String name})> players;
 
   @override
   State<GameConfigPanel> createState() => _GameConfigPanelState();
@@ -32,56 +28,10 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     _draftConfig = widget.initialConfig;
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Actions ───────────────────────────────────────────────────────────────────
 
-  /// Returns the current startingPlayerId regardless of config subtype.
-  String? get _startingPlayerId => _draftConfig.map(
-        x01: (c) => c.startingPlayerId,
-        cricket: (c) => c.startingPlayerId,
-        aroundTheClock: (c) => c.startingPlayerId,
-        killer: (c) => c.startingPlayerId,
-        baseball: (c) => c.startingPlayerId,
-        golf: (c) => c.startingPlayerId,
-        shanghai: (c) => c.startingPlayerId,
-        scram: (c) => c.startingPlayerId,
-        halveIt: (c) => c.startingPlayerId,
-        highScore: (c) => c.startingPlayerId,
-        blindCricket: (c) => c.startingPlayerId,
-        blindGolf: (c) => c.startingPlayerId,
-        blindKiller: (c) => c.startingPlayerId,
-        blindShanghai: (c) => c.startingPlayerId,
-        chaseTheDragon: (c) => c.startingPlayerId,
-        catch40: (c) => c.startingPlayerId,
-        bobs27: (c) => c.startingPlayerId,
-        checkoutPractice: (c) => c.startingPlayerId,
-      );
-
-  void _updateStartingPlayerId(String? id) {
-    setState(() {
-      _draftConfig = _draftConfig.map(
-        x01: (c) => c.copyWith(startingPlayerId: id),
-        cricket: (c) => c.copyWith(startingPlayerId: id),
-        aroundTheClock: (c) => c.copyWith(startingPlayerId: id),
-        killer: (c) => c.copyWith(startingPlayerId: id),
-        baseball: (c) => c.copyWith(startingPlayerId: id),
-        golf: (c) => c.copyWith(startingPlayerId: id),
-        shanghai: (c) => c.copyWith(startingPlayerId: id),
-        scram: (c) => c.copyWith(startingPlayerId: id),
-        halveIt: (c) => c.copyWith(startingPlayerId: id),
-        highScore: (c) => c.copyWith(startingPlayerId: id),
-        blindCricket: (c) => c.copyWith(startingPlayerId: id),
-        blindGolf: (c) => c.copyWith(startingPlayerId: id),
-        blindKiller: (c) => c.copyWith(startingPlayerId: id),
-        blindShanghai: (c) => c.copyWith(startingPlayerId: id),
-        chaseTheDragon: (c) => c.copyWith(startingPlayerId: id),
-        catch40: (c) => c.copyWith(startingPlayerId: id),
-        bobs27: (c) => c.copyWith(startingPlayerId: id),
-        checkoutPractice: (c) => c.copyWith(startingPlayerId: id),
-      );
-    });
-  }
-
-  void _close() => Navigator.pop(context, _draftConfig);
+  void _apply() => Navigator.pop(context, _draftConfig);
+  void _discard() => Navigator.pop(context, null);
 
   // ── Build ─────────────────────────────────────────────────────────────────────
 
@@ -90,39 +40,50 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _close();
+        if (!didPop) _discard();
       },
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Drag handle
+              // Drag handle — tap to discard
               Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(2),
+                child: GestureDetector(
+                  onTap: _discard,
+                  child: SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: Center(
+                      child: Container(
+                        width: 32,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.outline,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
               Text(
                 'Game Settings',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
               ..._buildConfigFields(),
-              const SizedBox(height: 8),
-              _buildStartingPlayerRow(),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: _close,
-                child: const Text('Apply'),
+                onPressed: _apply,
+                child: Text(
+                  'APPLY SETTINGS',
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                ),
               ),
             ],
           ),
@@ -156,41 +117,48 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
 
   List<Widget> _buildX01Fields(X01GameConfig c) {
     return [
-      _LabelRow(label: 'Starting Score', trailing: Text('${c.startingScore}')),
-      const Divider(),
-      _SectionLabel('In Strategy'),
-      ...['straight', 'double', 'master'].map(
-        (s) => RadioListTile<String>(
-          title: Text(_strategyLabel(s)),
-          value: s,
-          groupValue: c.inStrategy,
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      _FieldColumn(
+        label: 'Starting Score',
+        child: _StyledDropdown<int>(
+          value: c.startingScore,
+          items: const [101, 170, 201, 301, 401, 501, 701, 1001],
+          labelBuilder: (v) => '$v',
+          onChanged: (v) {
+            if (v == null) return;
+            setState(() => _draftConfig = c.copyWith(startingScore: v));
+          },
+        ),
+      ),
+      const SizedBox(height: AppSpacing.space4),
+      _FieldColumn(
+        label: 'In Strategy',
+        child: _StyledDropdown<String>(
+          value: c.inStrategy,
+          items: const ['straight', 'double', 'master'],
+          labelBuilder: _strategyLabel,
           onChanged: (v) {
             if (v == null) return;
             setState(() => _draftConfig = c.copyWith(inStrategy: v));
           },
         ),
       ),
-      const Divider(),
-      _SectionLabel('Out Strategy'),
-      ...['straight', 'double', 'master'].map(
-        (s) => RadioListTile<String>(
-          title: Text(_strategyLabel(s)),
-          value: s,
-          groupValue: c.outStrategy,
-          dense: true,
-          contentPadding: EdgeInsets.zero,
+      const SizedBox(height: AppSpacing.space4),
+      _FieldColumn(
+        label: 'Out Strategy',
+        child: _StyledDropdown<String>(
+          value: c.outStrategy,
+          items: const ['straight', 'double', 'master'],
+          labelBuilder: _strategyLabel,
           onChanged: (v) {
             if (v == null) return;
             setState(() => _draftConfig = c.copyWith(outStrategy: v));
           },
         ),
       ),
-      const Divider(),
-      _LabelRow(
+      const SizedBox(height: AppSpacing.space4),
+      _FieldColumn(
         label: 'Legs to Win',
-        trailing: ConfigStepperWidget(
+        child: ConfigStepperWidget(
           value: c.legsToWin,
           min: 1,
           max: 9,
@@ -200,15 +168,27 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
               setState(() => _draftConfig = c.copyWith(legsToWin: c.legsToWin + 1)),
         ),
       ),
-      const Divider(),
     ];
   }
 
   List<Widget> _buildCricketFields(CricketGameConfig c) {
     return [
-      _LabelRow(
+      _FieldColumn(
+        label: 'Variant',
+        child: _StyledDropdown<String>(
+          value: c.variant,
+          items: const ['standard', 'cut-throat'],
+          labelBuilder: (v) => v == 'cut-throat' ? 'Cut-throat' : 'Standard',
+          onChanged: (v) {
+            if (v == null) return;
+            setState(() => _draftConfig = c.copyWith(variant: v));
+          },
+        ),
+      ),
+      const SizedBox(height: AppSpacing.space4),
+      _FieldColumn(
         label: 'Points to Win',
-        trailing: ConfigStepperWidget(
+        child: ConfigStepperWidget(
           value: c.pointsToWin,
           min: 1,
           max: 9,
@@ -218,37 +198,11 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
               () => _draftConfig = c.copyWith(pointsToWin: c.pointsToWin + 1)),
         ),
       ),
-      const Divider(),
     ];
   }
 
-  Widget _buildStartingPlayerRow() {
-    // Dropdown value: null → 'random' sentinel; player ID otherwise.
-    // We use a nullable String? groupValue mapped to a String dropdown value.
-    const randomKey = '__random__';
-    final currentValue = _startingPlayerId ?? randomKey;
-
-    return _LabelRow(
-      label: 'Starting Player',
-      trailing: DropdownButton<String>(
-        value: currentValue,
-        underline: const SizedBox.shrink(),
-        items: [
-          const DropdownMenuItem(value: randomKey, child: Text('Random')),
-          ...widget.players.map(
-            (p) => DropdownMenuItem(value: p.id, child: Text(p.name)),
-          ),
-        ],
-        onChanged: (v) {
-          if (v == null) return;
-          _updateStartingPlayerId(v == randomKey ? null : v);
-        },
-      ),
-    );
-  }
-
   static String _strategyLabel(String strategy) => switch (strategy) {
-        'straight' => 'Straight',
+        'straight' => 'Any',
         'double' => 'Double',
         'master' => 'Master',
         _ => strategy,
@@ -257,42 +211,67 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
 
 // ── Private helpers ───────────────────────────────────────────────────────────
 
-class _LabelRow extends StatelessWidget {
-  const _LabelRow({required this.label, required this.trailing});
+class _FieldColumn extends StatelessWidget {
+  const _FieldColumn({required this.label, required this.child});
 
   final String label;
-  final Widget trailing;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: Theme.of(context).textTheme.bodyLarge),
-          trailing,
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 4),
+        child,
+      ],
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
+class _StyledDropdown<T> extends StatelessWidget {
+  const _StyledDropdown({
+    super.key,
+    required this.value,
+    required this.items,
+    required this.labelBuilder,
+    required this.onChanged,
+  });
 
-  final String text;
+  final T value;
+  final List<T> items;
+  final String Function(T) labelBuilder;
+  final ValueChanged<T?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 2),
-      child: Text(
-        text,
-        style: Theme.of(context)
-            .textTheme
-            .labelMedium
-            ?.copyWith(color: Theme.of(context).colorScheme.primary),
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: DropdownButton<T>(
+        value: value,
+        isExpanded: true,
+        underline: const SizedBox.shrink(),
+        icon: const Icon(Icons.expand_more),
+        items: items
+            .map(
+              (item) => DropdownMenuItem<T>(
+                value: item,
+                child: Text(labelBuilder(item)),
+              ),
+            )
+            .toList(),
+        onChanged: onChanged,
       ),
     );
   }
