@@ -15,11 +15,19 @@ import 'package:my_darts/features/players/presentation/providers/players_provide
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
+String _outStrategyLabel(String strategy) => switch (strategy) {
+  'straight' => 'Straight',
+  'double' => 'Double',
+  'master' => 'Master',
+  _ => strategy,
+};
+
 String _configSummaryFor(GameConfig config) {
   return config.maybeMap(
     x01: (c) {
       final legs = c.legsToWin;
-      return '${c.startingScore} · ${c.outStrategy} out · $legs ${legs == 1 ? 'Leg' : 'Legs'}';
+      final legLabel = legs == 1 ? '1 Leg' : 'Best of $legs';
+      return '${c.startingScore} · ${_outStrategyLabel(c.outStrategy)} Out · $legLabel';
     },
     cricket: (c) => '${c.variant} · ${c.pointsToWin} pts',
     aroundTheClock: (_) => 'Around the Clock',
@@ -217,6 +225,9 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     final result = await showModalBottomSheet<GameConfig>(
       context: context,
       isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.75,
+      ),
       backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -314,24 +325,26 @@ class _ConfigSummaryChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         child: Container(
           decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest,
+            color: cs.surface,
             border: Border.all(color: cs.outline),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.space4,
-              vertical: AppSpacing.space2,
+              horizontal: 12,
+              vertical: 10,
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     _configSummaryFor(config),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurface,
+                        ),
                   ),
                 ),
-                const Icon(Icons.edit_outlined, size: 18),
+                Icon(Icons.edit_outlined, size: 16, color: cs.primary),
               ],
             ),
           ),
@@ -433,11 +446,11 @@ class _SelectedPlayerCell extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 28,
-                  backgroundColor: cs.primaryContainer,
+                  backgroundColor: cs.secondaryContainer,
                   child: Text(
                     initials,
                     style: TextStyle(
-                      color: cs.onPrimaryContainer,
+                      color: cs.onSecondaryContainer,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -491,7 +504,7 @@ class _RosterGrid extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
+        color: cs.surface,
         border: Border.all(color: cs.outline),
         borderRadius: BorderRadius.circular(12),
       ),
@@ -563,11 +576,11 @@ class _PlayerRosterCell extends StatelessWidget {
             child: CircleAvatar(
               radius: 22,
               backgroundColor:
-                  isSelected ? cs.primary : cs.surfaceContainerHighest,
+                  isSelected ? cs.primary : cs.secondaryContainer,
               child: Text(
                 initials,
                 style: TextStyle(
-                  color: isSelected ? cs.onPrimary : cs.onSurface,
+                  color: isSelected ? cs.onPrimary : cs.onSecondaryContainer,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
