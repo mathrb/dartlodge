@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../domain/models/game_config.dart';
@@ -19,11 +20,12 @@ class DartIndicatorWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(12.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _RoundSumLabel(sum: _roundSum),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           ...List.generate(
             3,
             (i) => i < currentTurnDarts.length
@@ -46,7 +48,7 @@ class _RoundSumLabel extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Text(
       '$sum',
-      style: AppTextStyles.headingSmall.copyWith(color: cs.primary),
+      style: AppTextStyles.headingSmall.copyWith(fontSize: 24, color: cs.primary),
     );
   }
 }
@@ -60,16 +62,16 @@ class _DartChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: cs.surface,
         border: Border.all(color: cs.outline, width: 1),
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         segment,
-        style: AppTextStyles.bodyMedium.copyWith(color: cs.onSurface),
+        style: AppTextStyles.bodyMedium.copyWith(fontSize: 21, color: cs.onSurface),
       ),
     );
   }
@@ -81,13 +83,13 @@ class _EmptySlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: cs.outline, width: 1),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: SvgPicture.asset(
+        'assets/icons/dart_placeholder.svg',
+        width: 36,
+        height: 36,
+        colorFilter: ColorFilter.mode(cs.outline, BlendMode.srcIn),
       ),
     );
   }

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36">
+  <!-- Point (triangle pointing left) -->
+  <polygon points="2,18 8,15 8,21" fill="#000000"/>
+  <!-- Barrel (rectangle) -->
+  <rect x="8" y="16" width="14" height="4" rx="1" fill="#000000"/>
+  <!-- Shaft (thin line) -->
+  <rect x="22" y="17.5" width="8" height="1" fill="#000000"/>
+  <!-- Flights (chevron right) -->
+  <polygon points="30,17.5 34,13 35,13 35,14 31.5,17.5 35,21 35,22 34,22" fill="#000000"/>
+  <polygon points="30,18.5 34,23 35,23 35,22 31.5,18.5 35,15 35,14 34,14" fill="#000000"/>
+</svg>

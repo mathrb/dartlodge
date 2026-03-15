@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_darts/app/app_router.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
 import 'package:my_darts/features/players/presentation/widgets/player_card_widget.dart';
@@ -12,6 +13,7 @@ class PlayerListPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
         title: const Text('Players'),
         actions: [
           IconButton(

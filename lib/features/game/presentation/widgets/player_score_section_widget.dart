@@ -16,7 +16,7 @@ class PlayerScoreSectionWidget extends StatelessWidget {
   final Animation<double> bustFlashAnim;
 
   String _pprDisplay(CompetitorState cs) {
-    if (cs.dartThrows.isEmpty) return '—';
+    if (cs.dartThrows.length < 3) return '—';
     final totalReduction = gameState.startingScore - cs.score;
     return ((totalReduction / cs.dartThrows.length) * 3).toStringAsFixed(1);
   }
@@ -32,7 +32,7 @@ class PlayerScoreSectionWidget extends StatelessWidget {
   TextStyle _inactiveScoreStyle(BuildContext context) {
     final n = gameState.competitors.length;
     if (n == 1) return AppTextStyles.scoreInactive(context); // N/A
-    if (n == 2) return AppTextStyles.scoreInactive(context);
+    if (n == 2) return AppTextStyles.scoreMedium(context);
     if (n <= 4) return AppTextStyles.scoreSmall(context);
     return AppTextStyles.scoreSmall(context);
   }

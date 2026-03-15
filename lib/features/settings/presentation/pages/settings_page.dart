@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:my_darts/app/app_router.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsPage extends ConsumerWidget {
@@ -14,7 +16,10 @@ class SettingsPage extends ConsumerWidget {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+        title: const Text('Settings'),
+      ),
       body: ListView(
         children: [
           _SectionHeader(label: 'Theme', cs: cs, tt: tt),

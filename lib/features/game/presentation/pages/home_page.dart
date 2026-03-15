@@ -35,13 +35,19 @@ class HomePage extends ConsumerWidget {
             _PlayCard(
               label: 'X01',
               accentColor: AppColors.primary,
-              onTap: () => context.go('${GameRoutes.variantSelection}/x01'),
+              onTap: () {
+                ref.read(gameSetupProvider.notifier).reset();
+                context.go('${GameRoutes.variantSelection}/x01');
+              },
             ),
             const SizedBox(height: 8),
             _PlayCard(
               label: 'Cricket',
               accentColor: AppColors.secondary,
-              onTap: () => context.go('${GameRoutes.variantSelection}/cricket'),
+              onTap: () {
+                ref.read(gameSetupProvider.notifier).reset();
+                context.go('${GameRoutes.variantSelection}/cricket');
+              },
             ),
             const SizedBox(height: 8),
             _PlayCard(

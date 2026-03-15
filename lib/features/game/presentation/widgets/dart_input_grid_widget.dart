@@ -22,122 +22,136 @@ class DartInputGridWidget extends StatelessWidget {
     return Column(
       children: [
         // Row 0: special segments
-        Row(children: [
-          _GridCell(
-            label: 'MISS',
-            segment: 'MISS',
-            semanticLabel: 'Miss',
-            bgColor: cs.surface,
-            textColor: cs.onSurface,
-            dots: 0,
-            onTap: onSegmentTapped,
-            enabled: enabled,
-          ),
-          _GridCell(
-            label: 'SB',
-            segment: 'SB',
-            semanticLabel: 'Single Bull',
-            bgColor: cs.surface,
-            textColor: cs.onSurface,
-            dots: 0,
-            onTap: onSegmentTapped,
-            enabled: enabled,
-          ),
-          _GridCell(
-            label: 'DB',
-            segment: 'DB',
-            semanticLabel: 'Double Bull',
-            bgColor: cs.surface,
-            textColor: cs.onSurface,
-            dots: 0,
-            onTap: onSegmentTapped,
-            enabled: enabled,
-          ),
-        ]),
+        Expanded(
+          child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            _GridCell(
+              label: 'MISS',
+              segment: 'MISS',
+              semanticLabel: 'Miss',
+              bgColor: cs.surface,
+              textColor: cs.onSurface,
+              dots: 0,
+              onTap: onSegmentTapped,
+              enabled: enabled,
+            ),
+            _GridCell(
+              label: 'SB',
+              segment: 'SB',
+              semanticLabel: 'Single Bull',
+              bgColor: cs.surface,
+              textColor: cs.onSurface,
+              dots: 0,
+              onTap: onSegmentTapped,
+              enabled: enabled,
+            ),
+            _GridCell(
+              label: 'DB',
+              segment: 'DB',
+              semanticLabel: 'Double Bull',
+              bgColor: cs.surface,
+              textColor: cs.onSurface,
+              dots: 0,
+              onTap: onSegmentTapped,
+              enabled: enabled,
+            ),
+          ]),
+        ),
         const _TierSeparator(),
             // Singles rows
-            Row(children: [
-              for (final n in _row1)
-                _GridCell(
-                  label: '$n',
-                  segment: '$n',
-                  semanticLabel: 'Single $n',
-                  bgColor: cs.surface,
-                  textColor: cs.onSurface,
-                  dots: 0,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
-            Row(children: [
-              for (final n in _row2)
-                _GridCell(
-                  label: '$n',
-                  segment: '$n',
-                  semanticLabel: 'Single $n',
-                  bgColor: cs.surface,
-                  textColor: cs.onSurface,
-                  dots: 0,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row1)
+                  _GridCell(
+                    label: '$n',
+                    segment: '$n',
+                    semanticLabel: 'Single $n',
+                    bgColor: cs.surface,
+                    textColor: cs.onSurface,
+                    dots: 0,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row2)
+                  _GridCell(
+                    label: '$n',
+                    segment: '$n',
+                    semanticLabel: 'Single $n',
+                    bgColor: cs.surface,
+                    textColor: cs.onSurface,
+                    dots: 0,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
             const _TierSeparator(),
             // Doubles rows
-            Row(children: [
-              for (final n in _row1)
-                _GridCell(
-                  label: 'D$n',
-                  segment: 'D$n',
-                  semanticLabel: 'Double $n',
-                  bgColor: cs.primaryContainer,
-                  textColor: cs.onPrimaryContainer,
-                  dots: 2,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
-            Row(children: [
-              for (final n in _row2)
-                _GridCell(
-                  label: 'D$n',
-                  segment: 'D$n',
-                  semanticLabel: 'Double $n',
-                  bgColor: cs.primaryContainer,
-                  textColor: cs.onPrimaryContainer,
-                  dots: 2,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row1)
+                  _GridCell(
+                    label: 'D$n',
+                    segment: 'D$n',
+                    semanticLabel: 'Double $n',
+                    bgColor: cs.primaryContainer,
+                    textColor: cs.onPrimaryContainer,
+                    dots: 2,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row2)
+                  _GridCell(
+                    label: 'D$n',
+                    segment: 'D$n',
+                    semanticLabel: 'Double $n',
+                    bgColor: cs.primaryContainer,
+                    textColor: cs.onPrimaryContainer,
+                    dots: 2,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
             const _TierSeparator(),
             // Triples rows
-            Row(children: [
-              for (final n in _row1)
-                _GridCell(
-                  label: 'T$n',
-                  segment: 'T$n',
-                  semanticLabel: 'Triple $n',
-                  bgColor: cs.primary,
-                  textColor: cs.onPrimary,
-                  dots: 3,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
-            Row(children: [
-              for (final n in _row2)
-                _GridCell(
-                  label: 'T$n',
-                  segment: 'T$n',
-                  semanticLabel: 'Triple $n',
-                  bgColor: cs.primary,
-                  textColor: cs.onPrimary,
-                  dots: 3,
-                  onTap: onSegmentTapped,
-                  enabled: enabled,
-                ),
-            ]),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row1)
+                  _GridCell(
+                    label: 'T$n',
+                    segment: 'T$n',
+                    semanticLabel: 'Triple $n',
+                    bgColor: cs.primary,
+                    textColor: cs.onPrimary,
+                    dots: 3,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
+            Expanded(
+              child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                for (final n in _row2)
+                  _GridCell(
+                    label: 'T$n',
+                    segment: 'T$n',
+                    semanticLabel: 'Triple $n',
+                    bgColor: cs.primary,
+                    textColor: cs.onPrimary,
+                    dots: 3,
+                    onTap: onSegmentTapped,
+                    enabled: enabled,
+                  ),
+              ]),
+            ),
           ],
         );
   }
@@ -196,7 +210,7 @@ class _GridCell extends StatelessWidget {
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 Text(
                   label,

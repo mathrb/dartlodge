@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_darts/app/app_router.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
@@ -21,7 +22,10 @@ class VariantSelectionPage extends ConsumerWidget {
     );
 
     return Scaffold(
-      appBar: AppBar(title: Text(_titleFor(category))),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+        title: Text(_titleFor(category)),
+      ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         children: _cardsFor(category, ref, context, selectedConfig),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:my_darts/app/app_router.dart';
 import 'package:my_darts/features/history/presentation/providers/game_history_provider.dart';
 import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:my_darts/features/history/presentation/widgets/history_filter_bar_widget.dart';
@@ -41,7 +42,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final notifier = ref.read(gameHistoryProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+        title: const Text('History'),
+      ),
       body: asyncState.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(

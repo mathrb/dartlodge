@@ -385,15 +385,27 @@ class PracticeBoardPage extends ConsumerWidget {
               ),
               if (isShanghai)
                 _ShanghaiBonus(show: practiceState.showShanghaiBonus),
-              PracticeInputButtonsWidget(
-                gameType: gs.gameType,
-                currentTarget: effectiveTarget,
-                doublesOnly: doublesOnly,
-                enabled: !gs.isComplete &&
-                    gs.dartsThrownInTurn < 3 &&
-                    (!isCatch40 || gs.turnActive),
-                onDartThrown: (seg) => notifier.processDart(seg),
-              ),
+              if (isCatch40)
+                Expanded(
+                  flex: 2,
+                  child: PracticeInputButtonsWidget(
+                    gameType: gs.gameType,
+                    currentTarget: effectiveTarget,
+                    doublesOnly: doublesOnly,
+                    enabled: !gs.isComplete &&
+                        gs.dartsThrownInTurn < 3 &&
+                        gs.turnActive,
+                    onDartThrown: (seg) => notifier.processDart(seg),
+                  ),
+                )
+              else
+                PracticeInputButtonsWidget(
+                  gameType: gs.gameType,
+                  currentTarget: effectiveTarget,
+                  doublesOnly: doublesOnly,
+                  enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
+                  onDartThrown: (seg) => notifier.processDart(seg),
+                ),
               _BottomBar(
                 gameType: gs.gameType,
                 canUndo: !gs.isComplete &&

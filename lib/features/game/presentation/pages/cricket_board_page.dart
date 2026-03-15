@@ -134,6 +134,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
         return Scaffold(
           appBar: AppBar(
+            automaticallyImplyLeading: false,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
