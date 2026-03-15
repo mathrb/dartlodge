@@ -46,7 +46,6 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Drag handle — tap to discard
@@ -74,8 +73,17 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
-              ..._buildConfigFields(),
-              const SizedBox(height: 24),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ..._buildConfigFields(),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
               FilledButton(
                 onPressed: _apply,
                 child: Text(

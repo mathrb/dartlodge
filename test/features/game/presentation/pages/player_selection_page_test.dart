@@ -155,7 +155,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('501 · double out · 1 Leg'), findsOneWidget);
+    expect(find.text('501 · Double Out · 1 Leg'), findsOneWidget);
   });
 
   // ── 2. Config chip Cricket ────────────────────────────────────────────────
