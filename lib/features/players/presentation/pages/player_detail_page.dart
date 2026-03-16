@@ -155,10 +155,10 @@ class PlayerDetailPage extends ConsumerWidget {
                   child: Card(
                     child: ListTile(
                       title: const Text('Career Statistics'),
-                      subtitle: const Text('Stats coming soon'),
-                      trailing: TextButton(
-                        onPressed: null,
-                        child: const Text('View full stats →'),
+                      trailing: FilledButton(
+                        onPressed: () =>
+                            context.push('/stats/player/$playerId'),
+                        child: const Text('VIEW STATISTICS'),
                       ),
                     ),
                   ),

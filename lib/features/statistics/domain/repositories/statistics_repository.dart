@@ -2,6 +2,7 @@
 // Defines the contract for statistics data access
 
 import '../entities/player_stats.dart';
+import '../entities/player_leg_snapshot.dart';
 import '../entities/game_stats.dart';
 import '../../../../core/utils/constants.dart';
 
@@ -28,7 +29,21 @@ abstract interface class StatisticsRepository {
     GameType? gameType,
     DateTime? from,
     DateTime? to,
+    int? startingScore,
+    int? legLimit,
   });
+
+  /// Returns per-leg PPR snapshots ordered oldest → newest.
+  Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
+    String playerId, {
+    GameType? gameType,
+    int? startingScore,
+    int? limit,
+  });
+
+  /// Returns distinct X01 starting scores for the player's completed games,
+  /// sorted ascending.
+  Future<List<int>> getPlayerX01StartingScores(String playerId);
 
   /// Returns statistics for [playerId] scoped to a single completed [gameId].
   /// Throws [GameNotFoundException] if [gameId] does not exist.

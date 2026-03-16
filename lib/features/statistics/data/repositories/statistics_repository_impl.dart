@@ -24,6 +24,9 @@ import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_chec
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_legs_projection.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
+import 'package:my_darts/features/statistics/domain/entities/player_leg_snapshot.dart';
 
 
 class StatisticsRepositoryImpl implements StatisticsRepository {
@@ -160,6 +163,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     GameType? gameType,
     DateTime? from,
     DateTime? to,
+    int? startingScore,
+    int? legLimit,
   }) async {
     try {
       // Verify player exists
@@ -179,6 +184,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         gameType: gameType,
         from: from,
         to: to,
+        startingScore: startingScore,
+        legLimit: legLimit,
       );
       return stats ?? _createEmptyPlayerStats(playerId, gameType);
     } on RepositoryException {
@@ -367,6 +374,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     GameType? gameType,
     DateTime? from,
     DateTime? to,
+    int? startingScore,
+    int? legLimit,
   }) async {
     // 1. Query games involving this player
     String gamesQuery = '''
@@ -391,12 +400,34 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       gamesArgs.add(to.toIso8601String());
     }
 
-    final gamesResult = await _db.rawQuery(gamesQuery, gamesArgs);
+    var gamesResult = await _db.rawQuery(gamesQuery, gamesArgs);
     if (gamesResult.isEmpty) return null;
 
-    final gameIds = gamesResult.map((r) => r['game_id'] as String).toList();
+    // Filter by startingScore in Dart (config_json is opaque — no JSON_EXTRACT in SQL)
+    if (startingScore != null) {
+      gamesResult = gamesResult.where((row) {
+        final configJson = row['config_json'] as String?;
+        if (configJson == null) return false;
+        try {
+          final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+          return cfg['starting_score'] == startingScore;
+        } catch (_) {
+          return false;
+        }
+      }).toList();
+    }
+
+    if (gamesResult.isEmpty) return null;
+
+    var gameIds = gamesResult.map((r) => r['game_id'] as String).toList();
     final totalGames = gameIds.length;
     final effectiveGameType = gameType ?? GameType.x01;
+
+    // Apply legLimit: keep only the last legLimit completed legs by slicing game list
+    // (full leg-level limit is handled after projection via legLimit on the runner snapshot)
+    // For simplicity we pass legLimit into the events and trim after projection.
+    // The approach: replay all events; then reconstruct limited legs in snapshot.
+    // Simplest correct approach: filter game events to last legLimit LegCompleted events.
 
     // 2. Get totalDartsThrown from dart_throws (SQL fallback — projections
     //    count DartThrown events, but contract tests insert throws without events)
@@ -408,11 +439,37 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     final totalDartsThrown = throwsResult.first['cnt'] as int? ?? 0;
 
     // 3. Query all events for those games ordered by local_sequence
-    final eventsResult = await _db.rawQuery(
+    var eventsResult = await _db.rawQuery(
       'SELECT * FROM game_events WHERE game_id IN ($placeholders) ORDER BY local_sequence ASC',
       gameIds,
     );
-    final events = eventsResult.map((row) => GameEvent.fromJson(row)).toList();
+    var events = eventsResult.map((row) => GameEvent.fromJson(row)).toList();
+
+    // Apply legLimit by finding the Nth-from-last LegCompleted event and trimming
+    if (legLimit != null && legLimit > 0) {
+      final legCompletedIndices = <int>[];
+      for (int i = 0; i < events.length; i++) {
+        if (events[i].eventType == 'LegCompleted') {
+          legCompletedIndices.add(i);
+        }
+      }
+      if (legCompletedIndices.length > legLimit) {
+        final cutIndex = legCompletedIndices[legCompletedIndices.length - legLimit];
+        events = events.sublist(cutIndex - (cutIndex > 0 ? 0 : 0));
+        // We want the last legLimit legs, so keep events from the start of
+        // the (N-legLimit)th leg. Find the TurnStarted before that LegCompleted.
+        final cutEventIndex = legCompletedIndices[legCompletedIndices.length - legLimit];
+        // Walk backwards to find start of that leg (first TurnStarted after previous LegCompleted)
+        int legStart = 0;
+        if (legCompletedIndices.length > legLimit) {
+          final prevLegCompletedIdx = legCompletedIndices[legCompletedIndices.length - legLimit - 1];
+          legStart = prevLegCompletedIdx + 1;
+        }
+        events = events.sublist(legStart);
+        // Adjust game count to reflect the limit
+        gameIds = events.map((e) => e.gameId).toSet().toList();
+      }
+    }
 
     // 4. Extract in/out strategy from most recent game's config_json
     String inStrategy = 'straight';
@@ -448,6 +505,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       X01HighestTurnScoreProjection(),
       X01LegsProjection(),
       X01WinRateProjection(),
+      X01HighScoreBucketsProjection(),
+      X01FirstNinePprProjection(),
     ]);
 
     runner.init(context);
@@ -469,6 +528,9 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     final highestCheckoutSnap = snap['x01_highest_checkout'] ?? {};
     final highestTurnSnap = snap['x01_highest_turn_score'] ?? {};
     final winSnap = snap['x01.winRate'] ?? {};
+    final legsSnap = snap['x01.legs'] ?? {};
+    final bucketsSnap = snap['x01.highScoreBuckets'] ?? {};
+    final firstNineSnap = snap['x01.firstNinePpr'] ?? {};
 
     return PlayerStats(
       playerId: playerId,
@@ -483,7 +545,182 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       dartsPerLeg: (dartsPerLegSnap['dartsPerLeg'] as num?)?.toDouble() ?? 0.0,
       winRate: (winSnap['winRate'] as num?)?.toDouble() ?? 0.0,
       gamesWon: winSnap['gamesWon'] as int? ?? 0,
+      legsPlayed: legsSnap['legsPlayed'] as int? ?? 0,
+      legsWon: legsSnap['legsWon'] as int? ?? 0,
+      sixtyPlusTurns: bucketsSnap['sixtyPlusTurns'] as int? ?? 0,
+      oneHundredPlusTurns: bucketsSnap['oneHundredPlusTurns'] as int? ?? 0,
+      oneFortyPlusTurns: bucketsSnap['oneFortyPlusTurns'] as int? ?? 0,
+      oneEightyTurns: bucketsSnap['oneEightyTurns'] as int? ?? 0,
+      firstNinePpr: (firstNineSnap['firstNinePpr'] as num?)?.toDouble(),
     );
+  }
+
+  @override
+  Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
+    String playerId, {
+    GameType? gameType,
+    int? startingScore,
+    int? limit,
+  }) async {
+    try {
+      // 1. Query games for this player
+      String gamesQuery = '''
+        SELECT DISTINCT g.game_id, g.config_json, g.start_time
+        FROM games g
+        JOIN competitors c ON g.game_id = c.game_id
+        JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
+        WHERE cp.player_id = ?
+        AND g.is_complete = 1
+      ''';
+      final List<dynamic> gamesArgs = [playerId];
+
+      if (gameType != null) {
+        gamesQuery += ' AND g.game_type = ?';
+        gamesArgs.add(gameType.name);
+      }
+
+      gamesQuery += ' ORDER BY g.start_time ASC';
+
+      var gamesResult = await _db.rawQuery(gamesQuery, gamesArgs);
+
+      // Filter by startingScore in Dart (config_json is opaque)
+      if (startingScore != null) {
+        gamesResult = gamesResult.where((row) {
+          final configJson = row['config_json'] as String?;
+          if (configJson == null) return false;
+          try {
+            final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+            return cfg['starting_score'] == startingScore;
+          } catch (_) {
+            return false;
+          }
+        }).toList();
+      }
+
+      if (gamesResult.isEmpty) return [];
+
+      final List<PlayerLegSnapshot> snapshots = [];
+      int legIndex = 0;
+
+      for (final gameRow in gamesResult) {
+        final gameId = gameRow['game_id'] as String;
+        final gameDate = DateTime.tryParse(gameRow['start_time'] as String? ?? '') ?? DateTime.now();
+        final configJson = gameRow['config_json'] as String?;
+        int? gamStartingScore;
+        if (configJson != null) {
+          try {
+            final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+            gamStartingScore = cfg['starting_score'] as int?;
+          } catch (_) {}
+        }
+
+        // Get events for this game ordered by local_sequence
+        final eventsResult = await _db.rawQuery(
+          'SELECT * FROM game_events WHERE game_id = ? ORDER BY local_sequence ASC',
+          [gameId],
+        );
+
+        // Get dart throws for this player in this game
+        final dartsResult = await _db.rawQuery(
+          'SELECT turn_number, score FROM dart_throws WHERE player_id = ? AND game_id = ? ORDER BY turn_number ASC, dart_number ASC',
+          [playerId, gameId],
+        );
+
+        // Build per-turn score map
+        final Map<int, int> turnScores = {};
+        for (final dart in dartsResult) {
+          final turn = dart['turn_number'] as int;
+          final score = (dart['score'] as num?)?.toInt() ?? 0;
+          turnScores[turn] = (turnScores[turn] ?? 0) + score;
+        }
+
+        // Scan events to accumulate per-leg darts and PPR
+        int legDartCount = 0;
+        int legScoreTotal = 0;
+        int currentTurnNumber = 0;
+        final Set<int> legTurnNumbers = {};
+
+        for (final eventRow in eventsResult) {
+          final event = GameEvent.fromJson(eventRow);
+          switch (event.eventType) {
+            case 'TurnStarted':
+              final pid = event.payload['player_id'] as String?;
+              if (pid != playerId) break;
+              currentTurnNumber = event.payload['turn_number'] as int? ?? currentTurnNumber;
+            case 'DartThrown':
+              final pid = event.payload['player_id'] as String?;
+              if (pid != playerId) break;
+              legDartCount++;
+              final score = (event.payload['score'] as num?)?.toInt() ?? 0;
+              legScoreTotal += score;
+            case 'LegCompleted':
+              legIndex++;
+              final ppr = legDartCount > 0
+                  ? (legScoreTotal / legDartCount) * 3
+                  : 0.0;
+
+              final checkoutScore = event.payload['checkout_score'] as int?;
+              final checkoutAttempts = event.payload['checkout_attempts'] as int?;
+              double? checkoutPct;
+              if (checkoutAttempts != null && checkoutAttempts > 0 && checkoutScore != null) {
+                checkoutPct = (1 / checkoutAttempts) * 100;
+              }
+
+              snapshots.add(PlayerLegSnapshot(
+                gameId: gameId,
+                legIndex: legIndex,
+                gameDate: gameDate,
+                ppr: ppr,
+                checkoutPct: checkoutPct,
+                startingScore: gamStartingScore,
+              ));
+
+              // Reset for next leg
+              legDartCount = 0;
+              legScoreTotal = 0;
+              legTurnNumbers.clear();
+          }
+        }
+      }
+
+      // Apply limit by taking last N items
+      if (limit != null && snapshots.length > limit) {
+        return snapshots.sublist(snapshots.length - limit);
+      }
+      return snapshots;
+    } on RepositoryException {
+      rethrow;
+    } catch (e) {
+      throw StatisticsException('Failed to retrieve leg history: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<int>> getPlayerX01StartingScores(String playerId) async {
+    try {
+      final gamesResult = await _db.rawQuery('''
+        SELECT DISTINCT g.config_json
+        FROM games g
+        JOIN competitors c ON g.game_id = c.game_id
+        JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
+        WHERE cp.player_id = ? AND g.game_type = ? AND g.is_complete = 1
+      ''', [playerId, GameType.x01.name]);
+
+      final Set<int> scores = {};
+      for (final row in gamesResult) {
+        final configJson = row['config_json'] as String?;
+        if (configJson == null) continue;
+        try {
+          final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+          final score = cfg['starting_score'] as int?;
+          if (score != null) scores.add(score);
+        } catch (_) {}
+      }
+
+      return scores.toList()..sort();
+    } catch (e) {
+      throw StatisticsException('Failed to retrieve starting scores: ${e.toString()}');
+    }
   }
 
   // Helper method to get legs won for a competitor

@@ -33,6 +33,7 @@ dependencies:
   # UI components
   flutter_svg: ^2.0.7
   google_fonts: ^6.2.0
+  fl_chart: ^0.69.0
 
   # Settings / preferences
   shared_preferences: ^2.3.4

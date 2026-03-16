@@ -22,6 +22,13 @@ abstract class PlayerStats with _$PlayerStats {
     required int totalDartsThrown,
     required double dartsPerLeg,
     required double bustRate, // 0.0–1.0
+    @Default(0) int legsPlayed,
+    @Default(0) int legsWon,
+    double? firstNinePpr,
+    @Default(0) int sixtyPlusTurns,
+    @Default(0) int oneHundredPlusTurns,
+    @Default(0) int oneFortyPlusTurns,
+    @Default(0) int oneEightyTurns,
   }) = _PlayerStats;
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) =>

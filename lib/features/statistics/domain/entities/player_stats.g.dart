@@ -19,6 +19,13 @@ _PlayerStats _$PlayerStatsFromJson(Map<String, dynamic> json) => _PlayerStats(
   totalDartsThrown: (json['totalDartsThrown'] as num).toInt(),
   dartsPerLeg: (json['dartsPerLeg'] as num).toDouble(),
   bustRate: (json['bustRate'] as num).toDouble(),
+  legsPlayed: (json['legsPlayed'] as num?)?.toInt() ?? 0,
+  legsWon: (json['legsWon'] as num?)?.toInt() ?? 0,
+  firstNinePpr: (json['firstNinePpr'] as num?)?.toDouble(),
+  sixtyPlusTurns: (json['sixtyPlusTurns'] as num?)?.toInt() ?? 0,
+  oneHundredPlusTurns: (json['oneHundredPlusTurns'] as num?)?.toInt() ?? 0,
+  oneFortyPlusTurns: (json['oneFortyPlusTurns'] as num?)?.toInt() ?? 0,
+  oneEightyTurns: (json['oneEightyTurns'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
@@ -35,6 +42,13 @@ Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
       'totalDartsThrown': instance.totalDartsThrown,
       'dartsPerLeg': instance.dartsPerLeg,
       'bustRate': instance.bustRate,
+      'legsPlayed': instance.legsPlayed,
+      'legsWon': instance.legsWon,
+      'firstNinePpr': instance.firstNinePpr,
+      'sixtyPlusTurns': instance.sixtyPlusTurns,
+      'oneHundredPlusTurns': instance.oneHundredPlusTurns,
+      'oneFortyPlusTurns': instance.oneFortyPlusTurns,
+      'oneEightyTurns': instance.oneEightyTurns,
     };
 
 const _$GameTypeEnumMap = {

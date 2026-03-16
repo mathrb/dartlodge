@@ -4,6 +4,8 @@ import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/constants.dart';
 import '../../domain/entities/game_stats.dart';
 import '../../domain/entities/player_stats.dart';
+import '../../domain/entities/player_leg_snapshot.dart';
+import '../state/player_stats_page_state.dart';
 
 part 'statistics_provider.g.dart';
 
@@ -48,4 +50,56 @@ class Leaderboard extends _$Leaderboard {
     _metric = metric;
     ref.invalidateSelf();
   }
+}
+
+// ── Player Stats Page providers ───────────────────────────────────────────────
+
+@riverpod
+class PlayerStatsPage extends _$PlayerStatsPage {
+  @override
+  PlayerStatsPageState build(String playerId) => PlayerStatsPageState.initial();
+
+  void setTab(StatsTabIndex tab) => state = state.copyWith(activeTab: tab);
+  void setStartingScore(int? score) =>
+      state = state.copyWith(selectedStartingScore: score);
+  void setTimeRange(StatsTimeRange range) =>
+      state = state.copyWith(timeRange: range);
+  void toggleCheckoutOverlay() =>
+      state = state.copyWith(showCheckoutOverlay: !state.showCheckoutOverlay);
+}
+
+@riverpod
+Future<List<int>> playerX01StartingScores(Ref ref, String playerId) =>
+    ref.watch(statisticsRepositoryProvider).getPlayerX01StartingScores(playerId);
+
+@riverpod
+Future<PlayerStats> filteredPlayerStats(Ref ref, String playerId) {
+  final s = ref.watch(playerStatsPageProvider(playerId));
+  final limit = switch (s.timeRange) {
+    StatsTimeRange.last10 => 10,
+    StatsTimeRange.last100 => 100,
+    StatsTimeRange.all => null,
+  };
+  return ref.watch(statisticsRepositoryProvider).getPlayerStats(
+    playerId,
+    gameType: GameType.x01,
+    startingScore: s.selectedStartingScore,
+    legLimit: limit,
+  );
+}
+
+@riverpod
+Future<List<PlayerLegSnapshot>> playerLegHistory(Ref ref, String playerId) {
+  final s = ref.watch(playerStatsPageProvider(playerId));
+  final limit = switch (s.timeRange) {
+    StatsTimeRange.last10 => 10,
+    StatsTimeRange.last100 => 100,
+    StatsTimeRange.all => null,
+  };
+  return ref.watch(statisticsRepositoryProvider).getPlayerLegHistory(
+    playerId,
+    gameType: GameType.x01,
+    startingScore: s.selectedStartingScore,
+    limit: limit,
+  );
 }

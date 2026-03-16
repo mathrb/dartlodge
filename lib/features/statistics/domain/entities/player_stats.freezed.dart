@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$PlayerStats {
 
  String get playerId; GameType get gameType; int get totalGames; int get gamesWon; double get winRate; double get threeDartAverage; double? get checkoutPercentage;// null for non-X01 games
- int? get highestCheckout; int get highestTurnScore; int get totalDartsThrown; double get dartsPerLeg; double get bustRate;
+ int? get highestCheckout; int get highestTurnScore; int get totalDartsThrown; double get dartsPerLeg; double get bustRate;// 0.0–1.0
+ int get legsPlayed; int get legsWon; double? get firstNinePpr; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns; int get oneEightyTurns;
 /// Create a copy of PlayerStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,16 +30,16 @@ $PlayerStatsCopyWith<PlayerStats> get copyWith => _$PlayerStatsCopyWithImpl<Play
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.totalGames, totalGames) || other.totalGames == totalGames)&&(identical(other.gamesWon, gamesWon) || other.gamesWon == gamesWon)&&(identical(other.winRate, winRate) || other.winRate == winRate)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.highestTurnScore, highestTurnScore) || other.highestTurnScore == highestTurnScore)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.dartsPerLeg, dartsPerLeg) || other.dartsPerLeg == dartsPerLeg)&&(identical(other.bustRate, bustRate) || other.bustRate == bustRate));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.totalGames, totalGames) || other.totalGames == totalGames)&&(identical(other.gamesWon, gamesWon) || other.gamesWon == gamesWon)&&(identical(other.winRate, winRate) || other.winRate == winRate)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.highestTurnScore, highestTurnScore) || other.highestTurnScore == highestTurnScore)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.dartsPerLeg, dartsPerLeg) || other.dartsPerLeg == dartsPerLeg)&&(identical(other.bustRate, bustRate) || other.bustRate == bustRate)&&(identical(other.legsPlayed, legsPlayed) || other.legsPlayed == legsPlayed)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.firstNinePpr, firstNinePpr) || other.firstNinePpr == firstNinePpr)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,gameType,totalGames,gamesWon,winRate,threeDartAverage,checkoutPercentage,highestCheckout,highestTurnScore,totalDartsThrown,dartsPerLeg,bustRate);
+int get hashCode => Object.hashAll([runtimeType,playerId,gameType,totalGames,gamesWon,winRate,threeDartAverage,checkoutPercentage,highestCheckout,highestTurnScore,totalDartsThrown,dartsPerLeg,bustRate,legsPlayed,legsWon,firstNinePpr,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns,oneEightyTurns]);
 
 @override
 String toString() {
-  return 'PlayerStats(playerId: $playerId, gameType: $gameType, totalGames: $totalGames, gamesWon: $gamesWon, winRate: $winRate, threeDartAverage: $threeDartAverage, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, highestTurnScore: $highestTurnScore, totalDartsThrown: $totalDartsThrown, dartsPerLeg: $dartsPerLeg, bustRate: $bustRate)';
+  return 'PlayerStats(playerId: $playerId, gameType: $gameType, totalGames: $totalGames, gamesWon: $gamesWon, winRate: $winRate, threeDartAverage: $threeDartAverage, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, highestTurnScore: $highestTurnScore, totalDartsThrown: $totalDartsThrown, dartsPerLeg: $dartsPerLeg, bustRate: $bustRate, legsPlayed: $legsPlayed, legsWon: $legsWon, firstNinePpr: $firstNinePpr, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns, oneEightyTurns: $oneEightyTurns)';
 }
 
 
@@ -49,7 +50,7 @@ abstract mixin class $PlayerStatsCopyWith<$Res>  {
   factory $PlayerStatsCopyWith(PlayerStats value, $Res Function(PlayerStats) _then) = _$PlayerStatsCopyWithImpl;
 @useResult
 $Res call({
- String playerId, GameType gameType, int totalGames, int gamesWon, double winRate, double threeDartAverage, double? checkoutPercentage, int? highestCheckout, int highestTurnScore, int totalDartsThrown, double dartsPerLeg, double bustRate
+ String playerId, GameType gameType, int totalGames, int gamesWon, double winRate, double threeDartAverage, double? checkoutPercentage, int? highestCheckout, int highestTurnScore, int totalDartsThrown, double dartsPerLeg, double bustRate, int legsPlayed, int legsWon, double? firstNinePpr, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns, int oneEightyTurns
 });
 
 
@@ -66,7 +67,7 @@ class _$PlayerStatsCopyWithImpl<$Res>
 
 /// Create a copy of PlayerStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? gameType = null,Object? totalGames = null,Object? gamesWon = null,Object? winRate = null,Object? threeDartAverage = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? highestTurnScore = null,Object? totalDartsThrown = null,Object? dartsPerLeg = null,Object? bustRate = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? gameType = null,Object? totalGames = null,Object? gamesWon = null,Object? winRate = null,Object? threeDartAverage = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? highestTurnScore = null,Object? totalDartsThrown = null,Object? dartsPerLeg = null,Object? bustRate = null,Object? legsPlayed = null,Object? legsWon = null,Object? firstNinePpr = freezed,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,Object? oneEightyTurns = null,}) {
   return _then(_self.copyWith(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -80,7 +81,14 @@ as int?,highestTurnScore: null == highestTurnScore ? _self.highestTurnScore : hi
 as int,totalDartsThrown: null == totalDartsThrown ? _self.totalDartsThrown : totalDartsThrown // ignore: cast_nullable_to_non_nullable
 as int,dartsPerLeg: null == dartsPerLeg ? _self.dartsPerLeg : dartsPerLeg // ignore: cast_nullable_to_non_nullable
 as double,bustRate: null == bustRate ? _self.bustRate : bustRate // ignore: cast_nullable_to_non_nullable
-as double,
+as double,legsPlayed: null == legsPlayed ? _self.legsPlayed : legsPlayed // ignore: cast_nullable_to_non_nullable
+as int,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
+as int,firstNinePpr: freezed == firstNinePpr ? _self.firstNinePpr : firstNinePpr // ignore: cast_nullable_to_non_nullable
+as double?,sixtyPlusTurns: null == sixtyPlusTurns ? _self.sixtyPlusTurns : sixtyPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneHundredPlusTurns: null == oneHundredPlusTurns ? _self.oneHundredPlusTurns : oneHundredPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneFortyPlusTurns: null == oneFortyPlusTurns ? _self.oneFortyPlusTurns : oneFortyPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -165,10 +173,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate,  int legsPlayed,  int legsWon,  double? firstNinePpr,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns,  int oneEightyTurns)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlayerStats() when $default != null:
-return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate);case _:
+return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate,_that.legsPlayed,_that.legsWon,_that.firstNinePpr,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns,_that.oneEightyTurns);case _:
   return orElse();
 
 }
@@ -186,10 +194,10 @@ return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate,  int legsPlayed,  int legsWon,  double? firstNinePpr,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns,  int oneEightyTurns)  $default,) {final _that = this;
 switch (_that) {
 case _PlayerStats():
-return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate);case _:
+return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate,_that.legsPlayed,_that.legsWon,_that.firstNinePpr,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns,_that.oneEightyTurns);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +214,10 @@ return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String playerId,  GameType gameType,  int totalGames,  int gamesWon,  double winRate,  double threeDartAverage,  double? checkoutPercentage,  int? highestCheckout,  int highestTurnScore,  int totalDartsThrown,  double dartsPerLeg,  double bustRate,  int legsPlayed,  int legsWon,  double? firstNinePpr,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns,  int oneEightyTurns)?  $default,) {final _that = this;
 switch (_that) {
 case _PlayerStats() when $default != null:
-return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate);case _:
+return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_that.winRate,_that.threeDartAverage,_that.checkoutPercentage,_that.highestCheckout,_that.highestTurnScore,_that.totalDartsThrown,_that.dartsPerLeg,_that.bustRate,_that.legsPlayed,_that.legsWon,_that.firstNinePpr,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns,_that.oneEightyTurns);case _:
   return null;
 
 }
@@ -221,7 +229,7 @@ return $default(_that.playerId,_that.gameType,_that.totalGames,_that.gamesWon,_t
 @JsonSerializable()
 
 class _PlayerStats implements PlayerStats {
-  const _PlayerStats({required this.playerId, required this.gameType, required this.totalGames, required this.gamesWon, required this.winRate, required this.threeDartAverage, this.checkoutPercentage, this.highestCheckout, required this.highestTurnScore, required this.totalDartsThrown, required this.dartsPerLeg, required this.bustRate});
+  const _PlayerStats({required this.playerId, required this.gameType, required this.totalGames, required this.gamesWon, required this.winRate, required this.threeDartAverage, this.checkoutPercentage, this.highestCheckout, required this.highestTurnScore, required this.totalDartsThrown, required this.dartsPerLeg, required this.bustRate, this.legsPlayed = 0, this.legsWon = 0, this.firstNinePpr, this.sixtyPlusTurns = 0, this.oneHundredPlusTurns = 0, this.oneFortyPlusTurns = 0, this.oneEightyTurns = 0});
   factory _PlayerStats.fromJson(Map<String, dynamic> json) => _$PlayerStatsFromJson(json);
 
 @override final  String playerId;
@@ -237,6 +245,14 @@ class _PlayerStats implements PlayerStats {
 @override final  int totalDartsThrown;
 @override final  double dartsPerLeg;
 @override final  double bustRate;
+// 0.0–1.0
+@override@JsonKey() final  int legsPlayed;
+@override@JsonKey() final  int legsWon;
+@override final  double? firstNinePpr;
+@override@JsonKey() final  int sixtyPlusTurns;
+@override@JsonKey() final  int oneHundredPlusTurns;
+@override@JsonKey() final  int oneFortyPlusTurns;
+@override@JsonKey() final  int oneEightyTurns;
 
 /// Create a copy of PlayerStats
 /// with the given fields replaced by the non-null parameter values.
@@ -251,16 +267,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.totalGames, totalGames) || other.totalGames == totalGames)&&(identical(other.gamesWon, gamesWon) || other.gamesWon == gamesWon)&&(identical(other.winRate, winRate) || other.winRate == winRate)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.highestTurnScore, highestTurnScore) || other.highestTurnScore == highestTurnScore)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.dartsPerLeg, dartsPerLeg) || other.dartsPerLeg == dartsPerLeg)&&(identical(other.bustRate, bustRate) || other.bustRate == bustRate));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.totalGames, totalGames) || other.totalGames == totalGames)&&(identical(other.gamesWon, gamesWon) || other.gamesWon == gamesWon)&&(identical(other.winRate, winRate) || other.winRate == winRate)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.highestTurnScore, highestTurnScore) || other.highestTurnScore == highestTurnScore)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.dartsPerLeg, dartsPerLeg) || other.dartsPerLeg == dartsPerLeg)&&(identical(other.bustRate, bustRate) || other.bustRate == bustRate)&&(identical(other.legsPlayed, legsPlayed) || other.legsPlayed == legsPlayed)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.firstNinePpr, firstNinePpr) || other.firstNinePpr == firstNinePpr)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,gameType,totalGames,gamesWon,winRate,threeDartAverage,checkoutPercentage,highestCheckout,highestTurnScore,totalDartsThrown,dartsPerLeg,bustRate);
+int get hashCode => Object.hashAll([runtimeType,playerId,gameType,totalGames,gamesWon,winRate,threeDartAverage,checkoutPercentage,highestCheckout,highestTurnScore,totalDartsThrown,dartsPerLeg,bustRate,legsPlayed,legsWon,firstNinePpr,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns,oneEightyTurns]);
 
 @override
 String toString() {
-  return 'PlayerStats(playerId: $playerId, gameType: $gameType, totalGames: $totalGames, gamesWon: $gamesWon, winRate: $winRate, threeDartAverage: $threeDartAverage, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, highestTurnScore: $highestTurnScore, totalDartsThrown: $totalDartsThrown, dartsPerLeg: $dartsPerLeg, bustRate: $bustRate)';
+  return 'PlayerStats(playerId: $playerId, gameType: $gameType, totalGames: $totalGames, gamesWon: $gamesWon, winRate: $winRate, threeDartAverage: $threeDartAverage, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, highestTurnScore: $highestTurnScore, totalDartsThrown: $totalDartsThrown, dartsPerLeg: $dartsPerLeg, bustRate: $bustRate, legsPlayed: $legsPlayed, legsWon: $legsWon, firstNinePpr: $firstNinePpr, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns, oneEightyTurns: $oneEightyTurns)';
 }
 
 
@@ -271,7 +287,7 @@ abstract mixin class _$PlayerStatsCopyWith<$Res> implements $PlayerStatsCopyWith
   factory _$PlayerStatsCopyWith(_PlayerStats value, $Res Function(_PlayerStats) _then) = __$PlayerStatsCopyWithImpl;
 @override @useResult
 $Res call({
- String playerId, GameType gameType, int totalGames, int gamesWon, double winRate, double threeDartAverage, double? checkoutPercentage, int? highestCheckout, int highestTurnScore, int totalDartsThrown, double dartsPerLeg, double bustRate
+ String playerId, GameType gameType, int totalGames, int gamesWon, double winRate, double threeDartAverage, double? checkoutPercentage, int? highestCheckout, int highestTurnScore, int totalDartsThrown, double dartsPerLeg, double bustRate, int legsPlayed, int legsWon, double? firstNinePpr, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns, int oneEightyTurns
 });
 
 
@@ -288,7 +304,7 @@ class __$PlayerStatsCopyWithImpl<$Res>
 
 /// Create a copy of PlayerStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? playerId = null,Object? gameType = null,Object? totalGames = null,Object? gamesWon = null,Object? winRate = null,Object? threeDartAverage = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? highestTurnScore = null,Object? totalDartsThrown = null,Object? dartsPerLeg = null,Object? bustRate = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? playerId = null,Object? gameType = null,Object? totalGames = null,Object? gamesWon = null,Object? winRate = null,Object? threeDartAverage = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? highestTurnScore = null,Object? totalDartsThrown = null,Object? dartsPerLeg = null,Object? bustRate = null,Object? legsPlayed = null,Object? legsWon = null,Object? firstNinePpr = freezed,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,Object? oneEightyTurns = null,}) {
   return _then(_PlayerStats(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -302,7 +318,14 @@ as int?,highestTurnScore: null == highestTurnScore ? _self.highestTurnScore : hi
 as int,totalDartsThrown: null == totalDartsThrown ? _self.totalDartsThrown : totalDartsThrown // ignore: cast_nullable_to_non_nullable
 as int,dartsPerLeg: null == dartsPerLeg ? _self.dartsPerLeg : dartsPerLeg // ignore: cast_nullable_to_non_nullable
 as double,bustRate: null == bustRate ? _self.bustRate : bustRate // ignore: cast_nullable_to_non_nullable
-as double,
+as double,legsPlayed: null == legsPlayed ? _self.legsPlayed : legsPlayed // ignore: cast_nullable_to_non_nullable
+as int,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
+as int,firstNinePpr: freezed == firstNinePpr ? _self.firstNinePpr : firstNinePpr // ignore: cast_nullable_to_non_nullable
+as double?,sixtyPlusTurns: null == sixtyPlusTurns ? _self.sixtyPlusTurns : sixtyPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneHundredPlusTurns: null == oneHundredPlusTurns ? _self.oneHundredPlusTurns : oneHundredPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneFortyPlusTurns: null == oneFortyPlusTurns ? _self.oneFortyPlusTurns : oneFortyPlusTurns // ignore: cast_nullable_to_non_nullable
+as int,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

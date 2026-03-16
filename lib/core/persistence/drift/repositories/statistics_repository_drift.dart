@@ -7,6 +7,7 @@ import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
 import 'package:my_darts/features/statistics/domain/repositories/statistics_repository.dart';
 import 'package:my_darts/features/statistics/domain/entities/player_stats.dart';
+import 'package:my_darts/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:my_darts/features/statistics/domain/entities/game_stats.dart';
 import '../database.dart' as drift_db;
 
@@ -135,6 +136,8 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     GameType? gameType,
     DateTime? from,
     DateTime? to,
+    int? startingScore,
+    int? legLimit,
   }) async {
     try {
       // Verify player exists
@@ -751,6 +754,23 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     } catch (e) {
       return null;
     }
+  }
+
+  @override
+  Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
+    String playerId, {
+    GameType? gameType,
+    int? startingScore,
+    int? limit,
+  }) async {
+    // Minimal implementation — returns empty list (web debug target only)
+    return [];
+  }
+
+  @override
+  Future<List<int>> getPlayerX01StartingScores(String playerId) async {
+    // Minimal implementation — returns empty list (web debug target only)
+    return [];
   }
 
   /// Aggregate X01 checkout stats for [playerId] across all relevant games.

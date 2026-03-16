@@ -21,6 +21,7 @@ import 'package:my_darts/features/game/presentation/providers/game_setup_provide
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 import 'package:my_darts/features/history/presentation/pages/game_detail_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/career_stats_page.dart';
+import 'package:my_darts/features/statistics/presentation/pages/player_stats_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/post_game_summary_page.dart';
 
 part 'app_router.g.dart';
@@ -40,6 +41,7 @@ abstract final class GameRoutes {
   static const activePractice   = '/practice-board';
 
   static String gameDetail(String id) => '/game/history/$id';
+  static String playerStats(String id) => '/stats/player/$id';
 }
 
 // ── RouterNotifier ────────────────────────────────────────────────────────────
@@ -103,6 +105,8 @@ Widget _practiceBoardPage(BuildContext _, GoRouterState s) =>
     PracticeBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _careerStatsPage(BuildContext _, GoRouterState s) =>
     CareerStatsPage(playerId: s.pathParameters['playerId']!);
+Widget _playerStatsPage(BuildContext _, GoRouterState s) =>
+    PlayerStatsPage(playerId: s.pathParameters['playerId']!);
 Widget _postGameSummaryPage(BuildContext _, GoRouterState s) =>
     PostGameSummaryPage(gameId: s.pathParameters['gameId']!);
 Widget _gameDetailPage(BuildContext _, GoRouterState s) =>
@@ -148,7 +152,7 @@ List<RouteBase> _buildRoutes() => [
           builder: _practiceBoardPage),
       GoRoute(
           path: '/stats/player/:playerId',
-          builder: _careerStatsPage),
+          builder: _playerStatsPage),
       GoRoute(
           path: '/post-game/:gameId',
           builder: _postGameSummaryPage),
