@@ -68,7 +68,7 @@ class _PlayerPickerList extends StatelessWidget {
               final p = players[i];
               return PlayerCardWidget(
                 player: p,
-                onTap: () => context.go(GameRoutes.playerStats(p.playerId)),
+                onTap: () => context.push(GameRoutes.playerStats(p.playerId)),
                 trailing: const Icon(Icons.chevron_right),
               );
             },
