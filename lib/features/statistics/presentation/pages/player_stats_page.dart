@@ -142,14 +142,29 @@ class _ComingSoonTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Opacity(
       opacity: 0.6,
-      child: Center(
-        child: Text(
-          'Stats for $label coming soon',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+      child: Container(
+        color: colorScheme.surfaceContainerHighest,
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bar_chart_outlined,
+                size: 64,
+                color: colorScheme.onSurfaceVariant,
               ),
+              const SizedBox(height: 16),
+              Text(
+                'Stats for $label coming soon',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

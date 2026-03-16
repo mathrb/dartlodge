@@ -72,7 +72,6 @@ class StatsDetailTableWidget extends StatelessWidget {
                 row.value,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colorScheme.primary,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

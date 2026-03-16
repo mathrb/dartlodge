@@ -23,6 +23,7 @@ class VariantChipSelectorWidget extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (scores) {
         if (scores.isEmpty) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
         return SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -31,19 +32,36 @@ class VariantChipSelectorWidget extends ConsumerWidget {
               FilterChip(
                 label: const Text('All X01'),
                 selected: pageState.selectedStartingScore == null,
+                selectedColor: cs.primaryContainer,
+                checkmarkColor: cs.onPrimaryContainer,
+                labelStyle: TextStyle(
+                  color: pageState.selectedStartingScore == null
+                      ? cs.onPrimaryContainer
+                      : cs.onSurfaceVariant,
+                ),
+                backgroundColor: cs.surfaceContainerHighest,
                 onSelected: (_) => notifier.setStartingScore(null),
               ),
               const SizedBox(width: 8),
-              ...scores.map((score) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text('$score'),
-                      selected: pageState.selectedStartingScore == score,
-                      onSelected: (_) => notifier.setStartingScore(
-                        pageState.selectedStartingScore == score ? null : score,
-                      ),
+              ...scores.map((score) {
+                final isSelected = pageState.selectedStartingScore == score;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text('$score'),
+                    selected: isSelected,
+                    selectedColor: cs.primaryContainer,
+                    checkmarkColor: cs.onPrimaryContainer,
+                    labelStyle: TextStyle(
+                      color: isSelected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
                     ),
-                  )),
+                    backgroundColor: cs.surfaceContainerHighest,
+                    onSelected: (_) => notifier.setStartingScore(
+                      isSelected ? null : score,
+                    ),
+                  ),
+                );
+              }),
             ],
           ),
         );
