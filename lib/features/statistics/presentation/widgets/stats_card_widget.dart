@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/app_text_styles.dart';
+
 class StatsCardWidget extends StatelessWidget {
   final String label;
   final String value;
@@ -29,15 +31,15 @@ class StatsCardWidget extends StatelessWidget {
           children: [
             Text(
               label,
-              style: theme.textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               value,
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
+              style: AppTextStyles.scoreSmall(context).copyWith(
+                color: theme.colorScheme.primary,
               ),
             ),
             if (subtitle != null) ...[

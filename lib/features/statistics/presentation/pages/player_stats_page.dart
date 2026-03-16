@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_text_styles.dart';
 import '../../../players/presentation/providers/players_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../state/player_stats_page_state.dart';
@@ -61,6 +62,10 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
           tabs: _tabs,
           indicatorColor: Theme.of(context).colorScheme.primary,
           indicatorWeight: 2,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+          labelStyle: AppTextStyles.labelLarge,
+          unselectedLabelStyle: AppTextStyles.labelLarge,
         ),
       ),
       body: TabBarView(
@@ -137,12 +142,15 @@ class _ComingSoonTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        '$label stats coming soon',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+    return Opacity(
+      opacity: 0.6,
+      child: Center(
+        child: Text(
+          'Stats for $label coming soon',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
       ),
     );
   }

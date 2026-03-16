@@ -30,8 +30,12 @@ class PprTrendChartWidget extends ConsumerWidget {
       data: (history) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
+          Container(
             height: 200,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: history.length < 2
                 ? Center(
                     child: Text(
@@ -51,7 +55,7 @@ class PprTrendChartWidget extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: FilterChip(
-              label: const Text('Checkout %'),
+              label: const Text('📊 Overlay: Checkout %'),
               selected: pageState.showCheckoutOverlay,
               onSelected: (_) => notifier.toggleCheckoutOverlay(),
             ),

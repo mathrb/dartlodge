@@ -55,7 +55,7 @@ class StatsDetailTableWidget extends StatelessWidget {
       children: rows.asMap().entries.map((entry) {
         final i = entry.key;
         final row = entry.value;
-        final bg = i.isEven ? colorScheme.surface : colorScheme.surfaceContainerHighest;
+        final bg = i.isEven ? colorScheme.surface : theme.scaffoldBackgroundColor;
         return Container(
           color: bg,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
