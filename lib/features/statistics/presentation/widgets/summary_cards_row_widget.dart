@@ -26,7 +26,7 @@ class SummaryCardsRowWidget extends StatelessWidget {
         ),
         Expanded(
           child: StatsCardWidget(
-            label: 'Solo Games',
+            label: 'Games Played',
             value: stats.totalGames.toString(),
           ),
         ),

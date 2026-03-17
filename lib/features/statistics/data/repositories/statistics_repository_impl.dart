@@ -26,6 +26,11 @@ import 'package:my_darts/features/statistics/domain/engines/x01/x01_legs_project
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_win_rate_projection.dart';
 import 'package:my_darts/features/statistics/domain/entities/player_leg_snapshot.dart';
 
 
@@ -164,6 +169,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     DateTime? from,
     DateTime? to,
     int? startingScore,
+    String? variant,
     int? legLimit,
   }) async {
     try {
@@ -185,6 +191,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         from: from,
         to: to,
         startingScore: startingScore,
+        variant: variant,
         legLimit: legLimit,
       );
       return stats ?? _createEmptyPlayerStats(playerId, gameType);
@@ -375,6 +382,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     DateTime? from,
     DateTime? to,
     int? startingScore,
+    String? variant,
     int? legLimit,
   }) async {
     // 1. Query games involving this player
@@ -411,6 +419,20 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         try {
           final cfg = jsonDecode(configJson) as Map<String, dynamic>;
           return cfg['starting_score'] == startingScore;
+        } catch (_) {
+          return false;
+        }
+      }).toList();
+    }
+
+    // Filter by cricket variant if specified
+    if (variant != null) {
+      gamesResult = gamesResult.where((row) {
+        final configJson = row['config_json'] as String?;
+        if (configJson == null) return false;
+        try {
+          final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+          return cfg['variant'] == variant;
         } catch (_) {
           return false;
         }
@@ -494,20 +516,30 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       playerIds: [playerId],
     );
 
-    final runner = ProjectionRunner([
-      X01AverageProjection(),
-      X01BustRateProjection(),
-      X01CheckoutProjection(),
-      X01DartsPerLegProjection(),
-      X01DoubleOutProjection(),
-      X01FirstDartInProjection(),
-      X01HighestCheckoutProjection(),
-      X01HighestTurnScoreProjection(),
-      X01LegsProjection(),
-      X01WinRateProjection(),
-      X01HighScoreBucketsProjection(),
-      X01FirstNinePprProjection(),
-    ]);
+    final isCricket = effectiveGameType == GameType.cricket;
+
+    final runner = isCricket
+        ? ProjectionRunner([
+            CricketMarksPerTurnProjection(),
+            CricketHitRateProjection(),
+            CricketMarkBucketsProjection(),
+            CricketLegsProjection(),
+            CricketWinRateProjection(),
+          ])
+        : ProjectionRunner([
+            X01AverageProjection(),
+            X01BustRateProjection(),
+            X01CheckoutProjection(),
+            X01DartsPerLegProjection(),
+            X01DoubleOutProjection(),
+            X01FirstDartInProjection(),
+            X01HighestCheckoutProjection(),
+            X01HighestTurnScoreProjection(),
+            X01LegsProjection(),
+            X01WinRateProjection(),
+            X01HighScoreBucketsProjection(),
+            X01FirstNinePprProjection(),
+          ]);
 
     runner.init(context);
     runner.run(events);
@@ -521,6 +553,34 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
     // 7. Map snapshots to PlayerStats
     final snap = runner.snapshot();
+
+    if (isCricket) {
+      final mptSnap = snap['cricket.mpt'] ?? {};
+      final hitRateSnap = snap['cricket.hitRate'] ?? {};
+      final bucketsSnap = snap['cricket.markBuckets'] ?? {};
+      final legsSnap = snap['cricket.legs'] ?? {};
+      final winSnap = snap['cricket.winRate'] ?? {};
+
+      return PlayerStats(
+        playerId: playerId,
+        gameType: effectiveGameType,
+        totalGames: totalGames,
+        totalDartsThrown: totalDartsThrown,
+        threeDartAverage: 0.0,
+        bustRate: 0.0,
+        highestTurnScore: 0,
+        dartsPerLeg: 0.0,
+        winRate: (winSnap['winRate'] as num?)?.toDouble() ?? 0.0,
+        gamesWon: winSnap['gamesWon'] as int? ?? 0,
+        legsPlayed: legsSnap['legsPlayed'] as int? ?? 0,
+        legsWon: legsSnap['legsWon'] as int? ?? 0,
+        marksPerTurn: (mptSnap['marksPerTurn'] as num?)?.toDouble(),
+        hitRate: (hitRateSnap['hitRate'] as num?)?.toDouble(),
+        sixMarkTurns: bucketsSnap['sixMarkTurns'] as int? ?? 0,
+        nineMarkTurns: bucketsSnap['nineMarkTurns'] as int? ?? 0,
+      );
+    }
+
     final avgSnap = snap['x01_average'] ?? {};
     final bustSnap = snap['x01_bust_rate'] ?? {};
     final checkoutSnap = snap['x01_checkout'] ?? {};
@@ -560,6 +620,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     String playerId, {
     GameType? gameType,
     int? startingScore,
+    String? variant,
     int? limit,
   }) async {
     try {
@@ -591,6 +652,20 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
           try {
             final cfg = jsonDecode(configJson) as Map<String, dynamic>;
             return cfg['starting_score'] == startingScore;
+          } catch (_) {
+            return false;
+          }
+        }).toList();
+      }
+
+      // Filter by cricket variant if specified
+      if (variant != null) {
+        gamesResult = gamesResult.where((row) {
+          final configJson = row['config_json'] as String?;
+          if (configJson == null) return false;
+          try {
+            final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+            return cfg['variant'] == variant;
           } catch (_) {
             return false;
           }
@@ -634,11 +709,17 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
           turnScores[turn] = (turnScores[turn] ?? 0) + score;
         }
 
-        // Scan events to accumulate per-leg darts and PPR
+        // Scan events to accumulate per-leg darts and PPR/MPT
         int legDartCount = 0;
         int legScoreTotal = 0;
         int currentTurnNumber = 0;
         final Set<int> legTurnNumbers = {};
+
+        // Cricket MPT tracking
+        const cricketTargets = {15, 16, 17, 18, 19, 20, 25};
+        int legTotalMarks = 0;
+        int legTotalTurns = 0;
+        int currentTurnMarks = 0;
 
         for (final eventRow in eventsResult) {
           final event = GameEvent.fromJson(eventRow);
@@ -647,17 +728,42 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
               final pid = event.payload['player_id'] as String?;
               if (pid != playerId) break;
               currentTurnNumber = event.payload['turn_number'] as int? ?? currentTurnNumber;
+              currentTurnMarks = 0;
             case 'DartThrown':
               final pid = event.payload['player_id'] as String?;
               if (pid != playerId) break;
               legDartCount++;
-              final score = (event.payload['score'] as num?)?.toInt() ?? 0;
+              final seg = (event.payload['segment'] as num?)?.toInt();
+              final mult = (event.payload['multiplier'] as num?)?.toInt();
+              final score = (seg != null && mult != null)
+                  ? seg * mult
+                  : (event.payload['score'] as num?)?.toInt() ?? 0;
               legScoreTotal += score;
+              // Accumulate cricket marks (payload segment may be int or String)
+              final rawSeg = event.payload['segment'];
+              if (rawSeg is String) {
+                currentTurnMarks += _cricketMarksForSegment(rawSeg, cricketTargets);
+              } else if (rawSeg is num) {
+                final segInt = rawSeg.toInt();
+                final multInt = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
+                if (cricketTargets.contains(segInt)) {
+                  currentTurnMarks += multInt.clamp(0, 3);
+                }
+              }
+            case 'TurnEnded':
+              final pid = event.payload['player_id'] as String?;
+              if (pid != playerId) break;
+              legTotalMarks += currentTurnMarks;
+              legTotalTurns++;
+              currentTurnMarks = 0;
             case 'LegCompleted':
               legIndex++;
               final ppr = legDartCount > 0
                   ? (legScoreTotal / legDartCount) * 3
                   : 0.0;
+              final mpt = legTotalTurns > 0
+                  ? legTotalMarks / legTotalTurns
+                  : null;
 
               final checkoutScore = event.payload['checkout_score'] as int?;
               final checkoutAttempts = event.payload['checkout_attempts'] as int?;
@@ -673,12 +779,16 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
                 ppr: ppr,
                 checkoutPct: checkoutPct,
                 startingScore: gamStartingScore,
+                mpt: mpt,
               ));
 
               // Reset for next leg
               legDartCount = 0;
               legScoreTotal = 0;
               legTurnNumbers.clear();
+              legTotalMarks = 0;
+              legTotalTurns = 0;
+              currentTurnMarks = 0;
           }
         }
       }
@@ -745,99 +855,6 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     } catch (e) {
       print('Error parsing legs won: ${e.toString()}');
       return 0;
-    }
-  }
-
-  // Helper method to get games won by player
-  Future<int> _getGamesWonByPlayer(String playerId, GameType? gameType) async {
-    try {
-      String query = '''
-        SELECT COUNT(DISTINCT g.game_id) as games_won
-        FROM games g
-        JOIN competitors c ON g.winner_competitor_id = c.competitor_id
-        JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
-        WHERE cp.player_id = ?
-        AND g.is_complete = 1
-      ''';
-
-      List<dynamic> args = [playerId];
-
-      if (gameType != null) {
-        query += ' AND g.game_type = ?';
-        args.add(gameType.name);
-      }
-
-      final result = await _db.rawQuery(query, args);
-      return result.first['games_won'] as int? ?? 0;
-    } catch (e) {
-      print('Error getting games won: ${e.toString()}');
-      return 0;
-    }
-  }
-
-  // Helper method to calculate X01 specific statistics
-  Future<Map<String, dynamic>> _calculateX01Statistics(String playerId, GameType? gameType) async {
-    try {
-      // Get all X01 games for this player
-      String gameFilter = gameType == null 
-        ? 'g.game_type = ?' 
-        : 'g.game_type = ? AND g.game_type = ?';
-      List<dynamic> gameArgs = gameType == null 
-        ? ['x01'] 
-        : ['x01', gameType.name];
-
-      final gamesQuery = '''
-        SELECT g.game_id
-        FROM games g
-        JOIN dart_throws dt ON g.game_id = dt.game_id
-        WHERE dt.player_id = ? AND $gameFilter
-        AND g.is_complete = 1
-      ''';
-
-      final gamesResult = await _db.rawQuery(gamesQuery, [playerId, ...gameArgs]);
-      
-      if (gamesResult.isEmpty) {
-        return {
-          'checkoutPercentage': null,
-          'highestCheckout': null,
-        };
-      }
-
-      final gameIds = gamesResult.map((row) => row['game_id'] as String).toList();
-
-      // Calculate checkout percentage
-      double checkoutPercentage = 0.0;
-      int checkoutAttempts = 0;
-
-      // Calculate highest checkout
-      int? highestCheckout;
-
-      for (final gameId in gameIds) {
-        final gameCheckoutPercentage = await _calculateCheckoutPercentageForGame(playerId, gameId);
-        final gameHighestCheckout = await _calculateHighestCheckoutForGame(playerId, gameId);
-        
-        if (gameCheckoutPercentage != null) {
-          checkoutPercentage += gameCheckoutPercentage;
-          checkoutAttempts++;
-        }
-
-        if (gameHighestCheckout != null && (highestCheckout == null || gameHighestCheckout > highestCheckout)) {
-          highestCheckout = gameHighestCheckout;
-        }
-      }
-
-      checkoutPercentage = checkoutAttempts > 0 ? checkoutPercentage / checkoutAttempts : 0.0;
-
-      return {
-        'checkoutPercentage': checkoutPercentage,
-        'highestCheckout': highestCheckout,
-      };
-    } catch (e) {
-      print('Error calculating X01 statistics: ${e.toString()}');
-      return {
-        'checkoutPercentage': null,
-        'highestCheckout': null,
-      };
     }
   }
 
@@ -958,33 +975,6 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     }
   }
 
-  // Helper method to get legs won by player
-  Future<int> _getLegsWonByPlayer(String playerId, GameType? gameType) async {
-    try {
-      String query = '''
-        SELECT COUNT(*) as legs_won
-        FROM game_events ge
-        JOIN games g ON ge.game_id = g.game_id
-        WHERE ge.event_type = 'LegCompleted'
-        AND JSON_EXTRACT(ge.payload_json, '\$.winner_player_id') = ?
-        AND g.is_complete = 1
-      ''';
-
-      List<dynamic> args = [playerId];
-
-      if (gameType != null) {
-        query += ' AND g.game_type = ?';
-        args.add(gameType.name);
-      }
-
-      final result = await _db.rawQuery(query, args);
-      return result.first['legs_won'] as int? ?? 0;
-    } catch (e) {
-      print('Error getting legs won by player: ${e.toString()}');
-      return 0;
-    }
-  }
-
   // Helper method to get legs won for player in specific game
   Future<int> _getLegsWonForPlayerInGame(String playerId, String gameId) async {
     try {
@@ -1007,6 +997,52 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       print('Error getting legs won in game: ${e.toString()}');
       return 0;
     }
+  }
+
+  @override
+  Future<List<String>> getPlayerCricketVariants(String playerId) async {
+    try {
+      final gamesResult = await _db.rawQuery('''
+        SELECT DISTINCT g.config_json
+        FROM games g
+        JOIN competitors c ON g.game_id = c.game_id
+        JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
+        WHERE cp.player_id = ? AND g.game_type = ? AND g.is_complete = 1
+      ''', [playerId, GameType.cricket.name]);
+
+      final Set<String> variants = {};
+      for (final row in gamesResult) {
+        final configJson = row['config_json'] as String?;
+        if (configJson == null) continue;
+        try {
+          final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+          final v = cfg['variant'] as String?;
+          if (v != null) variants.add(v);
+        } catch (_) {}
+      }
+
+      return variants.toList()..sort();
+    } catch (e) {
+      throw StatisticsException('Failed to retrieve cricket variants: ${e.toString()}');
+    }
+  }
+
+  static int _cricketMarksForSegment(String segment, Set<int> targets) {
+    if (segment == 'DB') return 2;
+    if (segment == 'SB') return 1;
+    if (segment == 'MISS') return 0;
+    int multiplier = 1;
+    String stripped = segment;
+    if (segment.startsWith('T')) {
+      multiplier = 3;
+      stripped = segment.substring(1);
+    } else if (segment.startsWith('D')) {
+      multiplier = 2;
+      stripped = segment.substring(1);
+    }
+    final n = int.tryParse(stripped);
+    if (n == null || !targets.contains(n)) return 0;
+    return multiplier;
   }
 
   // Helper method to calculate bust rate

@@ -29,6 +29,11 @@ abstract class PlayerStats with _$PlayerStats {
     @Default(0) int oneHundredPlusTurns,
     @Default(0) int oneFortyPlusTurns,
     @Default(0) int oneEightyTurns,
+    // Cricket-specific fields (null for non-cricket games)
+    double? marksPerTurn,
+    double? hitRate,
+    @Default(0) int sixMarkTurns,
+    @Default(0) int nineMarkTurns,
   }) = _PlayerStats;
 
   factory PlayerStats.fromJson(Map<String, dynamic> json) =>

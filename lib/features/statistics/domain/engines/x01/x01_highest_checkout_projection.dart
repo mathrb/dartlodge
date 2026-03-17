@@ -8,7 +8,7 @@ class X01HighestCheckoutProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01_highest_checkout',
     supportedGameTypes: {GameType.x01},
-    consumedEventTypes: {'LegCompleted'},
+    consumedEventTypes: {'TurnStarted', 'LegCompleted'},
     scope: ProjectionScope.match,
   );
 
@@ -17,28 +17,33 @@ class X01HighestCheckoutProjection extends ProjectionEngine {
 
   ProjectionContext? _context;
   int _highestCheckout = 0;
+  int _lastPlayerTurnStartingScore = 0;
 
   @override
   void init(ProjectionContext context) {
     _context = context;
     _highestCheckout = 0;
+    _lastPlayerTurnStartingScore = 0;
   }
 
   @override
   void apply(GameEvent event) {
-    if (event.eventType != 'LegCompleted') return;
-    final winnerId = event.payload['winner_player_id'] as String?;
-    if (winnerId != _context?.playerId) return;
-    final checkoutScore =
-        (event.payload['checkout_score'] as num?)?.toInt() ?? 0;
-    _highestCheckout = max(_highestCheckout, checkoutScore);
+    switch (event.eventType) {
+      case 'TurnStarted':
+        final playerId = event.payload['player_id'] as String?;
+        if (playerId != _context?.playerId) return;
+        _lastPlayerTurnStartingScore =
+            (event.payload['starting_score'] as num?)?.toInt() ?? 0;
+      case 'LegCompleted':
+        final winnerId = event.payload['winner_player_id'] as String?;
+        if (winnerId != _context?.playerId) return;
+        _highestCheckout = max(_highestCheckout, _lastPlayerTurnStartingScore);
+    }
   }
 
   @override
   void reset(ProjectionScope scope) {
-    if (scope == ProjectionScope.match) {
-      _highestCheckout = 0;
-    }
+    // cumulative career stat — no reset
   }
 
   @override

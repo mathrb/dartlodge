@@ -43,7 +43,7 @@ class X01BustRateProjection extends ProjectionEngine {
   @override
   Map<String, dynamic> snapshot() {
     final bustRate =
-        _totalTurns > 0 ? (_bustTurns / _totalTurns * 100) : 0.0;
+        _totalTurns > 0 ? (_bustTurns / _totalTurns) : 0.0;
     return {
       'bustRate': bustRate,
       'bustTurns': _bustTurns,

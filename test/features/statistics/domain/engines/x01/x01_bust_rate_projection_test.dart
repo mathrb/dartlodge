@@ -88,8 +88,8 @@ void main() {
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'bust'}, seq: 2));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, seq: 3));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'bust'}, seq: 4));
-    // 2 busts / 4 turns = 50%
-    expect(engine.snapshot()['bustRate'], closeTo(50.0, 0.001));
+    // 2 busts / 4 turns = 0.5
+    expect(engine.snapshot()['bustRate'], closeTo(0.5, 0.001));
   });
 
   test('C3 — parallel engines converge', () {

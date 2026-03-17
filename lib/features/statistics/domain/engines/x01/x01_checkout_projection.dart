@@ -41,10 +41,7 @@ class X01CheckoutProjection extends ProjectionEngine {
 
   @override
   void reset(ProjectionScope scope) {
-    if (scope == ProjectionScope.leg) {
-      _checkoutAttempts = 0;
-      _successfulCheckouts = 0;
-    }
+    // cumulative career stat — no reset
   }
 
   @override

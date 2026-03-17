@@ -264,13 +264,34 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
       final GameType effectiveGameType = gameType ?? GameType.x01;
 
+      // Score buckets (60+, 100+, 140+, 180) — computed from game_events
+      Map<String, int> scoreBuckets = {};
+      if (effectiveGameType == GameType.x01) {
+        // Collect game IDs for this player
+        final gameIdsQuery = _db.selectOnly(_db.dartThrows)
+          ..addColumns([_db.dartThrows.gameId])
+          ..join([
+            innerJoin(
+                _db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
+          ])
+          ..where(_db.dartThrows.playerId.equals(playerId) &
+              _db.games.gameType.equals(GameType.x01.name))
+          ..groupBy([_db.dartThrows.gameId]);
+        final gameIdRows = await gameIdsQuery.get();
+        final gameIds = gameIdRows
+            .map((r) => r.read(_db.dartThrows.gameId))
+            .whereType<String>()
+            .toList();
+        scoreBuckets = await _calculateX01ScoreBuckets(playerId, gameIds);
+      }
+
       return PlayerStats(
         playerId: playerId,
         gameType: effectiveGameType,
         totalGames: totalGames,
         gamesWon: gamesWon,
         winRate: winRate,
-        threeDartAverage: avgScore.toDouble(),
+        threeDartAverage: (avgScore * 3).toDouble(),
         checkoutPercentage: checkoutPercentage,
         highestCheckout: highestCheckout,
         highestTurnScore: highestTurnScore,
@@ -279,6 +300,10 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         bustRate: bustRate,
         legsPlayed: legsPlayed,
         legsWon: legsWon,
+        sixtyPlusTurns: scoreBuckets['sixtyPlus'] ?? 0,
+        oneHundredPlusTurns: scoreBuckets['oneHundredPlus'] ?? 0,
+        oneFortyPlusTurns: scoreBuckets['oneFortyPlus'] ?? 0,
+        oneEightyTurns: scoreBuckets['oneEighty'] ?? 0,
       );
     } on RepositoryException {
       rethrow;
@@ -351,7 +376,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         totalGames: 1,
         gamesWon: legsWon > 0 ? 1 : 0,
         winRate: legsWon > 0 ? 1.0 : 0.0,
-        threeDartAverage: avgScore.toDouble(),
+        threeDartAverage: (avgScore * 3).toDouble(),
         checkoutPercentage: checkoutPercentage,
         highestCheckout: highestCheckout,
         highestTurnScore: highestTurnScore,
@@ -1050,5 +1075,73 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     } catch (e) {
       return {'checkoutPercentage': null, 'highestCheckout': null};
     }
+  }
+
+  /// X01 score bucket counts (60+, 100+, 140+, 180) by replaying DartThrown /
+  /// TurnEnded events from the given game IDs in Dart code.
+  Future<Map<String, int>> _calculateX01ScoreBuckets(
+      String playerId, List<String> gameIds) async {
+    if (gameIds.isEmpty) {
+      return {
+        'sixtyPlus': 0,
+        'oneHundredPlus': 0,
+        'oneFortyPlus': 0,
+        'oneEighty': 0,
+      };
+    }
+
+    int sixtyPlus = 0;
+    int oneHundredPlus = 0;
+    int oneFortyPlus = 0;
+    int oneEighty = 0;
+
+    for (final gId in gameIds) {
+      final events = await (_db.select(_db.gameEvents)
+            ..where((e) => e.gameId.equals(gId))
+            ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
+          .get();
+
+      int currentTurnScore = 0;
+
+      for (final event in events) {
+        final payload =
+            jsonDecode(event.payloadJson) as Map<String, dynamic>;
+
+        if (event.eventType == 'DartThrown') {
+          final pid = payload['player_id'] as String?;
+          if (pid != playerId) continue;
+          final seg = (payload['segment'] as num?)?.toInt();
+          final mult = (payload['multiplier'] as num?)?.toInt();
+          final score = (seg != null && mult != null)
+              ? seg * mult
+              : (payload['score'] as num?)?.toInt() ?? 0;
+          currentTurnScore += score;
+        } else if (event.eventType == 'TurnEnded') {
+          final pid = payload['player_id'] as String?;
+          if (pid != playerId) {
+            currentTurnScore = 0;
+            continue;
+          }
+          final reason = payload['reason'] as String?;
+          if (reason != 'bust') {
+            final s = currentTurnScore;
+            if (s == 180) oneEighty++;
+            if (s >= 140) oneFortyPlus++;
+            if (s >= 100) oneHundredPlus++;
+            if (s >= 60) sixtyPlus++;
+          }
+          currentTurnScore = 0;
+        } else if (event.eventType == 'TurnStarted') {
+          currentTurnScore = 0;
+        }
+      }
+    }
+
+    return {
+      'sixtyPlus': sixtyPlus,
+      'oneHundredPlus': oneHundredPlus,
+      'oneFortyPlus': oneFortyPlus,
+      'oneEighty': oneEighty,
+    };
   }
 }

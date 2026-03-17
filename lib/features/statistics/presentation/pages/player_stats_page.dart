@@ -5,6 +5,9 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../players/presentation/providers/players_provider.dart';
 import '../providers/statistics_provider.dart';
 import '../state/player_stats_page_state.dart';
+import '../widgets/cricket_stats_detail_table_widget.dart';
+import '../widgets/cricket_variant_chip_selector_widget.dart';
+import '../widgets/mpt_trend_chart_widget.dart';
 import '../widgets/ppr_trend_chart_widget.dart';
 import '../widgets/stats_detail_table_widget.dart';
 import '../widgets/summary_cards_row_widget.dart';
@@ -72,7 +75,7 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
         controller: _tabController,
         children: [
           _X01TabContent(playerId: widget.playerId),
-          const _ComingSoonTab(label: 'Cricket'),
+          _CricketTabContent(playerId: widget.playerId),
           const _ComingSoonTab(label: 'Practice'),
           const _ComingSoonTab(label: 'Others'),
         ],
@@ -128,6 +131,62 @@ class _X01TabContent extends ConsumerWidget {
               onRetry: () => ref.invalidate(filteredPlayerStatsProvider(playerId)),
             ),
             data: (stats) => StatsDetailTableWidget(stats: stats),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CricketTabContent extends ConsumerWidget {
+  final String playerId;
+
+  const _CricketTabContent({required this.playerId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncStats = ref.watch(filteredCricketStatsProvider(playerId));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: asyncStats.when(
+              loading: () => const SizedBox(
+                height: 80,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => _ErrorRetry(
+                message: 'Failed to load stats: $e',
+                onRetry: () =>
+                    ref.invalidate(filteredCricketStatsProvider(playerId)),
+              ),
+              data: (stats) => SummaryCardsRowWidget(stats: stats),
+            ),
+          ),
+          CricketVariantChipSelectorWidget(playerId: playerId),
+          TimeRangeSelectorWidget(playerId: playerId),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: MptTrendChartWidget(playerId: playerId),
+          ),
+          const SizedBox(height: 16),
+          asyncStats.when(
+            loading: () => const SizedBox(
+              height: 200,
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (e, _) => _ErrorRetry(
+              message: 'Failed to load stats: $e',
+              onRetry: () =>
+                  ref.invalidate(filteredCricketStatsProvider(playerId)),
+            ),
+            data: (stats) => CricketStatsDetailTableWidget(stats: stats),
           ),
         ],
       ),

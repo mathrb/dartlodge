@@ -26,6 +26,10 @@ _PlayerStats _$PlayerStatsFromJson(Map<String, dynamic> json) => _PlayerStats(
   oneHundredPlusTurns: (json['oneHundredPlusTurns'] as num?)?.toInt() ?? 0,
   oneFortyPlusTurns: (json['oneFortyPlusTurns'] as num?)?.toInt() ?? 0,
   oneEightyTurns: (json['oneEightyTurns'] as num?)?.toInt() ?? 0,
+  marksPerTurn: (json['marksPerTurn'] as num?)?.toDouble(),
+  hitRate: (json['hitRate'] as num?)?.toDouble(),
+  sixMarkTurns: (json['sixMarkTurns'] as num?)?.toInt() ?? 0,
+  nineMarkTurns: (json['nineMarkTurns'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
@@ -49,6 +53,10 @@ Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
       'oneHundredPlusTurns': instance.oneHundredPlusTurns,
       'oneFortyPlusTurns': instance.oneFortyPlusTurns,
       'oneEightyTurns': instance.oneEightyTurns,
+      'marksPerTurn': instance.marksPerTurn,
+      'hitRate': instance.hitRate,
+      'sixMarkTurns': instance.sixMarkTurns,
+      'nineMarkTurns': instance.nineMarkTurns,
     };
 
 const _$GameTypeEnumMap = {

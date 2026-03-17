@@ -53,8 +53,10 @@ class ProcessCricketDartUseCase {
       occurredAt: DateTime.now(),
       payload: {
         'competitor_id': dartThrow.competitorId,
+        'player_id': currentPlayerId,
         'segment': segmentValue,
         'multiplier': multiplier,
+        'score': parsedSegment.scoreValue,
         'input_method': 'manual',
       },
       synced: false,
@@ -85,6 +87,7 @@ class ProcessCricketDartUseCase {
         occurredAt: DateTime.now(),
         payload: {
           'competitor_id': dartThrow.competitorId,
+          'player_id': currentPlayerId,
           'reason': 'normal',
         },
         synced: false,
@@ -95,13 +98,17 @@ class ProcessCricketDartUseCase {
 
       if (result.outcome == LegOutcome.gameCompleted) {
         // Append LegCompleted + GameCompleted; call completeGame()
+        final winnerPlayerId = _getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
         final legCompletedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
           eventType: 'LegCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_competitor_id': result.winnerCompetitorId},
+          payload: {
+            'winner_competitor_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -114,7 +121,10 @@ class ProcessCricketDartUseCase {
           eventType: 'GameCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_id': result.winnerCompetitorId},
+          payload: {
+            'winner_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -125,13 +135,17 @@ class ProcessCricketDartUseCase {
 
       } else if (result.outcome == LegOutcome.legCompleted) {
         // Append LegCompleted + TurnStarted for first player of new leg
+        final winnerPlayerId = _getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
         final legCompletedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
           eventType: 'LegCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_competitor_id': result.winnerCompetitorId},
+          payload: {
+            'winner_competitor_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -139,7 +153,10 @@ class ProcessCricketDartUseCase {
         eventsToStore.add(legCompletedEvent);
 
         // After _resetLeg, currentTurnIndex == 0 (first player of next leg)
-        final nextCompetitorId = finalState.competitors[finalState.currentTurnIndex].competitorId;
+        final nextCompetitor = finalState.competitors[finalState.currentTurnIndex];
+        final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
+            ? nextCompetitor.playerIds.first
+            : 'system';
         final turnStartedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
@@ -147,7 +164,8 @@ class ProcessCricketDartUseCase {
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
           payload: {
-            'competitor_id': nextCompetitorId,
+            'competitor_id': nextCompetitor.competitorId,
+            'player_id': nextPlayerId,
             'turn_index': finalState.currentTurnIndex,
             'leg_index': finalState.currentLegIndex,
           },
@@ -161,7 +179,10 @@ class ProcessCricketDartUseCase {
       } else {
         // Normal 3-dart turn end — TurnStarted for next player
         final nextIndex = (finalState.currentTurnIndex + 1) % finalState.competitors.length;
-        final nextCompetitorId = finalState.competitors[nextIndex].competitorId;
+        final nextCompetitor = finalState.competitors[nextIndex];
+        final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
+            ? nextCompetitor.playerIds.first
+            : 'system';
         final turnStartedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
@@ -169,7 +190,8 @@ class ProcessCricketDartUseCase {
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
           payload: {
-            'competitor_id': nextCompetitorId,
+            'competitor_id': nextCompetitor.competitorId,
+            'player_id': nextPlayerId,
             'turn_index': nextIndex,
             'leg_index': finalState.currentLegIndex,
           },
@@ -206,5 +228,14 @@ class ProcessCricketDartUseCase {
       return competitor.playerIds.first;
     }
     return 'system';
+  }
+
+  String _getPlayerIdForCompetitor(GameState state, String? competitorId) {
+    if (competitorId == null) return '';
+    final competitor = state.competitors.firstWhere(
+      (c) => c.competitorId == competitorId,
+      orElse: () => state.competitors.first,
+    );
+    return competitor.playerIds.isNotEmpty ? competitor.playerIds.first : '';
   }
 }

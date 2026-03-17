@@ -114,6 +114,7 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
         occurredAt: DateTime.now(),
         payload: {
           'competitor_id': currentCompetitor.competitorId,
+          'player_id': actorId,
           'reason': current.showBust ? 'bust' : 'normal',
         },
         synced: false,
@@ -137,6 +138,8 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
         occurredAt: DateTime.now(),
         payload: {
           'competitor_id': nextCompetitor.competitorId,
+          'player_id': nextActorId,
+          'starting_score': nextCompetitor.score,
           'turn_index': newGs.currentTurnIndex,
           'leg_index': newGs.currentLegIndex,
         },

@@ -48,6 +48,13 @@ class CreateGameUseCase {
     await _eventRepository.appendEvent(gameCreatedEvent);
 
     // 4. Append TurnStarted for the first competitor (index 0 goes first)
+    final firstPlayerId = competitors.first.players.isNotEmpty
+        ? competitors.first.players.first.playerId
+        : 'system';
+    final startingScore = game.config.maybeMap(
+      x01: (c) => c.startingScore,
+      orElse: () => null,
+    );
     final turnStartedEvent = GameEvent(
       eventId: const Uuid().v4(),
       gameId: game.gameId,
@@ -57,6 +64,8 @@ class CreateGameUseCase {
       payload: {
         'game_id': game.gameId,
         'competitor_id': competitors.first.competitorId,
+        'player_id': firstPlayerId,
+        if (startingScore != null) 'starting_score': startingScore,
         'turn_index': 0,
         'leg_index': 0,
       },

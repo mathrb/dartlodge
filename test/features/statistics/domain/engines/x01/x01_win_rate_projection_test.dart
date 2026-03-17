@@ -87,8 +87,8 @@ void main() {
     engine.apply(_makeEvent('GameCompleted', {'winner_player_id': 'p2'}, seq: 2));
     engine.apply(_makeEvent('GameCompleted', {'winner_player_id': 'p1'}, seq: 3));
     engine.apply(_makeEvent('GameCompleted', {'winner_player_id': 'p2'}, seq: 4));
-    // 2 won / 4 played = 50%
-    expect(engine.snapshot()['winRate'], closeTo(50.0, 0.001));
+    // 2 won / 4 played = 0.5
+    expect(engine.snapshot()['winRate'], closeTo(0.5, 0.001));
     expect(engine.snapshot()['gamesPlayed'], 4);
     expect(engine.snapshot()['gamesWon'], 2);
   });
@@ -178,7 +178,7 @@ void main() {
     }
     expect(engine.snapshot()['gamesPlayed'], 1000);
     expect(engine.snapshot()['gamesWon'], 500);
-    expect(engine.snapshot()['winRate'], closeTo(50.0, 0.001));
+    expect(engine.snapshot()['winRate'], closeTo(0.5, 0.001));
   });
 
   // ── GS1/GS2 ───────────────────────────────────────────────────────────────

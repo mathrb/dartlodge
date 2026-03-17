@@ -43,7 +43,11 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        final score = (event.payload['score'] as num?)?.toInt() ?? 0;
+        final seg = (event.payload['segment'] as num?)?.toInt();
+        final mult = (event.payload['multiplier'] as num?)?.toInt();
+        final score = (seg != null && mult != null)
+            ? seg * mult
+            : (event.payload['score'] as num?)?.toInt() ?? 0;
         _currentTurnScore += score;
       case 'TurnEnded':
         if (!_inFirstNine) return;
@@ -55,7 +59,7 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         }
         _currentTurnScore = 0;
       case 'LegCompleted':
-        if (_turnIndexInLeg >= 3) {
+        if (_turnIndexInLeg >= 1) {
           _totalFirstNineLegs++;
         }
         _turnIndexInLeg = 0;

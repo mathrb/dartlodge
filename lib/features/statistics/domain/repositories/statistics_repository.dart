@@ -30,20 +30,25 @@ abstract interface class StatisticsRepository {
     DateTime? from,
     DateTime? to,
     int? startingScore,
+    String? variant,
     int? legLimit,
   });
 
-  /// Returns per-leg PPR snapshots ordered oldest → newest.
+  /// Returns per-leg PPR/MPT snapshots ordered oldest → newest.
   Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
     String playerId, {
     GameType? gameType,
     int? startingScore,
+    String? variant,
     int? limit,
   });
 
   /// Returns distinct X01 starting scores for the player's completed games,
   /// sorted ascending.
   Future<List<int>> getPlayerX01StartingScores(String playerId);
+
+  /// Returns distinct cricket variant strings for the player's completed games.
+  Future<List<String>> getPlayerCricketVariants(String playerId);
 
   /// Returns statistics for [playerId] scoped to a single completed [gameId].
   /// Throws [GameNotFoundException] if [gameId] does not exist.

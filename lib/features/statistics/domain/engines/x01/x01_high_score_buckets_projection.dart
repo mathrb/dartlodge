@@ -36,7 +36,11 @@ class X01HighScoreBucketsProjection extends ProjectionEngine {
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        final score = (event.payload['score'] as num?)?.toInt() ?? 0;
+        final seg = (event.payload['segment'] as num?)?.toInt();
+        final mult = (event.payload['multiplier'] as num?)?.toInt();
+        final score = (seg != null && mult != null)
+            ? seg * mult
+            : (event.payload['score'] as num?)?.toInt() ?? 0;
         _currentTurnScore += score;
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
@@ -44,21 +48,10 @@ class X01HighScoreBucketsProjection extends ProjectionEngine {
         final reason = event.payload['reason'] as String?;
         if (reason != 'bust') {
           final s = _currentTurnScore;
-          if (s == 180) {
-            _onEighty++;
-            _oneFortyPlus++;
-            _oneHundredPlus++;
-            _sixtyPlus++;
-          } else if (s >= 140) {
-            _oneFortyPlus++;
-            _oneHundredPlus++;
-            _sixtyPlus++;
-          } else if (s >= 100) {
-            _oneHundredPlus++;
-            _sixtyPlus++;
-          } else if (s >= 60) {
-            _sixtyPlus++;
-          }
+          if (s == 180) _onEighty++;
+          if (s >= 140) _oneFortyPlus++;
+          if (s >= 100) _oneHundredPlus++;
+          if (s >= 60) _sixtyPlus++;
         }
         _currentTurnScore = 0;
     }

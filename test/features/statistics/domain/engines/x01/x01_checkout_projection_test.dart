@@ -131,15 +131,15 @@ void main() {
 
   // ── Category D ─────────────────────────────────────────────────────────────
 
-  test('D2 — reset(leg) clears attempts and successes', () {
+  test('D2 — reset(leg) is a no-op (cumulative career stat)', () {
     engine.init(_makeContext());
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
     engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2));
     engine.reset(ProjectionScope.leg);
     final s = engine.snapshot();
-    expect(s['checkoutAttempts'], 0);
-    expect(s['successfulCheckouts'], 0);
-    expect(s['checkoutPercentage'], isNull);
+    expect(s['checkoutAttempts'], 1);
+    expect(s['successfulCheckouts'], 1);
+    expect(s['checkoutPercentage'], 100.0);
   });
 
   test('D1 — reset(turn) is a no-op', () {
@@ -198,10 +198,10 @@ void main() {
     for (int i = 0; i < 1000; i++) {
       engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: i * 2));
       engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: i * 2 + 1));
-      engine.reset(ProjectionScope.leg);
     }
-    // After each leg reset, counters are 0
-    expect(engine.snapshot()['checkoutAttempts'], 0);
+    // Cumulative — all 1000 attempts and successes are retained
+    expect(engine.snapshot()['checkoutAttempts'], 1000);
+    expect(engine.snapshot()['successfulCheckouts'], 1000);
   });
 
   // ── GS1/GS2/GS3 ───────────────────────────────────────────────────────────

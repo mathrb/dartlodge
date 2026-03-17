@@ -58,20 +58,20 @@ void main() {
 
   // ── Test 2 ──────────────────────────────────────────────────────────────────
 
-  test('T2 — leg scope reset fires after LegCompleted is applied', () {
+  test('T2 — leg scope reset is a no-op for cumulative checkout projection', () {
     final runner = ProjectionRunner([X01CheckoutProjection()]);
     runner.init(_makeContext());
 
     // TurnStarted: starting_score=50 ≤ 170 → checkoutAttempts=1
     runner.run([_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 50}, seq: 1)]);
 
-    // LegCompleted: apply → successfulCheckouts=1; then reset(leg) clears both to 0
+    // LegCompleted: apply → successfulCheckouts=1; reset(leg) is a no-op (cumulative)
     runner.run([_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 2)]);
 
     final snap = runner.snapshot()['x01_checkout']!;
-    // Both cleared by post-apply reset
-    expect(snap['checkoutAttempts'], 0);
-    expect(snap['successfulCheckouts'], 0);
+    // Cumulative — counters are retained across legs
+    expect(snap['checkoutAttempts'], 1);
+    expect(snap['successfulCheckouts'], 1);
   });
 
   // ── Test 3 ──────────────────────────────────────────────────────────────────

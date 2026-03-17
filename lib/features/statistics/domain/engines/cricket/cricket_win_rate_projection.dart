@@ -2,10 +2,11 @@ import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/entities/game_event.dart';
 import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
 
-class X01WinRateProjection extends ProjectionEngine {
+/// Career-level win rate for cricket games.
+class CricketWinRateProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
-    id: 'x01.winRate',
-    supportedGameTypes: {GameType.x01},
+    id: 'cricket.winRate',
+    supportedGameTypes: {GameType.cricket},
     consumedEventTypes: {'GameCompleted'},
     scope: ProjectionScope.match,
   );
@@ -39,8 +40,7 @@ class X01WinRateProjection extends ProjectionEngine {
 
   @override
   Map<String, dynamic> snapshot() {
-    final winRate =
-        _gamesPlayed > 0 ? (_gamesWon / _gamesPlayed) : 0.0;
+    final winRate = _gamesPlayed > 0 ? (_gamesWon / _gamesPlayed) : 0.0;
     return {
       'winRate': winRate,
       'gamesWon': _gamesWon,

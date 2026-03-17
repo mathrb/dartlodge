@@ -51,8 +51,10 @@ class ProcessDartUseCase {
       occurredAt: DateTime.now(),
       payload: {
         'competitor_id': dartThrow.competitorId,
+        'player_id': currentPlayerId,
         'segment': segmentValue,
         'multiplier': multiplier,
+        'score': parsedSegment.scoreValue,
         'input_method': 'manual',
       },
       synced: false,
@@ -83,6 +85,7 @@ class ProcessDartUseCase {
     if (!finalState.turnActive) {
       if (result.outcome == LegOutcome.gameCompleted) {
         // Append TurnEnded + LegCompleted + GameCompleted; call completeGame()
+        final winnerPlayerId = _getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
         final turnEndedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
@@ -91,6 +94,7 @@ class ProcessDartUseCase {
           occurredAt: DateTime.now(),
           payload: {
             'competitor_id': dartThrow.competitorId,
+            'player_id': currentPlayerId,
             'reason': 'normal',
           },
           synced: false,
@@ -105,7 +109,10 @@ class ProcessDartUseCase {
           eventType: 'LegCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_competitor_id': result.winnerCompetitorId},
+          payload: {
+            'winner_competitor_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -118,7 +125,10 @@ class ProcessDartUseCase {
           eventType: 'GameCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_id': result.winnerCompetitorId},
+          payload: {
+            'winner_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -129,6 +139,7 @@ class ProcessDartUseCase {
 
       } else if (result.outcome == LegOutcome.legCompleted) {
         // Append TurnEnded + LegCompleted + TurnStarted for first player of new leg
+        final winnerPlayerId = _getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
         final turnEndedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
@@ -137,6 +148,7 @@ class ProcessDartUseCase {
           occurredAt: DateTime.now(),
           payload: {
             'competitor_id': dartThrow.competitorId,
+            'player_id': currentPlayerId,
             'reason': 'normal',
           },
           synced: false,
@@ -151,7 +163,10 @@ class ProcessDartUseCase {
           eventType: 'LegCompleted',
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
-          payload: {'winner_competitor_id': result.winnerCompetitorId},
+          payload: {
+            'winner_competitor_id': result.winnerCompetitorId,
+            'winner_player_id': winnerPlayerId,
+          },
           synced: false,
           actorId: 'system',
           source: EventSource.client,
@@ -159,7 +174,10 @@ class ProcessDartUseCase {
         eventsToStore.add(legCompletedEvent);
 
         // After _resetLeg, currentTurnIndex == 0 (first player of next leg)
-        final nextCompetitorId = finalState.competitors[finalState.currentTurnIndex].competitorId;
+        final nextCompetitor = finalState.competitors[finalState.currentTurnIndex];
+        final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
+            ? nextCompetitor.playerIds.first
+            : 'system';
         final turnStartedEvent = GameEvent(
           eventId: const Uuid().v4(),
           gameId: currentState.gameId,
@@ -167,7 +185,9 @@ class ProcessDartUseCase {
           localSequence: nextSeq++,
           occurredAt: DateTime.now(),
           payload: {
-            'competitor_id': nextCompetitorId,
+            'competitor_id': nextCompetitor.competitorId,
+            'player_id': nextPlayerId,
+            'starting_score': nextCompetitor.score,
             'turn_index': finalState.currentTurnIndex,
             'leg_index': finalState.currentLegIndex,
           },
@@ -209,5 +229,14 @@ class ProcessDartUseCase {
       return competitor.playerIds.first;
     }
     return 'system';
+  }
+
+  String _getPlayerIdForCompetitor(GameState state, String? competitorId) {
+    if (competitorId == null) return '';
+    final competitor = state.competitors.firstWhere(
+      (c) => c.competitorId == competitorId,
+      orElse: () => state.competitors.first,
+    );
+    return competitor.playerIds.isNotEmpty ? competitor.playerIds.first : '';
   }
 }

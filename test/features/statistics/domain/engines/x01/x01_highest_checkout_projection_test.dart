@@ -29,6 +29,18 @@ ProjectionContext _makeContext({String playerId = 'p1'}) => ProjectionContext(
       playerIds: ['p1', 'p2'],
     );
 
+// Helper: apply TurnStarted then LegCompleted for a winning checkout turn
+void _applyWinningLeg(
+  X01HighestCheckoutProjection engine,
+  int startingScore, {
+  int seq = 1,
+  String winner = 'p1',
+}) {
+  engine.apply(_makeEvent('TurnStarted',
+      {'player_id': winner, 'starting_score': startingScore}, seq: seq));
+  engine.apply(_makeEvent('LegCompleted', {'winner_player_id': winner}, seq: seq + 1));
+}
+
 void main() {
   late X01HighestCheckoutProjection engine;
 
@@ -50,10 +62,9 @@ void main() {
 
   // ── Category B ─────────────────────────────────────────────────────────────
 
-  test('B1 — LegCompleted with winning player updates highest', () {
+  test('B1 — TurnStarted + LegCompleted with winning player updates highest', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 120}));
+    _applyWinningLeg(engine, 120);
     expect(engine.snapshot()['highestCheckout'], 120);
   });
 
@@ -65,18 +76,29 @@ void main() {
 
   test('B2 — LegCompleted for other player ignored', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'LegCompleted', {'winner_player_id': 'p2', 'checkout_score': 170}));
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p2', 'starting_score': 170}, seq: 1));
+    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p2'}, seq: 2));
     expect(engine.snapshot()['highestCheckout'], isNull);
+  });
+
+  test('B2 — TurnStarted for other player does not affect own checkout', () {
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p2', 'starting_score': 170}, seq: 1));
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p1', 'starting_score': 120}, seq: 2));
+    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 3));
+    expect(engine.snapshot()['highestCheckout'], 120);
   });
 
   // ── Category C ─────────────────────────────────────────────────────────────
 
   test('C1 — highest of multiple legs is tracked', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 1));
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 120}, seq: 2));
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 80}, seq: 3));
+    _applyWinningLeg(engine, 40, seq: 1);
+    _applyWinningLeg(engine, 120, seq: 3);
+    _applyWinningLeg(engine, 80, seq: 5);
     expect(engine.snapshot()['highestCheckout'], 120);
   });
 
@@ -85,8 +107,10 @@ void main() {
     engine.init(_makeContext());
     e2.init(_makeContext());
     final events = [
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 100}, seq: 1),
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2),
+      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 100}, seq: 1),
+      _makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 2),
+      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 3),
+      _makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 4),
     ];
     for (final e in events) {
       engine.apply(e);
@@ -97,23 +121,23 @@ void main() {
 
   // ── Category D ─────────────────────────────────────────────────────────────
 
-  test('D3 — reset(match) clears highestCheckout', () {
+  test('D3 — reset(match) is a no-op (cumulative career stat)', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 170}, seq: 1));
+    _applyWinningLeg(engine, 170, seq: 1);
     engine.reset(ProjectionScope.match);
-    expect(engine.snapshot()['highestCheckout'], isNull);
+    expect(engine.snapshot()['highestCheckout'], 170);
   });
 
   test('D1 — reset(turn) is a no-op', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 80}, seq: 1));
+    _applyWinningLeg(engine, 80, seq: 1);
     engine.reset(ProjectionScope.turn);
     expect(engine.snapshot()['highestCheckout'], 80);
   });
 
   test('D2 — reset(leg) is a no-op', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 80}, seq: 1));
+    _applyWinningLeg(engine, 80, seq: 1);
     engine.reset(ProjectionScope.leg);
     expect(engine.snapshot()['highestCheckout'], 80);
   });
@@ -123,8 +147,10 @@ void main() {
   test('E1 — replay yields same snapshot', () {
     engine.init(_makeContext());
     final events = [
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 60}, seq: 1),
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 140}, seq: 2),
+      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 60}, seq: 1),
+      _makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 2),
+      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 140}, seq: 3),
+      _makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 4),
     ];
     for (final e in events) engine.apply(e);
     final first = engine.snapshot();
@@ -135,10 +161,10 @@ void main() {
 
   test('Ext3 — replay after correction can lower highest (re-init yields fresh state)', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 140}, seq: 1));
+    _applyWinningLeg(engine, 140, seq: 1);
     // Correction: re-init with only lower checkout
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 60}, seq: 1));
+    _applyWinningLeg(engine, 60, seq: 1);
     expect(engine.snapshot()['highestCheckout'], 60);
   });
 
@@ -152,7 +178,7 @@ void main() {
 
   test('F3 — partial match (no GameCompleted) is valid', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 80}, seq: 1));
+    _applyWinningLeg(engine, 80, seq: 1);
     expect(engine.snapshot()['highestCheckout'], 80);
   });
 
@@ -162,7 +188,7 @@ void main() {
     final e2 = X01HighestCheckoutProjection();
     engine.init(_makeContext());
     e2.init(_makeContext());
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 100}));
+    _applyWinningLeg(engine, 100, seq: 1);
     expect(e2.snapshot()['highestCheckout'], isNull);
   });
 
@@ -171,8 +197,10 @@ void main() {
   test('H1 — 1000 leg events processed correctly', () {
     engine.init(_makeContext());
     for (int i = 1; i <= 1000; i++) {
+      engine.apply(_makeEvent('TurnStarted',
+          {'player_id': 'p1', 'starting_score': i}, seq: i * 2 - 1));
       engine.apply(_makeEvent('LegCompleted',
-          {'winner_player_id': 'p1', 'checkout_score': i}, seq: i));
+          {'winner_player_id': 'p1'}, seq: i * 2));
     }
     expect(engine.snapshot()['highestCheckout'], 1000);
   });
