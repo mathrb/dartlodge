@@ -264,6 +264,14 @@ Rendered as a modal bottom sheet, not a full page.
 
 ---
 
+### Game Board Layout Constraint (applies to all board screens: X01, Cricket, Practice)
+
+All game board screens must fit entirely within the device viewport with no scrolling required. The bottom action bar (NEXT ROUND / NEXT PLAYER / advance button) must always be visible without user scrolling.
+
+Implementation rule: The page body must use a `Column` with `Expanded` children to distribute vertical space. **Never use `SingleChildScrollView` as the body wrapper for a game board.** Flex-based layout guarantees the board adapts to any screen height; minimum cell heights (48dp for X01, 36–56dp for Cricket) prevent content from becoming unusably small.
+
+---
+
 ## 5. X01 Board Page (`/game/x01/:gameId`)
 
 **File:** `lib/features/game/presentation/pages/x01_board_page.dart`
@@ -404,7 +412,7 @@ AppBar: "Cricket | Standard · Leg 1"         [⋮]
 
 ### Input Cell Styling (contiguous tile layout)
 
-Cells are flush, `radiusNone`, separated by 1dp `colorOutline` hairlines (right and bottom of each cell). Minimum cell height: 56dp (cricket target rows). Cell width: equal thirds of the input column group.
+Cells are flush, `radiusNone`, separated by 1dp `colorOutline` hairlines (right and bottom of each cell). Cell height: flex (expands equally across the 7 target rows to fill available screen height); minimum 36dp. Cell width: equal thirds of the input column group.
 
 - Single cell: `colorSurface` background, `colorOnSurface` text, no dot indicators.
 - Double cell: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators below number.
@@ -436,7 +444,8 @@ Control cells use `colorSurface` background and `colorOnSurface` text at rest. U
 - **Target rows** each contain: marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell dividers are 1dp `colorOutline` hairlines.
 - **All-closed rows**: when every player has ≥3 marks on a number, the row is visually dimmed. Input buttons are disabled — the number is out of play.
 - **Bull row**: no triple. SB and DB each span 1.5 columns of the input area.
-- **Advance button**: placed in the footer row as a flat tile spanning the full 3-column input width. Label is "NEXT PLAYER" in multiplayer (≥2 players) and "NEXT ROUND" in single-player mode.
+- **Advance button**: placed as a page-level bottom bar (pinned, always visible) below the table. It must not be inside the scrollable table — it is a `SafeArea`-wrapped fixed-height (48dp) bar at the bottom of the screen. Label is "NEXT PLAYER" in multiplayer (≥2 players) and "NEXT ROUND" in single-player mode.
+- **No scrolling**: The cricket table must never require scrolling. The 7 target rows flex equally to fill the available space between the dart indicator and the advance button. Minimum row height is 36dp.
 - **No auto-advance**: inputting the third dart never triggers automatic player rotation. The player must tap the advance button to confirm and move on.
 - No persistent bottom navigation bar (full-screen game mode).
 

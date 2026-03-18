@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/utils/app_text_styles.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/dart_indicator_widget.dart';
@@ -120,21 +121,25 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
-                CricketUnifiedTableWidget(
+          body: Column(
+            children: [
+              DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
+              Expanded(
+                child: CricketUnifiedTableWidget(
                   gameState: gameState,
                   onSegmentTapped: gameState.isComplete
                       ? (_) {}
                       : (segment) => notifier.processDart(segment),
                   onMiss: () => notifier.processDart('MISS'),
                   onUndo: () => notifier.undoDart(),
-                  onNextPlayer: () => notifier.nextPlayer(),
                 ),
-              ],
-            ),
+              ),
+              _CricketBottomBar(
+                dartsThrownInTurn: gameState.dartsThrownInTurn,
+                isMultiplayer: gameState.competitors.length > 1,
+                onNextPlayer: () => notifier.nextPlayer(),
+              ),
+            ],
           ),
         );
       },
@@ -151,6 +156,108 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         },
         onCancel: () => Navigator.of(dialogContext).pop(),
       ),
+    );
+  }
+}
+
+// ── Bottom bar ────────────────────────────────────────────────────────────────
+
+class _CricketBottomBar extends StatelessWidget {
+  const _CricketBottomBar({
+    required this.dartsThrownInTurn,
+    required this.isMultiplayer,
+    required this.onNextPlayer,
+  });
+
+  final int dartsThrownInTurn;
+  final bool isMultiplayer;
+  final VoidCallback onNextPlayer;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final label = isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND';
+
+    Future<void> handleAdvance() async {
+      if (dartsThrownInTurn >= 3) {
+        onNextPlayer();
+      } else {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (_) => _AdvanceTurnConfirmDialog(
+            dartsThrownInTurn: dartsThrownInTurn,
+          ),
+        );
+        if (confirmed == true) onNextPlayer();
+      }
+    }
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: cs.outline, width: 1)),
+        ),
+        child: SizedBox(
+          height: 48,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Expanded(child: SizedBox.shrink()),
+              GestureDetector(
+                onTap: handleAdvance,
+                child: Container(
+                  width: 168,
+                  decoration: BoxDecoration(
+                    color: cs.surface,
+                    border: Border(
+                      left: BorderSide(color: cs.outline, width: 1),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    label,
+                    style: AppTextStyles.labelLarge
+                        .copyWith(color: cs.onSurface),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AdvanceTurnConfirmDialog extends StatelessWidget {
+  const _AdvanceTurnConfirmDialog({required this.dartsThrownInTurn});
+  final int dartsThrownInTurn;
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      title: const Text('Advance turn?'),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: [screenWidth - 48, 320.0].reduce((a, b) => a < b ? a : b),
+        ),
+        child: Text(
+          "You've only thrown $dartsThrownInTurn dart(s). Advance anyway?",
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Confirm'),
+        ),
+      ],
     );
   }
 }

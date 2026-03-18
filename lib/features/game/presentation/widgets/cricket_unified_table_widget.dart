@@ -26,14 +26,12 @@ class CricketUnifiedTableWidget extends StatelessWidget {
     required this.onSegmentTapped,
     required this.onMiss,
     required this.onUndo,
-    required this.onNextPlayer,
   });
 
   final GameState gameState;
   final ValueChanged<String> onSegmentTapped;
   final VoidCallback onMiss;
   final VoidCallback onUndo;
-  final VoidCallback onNextPlayer;
 
   static const _numbers = [20, 19, 18, 17, 16, 15, 25];
 
@@ -47,18 +45,15 @@ class CricketUnifiedTableWidget extends StatelessWidget {
           onUndo: onUndo,
         ),
         for (final n in _numbers)
-          _CricketNumberRow(
-            target: n,
-            competitors: gameState.competitors,
-            isRowClosed: _isRowClosed(n, gameState),
-            dartsThrownInTurn: gameState.dartsThrownInTurn,
-            onSegmentTapped: onSegmentTapped,
+          Expanded(
+            child: _CricketNumberRow(
+              target: n,
+              competitors: gameState.competitors,
+              isRowClosed: _isRowClosed(n, gameState),
+              dartsThrownInTurn: gameState.dartsThrownInTurn,
+              onSegmentTapped: onSegmentTapped,
+            ),
           ),
-        _CricketFooterRow(
-          dartsThrownInTurn: gameState.dartsThrownInTurn,
-          onNextPlayer: onNextPlayer,
-          isMultiplayer: gameState.competitors.length > 1,
-        ),
       ],
     );
   }
@@ -174,6 +169,7 @@ class _CricketNumberRow extends StatelessWidget {
           ? cs.surfaceContainerHighest.withValues(alpha: 0.38)
           : null,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final c in competitors)
             Expanded(
@@ -285,9 +281,10 @@ class _InputCell extends StatelessWidget {
         child: Container(
           color: bg,
           width: width,
-          height: 56,
+          constraints: const BoxConstraints(minHeight: 36),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
             children: [
               Text(
                 label,
@@ -362,84 +359,3 @@ class _ControlCell extends StatelessWidget {
   }
 }
 
-// ── Footer row ────────────────────────────────────────────────────────────────
-
-class _CricketFooterRow extends StatelessWidget {
-  const _CricketFooterRow({
-    required this.dartsThrownInTurn,
-    required this.onNextPlayer,
-    required this.isMultiplayer,
-  });
-
-  final int dartsThrownInTurn;
-  final VoidCallback onNextPlayer;
-  final bool isMultiplayer;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final label = isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND';
-
-    Future<void> handleAdvance() async {
-      if (dartsThrownInTurn >= 3) {
-        onNextPlayer();
-      } else {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (_) => _AdvanceTurnConfirmDialog(
-            dartsThrownInTurn: dartsThrownInTurn,
-          ),
-        );
-        if (confirmed == true) onNextPlayer();
-      }
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: cs.outline, width: 1)),
-      ),
-      child: Row(
-        children: [
-          const Expanded(child: SizedBox.shrink()),
-          _ControlCell(
-            label: label,
-            width: 168,
-            onTap: handleAdvance,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AdvanceTurnConfirmDialog extends StatelessWidget {
-  const _AdvanceTurnConfirmDialog({required this.dartsThrownInTurn});
-  final int dartsThrownInTurn;
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text('Advance turn?'),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: [screenWidth - 48, 320.0].reduce((a, b) => a < b ? a : b),
-        ),
-        child: Text(
-          "You've only thrown $dartsThrownInTurn dart(s). Advance anyway?",
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Confirm'),
-        ),
-      ],
-    );
-  }
-}
