@@ -423,12 +423,11 @@ Cells are flush, `radiusNone`, separated by 1dp `colorOutline` hairlines (right 
 ### Special Notes
 - **Dart indicator** sits between AppBar and the table. Shows segment label (e.g. "T20", "SB", "19") for thrown darts; outline circle for remaining slots.
 - **Header row** shows each player's current score (top) and name (bottom, ALL CAPS). MISS and UNDO sit in the input columns of this row.
-- **Target rows** each contain: fixed-width target label column (48dp) | marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell dividers are 1dp `colorOutline` hairlines.
+- **Target rows** each contain: marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell dividers are 1dp `colorOutline` hairlines.
 - **All-closed rows**: when every player has ≥3 marks on a number, the row is visually dimmed. Input buttons are disabled — the number is out of play.
 - **Bull row**: no triple button. Triple bull maps to double bull in cricket (3 marks from T = 3 marks from DB in terms of scoring), but the input only exposes SB and DB. The T slot is empty.
 - **NEXT PLAYER button**: placed in the footer row, right-aligned, same column width as the input buttons (3 × 48dp). Left portion of footer row is empty space.
 - No persistent bottom navigation bar (full-screen game mode).
-- FAB (📊) in bottom-right opens stats overlay — keep as-is.
 
 ---
 

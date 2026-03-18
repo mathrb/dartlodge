@@ -9,6 +9,7 @@ import '../../../../core/utils/checkout_table.dart';
 import '../providers/active_game_provider.dart';
 import '../widgets/dart_indicator_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
+import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/player_score_section_widget.dart';
 
@@ -261,7 +262,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
   void _showEndGameDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => _EndGameDialog(
+      builder: (dialogContext) => EndGameDialogWidget(
         onConfirm: () {
           Navigator.of(dialogContext).pop();
           context.go(GameRoutes.home);
@@ -418,39 +419,3 @@ class _WinBannerWidget extends StatelessWidget {
   }
 }
 
-class _EndGameDialog extends StatelessWidget {
-  const _EndGameDialog({
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return AlertDialog(
-      title: Text('End Game?', style: AppTextStyles.headingSmall),
-      content: Text(
-        'The current game will be abandoned.',
-        style: tt.bodyMedium,
-      ),
-      actions: [
-        TextButton(
-          onPressed: onCancel,
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: cs.onSurface),
-          ),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: cs.error),
-          onPressed: onConfirm,
-          child: const Text('End Game'),
-        ),
-      ],
-    );
-  }
-}

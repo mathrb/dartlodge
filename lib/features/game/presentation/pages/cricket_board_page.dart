@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
-import '../../../../features/statistics/presentation/widgets/stats_overlay_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/dart_indicator_widget.dart';
+import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 
@@ -20,8 +20,6 @@ class CricketBoardPage extends ConsumerStatefulWidget {
 }
 
 class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
-  bool _showStatsOverlay = false;
-
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(activeCricketGameProvider(widget.gameId));
@@ -95,43 +93,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final notifier =
             ref.read(activeCricketGameProvider(widget.gameId).notifier);
 
-        final boardBody = SingleChildScrollView(
-          child: Column(
-            children: [
-              DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
-              CricketUnifiedTableWidget(
-                gameState: gameState,
-                onSegmentTapped: gameState.isComplete
-                    ? (_) {}
-                    : (segment) => notifier.processDart(segment),
-                onMiss: () => notifier.processDart('MISS'),
-                onUndo: () => notifier.undoDart(),
-                onNextPlayer: () => notifier.nextPlayer(),
-              ),
-            ],
-          ),
-        );
-
-        final stackChildren = <Widget>[boardBody];
-
-        if (_showStatsOverlay) {
-          stackChildren.add(
-            GestureDetector(
-              onTap: () => setState(() => _showStatsOverlay = false),
-              child: Container(color: Colors.black.withValues(alpha: 0.3)),
-            ),
-          );
-          stackChildren.add(
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: StatsOverlayWidget(
-                gameId: widget.gameId,
-                onDismiss: () => setState(() => _showStatsOverlay = false),
-              ),
-            ),
-          );
-        }
-
         return Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
@@ -159,18 +120,21 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               ),
             ],
           ),
-          floatingActionButton: FloatingActionButton.small(
-            backgroundColor:
-                Theme.of(context).colorScheme.secondaryContainer,
-            foregroundColor:
-                Theme.of(context).colorScheme.onSecondaryContainer,
-            onPressed: () =>
-                setState(() => _showStatsOverlay = !_showStatsOverlay),
-            child: const Icon(Icons.bar_chart),
-          ),
-          body: Stack(
-            fit: StackFit.expand,
-            children: stackChildren,
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
+                CricketUnifiedTableWidget(
+                  gameState: gameState,
+                  onSegmentTapped: gameState.isComplete
+                      ? (_) {}
+                      : (segment) => notifier.processDart(segment),
+                  onMiss: () => notifier.processDart('MISS'),
+                  onUndo: () => notifier.undoDart(),
+                  onNextPlayer: () => notifier.nextPlayer(),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -180,7 +144,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   void _showEndGameDialog(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (dialogContext) => _EndGameDialog(
+      builder: (dialogContext) => EndGameDialogWidget(
         onConfirm: () {
           Navigator.of(dialogContext).pop();
           context.go(GameRoutes.home);
@@ -191,39 +155,3 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   }
 }
 
-class _EndGameDialog extends StatelessWidget {
-  const _EndGameDialog({
-    required this.onConfirm,
-    required this.onCancel,
-  });
-
-  final VoidCallback onConfirm;
-  final VoidCallback onCancel;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return AlertDialog(
-      title: const Text('End Game?'),
-      content: Text(
-        'The current game will be abandoned.',
-        style: tt.bodyMedium,
-      ),
-      actions: [
-        TextButton(
-          onPressed: onCancel,
-          child: Text(
-            'Cancel',
-            style: TextStyle(color: cs.onSurface),
-          ),
-        ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: cs.error),
-          onPressed: onConfirm,
-          child: const Text('End Game'),
-        ),
-      ],
-    );
-  }
-}

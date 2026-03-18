@@ -182,7 +182,6 @@ class _CricketNumberRow extends StatelessWidget {
                 marks: _marksForPlayer(c, target),
               ),
             ),
-          _TargetLabelCell(target: target),
           _InputCell(
             label: _singleSegment(target),
             bg: null,
@@ -249,24 +248,6 @@ class _MarkCell extends StatelessWidget {
           symbol,
           style: AppTextStyles.headingMedium.copyWith(color: color),
         ),
-      ),
-    );
-  }
-}
-
-// ── Target label cell ─────────────────────────────────────────────────────────
-
-class _TargetLabelCell extends StatelessWidget {
-  const _TargetLabelCell({required this.target});
-  final int target;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        target == 25 ? 'Bull' : '$target',
-        style: AppTextStyles.segmentButton,
       ),
     );
   }
