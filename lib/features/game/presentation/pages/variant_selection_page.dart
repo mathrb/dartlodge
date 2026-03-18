@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_darts/app/app_router.dart';
+import 'package:my_darts/core/persistence/database_provider.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
@@ -21,6 +22,10 @@ class VariantSelectionPage extends ConsumerWidget {
       orElse: () => null,
     );
 
+    final lastConfig = (category == 'x01' || category == 'cricket')
+        ? ref.watch(lastGameConfigProvider(category)).value
+        : null;
+
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
@@ -28,7 +33,7 @@ class VariantSelectionPage extends ConsumerWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        children: _cardsFor(category, ref, context, selectedConfig),
+        children: _cardsFor(category, ref, context, selectedConfig, lastConfig),
       ),
     );
   }
@@ -45,6 +50,7 @@ class VariantSelectionPage extends ConsumerWidget {
     WidgetRef ref,
     BuildContext context,
     GameConfig? selectedConfig,
+    GameConfig? lastConfig,
   ) {
     final variants = switch (cat) {
       'x01' => _x01Variants(),
@@ -54,6 +60,20 @@ class VariantSelectionPage extends ConsumerWidget {
     };
 
     final widgets = <Widget>[];
+
+    if (lastConfig != null) {
+      widgets.add(_LastUsedTile(
+        config: lastConfig,
+        onTap: () {
+          ref.read(gameSetupProvider.notifier).selectVariant(lastConfig);
+          context.push('/game/player-selection');
+        },
+      ));
+      widgets.add(const SizedBox(height: 8));
+      widgets.add(const Divider(height: 1));
+      widgets.add(const SizedBox(height: 8));
+    }
+
     for (var i = 0; i < variants.length; i++) {
       if (i > 0) widgets.add(const SizedBox(height: 8));
       final v = variants[i];
@@ -186,6 +206,80 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.checkoutPractice(),
         ),
       ];
+}
+
+class _LastUsedTile extends StatelessWidget {
+  const _LastUsedTile({required this.config, required this.onTap});
+
+  final GameConfig config;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 64),
+        decoration: BoxDecoration(
+          color: cs.secondaryContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: Border(left: BorderSide(color: cs.secondary, width: 3)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(Icons.history, color: cs.onSecondaryContainer, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Last Used',
+                    style: tt.bodyLarge?.copyWith(color: cs.onSecondaryContainer),
+                  ),
+                  Text(
+                    _summary,
+                    style: tt.bodySmall?.copyWith(color: cs.onSecondaryContainer),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String get _summary => config.maybeMap(
+        x01: (c) {
+          final inLabel = switch (c.inStrategy) {
+            'double' => 'Double',
+            'master' => 'Master',
+            _ => 'Straight',
+          };
+          final outLabel = switch (c.outStrategy) {
+            'double' => 'Double',
+            'master' => 'Master',
+            _ => 'Straight',
+          };
+          final legs = c.legsToWin == 1 ? '1 Leg' : 'Bo${c.legsToWin}';
+          return '${c.startingScore} · $inLabel In · $outLabel Out · $legs';
+        },
+        cricket: (c) {
+          final variant = switch (c.variant) {
+            'cut-throat' => 'Cut Throat',
+            'no-score' => 'No Score',
+            'tactics' => 'Tactics',
+            _ => 'Standard',
+          };
+          return '$variant · ${c.numbers.length} numbers';
+        },
+        orElse: () => '',
+      );
 }
 
 class _HintLine extends StatelessWidget {

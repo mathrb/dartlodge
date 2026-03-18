@@ -167,6 +167,12 @@ class GameSetupNotifier extends _$GameSetupNotifier {
     try {
       final result =
           await ref.read(createGameUseCaseProvider).execute(game, competitors);
+      // Persist config as "last used" for quick re-start next session.
+      if (s.gameType == GameType.x01) {
+        await ref.read(lastGameConfigProvider('x01').notifier).save(s.config);
+      } else if (s.gameType == GameType.cricket) {
+        await ref.read(lastGameConfigProvider('cricket').notifier).save(s.config);
+      }
       return result.gameId;
     } on ValidationException {
       return null;

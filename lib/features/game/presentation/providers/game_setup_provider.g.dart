@@ -41,7 +41,7 @@ final class GameSetupNotifierProvider
   }
 }
 
-String _$gameSetupNotifierHash() => r'76a1ae26060ee1affe55c1da74d8d53624a4a074';
+String _$gameSetupNotifierHash() => r'7e64b19267749071d23a496f5e8d381997dc9a04';
 
 abstract class _$GameSetupNotifier extends $Notifier<GameSetupState> {
   GameSetupState build();

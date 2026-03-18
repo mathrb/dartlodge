@@ -1432,6 +1432,111 @@ final class EndCheckoutPracticeUseCaseProvider
 String _$endCheckoutPracticeUseCaseHash() =>
     r'4c654335729ff4c6b6438c4e8458319a4cc3af21';
 
+/// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+/// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+
+@ProviderFor(LastGameConfig)
+final lastGameConfigProvider = LastGameConfigFamily._();
+
+/// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+/// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+final class LastGameConfigProvider
+    extends $AsyncNotifierProvider<LastGameConfig, GameConfig?> {
+  /// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+  /// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+  LastGameConfigProvider._({
+    required LastGameConfigFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'lastGameConfigProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$lastGameConfigHash();
+
+  @override
+  String toString() {
+    return r'lastGameConfigProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  LastGameConfig create() => LastGameConfig();
+
+  @override
+  bool operator ==(Object other) {
+    return other is LastGameConfigProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$lastGameConfigHash() => r'5a2f5e281db48e51c8b5bcc3a4a3e43276c3548e';
+
+/// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+/// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+
+final class LastGameConfigFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          LastGameConfig,
+          AsyncValue<GameConfig?>,
+          GameConfig?,
+          FutureOr<GameConfig?>,
+          String
+        > {
+  LastGameConfigFamily._()
+    : super(
+        retry: null,
+        name: r'lastGameConfigProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  /// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+  /// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+
+  LastGameConfigProvider call(String category) =>
+      LastGameConfigProvider._(argument: category, from: this);
+
+  @override
+  String toString() => r'lastGameConfigProvider';
+}
+
+/// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+/// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+
+abstract class _$LastGameConfig extends $AsyncNotifier<GameConfig?> {
+  late final _$args = ref.$arg as String;
+  String get category => _$args;
+
+  FutureOr<GameConfig?> build(String category);
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<GameConfig?>, GameConfig?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<GameConfig?>, GameConfig?>,
+              AsyncValue<GameConfig?>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, () => build(_$args));
+  }
+}
+
 @ProviderFor(clearAllData)
 final clearAllDataProvider = ClearAllDataProvider._();
 

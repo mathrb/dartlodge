@@ -1,6 +1,8 @@
 // Database Provider
 // Contains Riverpod providers for database and repository access
 
+import 'dart:convert';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/foundation.dart';
@@ -36,6 +38,7 @@ import '../../features/game/domain/usecases/process_practice_dart_use_case.dart'
 import '../../features/game/domain/usecases/end_checkout_practice_use_case.dart';
 import '../../features/game/domain/usecases/undo_last_dart_use_case.dart';
 import '../../features/game/domain/usecases/create_game_use_case.dart';
+import '../../features/game/domain/models/game_config.dart';
 
 part 'database_provider.g.dart';
 
@@ -281,6 +284,32 @@ EndCheckoutPracticeUseCase endCheckoutPracticeUseCase(Ref ref) =>
       ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
     );
+
+/// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
+/// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
+@Riverpod(keepAlive: true)
+class LastGameConfig extends _$LastGameConfig {
+  static const _keyPrefix = 'last_config_';
+
+  @override
+  Future<GameConfig?> build(String category) async {
+    final prefs = await ref.watch(sharedPreferencesProvider.future);
+    final raw = prefs.getString('$_keyPrefix$category');
+    if (raw == null) return null;
+    try {
+      return GameConfig.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> save(GameConfig config) async {
+    final prefs = await ref.read(sharedPreferencesProvider.future);
+    final json = jsonEncode(config.toJson());
+    await prefs.setString('$_keyPrefix$category', json);
+    state = AsyncData(config);
+  }
+}
 
 @riverpod
 Future<void> Function() clearAllData(Ref ref) {

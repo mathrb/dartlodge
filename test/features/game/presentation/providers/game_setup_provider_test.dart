@@ -14,11 +14,13 @@ import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
 import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'game_setup_provider_test.mocks.dart';
 
 @GenerateMocks([PlayerRepository, CreateGameUseCase, GameRepository])
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late ProviderContainer container;
   late MockPlayerRepository mockPlayerRepo;
   late MockCreateGameUseCase mockCreateGameUseCase;
@@ -39,6 +41,7 @@ void main() {
   }
 
   setUp(() {
+    SharedPreferences.setMockInitialValues({});
     mockPlayerRepo = MockPlayerRepository();
     mockCreateGameUseCase = MockCreateGameUseCase();
     mockGameRepo = MockGameRepository();
