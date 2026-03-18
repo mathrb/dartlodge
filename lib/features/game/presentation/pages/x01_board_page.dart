@@ -225,6 +225,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   _BottomActionBar(
                     canUndo: canUndo,
                     canNext: canNext,
+                    isMultiplayer: gameState.competitors.length > 1,
                     onUndo: () => ref
                         .read(activeGameProvider(widget.gameId).notifier)
                         .undoDart(),
@@ -317,12 +318,14 @@ class _BottomActionBar extends StatelessWidget {
   const _BottomActionBar({
     required this.canUndo,
     required this.canNext,
+    required this.isMultiplayer,
     required this.onUndo,
     required this.onNextRound,
   });
 
   final bool canUndo;
   final bool canNext;
+  final bool isMultiplayer;
   final VoidCallback onUndo;
   final VoidCallback onNextRound;
 
@@ -330,32 +333,78 @@ class _BottomActionBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              icon: Icon(
-                Icons.undo,
-                color: canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38),
-              ),
-              label: Text(
-                'Undo',
-                style: TextStyle(
-                  color: canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.38),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(height: 1, thickness: 1, color: cs.outlineVariant),
+          SizedBox(
+            height: 48,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: _ControlTile(
+                    label: 'UNDO',
+                    enabled: canUndo,
+                    onTap: onUndo,
+                    hasBorderRight: true,
+                  ),
                 ),
-              ),
-              onPressed: canUndo ? onUndo : null,
+                Expanded(
+                  flex: 7,
+                  child: _ControlTile(
+                    label: isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND',
+                    enabled: canNext,
+                    onTap: onNextRound,
+                    hasBorderRight: false,
+                  ),
+                ),
+              ],
             ),
-            FilledButton(
-              onPressed: canNext ? onNextRound : null,
-              child: const Text('NEXT ROUND'),
-            ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ControlTile extends StatelessWidget {
+  const _ControlTile({
+    required this.label,
+    required this.enabled,
+    required this.onTap,
+    required this.hasBorderRight,
+  });
+
+  final String label;
+  final bool enabled;
+  final VoidCallback onTap;
+  final bool hasBorderRight;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tile = GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border(
+            right: hasBorderRight
+                ? BorderSide(color: cs.outline, width: 1)
+                : BorderSide.none,
+            bottom: BorderSide(color: cs.outline, width: 1),
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: AppTextStyles.labelLarge.copyWith(color: cs.onSurface),
         ),
       ),
     );
+    return enabled ? tile : Opacity(opacity: 0.38, child: tile);
   }
 }
 
