@@ -225,7 +225,8 @@ void main() {
     expect(find.text('20'), findsWidgets);
     expect(find.text('19'), findsWidgets);
     expect(find.text('15'), findsWidgets);
-    expect(find.text('Bull'), findsOneWidget);
+    expect(find.text('SB'), findsOneWidget);
+    expect(find.text('DB'), findsOneWidget);
   });
 
   // ── 5. Mark symbols 0–3 ───────────────────────────────────────────────────
@@ -282,14 +283,17 @@ void main() {
     }
   });
 
-  // ── 7. Bull row has ≡ (disabled triple) ──────────────────────────────────
+  // ── 7. Bull row has no triple cell ───────────────────────────────────────
 
-  testWidgets('7. Bull row has disabled triple cell (≡)', (tester) async {
+  testWidgets('7. Bull row has no triple cell — only SB and DB', (tester) async {
     final notifier = _FakeActiveCricketGameNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('≡'), findsOneWidget);
+    // The ≡ disabled-triple placeholder was removed; SB + DB are the only bull cells
+    expect(find.text('≡'), findsNothing);
+    expect(find.text('SB'), findsOneWidget);
+    expect(find.text('DB'), findsOneWidget);
   });
 
   // ── 8. Tapping Single 20 → processDart('20') ─────────────────────────────
@@ -394,10 +398,13 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // MISS is in the header row which is visible at the top
-    final missBtn = find.widgetWithText(OutlinedButton, 'MISS');
-    await tester.ensureVisible(missBtn);
-    await tester.tap(missBtn);
+    // MISS is a flat _ControlCell (GestureDetector) in the header row
+    final missBtn = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('MISS'),
+    );
+    await tester.ensureVisible(missBtn.first);
+    await tester.tap(missBtn.first);
     await tester.pump();
 
     final notifier =
@@ -415,11 +422,12 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    // The undo IconButton is the one with Icons.undo icon
-    final undoBtn = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.undo),
+    // UNDO is a flat _ControlCell; when disabled its Opacity is 0.38
+    final undoText = find.text('UNDO');
+    final opacityWidget = tester.widget<Opacity>(
+      find.ancestor(of: undoText, matching: find.byType(Opacity)).first,
     );
-    expect(undoBtn.onPressed, isNull);
+    expect(opacityWidget.opacity, 0.38);
   });
 
   // ── 13. UNDO enabled when dartsThrownInTurn > 0 → undoDart() ─────────────
@@ -439,11 +447,16 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    final undoFinder = find.widgetWithIcon(IconButton, Icons.undo);
-    final undoBtn = tester.widget<IconButton>(undoFinder);
-    expect(undoBtn.onPressed, isNotNull);
+    // UNDO is enabled when dartsThrownInTurn > 0 — no Opacity wrapper (opacity: 1.0 skips it)
+    final undoText = find.text('UNDO');
+    final opacityAncestors = find.ancestor(of: undoText, matching: find.byType(Opacity));
+    expect(opacityAncestors, findsNothing);
 
-    await tester.tap(undoFinder);
+    final undoFinder = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('UNDO'),
+    );
+    await tester.tap(undoFinder.first);
     await tester.pump();
 
     final notifier =
@@ -469,9 +482,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    final nextPlayerBtn = find.widgetWithText(FilledButton, 'NEXT PLAYER');
-    await tester.ensureVisible(nextPlayerBtn);
-    await tester.tap(nextPlayerBtn);
+    final nextPlayerBtn = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('NEXT PLAYER'),
+    );
+    await tester.ensureVisible(nextPlayerBtn.first);
+    await tester.tap(nextPlayerBtn.first);
     await tester.pump();
 
     final notifier =
@@ -492,9 +508,12 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    final nextPlayerBtn = find.widgetWithText(FilledButton, 'NEXT PLAYER');
-    await tester.ensureVisible(nextPlayerBtn);
-    await tester.tap(nextPlayerBtn);
+    final nextPlayerBtn = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('NEXT PLAYER'),
+    );
+    await tester.ensureVisible(nextPlayerBtn.first);
+    await tester.tap(nextPlayerBtn.first);
     await tester.pumpAndSettle();
 
     expect(find.text('Advance turn?'), findsOneWidget);
@@ -517,9 +536,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    final nextPlayerBtn = find.widgetWithText(FilledButton, 'NEXT PLAYER');
-    await tester.ensureVisible(nextPlayerBtn);
-    await tester.tap(nextPlayerBtn);
+    final nextPlayerBtn = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('NEXT PLAYER'),
+    );
+    await tester.ensureVisible(nextPlayerBtn.first);
+    await tester.tap(nextPlayerBtn.first);
     await tester.pumpAndSettle();
 
     await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
@@ -547,9 +569,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    final nextPlayerBtn = find.widgetWithText(FilledButton, 'NEXT PLAYER');
-    await tester.ensureVisible(nextPlayerBtn);
-    await tester.tap(nextPlayerBtn);
+    final nextPlayerBtn = find.descendant(
+      of: find.byType(GestureDetector),
+      matching: find.text('NEXT PLAYER'),
+    );
+    await tester.ensureVisible(nextPlayerBtn.first);
+    await tester.tap(nextPlayerBtn.first);
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Cancel'));
@@ -609,27 +634,6 @@ void main() {
       return style?.color == AppColors.inactiveScore;
     }).toList();
     expect(inactiveColoredTexts, isNotEmpty);
-  });
-
-  // ── 20. Stats overlay toggles on FAB tap ─────────────────────────────────
-
-  testWidgets('20. FAB toggles stats overlay', (tester) async {
-    final notifier = _FakeActiveCricketGameNotifier(_activeState());
-    await tester.pumpWidget(_buildApp(notifier));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(FloatingActionButton), findsOneWidget);
-
-    await tester.tap(find.byType(FloatingActionButton));
-    await tester.pump();
-    // After tapping, a dark scrim should appear (stats overlay visible)
-    // We look for a container with black color (the scrim)
-    final containers = tester.widgetList<Container>(find.byType(Container));
-    final scrimContainers = containers.where((c) {
-      final color = c.color;
-      return color != null && color.r == 0 && color.g == 0 && color.b == 0;
-    }).toList();
-    expect(scrimContainers, isNotEmpty);
   });
 
   // ── 21. Game complete shown when pendingGameWinnerId set ──────────────────

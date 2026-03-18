@@ -57,6 +57,7 @@ class CricketUnifiedTableWidget extends StatelessWidget {
         _CricketFooterRow(
           dartsThrownInTurn: gameState.dartsThrownInTurn,
           onNextPlayer: onNextPlayer,
+          isMultiplayer: gameState.competitors.length > 1,
         ),
       ],
     );
@@ -83,34 +84,32 @@ class _CricketHeaderRow extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: cs.outline, width: 1)),
       ),
-      child: Row(
-        children: [
-          for (var i = 0; i < gameState.competitors.length; i++)
-            Expanded(
-              child: _PlayerHeaderCell(
-                competitor: gameState.competitors[i],
-                isActive: i == gameState.currentTurnIndex,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < gameState.competitors.length; i++)
+              Expanded(
+                child: _PlayerHeaderCell(
+                  competitor: gameState.competitors[i],
+                  isActive: i == gameState.currentTurnIndex,
+                ),
               ),
+            _ControlCell(
+              label: 'MISS',
+              width: 112,
+              height: null,
+              onTap: onMiss,
             ),
-          OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              backgroundColor: cs.surface,
-              side: BorderSide(color: cs.outline),
+            _ControlCell(
+              label: 'UNDO',
+              width: 56,
+              height: null,
+              enabled: gameState.dartsThrownInTurn > 0,
+              onTap: onUndo,
             ),
-            onPressed: onMiss,
-            child: const Text('MISS'),
-          ),
-          Tooltip(
-            message:
-                gameState.dartsThrownInTurn == 0 ? 'No darts to undo' : '',
-            child: IconButton(
-              icon: const Icon(Icons.undo),
-              onPressed: gameState.dartsThrownInTurn > 0 ? onUndo : null,
-            ),
-          ),
-          // Blank spacer matching triple column width
-          const SizedBox(width: 56),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -187,6 +186,7 @@ class _CricketNumberRow extends StatelessWidget {
             bg: null,
             textColor: cs.onSurface,
             dotCount: 1,
+            width: target == 25 ? 84 : 56,
             semanticLabel:
                 'Single ${target == 25 ? "Bull" : "$target"}',
             onTap: isRowClosed
@@ -199,6 +199,7 @@ class _CricketNumberRow extends StatelessWidget {
             bg: cs.primaryContainer,
             textColor: cs.onPrimaryContainer,
             dotCount: 2,
+            width: target == 25 ? 84 : 56,
             semanticLabel:
                 'Double ${target == 25 ? "Bull" : "$target"}',
             onTap: isRowClosed
@@ -212,14 +213,13 @@ class _CricketNumberRow extends StatelessWidget {
               bg: cs.primary,
               textColor: cs.onPrimary,
               dotCount: 3,
+              width: 56,
               semanticLabel: 'Triple $target',
               onTap: isRowClosed
                   ? null
                   : () => onSegmentTapped(_tripleSegment(target)),
               isRowClosed: isRowClosed,
-            )
-          else
-            const _DisabledTripleCell(),
+            ),
         ],
       ),
     );
@@ -264,6 +264,7 @@ class _InputCell extends StatelessWidget {
     required this.semanticLabel,
     required this.onTap,
     required this.isRowClosed,
+    this.width = 56,
   });
 
   final String label;
@@ -273,6 +274,7 @@ class _InputCell extends StatelessWidget {
   final String semanticLabel;
   final VoidCallback? onTap;
   final bool isRowClosed;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -282,7 +284,7 @@ class _InputCell extends StatelessWidget {
         onTap: onTap,
         child: Container(
           color: bg,
-          width: 56,
+          width: width,
           height: 56,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -317,27 +319,46 @@ class _InputCell extends StatelessWidget {
   }
 }
 
-// ── Disabled triple cell (Bull row) ──────────────────────────────────────────
+// ── Control cell ──────────────────────────────────────────────────────────────
 
-class _DisabledTripleCell extends StatelessWidget {
-  const _DisabledTripleCell();
+class _ControlCell extends StatelessWidget {
+  const _ControlCell({
+    required this.label,
+    required this.width,
+    required this.onTap,
+    this.enabled = true,
+    this.height = 56,
+  });
+
+  final String label;
+  final double width;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: 'Triple Bull — not applicable in Cricket',
-      child: SizedBox(
-        width: 56,
-        height: 56,
-        child: Center(
-          child: Text(
-            '≡',
-            style: TextStyle(color: cs.onSurfaceVariant),
+    final cell = GestureDetector(
+      onTap: enabled ? onTap : null,
+      child: Container(
+        width: width,
+        height: height ?? double.infinity,
+        decoration: BoxDecoration(
+          color: cs.surface,
+          border: Border(
+            right: BorderSide(color: cs.outline, width: 1),
+            bottom: BorderSide(color: cs.outline, width: 1),
           ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: AppTextStyles.labelLarge.copyWith(color: cs.onSurface),
         ),
       ),
     );
+    return enabled ? cell : Opacity(opacity: 0.38, child: cell);
   }
 }
 
@@ -347,14 +368,32 @@ class _CricketFooterRow extends StatelessWidget {
   const _CricketFooterRow({
     required this.dartsThrownInTurn,
     required this.onNextPlayer,
+    required this.isMultiplayer,
   });
 
   final int dartsThrownInTurn;
   final VoidCallback onNextPlayer;
+  final bool isMultiplayer;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final label = isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND';
+
+    Future<void> handleAdvance() async {
+      if (dartsThrownInTurn >= 3) {
+        onNextPlayer();
+      } else {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (_) => _AdvanceTurnConfirmDialog(
+            dartsThrownInTurn: dartsThrownInTurn,
+          ),
+        );
+        if (confirmed == true) onNextPlayer();
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: cs.outline, width: 1)),
@@ -362,44 +401,13 @@ class _CricketFooterRow extends StatelessWidget {
       child: Row(
         children: [
           const Expanded(child: SizedBox.shrink()),
-          _NextPlayerButton(
-            dartsThrownInTurn: dartsThrownInTurn,
-            onNextPlayer: onNextPlayer,
+          _ControlCell(
+            label: label,
+            width: 168,
+            onTap: handleAdvance,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _NextPlayerButton extends StatelessWidget {
-  const _NextPlayerButton({
-    required this.dartsThrownInTurn,
-    required this.onNextPlayer,
-  });
-
-  final int dartsThrownInTurn;
-  final VoidCallback onNextPlayer;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: () async {
-        if (dartsThrownInTurn >= 3) {
-          onNextPlayer();
-        } else {
-          final confirmed = await showDialog<bool>(
-            context: context,
-            builder: (_) => _AdvanceTurnConfirmDialog(
-              dartsThrownInTurn: dartsThrownInTurn,
-            ),
-          );
-          if (confirmed == true) {
-            onNextPlayer();
-          }
-        }
-      },
-      child: const Text('NEXT PLAYER'),
     );
   }
 }

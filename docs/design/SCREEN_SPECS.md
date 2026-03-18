@@ -368,18 +368,18 @@ Unified table where the scoreboard (left columns) and input buttons (right colum
 AppBar: "Cricket | Standard · Leg 1"         [⋮]
 [Dart indicator: T20 | ○ | ○]
 ──────────────────────────────────────────────────
-| 64      | 32      | [MISS]  | [UNDO]  |  ← header row
-| ALICE   | BOB     |         |         |     score top, name below
-| ⊗       | X       | [ 20 ] | [ 20 ] | [ 20 ] |
-|         |         |        | [ ·· ] | [ ··· ]|   dots below number (not on a different row, just below number)
-| /       | ⊗       | [ 19 ] | [ 19 ] | [ 19 ] |
-| X       | X       | [ 18 ] | [ 18 ] | [ 18 ] |
-| ─       | /       | [ 17 ] | [ 17 ] | [ 17 ] |
-| ─       | ─       | [ 16 ] | [ 16 ] | [ 16 ] |
-| ─       | ─       | [ 15 ] | [ 15 ] | [ 15 ] |
-| ─       | ─       | [Bull] | [Bull] | (gap)  |   no triple for Bull
+| 64      | 32      | [MISS ×2col ] | [UDO×1] |  ← header row
+| ALICE   | BOB     |               |         |     score top, name below
+| ⊗       | X       | [ 20 ]  | [ 20 ]  | [ 20 ] |
+|         |         |         | [ ·· ] | [ ··· ]|
+| /       | ⊗       | [ 19 ]  | [ 19 ]  | [ 19 ] |
+| X       | X       | [ 18 ]  | [ 18 ]  | [ 18 ] |
+| ─       | /       | [ 17 ]  | [ 17 ]  | [ 17 ] |
+| ─       | ─       | [ 16 ]  | [ 16 ]  | [ 16 ] |
+| ─       | ─       | [ 15 ]  | [ 15 ]  | [ 15 ] |
+| ─       | ─       | [SB  ×1.5col] | [DB  ×1.5col] |
 ──────────────────────────────────────────────────
-| (target+marks area — left)   | [NEXT PLAYER]  |  ← footer: input-column width only
+| (target+marks area — left)   | [NEXT PLAYER ×3col] |  ← footer
 ```
 
 ### Typography
@@ -389,8 +389,9 @@ AppBar: "Cricket | Standard · Leg 1"         [⋮]
 - Target label: `textSegmentButton` (18sp DM Sans SemiBold)
 - Mark symbols: `textHeadingMedium`
 - Input button number: `textSegmentButton` (18sp DM Sans SemiBold)
-- "NEXT PLAYER": `textLabelLarge`
-- "MISS" / "UNDO": `textLabelLarge`
+- "NEXT PLAYER" / "NEXT ROUND" cell: `textLabelLarge`
+- "MISS" / "UNDO" cells: `textLabelLarge`
+- "SB" / "DB" cells: `textSegmentButton` (matches number input cells)
 
 ### Mark Symbols
 
@@ -408,25 +409,35 @@ Cells are flush, `radiusNone`, separated by 1dp `colorOutline` hairlines (right 
 - Single cell: `colorSurface` background, `colorOnSurface` text, no dot indicators.
 - Double cell: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators below number.
 - Triple cell: `colorPrimary` background, `colorOnPrimary` text, 3 × 4dp dot indicators below number.
-- Bull triple slot: blank `colorSurfaceVariant` cell, no tap handler, small "≡DB" label in `textLabelSmall` `colorOnSurfaceVariant`.
+
+**Control cells** (MISS, UNDO, SB, DB, NEXT PLAYER) use the same flat tile style as number input cells: `radiusNone`, 1dp `colorOutline` hairlines, minimum height 56dp. They are laid out in the input column group using fractional widths:
+- MISS: 2/3 of input width
+- UNDO: 1/3 of input width
+- SB: 1/2 of input width
+- DB: 1/2 of input width
+- NEXT PLAYER: full input width (3/3)
+
+Control cells use `colorSurface` background and `colorOnSurface` text at rest. UNDO is disabled (38% opacity) when no darts have been thrown in the current turn. Tapped state follows the same ripple/ink treatment as number cells.
 
 ### Color Usage
 - Closed row (all players ≥3 marks): entire row at 38% opacity, `colorSurfaceVariant` tint; input buttons disabled
 - Active player column header: `colorPrimary` score; subtle left border or background to indicate active
 - Dart indicator chip (thrown): `colorSurface` background, `colorOutline` border, segment label
 - Dart indicator chip (remaining): outline circle `○`, `colorOutline`
-- MISS button: `colorSurface`, `colorOutline` border
-- UNDO button: icon or text in `colorOnSurface`; disabled at 38% opacity
-- NEXT PLAYER: `colorPrimary` filled button
+- MISS cell: `colorSurface` background, `colorOnSurface` text — flat tile, no distinct border
+- UNDO cell: `colorSurface` background, `colorOnSurface` text — disabled at 38% opacity when no darts thrown
+- SB / DB cells: `colorSurface` background, `colorOnSurface` text — flat tile; 1dp `colorOutline` hairline only
+- NEXT PLAYER cell: `colorSurface` background, `colorOnSurface` text — flat tile spanning full input width
 - Input cell dividers: 1dp `colorOutline` hairline (right and bottom of each cell).
 
 ### Special Notes
 - **Dart indicator** sits between AppBar and the table. Shows segment label (e.g. "T20", "SB", "19") for thrown darts; outline circle for remaining slots.
-- **Header row** shows each player's current score (top) and name (bottom, ALL CAPS). MISS and UNDO sit in the input columns of this row.
+- **Header row** shows each player's current score (top) and name (bottom, ALL CAPS). MISS spans 2 input columns and UNDO spans 1 input column in this row; both are flat tiles matching the number cell style.
 - **Target rows** each contain: marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell dividers are 1dp `colorOutline` hairlines.
 - **All-closed rows**: when every player has ≥3 marks on a number, the row is visually dimmed. Input buttons are disabled — the number is out of play.
-- **Bull row**: no triple button. Triple bull maps to double bull in cricket (3 marks from T = 3 marks from DB in terms of scoring), but the input only exposes SB and DB. The T slot is empty.
-- **NEXT PLAYER button**: placed in the footer row, right-aligned, same column width as the input buttons (3 × 48dp). Left portion of footer row is empty space.
+- **Bull row**: no triple. SB and DB each span 1.5 columns of the input area.
+- **Advance button**: placed in the footer row as a flat tile spanning the full 3-column input width. Label is "NEXT PLAYER" in multiplayer (≥2 players) and "NEXT ROUND" in single-player mode.
+- **No auto-advance**: inputting the third dart never triggers automatic player rotation. The player must tap the advance button to confirm and move on.
 - No persistent bottom navigation bar (full-screen game mode).
 
 ---
