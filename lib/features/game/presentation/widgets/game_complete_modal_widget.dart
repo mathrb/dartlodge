@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_dialog_widget.dart';
+
 class GameCompleteModalWidget extends StatelessWidget {
   const GameCompleteModalWidget({
     required this.winnerName,
@@ -14,22 +16,18 @@ class GameCompleteModalWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('$winnerName wins!'),
+    return AppDialogWidget(
+      title: '$winnerName wins!',
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            onNewGame();
-          },
-          child: const Text('New Game'),
+        DialogAction(
+          label: 'New Game',
+          onPressed: onNewGame,
+          autoClose: true,
         ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            onViewStats();
-          },
-          child: const Text('View Stats'),
+        DialogAction(
+          label: 'View Stats',
+          onPressed: onViewStats,
+          autoClose: true,
         ),
       ],
     );

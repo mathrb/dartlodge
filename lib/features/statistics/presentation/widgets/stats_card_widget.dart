@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/stat_formatter.dart';
 
 class StatsCardWidget extends StatelessWidget {
   final String label;
@@ -15,9 +16,9 @@ class StatsCardWidget extends StatelessWidget {
   });
 
   static String format(double? v, {int decimals = 1}) =>
-      v != null ? v.toStringAsFixed(decimals) : '—';
+      StatFormatter.fmtDouble(v, decimals: decimals);
 
-  static String formatInt(int? v) => v != null ? v.toString() : '—';
+  static String formatInt(int? v) => StatFormatter.fmtInt(v);
 
   @override
   Widget build(BuildContext context) {

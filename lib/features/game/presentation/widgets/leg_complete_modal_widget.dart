@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/app_dialog_widget.dart';
+
 class LegCompleteModalWidget extends StatelessWidget {
   const LegCompleteModalWidget({
     required this.winnerName,
@@ -14,15 +16,13 @@ class LegCompleteModalWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text('Leg $legNumber won by $winnerName'),
+    return AppDialogWidget(
+      title: 'Leg $legNumber won by $winnerName',
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            onNextLeg();
-          },
-          child: const Text('Next Leg'),
+        DialogAction(
+          label: 'Next Leg',
+          onPressed: onNextLeg,
+          autoClose: true,
         ),
       ],
     );

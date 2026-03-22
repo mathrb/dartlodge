@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/widgets/app_dialog_widget.dart';
 
 class EndGameDialogWidget extends StatelessWidget {
   const EndGameDialogWidget({
@@ -14,23 +14,20 @@ class EndGameDialogWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return AlertDialog(
-      title: Text('End Game?', style: AppTextStyles.headingSmall),
-      content: Text(
-        'The current game will be abandoned.',
-        style: tt.bodyMedium,
-      ),
+    return AppDialogWidget(
+      title: 'End Game?',
+      content: 'The current game will be abandoned.',
       actions: [
-        TextButton(
+        DialogAction(
+          label: 'Cancel',
           onPressed: onCancel,
-          child: Text('Cancel', style: TextStyle(color: cs.onSurface)),
+          autoClose: false,
         ),
-        FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: cs.error),
+        DialogAction(
+          label: 'End Game',
           onPressed: onConfirm,
-          child: const Text('End Game'),
+          isDestructive: true,
+          autoClose: false,
         ),
       ],
     );

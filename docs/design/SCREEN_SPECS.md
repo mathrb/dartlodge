@@ -1,7 +1,7 @@
 # Screen Design Specifications — my-darts
 
 **Theme:** Court Ready
-**Last updated:** 2026-03-11
+**Last updated:** 2026-03-22
 **Status:** Specification (pre-implementation)
 
 Read `DESIGN_SYSTEM.md` first — all token names referenced here are defined there.
@@ -133,13 +133,17 @@ The four Home page entry points are:
 ┌─────────────────────────────┐
 │  AppBar: "Players"          │
 ├─────────────────────────────┤
-│  [501 · Double Out · Best of 3  ✏]  │  ← config summary chip, full-width
+│  [501 · Double Out · Best of 3 · 20 Rounds  ✏]  │  ← config summary chip, full-width
 ├─────────────────────────────┤
 │                             │
 │  Selected players           │
-│  (drag to reorder)          │
-│  [Avatar]  [Avatar]  …      │
-│   NAME      NAME            │
+│  ┌─────────────────────────┐│
+│  │≡ [Av] ALICE           ✕ ││  ← rectangular block
+│  │        PPR 54.3          ││
+│  ├─────────────────────────┤│
+│  │≡ [Av] BOB             ✕ ││
+│  │        PPR —             ││
+│  └─────────────────────────┘│
 │                             │
 ├─────────────────────────────┤
 │  ┌─────────────────────┐    │
@@ -158,16 +162,20 @@ The four Home page entry points are:
 - Config summary chip text: `textBodyMedium`, `colorOnBackground`
 - Config summary chip edit icon: `colorPrimary`, 16 dp
 - Selected player name: `textPlayerName` (ALL CAPS)
+- Selected player stat line: `textBodySmall`, `colorOnSurfaceVariant`
 - Roster grid name: `textLabelSmall`, `colorOnBackground`, max 1 line, ellipsis overflow
 - "START GAME" button: `textLabelLarge`, `colorOnPrimary`
-- Modal title: `textHeadingSmall`
 
 ### Color Usage
 - Config summary chip: `colorSurface` background, `colorOutline` border 1 dp, `radiusMedium` corner radius (12 dp); `colorPrimary` trailing edit icon
 - Selected player area: `colorBackground`
+- Selected player block: `colorSurface` background, `colorOutline` border 1dp, `radiusMedium` corner radius (12dp)
+- Remove icon (right edge of selected player block): `colorError`
+- Drag handle icon (left edge of selected player block): `colorOnSurfaceVariant`
 - Roster grid container: `colorSurface` background, `colorOutline` border, `radiusMedium`
 - Roster grid avatar (real player): `colorSecondaryContainer` background,
   `colorOnSecondaryContainer` initials
+- Roster grid avatar selected-state overlay: avatar at 38% opacity + `colorOnSecondaryContainer` check icon (24dp) centered
 - Roster grid "+" card: `colorSurfaceVariant` background, `colorPrimary` "+" icon
 - "START GAME" button disabled: 38% opacity when no players selected
 
@@ -191,29 +199,38 @@ The four Home page entry points are:
 
   | Game type | Format |
   |---|---|
-  | X01 | `"{score} · {outStrategy} Out · {legsToWin == 1 ? '1 Leg' : 'Best of N'}"` |
-  | Cricket | `"{variant} · {N} {N == 1 ? 'pt' : 'pts'} to win"` |
+  | X01 | `"{score} · {outStrategy} Out · {legsToWin == 1 ? '1 Leg' : 'Best of N'} · {rounds} Rounds"` |
+  | Cricket | `"{variant} · {N} {N == 1 ? 'pt' : 'pts'} to win · {rounds} Rounds"` |
   | Practice | Shanghai: `"{gameName} · {totalRounds} Rounds"`; others: game name only |
 
   Out strategy labels: Straight, Double, Master.
   Cricket variant labels: Standard, No Score, Cut Throat, Tactics.
-- **Selected players area** (center): displays chosen players as avatars with name below.
-  Players can be dragged to reorder — turn order is significant in darts.
-  Tapping a selected player opens a modal with two options:
-  - Handicap settings (starting score offset for this player)
-  - Deselect (removes player from selection)
+- **Selected players area** (center): displays chosen players as a vertically stacked list of full-width rectangular cards. Players can be dragged to reorder — turn order is significant in darts. Each card is a horizontal `Row` containing:
+  - **Drag handle** (left edge, vertically centered): `drag_handle` icon, 24dp, `colorOnSurfaceVariant`
+  - **Avatar** (rounded square, 40×40dp, `radiusSmall` — 8dp corner radius): `colorSecondaryContainer` background, initials in `textLabelMedium`
+  - **Text column** (`Expanded`):
+    - Line 1: player name — `textPlayerName` (ALL CAPS), `colorOnBackground`
+    - Line 2: stat — `textBodySmall`, `colorOnSurfaceVariant`; label depends on game type:
+      - X01: `"PPR {value}"` (shows `"PPR —"` if no X01 games played)
+      - Cricket: `"MPT {value}"` (shows `"MPT —"` if no Cricket games played)
+      - Practice / others: omitted (single-line name only)
+  - **Remove icon** (right edge, vertically centered): `close` icon, 24dp, `colorError`
+
+  Block styling: `colorSurface` background, `colorOutline` border 1dp, `radiusMedium` (12dp) corner radius, 12dp horizontal padding, 10dp vertical padding. No elevation. Full-width inside the selected-players area. Vertically stacked, 4dp gap between cards.
+
+  Tapping the remove icon (✕) removes the player from the selection. Tapping a selected player in the roster grid also removes them. There is no tap-to-modal interaction on the selected-player card.
 - **Roster grid** (bottom ~20–25% of screen): fixed-height bordered container.
   4 columns, vertically scrollable. Height is set to show approximately 2.33 rows —
   the partial third row is an intentional scroll affordance indicating more players below.
-  Each cell shows a circular avatar (40dp) with the player's name truncated below.
+  Each cell shows a **rounded-square avatar** (40×40dp, `radiusSmall` — 8dp corner radius) with the player's name truncated below.
+  **Selected state**: when a player is already in the selected-players list, their roster cell avatar is rendered at 38% opacity with a `check` icon (24dp, `colorOnSecondaryContainer`) centered over it. The cell remains tappable — tapping a selected player removes them from the selection list.
   The last cell is always a "+" card; tapping it opens a lightweight inline modal
   (avatar preview + name field + CREATE PLAYER confirm button). The newly created player
   appears immediately in the roster grid and is auto-selected into the center area.
 - **"START GAME" button** is anchored at the very bottom, wrapped in `SafeArea` to
   respect home indicator insets. Sufficient padding separates it from the roster grid
   to prevent mis-taps.
-- Player avatar: circular, 40dp diameter, initials in `textLabelMedium` on
-  `colorSecondaryContainer`.
+- Player avatar: rounded square, 40×40dp, `radiusSmall` (8dp) corner radius, initials in `textLabelMedium` on `colorSecondaryContainer`.
 - Minimum tap target for each roster grid cell: 48×48dp.
 - If the roster has 0 real players, the grid shows only the "+" card (no separate empty
   state message needed).
@@ -233,11 +250,12 @@ Rendered as a modal bottom sheet, not a full page.
 │  ──── drag handle           │
 │  "Game Settings"            │
 │                             │
-│  Starting Score: [501▾]     │
-│  In Strategy:   [Any ▾]     │
-│  Out Strategy:  [Double▾]   │
-│  Legs to Win:   [− 3 +]     │
-│  Rounds:        [7 ▾]       │  ← visible for Shanghai
+│  Starting Score: [501▾]     │  ← X01 only
+│  In Strategy:   [Any ▾]     │  ← X01 only
+│  Out Strategy:  [Double▾]   │  ← X01 only
+│  Legs to Win:   [− 3 +]     │  ← X01 + Cricket
+│  Rounds:        [− 20 +]    │  ← X01 + Cricket (stepper, default 20)
+│  Rounds:        [7 ▾]       │  ← Shanghai only (dropdown: 7/10/15/20)
 │                             │
 │  [APPLY SETTINGS]           │
 └─────────────────────────────┘
@@ -259,7 +277,9 @@ Rendered as a modal bottom sheet, not a full page.
 - Opened via the config summary chip on the Player Selection page (Section 3).
 - Sheet height: `isScrollControlled: true` with `maxChildSize: 0.75`.
 - Stepper buttons minimum 48×48dp touch target.
-- "Rounds" is a dropdown (7, 10, 15, 20) visible only for game types that support it (e.g., Shanghai).
+- **X01 / Cricket** — "Rounds" is a **stepper** (−/+ buttons), default **20**, minimum 1, maximum 99. Shown only for these game types.
+- **Shanghai** — "Rounds" is a **dropdown** (options: 7, 10, 15, 20). Unchanged.
+- "Rounds" is hidden for all Practice game types except Shanghai.
 - All changes are held in local state until "APPLY SETTINGS" is tapped — tapping the drag-handle drag area dismisses without saving.
 
 ---
@@ -283,7 +303,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 ```
 ┌─────────────────────────────┐
 │  AppBar: "501"              │
-│           "Leg 1 of 3"      │
+│           "Leg 1 of 3 · Round 1 of 20"  │
 │                        [⋮] │
 ├─────────────────────────────┤
 │  [60]  [T20]  [○]  [○]     │  ← dart indicator row
@@ -319,7 +339,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 
 ### Typography
 - AppBar title line 1: `textHeadingSmall`, `colorOnBackground` — starting score
-- AppBar title line 2: `textBodySmall`, `colorOnSurfaceVariant` — leg indicator
+- AppBar title line 2: `textBodySmall`, `colorOnSurfaceVariant` — leg + round indicator: `"Leg {N} of {M} · Round {R} of {T}"`. When rounds = 0 (unlimited / not configured), show only `"Leg {N} of {M}"`
 - Player name: `textPlayerName` (ALL CAPS); active player uses `colorSecondary`, inactive uses `colorOnSurfaceVariant`; truncate with ellipsis if needed
 - Active player score: `textScoreActive` — scales with N: 80sp (N=1), 64sp (N=2), 48sp (N=3–4), 36sp (N=5–6)
 - Inactive player score: always one step smaller than active in the same game; same scale steps apply
@@ -361,6 +381,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 - **Player score panel:** The scoreboard is a single row of N equal-width columns (N = 1–6, enforced by the game config max). Each column contains a vertical stack: (1) round sum prefix + remaining score on one line — the round sum is the total of darts thrown so far this turn, shown in small text to the left of the main score; (2) player name (ALL CAPS, ▶ suffix for active player); (3) PPR, showing '—' until at least one turn is complete. Score font scales with N: 80sp / 64sp / 48sp / 36sp for N = 1 / 2 / 3-4 / 5-6. All columns are always visible; no scrolling or collapsing.
 - **Checkout suggestion:** A full-width banner row is inserted between the scoreboard and the input grid whenever the active player's remaining score is ≤ 170. Background `colorSurfaceVariant`, 2dp left border `colorPrimary`, 💡 icon + suggestion string (e.g. "T20 · T18 · D8"). Hidden otherwise — row collapses to zero height.
 - The nav bar is hidden on this screen (full-screen game mode).
+- **Round counter**: increments each time all players have completed a turn (i.e. after the last player in turn order taps NEXT ROUND). When the configured round limit is reached, the game ends — the winner is the player who checked out, or the player with the lowest remaining score. If no winner by round limit, tiebreak resolution is deferred to the game-engine spec.
 
 ---
 
@@ -373,7 +394,7 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 Unified table where the scoreboard (left columns) and input buttons (right columns) share the same rows. The dart indicator sits between the AppBar and the table.
 
 ```
-AppBar: "Cricket | Standard · Leg 1"         [⋮]
+AppBar: "Cricket | Standard · Leg 1 · Round 1 of 20"         [⋮]
 [Dart indicator: T20 | ○ | ○]
 ──────────────────────────────────────────────────
 | 64      | 32      | [MISS ×2col ] | [UDO×1] |  ← header row
@@ -448,6 +469,7 @@ Control cells use `colorSurface` background and `colorOnSurface` text at rest. U
 - **No scrolling**: The cricket table must never require scrolling. The 7 target rows flex equally to fill the available space between the dart indicator and the advance button. Minimum row height is 36dp.
 - **No auto-advance**: inputting the third dart never triggers automatic player rotation. The player must tap the advance button to confirm and move on.
 - No persistent bottom navigation bar (full-screen game mode).
+- **Round counter**: appended after the leg indicator in the AppBar title line: `"Cricket | {variant} · Leg {N} · Round {R} of {T}"`. When rounds = 0 (unlimited / not configured), omit the round counter and show only `"Cricket | {variant} · Leg {N}"`.
 
 ---
 

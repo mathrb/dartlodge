@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/entities/player_stats.dart';
 import 'stats_card_widget.dart';
 
@@ -20,11 +21,9 @@ class LeaderboardRowWidget extends StatelessWidget {
       case 'threeDartAverage':
         return StatsCardWidget.format(stats.threeDartAverage);
       case 'checkoutPercentage':
-        return stats.checkoutPercentage != null
-            ? '${stats.checkoutPercentage!.toStringAsFixed(1)}%'
-            : '—';
+        return StatFormatter.fmtPct(stats.checkoutPercentage, isRatio: false);
       case 'winRate':
-        return '${stats.winRate.toStringAsFixed(1)}%';
+        return StatFormatter.fmtPct(stats.winRate);
       case 'dartsPerLeg':
         return StatsCardWidget.format(stats.dartsPerLeg);
       default:
