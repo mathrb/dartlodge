@@ -1,7 +1,7 @@
 # Screen Design Specifications — my-darts
 
-**Theme:** Court Ready
-**Last updated:** 2026-03-11
+**Theme:** Kinetic Precision
+**Last updated:** 2026-03-22
 **Status:** Specification (pre-implementation)
 
 Read `DESIGN_SYSTEM.md` first — all token names referenced here are defined there.
@@ -39,10 +39,10 @@ The four Home page entry points are:
 │  Darts                   ⚙ │  ← gear → Settings
 ├─────────────────────────────┤
 │  PLAY                       │  ← section label
-│  |▌ X01               →    │  ← left accent bar, colorPrimary
-│  |▌ Cricket           →    │  ← colorSecondary
-│  |▌ Practice          →    │  ← colorOnPrimaryContainer
-│  |▌ Statistics        →    │  ← colorSecondary (same as Cricket)
+│  |▌ X01               →    │  ← left accent bar, primary
+│  |▌ Cricket           →    │  ← primary
+│  |▌ Practice          →    │  ← primary
+│  |▌ Statistics        →    │  ← primary
 ├─────────────────────────────┤
 │  [History              →]   │  ← full-width nav card
 │  [Local Players        →]   │  ← full-width nav card
@@ -54,27 +54,27 @@ The four Home page entry points are:
 ```
 
 ### Typography
-- AppBar title: `textHeadingMedium`, `colorOnBackground`
-- Game list item label: `textBodyLarge`, `colorOnBackground`
-- Game list item subtitle: `textBodySmall`, `colorOnSurfaceVariant`
-- "PLAY" section label: `textLabelSmall`, `colorOnSurfaceVariant`, uppercase
-- History / Local Players nav card label: `textBodyLarge`, `colorOnBackground`
+- AppBar title: `textHeadingMedium`, `onSurface`
+- Game list item label: `textBodyLarge`, `onSurface`
+- Game list item subtitle: `textBodySmall`, `onSurfaceVariant`
+- "PLAY" section label: `textLabelSmall`, `onSurfaceVariant`, uppercase
+- History / Local Players nav card label: `textBodyLarge`, `onSurface`
 
 ### Color Usage
-- All game list cards: `colorSurface` background, `colorOutline` border (1dp), `radiusLarge` corner radius
-- X01 left accent bar: `colorPrimary` (4dp)
-- Cricket left accent bar: `colorSecondary` (4dp)
-- Practice left accent bar: `colorOnPrimaryContainer` (4dp, dark red — the deep token from that container pair)
-- Statistics left accent bar: `colorSecondary` (4dp)
-- Chevron per card: matches the card's accent color
-- History / Local Players nav cards: `colorSurface` background, `colorOutline` border
-- Coming-soon cards: `colorSurfaceVariant` background, `colorOnSurfaceVariant` text, `opacity: 0.6`
+- All game list cards: `surfaceContainerLow` background, `radiusNone`
+- X01 left accent bar: `primary` (4dp)
+- Cricket left accent bar: `primary` (4dp)
+- Practice left accent bar: `primary` (4dp)
+- Statistics left accent bar: `primary` (4dp)
+- Chevron per card: `primary`
+- History / Local Players nav cards: `surfaceContainerLow` background
+- Coming-soon cards: `surfaceContainerHighest` background, `onSurfaceVariant` text, `opacity: 0.6`
 
 ### Special Notes
 - The gear icon (⚙) in the AppBar navigates to Settings. Settings is not a card.
-- The game list is a single-column vertical stack of full-width cards with `radiusLarge` corners and `64dp` minimum height.
+- The game list is a single-column vertical stack of full-width cards with `radiusNone` corners and `64dp` minimum height.
 - Each card has a 4dp left accent bar using the color tokens above; label is left-aligned; trailing chevron matches accent color.
-- Optionally a subtitle line (`textBodySmall`, `colorOnSurfaceVariant`) can be shown — reserved for future use.
+- Optionally a subtitle line (`textBodySmall`, `onSurfaceVariant`) can be shown — reserved for future use.
 - History and Local Players are full-width cards placed below the game list. They use a trailing chevron icon to reinforce navigation affordance.
 - Coming-soon cards are visually de-emphasised (lower opacity) and have a "Coming Soon" label in `textLabelMedium`. They receive no `onTap` handler and show `cursor: not-allowed` semantics. Coming-soon cards are: Game Lobby and VS Friends.
 
@@ -101,25 +101,25 @@ The four Home page entry points are:
 
 ### Typography
 - AppBar title: `textHeadingMedium`
-- Variant name: `textBodyLarge`, `colorOnBackground`
-- Variant subtitle: `textBodyMedium`, `colorOnSurfaceVariant` (adapts to `colorOnPrimary` / `colorOnPrimaryContainer` on filled/selected pills)
-- Hint line: `textBodySmall`, `colorOnSurfaceVariant`, centred
+- Variant name: `textBodyLarge`, `onSurface`
+- Variant subtitle: `textBodyMedium`, `onSurfaceVariant` (adapts to `onPrimaryFixed` / `onPrimaryFixed` on filled/selected pills)
+- Hint line: `textBodySmall`, `onSurfaceVariant`, left-aligned
 
 ### Color Usage
-- Selected variant card: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, left border 3dp `colorPrimary`
-- Unselected card: `colorSurface`
+- Selected variant card: `primaryContainer` background, `onPrimaryFixed` text, left border 3dp `primary`
+- Unselected card: `surfaceContainerLow`
 
 ### Special Notes
 - Variants are tappable list tiles, minimum 64dp height.
 - A single tap navigates directly to player selection with the variant pre-selected — no confirm button needed.
-- Each variant card displays a **subtitle** (`textBodyMedium`, `colorOnSurfaceVariant`) summarising its default rules:
+- Each variant card displays a **subtitle** (`textBodyMedium`, `onSurfaceVariant`) summarising its default rules:
   - X01 presets: `"Double Out · 1 Leg"` (substituting the actual leg count for multi-leg presets)
   - Cricket presets: describe the variant rule and scoring threshold, e.g. `"Close 15–20 & Bull · 3 pts to win"` for Standard Cricket
   - Practice variants: **Shanghai** shows the round count (e.g., `"7 Rounds"`); others have **no subtitle** as they are self-describing.
   - Disabled Custom entry: **no subtitle**
 - A **hint line** is rendered below the pill list in all categories:
   `"Select a preset — you can adjust the settings on the next screen"`
-  Styled `textBodySmall`, `colorOnSurfaceVariant`, centred, with `space4` (16 dp) top padding.
+  Styled `textBodySmall`, `onSurfaceVariant`, left-aligned, with `space4` (16 dp) top padding.
 
 ---
 
@@ -155,20 +155,20 @@ The four Home page entry points are:
 
 ### Typography
 - AppBar title: `textHeadingMedium`
-- Config summary chip text: `textBodyMedium`, `colorOnBackground`
-- Config summary chip edit icon: `colorPrimary`, 16 dp
+- Config summary chip text: `textBodyMedium`, `onSurface`
+- Config summary chip edit icon: `primary`, 16 dp
 - Selected player name: `textPlayerName` (ALL CAPS)
-- Roster grid name: `textLabelSmall`, `colorOnBackground`, max 1 line, ellipsis overflow
-- "START GAME" button: `textLabelLarge`, `colorOnPrimary`
+- Roster grid name: `textLabelSmall`, `onSurface`, max 1 line, ellipsis overflow
+- "START GAME" button: `textLabelLarge`, `onPrimaryFixed`
 - Modal title: `textHeadingSmall`
 
 ### Color Usage
-- Config summary chip: `colorSurface` background, `colorOutline` border 1 dp, `radiusMedium` corner radius (12 dp); `colorPrimary` trailing edit icon
-- Selected player area: `colorBackground`
-- Roster grid container: `colorSurface` background, `colorOutline` border, `radiusMedium`
-- Roster grid avatar (real player): `colorSecondaryContainer` background,
-  `colorOnSecondaryContainer` initials
-- Roster grid "+" card: `colorSurfaceVariant` background, `colorPrimary` "+" icon
+- Config summary chip: `surfaceContainerLow` background, `radiusNone`; `primary` trailing edit icon
+- Selected player area: `surface`
+- Roster grid container: `surfaceContainerLow` background, `radiusNone`
+- Roster grid avatar (real player): `surfaceContainerHighest` background,
+  `onSurface` initials
+- Roster grid "+" card: `surfaceContainerHighest` background, `primary` "+" icon
 - "START GAME" button disabled: 38% opacity when no players selected
 
 ### Special Notes
@@ -180,9 +180,9 @@ The four Home page entry points are:
   └──────────────────────────────────────────┘
   ```
 
-  - Background `colorSurface`; border 1 dp `colorOutline`; corner radius `radiusMedium` (12 dp); padding 12 dp horizontal, 10 dp vertical.
-  - Left text: config summary string (`textBodyMedium`, `colorOnBackground`).
-  - Right icon: `edit_outlined` in `colorPrimary`, 16 dp.
+  - Background `surfaceContainerLow`; `radiusNone`; padding 12 dp horizontal, 10 dp vertical.
+  - Left text: config summary string (`textBodyMedium`, `onSurface`).
+  - Right icon: `edit_outlined` in `primary`, 16 dp.
   - Tapping anywhere on the chip opens the Game Config bottom sheet (Section 4).
   - The chip re-renders immediately after settings are applied — it always reflects the current live config.
   - The AppBar on this page carries **no ⚙ settings icon** — the chip is the sole entry point to game config. The ⚙ icon is used exclusively on the Home page (→ Settings).
@@ -213,7 +213,7 @@ The four Home page entry points are:
   respect home indicator insets. Sufficient padding separates it from the roster grid
   to prevent mis-taps.
 - Player avatar: circular, 40dp diameter, initials in `textLabelMedium` on
-  `colorSecondaryContainer`.
+  `surfaceContainerHighest`.
 - Minimum tap target for each roster grid cell: 48×48dp.
 - If the roster has 0 real players, the grid shows only the "+" card (no separate empty
   state message needed).
@@ -245,15 +245,15 @@ Rendered as a modal bottom sheet, not a full page.
 
 ### Typography
 - Sheet title: `textHeadingMedium`
-- Field labels: `textBodyMedium`, `colorOnSurfaceVariant`
-- Dropdown values: `textBodyLarge`, `colorOnBackground`
-- Apply button: `textLabelLarge`, `colorOnPrimary` on `colorPrimary`
+- Field labels: `textBodyMedium`, `onSurfaceVariant`
+- Dropdown values: `textBodyLarge`, `onSurface`
+- Apply button: `textLabelLarge`, `onPrimaryFixed` on `primaryContainer`
 
 ### Color Usage
-- Sheet background: `colorSurface`
-- Drag handle: `colorOutline`
-- Stepper (−/+) buttons: outlined style, `colorPrimary` border + text
-- Count value between steppers: `textHeadingMedium`, `colorOnBackground`
+- Sheet background: `surfaceContainerLow`
+- Drag handle: `outlineVariant`
+- Stepper (−/+) buttons: outlined style, `primary` border + text
+- Count value between steppers: `textHeadingMedium`, `onSurface`
 
 ### Special Notes
 - Opened via the config summary chip on the Player Selection page (Section 3).
@@ -299,16 +299,16 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 │  💡 T20 · T18 · D8          │  ← checkout banner (≤170 only)
 ├─────────────────────────────┤
 │  ┌────────────────────────┐  │
-│  │  MISS  │  SB·25│ DB·50 │  │  ← row 0: 3 equal cells, hairlines
-│  ├────────────────────────┤  │  ← 1dp colorOutlineVariant group separator
-│  │20│19│18│17│16│15│14│13│12│11│  ← row 1 singles (colorSurface)
+│  │  MISS  │  SB·25│ DB·50 │  │  ← row 0: 3 equal cells (surfaceContainerLow)
+│  │                        │  │  ← tier boundary: tonal shift (no hairline)
+│  │20│19│18│17│16│15│14│13│12│11│  ← row 1 singles (surfaceContainerLow)
 │  │10│ 9│ 8│ 7│ 6│ 5│ 4│ 3│ 2│ 1│  ← row 2 singles
-│  ├────────────────────────┤  │  ← 1dp colorOutlineVariant group separator
-│  │20│19│…                 │  │  ← row 3 doubles (colorPrimaryContainer)
+│  │                        │  │  ← tier boundary: tonal shift (no hairline)
+│  │20│19│…                 │  │  ← row 3 doubles (primaryContainer)
 │  │ ·· ·· ··               │  │     2-dot indicators below numbers
 │  │10│ 9│…                 │  │  ← row 4 doubles
-│  ├────────────────────────┤  │  ← 1dp colorOutlineVariant group separator
-│  │20│19│…                 │  │  ← row 5 triples (colorPrimary)
+│  │                        │  │  ← tier boundary: tonal shift (no hairline)
+│  │20│19│…                 │  │  ← row 5 triples (primary)
 │  │···│···│···              │  │     3-dot indicators below numbers
 │  │10│ 9│…                 │  │  ← row 6 triples
 │  └────────────────────────┘  │
@@ -318,48 +318,48 @@ This is the highest-frequency interaction surface. Legibility and tap ergonomics
 ```
 
 ### Typography
-- AppBar title line 1: `textHeadingSmall`, `colorOnBackground` — starting score
-- AppBar title line 2: `textBodySmall`, `colorOnSurfaceVariant` — leg indicator
-- Player name: `textPlayerName` (ALL CAPS); active player uses `colorSecondary`, inactive uses `colorOnSurfaceVariant`; truncate with ellipsis if needed
+- AppBar title line 1: `textHeadingSmall`, `onSurface` — starting score
+- AppBar title line 2: `textBodySmall`, `onSurfaceVariant` — leg indicator
+- Player name: `textPlayerName` (ALL CAPS); active player uses `onSurface`, inactive uses `onSurfaceVariant` at 60% opacity; truncate with ellipsis if needed
 - Active player score: `textScoreActive` — scales with N: 80sp (N=1), 64sp (N=2), 48sp (N=3–4), 36sp (N=5–6)
 - Inactive player score: always one step smaller than active in the same game; same scale steps apply
-- Round sum prefix (inline before remaining score): `textBodySmall`, `colorOnSurfaceVariant`
-- Dart indicator chip label: `textBodyMedium`, `colorOnSurface`; round sum: `textHeadingSmall`, `colorPrimary`
-- PPR: `textBodySmall`, `colorOnSurfaceVariant`
-- Segment button number: `textSegmentButton` (18sp DM Sans SemiBold)
+- Round sum prefix (inline before remaining score): `textBodySmall`, `onSurfaceVariant`
+- Dart indicator chip label: `textBodyMedium`, `onSurface`; round sum: `textHeadingSmall`, `primary`
+- PPR: `textBodySmall`, `onSurfaceVariant`
+- Segment button number: `textSegmentButton` (18sp Inter SemiBold)
 - "NEXT ROUND" button: `textLabelLarge`
-- Checkout banner text: `textBodyMedium`, `colorOnBackground`; 💡 icon in `colorPrimary`
+- Checkout banner text: `textBodyMedium`, `onSurface`; 💡 icon in `primary`
 
 ### Color Usage
 - Active player panel: `colorActivePlayerBg` background, 4dp left border `colorActivePlayer`
-- Active player score: `colorPrimary`
-- Inactive player panel: `colorSurface`
-- Segment grid outer container: `colorSurface` background, `radiusNone`. Fills full screen width (edge-to-edge).
-- Individual cells: `radiusNone`. Each cell draws only its right and bottom 1dp `colorOutline` hairline border.
-- Tier boundaries (rows 2→3, rows 4→5): 1dp `colorOutlineVariant` separator (slightly stronger than `colorOutline`).
-- Row 0 / rows 1–2 (singles): `colorSurface` background, `colorOnSurface` text.
-- Rows 3–4 (doubles): `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp filled dot indicators in `colorOnPrimaryContainer`.
-- Rows 5–6 (triples): `colorPrimary` background, `colorOnPrimary` text, 3 × 4dp filled dot indicators in `colorOnPrimary`.
-- Undo button: icon in `colorOnSurface`; disabled state 38% opacity
-- "NEXT ROUND": `colorPrimary` filled button
-- Dart indicator chip (thrown): `colorSurface` background, `colorOutline` border
-- Dart indicator chip (remaining): outline circle, `colorOutline`
-- Checkout banner background: `colorSurfaceVariant`, left border `colorPrimary` (2dp)
+- Active player score: `primary`
+- Inactive player panel: `surface`
+- Segment grid outer container: `surface` background, `radiusNone`. Fills full screen width (edge-to-edge).
+- Individual cells: `radiusNone`. No explicit border — visual separation between tiers is provided by background color changes.
+- Tier boundaries (rows 2→3, rows 4→5): tonal step from singles (`surfaceContainerLow`) to doubles (`primaryContainer`) to triples (`primary`) provides the separator — no hairline needed.
+- Row 0 / rows 1–2 (singles): `surfaceContainerLow` background, `onSurface` text.
+- Rows 3–4 (doubles): `primaryContainer` background, `onPrimaryFixed` text, 2 × 4dp filled dot indicators in `onPrimaryFixed`.
+- Rows 5–6 (triples): `primary` background, `onPrimary` text, 3 × 4dp filled dot indicators in `onPrimary`.
+- Undo button: icon in `onSurface`; disabled state 38% opacity
+- "NEXT ROUND": `primary` filled button, `onPrimary` text (Action Button style — see DESIGN_SYSTEM §6.1)
+- Dart indicator chip (thrown): `surfaceContainerLow` background, `outlineVariant` at 20% opacity border
+- Dart indicator chip (remaining): outline circle, `outlineVariant` at 20% opacity
+- Checkout banner background: `surfaceContainerLow`, left border `primary` (2dp)
 
 ### Special Notes
 - **Score must never wrap or truncate.** Score panel width must be wide enough for "501" at 80sp. On narrow screens, reduce inactive score to `textScoreMedium` (48sp) before truncating.
-- **Dart indicator row** sits between AppBar and scoreboard. Round sum on the left (bold, `colorPrimary`), then up to 3 chips — thrown darts show the segment label (e.g. "T20", "SB", "14"), remaining slots show an empty outline circle. Sum increments as darts land.
+- **Dart indicator row** sits between AppBar and scoreboard. Round sum on the left (bold, `primary`), then up to 3 chips — thrown darts show the segment label (e.g. "T20", "SB", "14"), remaining slots show an empty outline circle. Sum increments as darts land.
 - **Segment input grid (contiguous tile layout):** The input area spans the full screen width (edge-to-edge, no horizontal margin). No padding inside the container — cells are flush against each other and against the container walls. No spacing between cells. Parent container: `radiusNone` (flat bar).
 
   Row 0: MISS / SB / DB — 3 equal-width cells. Rows 1–2: singles 20→11 and 10→1, 10 cells per row. Rows 3–4: doubles, same number order, 10 cells per row. Rows 5–6: triples, same number order, 10 cells per row. Cell heights flex equally across all 7 rows to fill available vertical space; minimum cell height 48dp.
 
-  Cell borders: each cell draws its right and bottom 1dp `colorOutline` hairline only (so shared edges are always 1dp, not 2dp). Tier-boundary rows use `colorOutlineVariant` for the horizontal separator. Ripple is clipped to the individual cell boundary (Material `InkWell` inside `radiusNone` cell).
+  Cell borders: no explicit hairlines — tonal background changes between tiers (singles `surfaceContainerLow` → doubles `primaryContainer` → triples `primary`) provide visual separation. Ripple is clipped to the individual cell boundary (Material `InkWell` inside `radiusNone` cell).
 
   Dot indicators are rendered below the number within the cell using the cell's foreground color. No text multiplier label.
 
   Semantic label per cell: "Single [N]", "Double [N]", "Triple [N]", "Miss", "Single Bull", "Double Bull".
 - **Player score panel:** The scoreboard is a single row of N equal-width columns (N = 1–6, enforced by the game config max). Each column contains a vertical stack: (1) round sum prefix + remaining score on one line — the round sum is the total of darts thrown so far this turn, shown in small text to the left of the main score; (2) player name (ALL CAPS, ▶ suffix for active player); (3) PPR, showing '—' until at least one turn is complete. Score font scales with N: 80sp / 64sp / 48sp / 36sp for N = 1 / 2 / 3-4 / 5-6. All columns are always visible; no scrolling or collapsing.
-- **Checkout suggestion:** A full-width banner row is inserted between the scoreboard and the input grid whenever the active player's remaining score is ≤ 170. Background `colorSurfaceVariant`, 2dp left border `colorPrimary`, 💡 icon + suggestion string (e.g. "T20 · T18 · D8"). Hidden otherwise — row collapses to zero height.
+- **Checkout suggestion:** A full-width banner row is inserted between the scoreboard and the input grid whenever the active player's remaining score is ≤ 170. Background `surfaceContainerLow`, 2dp left border `primary`, 💡 icon + suggestion string (e.g. "T20 · T18 · D8"). Hidden otherwise — row collapses to zero height.
 - The nav bar is hidden on this screen (full-screen game mode).
 
 ---
@@ -392,11 +392,11 @@ AppBar: "Cricket | Standard · Leg 1"         [⋮]
 
 ### Typography
 - Dart indicator chip label: `textBodyMedium`, segment string (e.g. "T20", "SB"); empty slots: outline circle `○`
-- Player score in header: `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
-- Player name in header: `textLabelSmall`, `colorOnBackground`, ALL CAPS
-- Target label: `textSegmentButton` (18sp DM Sans SemiBold)
+- Player score in header: `textScoreSmall` (36sp Space Grotesk Bold), `primary`
+- Player name in header: `textLabelSmall`, `onSurface`, ALL CAPS
+- Target label: `textSegmentButton` (18sp Inter SemiBold)
 - Mark symbols: `textHeadingMedium`
-- Input button number: `textSegmentButton` (18sp DM Sans SemiBold)
+- Input button number: `textSegmentButton` (18sp Inter SemiBold)
 - "NEXT PLAYER" / "NEXT ROUND" cell: `textLabelLarge`
 - "MISS" / "UNDO" cells: `textLabelLarge`
 - "SB" / "DB" cells: `textSegmentButton` (matches number input cells)
@@ -405,43 +405,43 @@ AppBar: "Cricket | Standard · Leg 1"         [⋮]
 
 | Marks | Symbol | Color |
 |-------|--------|-------|
-| 0     | ─      | `colorOnSurfaceVariant` |
-| 1     | /      | `colorOnBackground` |
-| 2     | X      | `colorOnBackground` (bold) |
-| 3+    | ⊗      | `colorCricketClosed` (#4CAF50) |
+| 0     | ─      | `onSurfaceVariant` |
+| 1     | /      | `onSurface` |
+| 2     | X      | `onSurface` (bold) |
+| 3+    | ⊗      | `colorCricketClosed` (`#00FFAB`) |
 
 ### Input Cell Styling (contiguous tile layout)
 
-Cells are flush, `radiusNone`, separated by 1dp `colorOutline` hairlines (right and bottom of each cell). Cell height: flex (expands equally across the 7 target rows to fill available screen height); minimum 36dp. Cell width: equal thirds of the input column group.
+Cells are flush, `radiusNone`, with no explicit border — tonal background changes between cell types (single `surfaceContainerLow` → double `primaryContainer` → triple `primary`) provide visual separation. Cell height: flex (expands equally across the 7 target rows to fill available screen height); minimum 36dp. Cell width: equal thirds of the input column group.
 
-- Single cell: `colorSurface` background, `colorOnSurface` text, no dot indicators.
-- Double cell: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators below number.
-- Triple cell: `colorPrimary` background, `colorOnPrimary` text, 3 × 4dp dot indicators below number.
+- Single cell: `surfaceContainerLow` background, `onSurface` text, no dot indicators.
+- Double cell: `primaryContainer` background, `onPrimaryFixed` text, 2 × 4dp dot indicators below number.
+- Triple cell: `primary` background, `onPrimary` text, 3 × 4dp dot indicators below number.
 
-**Control cells** (MISS, UNDO, SB, DB, NEXT PLAYER) use the same flat tile style as number input cells: `radiusNone`, 1dp `colorOutline` hairlines, minimum height 56dp. They are laid out in the input column group using fractional widths:
+**Control cells** (MISS, UNDO, SB, DB, NEXT PLAYER) use the same flat tile style as number input cells: `radiusNone`, no explicit border, minimum height 56dp. They are laid out in the input column group using fractional widths:
 - MISS: 2/3 of input width
 - UNDO: 1/3 of input width
 - SB: 1/2 of input width
 - DB: 1/2 of input width
 - NEXT PLAYER: full input width (3/3)
 
-Control cells use `colorSurface` background and `colorOnSurface` text at rest. UNDO is disabled (38% opacity) when no darts have been thrown in the current turn. Tapped state follows the same ripple/ink treatment as number cells.
+Control cells use `surfaceContainerLow` background and `onSurface` text at rest. UNDO is disabled (38% opacity) when no darts have been thrown in the current turn. Tapped state follows the same ripple/ink treatment as number cells.
 
 ### Color Usage
-- Closed row (all players ≥3 marks): entire row at 38% opacity, `colorSurfaceVariant` tint; input buttons disabled
-- Active player column header: `colorPrimary` score; subtle left border or background to indicate active
-- Dart indicator chip (thrown): `colorSurface` background, `colorOutline` border, segment label
-- Dart indicator chip (remaining): outline circle `○`, `colorOutline`
-- MISS cell: `colorSurface` background, `colorOnSurface` text — flat tile, no distinct border
-- UNDO cell: `colorSurface` background, `colorOnSurface` text — disabled at 38% opacity when no darts thrown
-- SB / DB cells: `colorSurface` background, `colorOnSurface` text — flat tile; 1dp `colorOutline` hairline only
-- NEXT PLAYER cell: `colorSurface` background, `colorOnSurface` text — flat tile spanning full input width
-- Input cell dividers: 1dp `colorOutline` hairline (right and bottom of each cell).
+- Closed row (all players ≥3 marks): entire row at 38% opacity, `surfaceContainerHighest` tint; input buttons disabled
+- Active player column header: `primary` score; subtle left border or background to indicate active
+- Dart indicator chip (thrown): `surfaceContainerLow` background, `outlineVariant` at 20% opacity border, segment label
+- Dart indicator chip (remaining): outline circle `○`, `outlineVariant` at 20% opacity
+- MISS cell: `surfaceContainerLow` background, `onSurface` text — flat tile, no border
+- UNDO cell: `surfaceContainerLow` background, `onSurface` text — disabled at 38% opacity when no darts thrown
+- SB / DB cells: `surfaceContainerLow` background, `onSurface` text — flat tile, no explicit border
+- NEXT PLAYER cell: `surfaceContainerLow` background, `onSurface` text — flat tile spanning full input width
+- Input cell dividers: tonal background shifts between cell types — no 1dp hairline.
 
 ### Special Notes
 - **Dart indicator** sits between AppBar and the table. Shows segment label (e.g. "T20", "SB", "19") for thrown darts; outline circle for remaining slots.
 - **Header row** shows each player's current score (top) and name (bottom, ALL CAPS). MISS spans 2 input columns and UNDO spans 1 input column in this row; both are flat tiles matching the number cell style.
-- **Target rows** each contain: marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell dividers are 1dp `colorOutline` hairlines.
+- **Target rows** each contain: marks-per-player columns (flexible) | 3 flush input cells (equal width, together occupying fixed space so each cell ≥ 48dp wide). The 3 input cells share the same row height as the rest of the row (minimum 56dp). Individual input cells have `radiusNone`; they are not wrapped in their own card. Cell separation is expressed through tonal background differences — no 1dp hairlines.
 - **All-closed rows**: when every player has ≥3 marks on a number, the row is visually dimmed. Input buttons are disabled — the number is out of play.
 - **Bull row**: no triple. SB and DB each span 1.5 columns of the input area.
 - **Advance button**: placed as a page-level bottom bar (pinned, always visible) below the table. It must not be inside the scrollable table — it is a `SafeArea`-wrapped fixed-height (48dp) bar at the bottom of the screen. Label is "NEXT PLAYER" in multiplayer (≥2 players) and "NEXT ROUND" in single-player mode.
@@ -471,13 +471,13 @@ There are 5 practice game types. All share a common chrome layout described here
 │                                 │
 │  DartboardHighlightWidget       │  ← Expanded, fills remaining height
 │  current target highlighted in  │
-│  colorPrimary; all others at    │
+│  primary; all others at    │
 │  35% opacity                    │
 │                                 │
 ├─────────────────────────────────┤
 │  PracticeTargetDisplayWidget    │
-│  Large target label (48sp)      │  ← textScoreMedium Oswald, colorPrimary
-│  Secondary metric               │  ← textBodyMedium, colorOnSurfaceVariant
+│  Large target label (48sp)      │  ← textScoreMedium Space Grotesk Bold, primary
+│  Secondary metric               │  ← textBodyMedium, onSurfaceVariant
 ├─────────────────────────────────┤
 │  PracticeInputButtonsWidget     │  ← varies per game type (see subsections)
 ├─────────────────────────────────┤
@@ -487,25 +487,25 @@ There are 5 practice game types. All share a common chrome layout described here
 ```
 
 ### Shared Typography
-- AppBar title line 1: `textHeadingSmall`, `colorOnBackground` — game name
-- AppBar title line 2: `textBodySmall`, `colorOnSurfaceVariant` — progress subtitle
-- Dart indicator chip label: `textBodyMedium`, `colorOnSurface`; round sum: `textHeadingSmall`, `colorPrimary`
-- Target label: `textScoreMedium` (48sp Oswald Bold), `colorPrimary`
-- Secondary metric: `textBodyMedium`, `colorOnSurfaceVariant`
+- AppBar title line 1: `textHeadingSmall`, `onSurface` — game name
+- AppBar title line 2: `textBodySmall`, `onSurfaceVariant` — progress subtitle
+- Dart indicator chip label: `textBodyMedium`, `onSurface`; round sum: `textHeadingSmall`, `primary`
+- Target label: `textScoreMedium` (48sp Space Grotesk Bold), `primary`
+- Secondary metric: `textBodyMedium`, `onSurfaceVariant`
 - Bottom-bar action button: `textLabelLarge`
 - Undo button: `textLabelLarge`; disabled at 38% opacity
 
 ### Shared Color Usage
-- Dart indicator chip (thrown): `colorSurface` background, `colorOutline` border
-- Dart indicator chip (remaining): outline circle, `colorOutline`
-- DartboardHighlightWidget highlighted segment: `colorPrimary`
-- DartboardHighlightWidget non-highlighted segments: `colorOnSurface` at 35% opacity
-- Bottom-bar primary action: `colorPrimary` filled button
-- MISS button: `colorSurface` background, `colorOutline` border
-- Undo button: icon/text in `colorOnSurface`; disabled at 38% opacity
+- Dart indicator chip (thrown): `surfaceContainerLow` background, `outlineVariant` at 20% opacity border
+- Dart indicator chip (remaining): outline circle, `outlineVariant` at 20% opacity
+- DartboardHighlightWidget highlighted segment: `primary`
+- DartboardHighlightWidget non-highlighted segments: `onSurface` at 35% opacity
+- Bottom-bar primary action: `primary` filled button
+- MISS button: `surfaceContainerLow` background, `outlineVariant` at 20% opacity border
+- Undo button: icon/text in `onSurface`; disabled at 38% opacity
 
 ### Shared Special Notes
-- **Dart indicator row** sits between AppBar and the dartboard/content area. It functions identically to X01 and Cricket: Round sum on the left (bold, `colorPrimary`), then up to 3 chips — thrown darts show the segment label (e.g. "T20", "SB", "14"), remaining slots show an empty outline circle. Sum increments as darts land.
+- **Dart indicator row** sits between AppBar and the dartboard/content area. It functions identically to X01 and Cricket: Round sum on the left (bold, `primary`), then up to 3 chips — thrown darts show the segment label (e.g. "T20", "SB", "14"), remaining slots show an empty outline circle. Sum increments as darts land.
 - The nav bar is hidden on this screen (full-screen practice mode).
 - `NEXT ROUND` in the bottom bar is enabled only when `dartsThrownInTurn == 3` (i.e. all 3 darts of the current turn have been registered).
 - `MISS` in the bottom bar is always enabled (records a missed dart without leaving the input grid).
@@ -521,19 +521,19 @@ There are 5 practice game types. All share a common chrome layout described here
 - Large: current target number (1–20)
 - Secondary: "Number N of 20"
 
-**Dartboard:** Full board shown; current number's entire wedge highlighted in `colorPrimary`. In `doublesOnly` variant, only the double ring of the current number is highlighted; the single and triple rings for that number are shown at 60% opacity.
+**Dartboard:** Full board shown; current number's entire wedge highlighted in `primary`. In `doublesOnly` variant, only the double ring of the current number is highlighted; the single and triple rings for that number are shown at 60% opacity.
 
 **Input bar — 3-cell contiguous row:**
 
-A single-row flush tile grid of 3 equal-width cells spanning the full screen width (edge-to-edge, no horizontal margin — visually distinct from content cards above it). Parent container: `radiusNone` (flat bar). Minimum cell height: 56dp. Cells separated by 1dp `colorOutline` vertical hairlines.
+A single-row flush tile grid of 3 equal-width cells spanning the full screen width (edge-to-edge, no horizontal margin — visually distinct from content cards above it). Parent container: `radiusNone` (flat bar). Minimum cell height: 56dp. Cells have no explicit border — tonal background differences between cell types provide separation.
 
 ```
 │ S-N │ D-N │ T-N │
 ```
 
-- S-N: `colorSurface` background, `colorOnSurface` text, no dots.
-- D-N: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators.
-- T-N: `colorPrimary` background, `colorOnPrimary` text, 3 × 4dp dot indicators.
+- S-N: `surfaceContainerLow` background, `onSurface` text, no dots.
+- D-N: `primaryContainer` background, `onPrimaryFixed` text, 2 × 4dp dot indicators.
+- T-N: `primary` background, `onPrimary` text, 3 × 4dp dot indicators.
 
 In `doublesOnly` variant, `S-N` and `T-N` are visually dimmed: foreground at 38% opacity. Background remains full opacity. Cells stay tappable; the engine will not advance the target on a hit (only the double registers a hit and advances the target). The bottom bar provides the MISS button.
 
@@ -561,7 +561,7 @@ A single full-width button spanning the screen width (edge-to-edge). Parent cont
 │ [ Double {N} ] │
 ```
 
-- Button: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators. Label: "Double {N}" (or "Double Bull" for Round 21).
+- Button: `primaryContainer` background, `onPrimaryFixed` text, 2 × 4dp dot indicators. Label: "Double {N}" (or "Double Bull" for Round 21).
 - Tapping records a **Hit** (+2 × N points, or +50 for Bull).
 - To record a **Miss**, use the MISS button in the bottom bar.
 
@@ -597,7 +597,7 @@ A single full-width button spanning the screen width (edge-to-edge). Parent cont
 [ 10 ][  9 ][  8 ][  7 ][  6 ][  5 ][  4 ][  3 ][  2 ][  1 ]  ← row 6 (triples, ···)
 ```
 
-The full 7-row segment grid in this game type follows the identical contiguous-tile spec as the X01 Board (Section 5). All geometry, hairline dividers, color tokens, dot indicators, and semantic labels are the same. Refer to Section 5.
+The full 7-row segment grid in this game type follows the identical contiguous-tile spec as the X01 Board (Section 5). All geometry, color tokens, dot indicators, tonal tier separation, and semantic labels are the same. Refer to Section 5.
 
 > **Note:** this full-grid layout is the intended design using the contiguous tile spec (Section 5). The current 4-button `PracticeInputButtonsWidget` is a placeholder and must be replaced.
 
@@ -624,25 +624,25 @@ The full 7-row segment grid in this game type follows the identical contiguous-t
 - Large: current round number (e.g. "3")
 - Secondary: "Score: {score} | Round N/{total}"
 
-**Dartboard:** Full board; current round number's entire wedge highlighted in `colorPrimary`.
+**Dartboard:** Full board; current round number's entire wedge highlighted in `primary`.
 
 **Input bar — 3-cell contiguous row:**
 
-A single-row flush tile grid of 3 equal-width cells spanning the full screen width (edge-to-edge, no horizontal margin). Parent container: `radiusNone` (flat bar). Minimum cell height: 56dp. Cells separated by 1dp `colorOutline` vertical hairlines.
+A single-row flush tile grid of 3 equal-width cells spanning the full screen width (edge-to-edge, no horizontal margin). Parent container: `radiusNone` (flat bar). Minimum cell height: 56dp. Cells have no explicit border — tonal background differences between cell types provide separation.
 
 ```
 │ S-N │ D-N │ T-N │
 ```
 
-- S-N: `colorSurface` background, `colorOnSurface` text, no dots.
-- D-N: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text, 2 × 4dp dot indicators.
-- T-N: `colorPrimary` background, `colorOnPrimary` text, 3 × 4dp dot indicators.
+- S-N: `surfaceContainerLow` background, `onSurface` text, no dots.
+- D-N: `primaryContainer` background, `onPrimaryFixed` text, 2 × 4dp dot indicators.
+- T-N: `primary` background, `onPrimary` text, 3 × 4dp dot indicators.
 
 Only the current round number is shown (N = current round). MISS is in the bottom bar.
 
 **Bottom bar right action:** `NEXT ROUND` — enabled only when `dartsThrownInTurn == 3`.
 
-**Shanghai (Instant Win):** if S-N, D-N, and T-N are all hit in the same turn (in any order), the game is an **INSTANT WIN**. A "SHANGHAI!" banner flashes briefly (300ms scale-in, 1s visible) before showing the Game Summary modal (Winner state). Banner color: `colorPrimary` text on `colorPrimaryContainer` background.
+**Shanghai (Instant Win):** if S-N, D-N, and T-N are all hit in the same turn (in any order), the game is an **INSTANT WIN**. A "SHANGHAI!" banner flashes briefly (300ms scale-in, 1s visible) before showing the Game Summary modal (Winner state). Banner color: `primary` text on `primaryContainer` background.
 
 **Completion:** Game ends when (a) the final round is completed, OR (b) a Shanghai is hit. Show a summary modal with total score and "Game Won" status if applicable.
 
@@ -670,12 +670,12 @@ Only the current round number is shown (N = current round). MISS is in the botto
 ### Typography
 - AppBar title: `textHeadingMedium`
 - Player name: `textPlayerName` (ALL CAPS)
-- Stat subtitle: `textBodySmall`, `colorOnSurfaceVariant`
+- Stat subtitle: `textBodySmall`, `onSurfaceVariant`
 
 ### Color Usage
-- Player row: `colorSurface` background, `colorOutline` divider
-- Avatar background: `colorSecondaryContainer`; initials: `colorOnSecondaryContainer`
-- [+] FAB / AppBar icon: `colorPrimary`
+- Player row: `surfaceContainerLow` background
+- Avatar background: `surfaceContainerHighest`; initials: `onSurface`
+- [+] FAB / AppBar icon: `primary`
 
 ### Special Notes
 - Each row is minimum 64dp tall.
@@ -711,15 +711,15 @@ Only the current round number is shown (N = current round). MISS is in the botto
 ```
 
 ### Typography
-- Player name: `textDisplayLarge` (32sp DM Sans SemiBold) — rendered as inline editable field
-- Stat card value: `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
-- Stat card label: `textLabelMedium`, `colorOnSurfaceVariant`
+- Player name: `textDisplayLarge` (32sp Space Grotesk Bold) — rendered as inline editable field
+- Stat card value: `textScoreSmall` (36sp Space Grotesk Bold), `primary`
+- Stat card label: `textLabelMedium`, `onSurfaceVariant`
 
 ### Color Usage
-- Hero avatar: 80dp circular, `colorSecondaryContainer` background
-- Stat cards: `colorSurface`, `radiusMedium`, elevation 1
+- Hero avatar: 80dp circular, `surfaceContainerHighest` background
+- Stat cards: `surfaceContainerLow`, `radiusNone`, ambient shadow only
 - Delete icon (🗑): `colorError` tint
-- "VIEW STATISTICS" button: `colorPrimary` filled
+- "VIEW STATISTICS" button: `primary` filled
 
 ### Special Notes
 - **Remove "Member since"** — not shown.
@@ -751,14 +751,14 @@ Only the current round number is shown (N = current round). MISS is in the botto
 
 ### Typography
 - AppBar title: `textHeadingMedium`
-- Name field label: `textBodyMedium`, `colorOnSurfaceVariant`
+- Name field label: `textBodyMedium`, `onSurfaceVariant`
 - Name field input: `textBodyLarge`
 - Button: `textLabelLarge`
 
 ### Color Usage
-- Input border focused: `colorPrimary`
-- Input border unfocused: `colorOutlineVariant`
-- Avatar preview: `colorSecondaryContainer` background, initials update as user types
+- Input focused: 2dp bottom-bar in `primary`, expands from center on focus (per DESIGN_SYSTEM §6.2)
+- Input unfocused: no visible border — tonal background (`surfaceContainerLow`) only
+- Avatar preview: `surfaceContainerHighest` background, initials update as user types
 
 ### Special Notes
 - "CREATE PLAYER" button disabled until name is non-empty and unique.
@@ -830,25 +830,25 @@ Per-player statistics page with in-page navigation across game types. Reached fr
 
 ### Game-Type Tab Bar
 - Tabs: **X01**, **Cricket**, **Practice**, **Others**
-- Tab indicator: `colorPrimary` underline, 2dp
-- Active tab label: `colorPrimary`, `textLabelLarge`
-- Inactive tab label: `colorOnSurfaceVariant`, `textLabelLarge`
+- Tab indicator: `primary` underline, 2dp
+- Active tab label: `primary`, `textLabelLarge`
+- Inactive tab label: `onSurfaceVariant`, `textLabelLarge`
 - Practice tab: Around the Clock variant is fully specified (see Practice Tab section below). All other practice variants show a "coming soon" placeholder.
 - Others tab shows a "coming soon" placeholder (same desaturated treatment as Home coming-soon cards) at this stage.
 
 ### Summary Cards Row
-- 3 cards in a single horizontal row, equal width, `colorSurface`, `radiusMedium`, elevation 1
+- 3 cards in a single horizontal row, equal width, `surfaceContainerLow`, `radiusNone`, ambient shadow only
 - **X01 cards:** Legs Played | Legs Won | Solo Games
   - "Solo Games" = number of distinct completed games (not legs — legs are sub-units of a game)
-- Card value: `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
-- Card label: `textLabelMedium`, `colorOnSurfaceVariant`
+- Card value: `textScoreSmall` (36sp Space Grotesk Bold), `primary`
+- Card label: `textLabelMedium`, `onSurfaceVariant`
 
 ### Variant Selector (X01 tab only)
 - Horizontal scrollable chip row below the summary cards
 - First chip: **"All X01"** (default selected)
 - Additional chips: one per distinct starting score seen in the player's data (e.g. **"501"**, **"301"**)
-- Selected chip: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text
-- Unselected chip: `colorSurfaceVariant` background, `colorOnSurfaceVariant` text
+- Selected chip: `primaryContainer` background, `onPrimaryFixed` text
+- Unselected chip: `surfaceContainerHighest` background, `onSurfaceVariant` text
 - Variant selection filters both the trend chart and the detail table
 - Hidden on tabs without variants (Cricket, Others)
 - **Practice tab has its own variant selector** — see Practice Tab section below
@@ -857,20 +857,20 @@ Per-player statistics page with in-page navigation across game types. Reached fr
 - `SegmentedButton` with 3 options: **Last 10**, **Last 100**, **All**
 - Default: **All**
 - Applies to both the trend chart and the detail table
-- `colorPrimary` selected segment fill
+- `primary` selected segment fill
 
 ### Trend Chart
 - Full-width line chart, minimum 160dp height
 - X axis: game/leg index (oldest → newest, left → right)
 - Y axis: PPR value; auto-scales to data range with a comfortable margin
-- Line color: `colorPrimary`; filled area below line: `colorPrimaryContainer` at 30% opacity
-- Chart background: `colorSurface`, `radiusMedium`
-- **Overlay toggle chip** below chart: "Checkout %" — when toggled on, a second line in `colorSecondary` is overlaid. The Y axis remains the same scale (CO% is rendered as a 0–100 value on the same axis; its secondary line label clarifies the scale)
+- Line color: `primary`; filled area below line: `primaryContainer` at 30% opacity
+- Chart background: `surfaceContainerLow`, `radiusNone`
+- **Overlay toggle chip** below chart: "Checkout %" — when toggled on, a second line in `primaryFixedDim` is overlaid. The Y axis remains the same scale (CO% is rendered as a 0–100 value on the same axis; its secondary line label clarifies the scale)
 - Tapping a data point shows a tooltip: PPR value (and CO% if overlay active) + game date
-- Empty state (fewer than 2 data points): centered "Not enough data yet" text, `textBodyMedium`, `colorOnSurfaceVariant`
+- Empty state (fewer than 2 data points): left-aligned "Not enough data yet" text, `textBodyMedium`, `onSurfaceVariant`
 
 ### Detail Table
-- Two-column table: **Metric** (left, `textBodyMedium`, `colorOnBackground`) | **Value** (right, `textBodyMedium`, `colorPrimary`)
+- Two-column table: **Metric** (left, `textBodyMedium`, `onSurface`) | **Value** (right, `textBodyMedium`, `primary`)
 - Rows (in order):
 
 | Metric | Notes |
@@ -885,7 +885,7 @@ Per-player statistics page with in-page navigation across game types. Reached fr
 | 140+ (total / per leg) | Turns scoring 140–179 |
 | 180 (total / per leg) | Perfect turns |
 
-- Alternating row tint: even rows `colorSurface`, odd rows `colorBackground`
+- Alternating row tint: even rows `surfaceContainerLow`, odd rows `surface`
 - "total / per leg" cells render as `"42 / 1.2"` inline
 - Table scrolls as part of the overall page — it is not independently scrollable
 
@@ -893,19 +893,19 @@ Per-player statistics page with in-page navigation across game types. Reached fr
 
 #### Summary Cards Row
 - Same 3-card layout as X01: **Legs Played | Legs Won | Solo Games**
-- Card value: `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
-- Card label: `textLabelMedium`, `colorOnSurfaceVariant`
+- Card value: `textScoreSmall` (36sp Space Grotesk Bold), `primary`
+- Card label: `textLabelMedium`, `onSurfaceVariant`
 
 #### Variant Selector (Cricket tab)
 - Horizontal scrollable chip row below the summary cards
 - Chips: **All Cricket** (default), **Standard**, **No Score**, **Cut Throat**, **Tactics**
-- Selected chip: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text
-- Unselected chip: `colorSurfaceVariant` background, `colorOnSurfaceVariant` text
+- Selected chip: `primaryContainer` background, `onPrimaryFixed` text
+- Unselected chip: `surfaceContainerHighest` background, `onSurfaceVariant` text
 - Filters both the trend chart and the detail table
 
 #### Trend Chart
 - Same visual spec as X01 PPR chart, but Y-axis plots **MPT** (Marks Per Turn)
-- Line color: `colorPrimary`; fill: `colorPrimaryContainer` at 30% opacity
+- Line color: `primary`; fill: `primaryContainer` at 30% opacity
 - Tooltip: MPT value + game date
 - Empty state: "Not enough data yet" (fewer than 2 data points)
 - No overlay toggle (no second metric for cricket)
@@ -913,11 +913,11 @@ Per-player statistics page with in-page navigation across game types. Reached fr
 #### Detail Table (3-column layout — AVERAGE | BEST)
 
 Column layout (same as X01):
-- Label column: `Expanded`, `textBodyMedium`, `colorOnSurface`
-- Col 1 (average/total): fixed 80px, `textBodyMedium`, `colorPrimary`, right-aligned
-- Col 2 (best/per-leg): fixed 80px, `textBodyMedium`, `colorSecondary`, right-aligned
-- Header row: `textLabelSmall`, `colorOnSurfaceVariant`, `letterSpacing: 0.8`
-- Alternating row tint: even rows `colorSurface`, odd rows `scaffoldBackground`
+- Label column: `Expanded`, `textBodyMedium`, `onSurface`
+- Col 1 (average/total): fixed 80px, `textBodyMedium`, `primary`, right-aligned
+- Col 2 (best/per-leg): fixed 80px, `textBodyMedium`, `primaryFixedDim`, right-aligned
+- Header row: `textLabelSmall`, `onSurfaceVariant`, `letterSpacing: 0.8`
+- Alternating row tint: even rows `surfaceContainerLow`, odd rows `surface`
 
 Rows:
 
@@ -938,26 +938,26 @@ Metric field sources in `PlayerStats`:
 
 ### Typography
 - AppBar title: `textHeadingMedium`
-- Summary card value: `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
-- Summary card label: `textLabelMedium`, `colorOnSurfaceVariant`
-- Table metric label: `textBodyMedium`, `colorOnBackground`
-- Table value: `textBodyMedium`, `colorPrimary`
-- Section dividers (if added): `textLabelSmall`, `colorOnSurfaceVariant`, ALL CAPS
+- Summary card value: `textScoreSmall` (36sp Space Grotesk Bold), `primary`
+- Summary card label: `textLabelMedium`, `onSurfaceVariant`
+- Table metric label: `textBodyMedium`, `onSurface`
+- Table value: `textBodyMedium`, `primary`
+- Section dividers (if added): `textLabelSmall`, `onSurfaceVariant`, ALL CAPS
 
 ### Color Usage
-- Summary cards: `colorSurface`, `radiusMedium`, elevation 1
-- Chart line: `colorPrimary`; chart area fill: `colorPrimaryContainer` 30% opacity
-- Checkout % overlay line: `colorSecondary`
-- Variant chips (selected): `colorPrimaryContainer` / `colorOnPrimaryContainer`
-- Variant chips (unselected): `colorSurfaceVariant` / `colorOnSurfaceVariant`
-- Time range selected segment: `colorPrimary` fill
-- Table alternating rows: `colorSurface` / `colorBackground`
-- Coming-soon tab placeholder: `colorSurfaceVariant` background, `colorOnSurfaceVariant` text + icon, `opacity: 0.6`
+- Summary cards: `surfaceContainerLow`, `radiusNone`, ambient shadow only
+- Chart line: `primary`; chart area fill: `primaryContainer` 30% opacity
+- Checkout % overlay line: `primaryFixedDim`
+- Variant chips (selected): `primaryContainer` / `onPrimaryFixed`
+- Variant chips (unselected): `surfaceContainerHighest` / `onSurfaceVariant`
+- Time range selected segment: `primary` fill
+- Table alternating rows: `surfaceContainerLow` / `surface`
+- Coming-soon tab placeholder: `surfaceContainerHighest` background, `onSurfaceVariant` text + icon, `opacity: 0.6`
 
 ### Special Notes
 - **Cricket tab is implemented** — see Cricket Tab section below.
 - **Practice tab — Around the Clock** is fully specified — see Practice Tab section below. All other practice variants remain stubbed.
-- **Others tab is stubbed:** shows a centred "Stats for [game type] coming soon" placeholder. No summary cards, no chart, no table.
+- **Others tab is stubbed:** shows a left-aligned "Stats for [game type] coming soon" placeholder. No summary cards, no chart, no table.
 - **Variant selector** appears on the X01 tab, the Cricket tab, and the Practice tab. Hidden on the Others tab.
 - **Time range** applies across the entire tab (chart + table). Switching range recomputes all displayed metrics.
 - **No leaderboard** on this page. Strictly per-player, per-game-type stats.
@@ -970,17 +970,17 @@ Metric field sources in `PlayerStats`:
 
 - Horizontal scrollable chip row below the summary cards (same chip-row pattern as X01/Cricket)
 - Chips (in order): **All Practice** (default selected), **Around the Clock**, **Bob's 27**, **Catch-40**, **Checkout Practice**, **Shanghai**
-- Selected chip: `colorPrimaryContainer` background, `colorOnPrimaryContainer` text
-- Unselected chip: `colorSurfaceVariant` background, `colorOnSurfaceVariant` text
+- Selected chip: `primaryContainer` background, `onPrimaryFixed` text
+- Unselected chip: `surfaceContainerHighest` background, `onSurfaceVariant` text
 - Hidden when the player has no practice data at all
 - Selecting a chip filters the view to that practice variant only
 
 #### Practice Tab — Non-ATC Variants (Stubbed)
 
 All variants except **Around the Clock** show the coming-soon placeholder:
-- Centred `"Stats for [variant name] coming soon"` text
-- `textBodyMedium`, `colorOnSurfaceVariant`, `opacity: 0.6`
-- `colorSurfaceVariant` background card, `radiusMedium`
+- Left-aligned `"Stats for [variant name] coming soon"` text
+- `textBodyMedium`, `onSurfaceVariant`, `opacity: 0.6`
+- `surfaceContainerHighest` background card, `radiusNone`
 
 #### Practice Tab — Around the Clock Stats View
 
@@ -1025,14 +1025,14 @@ Shown when **Around the Clock** chip is selected (or when **All Practice** is se
 
 - Full circular dartboard rendered at normal opacity using the same read-only dartboard component used elsewhere in the app (all interactive tap zones disabled)
 - Each numbered wedge (1–20) shows its hit rate percentage at the **outer tip** of the wedge, just outside the board boundary
-  - Text style: `textLabelSmall` (11sp DM Sans Medium), `colorOnBackground`
+  - Text style: `textLabelSmall` (11sp Inter Regular), `onSurface`
   - Format: `"72%"` (no decimal places)
   - Segments with 0 attempts: render `"—"` instead of a percentage
-- **Bull position:** hit rate shown as a centred label overlaid inside the bull circle
+- **Bull position:** hit rate shown as a centered label overlaid inside the bull circle (exception: concentric circular element — center-alignment is geometric, not editorial)
   - Format: `"DB 72%"` (prefix `"DB"` identifies the doubles bull / bullseye)
   - Covers inner bull (bullseye, 50-point ring) hit rate only
-  - Text style: `textLabelSmall`, `colorOnBackground`
-- **Segment colours are not changed** — the dartboard uses standard alternating black/white wedge colours; hit rate labels use `colorOnBackground` regardless of rate
+  - Text style: `textLabelSmall`, `onSurface`
+- **Segment colours are not changed** — the dartboard uses standard alternating black/white wedge colours; hit rate labels use `onSurface` regardless of rate
 - In `doublesOnly` variant: only `D1`–`D20` and `DB` are tracked; single and triple ring labels show `"—"`
 - Hit rate percentages on the board update when the time range selection changes
 
@@ -1040,29 +1040,29 @@ Shown when **Around the Clock** chip is selected (or when **All Practice** is se
 
 ##### Summary Column (1/5 width)
 
-Single-column card (`colorSurface`, `radiusMedium`, elevation 1) divided into three sections separated by `colorOutline` hairlines.
+Single-column card (`surfaceContainerLow`, `radiusNone`, ambient shadow only) divided into three sections separated by `spacing.8` (1.75rem) vertical padding — no hairlines.
 
 **Section 1 — Overall Hit Rate**
-- Header label: `"OVERALL"`, `textLabelSmall`, `colorOnSurfaceVariant`, ALL CAPS
-- Value: overall hit rate as `"72%"`, `textScoreSmall` (36sp Oswald Bold), `colorPrimary`
+- Header label: `"OVERALL"`, `textLabelSmall`, `onSurfaceVariant`, ALL CAPS
+- Value: overall hit rate as `"72%"`, `textScoreSmall` (36sp Space Grotesk Bold), `primary`
 - Definition: total targets hit ÷ total darts thrown across all numbers in the selected range
 
 **Section 2 — Best 3**
-- Header: `"BEST"`, `textLabelSmall`, `colorOnSurfaceVariant`, ALL CAPS
+- Header: `"BEST"`, `textLabelSmall`, `onSurfaceVariant`, ALL CAPS
 - 3 rows, sorted by hit rate descending; ties broken by segment number ascending
 - Only segments with ≥ 1 attempt are eligible
 - Each row:
-  - Segment label (e.g. `"20"`, `"Bull"`): `textBodyMedium`, `colorSuccess` (`Colors.green.shade700` light / `Colors.green.shade400` dark; define token `colorSuccess` in `DESIGN_SYSTEM.md` if not already present)
-  - Hit rate: e.g. `"94%"`, `textBodyMedium`, `colorOnBackground`
+  - Segment label (e.g. `"20"`, `"Bull"`): `textBodyMedium`, `primary` (`#006C46` — dark green signals positive/success)
+  - Hit rate: e.g. `"94%"`, `textBodyMedium`, `onSurface`
   - Layout: segment label left-aligned, hit rate right-aligned within column width
 
 **Section 3 — Weakest 3**
-- Header: `"WEAKEST"`, `textLabelSmall`, `colorOnSurfaceVariant`, ALL CAPS
+- Header: `"WEAKEST"`, `textLabelSmall`, `onSurfaceVariant`, ALL CAPS
 - 3 rows, sorted by hit rate ascending; ties broken by segment number ascending
 - Only segments with ≥ 1 attempt are eligible
 - Each row:
-  - Segment label: `textBodyMedium`, `colorError` (token `colorError`: `#B00020` light / `#CF6679` dark — distinct from `colorPrimary`)
-  - Hit rate: e.g. `"41%"`, `textBodyMedium`, `colorOnBackground`
+  - Segment label: `textBodyMedium`, `colorError` (`#D32F2F`)
+  - Hit rate: e.g. `"41%"`, `textBodyMedium`, `onSurface`
   - Layout: segment label left-aligned, hit rate right-aligned
 
 **Segment label mapping for the summary column:**
@@ -1076,7 +1076,7 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 **Edge cases:**
 - Fewer than 3 attempted segments: show only the available rows (no placeholder dashes)
-- No data at all: show `"—"` for the Overall value; Best and Weakest sections show `"No data yet"` in `textBodySmall`, `colorOnSurfaceVariant`
+- No data at all: show `"—"` for the Overall value; Best and Weakest sections show `"No data yet"` in `textBodySmall`, `onSurfaceVariant`
 
 ---
 
@@ -1084,12 +1084,12 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 | Element | Style token | Color token |
 |---|---|---|
-| Hit rate label on dartboard wedge | `textLabelSmall` | `colorOnBackground` |
-| Overall hit rate value | `textScoreSmall` | `colorPrimary` |
-| Section headers (OVERALL / BEST / WEAKEST) | `textLabelSmall` | `colorOnSurfaceVariant` |
-| Segment label — Best rows | `textBodyMedium` | `colorSuccess` |
+| Hit rate label on dartboard wedge | `textLabelSmall` | `onSurface` |
+| Overall hit rate value | `textScoreSmall` | `primary` |
+| Section headers (OVERALL / BEST / WEAKEST) | `textLabelSmall` | `onSurfaceVariant` |
+| Segment label — Best rows | `textBodyMedium` | `primary` |
 | Segment label — Weakest rows | `textBodyMedium` | `colorError` |
-| Hit rate value in Best/Weakest rows | `textBodyMedium` | `colorOnBackground` |
+| Hit rate value in Best/Weakest rows | `textBodyMedium` | `onSurface` |
 
 ---
 
@@ -1127,14 +1127,14 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 ### Typography
 - Winner name: `textDisplayLarge` (32sp), `colorWin`
-- "WINNER" badge: `textLabelLarge`, `colorOnPrimary` on `colorWin` chip
-- Stat label: `textBodySmall`, `colorOnSurfaceVariant`
-- Stat value: `textHeadingMedium` (20sp DM Sans SemiBold)
+- "WINNER" badge: `textLabelLarge`, `onPrimary` on `colorWin` chip
+- Stat label: `textBodySmall`, `onSurfaceVariant`
+- Stat value: `textHeadingMedium` (20sp Inter SemiBold)
 
 ### Color Usage
-- Winner card: `colorWinContainer` background, 2dp `colorWin` border
-- Loser card: `colorSurface`
-- "PLAY AGAIN": `colorPrimary` filled
+- Winner card: `colorWinContainer` background, 4dp `colorWin` left accent bar (semantic exception — same pattern as active player panel; not a divider)
+- Loser card: `surfaceContainerLow`
+- "PLAY AGAIN": `primary` filled
 - "DONE": outlined style
 
 ### Special Notes
@@ -1170,19 +1170,19 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 ### Typography
 - AppBar title: `textHeadingMedium`
 - Game type chip in card: `textLabelMedium`
-- Winner line: `textBodyLarge`, `colorOnBackground` — bold winner name
-- Metadata (date, dart count): `textBodySmall`, `colorOnSurfaceVariant`
+- Winner line: `textBodyLarge`, `onSurface` — bold winner name
+- Metadata (date, dart count): `textBodySmall`, `onSurfaceVariant`
 
 ### Color Usage
-- Filter chips: `colorPrimaryContainer` (active), `colorSurfaceVariant` (inactive)
-- Game card: `colorSurface`, `radiusMedium`, elevation 1
-- Game type label chip: `colorSecondaryContainer` background
+- Filter chips: `primaryContainer` (active), `surfaceContainerHighest` (inactive)
+- Game card: `surfaceContainerLow`, `radiusNone`, ambient shadow only
+- Game type label chip: `surfaceContainerHighest` background
 
 ### Special Notes
 - Navigated to from the Home page via the History card. Back button returns to Home.
-- Infinite scroll: `loadNextPage()` fires when within 200px of bottom. Loading indicator: `CircularProgressIndicator` in `colorPrimary` centered below last item.
+- Infinite scroll: `loadNextPage()` fires when within 200px of bottom. Loading indicator: `CircularProgressIndicator` in `primary` centered below last item.
 - Empty state: centered icon + "No completed games yet." text.
-- Shimmer skeleton placeholders on initial load (3 placeholder cards in `colorSurfaceVariant`).
+- Shimmer skeleton placeholders on initial load (3 placeholder cards in `surfaceContainerHighest`).
 
 ---
 
@@ -1213,14 +1213,14 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 ### Typography
 - Result header winner: `textHeadingLarge` (24sp), `colorWin`
-- Date: `textBodySmall`, `colorOnSurfaceVariant`
-- Stat values: `textScoreSmall` (36sp Oswald Bold), `colorOnBackground`
-- Leg table header: `textLabelMedium`, `colorOnSurfaceVariant`
+- Date: `textBodySmall`, `onSurfaceVariant`
+- Stat values: `textScoreSmall` (36sp Space Grotesk Bold), `onSurface`
+- Leg table header: `textLabelMedium`, `onSurfaceVariant`
 - Leg table rows: `textBodyMedium`
 
 ### Color Usage
-- Result header background: `colorSurface`
-- Winning player row in leg table: `colorPrimaryContainer` subtle tint
+- Result header background: `surfaceContainerLow`
+- Winning player row in leg table: `primaryContainer` at 20% opacity background tint
 
 ---
 
@@ -1245,13 +1245,13 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 ```
 
 ### Typography
-- Section headers: `textLabelMedium`, `colorOnSurfaceVariant`, ALL CAPS with `space2` (8dp) top + `space1` (4dp) bottom padding
-- Setting label: `textBodyLarge`, `colorOnBackground`
-- Setting description: `textBodySmall`, `colorOnSurfaceVariant`
+- Section headers: `textLabelMedium`, `onSurfaceVariant`, ALL CAPS with `space2` (8dp) top + `space1` (4dp) bottom padding
+- Setting label: `textBodyLarge`, `onSurface`
+- Setting description: `textBodySmall`, `onSurfaceVariant`
 
 ### Color Usage
-- Toggle active state: `colorPrimary` track
-- Toggle inactive: `colorOutlineVariant` track
+- Toggle active state: `primary` track
+- Toggle inactive: `outlineVariant` track
 - Section headers: no background, just typography treatment
 
 ### Special Notes
@@ -1267,8 +1267,8 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 | Context | Pattern |
 |---|---|
-| Full page initial load | Centered `CircularProgressIndicator` in `colorPrimary` on `colorBackground` |
-| List initial load | 3 shimmer skeleton cards in `colorSurfaceVariant`, `radiusMedium` |
+| Full page initial load | Centered `CircularProgressIndicator` in `primary` on `surface` |
+| List initial load | 3 shimmer skeleton cards in `surfaceContainerHighest`, `radiusNone` |
 | List pagination | Small `CircularProgressIndicator` centered below last item |
 | Button async action | Inline `SizedBox(20×20)` `CircularProgressIndicator(strokeWidth: 2)` replaces button text |
 
@@ -1276,25 +1276,25 @@ In `doublesOnly` variant, Best/Weakest rows show only the double segments that w
 
 | Context | Pattern |
 |---|---|
-| Full page error | Centered `error_outline` icon (48dp) + error message text + "Retry" `TextButton` in `colorPrimary` |
+| Full page error | Centered `error_outline` icon (48dp) + error message text + "Retry" `TextButton` in `primary` |
 | Snackbar (transient) | `colorErrorContainer` background, `colorOnErrorContainer` text, auto-dismiss 4s |
 | Validation error (inline) | Field border turns `colorError`; helper text below in `colorError`, `textBodySmall` |
 
 ### Empty States
 
 All empty states use:
-- Centered layout
-- Large icon (64dp) in `colorOnSurfaceVariant` at 60% opacity
-- Primary message: `textBodyLarge`, `colorOnBackground`
-- Secondary message / CTA: `textBodyMedium`, `colorOnSurfaceVariant`
-- When there is a creation CTA, use a `FilledButton` in `colorPrimary`
+- Left-aligned layout
+- Large icon (64dp) in `onSurfaceVariant` at 60% opacity
+- Primary message: `textBodyLarge`, `onSurface`
+- Secondary message / CTA: `textBodyMedium`, `onSurfaceVariant`
+- When there is a creation CTA, use a `FilledButton` in `primary`
 
 ### Dialogs
 
 All confirmation dialogs:
 - Title: `textHeadingSmall`
 - Body: `textBodyMedium`
-- Cancel button: `TextButton`, `colorOnBackground`
-- Confirm button: `FilledButton`, `colorPrimary` for neutral; `colorError` filled for destructive actions
-- Corner radius: `radiusMedium` (12dp)
+- Cancel button: `TextButton`, `onSurface`
+- Confirm button: `FilledButton`, `primary` for neutral; `colorError` filled for destructive actions
+- Corner radius: `radiusNone`
 - Minimum dialog width: `min(screen_width - 48dp, 320dp)`

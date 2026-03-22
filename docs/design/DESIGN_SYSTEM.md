@@ -38,10 +38,12 @@ The active player, current score, darts thrown this turn, and remaining outs are
 | `surfaceContainerLowest` | `#FFFFFF` | Pure white — "lifted" cards, dialogs (Level 2) |
 | `surfaceContainerHighest` | `#E2E2E2` | Pressed states, inactive chips, progress track |
 | `primary` | `#006C46` | Primary action text/icons (dark green for accessibility) |
+| `onPrimary` | `#FFFFFF` | Text/icons on `primary` backgrounds (in-game action fills, triple cells) — 10.4:1 contrast |
 | `primaryContainer` | `#00FFAB` | Brand neon — CTA button fills, active player accent |
-| `onPrimaryFixed` | `#002112` | Text on `primaryContainer` (neon fill) |
+| `onPrimaryFixed` | `#002112` | Text on `primaryContainer` (neon fill) — 8.9:1 contrast |
 | `primaryFixedDim` | `#00E297` | Hover / pressed state of `primaryContainer` |
 | `onSurface` | `#1A1C1C` | Primary body text and icons |
+| `onSurfaceVariant` | `#6B7070` | Secondary labels, metadata, placeholder text, inactive items — 4.6:1 on `surface` |
 | `outlineVariant` | `#B9CBBE` | Ghost borders at 20% opacity only — see No-Line Rule |
 | `colorError` | `#D32F2F` | Bust indicator, validation errors |
 | `colorOnError` | `#FFFFFF` | Text on error-colored backgrounds |
@@ -226,8 +228,17 @@ Base unit: **4dp**
 - Border-radius: 0dp
 - Padding: 14dp vertical, 24dp horizontal
 
+**Action Button** (in-game confirmatory actions — "NEXT ROUND", "NEXT PLAYER", "PLAY AGAIN")
+- Background: `primary` (`#006C46`)
+- Label: `onPrimary` (`#FFFFFF`) — `label-md`, ALL CAPS
+- Border-radius: 0dp
+- Padding: 14dp vertical, 24dp horizontal
+- No shadow
+- Use when the action advances game state (as opposed to launching/creating — those use Primary Button)
+
 **Hover / Pressed Interaction**
 - Primary: background shifts to `primaryFixedDim` (`#00E297`); element offsets **2px up and 2px right** ("kinetic" shift)
+- Action: background darkens by 8% (overlay at 8% opacity)
 - Secondary: border opacity increases to 60%
 - No scale transforms
 
@@ -283,6 +294,7 @@ Base unit: **4dp**
 - **No Center Alignment:** Use left-aligned "Editorial" layouts. Center-alignment feels like a template; asymmetrical left-alignment feels designed.
 - Don't use 1px opaque borders as dividers — ever.
 - Don't use `primaryContainer` (`#00FFAB`) as text color on white — it fails WCAG contrast. Always pair with `onPrimaryFixed` (`#002112`) on neon fills.
+- Don't use `onPrimaryFixed` (`#002112`) on `primary` (`#006C46`) backgrounds — near-black on dark green fails contrast. Use `onPrimary` (`#FFFFFF`) on all `primary`-filled surfaces.
 - Don't add drop shadows beyond the ambient shadow (`rgba(26,28,28,0.04)` at 4% opacity).
 - Don't mix Space Grotesk and Inter within the same UI element (e.g. a single label line).
 - Don't use `outlineVariant` at full (100%) opacity.
