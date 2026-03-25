@@ -32,7 +32,7 @@ class DartsApp extends ConsumerWidget {
       data: (_) {
         final router = ref.watch(routerProvider);
         final themeMode =
-            ref.watch(settingsProvider).value ?? ThemeMode.system;
+            ref.watch(settingsProvider).value ?? ThemeMode.light;
         return MaterialApp.router(
           title: 'Darts App',
           debugShowCheckedModeBanner: false,

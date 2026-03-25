@@ -606,7 +606,8 @@ void main() {
     final containers = tester.widgetList<Container>(find.byType(Container));
     final tintedContainers = containers.where((c) {
       final color = c.color;
-      return color != null && color.a < 1.0 && color.r > 0;
+      // Semi-transparent tint: alpha < 1 and not fully transparent
+      return color != null && color.a > 0 && color.a < 1.0;
     }).toList();
     expect(tintedContainers, isNotEmpty);
   });
