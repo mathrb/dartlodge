@@ -8,13 +8,11 @@ abstract final class AppTheme {
   // Shape tokens — use radiusNone (0) in Match Boards only.
   // Use radiusLarge / radiusXLarge / radiusFull for all Admin/Nav components.
   static const double radiusNone    = 0.0;
+  static const double radiusSmall   = 8.0;
+  static const double radiusMedium  = 12.0;
   static const double radiusLarge   = 16.0;
   static const double radiusXLarge  = 24.0;
   static const double radiusFull    = 9999.0;
-
-  // Deprecated — alias to radiusLarge until remaining call sites are migrated.
-  @Deprecated('Use radiusLarge')
-  static const double radiusMedium  = radiusLarge;
 
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark()  => _build(Brightness.dark);

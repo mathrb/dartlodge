@@ -4,14 +4,18 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:my_darts/app/app_router.dart';
 import 'package:my_darts/core/persistence/database_provider.dart';
+import 'package:my_darts/core/utils/app_colors.dart';
 import 'package:my_darts/core/utils/app_spacing.dart';
+import 'package:my_darts/core/utils/app_theme.dart';
 import 'package:my_darts/core/utils/constants.dart';
+import 'package:my_darts/core/widgets/app_header.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/pages/game_config_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
+import 'package:my_darts/features/statistics/presentation/providers/statistics_provider.dart';
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
@@ -26,8 +30,8 @@ String _configSummaryFor(GameConfig config) {
   return config.maybeMap(
     x01: (c) {
       final legs = c.legsToWin;
-      final legLabel = legs == 1 ? '1 Leg' : 'Best of $legs';
-      return '${c.startingScore} · ${_outStrategyLabel(c.outStrategy)} Out · $legLabel';
+      final roundsLabel = '$legs Round${legs == 1 ? '' : 's'}';
+      return '${c.startingScore} · ${_outStrategyLabel(c.outStrategy)} Out · $roundsLabel';
     },
     cricket: (c) => '${c.variant} · ${c.pointsToWin} pts',
     aroundTheClock: (_) => 'Around the Clock',
@@ -82,6 +86,8 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
       );
     });
 
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final setupState = ref.watch(gameSetupProvider);
     final notifier = ref.read(gameSetupProvider.notifier);
 
@@ -106,82 +112,155 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     final playersAsync = ref.watch(allPlayersProvider);
     final players = playersAsync.value ?? <Player>[];
 
-    String nameFor(String id) =>
-        players.firstWhere((p) => p.playerId == id, orElse: () {
-          return Player(
-            playerId: id,
-            name: id,
-            createdAt: DateTime.now(),
-            lastActive: DateTime.now(),
-          );
-        }).name;
-
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: AppBar(title: const Text('Players')),
-      body: Column(
-        children: [
-          // Config summary chip
-          if (config != null)
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+              child: AppHeader(
+                showBack: true,
+                onBack: () => context.pop(),
+                trailing: IconButton(
+                  icon: Icon(
+                    Icons.settings,
+                    color: cs.onSurface,
+                    semanticLabel: 'Settings',
+                  ),
+                  tooltip: 'Settings',
+                  onPressed: () => context.go(GameRoutes.settings),
+                ),
+              ),
+            ),
+
+            // Config summary chip (centered pill)
+            if (config != null)
+              Center(
+                child: _ConfigSummaryChip(
+                  config: config,
+                  onTap: () => _openConfigSheet(context, setupState),
+                ),
+              ),
+
+            // Active Lineup header
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.space4,
-                AppSpacing.space2,
                 AppSpacing.space4,
-                0,
+                AppSpacing.space4,
+                AppSpacing.space2,
               ),
-              child: _ConfigSummaryChip(
-                config: config,
-                onTap: () => _openConfigSheet(context, setupState),
-              ),
-            ),
-
-          // Selected player area
-          _SelectedPlayerArea(
-            selectedPlayerIds: selectedIds,
-            players: players,
-            lockedPlayerId: notifier.lockedPlayerId,
-            onTapPlayer: (id) => _openPlayerActionSheet(context, id, nameFor),
-            onReorder: notifier.reorderPlayers,
-          ),
-
-          // Roster grid
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-              child: playersAsync.when(
-                data: (playerList) => _RosterGrid(
-                  players: playerList,
-                  selectedIds: selectedIds.toSet(),
-                  maxPlayers: maxPlayers,
-                  onTapPlayer: (id) {
-                    final isSelected = selectedIds.contains(id);
-                    if (isSelected) {
-                      _openPlayerActionSheet(context, id, nameFor);
-                    } else {
-                      final atMax = maxPlayers != null &&
-                          selectedIds.length >= maxPlayers;
-                      if (!atMax) {
-                        notifier.togglePlayer(id);
-                      }
-                    }
-                  },
-                  onAddPlayer: () => _openCreatePlayerSheet(context),
-                ),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    Center(child: Text('Failed to load players: $e')),
+              child: Row(
+                children: [
+                  Text(
+                    'ACTIVE LINEUP',
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    maxPlayers != null
+                        ? '${selectedIds.length} / $maxPlayers Players'
+                        : '${selectedIds.length} ${selectedIds.length == 1 ? 'Player' : 'Players'}',
+                    style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
               ),
             ),
-          ),
 
-          // START GAME button
-          SafeArea(
-            top: false,
-            child: Padding(
+            // Active lineup cards
+            _ActiveLineup(
+              selectedPlayerIds: selectedIds,
+              players: players,
+              onReorder: notifier.reorderPlayers,
+              onRemove: (id) => notifier.togglePlayer(id),
+            ),
+
+            // Roster section header + add button
+            Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.space4,
+                AppSpacing.space4,
+                AppSpacing.space4,
                 AppSpacing.space2,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    'ROSTER',
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const Spacer(),
+                  InkWell(
+                    onTap: () => _openCreatePlayerSheet(context),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                    splashColor: AppTheme.kineticSplashColor,
+                    highlightColor: AppTheme.kineticSplashColor,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.space3,
+                        vertical: AppSpacing.space1,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.person_add_outlined,
+                            size: 14,
+                            color: cs.primaryFixed,
+                            semanticLabel: 'Add new player',
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'NEW PLAYER',
+                            style: tt.labelSmall?.copyWith(color: cs.primaryFixed),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Roster grid
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+                child: playersAsync.when(
+                  data: (playerList) => _RosterGrid(
+                    players: playerList,
+                    selectedIds: selectedIds.toSet(),
+                    maxPlayers: maxPlayers,
+                    onTapPlayer: (id) {
+                      final isSelected = selectedIds.contains(id);
+                      if (!isSelected) {
+                        final atMax = maxPlayers != null &&
+                            selectedIds.length >= maxPlayers;
+                        if (!atMax) notifier.togglePlayer(id);
+                      }
+                    },
+                    onAddNew: () => _openCreatePlayerSheet(context),
+                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, _) =>
+                      Center(child: Text('Failed to load players: $e')),
+                ),
+              ),
+            ),
+
+            // START GAME button
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.space4,
+                AppSpacing.space3,
                 AppSpacing.space4,
                 AppSpacing.space4,
               ),
@@ -189,23 +268,45 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                 message: canStart ? '' : 'Select at least one player',
                 child: SizedBox(
                   width: double.infinity,
-                  child: FilledButton(
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: cs.primaryFixed,
+                      foregroundColor: AppColors.onPrimaryFixed,
+                      disabledBackgroundColor:
+                          cs.primaryFixed.withValues(alpha: 0.38),
+                      disabledForegroundColor:
+                          AppColors.onPrimaryFixed.withValues(alpha: 0.38),
+                      minimumSize: const Size.fromHeight(56),
+                      textStyle: tt.labelLarge?.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
+                    ),
                     onPressed: (canStart && !_isStarting)
                         ? () => _onStartGame(context, notifier, gameType)
                         : null,
-                    child: _isStarting
+                    icon: _isStarting
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
+                            height: 18,
+                            width: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('START GAME'),
+                        : const Icon(
+                            Icons.sports_score,
+                            semanticLabel: 'Start game',
+                          ),
+                    label: const Text('START GAME'),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -253,21 +354,6 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     );
   }
 
-  void _openPlayerActionSheet(
-    BuildContext context,
-    String playerId,
-    String Function(String) nameFor,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => _PlayerActionSheet(
-        playerName: nameFor(playerId),
-        onDeselect: () =>
-            ref.read(gameSetupProvider.notifier).togglePlayer(playerId),
-      ),
-    );
-  }
-
   Future<void> _onStartGame(
     BuildContext context,
     GameSetupNotifier notifier,
@@ -307,7 +393,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
   }
 }
 
-// ── Private widgets ───────────────────────────────────────────────────────────
+// ── Config summary chip ────────────────────────────────────────────────────────
 
 class _ConfigSummaryChip extends StatelessWidget {
   const _ConfigSummaryChip({required this.config, required this.onTap});
@@ -318,164 +404,45 @@ class _ConfigSummaryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 48),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            border: Border.all(color: cs.outline),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 10,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    _configSummaryFor(config),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurface,
-                        ),
-                  ),
-                ),
-                Icon(Icons.edit_outlined, size: 16, color: cs.primary),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SelectedPlayerArea extends StatelessWidget {
-  const _SelectedPlayerArea({
-    required this.selectedPlayerIds,
-    required this.players,
-    required this.lockedPlayerId,
-    required this.onTapPlayer,
-    required this.onReorder,
-  });
-
-  final List<String> selectedPlayerIds;
-  final List<Player> players;
-  final String? lockedPlayerId;
-  final void Function(String id) onTapPlayer;
-  final void Function(int oldIndex, int newIndex) onReorder;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 96,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-        child: selectedPlayerIds.isEmpty
-            ? Center(
-                child: Text(
-                  'Select players below',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              )
-            : ReorderableListView.builder(
-                scrollDirection: Axis.horizontal,
-                shrinkWrap: true,
-                buildDefaultDragHandles: false,
-                onReorder: onReorder,
-                itemCount: selectedPlayerIds.length,
-                itemBuilder: (context, index) {
-                  final id = selectedPlayerIds[index];
-                  final name = players
-                      .firstWhere(
-                        (p) => p.playerId == id,
-                        orElse: () => Player(
-                          playerId: id,
-                          name: id,
-                          createdAt: DateTime.now(),
-                          lastActive: DateTime.now(),
-                        ),
-                      )
-                      .name;
-                  return _SelectedPlayerCell(
-                    key: ValueKey(id),
-                    index: index,
-                    name: name,
-                    onTap: () => onTapPlayer(id),
-                  );
-                },
-              ),
-      ),
-    );
-  }
-}
-
-class _SelectedPlayerCell extends StatelessWidget {
-  const _SelectedPlayerCell({
-    super.key,
-    required this.index,
-    required this.name,
-    required this.onTap,
-  });
-
-  final int index;
-  final String name;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final initials = _initials(name);
-    final truncated =
-        name.length > 10 ? '${name.substring(0, 9)}…' : name;
-
-    return GestureDetector(
+    final tt = Theme.of(context).textTheme;
+    return InkWell(
       onTap: onTap,
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      splashColor: AppTheme.kineticSplashColor,
+      highlightColor: AppTheme.kineticSplashColor,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.space5,
+          vertical: AppSpacing.space2,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: cs.secondaryContainer,
-                  child: Text(
-                    initials,
-                    style: TextStyle(
-                      color: cs.onSecondaryContainer,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Align(
-                    alignment: Alignment.bottomRight,
-                    child: ReorderableDragStartListener(
-                      index: index,
-                      child: Icon(
-                        Icons.drag_indicator,
-                        size: 16,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            Icon(
+              Icons.settings_input_component,
+              size: 16,
+              color: cs.primaryFixed,
+              semanticLabel: 'Game configuration',
             ),
-            const SizedBox(height: 4),
+            const SizedBox(width: AppSpacing.space3),
             Text(
-              truncated,
-              style: Theme.of(context).textTheme.labelSmall,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              _configSummaryFor(config),
+              style: tt.labelMedium?.copyWith(
+                color: cs.onSurface,
+                letterSpacing: 1.0,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space3),
+            Icon(
+              Icons.edit_outlined,
+              size: 16,
+              color: cs.onSurfaceVariant,
+              semanticLabel: 'Edit game config',
             ),
           ],
         ),
@@ -484,34 +451,244 @@ class _SelectedPlayerCell extends StatelessWidget {
   }
 }
 
+// ── Active Lineup ─────────────────────────────────────────────────────────────
+
+class _ActiveLineup extends StatelessWidget {
+  const _ActiveLineup({
+    required this.selectedPlayerIds,
+    required this.players,
+    required this.onReorder,
+    required this.onRemove,
+  });
+
+  final List<String> selectedPlayerIds;
+  final List<Player> players;
+  final void Function(int oldIndex, int newIndex) onReorder;
+  final void Function(String id) onRemove;
+
+  Player _playerById(String id) => players.firstWhere(
+    (p) => p.playerId == id,
+    orElse: () => Player(
+      playerId: id,
+      name: id,
+      createdAt: DateTime.now(),
+      lastActive: DateTime.now(),
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    if (selectedPlayerIds.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.space5,
+          horizontal: AppSpacing.space4,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.person_add_outlined,
+              size: 28,
+              color: cs.onSurfaceVariant,
+              semanticLabel: 'No players selected',
+            ),
+            const SizedBox(height: AppSpacing.space2),
+            Text(
+              'Tap a player from the roster to add',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+      child: ReorderableListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        buildDefaultDragHandles: false,
+        onReorder: onReorder,
+        itemCount: selectedPlayerIds.length,
+        itemBuilder: (context, index) {
+          final id = selectedPlayerIds[index];
+          final player = _playerById(id);
+          return _ActivePlayerCard(
+            key: ValueKey(id),
+            index: index,
+            player: player,
+            onRemove: () => onRemove(id),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ActivePlayerCard extends ConsumerWidget {
+  const _ActivePlayerCard({
+    super.key,
+    required this.index,
+    required this.player,
+    required this.onRemove,
+  });
+
+  final int index;
+  final Player player;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final initials = _initials(player.name);
+
+    final statsAsync = ref.watch(playerStatsProvider(player.playerId));
+    final avg = statsAsync.value?.threeDartAverage;
+    final avgLabel = avg != null ? 'AVG ${avg.toStringAsFixed(1)}' : 'AVG —';
+
+    final isFirst = index == 0;
+    final badgeBg = isFirst ? cs.primaryFixed : cs.surfaceContainerHighest;
+    final badgeFg = isFirst ? AppColors.onPrimaryFixed : cs.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.space2),
+      child: Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          border: Border.all(
+            color: cs.primaryFixed.withValues(alpha: 0.20),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Drag handle
+            ReorderableDragStartListener(
+              index: index,
+              child: SizedBox(
+                width: 48,
+                height: 56,
+                child: Icon(
+                  Icons.drag_indicator,
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                  semanticLabel: 'Drag to reorder',
+                ),
+              ),
+            ),
+
+            // Avatar + position badge
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  child: Text(
+                    initials,
+                    style: tt.labelMedium?.copyWith(color: cs.onSurface),
+                  ),
+                ),
+                Positioned(
+                  bottom: -2,
+                  right: -6,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: badgeBg,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${index + 1}',
+                      style: tt.labelSmall?.copyWith(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: badgeFg,
+                        height: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(width: AppSpacing.space3),
+
+            // Name + avg PPR
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    player.name.toUpperCase(),
+                    style: tt.titleMedium?.copyWith(color: cs.onSurface),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    avgLabel,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+
+            // Remove button
+            IconButton(
+              onPressed: onRemove,
+              icon: Icon(
+                Icons.remove_circle_outline,
+                color: cs.onSurfaceVariant,
+                semanticLabel: 'Remove ${player.name}',
+              ),
+              splashColor: cs.error.withValues(alpha: 0.08),
+              highlightColor: cs.error.withValues(alpha: 0.08),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Roster grid ───────────────────────────────────────────────────────────────
+
 class _RosterGrid extends StatelessWidget {
   const _RosterGrid({
     required this.players,
     required this.selectedIds,
     required this.maxPlayers,
     required this.onTapPlayer,
-    required this.onAddPlayer,
+    required this.onAddNew,
   });
 
   final List<Player> players;
   final Set<String> selectedIds;
   final int? maxPlayers;
   final void Function(String id) onTapPlayer;
-  final VoidCallback onAddPlayer;
+  final VoidCallback onAddNew;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final itemCount = players.length + 1; // +1 for the "+" cell
     return Container(
       decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border.all(color: cs.outline),
-        borderRadius: BorderRadius.circular(12),
+        color: cs.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final cellHeight = constraints.maxWidth / 4;
-          final itemCount = players.length + 1; // +1 for add cell
           return SizedBox(
             height: cellHeight * 2.33,
             child: GridView.builder(
@@ -522,7 +699,7 @@ class _RosterGrid extends StatelessWidget {
               itemCount: itemCount,
               itemBuilder: (context, index) {
                 if (index == players.length) {
-                  return _AddPlayerCell(onTap: onAddPlayer);
+                  return _PlusCell(onTap: onAddNew);
                 }
                 final player = players[index];
                 final isSelected = selectedIds.contains(player.playerId);
@@ -540,6 +717,44 @@ class _RosterGrid extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _PlusCell extends StatelessWidget {
+  const _PlusCell({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      splashColor: AppTheme.kineticSplashColor,
+      highlightColor: AppTheme.kineticSplashColor,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundColor: cs.surfaceContainerHighest,
+            child: Icon(
+              Icons.add,
+              size: 20,
+              color: cs.primary,
+              semanticLabel: 'Add new player',
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'New',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: cs.primary,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -563,42 +778,56 @@ class _PlayerRosterCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final initials = _initials(name);
     final truncated = name.length > 8 ? '${name.substring(0, 7)}…' : name;
 
     Widget cell = InkWell(
       onTap: isDisabled ? null : onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Opacity(
-            opacity: (isDisabled && !isSelected) ? 0.4 : 1.0,
-            child: CircleAvatar(
-              radius: 22,
-              backgroundColor:
-                  isSelected ? cs.primary : cs.secondaryContainer,
-              child: Text(
-                initials,
-                style: TextStyle(
-                  color: isSelected ? cs.onPrimary : cs.onSecondaryContainer,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+      splashColor: cs.onSurface.withValues(alpha: 0.08),
+      highlightColor: cs.onSurface.withValues(alpha: 0.08),
+      child: Opacity(
+        opacity: (isDisabled && !isSelected) ? 0.4 : 1.0,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: isSelected
+                      ? cs.primaryFixed.withValues(alpha: 0.15)
+                      : cs.surfaceContainerHighest,
+                  child: isSelected
+                      ? null
+                      : Text(
+                          initials,
+                          style: tt.labelMedium?.copyWith(color: cs.onSurface),
+                        ),
                 ),
-              ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    size: 40,
+                    color: cs.primaryFixed.withValues(alpha: 0.60),
+                    semanticLabel: 'Selected',
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            truncated,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: isDisabled && !isSelected
-                      ? cs.onSurfaceVariant
-                      : cs.onSurface,
-                ),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 1,
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              truncated,
+              style: tt.labelSmall?.copyWith(
+                color: isDisabled && !isSelected
+                    ? cs.onSurfaceVariant
+                    : cs.onSurface,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ],
+        ),
       ),
     );
 
@@ -610,38 +839,6 @@ class _PlayerRosterCell extends StatelessWidget {
     }
 
     return cell;
-  }
-}
-
-class _AddPlayerCell extends StatelessWidget {
-  const _AddPlayerCell({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: cs.surfaceContainerHighest,
-            child: Icon(Icons.add, color: cs.primary),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '+',
-            style: Theme.of(context)
-                .textTheme
-                .labelSmall
-                ?.copyWith(color: cs.primary),
-          ),
-        ],
-      ),
-    );
   }
 }
 
@@ -775,51 +972,6 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Player action sheet ───────────────────────────────────────────────────────
-
-class _PlayerActionSheet extends StatelessWidget {
-  const _PlayerActionSheet({
-    required this.playerName,
-    required this.onDeselect,
-  });
-
-  final String playerName;
-  final VoidCallback onDeselect;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.space4),
-          child: Text(
-            playerName,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ),
-        const Divider(),
-        Tooltip(
-          message: 'Coming soon',
-          child: ListTile(
-            title: const Text('Handicap'),
-            enabled: false,
-            onTap: null,
-          ),
-        ),
-        ListTile(
-          title: const Text('Deselect'),
-          onTap: () {
-            onDeselect();
-            Navigator.of(context).pop();
-          },
-        ),
-        const SizedBox(height: AppSpacing.space4),
-      ],
     );
   }
 }
