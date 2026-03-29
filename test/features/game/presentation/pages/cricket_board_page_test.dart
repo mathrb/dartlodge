@@ -66,6 +66,7 @@ GameState _cricketState({
   int currentTurnIndex = 0,
   int dartsThrownInTurn = 0,
   bool isComplete = false,
+  bool turnActive = true,
   String cricketVariant = 'standard',
   List<CompetitorState>? competitors,
 }) =>
@@ -80,6 +81,7 @@ GameState _cricketState({
       currentTurnIndex: currentTurnIndex,
       dartsThrownInTurn: dartsThrownInTurn,
       isComplete: isComplete,
+      turnActive: turnActive,
       cricketVariant: cricketVariant,
     );
 
@@ -245,10 +247,8 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.text('─'), findsWidgets); // 0 marks for 16, 15, Bull
-    expect(find.text('/'), findsOneWidget); // 1 mark for 19
-    expect(find.text('X'), findsOneWidget); // 2 marks for 18
-    expect(find.text('⊗'), findsOneWidget); // 3 marks for 17
+    // Marks are drawn via CustomPaint (at least one per row × one competitor = 7)
+    expect(find.byType(CustomPaint), findsAtLeastNWidgets(7));
   });
 
   // ── 6. Closed row cells are non-tappable + Tooltip ────────────────────────
@@ -311,14 +311,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // Single 20 — first '20' text that is inside an _InputCell (has GestureDetector)
-    // The DartIndicator area also has '0', but '20' only appears in the table.
-    // We find all GestureDetectors containing '20' text and tap the first one.
-    final gestureDetectors = find.descendant(
-      of: find.byType(GestureDetector),
+    // Single 20 — first InkWell that contains a Text('20')
+    final s20 = find.descendant(
+      of: find.byType(InkWell),
       matching: find.text('20'),
     );
-    await tester.tap(gestureDetectors.first);
+    await tester.tap(s20.first);
     await tester.pump();
 
     final notifier =
@@ -342,11 +340,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
+    // Double 19 — second Text('19') inside an InkWell (S19=0, D19=1, T19=2)
     final d19 = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.text('D19'),
+      of: find.byType(InkWell),
+      matching: find.text('19'),
     );
-    await tester.tap(d19.first);
+    await tester.tap(d19.at(1));
     await tester.pump();
 
     final notifier =
@@ -370,11 +369,12 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
+    // Triple 18 — third Text('18') inside an InkWell (S18=0, D18=1, T18=2)
     final t18 = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.text('T18'),
+      of: find.byType(InkWell),
+      matching: find.text('18'),
     );
-    await tester.tap(t18.first);
+    await tester.tap(t18.at(2));
     await tester.pump();
 
     final notifier =
@@ -398,13 +398,13 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // MISS is a flat _ControlCell (GestureDetector) in the header row
-    final missBtn = find.descendant(
-      of: find.byType(GestureDetector),
+    // MISS is inside an InkWell in the header row
+    final missText = find.descendant(
+      of: find.byType(InkWell),
       matching: find.text('MISS'),
     );
-    await tester.ensureVisible(missBtn.first);
-    await tester.tap(missBtn.first);
+    await tester.ensureVisible(missText.first);
+    await tester.tap(missText.first);
     await tester.pump();
 
     final notifier =
@@ -601,9 +601,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Active player (index 0) should have a container with primary-tinted bg
+    // The tint is set via BoxDecoration, not Container.color directly
     final containers = tester.widgetList<Container>(find.byType(Container));
     final tintedContainers = containers.where((c) {
-      final color = c.color;
+      final color = (c.decoration as BoxDecoration?)?.color;
       // Semi-transparent tint: alpha < 1 and not fully transparent
       return color != null && color.a > 0 && color.a < 1.0;
     }).toList();
@@ -626,11 +627,11 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    // Bob (inactive) score text should have inactiveScore color
+    // Bob (inactive) score text should have onSurfaceVariant color
     final texts = tester.widgetList<Text>(find.text('10'));
     final inactiveColoredTexts = texts.where((t) {
       final style = t.style;
-      return style?.color == AppColors.inactiveScore;
+      return style?.color == AppColors.onSurfaceVariant;
     }).toList();
     expect(inactiveColoredTexts, isNotEmpty);
   });

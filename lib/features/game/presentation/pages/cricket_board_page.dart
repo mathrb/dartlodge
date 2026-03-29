@@ -131,6 +131,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 currentLegIndex: gameState.currentLegIndex,
                 legsToWin: gameState.legsToWin,
                 roundInLeg: gameState.currentRoundInLeg,
+                totalRounds: gameState.cricketTotalRounds,
                 currentTurnDarts: currentTurnDarts,
               ),
               Expanded(

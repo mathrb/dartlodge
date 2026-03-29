@@ -127,7 +127,7 @@ class _PlayerHeaderCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: isActive ? cs.primaryContainer.withValues(alpha: 0.10) : null,
         border: Border(
-          right: BorderSide(
+          left: BorderSide(
             color: isActive
                 ? cs.primary
                 : cs.outlineVariant.withValues(alpha: 0.15),
