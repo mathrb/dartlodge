@@ -97,7 +97,7 @@ void main() {
             cricket: (c) {
               expect(c.variant, 'standard');
               expect(c.numbers, GameConfigurationConstants.cricketNumbers);
-              expect(c.pointsToWin, 3);
+              expect(c.legsToWin, 1);
             },
             orElse: () => fail('Expected cricket config'),
           );

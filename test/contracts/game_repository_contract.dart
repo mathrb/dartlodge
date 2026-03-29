@@ -219,7 +219,7 @@ void runGameRepositoryContractTests(Future<GameRepository> Function() factory) {
       final game2 = Game(
         gameId: 'g2',
         gameType: GameType.cricket,
-        config: const GameConfig.cricket(variant: 'standard', numbers: ['15', '16', '17', '18', '19', '20', 'bull'], pointsToWin: 3),
+        config: const GameConfig.cricket(variant: 'standard', numbers: ['15', '16', '17', '18', '19', '20', 'bull'], legsToWin: 1),
         startTime: DateTime.now(),
         isComplete: false,
       );

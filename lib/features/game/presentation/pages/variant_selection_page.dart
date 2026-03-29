@@ -136,7 +136,7 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.cricket(
             variant: 'standard',
             numbers: GameConfigurationConstants.cricketNumbers,
-            pointsToWin: 3,
+            legsToWin: 1,
           ),
         ),
         _VariantEntry(
@@ -144,7 +144,7 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.cricket(
             variant: 'no-score',
             numbers: GameConfigurationConstants.cricketNumbers,
-            pointsToWin: 3,
+            legsToWin: 1,
           ),
         ),
         _VariantEntry(
@@ -152,7 +152,7 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.cricket(
             variant: 'cut-throat',
             numbers: GameConfigurationConstants.cricketNumbers,
-            pointsToWin: 3,
+            legsToWin: 1,
           ),
         ),
         _VariantEntry(
@@ -160,7 +160,7 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.cricket(
             variant: 'tactics',
             numbers: GameConfigurationConstants.cricketNumbers,
-            pointsToWin: 3,
+            legsToWin: 1,
           ),
         ),
         const _VariantEntry(label: 'Custom', isEnabled: false),
@@ -350,7 +350,14 @@ class _MetadataRow extends StatelessWidget {
         ),
       ],
       cricket: (c) => [
-        _MetaChip(label: 'NUMBERS', value: '${c.numbers.length}'),
+        _MetaChip(
+          label: 'LEGS',
+          value: c.legsToWin == 1 ? '1' : 'Bo${c.legsToWin}',
+        ),
+        if (c.totalRounds != null) ...[
+          const SizedBox(width: 16),
+          _MetaChip(label: 'MAX ROUNDS', value: '${c.totalRounds}'),
+        ],
       ],
       orElse: () => <Widget>[],
     );

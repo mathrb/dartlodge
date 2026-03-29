@@ -25,6 +25,7 @@ abstract class GameState with _$GameState {
     @Default(0) int currentLegIndex,
     @Default(1) int currentRoundInLeg,
     int? x01TotalRounds,
+    int? cricketTotalRounds,
     @Default('straight') String inStrategy,
     @Default('double') String outStrategy,
     @Default(501) int startingScore,
@@ -60,7 +61,8 @@ abstract class GameState with _$GameState {
       outStrategy = x01Config.outStrategy;
     } else if (game.config is CricketGameConfig) {
       startingScore = 0;
-      cricketVariant = (game.config as CricketGameConfig).variant;
+      final cricketConfig = game.config as CricketGameConfig;
+      cricketVariant = cricketConfig.variant;
     } else if (game.config is AroundTheClockGameConfig) {
       startingScore = 0;
       aroundTheClockVariant = (game.config as AroundTheClockGameConfig).variant;
@@ -114,11 +116,16 @@ abstract class GameState with _$GameState {
       winnerCompetitorId: game.winnerCompetitorId,
       status: GameEngineStatus.initialized,
       turnActive: false,
-      legsToWin: (game.config is X01GameConfig)
+      legsToWin: game.config is X01GameConfig
           ? (game.config as X01GameConfig).legsToWin
-          : 1,
-      x01TotalRounds: (game.config is X01GameConfig)
+          : game.config is CricketGameConfig
+              ? (game.config as CricketGameConfig).legsToWin
+              : 1,
+      x01TotalRounds: game.config is X01GameConfig
           ? (game.config as X01GameConfig).totalRounds
+          : null,
+      cricketTotalRounds: game.config is CricketGameConfig
+          ? (game.config as CricketGameConfig).totalRounds
           : null,
       currentLegIndex: 0,
       inStrategy: inStrategy,

@@ -422,10 +422,10 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    // UNDO is a flat _ControlCell; when disabled its Opacity is 0.38
-    final undoText = find.text('UNDO');
+    // Undo is in the bottom bar as an icon; disabled state uses Opacity 0.38
+    final undoIcon = find.byIcon(Icons.undo);
     final opacityWidget = tester.widget<Opacity>(
-      find.ancestor(of: undoText, matching: find.byType(Opacity)).first,
+      find.ancestor(of: undoIcon, matching: find.byType(Opacity)).first,
     );
     expect(opacityWidget.opacity, 0.38);
   });
@@ -447,16 +447,14 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // UNDO is enabled when dartsThrownInTurn > 0 — no Opacity wrapper (opacity: 1.0 skips it)
-    final undoText = find.text('UNDO');
-    final opacityAncestors = find.ancestor(of: undoText, matching: find.byType(Opacity));
-    expect(opacityAncestors, findsNothing);
-
-    final undoFinder = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.text('UNDO'),
+    // Undo is enabled when dartsThrownInTurn > 0 — Opacity wrapper has opacity 1.0
+    final undoIcon = find.byIcon(Icons.undo);
+    final opacityWidget = tester.widget<Opacity>(
+      find.ancestor(of: undoIcon, matching: find.byType(Opacity)).first,
     );
-    await tester.tap(undoFinder.first);
+    expect(opacityWidget.opacity, 1.0);
+
+    await tester.tap(undoIcon);
     await tester.pump();
 
     final notifier =

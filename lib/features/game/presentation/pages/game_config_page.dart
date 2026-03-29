@@ -253,31 +253,50 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       _FieldSection(
         label: 'VARIANT',
         child: _SegmentedOptionGroup<String>(
-          values: const ['standard', 'cut-throat'],
-          labels: const ['STANDARD', 'CUT-THROAT'],
+          values: const ['standard', 'cut-throat', 'no-score', 'tactics'],
+          labels: const ['STANDARD', 'CUT-THROAT', 'NO SCORE', 'TACTICS'],
           selected: c.variant,
           onSelected: (v) =>
               setState(() => _draftConfig = c.copyWith(variant: v)),
         ),
       ),
       const SizedBox(height: AppSpacing.space4),
-      _FieldSection(
-        label: 'POINTS TO WIN',
-        child: _StepperContainer(
-          child: ConfigStepperWidget(
-            value: c.pointsToWin,
-            min: 1,
-            max: 9,
-            onDecrement: () => setState(
-              () =>
-                  _draftConfig = c.copyWith(pointsToWin: c.pointsToWin - 1),
-            ),
-            onIncrement: () => setState(
-              () =>
-                  _draftConfig = c.copyWith(pointsToWin: c.pointsToWin + 1),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: _FieldSection(
+              label: 'ROUNDS',
+              child: _RoundsDropdown(
+                value: c.totalRounds,
+                items: const [null, 10, 15, 20, 25, 50],
+                onChanged: (v) =>
+                    setState(() => _draftConfig = c.copyWith(totalRounds: v)),
+              ),
             ),
           ),
-        ),
+          const SizedBox(width: AppSpacing.space4),
+          Expanded(
+            child: _FieldSection(
+              label: 'LEGS TO WIN',
+              child: _StepperContainer(
+                child: ConfigStepperWidget(
+                  value: c.legsToWin,
+                  min: 1,
+                  max: 9,
+                  onDecrement: () => setState(
+                    () => _draftConfig =
+                        c.copyWith(legsToWin: c.legsToWin - 1),
+                  ),
+                  onIncrement: () => setState(
+                    () => _draftConfig =
+                        c.copyWith(legsToWin: c.legsToWin + 1),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     ];
   }

@@ -67,7 +67,7 @@ const _x01Config = GameConfig.x01(
 const _cricketConfig = GameConfig.cricket(
   variant: 'standard',
   numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
-  pointsToWin: 0,
+  legsToWin: 1,
 );
 
 Widget _buildApp({
@@ -170,7 +170,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('standard · 0 pts'), findsOneWidget);
+    expect(find.text('standard · 1 legs'), findsOneWidget);
   });
 
   // ── 3. Config chip ATC ───────────────────────────────────────────────────

@@ -105,7 +105,7 @@ void main() {
         config: GameConfig.cricket(
           variant: 'standard',
           numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
-          pointsToWin: 3,
+          legsToWin: 1,
         ),
         startTime: DateTime.now(),
         endTime: null,
@@ -319,7 +319,7 @@ void main() {
         config: GameConfig.cricket(
           variant: 'standard',
           numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
-          pointsToWin: 3,
+          legsToWin: 1,
         ),
         startTime: DateTime.now(),
         endTime: null,

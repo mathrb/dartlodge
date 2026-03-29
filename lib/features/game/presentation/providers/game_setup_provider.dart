@@ -200,7 +200,7 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         GameType.cricket => GameConfig.cricket(
             variant: 'standard',
             numbers: GameConfigurationConstants.cricketNumbers,
-            pointsToWin: 3,
+            legsToWin: 1,
           ),
         GameType.aroundTheClock   => const GameConfig.aroundTheClock(),
         GameType.killer           => const GameConfig.killer(),

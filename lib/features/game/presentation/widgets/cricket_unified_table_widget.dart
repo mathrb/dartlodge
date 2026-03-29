@@ -25,13 +25,11 @@ class CricketUnifiedTableWidget extends StatelessWidget {
     required this.gameState,
     required this.onSegmentTapped,
     required this.onMiss,
-    required this.onUndo,
   });
 
   final GameState gameState;
   final ValueChanged<String> onSegmentTapped;
   final VoidCallback onMiss;
-  final VoidCallback onUndo;
 
   static const _numbers = [20, 19, 18, 17, 16, 15, 25];
 
@@ -42,7 +40,6 @@ class CricketUnifiedTableWidget extends StatelessWidget {
         _CricketHeaderRow(
           gameState: gameState,
           onMiss: onMiss,
-          onUndo: onUndo,
         ),
         for (final n in _numbers)
           Expanded(
@@ -65,12 +62,10 @@ class _CricketHeaderRow extends StatelessWidget {
   const _CricketHeaderRow({
     required this.gameState,
     required this.onMiss,
-    required this.onUndo,
   });
 
   final GameState gameState;
   final VoidCallback onMiss;
-  final VoidCallback onUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -95,13 +90,6 @@ class _CricketHeaderRow extends StatelessWidget {
               width: 112,
               height: null,
               onTap: onMiss,
-            ),
-            _ControlCell(
-              label: 'UNDO',
-              width: 56,
-              height: null,
-              enabled: gameState.dartsThrownInTurn > 0,
-              onTap: onUndo,
             ),
           ],
         ),

@@ -33,7 +33,7 @@ String _configSummaryFor(GameConfig config) {
       final roundsLabel = rounds == null ? '∞ Rounds' : (rounds == 1 ? '1 Round' : '$rounds Rounds');
       return '${c.startingScore} · ${_outStrategyLabel(c.outStrategy)} Out · $roundsLabel';
     },
-    cricket: (c) => '${c.variant} · ${c.pointsToWin} pts',
+    cricket: (c) => '${c.variant} · ${c.legsToWin} legs',
     aroundTheClock: (_) => 'Around the Clock',
     catch40: (_) => 'Catch 40',
     bobs27: (_) => "Bob's 27",

@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
-import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_colors.dart';
+import '../../../../core/utils/app_theme.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cricket_unified_table_widget.dart';
-import '../widgets/dart_indicator_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
+import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 
 class CricketBoardPage extends ConsumerStatefulWidget {
@@ -80,6 +82,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final variantLabel = switch (gameState.cricketVariant) {
           'cut-throat' => 'Cut Throat',
           'no-score' => 'No Score',
+          'tactics' => 'Tactics',
           _ => 'Standard',
         };
 
@@ -94,36 +97,41 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final notifier =
             ref.read(activeCricketGameProvider(widget.gameId).notifier);
 
+        final dartsThrownInTurn = gameState.dartsThrownInTurn;
+        final canUndo = dartsThrownInTurn > 0 ||
+            gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
+        final canNext = !gameState.isComplete;
+
         return Scaffold(
-          appBar: AppBar(
-            automaticallyImplyLeading: false,
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text('Cricket'),
-                Text(
-                  '$variantLabel · Leg ${gameState.currentLegIndex + 1}',
-                  style: Theme.of(context).textTheme.bodySmall,
+          appBar: AppHeader(
+            boardMode: true,
+            showBack: true,
+            onBack: () => context.go(GameRoutes.home),
+            trailing: InkWell(
+              onTap: () => _showEndGameDialog(context),
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              splashColor: AppTheme.kineticSplashColor,
+              highlightColor: AppTheme.kineticSplashColor,
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  semanticLabel: 'Game options',
                 ),
-              ],
-            ),
-            actions: [
-              PopupMenuButton<String>(
-                onSelected: (v) {
-                  if (v == 'end') _showEndGameDialog(context);
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: 'end',
-                    child: Text('End Game'),
-                  ),
-                ],
               ),
-            ],
+            ),
           ),
           body: Column(
             children: [
-              DartIndicatorWidget(currentTurnDarts: currentTurnDarts),
+              GameStatusBarWidget(
+                configLabel: variantLabel,
+                currentLegIndex: gameState.currentLegIndex,
+                legsToWin: gameState.legsToWin,
+                roundInLeg: gameState.currentRoundInLeg,
+                currentTurnDarts: currentTurnDarts,
+              ),
               Expanded(
                 child: CricketUnifiedTableWidget(
                   gameState: gameState,
@@ -131,13 +139,15 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                       ? (_) {}
                       : (segment) => notifier.processDart(segment),
                   onMiss: () => notifier.processDart('MISS'),
-                  onUndo: () => notifier.undoDart(),
                 ),
               ),
-              _CricketBottomBar(
-                dartsThrownInTurn: gameState.dartsThrownInTurn,
+              _BottomActionBar(
+                canUndo: canUndo,
+                canNext: canNext,
                 isMultiplayer: gameState.competitors.length > 1,
-                onNextPlayer: () => notifier.nextPlayer(),
+                dartsThrownInTurn: dartsThrownInTurn,
+                onUndo: () => notifier.undoDart(),
+                onNextRound: () => notifier.nextPlayer(),
               ),
             ],
           ),
@@ -162,25 +172,30 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
 // ── Bottom bar ────────────────────────────────────────────────────────────────
 
-class _CricketBottomBar extends StatelessWidget {
-  const _CricketBottomBar({
-    required this.dartsThrownInTurn,
+class _BottomActionBar extends StatelessWidget {
+  const _BottomActionBar({
+    required this.canUndo,
+    required this.canNext,
     required this.isMultiplayer,
-    required this.onNextPlayer,
+    required this.dartsThrownInTurn,
+    required this.onUndo,
+    required this.onNextRound,
   });
 
-  final int dartsThrownInTurn;
+  final bool canUndo;
+  final bool canNext;
   final bool isMultiplayer;
-  final VoidCallback onNextPlayer;
+  final int dartsThrownInTurn;
+  final VoidCallback onUndo;
+  final VoidCallback onNextRound;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final label = isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND';
 
     Future<void> handleAdvance() async {
       if (dartsThrownInTurn >= 3) {
-        onNextPlayer();
+        onNextRound();
       } else {
         final confirmed = await showDialog<bool>(
           context: context,
@@ -188,42 +203,73 @@ class _CricketBottomBar extends StatelessWidget {
             dartsThrownInTurn: dartsThrownInTurn,
           ),
         );
-        if (confirmed == true) onNextPlayer();
+        if (confirmed == true) onNextRound();
       }
     }
 
     return SafeArea(
-      top: false,
       child: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: cs.outline, width: 1)),
+          color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
+          border: Border(
+            top: BorderSide(
+              color: cs.surfaceContainer.withValues(alpha: 0.3),
+            ),
+          ),
         ),
-        child: SizedBox(
-          height: 48,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Expanded(child: SizedBox.shrink()),
-              GestureDetector(
-                onTap: handleAdvance,
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+        child: Row(
+          children: [
+            // Undo — square button
+            Opacity(
+              opacity: canUndo ? 1.0 : 0.38,
+              child: InkWell(
+                onTap: canUndo ? onUndo : null,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                splashColor: AppTheme.kineticSplashColor,
+                highlightColor: AppTheme.kineticSplashColor,
                 child: Container(
-                  width: 168,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
-                    color: cs.surface,
-                    border: Border(
-                      left: BorderSide(color: cs.outline, width: 1),
+                    color: cs.surfaceContainerHighest,
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusLarge),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.2),
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    label,
-                    style: AppTextStyles.labelLarge
-                        .copyWith(color: cs.onSurface),
+                  child: Icon(
+                    Icons.undo,
+                    color: cs.onSurface,
+                    semanticLabel: 'Undo last dart',
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            // Next player / round — primary neon button
+            Expanded(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: cs.primaryFixed,
+                  foregroundColor: AppColors.onPrimaryFixed,
+                  disabledBackgroundColor:
+                      cs.primaryFixed.withValues(alpha: 0.38),
+                  disabledForegroundColor:
+                      AppColors.onPrimaryFixed.withValues(alpha: 0.38),
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
+                ),
+                onPressed: canNext ? handleAdvance : null,
+                icon: const Icon(Icons.arrow_forward, semanticLabel: ''),
+                label: Text(isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND'),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -261,4 +307,3 @@ class _AdvanceTurnConfirmDialog extends StatelessWidget {
     );
   }
 }
-

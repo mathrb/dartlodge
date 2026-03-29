@@ -34,7 +34,8 @@ CricketGameConfig _$CricketGameConfigFromJson(Map<String, dynamic> json) =>
       numbers: (json['numbers'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
-      pointsToWin: (json['pointsToWin'] as num).toInt(),
+      legsToWin: (json['legsToWin'] as num?)?.toInt() ?? 1,
+      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? null,
       startingPlayerId: json['startingPlayerId'] as String? ?? null,
       $type: json['runtimeType'] as String?,
     );
@@ -43,7 +44,8 @@ Map<String, dynamic> _$CricketGameConfigToJson(CricketGameConfig instance) =>
     <String, dynamic>{
       'variant': instance.variant,
       'numbers': instance.numbers,
-      'pointsToWin': instance.pointsToWin,
+      'legsToWin': instance.legsToWin,
+      'totalRounds': instance.totalRounds,
       'startingPlayerId': instance.startingPlayerId,
       'runtimeType': instance.$type,
     };

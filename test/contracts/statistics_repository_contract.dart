@@ -326,7 +326,7 @@ Future<void> _setupCompletedCricketGame(
       config: const GameConfig.cricket(
         variant: 'standard',
         numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
-        pointsToWin: 0,
+        legsToWin: 1,
       ),
       startTime: DateTime.now(),
       isComplete: false,
