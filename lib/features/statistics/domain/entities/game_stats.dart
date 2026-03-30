@@ -27,6 +27,7 @@ abstract class CompetitorStats with _$CompetitorStats {
     required int legsWon,
     required int totalDartsThrown,
     double? checkoutPercentage,
+    int? highestCheckout,
     @Default(0) int oneEightyTurns,
     @Default(0) int sixtyPlusTurns,
     @Default(0) int oneHundredPlusTurns,

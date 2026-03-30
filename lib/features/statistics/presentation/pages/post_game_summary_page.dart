@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../../domain/entities/game_stats.dart';
 import '../providers/statistics_provider.dart';
 
@@ -19,20 +20,12 @@ class PostGameSummaryPage extends ConsumerWidget {
     final asyncStats = ref.watch(gameStatsProvider(gameId));
 
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: true,
-        title: Text(
-          'MYDARTS',
-          style: AppTextStyles.headlineSmall.copyWith(
-            color: Theme.of(context).colorScheme.primaryFixed,
-            letterSpacing: 4,
-          ),
+      body: SafeArea(
+        child: asyncStats.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Error: $err')),
+          data: (gameStats) => _SummaryBody(gameStats: gameStats),
         ),
-      ),
-      body: asyncStats.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Error: $err')),
-        data: (gameStats) => _SummaryBody(gameStats: gameStats),
       ),
     );
   }
@@ -62,10 +55,11 @@ class _SummaryBody extends StatelessWidget {
     return Stack(
       children: [
         SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const AppHeader(),
               if (winner != null) ...[
                 _WinnerCard(winner: winner),
                 const SizedBox(height: 16),
@@ -154,7 +148,7 @@ class _WinnerCard extends StatelessWidget {
                               child: Text(
                                 'WINNER',
                                 style: tt.labelSmall?.copyWith(
-                                  color: cs.onPrimaryContainer,
+                                  color: cs.onPrimaryFixed,
                                   fontWeight: FontWeight.w900,
                                 ),
                               ),
@@ -460,6 +454,13 @@ class _StatsTable extends StatelessWidget {
         highlights: allCompetitors.map((_) => false).toList(),
       ),
       _StatRow(
+        category: 'Best Out',
+        values: allCompetitors
+            .map((c) => c.highestCheckout != null ? '${c.highestCheckout}' : '—')
+            .toList(),
+        highlights: allCompetitors.map((_) => false).toList(),
+      ),
+      _StatRow(
         category: '180s',
         values: allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
         highlights: allCompetitors.map((_) => false).toList(),
@@ -658,7 +659,7 @@ class _FooterButton extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     final bgColor = isPrimary ? cs.primaryFixed : cs.surfaceContainerHighest;
-    final fgColor = isPrimary ? cs.onPrimaryContainer : cs.onSurface;
+    final fgColor = isPrimary ? cs.onPrimaryFixed : cs.onSurface;
 
     return Material(
       color: bgColor,

@@ -287,7 +287,7 @@ as List<CompetitorStats>,
 /// @nodoc
 mixin _$CompetitorStats {
 
- String get competitorId; String get competitorName; List<PlayerTurnStats> get byPlayer; double get threeDartAverage; int get legsWon; int get totalDartsThrown; double? get checkoutPercentage; int get oneEightyTurns; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns;
+ String get competitorId; String get competitorName; List<PlayerTurnStats> get byPlayer; double get threeDartAverage; int get legsWon; int get totalDartsThrown; double? get checkoutPercentage; int? get highestCheckout; int get oneEightyTurns; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns;
 /// Create a copy of CompetitorStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -300,16 +300,16 @@ $CompetitorStatsCopyWith<CompetitorStats> get copyWith => _$CompetitorStatsCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other.byPlayer, byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other.byPlayer, byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns);
+int get hashCode => Object.hash(runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,highestCheckout,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns);
 
 @override
 String toString() {
-  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns)';
+  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns)';
 }
 
 
@@ -320,7 +320,7 @@ abstract mixin class $CompetitorStatsCopyWith<$Res>  {
   factory $CompetitorStatsCopyWith(CompetitorStats value, $Res Function(CompetitorStats) _then) = _$CompetitorStatsCopyWithImpl;
 @useResult
 $Res call({
- String competitorId, String competitorName, List<PlayerTurnStats> byPlayer, double threeDartAverage, int legsWon, int totalDartsThrown, double? checkoutPercentage, int oneEightyTurns, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns
+ String competitorId, String competitorName, List<PlayerTurnStats> byPlayer, double threeDartAverage, int legsWon, int totalDartsThrown, double? checkoutPercentage, int? highestCheckout, int oneEightyTurns, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns
 });
 
 
@@ -337,7 +337,7 @@ class _$CompetitorStatsCopyWithImpl<$Res>
 
 /// Create a copy of CompetitorStats
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? competitorName = null,Object? byPlayer = null,Object? threeDartAverage = null,Object? legsWon = null,Object? totalDartsThrown = null,Object? checkoutPercentage = freezed,Object? oneEightyTurns = null,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? competitorName = null,Object? byPlayer = null,Object? threeDartAverage = null,Object? legsWon = null,Object? totalDartsThrown = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? oneEightyTurns = null,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,}) {
   return _then(_self.copyWith(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
@@ -346,7 +346,8 @@ as List<PlayerTurnStats>,threeDartAverage: null == threeDartAverage ? _self.thre
 as double,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
 as int,totalDartsThrown: null == totalDartsThrown ? _self.totalDartsThrown : totalDartsThrown // ignore: cast_nullable_to_non_nullable
 as int,checkoutPercentage: freezed == checkoutPercentage ? _self.checkoutPercentage : checkoutPercentage // ignore: cast_nullable_to_non_nullable
-as double?,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
+as double?,highestCheckout: freezed == highestCheckout ? _self.highestCheckout : highestCheckout // ignore: cast_nullable_to_non_nullable
+as int?,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
 as int,sixtyPlusTurns: null == sixtyPlusTurns ? _self.sixtyPlusTurns : sixtyPlusTurns // ignore: cast_nullable_to_non_nullable
 as int,oneHundredPlusTurns: null == oneHundredPlusTurns ? _self.oneHundredPlusTurns : oneHundredPlusTurns // ignore: cast_nullable_to_non_nullable
 as int,oneFortyPlusTurns: null == oneFortyPlusTurns ? _self.oneFortyPlusTurns : oneFortyPlusTurns // ignore: cast_nullable_to_non_nullable
@@ -435,10 +436,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int? highestCheckout,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CompetitorStats() when $default != null:
-return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
+return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.highestCheckout,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
   return orElse();
 
 }
@@ -456,10 +457,10 @@ return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.thr
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int? highestCheckout,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)  $default,) {final _that = this;
 switch (_that) {
 case _CompetitorStats():
-return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
+return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.highestCheckout,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -476,10 +477,10 @@ return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.thr
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String competitorId,  String competitorName,  List<PlayerTurnStats> byPlayer,  double threeDartAverage,  int legsWon,  int totalDartsThrown,  double? checkoutPercentage,  int? highestCheckout,  int oneEightyTurns,  int sixtyPlusTurns,  int oneHundredPlusTurns,  int oneFortyPlusTurns)?  $default,) {final _that = this;
 switch (_that) {
 case _CompetitorStats() when $default != null:
-return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
+return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.threeDartAverage,_that.legsWon,_that.totalDartsThrown,_that.checkoutPercentage,_that.highestCheckout,_that.oneEightyTurns,_that.sixtyPlusTurns,_that.oneHundredPlusTurns,_that.oneFortyPlusTurns);case _:
   return null;
 
 }
@@ -491,7 +492,7 @@ return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.thr
 @JsonSerializable()
 
 class _CompetitorStats implements CompetitorStats {
-  const _CompetitorStats({required this.competitorId, required this.competitorName, required final  List<PlayerTurnStats> byPlayer, required this.threeDartAverage, required this.legsWon, required this.totalDartsThrown, this.checkoutPercentage, this.oneEightyTurns = 0, this.sixtyPlusTurns = 0, this.oneHundredPlusTurns = 0, this.oneFortyPlusTurns = 0}): _byPlayer = byPlayer;
+  const _CompetitorStats({required this.competitorId, required this.competitorName, required final  List<PlayerTurnStats> byPlayer, required this.threeDartAverage, required this.legsWon, required this.totalDartsThrown, this.checkoutPercentage, this.highestCheckout, this.oneEightyTurns = 0, this.sixtyPlusTurns = 0, this.oneHundredPlusTurns = 0, this.oneFortyPlusTurns = 0}): _byPlayer = byPlayer;
   factory _CompetitorStats.fromJson(Map<String, dynamic> json) => _$CompetitorStatsFromJson(json);
 
 @override final  String competitorId;
@@ -507,6 +508,7 @@ class _CompetitorStats implements CompetitorStats {
 @override final  int legsWon;
 @override final  int totalDartsThrown;
 @override final  double? checkoutPercentage;
+@override final  int? highestCheckout;
 @override@JsonKey() final  int oneEightyTurns;
 @override@JsonKey() final  int sixtyPlusTurns;
 @override@JsonKey() final  int oneHundredPlusTurns;
@@ -525,16 +527,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other._byPlayer, _byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other._byPlayer, _byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(_byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns);
+int get hashCode => Object.hash(runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(_byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,highestCheckout,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns);
 
 @override
 String toString() {
-  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns)';
+  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns)';
 }
 
 
@@ -545,7 +547,7 @@ abstract mixin class _$CompetitorStatsCopyWith<$Res> implements $CompetitorStats
   factory _$CompetitorStatsCopyWith(_CompetitorStats value, $Res Function(_CompetitorStats) _then) = __$CompetitorStatsCopyWithImpl;
 @override @useResult
 $Res call({
- String competitorId, String competitorName, List<PlayerTurnStats> byPlayer, double threeDartAverage, int legsWon, int totalDartsThrown, double? checkoutPercentage, int oneEightyTurns, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns
+ String competitorId, String competitorName, List<PlayerTurnStats> byPlayer, double threeDartAverage, int legsWon, int totalDartsThrown, double? checkoutPercentage, int? highestCheckout, int oneEightyTurns, int sixtyPlusTurns, int oneHundredPlusTurns, int oneFortyPlusTurns
 });
 
 
@@ -562,7 +564,7 @@ class __$CompetitorStatsCopyWithImpl<$Res>
 
 /// Create a copy of CompetitorStats
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? competitorId = null,Object? competitorName = null,Object? byPlayer = null,Object? threeDartAverage = null,Object? legsWon = null,Object? totalDartsThrown = null,Object? checkoutPercentage = freezed,Object? oneEightyTurns = null,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? competitorId = null,Object? competitorName = null,Object? byPlayer = null,Object? threeDartAverage = null,Object? legsWon = null,Object? totalDartsThrown = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? oneEightyTurns = null,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,}) {
   return _then(_CompetitorStats(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
@@ -571,7 +573,8 @@ as List<PlayerTurnStats>,threeDartAverage: null == threeDartAverage ? _self.thre
 as double,legsWon: null == legsWon ? _self.legsWon : legsWon // ignore: cast_nullable_to_non_nullable
 as int,totalDartsThrown: null == totalDartsThrown ? _self.totalDartsThrown : totalDartsThrown // ignore: cast_nullable_to_non_nullable
 as int,checkoutPercentage: freezed == checkoutPercentage ? _self.checkoutPercentage : checkoutPercentage // ignore: cast_nullable_to_non_nullable
-as double?,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
+as double?,highestCheckout: freezed == highestCheckout ? _self.highestCheckout : highestCheckout // ignore: cast_nullable_to_non_nullable
+as int?,oneEightyTurns: null == oneEightyTurns ? _self.oneEightyTurns : oneEightyTurns // ignore: cast_nullable_to_non_nullable
 as int,sixtyPlusTurns: null == sixtyPlusTurns ? _self.sixtyPlusTurns : sixtyPlusTurns // ignore: cast_nullable_to_non_nullable
 as int,oneHundredPlusTurns: null == oneHundredPlusTurns ? _self.oneHundredPlusTurns : oneHundredPlusTurns // ignore: cast_nullable_to_non_nullable
 as int,oneFortyPlusTurns: null == oneFortyPlusTurns ? _self.oneFortyPlusTurns : oneFortyPlusTurns // ignore: cast_nullable_to_non_nullable

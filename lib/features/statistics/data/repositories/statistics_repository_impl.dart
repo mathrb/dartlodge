@@ -158,6 +158,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         // Compute X01-specific stats via projection engine
         int totalOneEighty = 0, totalSixtyPlus = 0, totalHundredPlus = 0, totalFortyPlus = 0;
         int totalCheckoutAttempts = 0, totalSuccessfulCheckouts = 0;
+        int? competitorHighestCheckout;
 
         if (isX01) {
           final playerIds = byPlayer.keys.toList();
@@ -165,6 +166,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
             final runner = ProjectionRunner([
               X01CheckoutProjection(),
               X01HighScoreBucketsProjection(),
+              X01HighestCheckoutProjection(),
             ]);
             runner.init(ProjectionContext(
               playerId: playerId,
@@ -185,6 +187,12 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
             final checkout = snap['x01_checkout'] ?? {};
             totalCheckoutAttempts += (checkout['checkoutAttempts'] as int? ?? 0);
             totalSuccessfulCheckouts += (checkout['successfulCheckouts'] as int? ?? 0);
+
+            final hcSnap = snap['x01_highest_checkout'] ?? {};
+            final hc = hcSnap['highestCheckout'] as int?;
+            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout!)) {
+              competitorHighestCheckout = hc;
+            }
           }
         }
 
@@ -200,6 +208,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
           legsWon: legsWon,
           totalDartsThrown: totalDarts,
           checkoutPercentage: checkoutPercentage,
+          highestCheckout: competitorHighestCheckout,
           oneEightyTurns: totalOneEighty,
           sixtyPlusTurns: totalSixtyPlus,
           oneHundredPlusTurns: totalHundredPlus,

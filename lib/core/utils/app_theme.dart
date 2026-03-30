@@ -45,6 +45,7 @@ abstract final class AppTheme {
   static ColorScheme _lightScheme() => const ColorScheme(
     brightness: Brightness.light,
     primaryFixed:         AppColors.primaryContainer,
+    onPrimaryFixed:       AppColors.onPrimaryFixed,
     primary:              AppColors.primary,
     onPrimary:            AppColors.onPrimary,
     primaryContainer:     AppColors.primaryContainer,
@@ -72,6 +73,7 @@ abstract final class AppTheme {
   static ColorScheme _darkScheme() => const ColorScheme(
     brightness: Brightness.dark,
     primaryFixed:             AppColorsDark.primaryFixed,
+    onPrimaryFixed:           AppColors.onPrimaryFixed,
     primary:                  AppColorsDark.primary,
     onPrimary:                AppColorsDark.onPrimary,
     primaryContainer:         AppColorsDark.primaryContainer,

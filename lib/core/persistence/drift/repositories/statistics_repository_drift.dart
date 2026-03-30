@@ -14,6 +14,7 @@ import 'package:my_darts/features/statistics/domain/engines/projection_engine.da
 import 'package:my_darts/features/statistics/domain/engines/projection_runner.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
 import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
+import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
 import '../database.dart' as drift_db;
 
 class StatisticsRepositoryDrift implements StatisticsRepository {
@@ -140,6 +141,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         // X01-specific stats via projection engine
         int totalOneEighty = 0, totalSixtyPlus = 0, totalHundredPlus = 0, totalFortyPlus = 0;
         int totalCheckoutAttempts = 0, totalSuccessfulCheckouts = 0;
+        int? competitorHighestCheckout;
 
         if (isX01) {
           final playerIds = byPlayer.keys.toList();
@@ -147,6 +149,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
             final runner = ProjectionRunner([
               X01CheckoutProjection(),
               X01HighScoreBucketsProjection(),
+              X01HighestCheckoutProjection(),
             ]);
             runner.init(ProjectionContext(
               playerId: playerId,
@@ -167,6 +170,12 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
             final checkout = snap['x01_checkout'] ?? {};
             totalCheckoutAttempts += (checkout['checkoutAttempts'] as int? ?? 0);
             totalSuccessfulCheckouts += (checkout['successfulCheckouts'] as int? ?? 0);
+
+            final hcSnap = snap['x01_highest_checkout'] ?? {};
+            final hc = hcSnap['highestCheckout'] as int?;
+            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout!)) {
+              competitorHighestCheckout = hc;
+            }
           }
         }
 
@@ -182,6 +191,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           legsWon: legsWon,
           totalDartsThrown: totalDarts,
           checkoutPercentage: checkoutPercentage,
+          highestCheckout: competitorHighestCheckout,
           oneEightyTurns: totalOneEighty,
           sixtyPlusTurns: totalSixtyPlus,
           oneHundredPlusTurns: totalHundredPlus,
