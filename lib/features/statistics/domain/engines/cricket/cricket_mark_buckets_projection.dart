@@ -19,6 +19,11 @@ class CricketMarkBucketsProjection extends ProjectionEngine {
   int _sixMarkTurns = 0;
   int _nineMarkTurns = 0;
   int _turnMarks = 0;
+  int _fiveMarkExact = 0;
+  int _sixMarkExact = 0;
+  int _sevenMarkExact = 0;
+  int _eightMarkExact = 0;
+  int _nineMarkExact = 0;
 
   @override
   void init(ProjectionContext context) {
@@ -26,6 +31,11 @@ class CricketMarkBucketsProjection extends ProjectionEngine {
     _sixMarkTurns = 0;
     _nineMarkTurns = 0;
     _turnMarks = 0;
+    _fiveMarkExact = 0;
+    _sixMarkExact = 0;
+    _sevenMarkExact = 0;
+    _eightMarkExact = 0;
+    _nineMarkExact = 0;
   }
 
   @override
@@ -42,6 +52,13 @@ class CricketMarkBucketsProjection extends ProjectionEngine {
         if (playerId != _context?.playerId) return;
         if (_turnMarks >= 9) _nineMarkTurns++;
         if (_turnMarks >= 6) _sixMarkTurns++;
+        switch (_turnMarks) {
+          case 5: _fiveMarkExact++;
+          case 6: _sixMarkExact++;
+          case 7: _sevenMarkExact++;
+          case 8: _eightMarkExact++;
+          case 9: _nineMarkExact++;
+        }
         _turnMarks = 0;
     }
   }
@@ -58,6 +75,11 @@ class CricketMarkBucketsProjection extends ProjectionEngine {
     return {
       'sixMarkTurns': _sixMarkTurns,
       'nineMarkTurns': _nineMarkTurns,
+      'fiveMarkExact': _fiveMarkExact,
+      'sixMarkExact': _sixMarkExact,
+      'sevenMarkExact': _sevenMarkExact,
+      'eightMarkExact': _eightMarkExact,
+      'nineMarkExact': _nineMarkExact,
     };
   }
 }

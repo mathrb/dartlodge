@@ -11,6 +11,7 @@ abstract class GameStats with _$GameStats {
   const factory GameStats({
     required String gameId,
     required List<CompetitorStats> byCompetitor,
+    @Default('') String gameType,
   }) = _GameStats;
 
   factory GameStats.fromJson(Map<String, dynamic> json) =>
@@ -32,6 +33,13 @@ abstract class CompetitorStats with _$CompetitorStats {
     @Default(0) int sixtyPlusTurns,
     @Default(0) int oneHundredPlusTurns,
     @Default(0) int oneFortyPlusTurns,
+    double? marksPerRound,
+    double? firstNineMarksPerRound,
+    @Default(0) int fiveMarkTurns,
+    @Default(0) int sixMarkTurns,
+    @Default(0) int sevenMarkTurns,
+    @Default(0) int eightMarkTurns,
+    @Default(0) int nineMarkTurns,
   }) = _CompetitorStats;
 
   factory CompetitorStats.fromJson(Map<String, dynamic> json) =>

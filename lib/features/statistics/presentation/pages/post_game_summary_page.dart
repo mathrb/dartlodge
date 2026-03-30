@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../domain/entities/game_stats.dart';
 import '../providers/statistics_provider.dart';
@@ -46,6 +47,7 @@ class _SummaryBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final winner = _findWinner();
+    final isCricket = gameStats.gameType == GameType.cricket.name;
     final opponents = winner == null
         ? gameStats.byCompetitor
         : gameStats.byCompetitor
@@ -61,19 +63,20 @@ class _SummaryBody extends StatelessWidget {
             children: [
               const AppHeader(),
               if (winner != null) ...[
-                _WinnerCard(winner: winner),
+                _WinnerCard(winner: winner, isCricket: isCricket),
                 const SizedBox(height: 16),
               ],
               if (opponents.isNotEmpty) ...[
                 ...opponents.map((c) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: _OpponentCard(stats: c),
+                      child: _OpponentCard(stats: c, isCricket: isCricket),
                     )),
                 const SizedBox(height: 16),
               ],
               _StatsBreakdownSection(
                 allCompetitors: gameStats.byCompetitor,
                 winnerId: winner?.competitorId,
+                isCricket: isCricket,
               ),
             ],
           ),
@@ -92,9 +95,10 @@ class _SummaryBody extends StatelessWidget {
 // ── Winner Card ───────────────────────────────────────────────────────────────
 
 class _WinnerCard extends StatelessWidget {
-  const _WinnerCard({required this.winner});
+  const _WinnerCard({required this.winner, required this.isCricket});
 
   final CompetitorStats winner;
+  final bool isCricket;
 
   @override
   Widget build(BuildContext context) {
@@ -202,8 +206,10 @@ class _WinnerCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _BigStat(
-                    label: 'AVG PPR',
-                    value: winner.threeDartAverage.toStringAsFixed(1),
+                    label: isCricket ? 'AVG MPR' : 'AVG PPR',
+                    value: isCricket
+                        ? (winner.marksPerRound?.toStringAsFixed(2) ?? '—')
+                        : winner.threeDartAverage.toStringAsFixed(1),
                     color: cs.primaryFixed,
                   ),
                   const SizedBox(height: 16),
@@ -266,9 +272,10 @@ class _BigStat extends StatelessWidget {
 // ── Opponent Card ─────────────────────────────────────────────────────────────
 
 class _OpponentCard extends StatelessWidget {
-  const _OpponentCard({required this.stats});
+  const _OpponentCard({required this.stats, required this.isCricket});
 
   final CompetitorStats stats;
+  final bool isCricket;
 
   @override
   Widget build(BuildContext context) {
@@ -316,8 +323,10 @@ class _OpponentCard extends StatelessWidget {
           Row(
             children: [
               _SmallStat(
-                label: 'PPR',
-                value: stats.threeDartAverage.toStringAsFixed(1),
+                label: isCricket ? 'MPR' : 'PPR',
+                value: isCricket
+                    ? (stats.marksPerRound?.toStringAsFixed(2) ?? '—')
+                    : stats.threeDartAverage.toStringAsFixed(1),
               ),
               const SizedBox(width: 24),
               _SmallStat(
@@ -373,10 +382,12 @@ class _StatsBreakdownSection extends StatelessWidget {
   const _StatsBreakdownSection({
     required this.allCompetitors,
     required this.winnerId,
+    required this.isCricket,
   });
 
   final List<CompetitorStats> allCompetitors;
   final String? winnerId;
+  final bool isCricket;
 
   @override
   Widget build(BuildContext context) {
@@ -414,6 +425,7 @@ class _StatsBreakdownSection extends StatelessWidget {
             child: _StatsTable(
               allCompetitors: allCompetitors,
               winnerId: winnerId,
+              isCricket: isCricket,
             ),
           ),
         ),
@@ -426,61 +438,129 @@ class _StatsTable extends StatelessWidget {
   const _StatsTable({
     required this.allCompetitors,
     required this.winnerId,
+    required this.isCricket,
   });
 
   final List<CompetitorStats> allCompetitors;
   final String? winnerId;
+  final bool isCricket;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final rows = <_StatRow>[
-      _StatRow(
-        category: 'Avg PPR',
-        values: allCompetitors
-            .map((c) => c.threeDartAverage.toStringAsFixed(1))
-            .toList(),
-        highlights: allCompetitors.map((c) => c.competitorId == winnerId).toList(),
-      ),
-      _StatRow(
-        category: 'Checkout',
-        values: allCompetitors
-            .map((c) => c.checkoutPercentage != null
-                ? '${c.checkoutPercentage!.round()}%'
-                : '—')
-            .toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-      _StatRow(
-        category: 'Best Out',
-        values: allCompetitors
-            .map((c) => c.highestCheckout != null ? '${c.highestCheckout}' : '—')
-            .toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-      _StatRow(
-        category: '180s',
-        values: allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-      _StatRow(
-        category: '60+',
-        values: allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-      _StatRow(
-        category: '100+',
-        values: allCompetitors.map((c) => c.oneHundredPlusTurns.toString()).toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-      _StatRow(
-        category: '140+',
-        values: allCompetitors.map((c) => c.oneFortyPlusTurns.toString()).toList(),
-        highlights: allCompetitors.map((_) => false).toList(),
-      ),
-    ];
+    final noHighlight = allCompetitors.map((_) => false).toList();
+    final rows = isCricket
+        ? <_StatRow>[
+            _StatRow(
+              category: 'Avg MPR',
+              values: allCompetitors
+                  .map((c) => c.marksPerRound?.toStringAsFixed(2) ?? '—')
+                  .toList(),
+              highlights: allCompetitors
+                  .map((c) => c.competitorId == winnerId)
+                  .toList(),
+            ),
+            _StatRow(
+              category: 'First 9 MPR',
+              values: allCompetitors
+                  .map((c) => c.firstNineMarksPerRound?.toStringAsFixed(2) ?? '—')
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '5 Marks',
+              values: allCompetitors
+                  .map((c) => c.fiveMarkTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '6 Marks',
+              values: allCompetitors
+                  .map((c) => c.sixMarkTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '7 Marks',
+              values: allCompetitors
+                  .map((c) => c.sevenMarkTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '8 Marks',
+              values: allCompetitors
+                  .map((c) => c.eightMarkTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '9 Marks',
+              values: allCompetitors
+                  .map((c) => c.nineMarkTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+          ]
+        : <_StatRow>[
+            _StatRow(
+              category: 'Avg PPR',
+              values: allCompetitors
+                  .map((c) => c.threeDartAverage.toStringAsFixed(1))
+                  .toList(),
+              highlights: allCompetitors
+                  .map((c) => c.competitorId == winnerId)
+                  .toList(),
+            ),
+            _StatRow(
+              category: 'Checkout',
+              values: allCompetitors
+                  .map((c) => c.checkoutPercentage != null
+                      ? '${c.checkoutPercentage!.round()}%'
+                      : '—')
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: 'Best Out',
+              values: allCompetitors
+                  .map((c) =>
+                      c.highestCheckout != null ? '${c.highestCheckout}' : '—')
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '180s',
+              values: allCompetitors
+                  .map((c) => c.oneEightyTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '60+',
+              values: allCompetitors
+                  .map((c) => c.sixtyPlusTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '100+',
+              values: allCompetitors
+                  .map((c) => c.oneHundredPlusTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+            _StatRow(
+              category: '140+',
+              values: allCompetitors
+                  .map((c) => c.oneFortyPlusTurns.toString())
+                  .toList(),
+              highlights: noHighlight,
+            ),
+          ];
 
     final headerStyle = tt.labelSmall?.copyWith(
       color: cs.onSurfaceVariant,
