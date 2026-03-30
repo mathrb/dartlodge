@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/app_router.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -61,7 +62,14 @@ class _SummaryBody extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const AppHeader(),
+              AppHeader(
+                showBack: true,
+                onBack: () => context.go('/'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.settings_outlined, semanticLabel: 'Settings'),
+                  onPressed: () => context.push(GameRoutes.settings),
+                ),
+              ),
               if (winner != null) ...[
                 _WinnerCard(winner: winner, isCricket: isCricket),
                 const SizedBox(height: 16),
