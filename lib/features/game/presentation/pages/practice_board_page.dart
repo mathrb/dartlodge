@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
-import '../widgets/dart_indicator_widget.dart';
 import '../widgets/dartboard_highlight_widget.dart';
+import '../widgets/game_status_bar_widget.dart';
 import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
 
@@ -72,6 +74,11 @@ class PracticeBoardPage extends ConsumerWidget {
         final gs = practiceState.gameState;
         final notifier = ref.read(activePracticeProvider(gameId).notifier);
         final competitor = gs.competitors[gs.currentTurnIndex];
+        final allDarts = competitor.dartThrows;
+        final currentTurnDarts =
+            gs.dartsThrownInTurn == 0 || allDarts.length < gs.dartsThrownInTurn
+                ? <String>[]
+                : allDarts.sublist(allDarts.length - gs.dartsThrownInTurn);
         final isAtc = gs.gameType == GameType.aroundTheClock;
         final isBobs27 = gs.gameType == GameType.bobs27;
         final isCatch40 = gs.gameType == GameType.catch40;
@@ -314,56 +321,42 @@ class PracticeBoardPage extends ConsumerWidget {
         }
 
         return Scaffold(
-          appBar: AppBar(
-            leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
-            title: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _modeName(gs.gameType),
-                  style: AppTextStyles.headingSmall.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+          appBar: AppHeader(
+            boardMode: true,
+            showBack: true,
+            onBack: () => context.go(GameRoutes.home),
+            trailing: PopupMenuButton<_DrillAction>(
+              icon: const Icon(Icons.more_vert, color: Colors.white),
+              onSelected: (action) async {
+                switch (action) {
+                  case _DrillAction.resetDrill:
+                    await notifier.resetDrill();
+                  case _DrillAction.endDrill:
+                    await notifier.endDrill();
+                    if (context.mounted) context.go(GameRoutes.home);
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(
+                  value: _DrillAction.resetDrill,
+                  child: Text('Reset Drill'),
                 ),
-                Text(
-                  _progressText(gs, competitor),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                PopupMenuItem(
+                  value: _DrillAction.endDrill,
+                  child: Text('End Drill'),
                 ),
               ],
             ),
-            actions: [
-              PopupMenuButton<_DrillAction>(
-                onSelected: (action) async {
-                  switch (action) {
-                    case _DrillAction.resetDrill:
-                      await notifier.resetDrill();
-                    case _DrillAction.endDrill:
-                      await notifier.endDrill();
-                      if (context.mounted) context.go(GameRoutes.home);
-                  }
-                },
-                itemBuilder: (_) => const [
-                  PopupMenuItem(
-                    value: _DrillAction.resetDrill,
-                    child: Text('Reset Drill'),
-                  ),
-                  PopupMenuItem(
-                    value: _DrillAction.endDrill,
-                    child: Text('End Drill'),
-                  ),
-                ],
-              ),
-            ],
           ),
           body: Column(
             children: [
-              DartIndicatorWidget(
-                currentTurnDarts: competitor.dartThrows
-                    .skip(competitor.dartThrows.length -
-                        gs.dartsThrownInTurn.clamp(0, competitor.dartThrows.length))
-                    .toList(),
+              GameStatusBarWidget(
+                configLabel: _modeName(gs.gameType),
+                currentLegIndex: 0,
+                legsToWin: 1,
+                roundInLeg: competitor.practiceRound,
+                totalRounds: _totalRounds(gs),
+                currentTurnDarts: currentTurnDarts,
               ),
               Expanded(
                 child: DartboardHighlightWidget(
@@ -412,7 +405,7 @@ class PracticeBoardPage extends ConsumerWidget {
                     (gs.dartsThrownInTurn > 0 ||
                         gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
                 inputEnabled: !gs.isComplete && gs.dartsThrownInTurn < 3 && (!isCatch40 || gs.turnActive),
-                showNextRound: gs.dartsThrownInTurn == 3 && !gs.isComplete,
+                showNextRound: !gs.isComplete,
                 showNextTarget: isCatch40 &&
                     (gs.catch40TargetRemaining == 0 ||
                         gs.catch40DartsOnTarget >= 6) &&
@@ -453,19 +446,6 @@ class PracticeBoardPage extends ConsumerWidget {
         _ => 'Practice',
       };
 
-  static String _progressText(GameState gs, CompetitorState c) =>
-      switch (gs.gameType) {
-        GameType.aroundTheClock => 'Number: ${c.practiceRound} / 20',
-        GameType.bobs27 => 'Target: D${c.practiceRound}',
-        GameType.shanghai =>
-          'Round ${c.practiceRound} / ${gs.shanghaiTotalRounds}',
-        GameType.catch40 =>
-          'Target: ${60 + c.practiceRound} · ${gs.catch40DartsOnTarget}/6 darts',
-        GameType.checkoutPractice =>
-          '${c.practiceSuccesses}/${c.practiceAttempts} checkouts',
-        _ => '',
-      };
-
   static int _totalRounds(GameState gs) => switch (gs.gameType) {
         GameType.aroundTheClock => 20,
         GameType.bobs27 => 20,
@@ -501,59 +481,102 @@ class _BottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
     final isCheckout = gameType == GameType.checkoutPractice;
     final isCatch40 = gameType == GameType.catch40;
 
-    return DecoratedBox(
+    final nextEnabled = isCatch40 ? showNextTarget : showNextRound;
+    final nextLabel = isCatch40
+        ? 'NEXT TARGET'
+        : isCheckout
+            ? 'END DRILL'
+            : 'NEXT ROUND';
+    final VoidCallback? onNext = nextEnabled
+        ? (isCheckout ? () => onEndDrill() : () => onNextRound())
+        : null;
+
+    return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.6),
         border: Border(
-          top: BorderSide(color: colorScheme.outline, width: 1),
+          top: BorderSide(
+            color: cs.surfaceContainer.withValues(alpha: 0.3),
+          ),
         ),
       ),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              TextButton.icon(
-                icon: const Icon(Icons.undo),
-                label: Text(
-                  'Undo',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: colorScheme.onSurface,
+        child: Row(
+          children: [
+            // Undo — square button
+            Opacity(
+              opacity: canUndo ? 1.0 : 0.38,
+              child: InkWell(
+                onTap: canUndo ? onUndo : null,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                splashColor: AppTheme.kineticSplashColor,
+                highlightColor: AppTheme.kineticSplashColor,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Icon(Icons.undo, color: cs.onSurface),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Miss — square button
+            Opacity(
+              opacity: inputEnabled ? 1.0 : 0.38,
+              child: InkWell(
+                onTap: inputEnabled ? onMiss : null,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                splashColor: AppTheme.kineticSplashColor,
+                highlightColor: AppTheme.kineticSplashColor,
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Icon(Icons.close, color: cs.onSurface, semanticLabel: 'Miss'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Next — wide primary neon button
+            Expanded(
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: cs.primaryFixed,
+                  foregroundColor: AppColors.onPrimaryFixed,
+                  disabledBackgroundColor:
+                      cs.primaryFixed.withValues(alpha: 0.38),
+                  disabledForegroundColor:
+                      AppColors.onPrimaryFixed.withValues(alpha: 0.38),
+                  minimumSize: const Size.fromHeight(56),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.radiusMedium),
                   ),
                 ),
-                onPressed: canUndo ? onUndo : null,
+                onPressed: onNext,
+                icon: const Icon(Icons.arrow_forward, semanticLabel: ''),
+                label: Text(nextLabel),
               ),
-              OutlinedButton(
-                onPressed: inputEnabled ? onMiss : null,
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: colorScheme.surface,
-                  side: BorderSide(color: colorScheme.outline),
-                ),
-                child: const Text('MISS'),
-              ),
-              if (isCatch40)
-                FilledButton(
-                  onPressed: showNextTarget ? onNextRound : null,
-                  child: const Text('NEXT TARGET'),
-                )
-              else if (isCheckout)
-                FilledButton(
-                  onPressed: showNextRound ? onEndDrill : null,
-                  child: const Text('END DRILL'),
-                )
-              else
-                FilledButton(
-                  onPressed: showNextRound ? onNextRound : null,
-                  child: const Text('NEXT ROUND'),
-                ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

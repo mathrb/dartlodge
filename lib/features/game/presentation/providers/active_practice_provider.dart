@@ -200,6 +200,42 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     _ => throw UnsupportedError('Unsupported practice game type: $type'),
   };
 
+  /// Fills any unfilled dart slots in the current turn with MISS darts,
+  /// persisting them as events. Stops early if the game completes.
+  Future<GameState> _fillTurnWithMisses(GameState gs) async {
+    var current = gs;
+    while (current.dartsThrownInTurn < 3 && !current.isComplete) {
+      final competitor = current.competitors[current.currentTurnIndex];
+      final dart = DartThrow(
+        dartId: const Uuid().v4(),
+        gameId: current.gameId,
+        competitorId: competitor.competitorId,
+        playerId: competitor.playerIds.isNotEmpty
+            ? competitor.playerIds.first
+            : 'sentinel',
+        turnNumber: current.currentLegIndex,
+        dartNumber: current.dartsThrownInTurn + 1,
+        segment: 'MISS',
+        score: 0,
+      );
+      current = await switch (current.gameType) {
+        GameType.aroundTheClock =>
+          ref.read(processAroundTheClockDartUseCaseProvider).execute(current, dart),
+        GameType.bobs27 =>
+          ref.read(processBobs27DartUseCaseProvider).execute(current, dart),
+        GameType.shanghai =>
+          ref.read(processShanghaiDartUseCaseProvider).execute(current, dart),
+        GameType.catch40 =>
+          ref.read(processCatch40DartUseCaseProvider).execute(current, dart),
+        GameType.checkoutPractice =>
+          ref.read(processCheckoutPracticeDartUseCaseProvider).execute(current, dart),
+        _ => throw UnsupportedError(
+            'Unsupported practice game type: ${current.gameType}'),
+      };
+    }
+    return current;
+  }
+
   Future<void> startNextTurn() async {
     final current = state.value;
     if (current == null) return;
@@ -207,7 +243,8 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     if (gs.isComplete) return;
 
     state = await AsyncValue.guard(() async {
-      final newGs = await _advanceTurn(gs);
+      final filled = await _fillTurnWithMisses(gs);
+      final newGs = filled.isComplete ? filled : await _advanceTurn(filled);
       return ActivePracticeState(
         gameState: newGs,
         pendingGameWinnerId:
