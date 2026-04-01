@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 This file guides any AI coding agent working on this repository. Read it fully before writing, editing, or deleting any code. It is the authoritative behavioural contract for this project.
 
@@ -15,7 +15,7 @@ A local-first, open-source darts scoring app for Android and iOS built with Flut
 ## Repository Layout
 
 ```
-AGENTS.md                          ← you are here
+CLAUDE.md                          ← you are here
 README.md
 darts-game/                        ← plain-English game rules for each variant
 docs/
