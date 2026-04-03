@@ -447,12 +447,9 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    // Special buttons in new design: MISS, 25/BULL, 50/BULL
     expect(find.text('MISS'), findsOneWidget);
-    expect(find.text('25'), findsOneWidget);   // Bull button label
-    expect(find.text('BULL'), findsNWidgets(2)); // Bull subtext (appears twice)
-    expect(find.text('50'), findsOneWidget);   // D-Bull button label
-    // Note: Both bulls show "BULL" subtext, not "D-BULL"
+    expect(find.text('SB'), findsOneWidget);
+    expect(find.text('DB'), findsOneWidget);
   });
 
   // ── 15. Doubles rows show D-prefixed numbers ─────────────────────────────────
@@ -569,23 +566,8 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // Find the Triple 20 cell by finding text "20" in a triples row (3 dots)
-    // First find all text widgets with "20"
-    final text20Widgets = tester.widgetList<Text>(find.text('20'));
-    
-    // Find the one that's in a cell with 3 dots (triple)
-    for (final textWidget in text20Widgets) {
-      final ancestor = find.ancestor(of: find.byWidget(textWidget), matching: find.byType(InkWell)).first;
-      final inkWell = tester.widget<InkWell>(ancestor);
-      
-      // Check if this InkWell has a semantic label of "Triple 20"
-      final semantics = find.ancestor(of: ancestor, matching: find.byType(Semantics)).first;
-      final semanticsWidget = tester.widget<Semantics>(semantics);
-      if (semanticsWidget.properties.label == 'Triple 20') {
-        await tester.tap(ancestor);
-        break;
-      }
-    }
+    // Find the Triple 20 cell by its label text
+    await tester.tap(find.text('T20').first);
     await tester.pumpAndSettle();
 
     final notifier = container.read(activeGameProvider('game-1').notifier)
