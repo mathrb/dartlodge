@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/app_theme.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/statistics_provider.dart';
 
@@ -28,7 +29,7 @@ class MptTrendChartWidget extends ConsumerWidget {
         height: 200,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         ),
         child: history.length < 2
             ? Center(

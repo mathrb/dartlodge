@@ -136,13 +136,13 @@ class _X01TabContent extends ConsumerWidget {
     final asyncStats = ref.watch(filteredPlayerStatsProvider(playerId));
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: AppSpacing.space6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space4),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
               loading: () => const SizedBox(
                 height: 80,
@@ -157,12 +157,12 @@ class _X01TabContent extends ConsumerWidget {
           ),
           VariantChipSelectorWidget(playerId: playerId),
           TimeRangeSelectorWidget(playerId: playerId),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space2),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: PprTrendChartWidget(playerId: playerId),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
             loading: () => const SizedBox(
               height: 200,
@@ -190,13 +190,13 @@ class _CricketTabContent extends ConsumerWidget {
     final asyncStats = ref.watch(filteredCricketStatsProvider(playerId));
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: AppSpacing.space6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space4),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
               loading: () => const SizedBox(
                 height: 80,
@@ -212,12 +212,12 @@ class _CricketTabContent extends ConsumerWidget {
           ),
           CricketVariantChipSelectorWidget(playerId: playerId),
           TimeRangeSelectorWidget(playerId: playerId),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space2),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: MptTrendChartWidget(playerId: playerId),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
             loading: () => const SizedBox(
               height: 200,
@@ -249,14 +249,14 @@ class _PracticeTabContent extends ConsumerWidget {
         pageState.selectedPracticeGameType == GameType.aroundTheClock;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: AppSpacing.space6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.space4),
           PracticeGameTypeChipSelectorWidget(playerId: playerId),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
               loading: () => const SizedBox(
                 height: 80,
@@ -271,7 +271,7 @@ class _PracticeTabContent extends ConsumerWidget {
             ),
           ),
           TimeRangeSelectorWidget(playerId: playerId),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.space2),
           asyncStats.when(
             loading: () => const SizedBox(
               height: 200,
@@ -288,10 +288,10 @@ class _PracticeTabContent extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
                         child: PracticeTrendChartWidget(playerId: playerId),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.space4),
                       PracticeStatsDetailTableWidget(stats: stats),
                     ],
                   ),
@@ -310,7 +310,7 @@ class _AtcBoardAndSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -427,7 +427,7 @@ class _ComingSoonTab extends StatelessWidget {
                 size: 64,
                 color: colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.space4),
               Text(
                 'Stats for $label coming soon',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -454,7 +454,7 @@ class _ErrorRetry extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(message),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.space2),
         TextButton(onPressed: onRetry, child: const Text('Retry')),
       ],
     );

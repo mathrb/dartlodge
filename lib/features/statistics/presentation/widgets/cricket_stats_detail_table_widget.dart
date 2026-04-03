@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/app_spacing.dart';
 import '../../domain/entities/player_stats.dart';
 
 class CricketStatsDetailTableWidget extends StatelessWidget {
@@ -58,11 +59,14 @@ class CricketStatsDetailTableWidget extends StatelessWidget {
       ThemeData theme, ColorScheme colorScheme, _SectionHeader row) {
     final labelStyle = theme.textTheme.labelSmall?.copyWith(
       color: colorScheme.onSurfaceVariant,
-      letterSpacing: 0.8,
+      letterSpacing: 1.2,
     );
     return Container(
       color: theme.scaffoldBackgroundColor,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space4,
+        vertical: AppSpacing.space2,
+      ),
       child: Row(
         children: [
           const Expanded(child: SizedBox.shrink()),
