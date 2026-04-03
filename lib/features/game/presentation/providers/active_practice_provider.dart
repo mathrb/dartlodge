@@ -8,6 +8,7 @@ import '../../domain/models/game_state.dart';
 import '../state/active_practice_state.dart';
 import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/constants.dart';
+import 'game_replay_provider.dart';
 
 part 'active_practice_provider.g.dart';
 
@@ -15,29 +16,8 @@ part 'active_practice_provider.g.dart';
 class ActivePracticeNotifier extends _$ActivePracticeNotifier {
   @override
   Future<ActivePracticeState?> build(String gameId) async {
-    final game = await ref.read(gameRepositoryProvider).getGame(gameId);
-    if (game == null) return null;
-
-    final competitors =
-        await ref.read(gameRepositoryProvider).getCompetitors(gameId);
-    final events =
-        await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
-
-    final engine = switch (game.gameType) {
-      GameType.aroundTheClock => ref.read(aroundTheClockEngineProvider),
-      GameType.bobs27 => ref.read(bobs27EngineProvider),
-      GameType.shanghai => ref.read(shanghaiEngineProvider),
-      GameType.catch40 => ref.read(catch40EngineProvider),
-      GameType.checkoutPractice => ref.read(checkoutPracticeEngineProvider),
-      _ => throw UnsupportedError(
-          'Unsupported practice game type: ${game.gameType}'),
-    };
-
-    var gs = GameState.initial(game, competitors);
-    for (final event in events) {
-      gs = engine.apply(gs, event).state;
-    }
-
+    final gs = await ref.read(loadedGameStateProvider(gameId).future);
+    if (gs == null) return null;
     return ActivePracticeState(gameState: gs);
   }
 

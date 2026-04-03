@@ -7,6 +7,7 @@ import '../../domain/models/game_state.dart';
 import '../state/active_cricket_game_state.dart';
 import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/constants.dart';
+import 'game_replay_provider.dart';
 
 part 'active_cricket_game_provider.g.dart';
 
@@ -14,20 +15,8 @@ part 'active_cricket_game_provider.g.dart';
 class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   @override
   Future<ActiveCricketGameState?> build(String gameId) async {
-    final game = await ref.read(gameRepositoryProvider).getGame(gameId);
-    if (game == null) return null;
-
-    final competitors =
-        await ref.read(gameRepositoryProvider).getCompetitors(gameId);
-    final events =
-        await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
-
-    final engine = ref.read(cricketEngineProvider);
-    var gs = GameState.initial(game, competitors);
-    for (final event in events) {
-      gs = engine.apply(gs, event).state;
-    }
-
+    final gs = await ref.read(loadedGameStateProvider(gameId).future);
+    if (gs == null) return null;
     return ActiveCricketGameState(gameState: gs);
   }
 

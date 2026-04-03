@@ -53,7 +53,7 @@ final class ActivePracticeNotifierProvider
 }
 
 String _$activePracticeNotifierHash() =>
-    r'bbf7f4d367014b0e2fa39fcb9758ab7ce69d4a48';
+    r'2e62f958de627f456029f5b8a1144ad015a6da75';
 
 final class ActivePracticeNotifierFamily extends $Family
     with
