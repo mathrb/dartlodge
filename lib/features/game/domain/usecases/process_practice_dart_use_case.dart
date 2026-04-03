@@ -13,7 +13,6 @@ import '../models/game_config.dart';
 import '../engines/base_game_engine.dart';
 import '../../../../core/error/repository_exception.dart';
 import 'game_use_case_helpers.dart';
-import 'package:uuid/uuid.dart';
 import 'package:my_darts/core/utils/constants.dart';
 
 class ProcessPracticeDartUseCase {
@@ -47,21 +46,14 @@ class ProcessPracticeDartUseCase {
     // 4. Build DartThrown event
     final currentPlayerId = getCurrentPlayerId(currentState, dartThrow.competitorId);
 
-    final dartEvent = GameEvent(
-      eventId: dartThrow.dartId,
+    final dartEvent = buildDartThrownEvent(
       gameId: currentState.gameId,
-      eventType: 'DartThrown',
-      localSequence: nextSeq++,
-      occurredAt: DateTime.now(),
-      payload: {
-        'competitor_id': dartThrow.competitorId,
-        'segment': segmentValue,
-        'multiplier': multiplier,
-        'input_method': 'manual',
-      },
-      synced: false,
+      dartId: dartThrow.dartId,
+      competitorId: dartThrow.competitorId,
       actorId: currentPlayerId,
-      source: EventSource.client,
+      localSequence: nextSeq++,
+      segment: segmentValue,
+      multiplier: multiplier,
     );
 
     // 5. Apply DartThrown through engine
@@ -74,16 +66,10 @@ class ProcessPracticeDartUseCase {
 
     // 7. If game completed, append GameCompleted and call completeGame
     if (result.outcome == LegOutcome.gameCompleted) {
-      final gameCompletedEvent = GameEvent(
-        eventId: const Uuid().v4(),
+      final gameCompletedEvent = buildGameCompletedEvent(
         gameId: currentState.gameId,
-        eventType: 'GameCompleted',
+        winnerCompetitorId: result.winnerCompetitorId,
         localSequence: nextSeq++,
-        occurredAt: DateTime.now(),
-        payload: {'winner_id': result.winnerCompetitorId},
-        synced: false,
-        actorId: 'system',
-        source: EventSource.client,
       );
       eventsToStore.add(gameCompletedEvent);
       finalState = _engine.apply(finalState, gameCompletedEvent).state;
@@ -101,16 +87,10 @@ class ProcessPracticeDartUseCase {
 
     // 8. If leg boundary (but not game over), append LegCompleted
     if (result.state.currentLegIndex > currentState.currentLegIndex) {
-      final legCompletedEvent = GameEvent(
-        eventId: const Uuid().v4(),
+      final legCompletedEvent = buildLegCompletedEvent(
         gameId: currentState.gameId,
-        eventType: 'LegCompleted',
+        winnerCompetitorId: result.winnerCompetitorId,
         localSequence: nextSeq++,
-        occurredAt: DateTime.now(),
-        payload: {'winner_competitor_id': result.winnerCompetitorId},
-        synced: false,
-        actorId: 'system',
-        source: EventSource.client,
       );
       eventsToStore.add(legCompletedEvent);
       finalState = _engine.apply(finalState, legCompletedEvent).state;

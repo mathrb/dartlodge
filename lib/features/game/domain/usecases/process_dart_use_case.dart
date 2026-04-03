@@ -11,7 +11,6 @@ import '../models/game_config.dart';
 import '../engines/base_game_engine.dart';
 import '../../../../core/error/repository_exception.dart';
 import 'game_use_case_helpers.dart';
-import 'package:uuid/uuid.dart';
 import 'package:my_darts/core/utils/constants.dart';
 
 class ProcessDartUseCase {
@@ -44,23 +43,16 @@ class ProcessDartUseCase {
     // 4. Create DartThrown event (eventId == dartId per spec)
     final currentPlayerId = getCurrentPlayerId(currentState, dartThrow.competitorId);
 
-    var dartEvent = GameEvent(
-      eventId: dartThrow.dartId,
+    var dartEvent = buildDartThrownEvent(
       gameId: currentState.gameId,
-      eventType: 'DartThrown',
-      localSequence: nextSeq++,
-      occurredAt: DateTime.now(),
-      payload: {
-        'competitor_id': dartThrow.competitorId,
-        'player_id': currentPlayerId,
-        'segment': segmentValue,
-        'multiplier': multiplier,
-        'score': parsedSegment.scoreValue,
-        'input_method': 'manual',
-      },
-      synced: false,
+      dartId: dartThrow.dartId,
+      competitorId: dartThrow.competitorId,
       actorId: currentPlayerId,
-      source: EventSource.client,
+      localSequence: nextSeq++,
+      segment: segmentValue,
+      multiplier: multiplier,
+      score: parsedSegment.scoreValue,
+      playerId: currentPlayerId,
     );
 
     // 5. Validate
@@ -87,114 +79,56 @@ class ProcessDartUseCase {
       if (result.outcome == LegOutcome.gameCompleted) {
         // Append TurnEnded + LegCompleted + GameCompleted; call completeGame()
         final winnerPlayerId = getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
-        final turnEndedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+        eventsToStore.add(buildTurnEndedEvent(
           gameId: currentState.gameId,
-          eventType: 'TurnEnded',
+          competitorId: dartThrow.competitorId,
+          playerId: currentPlayerId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'competitor_id': dartThrow.competitorId,
-            'player_id': currentPlayerId,
-            'reason': 'normal',
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
-        );
-        eventsToStore.add(turnEndedEvent);
-
-        final legCompletedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+        ));
+        eventsToStore.add(buildLegCompletedEvent(
           gameId: currentState.gameId,
-          eventType: 'LegCompleted',
+          winnerCompetitorId: result.winnerCompetitorId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'winner_competitor_id': result.winnerCompetitorId,
-            'winner_player_id': winnerPlayerId,
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
-        );
-        eventsToStore.add(legCompletedEvent);
-
-        final gameCompletedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+          winnerPlayerId: winnerPlayerId,
+        ));
+        eventsToStore.add(buildGameCompletedEvent(
           gameId: currentState.gameId,
-          eventType: 'GameCompleted',
+          winnerCompetitorId: result.winnerCompetitorId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'winner_id': result.winnerCompetitorId,
-            'winner_player_id': winnerPlayerId,
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
-        );
-        eventsToStore.add(gameCompletedEvent);
+          winnerPlayerId: winnerPlayerId,
+        ));
         needsCompleteGame = true;
         // finalState stays as result.state (game is over, no TurnStarted)
 
       } else if (result.outcome == LegOutcome.legCompleted) {
         // Append TurnEnded + LegCompleted + TurnStarted for first player of new leg
         final winnerPlayerId = getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
-        final turnEndedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+        eventsToStore.add(buildTurnEndedEvent(
           gameId: currentState.gameId,
-          eventType: 'TurnEnded',
+          competitorId: dartThrow.competitorId,
+          playerId: currentPlayerId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'competitor_id': dartThrow.competitorId,
-            'player_id': currentPlayerId,
-            'reason': 'normal',
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
-        );
-        eventsToStore.add(turnEndedEvent);
-
-        final legCompletedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+        ));
+        eventsToStore.add(buildLegCompletedEvent(
           gameId: currentState.gameId,
-          eventType: 'LegCompleted',
+          winnerCompetitorId: result.winnerCompetitorId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'winner_competitor_id': result.winnerCompetitorId,
-            'winner_player_id': winnerPlayerId,
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
-        );
-        eventsToStore.add(legCompletedEvent);
+          winnerPlayerId: winnerPlayerId,
+        ));
 
         // After _resetLeg, currentTurnIndex == 0 (first player of next leg)
         final nextCompetitor = finalState.competitors[finalState.currentTurnIndex];
         final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
             ? nextCompetitor.playerIds.first
             : 'system';
-        final turnStartedEvent = GameEvent(
-          eventId: const Uuid().v4(),
+        final turnStartedEvent = buildTurnStartedEvent(
           gameId: currentState.gameId,
-          eventType: 'TurnStarted',
+          competitorId: nextCompetitor.competitorId,
+          playerId: nextPlayerId,
           localSequence: nextSeq++,
-          occurredAt: DateTime.now(),
-          payload: {
-            'competitor_id': nextCompetitor.competitorId,
-            'player_id': nextPlayerId,
-            'starting_score': nextCompetitor.score,
-            'turn_index': finalState.currentTurnIndex,
-            'leg_index': finalState.currentLegIndex,
-          },
-          synced: false,
-          actorId: 'system',
-          source: EventSource.client,
+          turnIndex: finalState.currentTurnIndex,
+          legIndex: finalState.currentLegIndex,
+          startingScore: nextCompetitor.score,
         );
         eventsToStore.add(turnStartedEvent);
         finalState = _engine.apply(finalState, turnStartedEvent).state;
