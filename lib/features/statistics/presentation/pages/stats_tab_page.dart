@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:my_darts/app/app_router.dart';
+import 'package:my_darts/core/utils/app_spacing.dart';
+import 'package:my_darts/core/widgets/app_header.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
 import 'package:my_darts/features/players/presentation/widgets/player_card_widget.dart';
@@ -12,30 +14,45 @@ class StatsTabPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
-        title: const Text('Statistics'),
-      ),
-      body: ref.watch(allPlayersProvider).when(
-        data: (players) => players.isEmpty
-            ? const _EmptyState()
-            : _PlayerPickerList(players: players),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.error_outline, size: 48),
-              const SizedBox(height: 8),
-              Text('Failed to load players: $e'),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => ref.invalidate(allPlayersProvider),
-                child: const Text('Retry'),
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+              child: AppHeader(
+                showBack: true,
+                onBack: () => context.go(GameRoutes.home),
               ),
-            ],
-          ),
+            ),
+            Expanded(
+              child: ref.watch(allPlayersProvider).when(
+                data: (players) => players.isEmpty
+                    ? const _EmptyState()
+                    : _PlayerPickerList(players: players),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 8),
+                      Text('Failed to load players: $e'),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () => ref.invalidate(allPlayersProvider),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -49,16 +66,25 @@ class _PlayerPickerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.space4,
+            AppSpacing.space4,
+            AppSpacing.space4,
+            AppSpacing.space2,
+          ),
           child: Text(
-            'Select a player',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+            'SELECT A PLAYER',
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
           ),
         ),
         Expanded(

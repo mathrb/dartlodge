@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/utils/app_spacing.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/widgets/app_header.dart';
 import '../../../players/presentation/providers/players_provider.dart';
 import '../../domain/entities/player_stats.dart';
 import '../providers/statistics_provider.dart';
@@ -62,31 +65,62 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
     final asyncPlayer = ref.watch(playerProvider(widget.playerId));
     final playerName = asyncPlayer.value?.name ?? 'Player';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$playerName — Stats'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: _tabs,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          indicatorWeight: 2,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          labelStyle: AppTextStyles.labelLarge,
-          unselectedLabelStyle: AppTextStyles.labelLarge,
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+              child: AppHeader(
+                showBack: true,
+                onBack: () => context.pop(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.space4,
+                AppSpacing.space2,
+                AppSpacing.space4,
+                AppSpacing.space2,
+              ),
+              child: Text(
+                playerName.toUpperCase(),
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+            TabBar(
+              controller: _tabController,
+              tabs: _tabs,
+              indicatorColor: cs.primaryFixed,
+              indicatorWeight: 2,
+              labelColor: cs.primaryFixed,
+              unselectedLabelColor: cs.onSurfaceVariant,
+              labelStyle: AppTextStyles.labelLarge,
+              unselectedLabelStyle: AppTextStyles.labelLarge,
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _X01TabContent(playerId: widget.playerId),
+                  _CricketTabContent(playerId: widget.playerId),
+                  _PracticeTabContent(playerId: widget.playerId),
+                  const _ComingSoonTab(label: 'Others'),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _X01TabContent(playerId: widget.playerId),
-          _CricketTabContent(playerId: widget.playerId),
-          _PracticeTabContent(playerId: widget.playerId),
-          const _ComingSoonTab(label: 'Others'),
-        ],
       ),
     );
   }
