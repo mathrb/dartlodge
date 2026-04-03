@@ -352,8 +352,6 @@ class PracticeBoardPage extends ConsumerWidget {
             children: [
               GameStatusBarWidget(
                 configLabel: _modeName(gs.gameType),
-                currentLegIndex: 0,
-                legsToWin: 1,
                 roundInLeg: competitor.practiceRound,
                 totalRounds: _totalRounds(gs),
                 currentTurnDarts: currentTurnDarts,
@@ -404,14 +402,12 @@ class PracticeBoardPage extends ConsumerWidget {
                 canUndo: !gs.isComplete &&
                     (gs.dartsThrownInTurn > 0 ||
                         gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
-                inputEnabled: !gs.isComplete && gs.dartsThrownInTurn < 3 && (!isCatch40 || gs.turnActive),
                 showNextRound: !gs.isComplete,
                 showNextTarget: isCatch40 &&
                     (gs.catch40TargetRemaining == 0 ||
                         gs.catch40DartsOnTarget >= 6) &&
                     !gs.isComplete,
                 onUndo: notifier.undoDart,
-                onMiss: () => notifier.processDart('MISS'),
                 onNextRound: notifier.startNextTurn,
                 onEndDrill: notifier.endDrill,
               ),
@@ -446,13 +442,13 @@ class PracticeBoardPage extends ConsumerWidget {
         _ => 'Practice',
       };
 
-  static int _totalRounds(GameState gs) => switch (gs.gameType) {
-        GameType.aroundTheClock => 20,
+  static int? _totalRounds(GameState gs) => switch (gs.gameType) {
+        GameType.aroundTheClock => null, // completion-based, no round limit
         GameType.bobs27 => 20,
         GameType.shanghai => gs.shanghaiTotalRounds,
         GameType.catch40 => 40,
         GameType.checkoutPractice => gs.checkoutPracticeOrder.length,
-        _ => 0,
+        _ => null,
       };
 }
 
@@ -460,10 +456,8 @@ class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.gameType,
     required this.canUndo,
-    required this.inputEnabled,
     required this.showNextRound,
     required this.onUndo,
-    required this.onMiss,
     required this.onNextRound,
     required this.onEndDrill,
     this.showNextTarget = false,
@@ -471,11 +465,9 @@ class _BottomBar extends StatelessWidget {
 
   final GameType gameType;
   final bool canUndo;
-  final bool inputEnabled;
   final bool showNextRound;
   final bool showNextTarget;
   final VoidCallback onUndo;
-  final VoidCallback onMiss;
   final Future<void> Function() onNextRound;
   final Future<void> Function() onEndDrill;
 
@@ -528,29 +520,6 @@ class _BottomBar extends StatelessWidget {
                     ),
                   ),
                   child: Icon(Icons.undo, color: cs.onSurface),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            // Miss — square button
-            Opacity(
-              opacity: inputEnabled ? 1.0 : 0.38,
-              child: InkWell(
-                onTap: inputEnabled ? onMiss : null,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                splashColor: AppTheme.kineticSplashColor,
-                highlightColor: AppTheme.kineticSplashColor,
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: Icon(Icons.close, color: cs.onSurface, semanticLabel: 'Miss'),
                 ),
               ),
             ),

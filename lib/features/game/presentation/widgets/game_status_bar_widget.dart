@@ -6,25 +6,27 @@ import '../../domain/models/game_config.dart';
 
 /// Compact status bar shown below the app header on game boards.
 ///
-/// Displays: `[configLabel] · ROUND x [/ y] · LEG x/y | [sum] [dart badges]`
+/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`
 ///
 /// [configLabel] is game-type specific — e.g. `'501'` for X01 or `'Standard'`
 /// for Cricket.
 /// [totalRounds] is optional; when null the round denominator is omitted.
+/// [currentLegIndex] and [legsToWin] are optional; when absent the leg section
+/// is hidden (e.g. practice games have no leg concept).
 class GameStatusBarWidget extends StatelessWidget {
   const GameStatusBarWidget({
     required this.configLabel,
-    required this.currentLegIndex,
-    required this.legsToWin,
     required this.roundInLeg,
     required this.currentTurnDarts,
+    this.currentLegIndex,
+    this.legsToWin,
     this.totalRounds,
     super.key,
   });
 
   final String configLabel;
-  final int currentLegIndex;
-  final int legsToWin;
+  final int? currentLegIndex;
+  final int? legsToWin;
   final int roundInLeg;
   final int? totalRounds;
   final List<String> currentTurnDarts;
@@ -77,8 +79,10 @@ class GameStatusBarWidget extends StatelessWidget {
                 : 'ROUND $roundInLeg',
             style: labelStyle,
           ),
-          dot,
-          Text('LEG ${currentLegIndex + 1} / $legsToWin', style: labelStyle),
+          if (currentLegIndex != null && legsToWin != null) ...[
+            dot,
+            Text('LEG ${currentLegIndex! + 1} / $legsToWin', style: labelStyle),
+          ],
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SizedBox(

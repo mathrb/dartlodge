@@ -50,6 +50,7 @@ class PracticeInputButtonsWidget extends StatelessWidget {
     final n = currentTarget;
 
     final buttons = [
+      const _ButtonSpec(label: 'MISS', segment: 'MISS', dimmed: false),
       _ButtonSpec(
         label: n != null ? 'S-$n' : 'S',
         segment: n != null ? '$n' : 'S',
@@ -124,6 +125,18 @@ class _AroundTheClockInputBar extends StatelessWidget {
           children: [
             Expanded(
               child: _AtcInputCell(
+                label: 'MISS',
+                bgColor: colorScheme.surface,
+                fgColor: colorScheme.onSurface,
+                dotCount: 0,
+                dimForeground: false,
+                enabled: enabled,
+                onTap: () => onDartThrown('MISS'),
+              ),
+            ),
+            VerticalDivider(width: 1, color: colorScheme.outline),
+            Expanded(
+              child: _AtcInputCell(
                 label: 'S-$num',
                 bgColor: colorScheme.surface,
                 fgColor: colorScheme.onSurface,
@@ -188,45 +201,34 @@ class _Bobs27InputBar extends StatelessWidget {
           top: BorderSide(color: colorScheme.outline, width: 1),
         ),
       ),
-      child: Material(
-        color: colorScheme.primaryContainer,
-        child: InkWell(
-          onTap: enabled ? () => onDartThrown(segment) : null,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 56),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    label,
-                    style: AppTextStyles.segmentButton.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (int i = 0; i < 2; i++) ...[
-                        if (i > 0) const SizedBox(width: 4),
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _AtcInputCell(
+                label: 'MISS',
+                bgColor: colorScheme.surface,
+                fgColor: colorScheme.onSurface,
+                dotCount: 0,
+                dimForeground: false,
+                enabled: enabled,
+                onTap: () => onDartThrown('MISS'),
               ),
             ),
-          ),
+            VerticalDivider(width: 1, color: colorScheme.outline),
+            Expanded(
+              child: _AtcInputCell(
+                label: label,
+                bgColor: colorScheme.primaryContainer,
+                fgColor: colorScheme.onPrimaryContainer,
+                dotCount: 2,
+                dimForeground: false,
+                enabled: enabled,
+                onTap: () => onDartThrown(segment),
+              ),
+            ),
+          ],
         ),
       ),
     );

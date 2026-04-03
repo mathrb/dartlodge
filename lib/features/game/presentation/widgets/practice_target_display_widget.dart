@@ -18,7 +18,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   final GameType gameType;
   final int? currentTarget;
   final int practiceRound;
-  final int totalRounds;
+  final int? totalRounds;
   final int score;
   final int practiceAttempts;
   final int practiceSuccesses;
@@ -37,7 +37,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   String get _secondaryMetric {
     return switch (gameType) {
       GameType.aroundTheClock =>
-        'Number $practiceRound of $totalRounds',
+        'Number $practiceRound',
       GameType.bobs27 =>
         'Score: $score',
       GameType.shanghai =>

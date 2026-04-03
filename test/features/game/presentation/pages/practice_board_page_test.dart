@@ -268,7 +268,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Around the Clock'), findsOneWidget);
-    expect(find.text('Number 3 of 20'), findsOneWidget);
+    expect(find.text('Number 3'), findsOneWidget);
   });
 
   // ── 6. AppBar overflow menu shows Reset/End Drill ─────────────────────────
@@ -327,41 +327,6 @@ void main() {
     final text = tester.widget<Text>(targetWidget);
     expect(text.style?.color, colorScheme.primary);
     expect(text.style?.fontFamily?.toLowerCase().contains('spacegrotesk'), isTrue);
-  });
-
-  // ── 9. MISS button enabled during active play ─────────────────────────────
-
-  testWidgets('9. MISS button enabled when dartsThrownInTurn=0, isComplete=false',
-      (tester) async {
-    final gs = _practiceState(dartsThrownInTurn: 0, isComplete: false);
-    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
-    await tester.pumpWidget(_buildApp(notifier));
-    await tester.pumpAndSettle();
-
-    final missBtn = tester.widget<InkWell>(
-      find.ancestor(
-        of: find.byIcon(Icons.close),
-        matching: find.byType(InkWell),
-      ).first,
-    );
-    expect(missBtn.onTap, isNotNull);
-  });
-
-  // ── 10. MISS button disabled when game complete ────────────────────────────
-
-  testWidgets('10. MISS button disabled when isComplete=true', (tester) async {
-    final gs = _practiceState(isComplete: true);
-    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
-    await tester.pumpWidget(_buildApp(notifier));
-    await tester.pumpAndSettle();
-
-    final missBtn = tester.widget<InkWell>(
-      find.ancestor(
-        of: find.byIcon(Icons.close),
-        matching: find.byType(InkWell),
-      ).first,
-    );
-    expect(missBtn.onTap, isNull);
   });
 
   // ── 11. Undo disabled when dartsThrownInTurn=0 and no dart throws ─────────
@@ -496,11 +461,12 @@ void main() {
     expect(find.text('home'), findsOneWidget);
   });
 
-  // ── 19. PracticeInputButtonsWidget has no MISS button ────────────────────
+  // ── 19. PracticeInputButtonsWidget contains MISS button ─────────────────
 
-  testWidgets('19. PracticeInputButtonsWidget does not contain MISS',
+  testWidgets('19. PracticeInputButtonsWidget contains MISS for aroundTheClock',
       (tester) async {
-    final notifier = _FakeActivePracticeNotifier(_activeState());
+    final gs = _practiceState(gameType: GameType.aroundTheClock);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
@@ -508,6 +474,34 @@ void main() {
       of: find.byType(PracticeInputButtonsWidget),
       matching: find.text('MISS'),
     );
-    expect(missInInputButtons, findsNothing);
+    expect(missInInputButtons, findsOneWidget);
+  });
+
+  testWidgets('19b. PracticeInputButtonsWidget contains MISS for bobs27',
+      (tester) async {
+    final gs = _practiceState(gameType: GameType.bobs27);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final missInInputButtons = find.descendant(
+      of: find.byType(PracticeInputButtonsWidget),
+      matching: find.text('MISS'),
+    );
+    expect(missInInputButtons, findsOneWidget);
+  });
+
+  testWidgets('19c. PracticeInputButtonsWidget contains MISS for checkoutPractice',
+      (tester) async {
+    final gs = _practiceState(gameType: GameType.checkoutPractice);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final missInInputButtons = find.descendant(
+      of: find.byType(PracticeInputButtonsWidget),
+      matching: find.text('MISS'),
+    );
+    expect(missInInputButtons, findsOneWidget);
   });
 }
