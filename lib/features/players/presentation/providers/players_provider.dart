@@ -4,9 +4,14 @@ import 'package:uuid/uuid.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
 import 'package:my_darts/core/persistence/database_provider.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:my_darts/features/players/domain/validators.dart';
 import 'package:my_darts/features/players/presentation/state/player_form_state.dart';
 
 part 'players_provider.g.dart';
+
+String _playerFormErrorMessage(Object e) => e is DuplicatePlayerException
+    ? 'A player with this name already exists'
+    : e.toString();
 
 @riverpod
 class AllPlayers extends _$AllPlayers {
@@ -38,12 +43,9 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
   Future<void> submit(String playerId) async {
     final name = state.name.trim();
 
-    if (name.isEmpty) {
-      state = state.copyWith(nameError: 'Name cannot be empty');
-      return;
-    }
-    if (name.length > 30) {
-      state = state.copyWith(nameError: 'Name must be 30 characters or fewer');
+    final error = validatePlayerName(name);
+    if (error != null) {
+      state = state.copyWith(nameError: error);
       return;
     }
 
@@ -69,10 +71,10 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
         ref.invalidate(playerProvider(playerId));
       },
       error: (e, _) {
-        final msg = e is DuplicatePlayerException
-            ? 'A player with this name already exists'
-            : e.toString();
-        state = state.copyWith(isSubmitting: false, nameError: msg);
+        state = state.copyWith(
+          isSubmitting: false,
+          nameError: _playerFormErrorMessage(e),
+        );
       },
       loading: () {},
     );
@@ -110,12 +112,9 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
   Future<void> submit() async {
     final name = state.name.trim();
 
-    if (name.isEmpty) {
-      state = state.copyWith(nameError: 'Name cannot be empty');
-      return;
-    }
-    if (name.length > 30) {
-      state = state.copyWith(nameError: 'Name must be 30 characters or fewer');
+    final error = validatePlayerName(name);
+    if (error != null) {
+      state = state.copyWith(nameError: error);
       return;
     }
 
@@ -142,10 +141,10 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
         state = state.copyWith(isSubmitting: false);
       },
       error: (e, _) {
-        final msg = e is DuplicatePlayerException
-            ? 'A player with this name already exists'
-            : e.toString();
-        state = state.copyWith(isSubmitting: false, nameError: msg);
+        state = state.copyWith(
+          isSubmitting: false,
+          nameError: _playerFormErrorMessage(e),
+        );
       },
       loading: () {},
     );

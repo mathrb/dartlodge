@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/players_provider.dart';
 import '../state/player_form_state.dart';
+import '../widgets/player_form_field_widget.dart';
 
 class CreatePlayerPage extends ConsumerStatefulWidget {
   const CreatePlayerPage({super.key});
@@ -57,19 +57,13 @@ class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
+            PlayerFormFieldWidget(
               controller: _controller,
               focusNode: _focusNode,
-              autofocus: true,
-              maxLength: 30,
-              inputFormatters: [LengthLimitingTextInputFormatter(30)],
+              errorText: state.nameError,
               onChanged: (v) =>
                   ref.read(createPlayerProvider.notifier).setName(v),
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                labelText: 'Name',
-                errorText: state.nameError,
-              ),
+              onSubmitted: _submit,
             ),
             const SizedBox(height: 24),
             FilledButton(
