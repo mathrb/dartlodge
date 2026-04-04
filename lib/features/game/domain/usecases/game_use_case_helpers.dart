@@ -153,3 +153,25 @@ GameEvent buildTurnStartedEvent({
     source: EventSource.client,
   );
 }
+
+/// Generic scaffolding helper — use when a typed event builder doesn't exist.
+/// Handles UUID, timestamp, synced=false, and EventSource.client.
+GameEvent buildGameEvent({
+  required String gameId,
+  required String eventType,
+  required int localSequence,
+  required String actorId,
+  required Map<String, dynamic> payload,
+}) {
+  return GameEvent(
+    eventId: const Uuid().v4(),
+    gameId: gameId,
+    eventType: eventType,
+    localSequence: localSequence,
+    occurredAt: DateTime.now(),
+    payload: payload,
+    synced: false,
+    actorId: actorId,
+    source: EventSource.client,
+  );
+}

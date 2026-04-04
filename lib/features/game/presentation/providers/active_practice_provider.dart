@@ -1,10 +1,10 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/dart_throw.dart';
-import '../../domain/entities/game_event.dart';
 import '../../domain/engines/base_game_engine.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_practice_state.dart';
 import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/constants.dart';
@@ -131,16 +131,12 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         ? currentCompetitor.playerIds.first
         : 'system';
 
-    final turnEndedEvent = GameEvent(
-      eventId: const Uuid().v4(),
+    final turnEndedEvent = buildGameEvent(
       gameId: gs.gameId,
       eventType: 'TurnEnded',
       localSequence: nextSeq++,
-      occurredAt: DateTime.now(),
-      payload: {'competitor_id': currentCompetitor.competitorId},
-      synced: false,
       actorId: actorId,
-      source: EventSource.client,
+      payload: {'competitor_id': currentCompetitor.competitorId},
     );
 
     var newGs = engine.apply(gs, turnEndedEvent).state;
@@ -150,16 +146,12 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         ? nextCompetitor.playerIds.first
         : 'system';
 
-    final turnStartedEvent = GameEvent(
-      eventId: const Uuid().v4(),
+    final turnStartedEvent = buildGameEvent(
       gameId: gs.gameId,
       eventType: 'TurnStarted',
       localSequence: nextSeq++,
-      occurredAt: DateTime.now(),
-      payload: {'competitor_id': nextCompetitor.competitorId},
-      synced: false,
       actorId: nextActorId,
-      source: EventSource.client,
+      payload: {'competitor_id': nextCompetitor.competitorId},
     );
 
     newGs = engine.apply(newGs, turnStartedEvent).state;

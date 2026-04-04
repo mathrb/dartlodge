@@ -290,8 +290,7 @@ as String,
 /// @nodoc
 mixin _$CompetitorStats {
 
- String get competitorId; String get competitorName; List<PlayerTurnStats> get byPlayer; double get threeDartAverage; int get legsWon; int get totalDartsThrown; double? get checkoutPercentage; int? get highestCheckout; int get oneEightyTurns; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns;// Cricket-specific stats
- double? get marksPerRound; double? get firstNineMarksPerRound; int get fiveMarkTurns; int get sixMarkTurns; int get sevenMarkTurns; int get eightMarkTurns; int get nineMarkTurns;
+ String get competitorId; String get competitorName; List<PlayerTurnStats> get byPlayer; double get threeDartAverage; int get legsWon; int get totalDartsThrown; double? get checkoutPercentage; int? get highestCheckout; int get oneEightyTurns; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns; double? get marksPerRound; double? get firstNineMarksPerRound; int get fiveMarkTurns; int get sixMarkTurns; int get sevenMarkTurns; int get eightMarkTurns; int get nineMarkTurns;
 /// Create a copy of CompetitorStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -524,7 +523,6 @@ class _CompetitorStats implements CompetitorStats {
 @override@JsonKey() final  int sixtyPlusTurns;
 @override@JsonKey() final  int oneHundredPlusTurns;
 @override@JsonKey() final  int oneFortyPlusTurns;
-// Cricket-specific stats
 @override final  double? marksPerRound;
 @override final  double? firstNineMarksPerRound;
 @override@JsonKey() final  int fiveMarkTurns;
