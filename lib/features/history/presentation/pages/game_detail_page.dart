@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:my_darts/features/game/domain/entities/competitor.dart';
 import 'package:my_darts/features/game/domain/entities/game.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 import 'package:my_darts/features/history/presentation/providers/game_detail_provider.dart';
 import 'package:my_darts/features/history/presentation/state/game_detail_state.dart';
 import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
@@ -32,8 +34,11 @@ class GameDetailPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Game Detail')),
       body: asyncState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        loading: () => const LoadingSpinnerWidget(),
+        error: (e, _) => ErrorRetryWidget(
+          message: 'Error: $e',
+          onRetry: () => ref.invalidate(gameDetailProvider(gameId)),
+        ),
         data: (detail) {
           if (detail == null) {
             return const Center(child: Text('Game not found'));

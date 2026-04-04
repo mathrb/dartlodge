@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/statistics_provider.dart';
@@ -17,13 +19,13 @@ class MptTrendChartWidget extends ConsumerWidget {
     final asyncHistory = ref.watch(cricketLegHistoryProvider(playerId));
 
     return asyncHistory.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const LoadingSpinnerWidget(height: 200),
       error: (e, _) => SizedBox(
         height: 200,
-        child: Center(child: Text('Failed to load chart: $e')),
+        child: ErrorRetryWidget(
+          message: 'Failed to load chart: $e',
+          onRetry: () => ref.invalidate(cricketLegHistoryProvider(playerId)),
+        ),
       ),
       data: (history) => TrendChartShellWidget(
         hasEnoughData: history.length >= 2,

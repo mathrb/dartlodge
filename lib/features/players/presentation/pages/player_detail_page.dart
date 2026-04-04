@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/players_provider.dart';
 import '../widgets/player_avatar_widget.dart';
 
@@ -63,7 +64,7 @@ class PlayerDetailPage extends ConsumerWidget {
     return asyncPlayer.when(
       loading: () => Scaffold(
         appBar: AppBar(),
-        body: const Center(child: CircularProgressIndicator()),
+        body: const LoadingSpinnerWidget(),
       ),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: const Text('Error')),

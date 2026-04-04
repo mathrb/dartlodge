@@ -9,6 +9,8 @@ import 'package:my_darts/core/utils/app_spacing.dart';
 import 'package:my_darts/core/utils/app_theme.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/core/widgets/app_header.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/presentation/pages/game_config_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
@@ -252,9 +254,11 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                       }
                     },
                   ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) =>
-                      Center(child: Text('Failed to load players: $e')),
+                  loading: () => const LoadingSpinnerWidget(),
+                  error: (e, _) => ErrorRetryWidget(
+                    message: 'Failed to load players: $e',
+                    onRetry: () => ref.invalidate(allPlayersProvider),
+                  ),
                 ),
               ),
             ),

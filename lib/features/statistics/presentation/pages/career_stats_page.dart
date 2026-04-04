@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
 import 'package:my_darts/features/statistics/domain/entities/player_stats.dart';
@@ -21,25 +23,11 @@ class CareerStatsPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text('$playerName — Career Stats')),
       body: statsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              const SizedBox(height: 12),
-              Text(error.toString(), textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => ref.invalidate(playerStatsProvider(playerId)),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        loading: () => const LoadingSpinnerWidget(),
+        error: (error, _) => ErrorRetryWidget(
+          title: 'Failed to load stats',
+          message: error.toString(),
+          onRetry: () => ref.invalidate(playerStatsProvider(playerId)),
         ),
         data: (stats) => _StatsBody(stats: stats),
       ),

@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/constants.dart';
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/statistics_provider.dart';
@@ -25,13 +27,14 @@ class PracticeTrendChartWidget extends ConsumerWidget {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
 
     return asyncHistory.when(
-      loading: () => const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () => const LoadingSpinnerWidget(height: 200),
       error: (e, _) => SizedBox(
         height: 200,
-        child: Center(child: Text('Failed to load chart: $e')),
+        child: ErrorRetryWidget(
+          message: 'Failed to load chart: $e',
+          onRetry: () =>
+              ref.invalidate(practiceDrillHistoryProvider(playerId)),
+        ),
       ),
       data: (history) {
         final spots = history

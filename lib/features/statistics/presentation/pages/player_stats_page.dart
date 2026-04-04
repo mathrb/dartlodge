@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/app_spacing.dart';
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
@@ -144,13 +146,11 @@ class _X01TabContent extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
-              loading: () => const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => _ErrorRetry(
+              loading: () => const LoadingSpinnerWidget(height: 80),
+              error: (e, _) => ErrorRetryWidget(
                 message: 'Failed to load stats: $e',
-                onRetry: () => ref.invalidate(filteredPlayerStatsProvider(playerId)),
+                onRetry: () =>
+                    ref.invalidate(filteredPlayerStatsProvider(playerId)),
               ),
               data: (stats) => SummaryCardsRowWidget(stats: stats),
             ),
@@ -164,13 +164,11 @@ class _X01TabContent extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
-            loading: () => const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => _ErrorRetry(
+            loading: () => const LoadingSpinnerWidget(height: 200),
+            error: (e, _) => ErrorRetryWidget(
               message: 'Failed to load stats: $e',
-              onRetry: () => ref.invalidate(filteredPlayerStatsProvider(playerId)),
+              onRetry: () =>
+                  ref.invalidate(filteredPlayerStatsProvider(playerId)),
             ),
             data: (stats) => StatsDetailTableWidget(stats: stats),
           ),
@@ -198,11 +196,8 @@ class _CricketTabContent extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
-              loading: () => const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => _ErrorRetry(
+              loading: () => const LoadingSpinnerWidget(height: 80),
+              error: (e, _) => ErrorRetryWidget(
                 message: 'Failed to load stats: $e',
                 onRetry: () =>
                     ref.invalidate(filteredCricketStatsProvider(playerId)),
@@ -219,11 +214,8 @@ class _CricketTabContent extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
-            loading: () => const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => _ErrorRetry(
+            loading: () => const LoadingSpinnerWidget(height: 200),
+            error: (e, _) => ErrorRetryWidget(
               message: 'Failed to load stats: $e',
               onRetry: () =>
                   ref.invalidate(filteredCricketStatsProvider(playerId)),
@@ -258,11 +250,8 @@ class _PracticeTabContent extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
             child: asyncStats.when(
-              loading: () => const SizedBox(
-                height: 80,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => _ErrorRetry(
+              loading: () => const LoadingSpinnerWidget(height: 80),
+              error: (e, _) => ErrorRetryWidget(
                 message: 'Failed to load stats: $e',
                 onRetry: () =>
                     ref.invalidate(filteredPracticeStatsProvider(playerId)),
@@ -273,11 +262,8 @@ class _PracticeTabContent extends ConsumerWidget {
           TimeRangeSelectorWidget(playerId: playerId),
           const SizedBox(height: AppSpacing.space2),
           asyncStats.when(
-            loading: () => const SizedBox(
-              height: 200,
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (e, _) => _ErrorRetry(
+            loading: () => const LoadingSpinnerWidget(height: 200),
+            error: (e, _) => ErrorRetryWidget(
               message: 'Failed to load stats: $e',
               onRetry: () =>
                   ref.invalidate(filteredPracticeStatsProvider(playerId)),
@@ -442,21 +428,3 @@ class _ComingSoonTab extends StatelessWidget {
   }
 }
 
-class _ErrorRetry extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
-
-  const _ErrorRetry({required this.message, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(message),
-        const SizedBox(height: AppSpacing.space2),
-        TextButton(onPressed: onRetry, child: const Text('Retry')),
-      ],
-    );
-  }
-}

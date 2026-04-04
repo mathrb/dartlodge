@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_darts/app/app_router.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 import 'package:my_darts/features/history/presentation/providers/game_history_provider.dart';
 import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:my_darts/features/history/presentation/widgets/history_filter_bar_widget.dart';
@@ -47,19 +49,10 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
         title: const Text('History'),
       ),
       body: asyncState.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Error loading history: $e'),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: () => ref.invalidate(gameHistoryProvider),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        loading: () => const LoadingSpinnerWidget(),
+        error: (e, _) => ErrorRetryWidget(
+          message: 'Error loading history: $e',
+          onRetry: () => ref.invalidate(gameHistoryProvider),
         ),
         data: (historyState) => Column(
           children: [

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:my_darts/app/app_router.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 import 'package:my_darts/core/utils/app_spacing.dart';
 import 'package:my_darts/core/widgets/app_header.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
@@ -34,21 +36,10 @@ class StatsTabPage extends ConsumerWidget {
                 data: (players) => players.isEmpty
                     ? const _EmptyState()
                     : _PlayerPickerList(players: players),
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48),
-                      const SizedBox(height: 8),
-                      Text('Failed to load players: $e'),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: () => ref.invalidate(allPlayersProvider),
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
+                loading: () => const LoadingSpinnerWidget(),
+                error: (e, _) => ErrorRetryWidget(
+                  message: 'Failed to load players: $e',
+                  onRetry: () => ref.invalidate(allPlayersProvider),
                 ),
               ),
             ),

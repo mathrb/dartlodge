@@ -8,6 +8,8 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
 import '../widgets/dartboard_highlight_widget.dart';
@@ -28,32 +30,13 @@ class PracticeBoardPage extends ConsumerWidget {
 
     return asyncState.when(
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: LoadingSpinnerWidget(),
       ),
       error: (err, _) => Scaffold(
-        body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Failed to load drill.',
-              style: AppTextStyles.bodyLarge.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => ref.invalidate(activePracticeProvider(gameId)),
-              child: Text(
-                'Retry',
-                style: TextStyle(color: Theme.of(context).colorScheme.primary),
-              ),
-            ),
-          ]),
+        body: ErrorRetryWidget(
+          title: 'Failed to load drill.',
+          message: '$err',
+          onRetry: () => ref.invalidate(activePracticeProvider(gameId)),
         ),
       ),
       data: (practiceState) {

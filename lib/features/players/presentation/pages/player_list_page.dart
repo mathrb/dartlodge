@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:my_darts/app/app_router.dart';
+import 'package:my_darts/core/widgets/error_retry_widget.dart';
 import 'package:my_darts/features/players/domain/entities/player.dart';
 import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
 import 'package:my_darts/features/players/presentation/widgets/player_card_widget.dart';
@@ -28,8 +29,9 @@ class PlayerListPage extends ConsumerWidget {
             ? const _EmptyState()
             : _PlayerList(players: players),
         loading: () => const _SkeletonList(),
-        error: (error, _) => _ErrorState(
-          error: error,
+        error: (error, _) => ErrorRetryWidget(
+          title: 'Failed to load players',
+          message: error.toString(),
           onRetry: () => ref.invalidate(allPlayersProvider),
         ),
       ),
@@ -210,42 +212,3 @@ class _SkeletonCard extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
-  final Object error;
-  final VoidCallback onRetry;
-
-  const _ErrorState({required this.error, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Failed to load players',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            error.toString(),
-            style: Theme.of(context).textTheme.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
-  }
-}

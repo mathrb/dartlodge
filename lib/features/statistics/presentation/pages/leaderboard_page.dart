@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/statistics_provider.dart';
 import '../widgets/leaderboard_row_widget.dart';
 
@@ -64,22 +66,10 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
         ),
         Expanded(
           child: leaderboard.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.error_outline, size: 48),
-                  const SizedBox(height: 8),
-                  Text('Failed to load leaderboard: $e'),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () => ref.invalidate(leaderboardProvider),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+            loading: () => const LoadingSpinnerWidget(),
+            error: (e, _) => ErrorRetryWidget(
+              message: 'Failed to load leaderboard: $e',
+              onRetry: () => ref.invalidate(leaderboardProvider),
             ),
             data: (stats) {
               if (stats.isEmpty) {

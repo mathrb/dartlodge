@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/statistics_provider.dart';
 
 class StatsOverlayWidget extends ConsumerWidget {
@@ -70,11 +72,15 @@ class StatsOverlayWidget extends ConsumerWidget {
               asyncStats.when(
                 loading: () => const Padding(
                   padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
+                  child: LoadingSpinnerWidget(),
                 ),
                 error: (err, _) => Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Text('Error: $err'),
+                  child: ErrorRetryWidget(
+                    message: 'Error: $err',
+                    onRetry: () =>
+                        ref.invalidate(liveGameStatsProvider(gameId)),
+                  ),
                 ),
                 data: (gameStats) {
                   if (gameStats == null) {

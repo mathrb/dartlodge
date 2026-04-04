@@ -6,6 +6,8 @@ import '../../../../app/app_router.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
@@ -30,10 +32,15 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
     return asyncState.when(
       loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: LoadingSpinnerWidget(),
       ),
       error: (err, _) => Scaffold(
-        body: Center(child: Text('Error: $err')),
+        body: ErrorRetryWidget(
+          title: 'Error',
+          message: '$err',
+          onRetry: () =>
+              ref.invalidate(activeCricketGameProvider(widget.gameId)),
+        ),
       ),
       data: (activeGameState) {
         if (activeGameState == null) {

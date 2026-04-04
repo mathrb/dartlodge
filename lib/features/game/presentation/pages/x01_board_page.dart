@@ -8,6 +8,8 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/checkout_table.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/error_retry_widget.dart';
+import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_game_provider.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
@@ -131,24 +133,13 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 
     return asyncState.when(
       loading: () => Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(color: cs.primary),
-        ),
+        body: LoadingSpinnerWidget(color: cs.primary),
       ),
       error: (err, _) => Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Error: $err'),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () =>
-                    ref.invalidate(activeGameProvider(widget.gameId)),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        body: ErrorRetryWidget(
+          title: 'Error',
+          message: '$err',
+          onRetry: () => ref.invalidate(activeGameProvider(widget.gameId)),
         ),
       ),
       data: (activeGameState) {
