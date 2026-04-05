@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_darts/core/utils/constants.dart';
 
 class HistoryFilterBarWidget extends StatelessWidget {
@@ -19,13 +20,7 @@ class HistoryFilterBarWidget extends StatelessWidget {
     super.key,
   });
 
-  static const _monthAbbr = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
-  String _formatDate(DateTime d) =>
-      '${d.day} ${_monthAbbr[d.month - 1]} ${d.year}';
+  String _formatDate(DateTime d) => DateFormat('d MMM y').format(d);
 
   bool get _isFilterActive =>
       selectedGameType != null ||

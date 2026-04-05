@@ -7,6 +7,7 @@ import 'package:my_darts/core/widgets/error_retry_widget.dart';
 import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
 import 'package:my_darts/features/history/presentation/providers/game_detail_provider.dart';
 import 'package:my_darts/features/history/presentation/state/game_detail_state.dart';
+import 'package:intl/intl.dart';
 import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:my_darts/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
 import 'package:my_darts/features/statistics/domain/entities/game_stats.dart';
@@ -18,14 +19,7 @@ class GameDetailPage extends ConsumerWidget {
 
   const GameDetailPage({required this.gameId, super.key});
 
-  static const _monthAbbr = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
-  String _formatDateTime(DateTime dt) =>
-      '${dt.day} ${_monthAbbr[dt.month - 1]} ${dt.year}, '
-      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  String _formatDateTime(DateTime dt) => DateFormat('d MMM y, HH:mm').format(dt);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

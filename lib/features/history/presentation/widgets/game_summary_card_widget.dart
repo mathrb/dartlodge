@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/entities/competitor.dart';
 import 'package:my_darts/features/game/domain/entities/game.dart';
@@ -19,11 +20,6 @@ class GameSummaryCardWidget extends StatelessWidget {
     super.key,
   });
 
-  static const _monthAbbr = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
   String _formatDate(DateTime? date) {
     if (date == null) return '—';
     final now = DateTime.now();
@@ -33,7 +29,7 @@ class GameSummaryCardWidget extends StatelessWidget {
     if (diff == 0) return 'Today';
     if (diff == 1) return 'Yesterday';
     if (diff <= 7) return '$diff days ago';
-    return '${date.day} ${_monthAbbr[date.month - 1]} ${date.year}';
+    return DateFormat('d MMM y').format(date);
   }
 
   static String gameTypeName(GameType type) {
