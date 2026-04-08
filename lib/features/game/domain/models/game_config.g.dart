@@ -259,6 +259,7 @@ CheckoutPracticeGameConfig _$CheckoutPracticeGameConfigFromJson(
 ) => CheckoutPracticeGameConfig(
   startingPlayerId: json['startingPlayerId'] as String? ?? null,
   randomOrder: json['randomOrder'] as bool? ?? false,
+  targetSuccesses: (json['targetSuccesses'] as num?)?.toInt() ?? null,
   $type: json['runtimeType'] as String?,
 );
 
@@ -267,5 +268,6 @@ Map<String, dynamic> _$CheckoutPracticeGameConfigToJson(
 ) => <String, dynamic>{
   'startingPlayerId': instance.startingPlayerId,
   'randomOrder': instance.randomOrder,
+  'targetSuccesses': instance.targetSuccesses,
   'runtimeType': instance.$type,
 };

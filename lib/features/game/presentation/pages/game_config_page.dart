@@ -140,7 +140,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       chaseTheDragon: (_) => [],
       catch40: (_) => [],
       bobs27: (_) => [],
-      checkoutPractice: (_) => [],
+      checkoutPractice: _buildCheckoutPracticeFields,
     );
   }
 
@@ -297,6 +297,21 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
             ),
           ),
         ],
+      ),
+    ];
+  }
+
+  List<Widget> _buildCheckoutPracticeFields(CheckoutPracticeGameConfig c) {
+    return [
+      _FieldSection(
+        label: 'TARGET SUCCESSES',
+        child: _RoundsDropdown(
+          value: c.targetSuccesses,
+          items: const [null, 1, 2, 3, 5, 10, 20],
+          onChanged: (v) {
+            setState(() => _draftConfig = c.copyWith(targetSuccesses: v));
+          },
+        ),
       ),
     ];
   }

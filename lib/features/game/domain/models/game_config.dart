@@ -81,6 +81,7 @@ abstract class GameConfig with _$GameConfig {
   const factory GameConfig.checkoutPractice({
     @Default(null) String? startingPlayerId,
     @Default(false) bool randomOrder,
+    @Default(null) int? targetSuccesses,
   }) = CheckoutPracticeGameConfig;
 
   factory GameConfig.fromJson(Map<String, dynamic> json) => _$GameConfigFromJson(json);
