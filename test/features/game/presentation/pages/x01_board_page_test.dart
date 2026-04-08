@@ -448,8 +448,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('MISS'), findsOneWidget);
-    expect(find.text('SB'), findsOneWidget);
-    expect(find.text('DB'), findsOneWidget);
+    expect(find.text('25'), findsWidgets); // Single Bull label
+    expect(find.text('50'), findsOneWidget); // Double Bull label
+    expect(find.text('BULL'), findsWidgets); // Sub-label on both bull buttons
   });
 
   // ── 15. Doubles rows show D-prefixed numbers ─────────────────────────────────
@@ -566,8 +567,10 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    // Find the Triple 20 cell by its label text
-    await tester.tap(find.text('T20').first);
+    // Find the Triple 20 cell by its Semantics widget label (label shows '20', prefix inferred from tier)
+    await tester.tap(find.byWidgetPredicate(
+      (w) => w is Semantics && w.properties.label == 'Triple 20',
+    ).first);
     await tester.pumpAndSettle();
 
     final notifier = container.read(activeGameProvider('game-1').notifier)

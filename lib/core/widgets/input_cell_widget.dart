@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../utils/app_text_styles.dart';
+import '../utils/app_theme.dart';
 
 /// A tappable grid cell used in the dart input grid.
 ///
-/// Promoted from the private `_GridCell` in `dart_input_grid_widget.dart`.
 /// The cricket (`_InputCell`) and practice (`_AtcInputCell`) variants deviate
 /// significantly in structure (fixed width, Tooltip/isRowClosed, Material/InkWell,
 /// dimForeground) and are intentionally left as file-private classes.
@@ -17,6 +17,7 @@ class InputCellWidget extends StatelessWidget {
     required this.textColor,
     required this.onTap,
     this.dots = 0,
+    this.dotColor,
     this.enabled = true,
     super.key,
   });
@@ -28,36 +29,38 @@ class InputCellWidget extends StatelessWidget {
   final Color textColor;
   final void Function(String) onTap;
   final int dots;
+  final Color? dotColor;
   final bool enabled;
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Expanded(
-      child: Semantics(
-        label: semanticLabel,
-        child: InkWell(
-          onTap: enabled ? () => onTap(segment) : null,
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 48),
-            decoration: BoxDecoration(
-              color: bgColor,
-              border: Border(
-                right: BorderSide(color: cs.outline, width: 1),
-                bottom: BorderSide(color: cs.outline, width: 1),
+    return Semantics(
+      label: semanticLabel,
+      child: InkWell(
+        onTap: enabled ? () => onTap(segment) : null,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        splashColor: AppTheme.kineticSplashColor,
+        highlightColor: AppTheme.kineticSplashColor,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.segmentButton.copyWith(color: textColor),
               ),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.max,
-              children: [
-                Text(
-                  label,
-                  style: AppTextStyles.segmentButton.copyWith(color: textColor),
-                ),
-                if (dots > 0) _DotRow(count: dots, color: textColor),
+              if (dots > 0) ...[
+                const SizedBox(height: 4),
+                _DotRow(count: dots, color: dotColor ?? textColor),
               ],
-            ),
+            ],
           ),
         ),
       ),
