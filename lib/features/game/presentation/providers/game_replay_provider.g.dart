@@ -79,7 +79,7 @@ final class LoadedGameStateProvider
   }
 }
 
-String _$loadedGameStateHash() => r'0acc71f104bfd78d77587dc64a1f343a86e93912';
+String _$loadedGameStateHash() => r'da86e6a4c3dfff31cf702398ee21e8a1b8e11a16';
 
 /// Loads a game from persistence and replays all recorded events to produce
 /// the current [GameState]. Returns null when no game exists for [gameId].
