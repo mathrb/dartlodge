@@ -29,6 +29,9 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Create Android platform
+        run: flutter create --platforms=android .
+
       - name: Generate code
         run: dart run build_runner build --delete-conflicting-outputs
 
