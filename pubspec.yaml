@@ -37,7 +37,7 @@ dependencies:
   fl_chart: ^0.69.0
 
   # Error monitoring
-  sentry_flutter: ^8.12.0
+  sentry_flutter: ^9.16.1
 
   # Settings / preferences
   shared_preferences: ^2.3.4
