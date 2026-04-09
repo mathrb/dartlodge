@@ -29,7 +29,12 @@ class VariantSelectionPage extends ConsumerWidget {
         ? ref.watch(lastGameConfigProvider(category)).value
         : null;
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(GameRoutes.home);
+      },
+      child: Scaffold(
       body: SafeArea(
         child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 64),
@@ -60,6 +65,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ],
         ),
       ),
+    ),
     );
   }
 
