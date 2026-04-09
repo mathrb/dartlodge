@@ -3,14 +3,23 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app/app.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  runApp(
-    const ProviderScope(
-      child: DartsApp(),
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = const String.fromEnvironment('SENTRY_DSN');
+      options.tracesSampleRate = 1.0;
+      options.environment = const String.fromEnvironment(
+        'SENTRY_ENVIRONMENT',
+        defaultValue: 'development',
+      );
+    },
+    appRunner: () => runApp(
+      const ProviderScope(
+        child: DartsApp(),
+      ),
     ),
   );
 }
