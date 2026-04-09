@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:my_darts/app/app_router.dart';
 import 'package:my_darts/core/persistence/database_provider.dart';
 import 'package:my_darts/core/persistence/drift/drift_helper.dart';
@@ -29,6 +30,51 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       }
     } finally {
       if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  Future<void> _reportBug() async {
+    final controller = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final submitted = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Report a Bug'),
+          content: TextField(
+            controller: controller,
+            maxLines: 4,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              hintText: 'Describe what went wrong…',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Send'),
+            ),
+          ],
+        ),
+      );
+
+      final message = controller.text.trim();
+      if (submitted != true || message.isEmpty) return;
+
+      Sentry.captureFeedback(SentryFeedback(message: message));
+
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Thanks! Your feedback has been sent.')),
+        );
+      }
+    } finally {
+      controller.dispose();
     }
   }
 
@@ -113,6 +159,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               context: context,
               applicationName: 'Darts',
             ),
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: 'Feedback', cs: cs, tt: tt),
+          ListTile(
+            leading: const Icon(Icons.bug_report_outlined),
+            title: const Text('Report a Bug'),
+            subtitle: const Text('Let us know if something went wrong'),
+            onTap: _reportBug,
           ),
           const Divider(height: 1),
           _SectionHeader(label: 'Debug', cs: cs, tt: tt),
