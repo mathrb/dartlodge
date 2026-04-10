@@ -206,7 +206,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     gameState: gameState,
                     bustFlashAnim: _bustFlashAnim,
                   ),
-                  _CheckoutBanner(score: currentScore),
+                  _CheckoutBanner(score: currentScore, outStrategy: gameState.outStrategy),
                   Expanded(
                     child: DartInputGridWidget(
                       onSegmentTapped: (segment) => ref
@@ -264,15 +264,18 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 // ── Private widgets ────────────────────────────────────────────────────────────
 
 class _CheckoutBanner extends StatelessWidget {
-  const _CheckoutBanner({required this.score});
+  const _CheckoutBanner({required this.score, required this.outStrategy});
 
   final int score;
+  final String outStrategy;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final inRange = score >= 2 && score <= 170;
-    final suggestion = inRange ? checkoutSuggestion(score) : null;
+    final inRange = score >= minCheckoutScore(outStrategy) &&
+        score <= maxCheckoutScore(outStrategy);
+    final suggestion =
+        inRange ? checkoutSuggestionForStrategy(score, outStrategy) : null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
