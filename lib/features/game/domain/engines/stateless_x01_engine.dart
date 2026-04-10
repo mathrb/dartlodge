@@ -254,8 +254,19 @@ class StatelessX01Engine implements GameEngine {
     if (isBust) {
       // Bust logic (Table F): restore to turnStartScore and end turn
       final bustRecoveryScore = competitorAfterInCheck.turnStartScore ?? competitorAfterInCheck.score;
+      // Dart count including the bust dart itself
+      final dartsActuallyThrown = cameThroughInStrategy
+          ? state.dartsThrownInTurn  // in-strategy already incremented
+          : state.dartsThrownInTurn + 1;
+      // Pad remaining slots with MISS so dartThrows aligns with dartsThrownInTurn=3
+      final missesToPad = 3 - dartsActuallyThrown;
+      final paddedDartThrows = [
+        ...updatedCompetitors[state.currentTurnIndex].dartThrows,
+        for (var i = 0; i < missesToPad; i++) 'MISS',
+      ];
       updatedCompetitors[state.currentTurnIndex] = updatedCompetitors[state.currentTurnIndex].copyWith(
         score: bustRecoveryScore,
+        dartThrows: paddedDartThrows,
       );
 
       final newState = state.copyWith(

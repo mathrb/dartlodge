@@ -2985,4 +2985,108 @@ void main() {
       expect(result.state.dartsThrownInTurn, 1);
     });
   });
+
+  group('Bust pads remaining darts with MISS', () {
+    GameState _startTurn(GameState state) {
+      return engine.apply(state, _createEvent(
+        eventId: 'turn-bust', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+    }
+
+    test('bust on 1st dart pads dartThrows with 2 MISSes', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 10, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      state = _startTurn(state);
+
+      // Single 20 from score 10 → bust on 1st dart
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      ));
+
+      expect(result.isBust, true);
+      expect(result.state.dartsThrownInTurn, 3);
+      // bust dart + 2 MISS padding
+      final darts = result.state.competitors[0].dartThrows;
+      expect(darts.length, 3);
+      expect(darts, ['20', 'MISS', 'MISS']);
+    });
+
+    test('bust on 2nd dart pads dartThrows with 1 MISS', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 18, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      state = _startTurn(state);
+
+      // 1st dart: single 1 → score 17
+      state = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 1, 'multiplier': 1},
+      )).state;
+      expect(state.dartsThrownInTurn, 1);
+
+      // 2nd dart: D17 = 34 > 17 → bust
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e2', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 17, 'multiplier': 2},
+      ));
+
+      expect(result.isBust, true);
+      expect(result.state.dartsThrownInTurn, 3);
+      // 1st dart + bust dart + 1 MISS padding
+      final darts = result.state.competitors[0].dartThrows;
+      expect(darts.length, 3);
+      expect(darts, ['1', 'D17', 'MISS']);
+    });
+
+    test('bust on 3rd dart adds no MISS padding', () {
+      var state = initialState.copyWith(
+        competitors: [
+          initialState.competitors[0].copyWith(score: 40, isIn: true),
+          initialState.competitors[1],
+        ],
+      );
+      state = _startTurn(state);
+
+      // 1st dart: single 1
+      state = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 1, 'multiplier': 1},
+      )).state;
+
+      // 2nd dart: single 1
+      state = engine.apply(state, _createEvent(
+        eventId: 'e2', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 1, 'multiplier': 1},
+      )).state;
+
+      // 3rd dart: T20 = 60 > 38 → bust
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e3', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 4, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 3},
+      ));
+
+      expect(result.isBust, true);
+      expect(result.state.dartsThrownInTurn, 3);
+      // All 3 darts thrown, no padding needed
+      final darts = result.state.competitors[0].dartThrows;
+      expect(darts.length, 3);
+      expect(darts, ['1', '1', 'T20']);
+    });
+  });
 }
