@@ -38,9 +38,8 @@ class CricketMarksPerTurnProjection extends ProjectionEngine {
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        final segment = event.payload['segment'] as String?;
-        if (segment == null) return;
-        _turnMarks += cricketMarksForSegment(segment);
+        final s = readSegmentFromPayload(event.payload);
+        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;

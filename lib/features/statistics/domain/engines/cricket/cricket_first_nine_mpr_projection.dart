@@ -46,9 +46,8 @@ class CricketFirstNineMprProjection extends ProjectionEngine {
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        final segment = event.payload['segment'] as String?;
-        if (segment == null) return;
-        _currentTurnMarks += cricketMarksForSegment(segment);
+        final s = readSegmentFromPayload(event.payload);
+        _currentTurnMarks += cricketMarksFromPayload(s.segment, s.multiplier);
       case 'TurnEnded':
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;

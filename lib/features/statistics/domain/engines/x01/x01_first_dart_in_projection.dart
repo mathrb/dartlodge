@@ -1,5 +1,6 @@
 import 'package:my_darts/core/utils/constants.dart';
 import 'package:my_darts/features/game/domain/entities/game_event.dart';
+import 'package:my_darts/features/statistics/domain/engines/segment_utils.dart';
 import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
 
 class X01FirstDartInProjection extends ProjectionEngine {
@@ -30,12 +31,10 @@ class X01FirstDartInProjection extends ProjectionEngine {
 
   bool get _isActive => _context?.inStrategy != 'Straight In';
 
-  bool _isValidInDart(String segment) {
+  bool _isValidInMultiplier(int multiplier) {
     final strategy = _context?.inStrategy ?? '';
-    if (strategy == 'Double In') return segment.startsWith('D');
-    if (strategy == 'Master In') {
-      return segment.startsWith('D') || segment.startsWith('T');
-    }
+    if (strategy == 'Double In') return multiplier == 2;
+    if (strategy == 'Master In') return multiplier == 2 || multiplier == 3;
     return false;
   }
 
@@ -52,8 +51,8 @@ class X01FirstDartInProjection extends ProjectionEngine {
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         _inAttempts++;
-        final segment = event.payload['segment'] as String? ?? '';
-        if (_isValidInDart(segment)) {
+        final s = readSegmentFromPayload(event.payload);
+        if (_isValidInMultiplier(s.multiplier)) {
           _inSuccesses++;
           _playerIsIn = true;
         }

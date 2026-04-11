@@ -347,7 +347,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     } on DatabaseException catch (e) {
       throw StatisticsException('Failed to retrieve player statistics: ${e.toString()}');
     } catch (e) {
-      throw StatisticsException('Failed to retrieve player statistics');
+      throw StatisticsException('Failed to retrieve player statistics: $e');
     }
   }
 

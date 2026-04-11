@@ -1,4 +1,6 @@
-/// Shared utilities for cricket segment parsing used across cricket projections.
+/// Cricket-specific segment utilities.
+
+export '../segment_utils.dart' show readSegmentFromPayload;
 
 /// Canonical set of cricket target numbers (bull represented as 25).
 const kCricketTargets = {15, 16, 17, 18, 19, 20, 25};
@@ -23,14 +25,14 @@ int cricketMarksForSegment(String segment) {
   return multiplier;
 }
 
-/// Returns true if the segment lands on a valid cricket target.
-bool isCricketTargetSegment(String segment) {
-  if (segment == 'DB' || segment == 'SB') return true;
-  if (segment == 'MISS') return false;
-  String stripped = segment;
-  if (segment.startsWith('T') || segment.startsWith('D')) {
-    stripped = segment.substring(1);
-  }
-  final n = int.tryParse(stripped);
-  return n != null && kCricketTargets.contains(n);
+/// Returns cricket marks from numeric (segment, multiplier) pair.
+int cricketMarksFromPayload(int segment, int multiplier) {
+  if (segment == 0) return 0;
+  if (!kCricketTargets.contains(segment)) return 0;
+  return multiplier.clamp(0, 3);
+}
+
+/// Returns true if the numeric segment is a valid cricket target.
+bool isCricketTargetNumeric(int segment) {
+  return segment != 0 && kCricketTargets.contains(segment);
 }

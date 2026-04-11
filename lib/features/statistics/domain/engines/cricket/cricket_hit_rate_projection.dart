@@ -33,8 +33,8 @@ class CricketHitRateProjection extends ProjectionEngine {
     final playerId = event.payload['player_id'] as String?;
     if (playerId != _context?.playerId) return;
     _totalDarts++;
-    final segment = event.payload['segment'] as String?;
-    if (segment != null && isCricketTargetSegment(segment)) {
+    final s = readSegmentFromPayload(event.payload);
+    if (isCricketTargetNumeric(s.segment)) {
       _cricketDarts++;
     }
   }
