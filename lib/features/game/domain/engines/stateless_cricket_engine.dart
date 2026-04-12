@@ -49,10 +49,20 @@ class StatelessCricketEngine implements GameEngine {
     final competitorId = event.payload['competitor_id'] as String;
     final competitorIndex =
         state.competitors.indexWhere((c) => c.competitorId == competitorId);
+    final resolvedIndex = competitorIndex >= 0 ? competitorIndex : state.currentTurnIndex;
+
+    // Increment round when cycling back to the first competitor after darts
+    // have been thrown — i.e. a full visit cycle just completed.
+    final newRound = resolvedIndex == 0 &&
+            state.competitors[0].dartThrows.isNotEmpty
+        ? state.currentRoundInLeg + 1
+        : state.currentRoundInLeg;
+
     return state.copyWith(
-      currentTurnIndex: competitorIndex >= 0 ? competitorIndex : state.currentTurnIndex,
+      currentTurnIndex: resolvedIndex,
       dartsThrownInTurn: 0,
       turnActive: true,
+      currentRoundInLeg: newRound,
     );
   }
 
@@ -354,6 +364,7 @@ class StatelessCricketEngine implements GameEngine {
       dartsThrownInTurn: 0,
       turnActive: false,
       winnerCompetitorId: null,
+      currentRoundInLeg: 1,
     );
   }
 
