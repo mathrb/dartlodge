@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_darts/core/utils/cricket_segment_utils.dart';
 import '../../domain/models/game_state.dart';
 
 class CricketScoreSidebarWidget extends StatelessWidget {
@@ -12,7 +13,8 @@ class CricketScoreSidebarWidget extends StatelessWidget {
   String _mpr(CompetitorState cs) {
     final rounds = cs.dartThrows.length ~/ 3;
     if (rounds == 0) return '0.0';
-    final totalMarks = cs.marksPerNumber.values.fold(0, (a, b) => a + b);
+    final totalMarks =
+        cs.dartThrows.fold(0, (sum, s) => sum + cricketMarksForSegment(s));
     return (totalMarks / rounds).toStringAsFixed(1);
   }
 

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/cricket_segment_utils.dart';
 import '../../domain/models/game_state.dart';
 
 // ── File-private helpers ──────────────────────────────────────────────────────
@@ -117,11 +118,10 @@ class _PlayerHeaderCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final totalMarks = competitor.marksPerNumber.values
-        .map((v) => v.clamp(0, 3))
-        .fold(0, (a, b) => a + b);
-    final mpr =
-        currentRoundInLeg > 0 ? totalMarks / currentRoundInLeg : 0.0;
+    final totalMarks = competitor.dartThrows
+        .fold(0, (sum, s) => sum + cricketMarksForSegment(s));
+    final rounds = competitor.dartThrows.length ~/ 3;
+    final mpr = rounds > 0 ? totalMarks / rounds : 0.0;
 
     final cell = Container(
       decoration: BoxDecoration(
