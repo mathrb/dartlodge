@@ -535,7 +535,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       FROM games g
       JOIN competitors c ON g.game_id = c.game_id
       JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
-      WHERE cp.player_id = ?
+      WHERE cp.player_id = ? AND g.is_complete = 1
     ''';
     final List<dynamic> gamesArgs = [playerId];
 

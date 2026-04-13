@@ -75,6 +75,7 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
       await _createPlayerAndGame(playerRepo, gameRepo, playerId: 'p1', gameId: 'g1');
       await _createDartThrow(dartThrowRepo,
           dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1', score: 60);
+      await gameRepo.completeGame(gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
 
       final x01Stats = await statsRepo.getPlayerStats('p1', gameType: GameType.x01);
       final cricketStats =
@@ -109,6 +110,7 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
       await _createPlayerAndGame(playerRepo, gameRepo, playerId: 'p1', gameId: 'g1');
       await _createDartThrow(dartThrowRepo,
           dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1', score: 60);
+      await gameRepo.completeGame(gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
 
       final stats = await statsRepo.getPlayerStatsForGame('p1', 'g1');
       expect(stats.playerId, 'p1');

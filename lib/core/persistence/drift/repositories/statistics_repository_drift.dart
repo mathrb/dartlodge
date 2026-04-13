@@ -240,58 +240,46 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         throw PlayerNotFoundException(playerId);
       }
 
-      // Build dart count query
+      // Build dart count query — always join games to filter by is_complete
       final dartCountQuery = _db.selectOnly(_db.dartThrows)
         ..addColumns([_db.dartThrows.dartId.count()])
         ..where(_db.dartThrows.playerId.equals(playerId));
+      final joinedDartCountQuery = dartCountQuery.join([
+        innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
+      ])..where(_db.games.isComplete.equals(1));
 
-      // Build avg score query
+      // Build avg score query — always join games to filter by is_complete
       final avgScoreQuery = _db.selectOnly(_db.dartThrows)
         ..addColumns([_db.dartThrows.score.avg()])
         ..where(_db.dartThrows.playerId.equals(playerId));
+      final joinedAvgScoreQuery = avgScoreQuery.join([
+        innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
+      ])..where(_db.games.isComplete.equals(1));
 
-      late int dartCount;
-      late double avgScore;
-
-      if (gameType != null || from != null || to != null) {
-        final joinedDartCountQuery = dartCountQuery.join([
-          innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
-        ]);
-        final joinedAvgScoreQuery = avgScoreQuery.join([
-          innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
-        ]);
-
-        if (gameType != null) {
-          joinedDartCountQuery
-              .where(_db.games.gameType.equals(gameType.name));
-          joinedAvgScoreQuery
-              .where(_db.games.gameType.equals(gameType.name));
-        }
-        if (from != null) {
-          joinedDartCountQuery.where(
-              _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
-          joinedAvgScoreQuery.where(
-              _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
-        }
-        if (to != null) {
-          joinedDartCountQuery.where(
-              _db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
-          joinedAvgScoreQuery.where(
-              _db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
-        }
-
-        final dartCountResult = await joinedDartCountQuery.getSingle();
-        dartCount = dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
-
-        final avgScoreResult = await joinedAvgScoreQuery.getSingle();
-        avgScore = avgScoreResult.read(_db.dartThrows.score.avg()) ?? 0;
-      } else {
-        final dartCountResult = await dartCountQuery.getSingle();
-        dartCount = dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
-
-        final avgScoreResult = await avgScoreQuery.getSingle();
-        avgScore = avgScoreResult.read(_db.dartThrows.score.avg()) ?? 0;
+      if (gameType != null) {
+        joinedDartCountQuery
+            .where(_db.games.gameType.equals(gameType.name));
+        joinedAvgScoreQuery
+            .where(_db.games.gameType.equals(gameType.name));
       }
+      if (from != null) {
+        joinedDartCountQuery.where(
+            _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
+        joinedAvgScoreQuery.where(
+            _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
+      }
+      if (to != null) {
+        joinedDartCountQuery.where(
+            _db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
+        joinedAvgScoreQuery.where(
+            _db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
+      }
+
+      final dartCountResult = await joinedDartCountQuery.getSingle();
+      final dartCount = dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
+
+      final avgScoreResult = await joinedAvgScoreQuery.getSingle();
+      final avgScore = avgScoreResult.read(_db.dartThrows.score.avg()) ?? 0;
 
       if (dartCount == 0) {
         return _createEmptyPlayerStats(playerId, gameType);
@@ -374,7 +362,8 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
                 _db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
           ])
           ..where(_db.dartThrows.playerId.equals(playerId) &
-              _db.games.gameType.equals(GameType.x01.name))
+              _db.games.gameType.equals(GameType.x01.name) &
+              _db.games.isComplete.equals(1))
           ..groupBy([_db.dartThrows.gameId]);
         final gameIdRows = await gameIdsQuery.get();
         final gameIds = gameIdRows

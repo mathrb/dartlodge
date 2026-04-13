@@ -8,6 +8,7 @@ import '../../../../app/app_router.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../domain/entities/game_stats.dart';
 import '../providers/statistics_provider.dart';
@@ -216,8 +217,8 @@ class _WinnerCard extends StatelessWidget {
                   _BigStat(
                     label: isCricket ? 'AVG MPR' : 'AVG PPR',
                     value: isCricket
-                        ? (winner.marksPerRound?.toStringAsFixed(2) ?? '—')
-                        : winner.threeDartAverage.toStringAsFixed(1),
+                        ? StatFormatter.fmtDouble(winner.marksPerRound, decimals: 2)
+                        : StatFormatter.fmtDouble(winner.threeDartAverage),
                     color: cs.primaryFixed,
                   ),
                   const SizedBox(height: 16),
@@ -333,8 +334,8 @@ class _OpponentCard extends StatelessWidget {
               _SmallStat(
                 label: isCricket ? 'MPR' : 'PPR',
                 value: isCricket
-                    ? (stats.marksPerRound?.toStringAsFixed(2) ?? '—')
-                    : stats.threeDartAverage.toStringAsFixed(1),
+                    ? StatFormatter.fmtDouble(stats.marksPerRound, decimals: 2)
+                    : StatFormatter.fmtDouble(stats.threeDartAverage),
               ),
               const SizedBox(width: 24),
               _SmallStat(
@@ -464,7 +465,7 @@ class _StatsTable extends StatelessWidget {
             _StatRow(
               category: 'Avg MPR',
               values: allCompetitors
-                  .map((c) => c.marksPerRound?.toStringAsFixed(2) ?? '—')
+                  .map((c) => StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
                   .toList(),
               highlights: allCompetitors
                   .map((c) => c.competitorId == winnerId)
@@ -473,7 +474,7 @@ class _StatsTable extends StatelessWidget {
             _StatRow(
               category: 'First 9 MPR',
               values: allCompetitors
-                  .map((c) => c.firstNineMarksPerRound?.toStringAsFixed(2) ?? '—')
+                  .map((c) => StatFormatter.fmtDouble(c.firstNineMarksPerRound, decimals: 2))
                   .toList(),
               highlights: noHighlight,
             ),
@@ -517,7 +518,7 @@ class _StatsTable extends StatelessWidget {
             _StatRow(
               category: 'Avg PPR',
               values: allCompetitors
-                  .map((c) => c.threeDartAverage.toStringAsFixed(1))
+                  .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
                   .toList(),
               highlights: allCompetitors
                   .map((c) => c.competitorId == winnerId)
@@ -526,9 +527,7 @@ class _StatsTable extends StatelessWidget {
             _StatRow(
               category: 'Checkout',
               values: allCompetitors
-                  .map((c) => c.checkoutPercentage != null
-                      ? '${c.checkoutPercentage!.round()}%'
-                      : '—')
+                  .map((c) => StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))
                   .toList(),
               highlights: noHighlight,
             ),
