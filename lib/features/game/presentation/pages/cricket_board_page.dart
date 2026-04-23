@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
+import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
@@ -28,6 +29,75 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+    ref.listen(activeCricketGameProvider(widget.gameId), (prev, next) {
+      final prevValue = prev?.value;
+      final nextValue = next.value;
+      if (nextValue == null) return;
+      final gs = nextValue.gameState;
+
+      final prevCap = prevValue?.pendingCapSelection ?? false;
+      if (!prevCap && nextValue.pendingCapSelection) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => CapWinnerSelectionDialogWidget(
+              competitors: gs.competitors,
+              onSelect: (id) => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .selectCapWinner(id),
+            ),
+          );
+        });
+      }
+
+      final prevLeg = prevValue?.pendingLegWinnerId;
+      final nextLeg = nextValue.pendingLegWinnerId;
+      if (prevLeg == null && nextLeg != null) {
+        final winner =
+            gs.competitors.firstWhere((c) => c.competitorId == nextLeg);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => LegCompleteModalWidget(
+              winnerName: winner.name,
+              legNumber: gs.currentLegIndex,
+              onNextLeg: () => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .dismissLegModal(),
+            ),
+          );
+        });
+      }
+
+      final prevComplete = prevValue?.gameState.isComplete ?? false;
+      if (!prevComplete && gs.isComplete) {
+        final winnerId = nextValue.pendingGameWinnerId;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          if (winnerId == null) {
+            context.go('/post-game/${widget.gameId}');
+            return;
+          }
+          final winner =
+              gs.competitors.firstWhere((c) => c.competitorId == winnerId);
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => GameCompleteModalWidget(
+              winnerName: winner.name,
+              onNewGame: () => context.go(GameRoutes.home),
+              onViewStats: () => context.go('/post-game/${widget.gameId}'),
+            ),
+          );
+        });
+      }
+    });
+
     final asyncState = ref.watch(activeCricketGameProvider(widget.gameId));
 
     return asyncState.when(
@@ -50,42 +120,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         }
 
         final gameState = activeGameState.gameState;
-
-        if (activeGameState.pendingLegWinnerId != null) {
-          final winner = gameState.competitors.firstWhere(
-            (c) => c.competitorId == activeGameState.pendingLegWinnerId,
-          );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!context.mounted) return;
-            showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => LegCompleteModalWidget(
-                winnerName: winner.name,
-                legNumber: gameState.currentLegIndex,
-                onNextLeg: () => ref
-                    .read(activeCricketGameProvider(widget.gameId).notifier)
-                    .dismissLegModal(),
-              ),
-            );
-          });
-        } else if (activeGameState.pendingGameWinnerId != null) {
-          final winner = gameState.competitors.firstWhere(
-            (c) => c.competitorId == activeGameState.pendingGameWinnerId,
-          );
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!context.mounted) return;
-            showDialog<void>(
-              context: context,
-              barrierDismissible: false,
-              builder: (_) => GameCompleteModalWidget(
-                winnerName: winner.name,
-                onNewGame: () => context.go(GameRoutes.home),
-                onViewStats: () => context.go('/post-game/${widget.gameId}'),
-              ),
-            );
-          });
-        }
 
         final variantLabel = switch (gameState.cricketVariant) {
           'cut-throat' => 'Cut Throat',

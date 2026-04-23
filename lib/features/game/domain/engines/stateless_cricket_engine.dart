@@ -20,7 +20,7 @@ class StatelessCricketEngine implements GameEngine {
           state: state.copyWith(status: GameEngineStatus.inProgress)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
-      'TurnEnded' => EngineResult(state: _applyTurnEnded(state, event)),
+      'TurnEnded' => _applyTurnEnded(state, event),
       'LegCompleted' => _applyLegCompleted(state, event),
       'GameCompleted' => EngineResult(
           state: _applyGameCompleted(state, event),
@@ -299,13 +299,137 @@ class StatelessCricketEngine implements GameEngine {
     return state;
   }
 
-  GameState _applyTurnEnded(GameState state, GameEvent event) {
+  EngineResult _applyTurnEnded(GameState state, GameEvent event) {
     final nextIndex = (state.currentTurnIndex + 1) % state.competitors.length;
-    return state.copyWith(
+    final rotated = state.copyWith(
       dartsThrownInTurn: 0,
       turnActive: false,
       currentTurnIndex: nextIndex,
     );
+
+    final cap = state.cricketTotalRounds;
+    final wasLastCompetitorOfRound =
+        state.currentTurnIndex == state.competitors.length - 1;
+    final capReached = cap != null &&
+        state.currentRoundInLeg >= cap &&
+        wasLastCompetitorOfRound;
+
+    if (!capReached) {
+      return EngineResult(state: rotated);
+    }
+
+    return _resolveRoundCap(state);
+  }
+
+  EngineResult _resolveRoundCap(GameState state) {
+    final winnerId = _selectCricketCapWinner(state);
+    final isSinglePlayer = state.competitors.length == 1;
+
+    if (winnerId == null && !isSinglePlayer) {
+      return EngineResult(
+        state: state.copyWith(turnActive: false),
+        outcome: LegOutcome.roundCapReached,
+      );
+    }
+
+    final updatedCompetitors = List<CompetitorState>.from(state.competitors);
+    var newWinnerLegsWon = 0;
+    if (winnerId != null) {
+      final idx =
+          updatedCompetitors.indexWhere((c) => c.competitorId == winnerId);
+      if (idx >= 0) {
+        final w = updatedCompetitors[idx];
+        newWinnerLegsWon = w.legsWon + 1;
+        updatedCompetitors[idx] = w.copyWith(legsWon: newWinnerLegsWon);
+      }
+    }
+
+    final gameComplete =
+        isSinglePlayer || newWinnerLegsWon >= state.legsToWin;
+
+    if (gameComplete) {
+      return EngineResult(
+        state: state.copyWith(
+          competitors: updatedCompetitors,
+          isComplete: true,
+          status: GameEngineStatus.completed,
+          turnActive: false,
+          winnerCompetitorId: winnerId,
+        ),
+        outcome: LegOutcome.gameCompleted,
+        winnerCompetitorId: winnerId,
+      );
+    }
+
+    final stateBeforeReset = state.copyWith(
+      competitors: updatedCompetitors,
+      currentLegIndex: state.currentLegIndex + 1,
+      turnActive: false,
+      winnerCompetitorId: winnerId,
+    );
+    return EngineResult(
+      state: _resetLeg(stateBeforeReset),
+      outcome: LegOutcome.legCompleted,
+      winnerCompetitorId: winnerId,
+    );
+  }
+
+  /// Per-variant cap winner: highest (standard), lowest (cut-throat), or most
+  /// marks (no-score). Primary-metric ties break by earliest [closeOrder];
+  /// null is earlier than null → unresolvable tie returns null for manual pick.
+  String? _selectCricketCapWinner(GameState state) {
+    if (state.competitors.length < 2) return null;
+    final variant = state.cricketVariant;
+
+    int Function(CompetitorState) metric;
+    bool higherWins;
+    switch (variant) {
+      case 'cut-throat':
+        metric = (c) => c.score;
+        higherWins = false;
+        break;
+      case 'no-score':
+        metric = (c) =>
+            _cricketNumbers.fold<int>(0, (s, n) => s + (c.marksPerNumber[n] ?? 0));
+        higherWins = true;
+        break;
+      case 'standard':
+      default:
+        metric = (c) => c.score;
+        higherWins = true;
+        break;
+    }
+
+    int bestMetric = metric(state.competitors.first);
+    final tied = <CompetitorState>[state.competitors.first];
+    for (var i = 1; i < state.competitors.length; i++) {
+      final c = state.competitors[i];
+      final m = metric(c);
+      final beats = higherWins ? m > bestMetric : m < bestMetric;
+      if (beats) {
+        bestMetric = m;
+        tied
+          ..clear()
+          ..add(c);
+      } else if (m == bestMetric) {
+        tied.add(c);
+      }
+    }
+    if (tied.length == 1) return tied.first.competitorId;
+
+    CompetitorState? earliest;
+    var earliestTied = false;
+    for (final c in tied) {
+      if (c.closeOrder == null) continue;
+      if (earliest == null || c.closeOrder! < earliest.closeOrder!) {
+        earliest = c;
+        earliestTied = false;
+      } else if (c.closeOrder == earliest.closeOrder) {
+        earliestTied = true;
+      }
+    }
+    if (earliest == null || earliestTied) return null;
+    return earliest.competitorId;
   }
 
   EngineResult _applyLegCompleted(GameState state, GameEvent event) {

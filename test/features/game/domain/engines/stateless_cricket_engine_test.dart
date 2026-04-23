@@ -1280,4 +1280,201 @@ void main() {
       expect(result.state.competitors[2].score, 0); // c3 not scored (closed)
     });
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // Round cap termination (cricketTotalRounds)
+  // ─────────────────────────────────────────────────────────────
+  group('Round cap termination (cricketTotalRounds)', () {
+    test('no cap set → TurnEnded rotates normally', () {
+      final state = _makeState(currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: null,
+        currentRoundInLeg: 99,
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.currentTurnIndex, 0);
+    });
+
+    test('cap not yet reached → normal rotation', () {
+      final state = _makeState(currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 19,
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.currentTurnIndex, 0);
+    });
+
+    test('standard: clear highest score wins final leg → gameCompleted', () {
+      final state = _makeState(currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: ['p1'],
+              score: 60),
+          const CompetitorState(
+              competitorId: 'c2',
+              name: 'Bob',
+              playerIds: ['p2'],
+              score: 30),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c1');
+      expect(result.state.isComplete, true);
+    });
+
+    test('cut-throat: clear lowest score wins → gameCompleted', () {
+      final state = _makeState(variant: 'cut-throat', currentTurnIndex: 1)
+          .copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: ['p1'],
+              score: 120),
+          const CompetitorState(
+              competitorId: 'c2',
+              name: 'Bob',
+              playerIds: ['p2'],
+              score: 45),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c2');
+    });
+
+    test('no-score: most marks wins → gameCompleted', () {
+      final state = _makeState(variant: 'no-score', currentTurnIndex: 1)
+          .copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'15': 3, '16': 3, '17': 2, '18': 0, '19': 0, '20': 0, 'Bull': 0},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+            marksPerNumber: {'15': 3, '16': 3, '17': 3, '18': 2, '19': 0, '20': 0, 'Bull': 0},
+          ),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c2');
+    });
+
+    test('tied score, different closeOrder → earliest closeOrder wins', () {
+      final state = _makeState(currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: ['p1'],
+              score: 60,
+              closeOrder: 42),
+          const CompetitorState(
+              competitorId: 'c2',
+              name: 'Bob',
+              playerIds: ['p2'],
+              score: 60,
+              closeOrder: 20),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c2'); // closed earlier
+    });
+
+    test('tied score, no closeOrder anywhere → roundCapReached', () {
+      final state = _makeState(currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: ['p1'],
+              score: 30),
+          const CompetitorState(
+              competitorId: 'c2',
+              name: 'Bob',
+              playerIds: ['p2'],
+              score: 30),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.roundCapReached);
+      expect(result.state.isComplete, false);
+      expect(result.state.turnActive, false);
+    });
+
+    test('multi-leg with clear winner → legCompleted, leg reset', () {
+      final state = _makeState(legsToWin: 3, currentTurnIndex: 1).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 75,
+            marksPerNumber: {'15': 3},
+          ),
+          const CompetitorState(
+              competitorId: 'c2',
+              name: 'Bob',
+              playerIds: ['p2'],
+              score: 10),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c2'));
+      expect(result.outcome, LegOutcome.legCompleted);
+      expect(result.winnerCompetitorId, 'c1');
+      expect(result.state.isComplete, false);
+      expect(result.state.currentLegIndex, 1);
+      // Leg reset: marks cleared, scores zeroed
+      expect(result.state.competitors[0].score, 0);
+      expect(result.state.competitors[0].marksPerNumber, isEmpty);
+      // Winner's legsWon persists
+      final c1 =
+          result.state.competitors.firstWhere((c) => c.competitorId == 'c1');
+      expect(c1.legsWon, 1);
+    });
+
+    test('single-player cap reached → gameCompleted with null winner', () {
+      final state = _makeState(currentTurnIndex: 0).copyWith(
+        cricketTotalRounds: 20,
+        currentRoundInLeg: 20,
+        competitors: [
+          const CompetitorState(
+              competitorId: 'c1',
+              name: 'Solo',
+              playerIds: ['p1'],
+              score: 40),
+        ],
+      );
+      final result = engine.apply(state, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.state.isComplete, true);
+      expect(result.state.winnerCompetitorId, isNull);
+    });
+  });
 }

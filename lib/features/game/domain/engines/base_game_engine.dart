@@ -1,8 +1,12 @@
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 
-/// Leg outcome enum for engine result signaling
-enum LegOutcome { none, legCompleted, gameCompleted }
+/// Leg outcome enum for engine result signaling.
+///
+/// [roundCapReached] signals that the per-leg round cap has been hit with no
+/// unambiguous winner — the UI must prompt for a manual winner pick before
+/// LegCompleted / GameCompleted events are emitted.
+enum LegOutcome { none, legCompleted, gameCompleted, roundCapReached }
 
 /// Engine result type that carries both state and outcome signals
 class EngineResult {

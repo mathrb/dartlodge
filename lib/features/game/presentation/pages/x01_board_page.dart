@@ -11,6 +11,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_game_provider.dart';
+import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
@@ -91,11 +92,10 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       }
     });
 
-    // Game complete listener — navigate to post-game summary
     ref.listen(activeGameProvider(widget.gameId), (prev, next) {
-      final prevWinner = prev?.value?.pendingGameWinnerId;
-      final nextWinner = next.value?.pendingGameWinnerId;
-      if (prevWinner == null && nextWinner != null) {
+      final prevComplete = prev?.value?.gameState.isComplete ?? false;
+      final nextComplete = next.value?.gameState.isComplete ?? false;
+      if (!prevComplete && nextComplete) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
           context.go('/post-game/${widget.gameId}');
@@ -103,7 +103,6 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       }
     });
 
-    // Leg complete listener
     ref.listen(activeGameProvider(widget.gameId), (prev, next) {
       final prevLeg = prev?.value?.pendingLegWinnerId;
       final nextLeg = next.value?.pendingLegWinnerId;
@@ -123,6 +122,27 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
               onNextLeg: () => ref
                   .read(activeGameProvider(widget.gameId).notifier)
                   .dismissLegModal(),
+            ),
+          );
+        });
+      }
+    });
+
+    ref.listen(activeGameProvider(widget.gameId), (prev, next) {
+      final prevCap = prev?.value?.pendingCapSelection ?? false;
+      final nextCap = next.value?.pendingCapSelection ?? false;
+      if (!prevCap && nextCap) {
+        final gs = next.value!.gameState;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          showDialog<void>(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => CapWinnerSelectionDialogWidget(
+              competitors: gs.competitors,
+              onSelect: (id) => ref
+                  .read(activeGameProvider(widget.gameId).notifier)
+                  .selectCapWinner(id),
             ),
           );
         });

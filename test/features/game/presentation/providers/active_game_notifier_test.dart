@@ -372,4 +372,182 @@ void main() {
     expect(s.gameState.dartsThrownInTurn, 1);
     expect(s.gameState.competitors[0].score, 20); // after 20 single
   });
+
+  // ── Round cap tests ──────────────────────────────────────────────────────
+
+  Game makeGameWithCap({
+    int startingScore = 501,
+    int totalRounds = 1,
+    int legsToWin = 1,
+  }) =>
+      Game(
+        gameId: 'g1',
+        gameType: GameType.x01,
+        config: GameConfig.x01(
+          startingScore: startingScore,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+          legsToWin: legsToWin,
+          totalRounds: totalRounds,
+        ),
+        startTime: DateTime(2025),
+      );
+
+  GameEvent turnEndedEvent({
+    required String competitorId,
+    required int seq,
+  }) =>
+      GameEvent(
+        eventId: 'e-te-$seq',
+        gameId: 'g1',
+        eventType: 'TurnEnded',
+        localSequence: seq,
+        occurredAt: DateTime(2025),
+        payload: {'competitor_id': competitorId, 'player_id': 'p1'},
+        synced: false,
+        actorId: 'system',
+        source: EventSource.client,
+      );
+
+  GameEvent dartThrownC2({
+    required int segment,
+    required int multiplier,
+    required int seq,
+  }) =>
+      GameEvent(
+        eventId: 'e-dart-c2-$seq',
+        gameId: 'g1',
+        eventType: 'DartThrown',
+        localSequence: seq,
+        occurredAt: DateTime(2025),
+        payload: {
+          'competitor_id': 'c2',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        },
+        synced: false,
+        actorId: 'p2',
+        source: EventSource.client,
+      );
+
+  // Event trail: round 1 of a totalRounds=1 x01 game. c1 scores 20, c2
+  // scores 20 — tied when the cap fires. Ends with c2's turn done
+  // (3 darts thrown), ready for a cap-triggering nextPlayer() / advanceTurn().
+  List<GameEvent> makeCapBoundaryEventsTied({int startingScore = 501}) {
+    return [
+      turnStartedEvent(competitorId: 'c1', seq: 1),
+      dartThrownEvent(segment: 20, multiplier: 1, seq: 2, eventId: 'e-c1-1'),
+      dartThrownEvent(segment: 0, multiplier: 1, seq: 3, eventId: 'e-c1-2'),
+      dartThrownEvent(segment: 0, multiplier: 1, seq: 4, eventId: 'e-c1-3'),
+      turnEndedEvent(competitorId: 'c1', seq: 5),
+      turnStartedEvent(competitorId: 'c2', seq: 6),
+      dartThrownC2(segment: 20, multiplier: 1, seq: 7),
+      dartThrownC2(segment: 0, multiplier: 1, seq: 8),
+      dartThrownC2(segment: 0, multiplier: 1, seq: 9),
+    ];
+  }
+
+  test(
+      'advanceTurn at round cap with tied scores → pendingCapSelection (ambiguous)',
+      () async {
+    when(mockGameRepo.getGame('g1'))
+        .thenAnswer((_) async => makeGameWithCap(totalRounds: 1));
+    when(mockGameRepo.getCompetitors('g1'))
+        .thenAnswer((_) async => makeCompetitors());
+    when(mockEventRepo.getEventsForGame('g1'))
+        .thenAnswer((_) async => makeCapBoundaryEventsTied());
+    await container.read(activeGameProvider('g1').future);
+
+    await container.read(activeGameProvider('g1').notifier).advanceTurn();
+
+    final s = container.read(activeGameProvider('g1')).value!;
+    expect(s.pendingCapSelection, true);
+    expect(s.pendingLegWinnerId, null);
+    expect(s.pendingGameWinnerId, null);
+    expect(s.gameState.isComplete, false);
+    expect(s.gameState.competitors[0].legsWon, 0);
+    expect(s.gameState.competitors[1].legsWon, 0);
+  });
+
+  test(
+      'advanceTurn at round cap with clear lowest score → gameCompleted auto-winner',
+      () async {
+    when(mockGameRepo.getGame('g1'))
+        .thenAnswer((_) async => makeGameWithCap(totalRounds: 1));
+    when(mockGameRepo.getCompetitors('g1'))
+        .thenAnswer((_) async => makeCompetitors());
+    // c1 scores 60 (T20), c2 scores 20 — c2 is clear higher → c1 has lower
+    // score → c1 wins by "least remaining" (actually in X01 lower score =
+    // closer to 0 = winner).
+    final events = [
+      turnStartedEvent(competitorId: 'c1', seq: 1),
+      dartThrownEvent(segment: 20, multiplier: 3, seq: 2, eventId: 'e-c1-1'),
+      dartThrownEvent(segment: 0, multiplier: 1, seq: 3, eventId: 'e-c1-2'),
+      dartThrownEvent(segment: 0, multiplier: 1, seq: 4, eventId: 'e-c1-3'),
+      turnEndedEvent(competitorId: 'c1', seq: 5),
+      turnStartedEvent(competitorId: 'c2', seq: 6),
+      dartThrownC2(segment: 20, multiplier: 1, seq: 7),
+      dartThrownC2(segment: 0, multiplier: 1, seq: 8),
+      dartThrownC2(segment: 0, multiplier: 1, seq: 9),
+    ];
+    when(mockEventRepo.getEventsForGame('g1')).thenAnswer((_) async => events);
+    await container.read(activeGameProvider('g1').future);
+
+    await container.read(activeGameProvider('g1').notifier).advanceTurn();
+
+    final s = container.read(activeGameProvider('g1')).value!;
+    expect(s.pendingCapSelection, false);
+    expect(s.pendingGameWinnerId, 'c1');
+    expect(s.gameState.isComplete, true);
+    expect(s.gameState.winnerCompetitorId, 'c1');
+    verify(mockGameRepo.completeGame(
+      gameId: 'g1',
+      winnerCompetitorId: 'c1',
+      endTime: anyNamed('endTime'),
+    )).called(1);
+  });
+
+  test('selectCapWinner finalizes ambiguous cap leg', () async {
+    when(mockGameRepo.getGame('g1'))
+        .thenAnswer((_) async => makeGameWithCap(totalRounds: 1));
+    when(mockGameRepo.getCompetitors('g1'))
+        .thenAnswer((_) async => makeCompetitors());
+    when(mockEventRepo.getEventsForGame('g1'))
+        .thenAnswer((_) async => makeCapBoundaryEventsTied());
+    await container.read(activeGameProvider('g1').future);
+    await container.read(activeGameProvider('g1').notifier).advanceTurn();
+
+    await container
+        .read(activeGameProvider('g1').notifier)
+        .selectCapWinner('c2');
+
+    final s = container.read(activeGameProvider('g1')).value!;
+    expect(s.pendingCapSelection, false);
+    expect(s.pendingGameWinnerId, 'c2');
+    expect(s.gameState.isComplete, true);
+    verify(mockGameRepo.completeGame(
+      gameId: 'g1',
+      winnerCompetitorId: 'c2',
+      endTime: anyNamed('endTime'),
+    )).called(1);
+  });
+
+  test('selectCapWinner is a no-op when pendingCapSelection is false', () async {
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeGameProvider('g1').future);
+
+    await container
+        .read(activeGameProvider('g1').notifier)
+        .selectCapWinner('c1');
+
+    final s = container.read(activeGameProvider('g1')).value!;
+    expect(s.gameState.isComplete, false);
+    expect(s.pendingGameWinnerId, null);
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
 }

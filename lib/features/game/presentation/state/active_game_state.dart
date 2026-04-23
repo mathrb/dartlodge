@@ -10,5 +10,6 @@ abstract class ActiveGameState with _$ActiveGameState {
     @Default(false) bool showBust,
     String? pendingLegWinnerId,
     String? pendingGameWinnerId,
+    @Default(false) bool pendingCapSelection,
   }) = _ActiveGameState;
 }

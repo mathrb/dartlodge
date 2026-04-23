@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ActiveCricketGameState {
 
- GameState get gameState; String? get pendingLegWinnerId; String? get pendingGameWinnerId;
+ GameState get gameState; String? get pendingLegWinnerId; String? get pendingGameWinnerId; bool get pendingCapSelection;
 /// Create a copy of ActiveCricketGameState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $ActiveCricketGameStateCopyWith<ActiveCricketGameState> get copyWith => _$Active
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveCricketGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveCricketGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.pendingCapSelection, pendingCapSelection) || other.pendingCapSelection == pendingCapSelection));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingLegWinnerId,pendingGameWinnerId);
+int get hashCode => Object.hash(runtimeType,gameState,pendingLegWinnerId,pendingGameWinnerId,pendingCapSelection);
 
 @override
 String toString() {
-  return 'ActiveCricketGameState(gameState: $gameState, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId)';
+  return 'ActiveCricketGameState(gameState: $gameState, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId, pendingCapSelection: $pendingCapSelection)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $ActiveCricketGameStateCopyWith<$Res>  {
   factory $ActiveCricketGameStateCopyWith(ActiveCricketGameState value, $Res Function(ActiveCricketGameState) _then) = _$ActiveCricketGameStateCopyWithImpl;
 @useResult
 $Res call({
- GameState gameState, String? pendingLegWinnerId, String? pendingGameWinnerId
+ GameState gameState, String? pendingLegWinnerId, String? pendingGameWinnerId, bool pendingCapSelection
 });
 
 
@@ -62,12 +62,13 @@ class _$ActiveCricketGameStateCopyWithImpl<$Res>
 
 /// Create a copy of ActiveCricketGameState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? pendingLegWinnerId = freezed,Object? pendingGameWinnerId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? pendingLegWinnerId = freezed,Object? pendingGameWinnerId = freezed,Object? pendingCapSelection = null,}) {
   return _then(_self.copyWith(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,pendingLegWinnerId: freezed == pendingLegWinnerId ? _self.pendingLegWinnerId : pendingLegWinnerId // ignore: cast_nullable_to_non_nullable
 as String?,pendingGameWinnerId: freezed == pendingGameWinnerId ? _self.pendingGameWinnerId : pendingGameWinnerId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,pendingCapSelection: null == pendingCapSelection ? _self.pendingCapSelection : pendingCapSelection // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 /// Create a copy of ActiveCricketGameState
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId,  bool pendingCapSelection)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ActiveCricketGameState() when $default != null:
-return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId);case _:
+return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId,_that.pendingCapSelection);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinner
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId,  bool pendingCapSelection)  $default,) {final _that = this;
 switch (_that) {
 case _ActiveCricketGameState():
-return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId);case _:
+return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId,_that.pendingCapSelection);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinner
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( GameState gameState,  String? pendingLegWinnerId,  String? pendingGameWinnerId,  bool pendingCapSelection)?  $default,) {final _that = this;
 switch (_that) {
 case _ActiveCricketGameState() when $default != null:
-return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId);case _:
+return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinnerId,_that.pendingCapSelection);case _:
   return null;
 
 }
@@ -217,12 +218,13 @@ return $default(_that.gameState,_that.pendingLegWinnerId,_that.pendingGameWinner
 
 
 class _ActiveCricketGameState implements ActiveCricketGameState {
-  const _ActiveCricketGameState({required this.gameState, this.pendingLegWinnerId, this.pendingGameWinnerId});
+  const _ActiveCricketGameState({required this.gameState, this.pendingLegWinnerId, this.pendingGameWinnerId, this.pendingCapSelection = false});
   
 
 @override final  GameState gameState;
 @override final  String? pendingLegWinnerId;
 @override final  String? pendingGameWinnerId;
+@override@JsonKey() final  bool pendingCapSelection;
 
 /// Create a copy of ActiveCricketGameState
 /// with the given fields replaced by the non-null parameter values.
@@ -234,16 +236,16 @@ _$ActiveCricketGameStateCopyWith<_ActiveCricketGameState> get copyWith => __$Act
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveCricketGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveCricketGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.pendingCapSelection, pendingCapSelection) || other.pendingCapSelection == pendingCapSelection));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingLegWinnerId,pendingGameWinnerId);
+int get hashCode => Object.hash(runtimeType,gameState,pendingLegWinnerId,pendingGameWinnerId,pendingCapSelection);
 
 @override
 String toString() {
-  return 'ActiveCricketGameState(gameState: $gameState, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId)';
+  return 'ActiveCricketGameState(gameState: $gameState, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId, pendingCapSelection: $pendingCapSelection)';
 }
 
 
@@ -254,7 +256,7 @@ abstract mixin class _$ActiveCricketGameStateCopyWith<$Res> implements $ActiveCr
   factory _$ActiveCricketGameStateCopyWith(_ActiveCricketGameState value, $Res Function(_ActiveCricketGameState) _then) = __$ActiveCricketGameStateCopyWithImpl;
 @override @useResult
 $Res call({
- GameState gameState, String? pendingLegWinnerId, String? pendingGameWinnerId
+ GameState gameState, String? pendingLegWinnerId, String? pendingGameWinnerId, bool pendingCapSelection
 });
 
 
@@ -271,12 +273,13 @@ class __$ActiveCricketGameStateCopyWithImpl<$Res>
 
 /// Create a copy of ActiveCricketGameState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? gameState = null,Object? pendingLegWinnerId = freezed,Object? pendingGameWinnerId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? gameState = null,Object? pendingLegWinnerId = freezed,Object? pendingGameWinnerId = freezed,Object? pendingCapSelection = null,}) {
   return _then(_ActiveCricketGameState(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,pendingLegWinnerId: freezed == pendingLegWinnerId ? _self.pendingLegWinnerId : pendingLegWinnerId // ignore: cast_nullable_to_non_nullable
 as String?,pendingGameWinnerId: freezed == pendingGameWinnerId ? _self.pendingGameWinnerId : pendingGameWinnerId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,pendingCapSelection: null == pendingCapSelection ? _self.pendingCapSelection : pendingCapSelection // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

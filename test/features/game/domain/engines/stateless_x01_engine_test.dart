@@ -3089,4 +3089,176 @@ void main() {
       expect(darts, ['1', '1', 'T20']);
     });
   });
+
+  group('Round cap termination (x01TotalRounds)', () {
+    GameEvent turnEndedEvent({int seq = 1, String competitorId = 'c1'}) =>
+        _createEvent(
+          eventId: 'te-$seq',
+          gameId: 'test-game',
+          eventType: 'TurnEnded',
+          localSequence: seq,
+          occurredAt: DateTime.now(),
+          payload: {'competitor_id': competitorId, 'player_id': 'p1'},
+        );
+
+    test('no cap set → TurnEnded rotates normally', () {
+      final state = initialState.copyWith(
+        x01TotalRounds: null,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 99,
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.currentTurnIndex, 0);
+    });
+
+    test('cap not yet reached → normal rotation', () {
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 9,
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.currentTurnIndex, 0);
+    });
+
+    test('cap reached mid-round (not last competitor) → no termination', () {
+      // currentTurnIndex = 0 (first competitor just ended), last index = 1
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 0,
+        currentRoundInLeg: 10,
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.currentTurnIndex, 1);
+    });
+
+    test('cap reached, clear lowest score wins final leg → gameCompleted', () {
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 10,
+        legsToWin: 1,
+        competitors: [
+          initialState.competitors[0].copyWith(score: 40),
+          initialState.competitors[1].copyWith(score: 120),
+        ],
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c1');
+      expect(result.state.isComplete, true);
+      expect(result.state.winnerCompetitorId, 'c1');
+      // Winner's legsWon incremented
+      final winner =
+          result.state.competitors.firstWhere((c) => c.competitorId == 'c1');
+      expect(winner.legsWon, 1);
+    });
+
+    test('cap reached, multi-leg with clear winner → legCompleted, leg reset',
+        () {
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 10,
+        legsToWin: 3,
+        currentLegIndex: 0,
+        competitors: [
+          initialState.competitors[0].copyWith(score: 40),
+          initialState.competitors[1].copyWith(score: 120),
+        ],
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.legCompleted);
+      expect(result.winnerCompetitorId, 'c1');
+      expect(result.state.isComplete, false);
+      expect(result.state.currentLegIndex, 1);
+      // Leg reset: scores back to starting
+      expect(result.state.competitors[0].score, 501);
+      expect(result.state.competitors[1].score, 501);
+      // Winner legsWon persists across reset
+      final c1 =
+          result.state.competitors.firstWhere((c) => c.competitorId == 'c1');
+      expect(c1.legsWon, 1);
+    });
+
+    test('cap reached, scores tied → roundCapReached (ambiguous)', () {
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 10,
+        competitors: [
+          initialState.competitors[0].copyWith(score: 80),
+          initialState.competitors[1].copyWith(score: 80),
+        ],
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.roundCapReached);
+      expect(result.state.isComplete, false);
+      expect(result.state.turnActive, false);
+      // No legsWon mutation until user picks
+      expect(result.state.competitors[0].legsWon, 0);
+      expect(result.state.competitors[1].legsWon, 0);
+    });
+
+    test('single-player cap reached → gameCompleted with null winner', () {
+      final state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 0,
+        currentRoundInLeg: 10,
+        competitors: [initialState.competitors[0].copyWith(score: 200)],
+      );
+      final result = engine.apply(state, turnEndedEvent());
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.state.isComplete, true);
+      expect(result.state.winnerCompetitorId, isNull);
+    });
+
+    test('natural win on last dart wins the leg before TurnEnded fires', () {
+      // Scenario: round cap is 10, currentRoundInLeg = 10, player on last dart
+      // of 3rd throw checks out. _applyDartThrown must set isComplete BEFORE
+      // any TurnEnded would arrive. We simulate the DartThrown path directly.
+      var state = initialState.copyWith(
+        x01TotalRounds: 10,
+        currentTurnIndex: 1,
+        currentRoundInLeg: 10,
+        legsToWin: 1,
+        competitors: [
+          initialState.competitors[0].copyWith(score: 120),
+          initialState.competitors[1].copyWith(score: 40, isIn: true),
+        ],
+      );
+      state = engine
+          .apply(
+            state,
+            _createEvent(
+              eventId: 'ts',
+              gameId: 'test-game',
+              eventType: 'TurnStarted',
+              localSequence: 1,
+              occurredAt: DateTime.now(),
+              payload: {'competitor_id': 'c2'},
+            ),
+          )
+          .state;
+      // D20 = 40 → 0 (double-out valid).
+      final result = engine.apply(
+        state,
+        _createEvent(
+          eventId: 'd',
+          gameId: 'test-game',
+          eventType: 'DartThrown',
+          localSequence: 2,
+          occurredAt: DateTime.now(),
+          payload: {'competitor_id': 'c2', 'segment': 20, 'multiplier': 2},
+        ),
+      );
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c2');
+      expect(result.state.isComplete, true);
+    });
+  });
 }

@@ -260,6 +260,63 @@ Triggered after LegCompleted when match not finished.
 
 ---
 
+## Table N — Round Cap Termination (optional)
+
+Fires **only** when `cricket_total_rounds` (per-leg cap) is set. Evaluated
+on `TurnEnded` when the turn that just ended belonged to the last competitor
+of the round. A natural win via Table G during the capped round still closes
+the leg normally (Table G fires inside `DartThrown`, before the `TurnEnded`
+that would trigger this table).
+
+**Trigger condition**
+
+```
+cap_reached = cricket_total_rounds != null
+           && current_round_in_leg >= cricket_total_rounds
+           && current_turn_index == competitors.length - 1   // last competitor
+```
+
+**Winner selection by variant (no existing Table G winner on the board)**
+
+Winner is chosen by the primary metric below; when the top two competitors
+share the metric, tie-break prefers the **earliest `close_order`** (a player
+who closed all numbers first). If both metric and `close_order` tie, the
+outcome is ambiguous and the UI must prompt.
+
+| Variant    | Primary metric                         | Higher wins? |
+| ---------- | -------------------------------------- | ------------ |
+| standard   | `score`                                | yes          |
+| cut-throat | `score`                                | no (lowest)  |
+| no-score   | `Σ hits[n]` over all cricket numbers   | yes          |
+
+Solo play (one competitor) terminates silently with `winner_competitor_id = null`.
+
+**Outcomes**
+
+| Situation                                          | LegOutcome signal  | State change                                                                       |
+| -------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------- |
+| Solo or auto-winner with `legs_won ≥ legs_to_win`  | `gameCompleted`    | `is_complete = true`; emit `LegCompleted` + `GameCompleted`                        |
+| Auto-winner, more legs remaining                   | `legCompleted`     | Increment winner `legs_won`, apply **Table L** reset, emit `LegCompleted`          |
+| Multi-player with no auto-winner                   | `roundCapReached`  | Persist only `TurnEnded`; notifier sets `pendingCapSelection = true` for UI prompt |
+
+**UI ambiguity resolution**
+
+After `roundCapReached`, the user picks a winner from the cap-selection
+dialog. The notifier's `selectCapWinner(competitorId)` emits a synthetic
+`LegCompleted` event through the engine's standard path (Table K), so
+`legs_won` increments and Table L / Table M handle the subsequent
+transition uniformly.
+
+**Invariants**
+
+* The cap never fires during a `DartThrown` — only on `TurnEnded`.
+* A natural win via Table G on the last dart of the capped round completes
+  the leg before any `TurnEnded` is emitted.
+* When `LegOutcome.roundCapReached` is returned, no `LegCompleted` or
+  `GameCompleted` event has yet been persisted.
+
+---
+
 ## 4. Derived Invariants (Must Always Hold)
 
 * `0 ≤ darts_thrown_in_turn ≤ 3`

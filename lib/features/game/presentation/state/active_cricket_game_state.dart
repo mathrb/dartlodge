@@ -9,5 +9,6 @@ abstract class ActiveCricketGameState with _$ActiveCricketGameState {
     required GameState gameState,
     String? pendingLegWinnerId,
     String? pendingGameWinnerId,
+    @Default(false) bool pendingCapSelection,
   }) = _ActiveCricketGameState;
 }

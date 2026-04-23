@@ -366,4 +366,134 @@ void main() {
     expect(s.pendingLegWinnerId, null);
     expect(s.gameState, afterGame.gameState);
   });
+
+  // ── Round cap tests ──────────────────────────────────────────────────────
+
+  // Reconfigures the mock to return a cricket game with totalRounds set.
+  Game makeGameWithCap({
+    String variant = 'standard',
+    int totalRounds = 1,
+    int legsToWin = 1,
+  }) =>
+      Game(
+        gameId: 'g1',
+        gameType: GameType.cricket,
+        config: GameConfig.cricket(
+          variant: variant,
+          numbers: const ['15', '16', '17', '18', '19', '20', 'bull'],
+          legsToWin: legsToWin,
+          totalRounds: totalRounds,
+        ),
+        startTime: DateTime(2025),
+      );
+
+  GameEvent turnEndedEvent({
+    required String competitorId,
+    required int seq,
+  }) =>
+      GameEvent(
+        eventId: 'e-te-$seq',
+        gameId: 'g1',
+        eventType: 'TurnEnded',
+        localSequence: seq,
+        occurredAt: DateTime(2025),
+        payload: {'competitor_id': competitorId, 'player_id': 'p1'},
+        synced: false,
+        actorId: 'system',
+        source: EventSource.client,
+      );
+
+  // Events that drive state to: round 1 complete for both players, c2's
+  // turn is done (3 misses), ready for cap-triggering TurnEnded via
+  // nextPlayer().
+  List<GameEvent> makeCapBoundaryEvents() {
+    int seq = 0;
+    return [
+      turnStartedEvent(competitorId: 'c1', turnIndex: 0, seq: ++seq),
+      dartThrownEvent(competitorId: 'c1', segment: 0, multiplier: 1, seq: ++seq),
+      dartThrownEvent(competitorId: 'c1', segment: 0, multiplier: 1, seq: ++seq),
+      dartThrownEvent(competitorId: 'c1', segment: 0, multiplier: 1, seq: ++seq),
+      turnEndedEvent(competitorId: 'c1', seq: ++seq),
+      turnStartedEvent(competitorId: 'c2', turnIndex: 1, seq: ++seq),
+      dartThrownEvent(competitorId: 'c2', segment: 0, multiplier: 1, seq: ++seq),
+      dartThrownEvent(competitorId: 'c2', segment: 0, multiplier: 1, seq: ++seq),
+      dartThrownEvent(competitorId: 'c2', segment: 0, multiplier: 1, seq: ++seq),
+    ];
+  }
+
+  test(
+      'nextPlayer at round cap with tied scores → pendingCapSelection (ambiguous)',
+      () async {
+    when(mockGameRepo.getGame('g1'))
+        .thenAnswer((_) async => makeGameWithCap(totalRounds: 1));
+    when(mockGameRepo.getCompetitors('g1'))
+        .thenAnswer((_) async => makeCompetitors());
+    when(mockEventRepo.getEventsForGame('g1'))
+        .thenAnswer((_) async => makeCapBoundaryEvents());
+    await container.read(activeCricketGameProvider('g1').future);
+
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .nextPlayer();
+
+    final s = container.read(activeCricketGameProvider('g1')).value!;
+    expect(s.pendingCapSelection, true);
+    expect(s.pendingLegWinnerId, null);
+    expect(s.pendingGameWinnerId, null);
+    expect(s.gameState.isComplete, false);
+    // Competitors' legsWon unchanged until user picks
+    expect(s.gameState.competitors[0].legsWon, 0);
+    expect(s.gameState.competitors[1].legsWon, 0);
+  });
+
+  test(
+      'selectCapWinner finalizes leg, emits LegCompleted + GameCompleted, '
+      'marks game complete', () async {
+    when(mockGameRepo.getGame('g1'))
+        .thenAnswer((_) async => makeGameWithCap(totalRounds: 1));
+    when(mockGameRepo.getCompetitors('g1'))
+        .thenAnswer((_) async => makeCompetitors());
+    when(mockEventRepo.getEventsForGame('g1'))
+        .thenAnswer((_) async => makeCapBoundaryEvents());
+    await container.read(activeCricketGameProvider('g1').future);
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .nextPlayer();
+
+    // User picks c2 as the winner
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .selectCapWinner('c2');
+
+    final s = container.read(activeCricketGameProvider('g1')).value!;
+    expect(s.pendingCapSelection, false);
+    expect(s.pendingGameWinnerId, 'c2');
+    expect(s.gameState.isComplete, true);
+    expect(s.gameState.winnerCompetitorId, 'c2');
+    verify(mockGameRepo.completeGame(
+      gameId: 'g1',
+      winnerCompetitorId: 'c2',
+      endTime: anyNamed('endTime'),
+    )).called(1);
+  });
+
+  test(
+      'selectCapWinner is a no-op when pendingCapSelection is false',
+      () async {
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeCricketGameProvider('g1').future);
+
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .selectCapWinner('c1');
+
+    final s = container.read(activeCricketGameProvider('g1')).value!;
+    expect(s.gameState.isComplete, false);
+    expect(s.pendingGameWinnerId, null);
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
 }

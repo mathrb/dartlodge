@@ -13,7 +13,7 @@ class StatelessX01Engine implements GameEngine {
       'GameCreated' => EngineResult(state: _applyGameCreated(state, event)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
-      'TurnEnded' => EngineResult(state: _applyTurnEnded(state, event)),
+      'TurnEnded' => _applyTurnEnded(state, event),
       'LegCompleted' => _applyLegCompleted(state, event),
       'GameCompleted' => EngineResult(
           state: _applyGameCompleted(state, event),
@@ -327,13 +327,99 @@ class StatelessX01Engine implements GameEngine {
     return (checkTurnEnd(newState), LegOutcome.none, null, false);
   }
 
-  GameState _applyTurnEnded(GameState state, GameEvent event) {
+  EngineResult _applyTurnEnded(GameState state, GameEvent event) {
     final nextIndex = (state.currentTurnIndex + 1) % state.competitors.length;
-    return state.copyWith(
+    final rotated = state.copyWith(
       dartsThrownInTurn: 0,
       turnActive: false,
       currentTurnIndex: nextIndex,
     );
+
+    final cap = state.x01TotalRounds;
+    final wasLastCompetitorOfRound =
+        state.currentTurnIndex == state.competitors.length - 1;
+    final capReached = cap != null &&
+        state.currentRoundInLeg >= cap &&
+        wasLastCompetitorOfRound;
+
+    if (!capReached) {
+      return EngineResult(state: rotated);
+    }
+
+    return _resolveRoundCap(state);
+  }
+
+  EngineResult _resolveRoundCap(GameState state) {
+    final winnerId = _selectX01CapWinner(state);
+    final isSinglePlayer = state.competitors.length == 1;
+
+    if (winnerId == null && !isSinglePlayer) {
+      return EngineResult(
+        state: state.copyWith(turnActive: false),
+        outcome: LegOutcome.roundCapReached,
+      );
+    }
+
+    final updatedCompetitors = List<CompetitorState>.from(state.competitors);
+    var newWinnerLegsWon = 0;
+    if (winnerId != null) {
+      final idx =
+          updatedCompetitors.indexWhere((c) => c.competitorId == winnerId);
+      if (idx >= 0) {
+        final w = updatedCompetitors[idx];
+        newWinnerLegsWon = w.legsWon + 1;
+        updatedCompetitors[idx] = w.copyWith(legsWon: newWinnerLegsWon);
+      }
+    }
+
+    final gameComplete =
+        isSinglePlayer || newWinnerLegsWon >= state.legsToWin;
+
+    if (gameComplete) {
+      return EngineResult(
+        state: state.copyWith(
+          competitors: updatedCompetitors,
+          isComplete: true,
+          status: GameEngineStatus.completed,
+          turnActive: false,
+          winnerCompetitorId: winnerId,
+        ),
+        outcome: LegOutcome.gameCompleted,
+        winnerCompetitorId: winnerId,
+      );
+    }
+
+    final stateBeforeReset = state.copyWith(
+      competitors: updatedCompetitors,
+      currentLegIndex: state.currentLegIndex + 1,
+      turnActive: false,
+      winnerCompetitorId: winnerId,
+    );
+    return EngineResult(
+      state: _resetLeg(stateBeforeReset),
+      outcome: LegOutcome.legCompleted,
+      winnerCompetitorId: winnerId,
+    );
+  }
+
+  /// Lowest current score wins. A tie at the minimum returns null — caller
+  /// must prompt for manual selection.
+  String? _selectX01CapWinner(GameState state) {
+    if (state.competitors.length < 2) return null;
+    var minScore = state.competitors.first.score;
+    var minId = state.competitors.first.competitorId;
+    var minIsUnique = true;
+    for (var i = 1; i < state.competitors.length; i++) {
+      final c = state.competitors[i];
+      if (c.score < minScore) {
+        minScore = c.score;
+        minId = c.competitorId;
+        minIsUnique = true;
+      } else if (c.score == minScore) {
+        minIsUnique = false;
+      }
+    }
+    return minIsUnique ? minId : null;
   }
   
   /// Handle LegCompleted events (Table J)
