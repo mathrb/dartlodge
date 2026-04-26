@@ -183,6 +183,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Dual statistics repositories:** Statistics queries exist in both `lib/features/statistics/data/repositories/statistics_repository_impl.dart` (sqflite) and `lib/core/persistence/drift/repositories/statistics_repository_drift.dart` (drift). Always update both when changing query logic.
 
+**Statistics scope is required:** `getPlayerStats` and `watchPlayerStats` take `required GameType gameType`. PPR-shaped fields are X01-only and cricket fields are cricket-only — a single call cannot mix types coherently. The player-picker AVG badge consumes `playerStatsProvider`, which passes `GameType.x01`.
+
 **Notifier tests:** Use `ProviderContainer` with `overrides`. Never instantiate notifiers directly. Use `ProviderScope` with `overrides` for widget tests.
 
 **Widget test finders:** `StatFormatter.fmtDouble` strips trailing zeros — e.g. `170.0` → `'170'`, which collides with raw `int` values rendered the same way. Prefer `findsNWidgets(n)` or more specific finders (`find.descendant`) over `findsOneWidget` when stat rows may share literals.

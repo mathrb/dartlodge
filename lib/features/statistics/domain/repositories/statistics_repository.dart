@@ -19,14 +19,19 @@ abstract interface class StatisticsRepository {
 
   // Per-player (career) statistics
 
-  /// Returns aggregated career statistics for [playerId] across all games
-  /// of [gameType]. Pass null for [gameType] to aggregate across all game types.
+  /// Returns aggregated career statistics for [playerId] across completed
+  /// games of [gameType].
+  ///
+  /// [gameType] is required: PPR-shaped fields (`threeDartAverage`,
+  /// `bustRate`, score buckets) are X01-specific by definition, and cricket
+  /// metrics (`marksPerTurn`, mark buckets) only apply to cricket. A single
+  /// call cannot mix game types coherently.
   ///
   /// [from] and [to] are inclusive date-range filters applied to [start_time].
   /// Throws [PlayerNotFoundException] if [playerId] does not exist.
   Future<PlayerStats> getPlayerStats(
     String playerId, {
-    GameType? gameType,
+    required GameType gameType,
     DateTime? from,
     DateTime? to,
     int? startingScore,
@@ -57,7 +62,10 @@ abstract interface class StatisticsRepository {
 
   /// Emits updated career [PlayerStats] whenever a game involving [playerId]
   /// is completed. Used to keep the statistics dashboard current.
-  Stream<PlayerStats> watchPlayerStats(String playerId, {GameType? gameType});
+  ///
+  /// [gameType] is required for the same reasons as [getPlayerStats].
+  Stream<PlayerStats> watchPlayerStats(String playerId,
+      {required GameType gameType});
 
   // Leaderboard
 

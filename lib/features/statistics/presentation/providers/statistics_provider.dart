@@ -12,7 +12,10 @@ part 'statistics_provider.g.dart';
 @riverpod
 Stream<PlayerStats> playerStats(Ref ref, String playerId) {
   final repository = ref.watch(statisticsRepositoryProvider);
-  return repository.watchPlayerStats(playerId);
+  // The sole consumer (player picker AVG badge) displays PPR, which is
+  // X01-only by definition. Cricket / practice players intentionally see
+  // "AVG —" until a dedicated provider exists.
+  return repository.watchPlayerStats(playerId, gameType: GameType.x01);
 }
 
 @riverpod

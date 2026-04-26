@@ -20,7 +20,6 @@ import 'package:my_darts/features/game/presentation/pages/x01_board_page.dart';
 import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
 import 'package:my_darts/features/history/presentation/pages/game_detail_page.dart';
-import 'package:my_darts/features/statistics/presentation/pages/career_stats_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/player_stats_page.dart';
 import 'package:my_darts/features/statistics/presentation/pages/post_game_summary_page.dart';
 
@@ -103,8 +102,6 @@ Widget _cricketBoardPage(BuildContext _, GoRouterState s) =>
     CricketBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _practiceBoardPage(BuildContext _, GoRouterState s) =>
     PracticeBoardPage(gameId: s.pathParameters['gameId']!);
-Widget _careerStatsPage(BuildContext _, GoRouterState s) =>
-    CareerStatsPage(playerId: s.pathParameters['playerId']!);
 Widget _playerStatsPage(BuildContext _, GoRouterState s) =>
     PlayerStatsPage(playerId: s.pathParameters['playerId']!);
 Widget _postGameSummaryPage(BuildContext _, GoRouterState s) =>

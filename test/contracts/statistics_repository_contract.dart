@@ -57,7 +57,8 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
   group('getPlayerStats', () {
     test('throws PlayerNotFoundException for non-existent player', () async {
       await expectLater(
-        statsRepo.getPlayerStats('non-existent-player'),
+        statsRepo.getPlayerStats('non-existent-player',
+            gameType: GameType.x01),
         throwsA(isA<PlayerNotFoundException>()),
       );
     });
@@ -65,7 +66,8 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
     test('returns zero stats for player with no dart throws', () async {
       await _createPlayer(playerRepo, 'p1');
 
-      final stats = await statsRepo.getPlayerStats('p1');
+      final stats =
+          await statsRepo.getPlayerStats('p1', gameType: GameType.x01);
       expect(stats.playerId, 'p1');
       expect(stats.totalDartsThrown, 0);
       expect(stats.threeDartAverage, 0.0);
@@ -142,13 +144,14 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
   // ── watchPlayerStats ──────────────────────────────────────────────────────
 
   group('watchPlayerStats', () {
-    test('returns a Stream<PlayerStats>', () {
-      final stream = statsRepo.watchPlayerStats('p1');
+    test('returns a Stream<PlayerStats> for X01', () {
+      final stream = statsRepo.watchPlayerStats('p1', gameType: GameType.x01);
       expect(stream, isA<Stream>());
     });
 
-    test('returns a Stream<PlayerStats> when gameType filter is provided', () {
-      final stream = statsRepo.watchPlayerStats('p1', gameType: GameType.x01);
+    test('returns a Stream<PlayerStats> for cricket', () {
+      final stream =
+          statsRepo.watchPlayerStats('p1', gameType: GameType.cricket);
       expect(stream, isA<Stream>());
     });
   });

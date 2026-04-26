@@ -221,7 +221,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   @override
   Future<PlayerStats> getPlayerStats(
     String playerId, {
-    GameType? gameType,
+    required GameType gameType,
     DateTime? from,
     DateTime? to,
     int? startingScore,
@@ -256,12 +256,8 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
       ])..where(_db.games.isComplete.equals(1));
 
-      if (gameType != null) {
-        joinedDartCountQuery
-            .where(_db.games.gameType.equals(gameType.name));
-        joinedAvgScoreQuery
-            .where(_db.games.gameType.equals(gameType.name));
-      }
+      joinedDartCountQuery.where(_db.games.gameType.equals(gameType.name));
+      joinedAvgScoreQuery.where(_db.games.gameType.equals(gameType.name));
       if (from != null) {
         joinedDartCountQuery.where(
             _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
@@ -303,7 +299,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           legsPlayed > 0 ? dartCount / legsPlayed : 0.0;
 
       // Practice game types: compute stats from event log
-      if (gameType != null && _practiceGameTypes.contains(gameType)) {
+      if (_practiceGameTypes.contains(gameType)) {
         return await _computePracticeStatsDrift(
             playerId, gameType, totalGames, dartCount);
       }
@@ -338,13 +334,11 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       // X01-specific stats
       double? checkoutPercentage;
       int? highestCheckout;
-      if (gameType == GameType.x01 || gameType == null) {
+      if (gameType == GameType.x01) {
         final x01Stats = await _calculateX01Statistics(playerId, gameType);
         checkoutPercentage = x01Stats['checkoutPercentage'] as double?;
         highestCheckout = x01Stats['highestCheckout'] as int?;
       }
-
-      final GameType effectiveGameType = gameType ?? GameType.x01;
 
       // Score buckets (60+, 100+, 140+, 180) and First 9 PPR — computed from game_events
       Map<String, int> scoreBuckets = {};
@@ -353,7 +347,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       double? bestFirstNinePpr;
       double? avgCheckoutScore;
       double? bestGameCheckoutPercentage;
-      if (effectiveGameType == GameType.x01) {
+      if (gameType == GameType.x01) {
         // Collect game IDs for this player
         final gameIdsQuery = _db.selectOnly(_db.dartThrows)
           ..addColumns([_db.dartThrows.gameId])
@@ -382,7 +376,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
       return PlayerStats(
         playerId: playerId,
-        gameType: effectiveGameType,
+        gameType: gameType,
         totalGames: totalGames,
         gamesWon: gamesWon,
         winRate: winRate,
@@ -496,35 +490,21 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
   @override
   Stream<PlayerStats> watchPlayerStats(String playerId,
-      {GameType? gameType}) {
-    if (gameType != null) {
-      final dartThrowsQuery = _db.select(_db.dartThrows)
-        ..where((t) => t.playerId.equals(playerId));
-      final joinedQuery = dartThrowsQuery.join([
-        innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId)),
-      ]);
-      joinedQuery.where(_db.games.gameType.equals(gameType.name));
-      return joinedQuery
-          .watch()
-          .asyncMap((_) async => getPlayerStats(playerId, gameType: gameType))
-          .handleError((error) {
-        if (error is RepositoryException) throw error;
-        throw StatisticsException(
-            'Failed to watch player statistics: ${error.toString()}');
-      });
-    } else {
-      final dartThrowsQuery = _db.select(_db.dartThrows)
-        ..where((t) => t.playerId.equals(playerId));
-      return dartThrowsQuery
-          .watch()
-          .asyncMap(
-              (_) async => getPlayerStats(playerId, gameType: gameType))
-          .handleError((error) {
-        if (error is RepositoryException) throw error;
-        throw StatisticsException(
-            'Failed to watch player statistics: ${error.toString()}');
-      });
-    }
+      {required GameType gameType}) {
+    final dartThrowsQuery = _db.select(_db.dartThrows)
+      ..where((t) => t.playerId.equals(playerId));
+    final joinedQuery = dartThrowsQuery.join([
+      innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId)),
+    ]);
+    joinedQuery.where(_db.games.gameType.equals(gameType.name));
+    return joinedQuery
+        .watch()
+        .asyncMap((_) async => getPlayerStats(playerId, gameType: gameType))
+        .handleError((error) {
+      if (error is RepositoryException) throw error;
+      throw StatisticsException(
+          'Failed to watch player statistics: ${error.toString()}');
+    });
   }
 
   @override
@@ -571,10 +551,10 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
   // ── Helper methods ──────────────────────────────────────────────────────────
 
-  PlayerStats _createEmptyPlayerStats(String playerId, GameType? gameType) {
+  PlayerStats _createEmptyPlayerStats(String playerId, GameType gameType) {
     return PlayerStats(
       playerId: playerId,
-      gameType: gameType ?? GameType.x01,
+      gameType: gameType,
       totalGames: 0,
       gamesWon: 0,
       winRate: 0.0,

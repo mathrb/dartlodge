@@ -312,7 +312,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   @override
   Future<PlayerStats> getPlayerStats(
     String playerId, {
-    GameType? gameType,
+    required GameType gameType,
     DateTime? from,
     DateTime? to,
     int? startingScore,
@@ -448,7 +448,8 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   }
 
   @override
-  Stream<PlayerStats> watchPlayerStats(String playerId, {GameType? gameType}) {
+  Stream<PlayerStats> watchPlayerStats(String playerId,
+      {required GameType gameType}) {
     return Stream.periodic(const Duration(seconds: 5), (_) {})
       .asyncMap((_) async {
         final stats = await _buildPlayerStatsViaProjection(playerId, gameType: gameType);
@@ -503,10 +504,10 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   }
 
   // Helper method to create empty player stats
-  PlayerStats _createEmptyPlayerStats(String playerId, GameType? gameType) {
+  PlayerStats _createEmptyPlayerStats(String playerId, GameType gameType) {
     return PlayerStats(
       playerId: playerId,
-      gameType: gameType ?? GameType.x01,
+      gameType: gameType,
       totalGames: 0,
       gamesWon: 0,
       winRate: 0.0,
@@ -522,7 +523,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
   Future<PlayerStats?> _buildPlayerStatsViaProjection(
     String playerId, {
-    GameType? gameType,
+    required GameType gameType,
     DateTime? from,
     DateTime? to,
     int? startingScore,
@@ -536,13 +537,10 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       JOIN competitors c ON g.game_id = c.game_id
       JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
       WHERE cp.player_id = ? AND g.is_complete = 1
+        AND g.game_type = ?
     ''';
-    final List<dynamic> gamesArgs = [playerId];
+    final List<dynamic> gamesArgs = [playerId, gameType.name];
 
-    if (gameType != null) {
-      gamesQuery += ' AND g.game_type = ?';
-      gamesArgs.add(gameType.name);
-    }
     if (from != null) {
       gamesQuery += ' AND g.start_time >= ?';
       gamesArgs.add(from.toIso8601String());
@@ -587,7 +585,6 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
     var gameIds = gamesResult.map((r) => r['game_id'] as String).toList();
     final totalGames = gameIds.length;
-    final effectiveGameType = gameType ?? GameType.x01;
 
     // Apply legLimit: keep only the last legLimit completed legs by slicing game list
     // (full leg-level limit is handled after projection via legLimit on the runner snapshot)
@@ -646,20 +643,20 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     // 5. Build context and run projections
     final context = ProjectionContext(
       playerId: playerId,
-      gameType: effectiveGameType,
+      gameType: gameType,
       inStrategy: inStrategy,
       outStrategy: outStrategy,
       playerIds: [playerId],
     );
 
-    final isCricket = effectiveGameType == GameType.cricket;
+    final isCricket = gameType == GameType.cricket;
 
-    final isPractice = _practiceGameTypes.contains(effectiveGameType);
+    final isPractice = _practiceGameTypes.contains(gameType);
 
     if (isPractice) {
       return _buildPracticePlayerStats(
         playerId,
-        effectiveGameType,
+        gameType,
         gamesResult,
         events,
         totalGames,
@@ -719,7 +716,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
       return PlayerStats(
         playerId: playerId,
-        gameType: effectiveGameType,
+        gameType: gameType,
         totalGames: totalGames,
         totalDartsThrown: totalDartsThrown,
         threeDartAverage: 0.0,
@@ -756,7 +753,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
     return PlayerStats(
       playerId: playerId,
-      gameType: effectiveGameType,
+      gameType: gameType,
       totalGames: totalGames,
       totalDartsThrown: totalDartsThrown,
       threeDartAverage: (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0,
