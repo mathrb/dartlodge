@@ -1,5 +1,8 @@
-// Test for new GameEvent fields (actorId, globalSequence, source)
+// Test for new GameEvent fields (actorId, globalSequence, source).
+// Uses the canonical migrations script with PRAGMA foreign_keys = ON so tests
+// match production.
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_darts/core/persistence/database_migrations.dart';
 import 'package:my_darts/features/game/data/repositories/game_event_repository_impl.dart';
 import 'package:my_darts/features/game/data/repositories/game_repository_impl.dart';
 import 'package:my_darts/features/game/domain/entities/game_event.dart';
@@ -18,37 +21,8 @@ void main() {
 
   setUp(() async {
     db = await openDatabase(inMemoryDatabasePath);
-    
-    // Create schema with new fields
-    await db.execute('''
-      CREATE TABLE games (
-        game_id               TEXT     NOT NULL PRIMARY KEY,
-        game_type             TEXT     NOT NULL,
-        config_json           TEXT     NOT NULL,
-        start_time            TEXT     NOT NULL,
-        end_time              TEXT,
-        winner_competitor_id  TEXT,
-        is_complete           INTEGER  NOT NULL DEFAULT 0,
-        game_state_json       TEXT
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE game_events (
-        event_id        TEXT     NOT NULL PRIMARY KEY,
-        game_id         TEXT     NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
-        event_type      TEXT     NOT NULL,
-        local_sequence  INTEGER  NOT NULL,
-        occurred_at     TEXT     NOT NULL,
-        payload_json    TEXT     NOT NULL,
-        synced          INTEGER  NOT NULL DEFAULT 0,
-        actor_id        TEXT     NOT NULL,
-        global_sequence INTEGER,
-        source          INTEGER  NOT NULL DEFAULT 0,
-        UNIQUE (game_id, local_sequence)
-      );
-    ''');
-
+    await db.execute('PRAGMA foreign_keys = ON;');
+    await DatabaseMigrations.createSchema(db);
     repo = GameEventRepositoryImpl(db);
     gameRepo = GameRepositoryImpl(db);
   });

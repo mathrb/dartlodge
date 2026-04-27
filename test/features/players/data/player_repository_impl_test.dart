@@ -1,7 +1,9 @@
 // Player Repository Implementation Tests
-// Runs the contract tests against the PlayerRepositoryImpl
+// Runs the contract tests against the PlayerRepositoryImpl, using the canonical
+// migrations script with PRAGMA foreign_keys = ON so tests match production.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:my_darts/core/persistence/database_migrations.dart';
 import 'package:my_darts/features/players/data/repositories/player_repository_impl.dart';
 import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -19,36 +21,9 @@ void main() {
   }
 
   setUp(() async {
-    // Open an in-memory database for each test
     db = await openDatabase(inMemoryDatabasePath);
-
-    await db.execute('''
-      CREATE TABLE players (
-        player_id   TEXT    NOT NULL PRIMARY KEY,
-        name        TEXT    NOT NULL,
-        created_at  TEXT    NOT NULL,
-        last_active TEXT    NOT NULL
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE competitors (
-        competitor_id TEXT NOT NULL PRIMARY KEY,
-        game_id       TEXT NOT NULL,
-        type          TEXT NOT NULL,
-        name          TEXT NOT NULL
-      );
-    ''');
-
-    await db.execute('''
-      CREATE TABLE competitor_players (
-        competitor_id     TEXT    NOT NULL,
-        player_id         TEXT    NOT NULL,
-        rotation_position INTEGER NOT NULL,
-        PRIMARY KEY (competitor_id, player_id)
-      );
-    ''');
-
+    await db.execute('PRAGMA foreign_keys = ON;');
+    await DatabaseMigrations.createSchema(db);
     repo = PlayerRepositoryImpl(db);
   });
 
@@ -59,6 +34,14 @@ void main() {
   runPlayerRepositoryContractTests(
     factory,
     insertHistory: (playerId) async {
+      // Insert in FK order: games → competitors → competitor_players.
+      await db.insert('games', {
+        'game_id': 'g1',
+        'game_type': 'x01',
+        'config_json': '{}',
+        'start_time': DateTime.now().toIso8601String(),
+        'is_complete': 1,
+      });
       await db.insert('competitors', {
         'competitor_id': 'c1',
         'game_id': 'g1',

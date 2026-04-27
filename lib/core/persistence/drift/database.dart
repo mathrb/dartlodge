@@ -6,13 +6,19 @@ import 'package:my_darts/core/utils/constants.dart';
 
 part 'database.g.dart';
 
-// Data classes for all tables
+// Data classes for all tables.
+//
+// Foreign keys here mirror the canonical schema in `database_migrations.dart`
+// (sqflite). `winner_competitor_id` on `games` is intentionally NOT a FK —
+// competitors are game-scoped and consistency is enforced by application logic.
 class Players extends Table {
   TextColumn get playerId => text()();
   TextColumn get name => text()();
   TextColumn get createdAt => text()();
   TextColumn get lastActive => text()();
-  TextColumn get accountId => text().nullable()();
+  TextColumn get accountId => text()
+      .nullable()
+      .references(Accounts, #accountId, onDelete: KeyAction.setNull)();
   TextColumn get avatarUrl => text().nullable()();
 
   @override
@@ -35,7 +41,8 @@ class Games extends Table {
 
 class Competitors extends Table {
   TextColumn get competitorId => text()();
-  TextColumn get gameId => text()();
+  TextColumn get gameId =>
+      text().references(Games, #gameId, onDelete: KeyAction.cascade)();
   TextColumn get type => text()();
   TextColumn get name => text()();
 
@@ -44,8 +51,10 @@ class Competitors extends Table {
 }
 
 class CompetitorPlayers extends Table {
-  TextColumn get competitorId => text()();
-  TextColumn get playerId => text()();
+  TextColumn get competitorId => text()
+      .references(Competitors, #competitorId, onDelete: KeyAction.cascade)();
+  TextColumn get playerId => text()
+      .references(Players, #playerId, onDelete: KeyAction.restrict)();
   IntColumn get rotationPosition => integer()();
 
   @override
@@ -54,9 +63,12 @@ class CompetitorPlayers extends Table {
 
 class DartThrows extends Table {
   TextColumn get dartId => text()();
-  TextColumn get gameId => text()();
-  TextColumn get competitorId => text()();
-  TextColumn get playerId => text()();
+  TextColumn get gameId =>
+      text().references(Games, #gameId, onDelete: KeyAction.cascade)();
+  TextColumn get competitorId => text()
+      .references(Competitors, #competitorId, onDelete: KeyAction.cascade)();
+  TextColumn get playerId =>
+      text().references(Players, #playerId, onDelete: KeyAction.restrict)();
   IntColumn get turnNumber => integer()();
   IntColumn get dartNumber => integer()();
   TextColumn get segment => text()();
@@ -70,7 +82,8 @@ class DartThrows extends Table {
 
 class GameEvents extends Table {
   TextColumn get eventId => text()();
-  TextColumn get gameId => text()();
+  TextColumn get gameId =>
+      text().references(Games, #gameId, onDelete: KeyAction.cascade)();
   TextColumn get eventType => text()();
   IntColumn get localSequence => integer()();
   TextColumn get occurredAt => text()();
@@ -120,13 +133,19 @@ class SyncQueue extends Table {
 
 class GameSessions extends Table {
   TextColumn get sessionId => text()();
-  TextColumn get gameId => text()();
-  TextColumn get hostPlayerId => text()();
+  TextColumn get gameId =>
+      text().references(Games, #gameId, onDelete: KeyAction.cascade)();
+  @ReferenceName('hostedSessions')
+  TextColumn get hostPlayerId =>
+      text().references(Players, #playerId, onDelete: KeyAction.restrict)();
   TextColumn get status => text()();
   TextColumn get createdAt => text()();
   TextColumn get startedAt => text().nullable()();
   TextColumn get completedAt => text().nullable()();
-  TextColumn get currentTurnPlayerId => text().nullable()();
+  @ReferenceName('currentTurnSessions')
+  TextColumn get currentTurnPlayerId => text()
+      .nullable()
+      .references(Players, #playerId, onDelete: KeyAction.setNull)();
 
   @override
   Set<Column> get primaryKey => {sessionId};

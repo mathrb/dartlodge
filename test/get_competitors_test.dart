@@ -2,23 +2,40 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_darts/features/game/domain/entities/competitor.dart';
 import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:my_darts/core/utils/constants.dart';
 import 'test_data.dart';
 import 'hybrid_test_runner.dart';
 
+Future<void> _seedPlayers(PlayerRepository repo, List<String> ids) async {
+  final now = DateTime.now();
+  for (final id in ids) {
+    await repo.createPlayer(Player(
+      playerId: id,
+      name: 'Test $id',
+      createdAt: now,
+      lastActive: now,
+    ));
+  }
+}
+
 void main() {
   group('getCompetitors Tests', () {
-    
+
     runHybridTests('getCompetitors functionality', (base) {
       late GameRepository gameRepo;
-      
+      late PlayerRepository playerRepo;
+
       setUp(() async {
         gameRepo = await base.createGameRepository();
+        playerRepo = await base.createPlayerRepository();
       });
       
       test('should return competitors with player rosters', () async {
+        await _seedPlayers(playerRepo, ['player-1', 'player-2']);
         final game = TestData.createTestGame();
-        
+
         // Create competitors with players
         final competitors = [
           Competitor(
@@ -84,8 +101,9 @@ void main() {
       });
       
       test('should handle team competitors with multiple players', () async {
+        await _seedPlayers(playerRepo, ['player-1', 'player-2', 'player-3']);
         final game = TestData.createTestGame();
-        
+
         // Create team competitor with multiple players
         final competitors = [
           Competitor(

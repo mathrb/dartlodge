@@ -6,18 +6,33 @@ import 'package:my_darts/features/game/domain/entities/game.dart';
 import 'package:my_darts/features/game/domain/entities/competitor.dart';
 import 'package:my_darts/features/game/domain/models/game_config.dart';
 import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
 import 'package:my_darts/core/error/repository_exception.dart';
 import 'package:my_darts/core/utils/constants.dart';
 
-void runGameRepositoryContractTests(Future<GameRepository> Function() factory) {
+void runGameRepositoryContractTests(
+  Future<GameRepository> Function() factory, {
+  required Future<PlayerRepository> Function() playerRepoFactory,
+}) {
   late GameRepository repo;
+  late PlayerRepository playerRepo;
 
   setUp(() async {
     repo = await factory();
-  }
-
-
-);
+    playerRepo = await playerRepoFactory();
+    // Seed players referenced by competitors in the tests below. FK constraints
+    // on competitor_players.player_id require these rows to exist first.
+    final now = DateTime.now();
+    for (final id in const ['p1', 'p2']) {
+      await playerRepo.createPlayer(Player(
+        playerId: id,
+        name: 'Test $id',
+        createdAt: now,
+        lastActive: now,
+      ));
+    }
+  });
 
   group('createGame and getGame', () {
     test('should create and retrieve a game with competitors', () async {

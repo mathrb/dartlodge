@@ -1,6 +1,7 @@
 // Player Repository Hybrid Contract Test
 // Runs the shared contract tests against both SQLite and Drift implementations
 
+import 'package:drift/drift.dart' as drift;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:my_darts/core/persistence/drift/database.dart' as drift_db;
 import 'package:my_darts/features/players/domain/entities/player.dart';
@@ -169,7 +170,19 @@ void main() {
 }
 
 Future<void> _insertHistory(DatabaseTestBase base, String playerId) async {
+  // Insert in FK order: games → competitors → competitor_players. The drift
+  // schema enforces FKs; the sqflite test schema currently does not, but we
+  // still write them in dependency order for parity.
   if (base is DriftTestBase) {
+    await base.db.into(base.db.games).insert(
+      drift_db.GamesCompanion.insert(
+        gameId: 'g1',
+        gameType: 'x01',
+        configJson: '{}',
+        startTime: DateTime.now().toIso8601String(),
+        isComplete: const drift.Value(1),
+      ),
+    );
     await base.db.into(base.db.competitors).insert(
       drift_db.CompetitorsCompanion.insert(
         competitorId: 'c1',
@@ -186,6 +199,13 @@ Future<void> _insertHistory(DatabaseTestBase base, String playerId) async {
       ),
     );
   } else if (base is SqfliteTestBase) {
+    await base.db.insert('games', {
+      'game_id': 'g1',
+      'game_type': 'x01',
+      'config_json': '{}',
+      'start_time': DateTime.now().toIso8601String(),
+      'is_complete': 1,
+    });
     await base.db.insert('competitors', {
       'competitor_id': 'c1',
       'game_id': 'g1',

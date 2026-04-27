@@ -64,7 +64,7 @@ final class PlayerStatsProvider
   }
 }
 
-String _$playerStatsHash() => r'6880daff4c73362af64f0dfc5e369bd9c3f07bd1';
+String _$playerStatsHash() => r'c2b7717ab6faabf59bd007b745ef5032d5daec3a';
 
 final class PlayerStatsFamily extends $Family
     with $FunctionalFamilyOverride<Stream<PlayerStats>, String> {
