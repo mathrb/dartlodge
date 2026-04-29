@@ -24,7 +24,20 @@ flutter test -r failures-only  # errors only
 flutter analyze                 # static analysis
 ```
 
-**Mobile debugging:** No USB connection available. APK is built via GitHub Actions CI. To debug mobile-only issues, surface errors in the UI (e.g. timeouts with step labels) rather than relying on `flutter logs` or console output.
+**Mobile debugging:** No USB connection available. APKs can be built locally (see "Building Android APKs" below) or via GitHub Actions CI. To debug mobile-only issues, surface errors in the UI (e.g. timeouts with step labels) rather than relying on `flutter logs` or console output.
+
+### Building Android APKs
+
+`android/` is gitignored. Each dev scaffolds it once per machine:
+
+```bash
+flutter create --platforms=android .   # one-time, after fresh clone or rm -rf android/
+flutter build apk --debug              # or --release
+```
+
+Requires JDK 17 + Android SDK on `PATH` (`JAVA_HOME`, `ANDROID_HOME`). CI also produces release APKs.
+
+**Sideloading to a phone over Wi-Fi:** `tools/release-debug.sh --serve` bumps `versionCode`, rebuilds, and starts `python3 -m http.server` on port 8000. Phone downloads from `http://<lan-ip>:8000/app-debug.apk`. In-place upgrades only work when `versionCode` increases AND the signing key matches — debug builds on the same machine share `~/.android/debug.keystore` so upgrades just work; mixing local debug ↔ CI release ↔ another machine forces uninstall.
 
 ---
 
@@ -178,6 +191,12 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Database:** `PRAGMA foreign_keys = ON` must be set in `onOpen` (sqflite) / `beforeOpen` (drift). Schema is currently single-version (`databaseVersion = 1`); future schema migrations will be applied in `onUpgrade` (sqflite) / `MigrationStrategy.onUpgrade` (drift). Completed games are read-only — enforced in application logic, not triggers.
 
+**Dual database schemas:** The schema is declared in two parallel sources that must stay in sync: `lib/core/persistence/database_migrations.dart` (sqflite, canonical) and `lib/core/persistence/drift/database.dart` (drift web). When changing schema, update both. After editing drift table classes, run `dart run build_runner build --delete-conflicting-outputs`. The canonical SQL DDL is mirrored in `docs/DATABASE_DDL.md`.
+
+**Drift foreign keys:** Plain `text()()` emits NO foreign key clause — you must call `.references(Type, #col, onDelete: KeyAction.{cascade|restrict|setNull})` explicitly. `PRAGMA foreign_keys = ON` is a no-op without `.references()`. When two columns in a table reference the same parent (e.g. `game_sessions.host_player_id` and `current_turn_player_id` both → `players`), add `@ReferenceName('xxx')` annotations to disambiguate manager-API helpers, or build_runner warns.
+
+**Test database setup:** Every sqflite-using test must call `DatabaseMigrations.createSchema(db)` and `await db.execute('PRAGMA foreign_keys = ON;')` before instantiating repositories — never roll a hand-crafted CREATE TABLE schema. Drift tests use `AppDatabase(NativeDatabase.memory())` directly. With FK enforcement active across both backends, fixtures must respect FK order: insert players before competitors, games before competitors/dart_throws/game_events, and use `playerRepo.createPlayer()` to seed referenced player IDs before any `createGame` call.
+
 **Test game setup ordering:** Drift enforces read-only on completed games. In tests: create game with `isComplete: false` → insert darts/events → call `gameRepo.completeGame()`. Never set `isComplete: true` at creation if you need to insert data afterward.
 
 **Statistics scope resets:** Turn resets on `TurnStarted`, Leg resets on `LegCompleted`, Match resets on `GameCompleted`. No other reset points.
@@ -220,8 +239,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 - Skip or comment out contract tests to make CI pass
 - Add database triggers — immutability of completed games is application logic only
 - Add packages without checking whether the existing stack already covers the need
-- Run `flutter create --platforms=android .` locally — Android platform is scaffolded in CI only
-- Build an Android APK without first scaffolding the platform: `android/` is not in the repo — run `flutter create --platforms=android .` before `flutter build apk`
+- Commit the `android/` folder — it is gitignored and scaffolded per machine via `flutter create --platforms=android .`
 
 ---
 

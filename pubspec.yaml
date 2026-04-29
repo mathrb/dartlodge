@@ -1,6 +1,6 @@
 name: my_darts
 description: A comprehensive darts scoring and statistics application
-version: 1.0.0+1
+version: 1.0.0+3
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
