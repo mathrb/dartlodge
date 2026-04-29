@@ -1,113 +1,119 @@
-# Darts App
+# My Darts
 
-A **local-first**, open-source darts application for Android and iOS, built with Flutter. Users can track statistics, play manually, or optionally use a self-hosted backend for auto-scoring via computer vision.
+A **local-first**, open-source darts scoring and statistics app for Android and
+iOS, built with Flutter. Plays offline by default; statistics are computed by
+replaying the local game-event log so they always reflect the current data.
 
-## Features
-- **Local-First**: Works offline by default, with optional backend sync.
-- **Statistics Tracking**: Save and view game statistics locally.
-- **Auto-Scoring (Optional)**: Use a self-hosted backend to detect darts via computer vision.
-- **Cross-Platform**: Targets Android and iOS; Flutter Web is supported as a development/debug target.
+## Game modes
 
-## Advanced Features
+- **X01** — 301 / 501 / 701 / 901 with configurable starting score, double-out / straight-out / master-out, leg/match formats
+- **Cricket** — Standard, No-Score, Cut Throat, Tactics, Random
+- **Around the Clock** — single / double / triple variants
+- **Bob's 27**, **Catch 40**, **Shanghai**
+- **Checkout Practice** (170 finishing drill)
 
-For advanced functionality including remote multiplayer, authentication, and complex synchronization, see [Backend Integration](docs/BACKEND_INTEGRATION.md).
+Per-player statistics (averages, checkout %, MPR, first-9 average, high-score
+buckets) are tracked across all game types.
 
-### Multiplayer Support
-This application supports both local (hotseat) and remote multiplayer modes. Detailed architecture and implementation guidance is available in the backend integration documentation.
+## Status
 
-## Documentation
+Local play, scoring, history, and statistics work end-to-end. The app is
+**local-only today** — there is no remote backend, no account system, and no
+cloud sync.
 
-For detailed technical information, see:
-- [Data Structure](docs/DATA.md) - Database schema and data models
-- [System Architecture](docs/ARCHITECTURE.md) - Technical architecture and design
+A self-hosted backend with computer-vision auto-scoring and remote multiplayer
+is sketched in [`docs/BACKEND_INTEGRATION.md`](docs/BACKEND_INTEGRATION.md) as a
+future direction; **it is not implemented**. Treat any backend / CV references
+in design docs as roadmap, not shipping behaviour.
+
+## Running
+
+Flutter Web (Chrome) is the primary development target. iOS / Android builds
+work but require platform-specific setup.
+
+### Web (recommended for development)
+
+A one-time asset setup is required after `flutter pub get`:
+
+```bash
+# Compile the Drift web worker
+dart compile js -O4 -o web/drift_worker.dart.js web/drift_worker.dart
+
+# Download sqlite3.wasm matching your pubspec.lock version
+grep -A7 "^  sqlite3:$" pubspec.lock | grep version
+curl -L -o web/sqlite3.wasm \
+  "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-v<VERSION>/sqlite3.wasm"
+```
+
+Then:
+
+```bash
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter run -d chrome
+# or for headless / remote access:
+flutter run -d web-server --web-port 8087 --web-hostname 0.0.0.0
+```
+
+See [`docs/BUILD.md`](docs/BUILD.md) for full build troubleshooting.
+
+### Android
+
+The `android/` folder is intentionally gitignored and scaffolded per machine:
+
+```bash
+flutter create --platforms=android .   # one-time, after fresh clone
+flutter build apk --debug              # or --release
+```
+
+Requires JDK 17 and the Android SDK on `PATH`. See `tools/release-debug.sh` for
+the local sideload flow.
+
+CI also produces release APKs via `.github/workflows/build-apk.yml`.
+
+### iOS
+
+Standard Flutter iOS workflow. Open `ios/Runner.xcworkspace` in Xcode and run on
+a simulator or device after `flutter pub get`.
+
+## Tests
+
+```bash
+flutter test                    # full suite
+flutter test -r failures-only   # errors only
+flutter analyze                 # static analysis
+```
 
 ## Architecture
-### Frontend (Flutter)
-- **Local Storage**: Uses SQLite (via sqflite package) to store statistics offline on mobile. SQLite was chosen for its relational capabilities, complex query support, and better long-term maintainability for statistics tracking. On web, a compatible alternative (e.g. `drift` with IndexedDB) is used via repository abstraction.
-- **UI**: Built with Flutter widgets for a native-like experience.
-- **Optional Backend Sync**: Connects to a self-hosted backend if configured.
 
-### Backend (Optional, Self-Hosted)
-- **REST API**: For syncing statistics and auto-scoring.
-- **Computer Vision**: Detects darts using PyTorch or ONNX models (Rust/Python).
-- **Self-Hosted**: Users can run their own backend (Python or Rust).
+Feature-first Clean Architecture with strict layer boundaries.
 
-## Getting Started
+- **Frontend (Flutter):** Riverpod (`@riverpod` codegen) for state, Freezed for
+  immutable models, GoRouter for navigation.
+- **Persistence:** SQLite via `sqflite` on mobile, `drift` (sqlite3 WASM) on
+  web. Repository abstraction selects the backend in
+  `lib/core/persistence/database_provider.dart`.
+- **Game logic:** Every change to game state is appended to `game_events` as a
+  typed event. Statistics are pure projections — never stored.
+- **Crash reporting:** Sentry, opt-in via `--dart-define=SENTRY_DSN=<dsn>` at
+  build time.
 
-### Prerequisites
-- Flutter SDK (with web support enabled for headless development).
-- Python or Rust (for backend, if used).
-- Optional: LibTorch or ONNX runtime (for computer vision).
+Detailed references:
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — concise overview
+- [`docs/ARCHITECTURE_COMPLETE.md`](docs/ARCHITECTURE_COMPLETE.md) — full reference
+- [`docs/DATABASE_DDL.md`](docs/DATABASE_DDL.md) — schema
+- [`docs/STATE_MANAGEMENT.md`](docs/STATE_MANAGEMENT.md) — Riverpod conventions
+- [`docs/games/`](docs/games/) — formal scoring rules and transition tables
 
-### Running on Web (Headless / Development)
+## Contributing
 
-Flutter Web is the recommended way to iterate quickly in a headless environment without a connected device. Game logic, UI, and backend API calls all behave identically to the mobile target. Native-only features (camera, SQLite) are stubbed on web.
+Issues and PRs welcome. Before opening a PR, run `flutter test` and
+`flutter analyze`.
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/darts-app.git
-   cd darts-app
-   ```
-2. Install Flutter dependencies:
-   ```bash
-   flutter pub get
-   ```
-3. Enable Flutter Web if not already active:
-   ```bash
-   flutter config --enable-web
-   ```
-4. Run in Chrome (requires a display) or build and serve for remote access:
-   ```bash
-   # Option A — run directly in Chrome
-   flutter run -d chrome
+`CLAUDE.md` is a behaviour contract for AI coding agents (Claude Code etc.) and
+not required reading for human contributors — but it does mirror the
+architecture rules below, so it's a fast way to learn the conventions.
 
-   # Option B — build and serve over the network (headless-friendly)
-   flutter build web
-   cd build/web && python3 -m http.server 8080
-   # Then open http://<your-machine-ip>:8080 in any browser
-   ```
+## License
 
-> **Note**: `sqflite` is not supported on web. When running the web build, the data layer falls back to a browser-compatible storage backend. Data entered in the web build does not persist to the mobile SQLite database.
-
-### Install on Mobile (Android / iOS)
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/darts-app.git
-   cd darts-app
-   ```
-2. Install Flutter dependencies:
-   ```bash
-   flutter pub get
-   ```
-3. Add SQLite dependency (if not already in pubspec.yaml):
-   ```bash
-   flutter pub add sqflite
-   flutter pub add path_provider
-   ```
-4. Connect a physical device or start an emulator, then run:
-   ```bash
-   flutter run
-   ```
-
-### Set Up the Backend (Optional)
-#### Python Backend
-1. Install dependencies:
-   ```bash
-   pip install flask opencv-python torch
-   ```
-2. Run the backend:
-   ```bash
-   python backend/app.py
-   ```
-3. Configure the app to use the backend URL (e.g., `http://localhost:5000`).
-
-#### Rust Backend
-1. Install Rust:
-   ```bash
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   ```
-2. Install dependencies (e.g., `tract-onnx` or `tch-rs`):
-   ```bash
-   cargo add tract-onnx
-   ```
+MIT — see [`LICENSE`](LICENSE).

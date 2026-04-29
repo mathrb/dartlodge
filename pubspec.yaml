@@ -1,5 +1,5 @@
 name: my_darts
-description: A comprehensive darts scoring and statistics application
+description: Local-first open-source darts scoring and statistics app for Android, iOS, and web.
 version: 1.0.0+4
 
 environment:

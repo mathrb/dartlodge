@@ -6,3 +6,22 @@ web/
 android/
 releases/
 tools/apk-server/
+.claude/
+.remember/
+*.iml
+test_output.txt
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local env / secrets
+.env
+.env.local
+
+# Test coverage
+coverage/
+lcov.info

@@ -1,6 +1,10 @@
-# Darts Game Modes
+# Darts Game Modes (Research / Brainstorm)
 
-This folder contains detailed documentation for each darts game mode that can be implemented in the app.
+> Early-stage research notes. **Not authoritative.** The implemented game rules
+> and transition tables live in `docs/games/` (`x01.transitions.md`,
+> `cricket.transitions.md`, `around-the-clock.md`, `checkout-practice.md`).
+> Files here capture mode ideas considered during initial scoping; some are
+> implemented, most are not.
 
 ## Available Game Modes
 
