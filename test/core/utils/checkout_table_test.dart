@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/utils/checkout_table.dart';
+import 'package:dart_lodge/core/utils/checkout_table.dart';
 
 void main() {
   group('checkoutSuggestion (double-out, backward compat)', () {

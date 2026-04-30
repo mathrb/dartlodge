@@ -1,5 +1,5 @@
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 
 enum ProjectionScope { dart, turn, leg, match, career }
 

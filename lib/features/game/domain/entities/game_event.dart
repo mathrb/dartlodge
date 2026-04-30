@@ -3,7 +3,7 @@
 
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'dart:convert';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 part 'game_event.freezed.dart';
 part 'game_event.g.dart';

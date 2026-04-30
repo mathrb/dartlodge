@@ -2,11 +2,11 @@
 // Covers all transition tables A–M from docs/games/cricket.transitions.md
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/engines/stateless_cricket_engine.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_cricket_engine.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 
 int _seq = 0;
 

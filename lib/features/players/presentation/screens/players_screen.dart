@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_darts/features/players/presentation/pages/player_list_page.dart';
+import 'package:dart_lodge/features/players/presentation/pages/player_list_page.dart';
 
 class PlayersScreen extends ConsumerWidget {
   final bool showAddDialog;

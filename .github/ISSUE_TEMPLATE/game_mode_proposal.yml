@@ -11,9 +11,9 @@ body:
         eventually implement.
 
         For inspiration, see the existing transition tables under
-        [`docs/games/`](https://github.com/mathrb/my-darts/tree/main/docs/games)
+        [`docs/games/`](https://github.com/mathrb/dartlodge/tree/main/docs/games)
         and the early brainstorm notes under
-        [`docs/games/research/`](https://github.com/mathrb/my-darts/tree/main/docs/games/research).
+        [`docs/games/research/`](https://github.com/mathrb/dartlodge/tree/main/docs/games/research).
 
   - type: input
     id: name

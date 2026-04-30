@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_darts/core/utils/app_text_styles.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 
 /// App-wide top header row: logo, optional back button, and trailing action slot.
 ///

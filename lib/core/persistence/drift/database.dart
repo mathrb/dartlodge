@@ -2,7 +2,7 @@
 // IndexedDB-based database for web using drift
 
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 part 'database.g.dart';
 

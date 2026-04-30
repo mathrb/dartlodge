@@ -2,11 +2,11 @@
 // Verifies pure functional state transitions based on docs/games/x01.transitions.md
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/engines/stateless_x01_engine.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 
 /// Helper function to create GameEvent with required new fields
 GameEvent _createEvent({

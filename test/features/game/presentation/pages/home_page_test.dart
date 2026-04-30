@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/features/game/presentation/pages/home_page.dart';
-import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
-import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/features/game/presentation/pages/home_page.dart';
+import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
 

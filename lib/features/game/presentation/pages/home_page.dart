@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/core/widgets/app_header.dart';
-import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/widgets/app_header.dart';
+import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});

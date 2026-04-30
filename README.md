@@ -1,4 +1,4 @@
-# My Darts
+# DartLodge
 
 A **local-first**, open-source darts scoring and statistics app for Android and
 iOS, built with Flutter. Plays offline by default; statistics are computed by
@@ -62,8 +62,9 @@ See [`docs/BUILD.md`](docs/BUILD.md) for full build troubleshooting.
 The `android/` folder is intentionally gitignored and scaffolded per machine:
 
 ```bash
-flutter create --platforms=android .   # one-time, after fresh clone
-flutter build apk --debug              # or --release
+flutter create --platforms=android --org app .   # one-time, after fresh clone
+bash tools/post-create-android.sh                 # override applicationId to app.dartlodge
+flutter build apk --debug                         # or --release
 ```
 
 Requires JDK 17 and the Android SDK on `PATH`. See `tools/release-debug.sh` for

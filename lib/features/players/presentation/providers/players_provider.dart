@@ -1,11 +1,11 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/validators.dart';
-import 'package:my_darts/features/players/presentation/state/player_form_state.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/validators.dart';
+import 'package:dart_lodge/features/players/presentation/state/player_form_state.dart';
 
 part 'players_provider.g.dart';
 

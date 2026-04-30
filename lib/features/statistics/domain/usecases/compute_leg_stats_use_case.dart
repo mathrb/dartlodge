@@ -1,16 +1,16 @@
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/entities/leg_stats_breakdown.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_runner.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_average_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_runner.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_average_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
 
 class ComputeLegStatsUseCase {
   const ComputeLegStatsUseCase();

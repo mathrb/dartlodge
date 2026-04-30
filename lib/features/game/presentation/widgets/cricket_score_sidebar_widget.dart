@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_darts/core/utils/cricket_segment_utils.dart';
+import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import '../../domain/models/game_state.dart';
 
 class CricketScoreSidebarWidget extends StatelessWidget {

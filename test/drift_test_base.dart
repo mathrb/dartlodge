@@ -2,12 +2,12 @@
 // Test base for web Drift database
 
 import 'package:drift/native.dart';
-import 'package:my_darts/core/persistence/drift/database.dart';
-import 'package:my_darts/core/persistence/drift/repositories/player_repository_drift.dart';
-import 'package:my_darts/core/persistence/drift/repositories/game_repository_drift.dart';
-import 'package:my_darts/core/persistence/drift/repositories/dart_throw_repository_drift.dart';
-import 'package:my_darts/core/persistence/drift/repositories/game_event_repository_drift.dart';
-import 'package:my_darts/core/persistence/drift/repositories/statistics_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/database.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/player_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/game_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/dart_throw_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/game_event_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/statistics_repository_drift.dart';
 import 'database_test_base.dart';
 
 class DriftTestBase implements DatabaseTestBase {

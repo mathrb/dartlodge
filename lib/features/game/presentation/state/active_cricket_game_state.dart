@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 
 part 'active_cricket_game_state.freezed.dart';
 

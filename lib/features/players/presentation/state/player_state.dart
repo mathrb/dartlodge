@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
 part 'player_state.freezed.dart';
 

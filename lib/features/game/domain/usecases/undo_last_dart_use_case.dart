@@ -11,7 +11,7 @@ import '../repositories/dart_throw_repository.dart';
 import '../engines/base_game_engine.dart';
 import '../../../../core/error/repository_exception.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 class UndoLastDartUseCase {
   final GameRepository _gameRepository;
