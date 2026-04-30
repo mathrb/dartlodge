@@ -2,17 +2,17 @@
 // Verifies the coordination between repositories and the engine
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/entities/dart_throw.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/domain/repositories/dart_throw_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/features/game/domain/usecases/process_dart_use_case.dart';
-import 'package:my_darts/features/game/domain/engines/stateless_x01_engine.dart';
-import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/game/domain/usecases/process_dart_use_case.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 

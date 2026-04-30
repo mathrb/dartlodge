@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:my_darts/core/utils/app_colors.dart';
-import 'package:my_darts/core/utils/app_spacing.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/presentation/widgets/config_stepper_widget.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
+import 'package:dart_lodge/core/utils/app_spacing.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/config_stepper_widget.dart';
 
 /// A bottom-sheet panel that lets the user adjust game configuration.
 /// Uses a copy-on-open (draft) pattern: edits are local until Apply is tapped.

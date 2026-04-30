@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/core/utils/app_colors.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/presentation/pages/cricket_board_page.dart';
-import 'package:my_darts/features/game/presentation/providers/active_cricket_game_provider.dart';
-import 'package:my_darts/features/game/presentation/state/active_cricket_game_state.dart';
-import 'package:my_darts/features/game/presentation/widgets/game_complete_modal_widget.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/presentation/pages/cricket_board_page.dart';
+import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
+import 'package:dart_lodge/features/game/presentation/state/active_cricket_game_state.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/game_complete_modal_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
 

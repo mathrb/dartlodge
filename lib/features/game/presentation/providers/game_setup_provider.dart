@@ -1,12 +1,12 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 
 part 'game_setup_provider.g.dart';
 

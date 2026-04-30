@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
 
 GameEvent _makeEvent(
   String type,

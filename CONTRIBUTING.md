@@ -1,4 +1,4 @@
-# Contributing to my-darts
+# Contributing to DartLodge
 
 Thanks for your interest! This is a solo-maintained, local-first Flutter
 darts app. Issues, bug reports, and pull requests are welcome.
@@ -13,8 +13,8 @@ can go straight to a PR.
 ## Getting set up
 
 ```bash
-git clone https://github.com/mathrb/my-darts.git
-cd my-darts
+git clone https://github.com/mathrb/dartlodge.git
+cd dartlodge
 flutter pub get
 ```
 
@@ -53,7 +53,8 @@ See [`docs/BUILD.md`](docs/BUILD.md) for full build troubleshooting.
 `android/` is intentionally gitignored and scaffolded per machine:
 
 ```bash
-flutter create --platforms=android .
+flutter create --platforms=android --org app .
+bash tools/post-create-android.sh
 flutter build apk --debug
 ```
 

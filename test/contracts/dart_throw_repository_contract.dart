@@ -2,16 +2,16 @@
 // Shared test suite for all DartThrowRepository implementations
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/entities/dart_throw.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/domain/repositories/dart_throw_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 void runDartThrowRepositoryContractTests({
   required Future<DartThrowRepository> Function() factory,

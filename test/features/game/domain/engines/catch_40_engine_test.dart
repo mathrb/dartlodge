@@ -4,11 +4,11 @@
 // Scoring: ≤2 darts → +3, 3 darts → +2 (target 99 → +3), 4-6 darts → +1, fail → +0.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/engines/stateless_catch_40_engine.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_catch_40_engine.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 
 int _seq = 0;
 

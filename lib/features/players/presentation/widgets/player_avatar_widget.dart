@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
 class PlayerAvatarWidget extends StatelessWidget {
   final Player player;

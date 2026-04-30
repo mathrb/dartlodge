@@ -3,19 +3,19 @@
 
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart' as domain;
-import 'package:my_darts/features/statistics/domain/repositories/statistics_repository.dart';
-import 'package:my_darts/features/statistics/domain/entities/player_stats.dart';
-import 'package:my_darts/features/statistics/domain/entities/player_leg_snapshot.dart';
-import 'package:my_darts/features/statistics/domain/entities/game_stats.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_runner.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart' as domain;
+import 'package:dart_lodge/features/statistics/domain/repositories/statistics_repository.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_runner.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
 import '../database.dart' as drift_db;
 
 class StatisticsRepositoryDrift implements StatisticsRepository {

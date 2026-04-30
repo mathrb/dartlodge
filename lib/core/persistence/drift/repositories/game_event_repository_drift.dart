@@ -4,10 +4,10 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
 import '../database.dart' as drift_db;
 
 class GameEventRepositoryDrift implements GameEventRepository {

@@ -1,14 +1,14 @@
 // Test Data Utilities
 // Provides test data generators and cleanup methods
 
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/dart_throw.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 
 class TestData {
   /// Player Test Data

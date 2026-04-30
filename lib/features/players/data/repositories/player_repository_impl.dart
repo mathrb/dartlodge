@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../domain/entities/player.dart';
 import '../../domain/repositories/player_repository.dart';
-import 'package:my_darts/core/error/repository_exception.dart' hide DatabaseException;
+import 'package:dart_lodge/core/error/repository_exception.dart' hide DatabaseException;
 
 class PlayerRepositoryImpl implements PlayerRepository {
   final Database _db;

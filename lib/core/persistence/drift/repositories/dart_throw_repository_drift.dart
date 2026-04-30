@@ -2,9 +2,9 @@
 // Concrete implementation of DartThrowRepository interface using Drift
 
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/features/game/domain/entities/dart_throw.dart';
-import 'package:my_darts/features/game/domain/repositories/dart_throw_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
+import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart';
 import '../database.dart' as drift_db;
 
 class DartThrowRepositoryDrift implements DartThrowRepository {

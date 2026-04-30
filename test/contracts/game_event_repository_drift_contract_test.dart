@@ -1,8 +1,8 @@
 // Game Event Repository Hybrid Contract Test
 // Runs the shared contract tests against both SQLite and Drift implementations
 
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import '../hybrid_test_runner.dart';
 import 'game_event_repository_contract.dart';
 

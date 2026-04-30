@@ -31,13 +31,14 @@ flutter analyze                 # static analysis
 `android/` is gitignored. Each dev scaffolds it once per machine:
 
 ```bash
-flutter create --platforms=android .   # one-time, after fresh clone or rm -rf android/
-flutter build apk --debug              # or --release
+flutter create --platforms=android --org app .   # one-time, after fresh clone or rm -rf android/
+bash tools/post-create-android.sh                 # override applicationId to app.dartlodge
+flutter build apk --debug                         # or --release
 ```
 
 Requires JDK 17 + Android SDK on `PATH` (`JAVA_HOME`, `ANDROID_HOME`). Non-interactive shells (incl. Bash tool calls) don't load `~/.bashrc` — use `tools/release-debug.sh` or prepend env exports inline. CI also produces release APKs.
 
-**Sideloading to a phone:** `tools/release-debug.sh` bumps `versionCode`, rebuilds, and copies the APK to `releases/my_darts-debug-<version>.apk` (folder gitignored). Serve `releases/` by whichever method (Python http.server, nginx, docker — devs choose). In-place upgrades require both an increased `versionCode` AND a matching signing key; debug builds on the same machine share `~/.android/debug.keystore` so upgrades just work; mixing local debug ↔ CI release ↔ another machine forces uninstall. Android identifies apps by `applicationId` + signing key, NOT by APK filename — different filenames with the same identity all upgrade the same installed app.
+**Sideloading to a phone:** `tools/release-debug.sh` bumps `versionCode`, rebuilds, and copies the APK to `releases/dartlodge-debug-<version>.apk` (folder gitignored). Serve `releases/` by whichever method (Python http.server, nginx, docker — devs choose). In-place upgrades require both an increased `versionCode` AND a matching signing key; debug builds on the same machine share `~/.android/debug.keystore` so upgrades just work; mixing local debug ↔ CI release ↔ another machine forces uninstall. Android identifies apps by `applicationId` + signing key, NOT by APK filename — different filenames with the same identity all upgrade the same installed app.
 
 ---
 
