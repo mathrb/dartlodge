@@ -204,9 +204,15 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **DartThrown payload keys:** `competitor_id`, `player_id`, `segment`, `multiplier`, `score`, `input_method` only (see `buildDartThrownEvent` in `lib/features/game/domain/usecases/game_use_case_helpers.dart`). No `turn_number`, no `dart_number` — reconstruct turn grouping via `TurnStarted`/`TurnEnded` event boundaries if needed.
 
-**Computing stats over an event slice:** Build a `ProjectionRunner` with the projections you need, call `init(ProjectionContext(...))` then `run(events)` then `snapshot()`. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. Same wiring lives in both statistics repos and `ComputeLegStatsUseCase` — update all three when it changes.
+**Computing stats over an event slice:** Build a `ProjectionRunner` with the projections you need, call `init(ProjectionContext(...))` then `run(events)` then `snapshot()`. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. Same wiring lives in both statistics repos and `ComputeLegStatsUseCase` — update all three when it changes. First-nine projections (`cricket.firstNineMpr`, X01 first-nine PPR) only count when `TurnStarted` events are present — fixtures emitting just `DartThrown`/`TurnEnded` silently produce null first-nine stats.
+
+**`GameStats.gameType` is load-bearing:** the post-game summary branches on `gameStats.gameType == GameType.cricket.name` to choose MPR vs PPR labels and rows. Every return path of `getGameStats` (including the empty-darts early return) must set it, in both repository implementations.
 
 **Dual statistics repositories:** Statistics queries exist in both `lib/features/statistics/data/repositories/statistics_repository_impl.dart` (sqflite) and `lib/core/persistence/drift/repositories/statistics_repository_drift.dart` (drift). Always update both when changing query logic.
+
+**Repository contract tests run on both backends:** `runHybridTests` (`test/hybrid_test_runner.dart`) executes a single contract suite against both sqflite and drift, with separate `setUp`/`tearDown` per engine. Add cross-backend coverage in the shared `*_contract.dart` file — the `*_drift_contract_test.dart` / `*_sqflite_contract_test.dart` wrappers are just two-liners.
+
+**Cricket mark-bucket field overload:** `CompetitorStats.{five..nine}MarkTurns` are populated as **exact-N** counts by `getGameStats` and `ComputeLegStatsUseCase` (read from the `*Exact` snapshot keys) but as **≥-N** counts by `getPlayerStats` (read from the `*MarkTurns` keys). Same field, different cohorts by call path.
 
 **Statistics scope is required:** `getPlayerStats` and `watchPlayerStats` take `required GameType gameType`. PPR-shaped fields are X01-only and cricket fields are cricket-only — a single call cannot mix types coherently. The player-picker AVG badge consumes `playerStatsProvider`, which passes `GameType.x01`.
 
