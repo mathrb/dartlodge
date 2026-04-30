@@ -31,4 +31,9 @@ if [[ -f $MANIFEST ]]; then
   sed -i 's/android:label="dart_lodge"/android:label="DartLodge"/g' "$MANIFEST"
 fi
 
+# `flutter create` regenerates the default counter-app smoke test that
+# references a non-existent `MyApp` class. Drop it so `flutter analyze` stays
+# clean.
+rm -f test/widget_test.dart
+
 echo "android applicationId set to app.dartlodge, label set to DartLodge"
