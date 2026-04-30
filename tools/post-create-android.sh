@@ -25,4 +25,10 @@ if [[ -d $OLD_KOTLIN_DIR ]]; then
   sed -i 's/^package app\.dart_lodge/package app.dartlodge/' "$NEW_KOTLIN_DIR/MainActivity.kt"
 fi
 
-echo "android applicationId set to app.dartlodge"
+# Override the user-visible app label (default is the pubspec name dart_lodge)
+MANIFEST="android/app/src/main/AndroidManifest.xml"
+if [[ -f $MANIFEST ]]; then
+  sed -i 's/android:label="dart_lodge"/android:label="DartLodge"/g' "$MANIFEST"
+fi
+
+echo "android applicationId set to app.dartlodge, label set to DartLodge"

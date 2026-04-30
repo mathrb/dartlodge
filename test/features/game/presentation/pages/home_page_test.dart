@@ -104,11 +104,11 @@ void main() {
   // ── Render tests ────────────────────────────────────────────────────────────
 
   group('HomePage — render', () {
-    testWidgets('renders MYDARTS app title in header', (tester) async {
+    testWidgets('renders DARTLODGE app title in header', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      expect(find.text('MYDARTS'), findsOneWidget);
+      expect(find.text('DARTLODGE'), findsOneWidget);
     });
 
     testWidgets('renders all three game cards', (tester) async {
