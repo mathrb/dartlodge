@@ -174,7 +174,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
             final hcSnap = snap['x01_highest_checkout'] ?? {};
             final hc = hcSnap['highestCheckout'] as int?;
-            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout!)) {
+            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout)) {
               competitorHighestCheckout = hc;
             }
           }
@@ -1635,20 +1635,20 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           // Highest checkout
           if (lastPlayerTurnStartingScore > 0 &&
               (highestCheckout == null ||
-                  lastPlayerTurnStartingScore > highestCheckout!)) {
+                  lastPlayerTurnStartingScore > highestCheckout)) {
             highestCheckout = lastPlayerTurnStartingScore;
           }
 
           // Best leg PPR
           if (legStartingScore != null && legDartsCount > 0) {
-            final legPpr = legStartingScore! / legDartsCount * 3;
+            final legPpr = legStartingScore / legDartsCount * 3;
             bestLegPpr =
-                bestLegPpr == null ? legPpr : (legPpr > bestLegPpr! ? legPpr : bestLegPpr!);
+                bestLegPpr == null ? legPpr : (legPpr > bestLegPpr ? legPpr : bestLegPpr);
             if (turnIndexInLeg >= 3) {
               final f9ppr = legFirstNineScore / 9 * 3;
               bestFirstNinePpr = bestFirstNinePpr == null
                   ? f9ppr
-                  : (f9ppr > bestFirstNinePpr! ? f9ppr : bestFirstNinePpr!);
+                  : (f9ppr > bestFirstNinePpr ? f9ppr : bestFirstNinePpr);
             }
           }
         }
@@ -1664,7 +1664,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       } else if (event.eventType == 'GameCompleted') {
         if (gameAttempts > 0) {
           final gameCo = gameSuccesses / gameAttempts * 100;
-          if (bestGameCo == null || gameCo > bestGameCo!) {
+          if (bestGameCo == null || gameCo > bestGameCo) {
             bestGameCo = gameCo;
           }
         }

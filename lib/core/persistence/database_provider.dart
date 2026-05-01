@@ -136,7 +136,6 @@ ProcessDartUseCase processDartUseCase(Ref ref) {
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoLastDartUseCase(Ref ref) {
   return UndoLastDartUseCase(
-    ref.watch(gameRepositoryProvider),
     ref.watch(gameEventRepositoryProvider),
     ref.watch(dartThrowRepositoryProvider),
     ref.watch(x01EngineProvider),
@@ -158,7 +157,6 @@ ProcessCricketDartUseCase processCricketDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoCricketLastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(cricketEngineProvider),
@@ -241,7 +239,6 @@ ProcessPracticeDartUseCase processCheckoutPracticeDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoPracticeAroundTheClockLastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(aroundTheClockEngineProvider),
@@ -250,7 +247,6 @@ UndoLastDartUseCase undoPracticeAroundTheClockLastDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoPracticeBobs27LastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(bobs27EngineProvider),
@@ -259,7 +255,6 @@ UndoLastDartUseCase undoPracticeBobs27LastDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoPracticeShanghaiLastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(shanghaiEngineProvider),
@@ -268,7 +263,6 @@ UndoLastDartUseCase undoPracticeShanghaiLastDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoPracticeCatch40LastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(catch40EngineProvider),
@@ -277,7 +271,6 @@ UndoLastDartUseCase undoPracticeCatch40LastDartUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 UndoLastDartUseCase undoPracticeCheckoutPracticeLastDartUseCase(Ref ref) =>
     UndoLastDartUseCase(
-      ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(checkoutPracticeEngineProvider),

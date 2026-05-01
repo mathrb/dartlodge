@@ -7,6 +7,7 @@ android/
 releases/
 tools/apk-server/
 .claude/
+.claude.local.md
 .remember/
 *.iml
 test_output.txt

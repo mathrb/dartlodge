@@ -247,7 +247,6 @@ void main() {
 
   testWidgets('7. Tapping unselected roster cell adds player', (tester) async {
     final players = [_fakePlayer('p1', 'Alice')];
-    late GameSetupNotifier capturedNotifier;
 
     final router = GoRouter(
       initialLocation: '/game/player-selection',
@@ -262,9 +261,6 @@ void main() {
         ),
       ],
     );
-
-    // Use a mutable state to verify toggle was called
-    final stateHolder = ValueNotifier<List<String>>([]);
 
     await tester.pumpWidget(
       ProviderScope(

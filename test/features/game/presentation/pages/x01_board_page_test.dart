@@ -420,7 +420,7 @@ void main() {
 
     // Checkout banner is now always visible but dimmed when not in range
     final checkoutText = tester.widget<Text>(find.text('CHECKOUT'));
-    final color = checkoutText.style?.color as Color?;
+    final color = checkoutText.style?.color;
     expect(color?.alpha, lessThan(255)); // Check that it's dimmed (alpha < 1.0)
   });
 
@@ -435,7 +435,7 @@ void main() {
 
     // Checkout banner is now always visible but dimmed when not in range
     final checkoutText = tester.widget<Text>(find.text('CHECKOUT'));
-    final color = checkoutText.style?.color as Color?;
+    final color = checkoutText.style?.color;
     expect(color?.alpha, lessThan(255)); // Check that it's dimmed (alpha < 1.0)
   });
 

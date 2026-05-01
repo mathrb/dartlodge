@@ -193,7 +193,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
             final hcSnap = snap['x01_highest_checkout'] ?? {};
             final hc = hcSnap['highestCheckout'] as int?;
-            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout!)) {
+            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout)) {
               competitorHighestCheckout = hc;
             }
           }

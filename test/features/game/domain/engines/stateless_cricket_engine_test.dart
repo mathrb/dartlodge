@@ -92,16 +92,6 @@ GameState _makeState({
   );
 }
 
-/// Helper: apply TurnStarted then a dart for c1, return result state
-GameState _startTurnAndThrow(
-    StatelessCricketEngine engine, GameState state, int segment, int multiplier,
-    {String competitorId = 'c1'}) {
-  final s1 = engine.apply(state, _turnStarted(competitorId)).state;
-  return engine
-      .apply(s1, _dartThrown(competitorId: competitorId, segment: segment, multiplier: multiplier))
-      .state;
-}
-
 void main() {
   late StatelessCricketEngine engine;
 
