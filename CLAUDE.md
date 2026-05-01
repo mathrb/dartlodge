@@ -63,6 +63,7 @@ Check the relevant spec before implementing. These are the source of truth.
 | Data entities and field names | `docs/DATA.md` |
 | Backend REST endpoints (optional) | `docs/API_CONTRACT.md` |
 | Backend integration patterns (optional) | `docs/BACKEND_INTEGRATION.md` |
+| Branching, CI, releases, signing | `docs/RELEASES.md` |
 | Architecture diagrams | `docs/ARCHITECTURE_DIAGRAMS.md` |
 | Concise architecture overview | `docs/ARCHITECTURE.md` |
 | Full architecture reference | `docs/ARCHITECTURE_COMPLETE.md` |
@@ -232,6 +233,18 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **UI refactors:** After any widget redesign or UI refactor, update the corresponding test expectations in the same session before committing.
 
+**Branch naming:** All work goes on a branch off `main` named `<type>/<slug>` where type ∈ {`feat`, `fix`, `docs`, `chore`, `hotfix`}. Slugs are short and dash-separated (`feat/cricket-stats-export`). Never commit directly to `main`.
+
+**PR titles:** Soft Conventional Commits — `feat(cricket): ...`, `fix(x01): ...`, `docs: ...`, `chore(deps): ...`. PR titles become squash-merge commit messages and feed GitHub's auto-generated release notes.
+
+**Squash-merge only:** PRs are always squash-merged. Don't rebase-merge or merge-commit. Branches auto-delete after merge.
+
+**Releases are tag-driven:** Pushing a tag `vX.Y.Z` (or `vX.Y.Z-rcN` for pre-release) triggers `release.yml`, which builds and publishes the signed APK to GitHub Releases. Never manually upload an APK to a release. Tags must point to a commit that's reachable from `main` (`release.yml` enforces this). Full process in `docs/RELEASES.md`.
+
+**Version bumps:** When asked to bump the version, edit only `pubspec.yaml`'s `version:` field (e.g. `1.0.0+0` → `1.1.0+0`) in a `chore: bump version to X.Y.Z` PR. The `+N` suffix is a placeholder; CI overrides `versionCode` from `github.run_number` on tag builds.
+
+**CI does not run `build_runner`:** Generated `.g.dart` / `.freezed.dart` / `.mocks.dart` files are committed. After editing any `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, regenerate locally and commit the result in the same PR — CI will fail otherwise.
+
 ---
 
 ## Things You Must Not Do
@@ -247,6 +260,9 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 - Add database triggers — immutability of completed games is application logic only
 - Add packages without checking whether the existing stack already covers the need
 - Commit the `android/` folder — it is gitignored and scaffolded per machine via `flutter create --platforms=android .`
+- Push commits directly to `main` — always go through a PR
+- Tag a commit that's not on `main` (release CI refuses to build it; the only exception is hotfixes — see `docs/RELEASES.md`)
+- Manually upload APKs to a GitHub Release — releases are produced by `release.yml` from tags only
 
 ---
 
