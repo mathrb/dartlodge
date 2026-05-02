@@ -83,12 +83,6 @@ class StatsOverlayWidget extends ConsumerWidget {
                   ),
                 ),
                 data: (gameStats) {
-                  if (gameStats == null) {
-                    return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text('No stats available'),
-                    );
-                  }
                   return Column(
                     children: gameStats.byCompetitor.map((cs) {
                       return Padding(

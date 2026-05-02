@@ -245,6 +245,10 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **CI does not run `build_runner`:** Generated `.g.dart` / `.freezed.dart` / `.mocks.dart` files are committed. After editing any `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, regenerate locally and commit the result in the same PR — CI will fail otherwise.
 
+**Analyze in CI:** `test.yml` runs `flutter analyze --no-fatal-infos`. Warnings block CI; infos are advisory. ~190 info-level lints are tolerated (deprecated `overrideWith`, `curly_braces_in_flow_control_structures`, `avoid_print` in test infra). Cleaning them is optional polish — never tighten this flag without raising it.
+
+**"Unused" in `lib/` may be forgotten wiring:** When `flutter analyze` flags an unused field, parameter, or import in `lib/`, check whether it represents incomplete wiring (a setter that updates a field nothing reads, a constructor param never used in the body) before deleting. If unsure, ask — silent deletion can lock in a no-op user-facing control as the intended behavior.
+
 ---
 
 ## Things You Must Not Do
