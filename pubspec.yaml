@@ -1,6 +1,6 @@
-name: my_darts
+name: dart_lodge
 description: Local-first open-source darts scoring and statistics app for Android, iOS, and web.
-version: 1.0.0+4
+version: 0.1.0+0
 
 environment:
   sdk: ">=3.8.0 <4.0.0"

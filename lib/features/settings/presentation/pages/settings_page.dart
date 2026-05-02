@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/persistence/drift/drift_helper.dart';
-import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
+import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {

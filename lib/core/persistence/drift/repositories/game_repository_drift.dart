@@ -4,13 +4,13 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/domain/models/game_state_snapshot.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import '../database.dart' as drift_db;
 
 
@@ -197,7 +197,6 @@ class GameRepositoryDrift implements GameRepository {
     for (final row in results) {
       final competitorRow = row.readTable(_db.competitors);
       final competitorPlayerRow = row.readTableOrNull(_db.competitorPlayers);
-      final playerRow = row.readTableOrNull(_db.players);
 
       // Create or get existing competitor data
       final competitorData = competitorMap.putIfAbsent(

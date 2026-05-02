@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/presentation/widgets/player_avatar_widget.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/presentation/widgets/player_avatar_widget.dart';
 
 class PlayerCardWidget extends StatelessWidget {
   final Player player;

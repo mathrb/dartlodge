@@ -34,7 +34,7 @@ class DartsApp extends ConsumerWidget {
         final themeMode =
             ref.watch(settingsProvider).value ?? ThemeMode.light;
         return MaterialApp.router(
-          title: 'Darts App',
+          title: 'DartLodge',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),

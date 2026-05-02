@@ -9,36 +9,36 @@ import 'dart:math' show min;
 import '../../domain/entities/player_stats.dart';
 import '../../domain/entities/game_stats.dart';
 import '../../domain/repositories/statistics_repository.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/error/repository_exception.dart' hide DatabaseException;
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_runner.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_average_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_legs_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_avg_checkout_score_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_best_game_checkout_percentage_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_win_rate_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
-import 'package:my_darts/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
-import 'package:my_darts/features/statistics/domain/entities/player_leg_snapshot.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart' hide DatabaseException;
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_runner.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_average_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_legs_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_avg_checkout_score_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_game_checkout_percentage_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_win_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 
 
 class StatisticsRepositoryImpl implements StatisticsRepository {
@@ -85,6 +85,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         return GameStats(
           gameId: gameId,
           byCompetitor: [],
+          gameType: gameTypeStr ?? '',
         );
       }
 
@@ -192,7 +193,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
             final hcSnap = snap['x01_highest_checkout'] ?? {};
             final hc = hcSnap['highestCheckout'] as int?;
-            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout!)) {
+            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout)) {
               competitorHighestCheckout = hc;
             }
           }

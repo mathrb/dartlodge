@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/presentation/widgets/cricket_mark_indicator_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/cricket_mark_indicator_widget.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 

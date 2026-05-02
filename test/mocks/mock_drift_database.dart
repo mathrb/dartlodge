@@ -3,7 +3,7 @@
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:my_darts/core/persistence/drift/database.dart';
+import 'package:dart_lodge/core/persistence/drift/database.dart';
 
 class MockDriftDatabase extends AppDatabase {
   MockDriftDatabase() : super(_openMockConnection());

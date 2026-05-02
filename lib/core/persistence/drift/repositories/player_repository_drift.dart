@@ -2,9 +2,9 @@
 // Concrete implementation of PlayerRepository interface using Drift
 
 import 'package:drift/drift.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 import '../database.dart' as drift_db;
 
 class PlayerRepositoryDrift implements PlayerRepository {

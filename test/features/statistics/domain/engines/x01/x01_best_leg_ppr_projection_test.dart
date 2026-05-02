@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
-import 'package:my_darts/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
 
 GameEvent _makeEvent(
   String type,
@@ -30,54 +30,6 @@ ProjectionContext _makeContext({String playerId = 'p1'}) => ProjectionContext(
       playerIds: ['p1', 'p2'],
     );
 
-// Helper: produce a minimal single-leg sequence:
-//   3 turns × 3 darts of [score] each, then LegCompleted won by p1.
-// legStartingScore is the starting_score of the first TurnStarted.
-// Returns list of events with auto-incrementing seq starting from [startSeq].
-List<GameEvent> _leg({
-  required int legStartingScore,
-  required int dartScore,
-  int darts = 9,
-  String winner = 'p1',
-  int startSeq = 1,
-}) {
-  final events = <GameEvent>[];
-  int seq = startSeq;
-  int remaining = legStartingScore;
-
-  // Simulate [darts] darts split across turns of 3
-  int turnCount = (darts / 3).ceil();
-  for (int t = 0; t < turnCount; t++) {
-    events.add(_makeEvent(
-      'TurnStarted',
-      {'player_id': 'p1', 'starting_score': remaining},
-      seq: seq++,
-    ));
-    int dartsThisTurn = (t == turnCount - 1) ? darts - t * 3 : 3;
-    for (int d = 0; d < dartsThisTurn; d++) {
-      events.add(_makeEvent(
-        'DartThrown',
-        {'player_id': 'p1', 'segment': dartScore, 'multiplier': 1},
-        seq: seq++,
-      ));
-      remaining -= dartScore;
-    }
-    events.add(_makeEvent(
-      'TurnEnded',
-      {'player_id': 'p1', 'reason': 'normal'},
-      seq: seq++,
-    ));
-  }
-
-  events.add(_makeEvent(
-    'LegCompleted',
-    {'winner_player_id': winner},
-    seq: seq++,
-  ));
-
-  return events;
-}
-
 void main() {
   late X01BestLegPprProjection engine;
 
@@ -101,15 +53,7 @@ void main() {
 
   // ── Category B ─────────────────────────────────────────────────────────────
 
-  test('B1 — best leg PPR computed correctly: 501 in 9 darts = 167.0', () {
-    engine.init(_makeContext());
-    // 501 / 9 * 3 = 167.0
-    final events = _leg(legStartingScore: 501, dartScore: 57, darts: 9);
-    // But 57*9 = 513 ≠ 501; use round numbers
-    // Use 501/9 directly without caring about exact scores
-    // Instead construct a simpler leg: 9 darts each scoring 55 + last 6
-    // Actually let's just use the formula: bestLegPpr = legStartingScore / legDartsCount * 3
-    // and test with a controlled scenario
+  test('B1 — best leg PPR computed correctly: 180 in 3 darts = 180.0', () {
     engine.init(_makeContext());
     // Leg: startingScore=180, 3 darts (T20 T20 T20 = 180), won by p1
     final evts = <GameEvent>[];
