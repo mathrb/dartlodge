@@ -1,6 +1,6 @@
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'cricket_segment_utils.dart';
 
 /// Computes hit rate: fraction of darts that land on a valid cricket target.

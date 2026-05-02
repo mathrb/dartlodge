@@ -13,7 +13,7 @@ class CricketStatsDetailTableWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = <StatsTableRow>[
       StatsTableHeader('AVERAGE', col2: 'BEST'),
-      StatsTableDataRow('MPT',
+      StatsTableDataRow('MPR',
           StatFormatter.fmtDouble(stats.marksPerTurn, decimals: 2),
           StatFormatter.fmtDouble(stats.bestLegMpt, decimals: 2)),
       StatsTableDataRow('Hit rate',

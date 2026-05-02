@@ -34,7 +34,6 @@ Future<GameStats> gameStats(Ref ref, String gameId) {
 class Leaderboard extends _$Leaderboard {
   GameType _gameType = GameType.x01;
   int _minGames = 5;
-  String _metric = 'threeDartAverage';
 
   @override
   Future<List<PlayerStats>> build() async {
@@ -52,11 +51,6 @@ class Leaderboard extends _$Leaderboard {
 
   void setMinGames(int min) {
     _minGames = min;
-    ref.invalidateSelf();
-  }
-
-  void setMetric(String metric) {
-    _metric = metric;
     ref.invalidateSelf();
   }
 }

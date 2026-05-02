@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 class HistoryFilterBarWidget extends StatelessWidget {
   final GameType? selectedGameType;

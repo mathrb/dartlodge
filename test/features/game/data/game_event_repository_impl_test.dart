@@ -4,11 +4,11 @@
 // production.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/persistence/database_migrations.dart';
-import 'package:my_darts/features/game/data/repositories/game_event_repository_impl.dart';
-import 'package:my_darts/features/game/data/repositories/game_repository_impl.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/core/persistence/database_migrations.dart';
+import 'package:dart_lodge/features/game/data/repositories/game_event_repository_impl.dart';
+import 'package:dart_lodge/features/game/data/repositories/game_repository_impl.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../../contracts/game_event_repository_contract.dart';
 

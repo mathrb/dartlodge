@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/core/widgets/error_retry_widget.dart';
-import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
-import 'package:my_darts/features/history/presentation/providers/game_detail_provider.dart';
-import 'package:my_darts/features/history/presentation/state/game_detail_state.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/features/history/presentation/providers/game_detail_provider.dart';
+import 'package:dart_lodge/features/history/presentation/state/game_detail_state.dart';
 import 'package:intl/intl.dart';
-import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
-import 'package:my_darts/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
-import 'package:my_darts/features/statistics/domain/entities/game_stats.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 // Cross-feature import: StatsCardWidget is a pure display widget with no domain logic
-import 'package:my_darts/features/statistics/presentation/widgets/stats_card_widget.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/stats_card_widget.dart';
 
 class GameDetailPage extends ConsumerWidget {
   final String gameId;

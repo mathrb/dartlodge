@@ -2,13 +2,13 @@
 // Shared test suite for all GameEventRepository implementations
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 void runGameEventRepositoryContractTests({
   required Future<GameEventRepository> Function() factory,

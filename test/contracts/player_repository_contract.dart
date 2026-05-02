@@ -2,9 +2,9 @@
 // Shared test suite for all PlayerRepository implementations
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
 
 /// [insertHistory] is an optional callback that inserts a competitor_players row
 /// for [playerId], enabling the history-check test. If null, that test is skipped.

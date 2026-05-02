@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/presentation/pages/player_selection_page.dart';
-import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
-import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/presentation/pages/player_selection_page.dart';
+import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
 
@@ -247,7 +247,6 @@ void main() {
 
   testWidgets('7. Tapping unselected roster cell adds player', (tester) async {
     final players = [_fakePlayer('p1', 'Alice')];
-    late GameSetupNotifier capturedNotifier;
 
     final router = GoRouter(
       initialLocation: '/game/player-selection',
@@ -262,9 +261,6 @@ void main() {
         ),
       ],
     );
-
-    // Use a mutable state to verify toggle was called
-    final stateHolder = ValueNotifier<List<String>>([]);
 
     await tester.pumpWidget(
       ProviderScope(

@@ -3,16 +3,16 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/features/game/domain/usecases/create_game_use_case.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/game/domain/usecases/create_game_use_case.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 
 import 'create_game_use_case_test.mocks.dart';
 

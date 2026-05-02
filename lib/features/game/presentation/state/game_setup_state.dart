@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 
 part 'game_setup_state.freezed.dart';
 

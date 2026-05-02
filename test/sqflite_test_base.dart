@@ -5,12 +5,12 @@
 // FK enforcement) as production.
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:my_darts/core/persistence/database_migrations.dart';
-import 'package:my_darts/features/players/data/repositories/player_repository_impl.dart';
-import 'package:my_darts/features/game/data/repositories/game_repository_impl.dart';
-import 'package:my_darts/features/game/data/repositories/dart_throw_repository_impl.dart';
-import 'package:my_darts/features/game/data/repositories/game_event_repository_impl.dart';
-import 'package:my_darts/features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'package:dart_lodge/core/persistence/database_migrations.dart';
+import 'package:dart_lodge/features/players/data/repositories/player_repository_impl.dart';
+import 'package:dart_lodge/features/game/data/repositories/game_repository_impl.dart';
+import 'package:dart_lodge/features/game/data/repositories/dart_throw_repository_impl.dart';
+import 'package:dart_lodge/features/game/data/repositories/game_event_repository_impl.dart';
+import 'package:dart_lodge/features/statistics/data/repositories/statistics_repository_impl.dart';
 import 'database_test_base.dart';
 
 class SqfliteTestBase implements DatabaseTestBase {

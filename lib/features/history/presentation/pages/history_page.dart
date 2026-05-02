@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/widgets/error_retry_widget.dart';
-import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
-import 'package:my_darts/features/history/presentation/providers/game_history_provider.dart';
-import 'package:my_darts/features/history/presentation/widgets/game_summary_card_widget.dart';
-import 'package:my_darts/features/history/presentation/widgets/history_filter_bar_widget.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/features/history/presentation/providers/game_history_provider.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/history_filter_bar_widget.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});

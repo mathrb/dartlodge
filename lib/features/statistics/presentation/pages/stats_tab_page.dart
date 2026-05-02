@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/widgets/error_retry_widget.dart';
-import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
-import 'package:my_darts/core/utils/app_spacing.dart';
-import 'package:my_darts/core/widgets/app_header.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
-import 'package:my_darts/features/players/presentation/widgets/player_card_widget.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/core/utils/app_spacing.dart';
+import 'package:dart_lodge/core/widgets/app_header.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/features/players/presentation/widgets/player_card_widget.dart';
 
 class StatsTabPage extends ConsumerWidget {
   const StatsTabPage({super.key});

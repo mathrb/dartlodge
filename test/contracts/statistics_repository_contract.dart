@@ -3,19 +3,19 @@
 // honours the contracts defined in REPOSITORY_INTERFACES.md §5.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/statistics/domain/repositories/statistics_repository.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/dart_throw_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/game/domain/entities/game.dart';
-import 'package:my_darts/features/game/domain/entities/competitor.dart';
-import 'package:my_darts/features/game/domain/entities/dart_throw.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/core/error/repository_exception.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/features/statistics/domain/repositories/statistics_repository.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 import '../database_test_base.dart';
 
 void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
@@ -49,6 +49,38 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
       final stats = await statsRepo.getGameStats('g1');
       expect(stats.gameId, 'g1');
       expect(stats.byCompetitor, isEmpty);
+    });
+
+    test('sets gameType to x01 for an X01 game', () async {
+      await _createPlayerAndGame(playerRepo, gameRepo, playerId: 'p1', gameId: 'g1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1', score: 60);
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      final stats = await statsRepo.getGameStats('g1');
+      expect(stats.gameType, GameType.x01.name);
+    });
+
+    test('cricket game populates gameType and cricket fields', () async {
+      await _setupCompletedCricketGame(
+          playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+          playerId: 'p1', gameId: 'g1', competitorId: 'c1');
+
+      final stats = await statsRepo.getGameStats('g1');
+      expect(stats.gameType, GameType.cricket.name);
+      expect(stats.byCompetitor, hasLength(1));
+
+      final c = stats.byCompetitor.single;
+      // Turn 0: 1+3+2 = 6 marks; Turn 1: 3+3+3 = 9 marks → MPR = 15/2 = 7.5
+      expect(c.marksPerRound, isNotNull);
+      expect(c.marksPerRound!, closeTo(7.5, 0.01));
+      // 15 marks across 1 leg of first 9 darts → 15 / (1*3) = 5.0
+      expect(c.firstNineMarksPerRound, isNotNull);
+      expect(c.firstNineMarksPerRound!, closeTo(5.0, 0.01));
+      // Mark buckets are exact-count: turn 0 = exactly 6, turn 1 = exactly 9.
+      expect(c.sixMarkTurns, 1);
+      expect(c.nineMarkTurns, 1);
     });
   });
 
@@ -377,10 +409,12 @@ Future<void> _setupCompletedCricketGame(
     ));
   }
 
+  await appendEvent('TurnStarted', {'player_id': playerId});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': '20'});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': 'T19'});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': 'D15'});
   await appendEvent('TurnEnded',  {'player_id': playerId});
+  await appendEvent('TurnStarted', {'player_id': playerId});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': 'T20'});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': 'T20'});
   await appendEvent('DartThrown', {'player_id': playerId, 'segment': 'T20'});
