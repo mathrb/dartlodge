@@ -602,9 +602,12 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     );
     final totalDartsThrown = throwsResult.first['cnt'] as int? ?? 0;
 
-    // 3. Query all events for those games ordered by local_sequence
+    // 3. Query all events for those games ordered by (game_id, local_sequence).
+    //    `local_sequence` is per-game and starts at 1 for each game, so ordering
+    //    by it alone interleaves events from different games — corrupting the
+    //    projection state. Ordering by game_id first keeps each game contiguous.
     var eventsResult = await _db.rawQuery(
-      'SELECT * FROM game_events WHERE game_id IN ($placeholders) ORDER BY local_sequence ASC',
+      'SELECT * FROM game_events WHERE game_id IN ($placeholders) ORDER BY game_id ASC, local_sequence ASC',
       gameIds,
     );
     var events = eventsResult.map((row) => GameEvent.fromJson(row)).toList();

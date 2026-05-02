@@ -207,6 +207,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Computing stats over an event slice:** Build a `ProjectionRunner` with the projections you need, call `init(ProjectionContext(...))` then `run(events)` then `snapshot()`. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. Same wiring lives in both statistics repos and `ComputeLegStatsUseCase` — update all three when it changes. First-nine projections (`cricket.firstNineMpr`, X01 first-nine PPR) only count when `TurnStarted` events are present — fixtures emitting just `DartThrown`/`TurnEnded` silently produce null first-nine stats.
 
+**`local_sequence` is per-game, not global:** every new game restarts `local_sequence` at 1, so multiple games' events share the same sequence range. Any query that loads events across multiple games MUST sort by `(game_id, local_sequence)` — sorting by `local_sequence` alone interleaves games and corrupts projection state across game boundaries. `ProjectionRunner.run()` enforces this internally; SQL queries feeding it should match.
+
 **`GameStats.gameType` is load-bearing:** the post-game summary branches on `gameStats.gameType == GameType.cricket.name` to choose MPR vs PPR labels and rows. Every return path of `getGameStats` (including the empty-darts early return) must set it, in both repository implementations.
 
 **Dual statistics repositories:** Statistics queries exist in both `lib/features/statistics/data/repositories/statistics_repository_impl.dart` (sqflite) and `lib/core/persistence/drift/repositories/statistics_repository_drift.dart` (drift). Always update both when changing query logic.

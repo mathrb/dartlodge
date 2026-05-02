@@ -16,8 +16,15 @@ class ProjectionRunner {
   }
 
   void run(List<GameEvent> events) {
+    // Sort by gameId first so events from different games stay contiguous —
+    // local_sequence restarts at 1 per game, so ordering by it alone would
+    // interleave games and corrupt projection state across game boundaries.
     final sorted = [...events]
-      ..sort((a, b) => a.localSequence.compareTo(b.localSequence));
+      ..sort((a, b) {
+        final byGame = a.gameId.compareTo(b.gameId);
+        if (byGame != 0) return byGame;
+        return a.localSequence.compareTo(b.localSequence);
+      });
 
     for (final event in sorted) {
       // Before apply: TurnStarted resets turn scope
