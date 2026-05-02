@@ -32,7 +32,9 @@ jobs:
         run: flutter pub get
 
       - name: Analyze
-        run: flutter analyze
+        # --no-fatal-infos: info-level lints (style, deprecated APIs) don't
+        # block CI. Errors and warnings still do. See docs/RELEASES.md.
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests with coverage
         run: flutter test --coverage

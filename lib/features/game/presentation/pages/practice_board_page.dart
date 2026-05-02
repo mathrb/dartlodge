@@ -513,7 +513,6 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final isCheckout = gameType == GameType.checkoutPractice;
     final isCatch40 = gameType == GameType.catch40;
 
     final nextEnabled = isCatch40 ? showNextTarget : showNextRound;
