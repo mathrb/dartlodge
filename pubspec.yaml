@@ -25,7 +25,7 @@ dependencies:
   # Web database (Drift with SQLite WASM)
   drift: ^2.31.0
   sqlite3: ^2.9.4
-  sqlite3_flutter_libs: ^0.5.41
+  sqlite3_flutter_libs: ">=0.5.41 <0.7.0"
   
   # Utility packages
   uuid: ^4.5.2
