@@ -129,7 +129,7 @@ void main() {
     mockDartRepo = MockDartThrowRepository();
     engine = StatelessX01Engine();
     useCase = UndoLastDartUseCase(
-        mockGameRepo, mockEventRepo, mockDartRepo, engine);
+        mockEventRepo, mockDartRepo, engine);
 
     when(mockEventRepo.getLatestSequence(any)).thenAnswer((_) async => 10);
     when(mockEventRepo.appendEvent(any)).thenAnswer((_) async {});

@@ -197,7 +197,6 @@ class GameRepositoryDrift implements GameRepository {
     for (final row in results) {
       final competitorRow = row.readTable(_db.competitors);
       final competitorPlayerRow = row.readTableOrNull(_db.competitorPlayers);
-      final playerRow = row.readTableOrNull(_db.players);
 
       // Create or get existing competitor data
       final competitorData = competitorMap.putIfAbsent(
