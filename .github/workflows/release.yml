@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v0.2.0 or v0.2.0-rc1)'
+        required: true
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create GitHub Releases
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history to verify tag is on main
+
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          VERSION_NAME="${TAG#v}"
+          # Pre-release tags contain a hyphen (e.g. v0.2.0-rc1).
+          if [[ "$TAG" == *-* ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
+          echo "Building $TAG (versionName=$VERSION_NAME, versionCode=$GITHUB_RUN_NUMBER, prerelease=$IS_PRERELEASE)"
+
+      - name: Verify tag is reachable from main
+        run: |
+          # Refuses to build a release from a commit that was never on main.
+          # If you need to ship a hotfix from a release-tag branch, remove
+          # this step or extend it to allow hotfix/* branches.
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::Tag ${{ steps.tag.outputs.tag }} ($GITHUB_SHA) is not on main. Refusing to release." >&2
+            exit 1
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.1'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Create Android platform
+        run: flutter create --platforms=android --org app .
+
+      - name: Override applicationId to app.dartlodge
+        run: bash tools/post-create-android.sh
+
+      - name: Configure release signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: bash tools/configure-android-signing.sh
+
+      - name: Build signed release APK
+        run: |
+          flutter build apk --release \
+            --build-name="${{ steps.tag.outputs.version_name }}" \
+            --build-number="${{ steps.tag.outputs.version_code }}" \
+            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
+            --dart-define=SENTRY_ENVIRONMENT=production
+
+      - name: Rename and checksum APK
+        id: artifacts
+        run: |
+          OUT_DIR=build/app/outputs/flutter-apk
+          APK_NAME="dartlodge-${{ steps.tag.outputs.version_name }}.apk"
+          mv "$OUT_DIR/app-release.apk" "$OUT_DIR/$APK_NAME"
+          (cd "$OUT_DIR" && sha256sum "$APK_NAME" > "$APK_NAME.sha256")
+          echo "apk_path=$OUT_DIR/$APK_NAME" >> "$GITHUB_OUTPUT"
+          echo "sha_path=$OUT_DIR/$APK_NAME.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PRERELEASE_FLAG=""
+          if [ "${{ steps.tag.outputs.is_prerelease }}" = "true" ]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+          gh release create "${{ steps.tag.outputs.tag }}" \
+            --title "${{ steps.tag.outputs.tag }}" \
+            --generate-notes \
+            $PRERELEASE_FLAG \
+            "${{ steps.artifacts.outputs.apk_path }}" \
+            "${{ steps.artifacts.outputs.sha_path }}"

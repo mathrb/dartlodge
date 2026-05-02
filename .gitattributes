@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+# Hide generated Dart files from PR diffs and language stats on GitHub.
+# These are committed to keep CI fast and fresh clones working without
+# build_runner; see docs/RELEASES.md for the rationale.
+*.g.dart        linguist-generated=true
+*.freezed.dart  linguist-generated=true
+*.mocks.dart    linguist-generated=true

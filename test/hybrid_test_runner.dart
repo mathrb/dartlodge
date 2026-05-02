@@ -2,11 +2,11 @@
 // Runs the same tests against both SQLite and Drift engines
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/dart_throw_repository.dart';
-import 'package:my_darts/features/game/domain/repositories/game_event_repository.dart';
-import 'package:my_darts/features/statistics/domain/repositories/statistics_repository.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
+import 'package:dart_lodge/features/statistics/domain/repositories/statistics_repository.dart';
 import 'database_test_base.dart';
 import 'sqflite_test_base.dart';
 import 'drift_test_base.dart';

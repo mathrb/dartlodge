@@ -31,13 +31,14 @@ flutter analyze                 # static analysis
 `android/` is gitignored. Each dev scaffolds it once per machine:
 
 ```bash
-flutter create --platforms=android .   # one-time, after fresh clone or rm -rf android/
-flutter build apk --debug              # or --release
+flutter create --platforms=android --org app .   # one-time, after fresh clone or rm -rf android/
+bash tools/post-create-android.sh                 # override applicationId to app.dartlodge
+flutter build apk --debug                         # or --release
 ```
 
 Requires JDK 17 + Android SDK on `PATH` (`JAVA_HOME`, `ANDROID_HOME`). Non-interactive shells (incl. Bash tool calls) don't load `~/.bashrc` — use `tools/release-debug.sh` or prepend env exports inline. CI also produces release APKs.
 
-**Sideloading to a phone:** `tools/release-debug.sh` bumps `versionCode`, rebuilds, and copies the APK to `releases/my_darts-debug-<version>.apk` (folder gitignored). Serve `releases/` by whichever method (Python http.server, nginx, docker — devs choose). In-place upgrades require both an increased `versionCode` AND a matching signing key; debug builds on the same machine share `~/.android/debug.keystore` so upgrades just work; mixing local debug ↔ CI release ↔ another machine forces uninstall. Android identifies apps by `applicationId` + signing key, NOT by APK filename — different filenames with the same identity all upgrade the same installed app.
+**Sideloading to a phone:** `tools/release-debug.sh` bumps `versionCode`, rebuilds, and copies the APK to `releases/dartlodge-debug-<version>.apk` (folder gitignored). Serve `releases/` by whichever method (Python http.server, nginx, docker — devs choose). In-place upgrades require both an increased `versionCode` AND a matching signing key; debug builds on the same machine share `~/.android/debug.keystore` so upgrades just work; mixing local debug ↔ CI release ↔ another machine forces uninstall. Android identifies apps by `applicationId` + signing key, NOT by APK filename — different filenames with the same identity all upgrade the same installed app.
 
 ---
 
@@ -62,6 +63,7 @@ Check the relevant spec before implementing. These are the source of truth.
 | Data entities and field names | `docs/DATA.md` |
 | Backend REST endpoints (optional) | `docs/API_CONTRACT.md` |
 | Backend integration patterns (optional) | `docs/BACKEND_INTEGRATION.md` |
+| Branching, CI, releases, signing | `docs/RELEASES.md` |
 | Architecture diagrams | `docs/ARCHITECTURE_DIAGRAMS.md` |
 | Concise architecture overview | `docs/ARCHITECTURE.md` |
 | Full architecture reference | `docs/ARCHITECTURE_COMPLETE.md` |
@@ -203,9 +205,15 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **DartThrown payload keys:** `competitor_id`, `player_id`, `segment`, `multiplier`, `score`, `input_method` only (see `buildDartThrownEvent` in `lib/features/game/domain/usecases/game_use_case_helpers.dart`). No `turn_number`, no `dart_number` — reconstruct turn grouping via `TurnStarted`/`TurnEnded` event boundaries if needed.
 
-**Computing stats over an event slice:** Build a `ProjectionRunner` with the projections you need, call `init(ProjectionContext(...))` then `run(events)` then `snapshot()`. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. Same wiring lives in both statistics repos and `ComputeLegStatsUseCase` — update all three when it changes.
+**Computing stats over an event slice:** Build a `ProjectionRunner` with the projections you need, call `init(ProjectionContext(...))` then `run(events)` then `snapshot()`. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. Same wiring lives in both statistics repos and `ComputeLegStatsUseCase` — update all three when it changes. First-nine projections (`cricket.firstNineMpr`, X01 first-nine PPR) only count when `TurnStarted` events are present — fixtures emitting just `DartThrown`/`TurnEnded` silently produce null first-nine stats.
+
+**`GameStats.gameType` is load-bearing:** the post-game summary branches on `gameStats.gameType == GameType.cricket.name` to choose MPR vs PPR labels and rows. Every return path of `getGameStats` (including the empty-darts early return) must set it, in both repository implementations.
 
 **Dual statistics repositories:** Statistics queries exist in both `lib/features/statistics/data/repositories/statistics_repository_impl.dart` (sqflite) and `lib/core/persistence/drift/repositories/statistics_repository_drift.dart` (drift). Always update both when changing query logic.
+
+**Repository contract tests run on both backends:** `runHybridTests` (`test/hybrid_test_runner.dart`) executes a single contract suite against both sqflite and drift, with separate `setUp`/`tearDown` per engine. Add cross-backend coverage in the shared `*_contract.dart` file — the `*_drift_contract_test.dart` / `*_sqflite_contract_test.dart` wrappers are just two-liners.
+
+**Cricket mark-bucket field overload:** `CompetitorStats.{five..nine}MarkTurns` are populated as **exact-N** counts by `getGameStats` and `ComputeLegStatsUseCase` (read from the `*Exact` snapshot keys) but as **≥-N** counts by `getPlayerStats` (read from the `*MarkTurns` keys). Same field, different cohorts by call path.
 
 **Statistics scope is required:** `getPlayerStats` and `watchPlayerStats` take `required GameType gameType`. PPR-shaped fields are X01-only and cricket fields are cricket-only — a single call cannot mix types coherently. The player-picker AVG badge consumes `playerStatsProvider`, which passes `GameType.x01`.
 
@@ -225,6 +233,22 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **UI refactors:** After any widget redesign or UI refactor, update the corresponding test expectations in the same session before committing.
 
+**Branch naming:** All work goes on a branch off `main` named `<type>/<slug>` where type ∈ {`feat`, `fix`, `docs`, `chore`, `hotfix`}. Slugs are short and dash-separated (`feat/cricket-stats-export`). Never commit directly to `main`.
+
+**PR titles:** Soft Conventional Commits — `feat(cricket): ...`, `fix(x01): ...`, `docs: ...`, `chore(deps): ...`. PR titles become squash-merge commit messages and feed GitHub's auto-generated release notes.
+
+**Squash-merge only:** PRs are always squash-merged. Don't rebase-merge or merge-commit. Branches auto-delete after merge.
+
+**Releases are tag-driven:** Pushing a tag `vX.Y.Z` (or `vX.Y.Z-rcN` for pre-release) triggers `release.yml`, which builds and publishes the signed APK to GitHub Releases. Never manually upload an APK to a release. Tags must point to a commit that's reachable from `main` (`release.yml` enforces this). Full process in `docs/RELEASES.md`.
+
+**Version bumps:** When asked to bump the version, edit only `pubspec.yaml`'s `version:` field (e.g. `1.0.0+0` → `1.1.0+0`) in a `chore: bump version to X.Y.Z` PR. The `+N` suffix is a placeholder; CI overrides `versionCode` from `github.run_number` on tag builds.
+
+**CI does not run `build_runner`:** Generated `.g.dart` / `.freezed.dart` / `.mocks.dart` files are committed. After editing any `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, regenerate locally and commit the result in the same PR — CI will fail otherwise.
+
+**Analyze in CI:** `test.yml` runs `flutter analyze --no-fatal-infos`. Warnings block CI; infos are advisory. ~190 info-level lints are tolerated (deprecated `overrideWith`, `curly_braces_in_flow_control_structures`, `avoid_print` in test infra). Cleaning them is optional polish — never tighten this flag without raising it.
+
+**"Unused" in `lib/` may be forgotten wiring:** When `flutter analyze` flags an unused field, parameter, or import in `lib/`, check whether it represents incomplete wiring (a setter that updates a field nothing reads, a constructor param never used in the body) before deleting. If unsure, ask — silent deletion can lock in a no-op user-facing control as the intended behavior.
+
 ---
 
 ## Things You Must Not Do
@@ -240,6 +264,9 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 - Add database triggers — immutability of completed games is application logic only
 - Add packages without checking whether the existing stack already covers the need
 - Commit the `android/` folder — it is gitignored and scaffolded per machine via `flutter create --platforms=android .`
+- Push commits directly to `main` — always go through a PR
+- Tag a commit that's not on `main` (release CI refuses to build it; the only exception is hotfixes — see `docs/RELEASES.md`)
+- Manually upload APKs to a GitHub Release — releases are produced by `release.yml` from tags only
 
 ---
 

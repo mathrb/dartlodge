@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:my_darts/core/utils/app_text_styles.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 
 /// App-wide top header row: logo, optional back button, and trailing action slot.
 ///
@@ -69,7 +69,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             if (showBack) const SizedBox(width: 16),
             Expanded(
               child: Text(
-                'MYDARTS',
+                'DARTLODGE',
                 style: AppTextStyles.headlineSmall.copyWith(
                   color: cs.primaryFixed,
                   letterSpacing: 4,
@@ -100,7 +100,7 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           Expanded(
             child: Text(
-              'MYDARTS',
+              'DARTLODGE',
               style: AppTextStyles.headlineMedium.copyWith(
                 color: cs.primaryFixed,
                 letterSpacing: 1.5,

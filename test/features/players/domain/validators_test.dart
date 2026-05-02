@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/players/domain/validators.dart';
+import 'package:dart_lodge/features/players/domain/validators.dart';
 
 void main() {
   group('validatePlayerName', () {

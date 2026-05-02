@@ -2,22 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/utils/app_colors.dart';
-import 'package:my_darts/core/utils/app_spacing.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/widgets/app_header.dart';
-import 'package:my_darts/core/widgets/error_retry_widget.dart';
-import 'package:my_darts/core/widgets/loading_spinner_widget.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/presentation/pages/game_config_page.dart';
-import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
-import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
-import 'package:my_darts/features/players/presentation/providers/players_provider.dart';
-import 'package:my_darts/features/statistics/presentation/providers/statistics_provider.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
+import 'package:dart_lodge/core/utils/app_spacing.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/widgets/app_header.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/presentation/pages/game_config_page.dart';
+import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/features/statistics/presentation/providers/statistics_provider.dart';
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
@@ -113,7 +113,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     final isX01 = config is X01GameConfig;
 
     final canStart = notifier.canStart;
-    final maxPlayers = gameType != null ? gameType?.maxPlayers : null;
+    final maxPlayers = gameType != null ? gameType.maxPlayers : null;
 
     final playersAsync = ref.watch(allPlayersProvider);
     final players = playersAsync.value ?? <Player>[];
@@ -367,7 +367,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             selectingPlayers: (s) => s.gameType,
             orElse: () => null,
           );
-          final maxPlayers = gameType != null ? gameType?.maxPlayers : null;
+          final maxPlayers = gameType != null ? gameType.maxPlayers : null;
           final selectedCount = state.maybeMap(
             selectingPlayers: (s) => s.selectedPlayerIds.length,
             orElse: () => 0,

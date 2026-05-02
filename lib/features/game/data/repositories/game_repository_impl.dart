@@ -9,8 +9,8 @@ import '../../domain/entities/game.dart';
 import '../../domain/entities/competitor.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/models/game_state_snapshot.dart';
-import 'package:my_darts/core/error/repository_exception.dart' hide DatabaseException;
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart' hide DatabaseException;
+import 'package:dart_lodge/core/utils/constants.dart';
 
 class GameRepositoryImpl implements GameRepository {
   final Database _db;

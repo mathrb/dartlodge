@@ -5,22 +5,19 @@
 
 import '../entities/game_event.dart';
 import '../models/game_state.dart';
-import '../repositories/game_repository.dart';
 import '../repositories/game_event_repository.dart';
 import '../repositories/dart_throw_repository.dart';
 import '../engines/base_game_engine.dart';
 import '../../../../core/error/repository_exception.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 class UndoLastDartUseCase {
-  final GameRepository _gameRepository;
   final GameEventRepository _eventRepository;
   final DartThrowRepository _dartThrowRepository;
   final GameEngine _engine;
 
   UndoLastDartUseCase(
-    this._gameRepository,
     this._eventRepository,
     this._dartThrowRepository,
     this._engine,

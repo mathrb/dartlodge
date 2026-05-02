@@ -5,7 +5,7 @@ import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import '../../domain/entities/game_event.dart';
 import '../../domain/repositories/game_event_repository.dart';
-import 'package:my_darts/core/error/repository_exception.dart' hide DatabaseException;
+import 'package:dart_lodge/core/error/repository_exception.dart' hide DatabaseException;
 
 class GameEventRepositoryImpl implements GameEventRepository {
   final Database _db;

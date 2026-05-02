@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/core/utils/stat_formatter.dart';
-import 'package:my_darts/features/statistics/domain/entities/leg_stats_breakdown.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
 
 class LegBreakdownTableWidget extends StatefulWidget {
   final List<LegStatsBreakdown> legs;

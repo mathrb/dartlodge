@@ -42,7 +42,6 @@ class _LeaderboardPageState extends ConsumerState<LeaderboardPage> {
                   onSelectionChanged: (selected) {
                     final metric = selected.first;
                     setState(() => _selectedMetric = metric);
-                    ref.read(leaderboardProvider.notifier).setMetric(metric);
                   },
                 ),
               ),

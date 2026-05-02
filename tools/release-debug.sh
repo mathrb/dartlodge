@@ -34,7 +34,7 @@ flutter build apk --debug
 
 version_full=$(grep -E "^version: " pubspec.yaml | sed -E 's/version: //')
 APK_SRC="$REPO_ROOT/build/app/outputs/flutter-apk/app-debug.apk"
-APK_OUT="$REPO_ROOT/releases/my_darts-debug-${version_full}.apk"
+APK_OUT="$REPO_ROOT/releases/dartlodge-debug-${version_full}.apk"
 mkdir -p "$REPO_ROOT/releases"
 cp "$APK_SRC" "$APK_OUT"
 echo "released: $APK_OUT ($(du -h "$APK_OUT" | cut -f1))"

@@ -3,9 +3,9 @@
 // migrations script with PRAGMA foreign_keys = ON so tests match production.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/persistence/database_migrations.dart';
-import 'package:my_darts/features/players/data/repositories/player_repository_impl.dart';
-import 'package:my_darts/features/players/domain/repositories/player_repository.dart';
+import 'package:dart_lodge/core/persistence/database_migrations.dart';
+import 'package:dart_lodge/features/players/data/repositories/player_repository_impl.dart';
+import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../../contracts/player_repository_contract.dart';
 

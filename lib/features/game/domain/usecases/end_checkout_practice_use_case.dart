@@ -7,7 +7,7 @@ import '../repositories/game_repository.dart';
 import '../repositories/game_event_repository.dart';
 import '../models/game_state.dart';
 import 'package:uuid/uuid.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 class EndCheckoutPracticeUseCase {
   final GameRepository _gameRepository;

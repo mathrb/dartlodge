@@ -4,11 +4,11 @@
 // Scoring: ≤2 darts → +3, 3 darts → +2 (target 99 → +3), 4-6 darts → +1, fail → +0.
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/features/game/domain/engines/stateless_catch_40_engine.dart';
-import 'package:my_darts/features/game/domain/models/game_state.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_catch_40_engine.dart';
+import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 
 int _seq = 0;
 
@@ -194,16 +194,6 @@ void main() {
     });
 
     test('checkout on 2nd dart: turnActive=false after 2nd dart', () {
-      final state = _makeState(
-        practiceRound: 1,
-        catch40TargetRemaining: 40,
-        turnActive: true,
-        dartsThrownInTurn: 1,
-        dartThrows: ['1'],
-        catch40DartsOnTarget: 1,
-      );
-      // Remaining after 1 dart: 40-1=39. D20=40 > 39 = bust, not checkout.
-      // Let's use remaining=40 fresh:
       final s2 = _makeState(
         practiceRound: 1,
         catch40TargetRemaining: 40,

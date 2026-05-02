@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 

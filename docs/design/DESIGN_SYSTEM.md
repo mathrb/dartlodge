@@ -1,4 +1,4 @@
-# Design System — my-darts
+# Design System — DartLodge
 
 **Theme name:** Dual-Tone Performance Framework
 **Last updated:** 2026-04-01

@@ -2,9 +2,9 @@
 // Tests the drift implementation for web
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:my_darts/core/persistence/drift/drift_helper.dart';
-import 'package:my_darts/core/persistence/drift/repositories/player_repository_drift.dart';
-import 'package:my_darts/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/player_repository_drift.dart';
+import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
 void main() {
   group('Drift Web Implementation', () {

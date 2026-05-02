@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:my_darts/app/app_router.dart';
-import 'package:my_darts/core/persistence/database_provider.dart';
-import 'package:my_darts/core/utils/app_text_styles.dart';
-import 'package:my_darts/core/utils/app_theme.dart';
-import 'package:my_darts/core/widgets/app_header.dart';
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/models/game_config.dart';
-import 'package:my_darts/features/game/presentation/providers/game_setup_provider.dart';
-import 'package:my_darts/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/widgets/app_header.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 
 class VariantSelectionPage extends ConsumerWidget {
   const VariantSelectionPage({super.key, required this.category});

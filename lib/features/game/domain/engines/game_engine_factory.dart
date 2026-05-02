@@ -6,7 +6,7 @@ import 'stateless_bobs_27_engine.dart';
 import 'stateless_shanghai_engine.dart';
 import 'stateless_catch_40_engine.dart';
 import 'stateless_checkout_practice_engine.dart';
-import 'package:my_darts/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 
 /// Game Engine Factory
 /// Responsible for creating the appropriate game engine based on game type

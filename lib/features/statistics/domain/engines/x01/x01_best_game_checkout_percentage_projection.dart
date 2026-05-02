@@ -1,6 +1,6 @@
-import 'package:my_darts/core/utils/constants.dart';
-import 'package:my_darts/features/game/domain/entities/game_event.dart';
-import 'package:my_darts/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 
 /// Tracks the best single-game checkout percentage across all games.
 class X01BestGameCheckoutPercentageProjection extends ProjectionEngine {
