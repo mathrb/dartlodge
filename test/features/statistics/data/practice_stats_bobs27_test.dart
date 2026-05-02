@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
-import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/data/repositories/statistics_repository_impl.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 

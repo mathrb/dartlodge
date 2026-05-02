@@ -113,7 +113,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     final isX01 = config is X01GameConfig;
 
     final canStart = notifier.canStart;
-    final maxPlayers = gameType != null ? gameType?.maxPlayers : null;
+    final maxPlayers = gameType != null ? gameType.maxPlayers : null;
 
     final playersAsync = ref.watch(allPlayersProvider);
     final players = playersAsync.value ?? <Player>[];
@@ -367,7 +367,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             selectingPlayers: (s) => s.gameType,
             orElse: () => null,
           );
-          final maxPlayers = gameType != null ? gameType?.maxPlayers : null;
+          final maxPlayers = gameType != null ? gameType.maxPlayers : null;
           final selectedCount = state.maybeMap(
             selectingPlayers: (s) => s.selectedPlayerIds.length,
             orElse: () => 0,
