@@ -179,87 +179,52 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   @override
   Future<PlayerStats> getPlayerStatsForGame(String playerId, String gameId) async {
     try {
-      // Verify game exists and player participated
-      final participationCheck = await _db.query(
-        'dart_throws',
-        where: 'player_id = ? AND game_id = ?',
-        whereArgs: [playerId, gameId],
-        limit: 1,
-      );
-
-      if (participationCheck.isEmpty) {
-        // Check if game exists first to throw the right exception
-        final gameCheck = await _db.query(
-          'games',
-          where: 'game_id = ?',
-          whereArgs: [gameId],
-          limit: 1,
-        );
-        
-        if (gameCheck.isEmpty) {
-          throw GameNotFoundException(gameId);
-        } else {
-          throw PlayerNotFoundException(playerId);
-        }
-      }
-
-      // Get game type
+      // 1. Verify game exists, grab gameType.
       final gameResult = await _db.query(
         'games',
         where: 'game_id = ?',
         whereArgs: [gameId],
         limit: 1,
       );
-
       if (gameResult.isEmpty) {
         throw GameNotFoundException(gameId);
       }
-
       final gameType = GameType.values.firstWhere(
         (type) => type.name == gameResult.first['game_type'] as String,
         orElse: () => GameType.x01,
       );
 
-      // Get all dart throws for this player in this game
+      // 2. Verify player participated and aggregate their darts/score.
       final dartThrows = await _db.query(
         'dart_throws',
         where: 'player_id = ? AND game_id = ?',
         whereArgs: [playerId, gameId],
         orderBy: 'turn_number ASC, dart_number ASC',
       );
-
       if (dartThrows.isEmpty) {
-        return _createEmptyPlayerStats(playerId, gameType);
+        throw PlayerNotFoundException(playerId);
       }
+      final playerDartsInGame = dartThrows.length;
+      final playerScoreInGame = dartThrows.fold<int>(
+          0, (sum, t) => sum + (t['score'] as int));
 
-      // Calculate statistics for this game only
-      int totalDarts = dartThrows.length;
-      int totalScore = dartThrows.fold(0, (sum, throwData) => sum + (throwData['score'] as int));
-      double threeDartAverage = totalDarts > 0 ? (totalScore / totalDarts) * 3 : 0.0;
+      // 3. Load events for projection-based stats.
+      final eventsResult = await _db.query(
+        'game_events',
+        where: 'game_id = ?',
+        whereArgs: [gameId],
+        orderBy: 'local_sequence ASC',
+      );
+      final events =
+          eventsResult.map((r) => GameEvent.fromJson(r)).toList();
 
-      // Calculate game-specific metrics
-      final highestTurnScore = await _calculateHighestTurnScore(playerId, gameType, gameId: gameId);
-      final checkoutPercentage = await _calculateCheckoutPercentageForGame(playerId, gameId);
-      final highestCheckout = await _calculateHighestCheckoutForGame(playerId, gameId);
-      final bustRate = await _calculateBustRate(playerId, gameType, gameId: gameId);
-
-      // For per-game stats, legs won is either 0 or 1 (assuming single leg games for now)
-      final legsWon = await _getLegsWonForPlayerInGame(playerId, gameId);
-      double dartsPerLeg = legsWon > 0 ? totalDarts / legsWon : 0.0;
-
-      return PlayerStats(
+      // 4. Delegate.
+      return _assembler.playerStatsForGameFromEvents(
         playerId: playerId,
         gameType: gameType,
-        totalGames: 1, // This is for a single game
-        gamesWon: legsWon > 0 ? 1 : 0, // Simplified for per-game stats
-        winRate: legsWon > 0 ? 1.0 : 0.0,
-        threeDartAverage: threeDartAverage,
-        checkoutPercentage: checkoutPercentage,
-        highestCheckout: highestCheckout,
-        highestTurnScore: highestTurnScore,
-        totalDartsThrown: totalDarts,
-        dartsPerLeg: dartsPerLeg,
-        bustRate: bustRate,
+        playerDartsInGame: playerDartsInGame,
+        playerScoreInGame: playerScoreInGame,
+        events: events,
       );
     } on RepositoryException {
       rethrow;
@@ -732,152 +697,6 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     }
   }
 
-  // Helper method to calculate checkout percentage for a specific game
-  Future<double?> _calculateCheckoutPercentageForGame(String playerId, String gameId) async {
-    try {
-      // Get all events for this game
-      final events = await _db.query(
-        'game_events',
-        where: 'game_id = ?',
-        whereArgs: [gameId],
-        orderBy: 'local_sequence ASC',
-      );
-
-      if (events.isEmpty) return null;
-
-      int checkoutAttempts = 0;
-      int successfulCheckouts = 0;
-      bool inCheckoutRange = false;
-
-      for (final event in events) {
-        final payload = jsonDecode(event['payload_json'] as String) as Map<String, dynamic>;
-        final eventType = event['event_type'] as String;
-
-        if (eventType == 'TurnStarted') {
-          final turnPlayerId = payload['player_id'] as String?;
-          final startingScore = payload['starting_score'] as int?;
-          
-          if (turnPlayerId == playerId && startingScore != null && startingScore <= 170) {
-            inCheckoutRange = true;
-            checkoutAttempts++;
-          }
-        } else if (eventType == 'LegCompleted') {
-          final winnerPlayerId = payload['winner_player_id'] as String?;
-          if (winnerPlayerId == playerId && inCheckoutRange) {
-            successfulCheckouts++;
-          }
-          inCheckoutRange = false;
-        } else if (eventType == 'TurnEnded') {
-          inCheckoutRange = false;
-        }
-      }
-
-      return checkoutAttempts > 0 ? (successfulCheckouts / checkoutAttempts) * 100 : null;
-    } catch (e) {
-      print('Error calculating checkout percentage for game $gameId: ${e.toString()}');
-      return null;
-    }
-  }
-
-  // Helper method to calculate highest checkout for a specific game
-  Future<int?> _calculateHighestCheckoutForGame(String playerId, String gameId) async {
-    try {
-      final events = await _db.query(
-        'game_events',
-        where: 'game_id = ?',
-        whereArgs: [gameId],
-        orderBy: 'local_sequence ASC',
-      );
-
-      int? highestCheckout;
-      int lastPlayerTurnStartingScore = 0;
-
-      for (final event in events) {
-        final payload = jsonDecode(event['payload_json'] as String) as Map<String, dynamic>;
-        final eventType = event['event_type'] as String;
-
-        if (eventType == 'TurnStarted') {
-          final pid = payload['player_id'] as String?;
-          if (pid == playerId) {
-            lastPlayerTurnStartingScore =
-                (payload['starting_score'] as num?)?.toInt() ?? 0;
-          }
-        } else if (eventType == 'LegCompleted') {
-          final winnerPlayerId = payload['winner_player_id'] as String?;
-          if (winnerPlayerId == playerId && lastPlayerTurnStartingScore > 0) {
-            if (highestCheckout == null ||
-                lastPlayerTurnStartingScore > highestCheckout) {
-              highestCheckout = lastPlayerTurnStartingScore;
-            }
-          }
-        }
-      }
-
-      return highestCheckout;
-    } catch (e) {
-      print('Error calculating highest checkout for game $gameId: ${e.toString()}');
-      return null;
-    }
-  }
-
-  // Helper method to calculate highest turn score
-  Future<int> _calculateHighestTurnScore(String playerId, GameType? gameType, {String? gameId}) async {
-    try {
-      String query = '''
-        SELECT MAX(turn_score) as highest_turn_score
-        FROM (
-          SELECT turn_number, SUM(score) as turn_score
-          FROM dart_throws
-          WHERE player_id = ?
-      ''';
-
-      List<dynamic> args = [playerId];
-
-      if (gameId != null) {
-        query += ' AND game_id = ?';
-        args.add(gameId);
-      } else if (gameType != null) {
-        query += ' AND game_id IN (SELECT game_id FROM games WHERE game_type = ?)';
-        args.add(gameType.name);
-      }
-
-      query += '''
-          GROUP BY game_id, turn_number
-        )
-      ''';
-
-      final result = await _db.rawQuery(query, args);
-      return result.first['highest_turn_score'] as int? ?? 0;
-    } catch (e) {
-      print('Error calculating highest turn score: ${e.toString()}');
-      return 0;
-    }
-  }
-
-  // Helper method to get legs won for player in specific game
-  Future<int> _getLegsWonForPlayerInGame(String playerId, String gameId) async {
-    try {
-      final events = await _db.query(
-        'game_events',
-        where: 'game_id = ? AND event_type = ?',
-        whereArgs: [gameId, 'LegCompleted'],
-      );
-
-      int legsWon = 0;
-      for (final event in events) {
-        final payload = jsonDecode(event['payload_json'] as String) as Map<String, dynamic>;
-        if (payload['winner_player_id'] == playerId) {
-          legsWon++;
-        }
-      }
-
-      return legsWon;
-    } catch (e) {
-      print('Error getting legs won in game: ${e.toString()}');
-      return 0;
-    }
-  }
-
   @override
   Future<List<String>> getPlayerCricketVariants(String playerId) async {
     try {
@@ -906,37 +725,4 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     }
   }
 
-
-  // Helper method to calculate bust rate
-  Future<double> _calculateBustRate(String playerId, GameType? gameType, {String? gameId}) async {
-    try {
-      String scopeFilter = '';
-      List<dynamic> args = [playerId];
-
-      if (gameId != null) {
-        scopeFilter = ' AND game_id = ?';
-        args.add(gameId);
-      } else if (gameType != null) {
-        scopeFilter = ' AND game_id IN (SELECT game_id FROM games WHERE game_type = ?)';
-        args.add(gameType.name);
-      }
-
-      final result = await _db.rawQuery('''
-        SELECT
-          COUNT(*) AS turn_count,
-          SUM(CASE WHEN JSON_EXTRACT(payload_json, '\$.reason') = 'bust' THEN 1 ELSE 0 END) AS bust_count
-        FROM game_events
-        WHERE event_type = 'TurnEnded'
-        AND JSON_EXTRACT(payload_json, '\$.player_id') = ?
-        $scopeFilter
-      ''', args);
-
-      final turnCount = result.first['turn_count'] as int? ?? 0;
-      final bustCount = result.first['bust_count'] as int? ?? 0;
-      return turnCount > 0 ? bustCount / turnCount : 0.0;
-    } catch (e) {
-      print('Error calculating bust rate: ${e.toString()}');
-      return 0.0;
-    }
-  }
 }

@@ -404,6 +404,71 @@ class PlayerStatsAssembler {
     );
   }
 
+  // ── Per-game player stats ──────────────────────────────────────────────────
+
+  /// Builds a per-game PlayerStats slice for one player in one game.
+  ///
+  /// AVG uses the caller-supplied dart aggregate (matches the historical
+  /// raw-throw semantic and works with fixtures that insert dart_throws
+  /// without corresponding DartThrown events). Other stats come from
+  /// projections over [events].
+  PlayerStats playerStatsForGameFromEvents({
+    required String playerId,
+    required GameType gameType,
+    required int playerDartsInGame,
+    required int playerScoreInGame,
+    required List<GameEvent> events,
+  }) {
+    final threeDartAverage = playerDartsInGame > 0
+        ? (playerScoreInGame / playerDartsInGame) * 3
+        : 0.0;
+
+    final runner = ProjectionRunner([
+      X01BustRateProjection(),
+      X01CheckoutProjection(),
+      X01HighestCheckoutProjection(),
+      X01HighestTurnScoreProjection(),
+      X01LegsProjection(),
+    ]);
+    runner.init(ProjectionContext(
+      playerId: playerId,
+      gameType: gameType,
+      inStrategy: 'straight',
+      outStrategy: 'double',
+      playerIds: [playerId],
+    ));
+    runner.run(events);
+    final snap = runner.snapshot();
+
+    final bustRateSnap = snap['x01_bust_rate'] ?? {};
+    final checkoutSnap = snap['x01_checkout'] ?? {};
+    final highestCheckoutSnap = snap['x01_highest_checkout'] ?? {};
+    final highestTurnSnap = snap['x01_highest_turn_score'] ?? {};
+    final legsSnap = snap['x01.legs'] ?? {};
+
+    final legsPlayed = legsSnap['legsPlayed'] as int? ?? 0;
+    final legsWon = legsSnap['legsWon'] as int? ?? 0;
+
+    return PlayerStats(
+      playerId: playerId,
+      gameType: gameType,
+      totalGames: 1,
+      gamesWon: legsWon > 0 ? 1 : 0,
+      winRate: legsWon > 0 ? 1.0 : 0.0,
+      threeDartAverage: threeDartAverage,
+      bustRate: (bustRateSnap['bustRate'] as num?)?.toDouble() ?? 0.0,
+      checkoutPercentage:
+          (checkoutSnap['checkoutPercentage'] as num?)?.toDouble(),
+      highestCheckout: highestCheckoutSnap['highestCheckout'] as int?,
+      highestTurnScore: highestTurnSnap['highestTurnScore'] as int? ?? 0,
+      totalDartsThrown: playerDartsInGame,
+      dartsPerLeg:
+          legsPlayed > 0 ? playerDartsInGame / legsPlayed : 0.0,
+      legsPlayed: legsPlayed,
+      legsWon: legsWon,
+    );
+  }
+
   // ── Practice statistics ────────────────────────────────────────────────────
 
   PlayerStats _buildPracticeStats({
