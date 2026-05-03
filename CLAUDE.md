@@ -147,6 +147,7 @@ Platform selection (native SQLite vs WASM) happens once in the Drift factory. Ev
 
 Follow `docs/STATE_MANAGEMENT.md` exactly. Rules that are easiest to violate:
 - Provider names strip the `Notifier` suffix: `FooNotifier` → `fooProvider`; family variant `FooNotifier.build(String id)` → `fooProvider('id')`.
+- The same suffix stripping applies to **function-style** providers: `@riverpod Foo fooNotifier(Ref ref)` generates `fooProvider`, not `fooNotifierProvider`. Don't reach for `xxxNotifierProvider` — grep the `.g.dart` if unsure.
 - Use `ref.watch()` inside `build()`. Use `ref.read()` only in event handlers and notifier methods.
 - Handle all three `AsyncValue` states in every widget: `data`, `loading`, `error`. Never use `.value!` without fallbacks.
 - Use `AsyncValue.value` (returns `T?`) — not `valueOrNull` — in Riverpod 3.x.
@@ -249,7 +250,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **CI does not run `build_runner`:** Generated `.g.dart` / `.freezed.dart` / `.mocks.dart` files are committed. After editing any `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, regenerate locally and commit the result in the same PR — CI will fail otherwise.
 
-**Analyze in CI:** `test.yml` runs `flutter analyze --no-fatal-infos`. Warnings block CI; infos are advisory. ~190 info-level lints are tolerated (deprecated `overrideWith`, `curly_braces_in_flow_control_structures`, `avoid_print` in test infra). Cleaning them is optional polish — never tighten this flag without raising it.
+**Analyze in CI:** `test.yml` runs `flutter analyze --no-fatal-infos`. Warnings block CI; infos are advisory. ~190 info-level lints are tolerated (deprecated `overrideWith`, `curly_braces_in_flow_control_structures`, `avoid_print` in test infra). Cleaning them is optional polish — never tighten this flag without raising it. **Always run project-wide `flutter analyze --no-fatal-infos` before pushing — `flutter analyze <path>` may not surface unused-import / unused-variable warnings that the project-wide variant catches.**
 
 **"Unused" in `lib/` may be forgotten wiring:** When `flutter analyze` flags an unused field, parameter, or import in `lib/`, check whether it represents incomplete wiring (a setter that updates a field nothing reads, a constructor param never used in the body) before deleting. If unsure, ask — silent deletion can lock in a no-op user-facing control as the intended behavior.
 
