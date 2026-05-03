@@ -14,6 +14,7 @@ import 'package:dart_lodge/features/game/data/repositories/game_repository_impl.
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/players/data/repositories/player_repository_impl.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
@@ -165,6 +166,36 @@ void main() {
 
     // Use the dart repo (any registered write triggers the notifier).
     await dartRepo.insertDart(_dart());
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect(emissions.length, greaterThanOrEqualTo(2));
+    await sub.cancel();
+  });
+
+  test('watchGameStats re-emits on appendEvent (covers GameEvent publisher)',
+      () async {
+    await seedPlayerAndGame();
+
+    final emissions = <int>[];
+    final sub = statsRepo.watchGameStats('g1').listen((stats) {
+      emissions.add(stats.byCompetitor.length);
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+    expect(emissions.length, 1);
+
+    // Append an event — should publish a change.
+    await eventRepo.appendEvent(GameEvent(
+      eventId: 'e1',
+      gameId: 'g1',
+      eventType: 'TurnStarted',
+      localSequence: 1,
+      occurredAt: DateTime.now(),
+      payload: const {'player_id': 'p1'},
+      synced: false,
+      actorId: 'p1',
+      source: EventSource.client,
+    ));
     await Future<void>.delayed(const Duration(milliseconds: 50));
 
     expect(emissions.length, greaterThanOrEqualTo(2));
