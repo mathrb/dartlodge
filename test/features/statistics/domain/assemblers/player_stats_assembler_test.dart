@@ -242,6 +242,65 @@ void main() {
     });
   });
 
+  group("practice — Bob's 27", () {
+    test('one drill with one D1 hit then LegCompleted updates score and rates',
+        () {
+      // Round 1: hit D1 once (mult=2 on segment 1), miss twice with singles.
+      //   doubleAttempts = 1 (only the D1 throw is a double)
+      //   doubleHits     = 1 (D1 = double of round 1)
+      //   currentScore   = 27 + 1 * 1 * 2 = 29
+      // LegCompleted: drill counted as a completed, successful drill.
+      final events = [
+        turnStarted(turnNumber: 1),
+        dart(1, 2),
+        dart(20, 1),
+        dart(20, 1),
+        turnEnded(),
+        legCompleted(winnerPlayerId: playerId),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.bobs27,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      expect(stats.bobs27AvgScore, 29.0);
+      expect(stats.bobs27BestScore, 29);
+      expect(stats.bobs27CompletionRate, 1.0);
+      expect(stats.bobs27DoubleHitRate, 1.0);
+    });
+  });
+
+  group('practice — Shanghai', () {
+    test('S1 + D1 + T1 in round 1 counts as a Shanghai', () {
+      // All three multipliers (1, 2, 3) hit the round-1 target → Shanghai.
+      // Score = 1 + 2 + 3 = 6.
+      final events = [
+        turnStarted(turnNumber: 1),
+        dart(1, 1),
+        dart(1, 2),
+        dart(1, 3),
+        turnEnded(),
+        legCompleted(winnerPlayerId: playerId),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.shanghai,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      expect(stats.shanghaiCount, 1);
+      expect(stats.shanghaiAvgScore, 6.0);
+      expect(stats.shanghaiBestScore, 6);
+    });
+  });
+
   group('practice — Catch-40', () {
     test('classifies checkouts by turn dart count', () {
       // Two checkouts: one in 2 darts, one in 3 darts.
