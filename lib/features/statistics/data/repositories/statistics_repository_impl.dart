@@ -450,8 +450,17 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
 
   @override
   Stream<PlayerStats> watchPlayerStats(String playerId,
-      {required GameType gameType}) {
-    return Stream.periodic(const Duration(seconds: 5), (_) {})
+      {required GameType gameType}) async* {
+    // Emit an initial snapshot before falling into the periodic poll so
+    // subscribers don't wait the full 5s tick for their first value.
+    try {
+      final initial = await _buildPlayerStatsViaProjection(playerId, gameType: gameType);
+      yield initial ?? _createEmptyPlayerStats(playerId, gameType);
+    } catch (error) {
+      if (error is RepositoryException) rethrow;
+      throw StatisticsException('Failed to watch player statistics: ${error.toString()}');
+    }
+    yield* Stream.periodic(const Duration(seconds: 5), (_) {})
       .asyncMap((_) async {
         final stats = await _buildPlayerStatsViaProjection(playerId, gameType: gameType);
         return stats ?? _createEmptyPlayerStats(playerId, gameType);

@@ -186,6 +186,24 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
           statsRepo.watchPlayerStats('p1', gameType: GameType.cricket);
       expect(stream, isA<Stream>());
     });
+
+    test('emits an initial value promptly without waiting on a poll tick',
+        () async {
+      // Regression: the sqflite implementation previously started with
+      // Stream.periodic(5s), which delayed the first emission by a full
+      // poll interval — making the AVG badge empty for ~5s on subscribe.
+      await playerRepo.createPlayer(Player(
+        playerId: 'p1',
+        name: 'P1',
+        createdAt: DateTime.now(),
+        lastActive: DateTime.now(),
+      ));
+      final stream = statsRepo.watchPlayerStats('p1', gameType: GameType.x01);
+      final first =
+          await stream.first.timeout(const Duration(milliseconds: 1500));
+      expect(first.playerId, 'p1');
+      expect(first.gameType, GameType.x01);
+    });
   });
 
   // ── Cricket statistics ────────────────────────────────────────────────────
