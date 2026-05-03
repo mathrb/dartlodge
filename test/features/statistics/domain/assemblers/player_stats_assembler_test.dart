@@ -1,8 +1,8 @@
 // Unit tests for PlayerStatsAssembler.
 //
 // These run against synthetic event lists with no DB. They lock in the
-// projection-replay contract (notably: 3-dart average excludes busted-turn
-// points but includes the busted darts in the denominator).
+// projection-replay contract (notably: 3-dart average INCLUDES busted-turn
+// points; high-score buckets and highest-turn-score still EXCLUDE busts).
 
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
@@ -369,6 +369,138 @@ void main() {
 
       expect(stats.totalGames, 42);
       expect(stats.totalDartsThrown, 1234);
+    });
+  });
+
+  // ── gameStatsFromEvents ─────────────────────────────────────────────────────
+
+  group('gameStatsFromEvents', () {
+    test('empty throws → empty byCompetitor list, gameType set', () {
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: const [],
+        competitorNames: const {},
+        events: const [],
+      );
+
+      expect(stats.gameId, gameId);
+      expect(stats.byCompetitor, isEmpty);
+      expect(stats.gameType, 'x01');
+    });
+
+    test(
+        'X01 — per-player and per-competitor AVG include all darts (busts not subtracted)',
+        () {
+      // Solo competitor; one player; one bust + one normal turn, both 180.
+      // Per X01 convention now: AVG = (180 + 180) / 6 * 3 = 180.
+      final events = [
+        turnStarted(turnNumber: 1, startingScore: 100),
+        dart(20, 3),
+        dart(20, 3),
+        dart(20, 3),
+        turnEnded(reason: 'bust'),
+        turnStarted(turnNumber: 2, startingScore: 100),
+        dart(20, 3),
+        dart(20, 3),
+        dart(20, 3),
+        turnEnded(),
+      ];
+
+      final throws = [
+        for (var i = 0; i < 6; i++)
+          (competitorId: 'c1', playerId: playerId, score: 60),
+      ];
+
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: throws,
+        competitorNames: const {'c1': 'Alice'},
+        events: events,
+      );
+
+      expect(stats.byCompetitor.length, 1);
+      final c = stats.byCompetitor.single;
+      expect(c.competitorName, 'Alice');
+      expect(c.totalDartsThrown, 6);
+      expect(c.threeDartAverage, 180.0);
+      expect(c.byPlayer.single.threeDartAverage, 180.0);
+      // Bucket excludes the busted 180.
+      expect(c.oneEightyTurns, 1);
+    });
+
+    test('legsWon counted from LegCompleted events with matching competitor',
+        () {
+      final events = [
+        // Leg 1 — c1 wins
+        legCompleted(),
+        // Manually inject a competitor-targeted LegCompleted via event helper.
+      ];
+      // Replace the simple legCompleted with one that targets c1.
+      final betterEvents = [
+        event('LegCompleted', {'winner_competitor_id': 'c1'}),
+        event('LegCompleted', {'winner_competitor_id': 'c2'}),
+        event('LegCompleted', {'winner_competitor_id': 'c1'}),
+      ];
+
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: [
+          (competitorId: 'c1', playerId: 'p1', score: 60),
+          (competitorId: 'c2', playerId: 'p2', score: 60),
+        ],
+        competitorNames: const {'c1': 'Alice', 'c2': 'Bob'},
+        events: [...events, ...betterEvents],
+      );
+
+      final c1 = stats.byCompetitor.firstWhere((c) => c.competitorId == 'c1');
+      final c2 = stats.byCompetitor.firstWhere((c) => c.competitorId == 'c2');
+      expect(c1.legsWon, 2);
+      expect(c2.legsWon, 1);
+    });
+
+    test('competitor missing from competitorNames is skipped', () {
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: [
+          (competitorId: 'c1', playerId: 'p1', score: 60),
+          (competitorId: 'c-orphan', playerId: 'p2', score: 60),
+        ],
+        competitorNames: const {'c1': 'Alice'},
+        events: const [],
+      );
+
+      expect(stats.byCompetitor.length, 1);
+      expect(stats.byCompetitor.single.competitorId, 'c1');
+    });
+
+    test('cricket — per-competitor mark stats from projections', () {
+      // Solo cricket competitor; one turn of T20+T19+T18 = 9 marks / 3 darts.
+      final events = [
+        turnStarted(),
+        dart(20, 3),
+        dart(19, 3),
+        dart(18, 3),
+        turnEnded(),
+      ];
+
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.cricket,
+        throws: [
+          for (var i = 0; i < 3; i++)
+            (competitorId: 'c1', playerId: playerId, score: 0),
+        ],
+        competitorNames: const {'c1': 'Alice'},
+        events: events,
+      );
+
+      final c = stats.byCompetitor.single;
+      expect(c.marksPerRound, 9.0);
+      expect(c.nineMarkTurns, 1);
     });
   });
 }

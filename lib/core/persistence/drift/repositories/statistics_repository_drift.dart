@@ -12,15 +12,7 @@ import 'package:dart_lodge/features/statistics/domain/repositories/statistics_re
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/projection_runner.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
 import '../database.dart' as drift_db;
 
 class StatisticsRepositoryDrift implements StatisticsRepository {
@@ -41,19 +33,20 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   @override
   Future<GameStats> getGameStats(String gameId) async {
     try {
-      // Verify game exists and determine game type in a single query
+      // 1. Verify game exists + grab gameType.
       final gameRow = await (_db.select(_db.games)
             ..where((g) => g.gameId.equals(gameId))
             ..limit(1))
           .getSingleOrNull();
-
       if (gameRow == null) {
         throw GameNotFoundException(gameId);
       }
+      final gameType = GameType.values.firstWhere(
+        (t) => t.name == gameRow.gameType,
+        orElse: () => GameType.x01,
+      );
 
-      final isX01 = gameRow.gameType == GameType.x01.name;
-      final isGameCricket = gameRow.gameType == GameType.cricket.name;
-
+      // 2. Load throws for the game.
       final dartThrows = await (_db.select(_db.dartThrows)
             ..where((t) => t.gameId.equals(gameId))
             ..orderBy([
@@ -65,212 +58,56 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       if (dartThrows.isEmpty) {
         return GameStats(
           gameId: gameId,
-          byCompetitor: [],
+          byCompetitor: const [],
           gameType: gameRow.gameType,
         );
       }
 
-      List<domain.GameEvent> gameEvents = [];
-      if (isX01 || isGameCricket) {
-        final eventRows = await (_db.select(_db.gameEvents)
-              ..where((e) => e.gameId.equals(gameId))
-              ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
-            .get();
-        gameEvents = eventRows.map((row) => domain.GameEvent(
-          eventId: row.eventId,
-          gameId: row.gameId,
-          eventType: row.eventType,
-          localSequence: row.localSequence,
-          occurredAt: DateTime.parse(row.occurredAt),
-          payload: jsonDecode(row.payloadJson) as Map<String, dynamic>,
-          synced: row.synced == 1,
-          actorId: row.actorId,
-          globalSequence: row.globalSequence,
-          source: EventSource.client,
-        )).toList();
-      }
+      final throws = dartThrows
+          .map((t) => (
+                competitorId: t.competitorId,
+                playerId: t.playerId,
+                score: t.score,
+              ))
+          .toList();
 
-      // Group by competitor in Dart
-      final Map<String, List<drift_db.DartThrow>> byCompetitor = {};
-      for (final t in dartThrows) {
-        byCompetitor.putIfAbsent(t.competitorId, () => []).add(t);
-      }
+      // 3. Resolve competitor names.
+      final competitorIds =
+          throws.map((t) => t.competitorId).toSet().toList();
+      final competitorRows = await (_db.select(_db.competitors)
+            ..where((c) => c.competitorId.isIn(competitorIds)))
+          .get();
+      final competitorNames = <String, String>{
+        for (final c in competitorRows) c.competitorId: c.name,
+      };
 
-      final List<CompetitorStats> competitorStats = [];
+      // 4. Load events for projection-based stats.
+      final eventRows = await (_db.select(_db.gameEvents)
+            ..where((e) => e.gameId.equals(gameId))
+            ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
+          .get();
+      final events = eventRows
+          .map((row) => domain.GameEvent(
+                eventId: row.eventId,
+                gameId: row.gameId,
+                eventType: row.eventType,
+                localSequence: row.localSequence,
+                occurredAt: DateTime.parse(row.occurredAt),
+                payload: jsonDecode(row.payloadJson) as Map<String, dynamic>,
+                synced: row.synced == 1,
+                actorId: row.actorId,
+                globalSequence: row.globalSequence,
+                source: EventSource.client,
+              ))
+          .toList();
 
-      for (final entry in byCompetitor.entries) {
-        final competitorId = entry.key;
-        final throws = entry.value;
-
-        // Get competitor name
-        final competitor = await (_db.select(_db.competitors)
-              ..where((c) => c.competitorId.equals(competitorId))
-              ..limit(1))
-            .getSingleOrNull();
-
-        if (competitor == null) continue;
-
-        // Group throws by player within competitor
-        final Map<String, List<drift_db.DartThrow>> byPlayer = {};
-        for (final t in throws) {
-          byPlayer.putIfAbsent(t.playerId, () => []).add(t);
-        }
-
-        // Build PlayerTurnStats for each player
-        final List<PlayerTurnStats> playerTurnStats = [];
-        for (final playerEntry in byPlayer.entries) {
-          final playerId = playerEntry.key;
-          final playerThrows = playerEntry.value;
-
-          final int playerDarts = playerThrows.length;
-          final int playerScore =
-              playerThrows.fold(0, (sum, t) => sum + t.score);
-          final double playerAvg =
-              playerDarts > 0 ? (playerScore / playerDarts) * 3 : 0.0;
-
-          playerTurnStats.add(PlayerTurnStats(
-            playerId: playerId,
-            threeDartAverage: playerAvg,
-            dartsThrown: playerDarts,
-          ));
-        }
-
-        // Competitor totals
-        final int totalDarts = throws.length;
-        final int totalScore = throws.fold(0, (sum, t) => sum + t.score);
-        final double threeDartAverage =
-            totalDarts > 0 ? (totalScore / totalDarts) * 3 : 0.0;
-
-        final legsWon = await _getLegsWonForCompetitor(competitorId, gameId);
-
-        // X01-specific stats via projection engine
-        int totalOneEighty = 0, totalSixtyPlus = 0, totalHundredPlus = 0, totalFortyPlus = 0;
-        int totalCheckoutAttempts = 0, totalSuccessfulCheckouts = 0;
-        int? competitorHighestCheckout;
-
-        if (isX01) {
-          final playerIds = byPlayer.keys.toList();
-          for (final playerId in playerIds) {
-            final runner = ProjectionRunner([
-              X01CheckoutProjection(),
-              X01HighScoreBucketsProjection(),
-              X01HighestCheckoutProjection(),
-            ]);
-            runner.init(ProjectionContext(
-              playerId: playerId,
-              gameType: GameType.x01,
-              inStrategy: 'straight',
-              outStrategy: 'double',
-              playerIds: playerIds,
-            ));
-            runner.run(gameEvents);
-            final snap = runner.snapshot();
-
-            final buckets = snap['x01.highScoreBuckets'] ?? {};
-            totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
-            totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
-            totalHundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
-            totalSixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
-
-            final checkout = snap['x01_checkout'] ?? {};
-            totalCheckoutAttempts += (checkout['checkoutAttempts'] as int? ?? 0);
-            totalSuccessfulCheckouts += (checkout['successfulCheckouts'] as int? ?? 0);
-
-            final hcSnap = snap['x01_highest_checkout'] ?? {};
-            final hc = hcSnap['highestCheckout'] as int?;
-            if (hc != null && (competitorHighestCheckout == null || hc > competitorHighestCheckout)) {
-              competitorHighestCheckout = hc;
-            }
-          }
-        }
-
-        final checkoutPercentage = totalCheckoutAttempts > 0
-            ? (totalSuccessfulCheckouts / totalCheckoutAttempts) * 100
-            : null;
-
-        // Cricket-specific stats via projection engine
-        double? cricketMpr;
-        double? cricketFirstNineMpr;
-        int cricketFiveMark = 0,
-            cricketSixMark = 0,
-            cricketSevenMark = 0,
-            cricketEightMark = 0,
-            cricketNineMark = 0;
-
-        if (isGameCricket) {
-          final playerIds = byPlayer.keys.toList();
-          int totalMarks = 0;
-          int totalTurns = 0;
-          int firstNineMarksTotal = 0;
-          int firstNineLegsTotal = 0;
-
-          for (final playerId in playerIds) {
-            final runner = ProjectionRunner([
-              CricketMarksPerTurnProjection(),
-              CricketMarkBucketsProjection(),
-              CricketFirstNineMprProjection(),
-            ]);
-            runner.init(ProjectionContext(
-              playerId: playerId,
-              gameType: GameType.cricket,
-              inStrategy: 'straight',
-              outStrategy: 'straight',
-              playerIds: playerIds,
-            ));
-            runner.run(gameEvents);
-            final snap = runner.snapshot();
-
-            final mptSnap = snap['cricket.mpt'] ?? {};
-            totalMarks += (mptSnap['totalMarks'] as int? ?? 0);
-            totalTurns += (mptSnap['totalTurns'] as int? ?? 0);
-
-            final bucketsSnap = snap['cricket.markBuckets'] ?? {};
-            cricketFiveMark += (bucketsSnap['fiveMarkExact'] as int? ?? 0);
-            cricketSixMark += (bucketsSnap['sixMarkExact'] as int? ?? 0);
-            cricketSevenMark += (bucketsSnap['sevenMarkExact'] as int? ?? 0);
-            cricketEightMark += (bucketsSnap['eightMarkExact'] as int? ?? 0);
-            cricketNineMark += (bucketsSnap['nineMarkExact'] as int? ?? 0);
-
-            final fn9Snap = snap['cricket.firstNineMpr'] ?? {};
-            firstNineMarksTotal +=
-                (fn9Snap['totalFirstNineMarks'] as int? ?? 0);
-            firstNineLegsTotal +=
-                (fn9Snap['totalFirstNineLegs'] as int? ?? 0);
-          }
-
-          cricketMpr = totalTurns > 0 ? totalMarks / totalTurns : null;
-          cricketFirstNineMpr = firstNineLegsTotal > 0
-              ? firstNineMarksTotal / (firstNineLegsTotal * 3)
-              : null;
-        }
-
-        competitorStats.add(CompetitorStats(
-          competitorId: competitorId,
-          competitorName: competitor.name,
-          byPlayer: playerTurnStats,
-          threeDartAverage: threeDartAverage,
-          legsWon: legsWon,
-          totalDartsThrown: totalDarts,
-          checkoutPercentage: checkoutPercentage,
-          highestCheckout: competitorHighestCheckout,
-          oneEightyTurns: totalOneEighty,
-          sixtyPlusTurns: totalSixtyPlus,
-          oneHundredPlusTurns: totalHundredPlus,
-          oneFortyPlusTurns: totalFortyPlus,
-          marksPerRound: cricketMpr,
-          firstNineMarksPerRound: cricketFirstNineMpr,
-          fiveMarkTurns: cricketFiveMark,
-          sixMarkTurns: cricketSixMark,
-          sevenMarkTurns: cricketSevenMark,
-          eightMarkTurns: cricketEightMark,
-          nineMarkTurns: cricketNineMark,
-        ));
-      }
-
-      return GameStats(
+      // 5. Delegate.
+      return _assembler.gameStatsFromEvents(
         gameId: gameId,
-        byCompetitor: competitorStats,
-        gameType: gameRow.gameType,
+        gameType: gameType,
+        throws: throws,
+        competitorNames: competitorNames,
+        events: events,
       );
     } on RepositoryException {
       rethrow;
@@ -463,74 +300,58 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   Future<PlayerStats> getPlayerStatsForGame(
       String playerId, String gameId) async {
     try {
-      // Check game exists first
+      // 1. Verify game exists, grab gameType.
       final game = await (_db.select(_db.games)
             ..where((g) => g.gameId.equals(gameId))
             ..limit(1))
           .getSingleOrNull();
-
       if (game == null) {
         throw GameNotFoundException(gameId);
       }
-
-      // Check player participated
-      final dartCountQuery = _db.selectOnly(_db.dartThrows)
-        ..addColumns([_db.dartThrows.dartId.count()])
-        ..where(_db.dartThrows.playerId.equals(playerId) &
-            _db.dartThrows.gameId.equals(gameId));
-
-      final dartCountResult = await dartCountQuery.getSingle();
-      final dartCount =
-          dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
-
-      if (dartCount == 0) {
-        throw PlayerNotFoundException(playerId);
-      }
-
       final gameType = GameType.values.firstWhere(
         (type) => type.name == game.gameType,
         orElse: () => GameType.x01,
       );
 
-      // Average score for this game/player
-      final avgScoreQuery = _db.selectOnly(_db.dartThrows)
-        ..addColumns([_db.dartThrows.score.avg()])
-        ..where(_db.dartThrows.playerId.equals(playerId) &
-            _db.dartThrows.gameId.equals(gameId));
+      // 2. Verify player participated and aggregate their darts/score.
+      final playerThrows = await (_db.select(_db.dartThrows)
+            ..where((t) =>
+                t.playerId.equals(playerId) & t.gameId.equals(gameId)))
+          .get();
+      if (playerThrows.isEmpty) {
+        throw PlayerNotFoundException(playerId);
+      }
+      final playerDartsInGame = playerThrows.length;
+      final playerScoreInGame =
+          playerThrows.fold<int>(0, (sum, t) => sum + t.score);
 
-      final avgScoreResult = await avgScoreQuery.getSingle();
-      final double avgScore =
-          avgScoreResult.read(_db.dartThrows.score.avg()) ?? 0;
+      // 3. Load events for projection-based stats.
+      final eventRows = await (_db.select(_db.gameEvents)
+            ..where((e) => e.gameId.equals(gameId))
+            ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
+          .get();
+      final events = eventRows
+          .map((row) => domain.GameEvent(
+                eventId: row.eventId,
+                gameId: row.gameId,
+                eventType: row.eventType,
+                localSequence: row.localSequence,
+                occurredAt: DateTime.parse(row.occurredAt),
+                payload: jsonDecode(row.payloadJson) as Map<String, dynamic>,
+                synced: row.synced == 1,
+                actorId: row.actorId,
+                globalSequence: row.globalSequence,
+                source: EventSource.client,
+              ))
+          .toList();
 
-      // Game-specific metrics
-      final highestTurnScore =
-          await _calculateHighestTurnScore(playerId, gameType, gameId: gameId);
-      final checkoutPercentage =
-          await _calculateCheckoutPercentageForGame(playerId, gameId);
-      final highestCheckout =
-          await _calculateHighestCheckoutForGame(playerId, gameId);
-      final bustRate =
-          await _calculateBustRate(playerId, gameType, gameId: gameId);
-      final legsPlayedInGame = await _getLegsPlayedInGame(gameId);
-      final legsWon = await _getLegsWonForPlayerInGame(playerId, gameId);
-      final double dartsPerLeg =
-          legsPlayedInGame > 0 ? dartCount / legsPlayedInGame : 0.0;
-
-      return PlayerStats(
+      // 4. Delegate.
+      return _assembler.playerStatsForGameFromEvents(
         playerId: playerId,
         gameType: gameType,
-        totalGames: 1,
-        gamesWon: legsWon > 0 ? 1 : 0,
-        winRate: legsWon > 0 ? 1.0 : 0.0,
-        threeDartAverage: (avgScore * 3).toDouble(),
-        checkoutPercentage: checkoutPercentage,
-        highestCheckout: highestCheckout,
-        highestTurnScore: highestTurnScore,
-        totalDartsThrown: dartCount,
-        dartsPerLeg: dartsPerLeg,
-        bustRate: bustRate,
-        legsPlayed: legsPlayedInGame,
-        legsWon: legsWon,
+        playerDartsInGame: playerDartsInGame,
+        playerScoreInGame: playerScoreInGame,
+        events: events,
       );
     } on RepositoryException {
       rethrow;
@@ -619,237 +440,6 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       bustRate: 0.0,
     );
   }
-
-  /// Count of distinct completed games the player has participated in.
-  Future<int> _calculateHighestTurnScore(
-    String playerId,
-    GameType? gameType, {
-    String? gameId,
-  }) async {
-    try {
-      String gameFilter;
-      List<String> args;
-
-      if (gameId != null) {
-        gameFilter = 'AND game_id = ?';
-        args = [playerId, gameId];
-      } else if (gameType != null) {
-        gameFilter =
-            "AND game_id IN (SELECT game_id FROM games WHERE game_type = ?)";
-        args = [playerId, gameType.name];
-      } else {
-        gameFilter = '';
-        args = [playerId];
-      }
-
-      final sql = '''
-        SELECT MAX(turn_score) AS highest_turn_score
-        FROM (
-          SELECT SUM(score) AS turn_score
-          FROM dart_throws
-          WHERE player_id = ?
-          $gameFilter
-          GROUP BY game_id, turn_number
-        )
-      ''';
-
-      final rows = await _db.customSelect(sql, variables: [
-        for (final a in args) Variable.withString(a),
-      ]).get();
-
-      final raw = rows.first.data['highest_turn_score'];
-      if (raw == null) return 0;
-      return (raw as num).toInt();
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Number of legs won by [playerId] across completed games of [gameType].
-  Future<int> _getLegsPlayedInGame(String gameId) async {
-    try {
-      final events = await (_db.select(_db.gameEvents)
-            ..where((e) =>
-                e.gameId.equals(gameId) & e.eventType.equals('LegCompleted')))
-          .get();
-      return events.length;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Bust rate for [playerId] across the given scope.
-  Future<double> _calculateBustRate(
-    String playerId,
-    GameType? gameType, {
-    String? gameId,
-  }) async {
-    try {
-      String scopeFilter;
-      List<String> args;
-
-      if (gameId != null) {
-        scopeFilter = 'AND game_id = ?';
-        args = [playerId, gameId];
-      } else if (gameType != null) {
-        scopeFilter =
-            "AND game_id IN (SELECT game_id FROM games WHERE game_type = ?)";
-        args = [playerId, gameType.name];
-      } else {
-        scopeFilter = '';
-        args = [playerId];
-      }
-
-      final sql = '''
-        SELECT
-          COUNT(*) AS turn_count,
-          SUM(CASE WHEN JSON_EXTRACT(payload_json, '\$.reason') = 'bust' THEN 1 ELSE 0 END) AS bust_count
-        FROM game_events
-        WHERE event_type = 'TurnEnded'
-        AND JSON_EXTRACT(payload_json, '\$.player_id') = ?
-        $scopeFilter
-      ''';
-
-      final rows = await _db.customSelect(
-        sql,
-        variables: [for (final a in args) Variable.withString(a)],
-      ).get();
-
-      final bustCount = (rows.first.data['bust_count'] as num? ?? 0).toInt();
-      final turnCount = (rows.first.data['turn_count'] as num? ?? 0).toInt();
-
-      return turnCount > 0 ? bustCount / turnCount : 0.0;
-    } catch (e) {
-      return 0.0;
-    }
-  }
-
-  /// Legs won by competitor in a single game (Dart-side JSON parsing).
-  Future<int> _getLegsWonForCompetitor(
-      String competitorId, String gameId) async {
-    try {
-      final events = await (_db.select(_db.gameEvents)
-            ..where((e) =>
-                e.gameId.equals(gameId) &
-                e.eventType.equals('LegCompleted')))
-          .get();
-
-      int legsWon = 0;
-      for (final event in events) {
-        final payload =
-            jsonDecode(event.payloadJson) as Map<String, dynamic>;
-        if (payload['winner_competitor_id'] == competitorId) {
-          legsWon++;
-        }
-      }
-      return legsWon;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Legs won by player in a single game (Dart-side JSON parsing).
-  Future<int> _getLegsWonForPlayerInGame(
-      String playerId, String gameId) async {
-    try {
-      final events = await (_db.select(_db.gameEvents)
-            ..where((e) =>
-                e.gameId.equals(gameId) &
-                e.eventType.equals('LegCompleted')))
-          .get();
-
-      int legsWon = 0;
-      for (final event in events) {
-        final payload =
-            jsonDecode(event.payloadJson) as Map<String, dynamic>;
-        if (payload['winner_player_id'] == playerId) {
-          legsWon++;
-        }
-      }
-      return legsWon;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Checkout percentage for [playerId] in a single game (Dart-side JSON parsing).
-  Future<double?> _calculateCheckoutPercentageForGame(
-      String playerId, String gameId) async {
-    try {
-      final events = await (_db.select(_db.gameEvents)
-            ..where((e) => e.gameId.equals(gameId))
-            ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
-          .get();
-
-      if (events.isEmpty) return null;
-
-      int checkoutAttempts = 0;
-      int successfulCheckouts = 0;
-      bool inCheckoutRange = false;
-
-      for (final event in events) {
-        final payload =
-            jsonDecode(event.payloadJson) as Map<String, dynamic>;
-        final eventType = event.eventType;
-
-        if (eventType == 'TurnStarted') {
-          final turnPlayerId = payload['player_id'] as String?;
-          final startingScore = payload['starting_score'] as int?;
-          if (turnPlayerId == playerId &&
-              startingScore != null &&
-              startingScore <= 170) {
-            inCheckoutRange = true;
-            checkoutAttempts++;
-          }
-        } else if (eventType == 'LegCompleted') {
-          final winnerPlayerId = payload['winner_player_id'] as String?;
-          if (winnerPlayerId == playerId && inCheckoutRange) {
-            successfulCheckouts++;
-          }
-          inCheckoutRange = false;
-        } else if (eventType == 'TurnEnded') {
-          inCheckoutRange = false;
-        }
-      }
-
-      return checkoutAttempts > 0
-          ? (successfulCheckouts / checkoutAttempts) * 100
-          : null;
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Highest checkout score for [playerId] in a single game (Dart-side JSON parsing).
-  Future<int?> _calculateHighestCheckoutForGame(
-      String playerId, String gameId) async {
-    try {
-      final events = await (_db.select(_db.gameEvents)
-            ..where((e) => e.gameId.equals(gameId)))
-          .get();
-
-      int? highestCheckout;
-
-      for (final event in events) {
-        if (event.eventType != 'LegCompleted') continue;
-        final payload =
-            jsonDecode(event.payloadJson) as Map<String, dynamic>;
-        final winnerPlayerId = payload['winner_player_id'] as String?;
-        final checkoutScore = payload['checkout_score'] as int?;
-
-        if (winnerPlayerId == playerId && checkoutScore != null) {
-          if (highestCheckout == null || checkoutScore > highestCheckout) {
-            highestCheckout = checkoutScore;
-          }
-        }
-      }
-
-      return highestCheckout;
-    } catch (e) {
-      return null;
-    }
-  }
-
   @override
   Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
     String playerId, {
