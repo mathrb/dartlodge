@@ -17,6 +17,7 @@ import 'dart:math' show min;
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
@@ -40,6 +41,7 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_ch
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_legs_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 
 class PlayerStatsAssembler {
@@ -205,6 +207,200 @@ class PlayerStatsAssembler {
           (avgCheckoutSnap['avgCheckoutScore'] as num?)?.toDouble(),
       bestGameCheckoutPercentage:
           (bestGameCoSnap['bestGameCheckoutPercentage'] as num?)?.toDouble(),
+    );
+  }
+
+  // ── Per-game stats ─────────────────────────────────────────────────────────
+
+  /// Builds a GameStats snapshot from one game's events + dart throws.
+  ///
+  /// [throws] is a flat list of dart throws across all competitors and
+  /// players in the game. The assembler groups them itself.
+  /// [competitorNames] maps competitorId → display name (for output only).
+  GameStats gameStatsFromEvents({
+    required String gameId,
+    required GameType gameType,
+    required List<({String competitorId, String playerId, int score})> throws,
+    required Map<String, String> competitorNames,
+    required List<GameEvent> events,
+  }) {
+    if (throws.isEmpty) {
+      return GameStats(
+        gameId: gameId,
+        byCompetitor: const [],
+        gameType: gameType.name,
+      );
+    }
+
+    // Group throws by competitor → by player.
+    final Map<String, Map<String, List<int>>> byCompetitor = {};
+    for (final t in throws) {
+      byCompetitor
+          .putIfAbsent(t.competitorId, () => {})
+          .putIfAbsent(t.playerId, () => [])
+          .add(t.score);
+    }
+
+    final isX01 = gameType == GameType.x01;
+    final isCricket = gameType == GameType.cricket;
+
+    final List<CompetitorStats> competitorStats = [];
+    for (final entry in byCompetitor.entries) {
+      final competitorId = entry.key;
+      final competitorName = competitorNames[competitorId];
+      if (competitorName == null) continue;
+
+      final byPlayer = entry.value;
+      final List<PlayerTurnStats> playerTurnStats = [];
+      int competitorDarts = 0;
+      int competitorScore = 0;
+      for (final playerEntry in byPlayer.entries) {
+        final playerId = playerEntry.key;
+        final playerScores = playerEntry.value;
+        final playerDarts = playerScores.length;
+        final playerTotal =
+            playerScores.fold<int>(0, (sum, s) => sum + s);
+        final playerAvg =
+            playerDarts > 0 ? (playerTotal / playerDarts) * 3 : 0.0;
+        playerTurnStats.add(PlayerTurnStats(
+          playerId: playerId,
+          threeDartAverage: playerAvg,
+          dartsThrown: playerDarts,
+        ));
+        competitorDarts += playerDarts;
+        competitorScore += playerTotal;
+      }
+      final competitorAvg =
+          competitorDarts > 0 ? (competitorScore / competitorDarts) * 3 : 0.0;
+
+      // Legs won — count LegCompleted events with this competitor as winner.
+      final legsWon = events.where((e) {
+        if (e.eventType != 'LegCompleted') return false;
+        return e.payload['winner_competitor_id'] == competitorId;
+      }).length;
+
+      // Per-player projection aggregates.
+      int totalOneEighty = 0,
+          totalSixtyPlus = 0,
+          totalHundredPlus = 0,
+          totalFortyPlus = 0;
+      int totalCheckoutAttempts = 0, totalSuccessfulCheckouts = 0;
+      int? competitorHighestCheckout;
+      int totalMarks = 0, totalTurns = 0;
+      int firstNineMarksTotal = 0, firstNineLegsTotal = 0;
+      int cricketFiveMark = 0,
+          cricketSixMark = 0,
+          cricketSevenMark = 0,
+          cricketEightMark = 0,
+          cricketNineMark = 0;
+
+      final playerIds = byPlayer.keys.toList();
+
+      if (isX01) {
+        for (final playerId in playerIds) {
+          final runner = ProjectionRunner([
+            X01CheckoutProjection(),
+            X01HighScoreBucketsProjection(),
+            X01HighestCheckoutProjection(),
+          ]);
+          runner.init(ProjectionContext(
+            playerId: playerId,
+            gameType: GameType.x01,
+            inStrategy: 'straight',
+            outStrategy: 'double',
+            playerIds: playerIds,
+          ));
+          runner.run(events);
+          final snap = runner.snapshot();
+
+          final buckets = snap['x01.highScoreBuckets'] ?? {};
+          totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
+          totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
+          totalHundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
+          totalSixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
+
+          final checkout = snap['x01_checkout'] ?? {};
+          totalCheckoutAttempts += (checkout['checkoutAttempts'] as int? ?? 0);
+          totalSuccessfulCheckouts +=
+              (checkout['successfulCheckouts'] as int? ?? 0);
+
+          final hcSnap = snap['x01_highest_checkout'] ?? {};
+          final hc = hcSnap['highestCheckout'] as int?;
+          if (hc != null &&
+              (competitorHighestCheckout == null ||
+                  hc > competitorHighestCheckout)) {
+            competitorHighestCheckout = hc;
+          }
+        }
+      } else if (isCricket) {
+        for (final playerId in playerIds) {
+          final runner = ProjectionRunner([
+            CricketMarksPerTurnProjection(),
+            CricketMarkBucketsProjection(),
+            CricketFirstNineMprProjection(),
+          ]);
+          runner.init(ProjectionContext(
+            playerId: playerId,
+            gameType: GameType.cricket,
+            inStrategy: 'straight',
+            outStrategy: 'straight',
+            playerIds: playerIds,
+          ));
+          runner.run(events);
+          final snap = runner.snapshot();
+
+          final mptSnap = snap['cricket.mpt'] ?? {};
+          totalMarks += (mptSnap['totalMarks'] as int? ?? 0);
+          totalTurns += (mptSnap['totalTurns'] as int? ?? 0);
+
+          final bucketsSnap = snap['cricket.markBuckets'] ?? {};
+          cricketFiveMark += (bucketsSnap['fiveMarkExact'] as int? ?? 0);
+          cricketSixMark += (bucketsSnap['sixMarkExact'] as int? ?? 0);
+          cricketSevenMark += (bucketsSnap['sevenMarkExact'] as int? ?? 0);
+          cricketEightMark += (bucketsSnap['eightMarkExact'] as int? ?? 0);
+          cricketNineMark += (bucketsSnap['nineMarkExact'] as int? ?? 0);
+
+          final fn9Snap = snap['cricket.firstNineMpr'] ?? {};
+          firstNineMarksTotal += (fn9Snap['totalFirstNineMarks'] as int? ?? 0);
+          firstNineLegsTotal += (fn9Snap['totalFirstNineLegs'] as int? ?? 0);
+        }
+      }
+
+      final checkoutPercentage = totalCheckoutAttempts > 0
+          ? (totalSuccessfulCheckouts / totalCheckoutAttempts) * 100
+          : null;
+      final cricketMpr = totalTurns > 0 ? totalMarks / totalTurns : null;
+      final cricketFirstNineMpr = firstNineLegsTotal > 0
+          ? firstNineMarksTotal / (firstNineLegsTotal * 3)
+          : null;
+
+      competitorStats.add(CompetitorStats(
+        competitorId: competitorId,
+        competitorName: competitorName,
+        byPlayer: playerTurnStats,
+        threeDartAverage: competitorAvg,
+        legsWon: legsWon,
+        totalDartsThrown: competitorDarts,
+        checkoutPercentage: checkoutPercentage,
+        highestCheckout: competitorHighestCheckout,
+        oneEightyTurns: totalOneEighty,
+        sixtyPlusTurns: totalSixtyPlus,
+        oneHundredPlusTurns: totalHundredPlus,
+        oneFortyPlusTurns: totalFortyPlus,
+        marksPerRound: cricketMpr,
+        firstNineMarksPerRound: cricketFirstNineMpr,
+        fiveMarkTurns: cricketFiveMark,
+        sixMarkTurns: cricketSixMark,
+        sevenMarkTurns: cricketSevenMark,
+        eightMarkTurns: cricketEightMark,
+        nineMarkTurns: cricketNineMark,
+      ));
+    }
+
+    return GameStats(
+      gameId: gameId,
+      byCompetitor: competitorStats,
+      gameType: gameType.name,
     );
   }
 
