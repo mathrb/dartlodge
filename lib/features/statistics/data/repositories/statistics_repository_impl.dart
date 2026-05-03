@@ -5,37 +5,20 @@
 import 'package:sqflite/sqflite.dart';
 import 'dart:convert';
 import 'dart:async';
-import 'dart:math' show min;
 import '../../domain/entities/player_stats.dart';
 import '../../domain/entities/game_stats.dart';
 import '../../domain/repositories/statistics_repository.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart' hide DatabaseException;
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/assemblers/player_stats_assembler.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_runner.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_average_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_legs_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_avg_checkout_score_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_game_checkout_percentage_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_marks_per_turn_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_mark_buckets_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_win_rate_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
@@ -43,8 +26,11 @@ import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapsh
 
 class StatisticsRepositoryImpl implements StatisticsRepository {
   final Database _db;
+  final PlayerStatsAssembler _assembler;
 
-  StatisticsRepositoryImpl(this._db);
+  StatisticsRepositoryImpl(this._db,
+      {PlayerStatsAssembler? assembler})
+      : _assembler = assembler ?? const PlayerStatsAssembler();
 
   static const _practiceGameTypes = {
     GameType.aroundTheClock,
@@ -639,9 +625,10 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       }
     }
 
-    // 4. Extract in/out strategy from most recent game's config_json
+    // 4. Extract in/out strategy + ATC variant from most recent game's config
     String inStrategy = 'straight';
     String outStrategy = 'double';
+    String atcVariant = 'standard';
     final sortedGames = [...gamesResult]
       ..sort((a, b) => (b['start_time'] as String).compareTo(a['start_time'] as String));
     final latestConfigJson = sortedGames.first['config_json'] as String?;
@@ -650,145 +637,20 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
         final config = jsonDecode(latestConfigJson) as Map<String, dynamic>;
         inStrategy = config['in_strategy'] as String? ?? inStrategy;
         outStrategy = config['out_strategy'] as String? ?? outStrategy;
+        atcVariant = config['variant'] as String? ?? atcVariant;
       } catch (_) {}
     }
 
-    // 5. Build context and run projections
-    final context = ProjectionContext(
+    // 5. Delegate projection replay + snapshot mapping to the shared assembler.
+    return _assembler.fromEvents(
       playerId: playerId,
       gameType: gameType,
-      inStrategy: inStrategy,
-      outStrategy: outStrategy,
-      playerIds: [playerId],
-    );
-
-    final isCricket = gameType == GameType.cricket;
-
-    final isPractice = _practiceGameTypes.contains(gameType);
-
-    if (isPractice) {
-      return _buildPracticePlayerStats(
-        playerId,
-        gameType,
-        gamesResult,
-        events,
-        totalGames,
-        totalDartsThrown,
-      );
-    }
-
-    final runner = isCricket
-        ? ProjectionRunner([
-            CricketMarksPerTurnProjection(),
-            CricketHitRateProjection(),
-            CricketMarkBucketsProjection(),
-            CricketLegsProjection(),
-            CricketWinRateProjection(),
-            CricketBestLegMptProjection(),
-            CricketBestGameHitRateProjection(),
-          ])
-        : ProjectionRunner([
-            X01AverageProjection(),
-            X01BustRateProjection(),
-            X01CheckoutProjection(),
-            X01DartsPerLegProjection(),
-            X01DoubleOutProjection(),
-            X01FirstDartInProjection(),
-            X01HighestCheckoutProjection(),
-            X01HighestTurnScoreProjection(),
-            X01LegsProjection(),
-            X01WinRateProjection(),
-            X01HighScoreBucketsProjection(),
-            X01FirstNinePprProjection(),
-            X01BestLegPprProjection(),
-            X01AvgCheckoutScoreProjection(),
-            X01BestGameCheckoutPercentageProjection(),
-          ]);
-
-    runner.init(context);
-    runner.run(events);
-
-    // 6. Handle DartCorrected events
-    final correctedEvents = events.where((e) => e.eventType == 'DartCorrected').toList();
-    if (correctedEvents.isNotEmpty) {
-      final minSeq = correctedEvents.map((e) => e.localSequence).reduce(min);
-      runner.replayFrom(events, minSeq);
-    }
-
-    // 7. Map snapshots to PlayerStats
-    final snap = runner.snapshot();
-
-    if (isCricket) {
-      final mptSnap = snap['cricket.mpt'] ?? {};
-      final hitRateSnap = snap['cricket.hitRate'] ?? {};
-      final bucketsSnap = snap['cricket.markBuckets'] ?? {};
-      final legsSnap = snap['cricket.legs'] ?? {};
-      final winSnap = snap['cricket.winRate'] ?? {};
-      final bestLegMptSnap = snap['cricket.bestLegMpt'] ?? {};
-      final bestGameHitRateSnap = snap['cricket.bestGameHitRate'] ?? {};
-
-      return PlayerStats(
-        playerId: playerId,
-        gameType: gameType,
-        totalGames: totalGames,
-        totalDartsThrown: totalDartsThrown,
-        threeDartAverage: 0.0,
-        bustRate: 0.0,
-        highestTurnScore: 0,
-        dartsPerLeg: 0.0,
-        winRate: (winSnap['winRate'] as num?)?.toDouble() ?? 0.0,
-        gamesWon: winSnap['gamesWon'] as int? ?? 0,
-        legsPlayed: legsSnap['legsPlayed'] as int? ?? 0,
-        legsWon: legsSnap['legsWon'] as int? ?? 0,
-        marksPerTurn: (mptSnap['marksPerTurn'] as num?)?.toDouble(),
-        hitRate: (hitRateSnap['hitRate'] as num?)?.toDouble(),
-        sixMarkTurns: bucketsSnap['sixMarkTurns'] as int? ?? 0,
-        nineMarkTurns: bucketsSnap['nineMarkTurns'] as int? ?? 0,
-        bestLegMpt: (bestLegMptSnap['bestLegMpt'] as num?)?.toDouble(),
-        bestGameHitRate:
-            (bestGameHitRateSnap['bestGameHitRate'] as num?)?.toDouble(),
-      );
-    }
-
-    final avgSnap = snap['x01_average'] ?? {};
-    final bustSnap = snap['x01_bust_rate'] ?? {};
-    final checkoutSnap = snap['x01_checkout'] ?? {};
-    final dartsPerLegSnap = snap['x01.dartsPerLeg'] ?? {};
-    final highestCheckoutSnap = snap['x01_highest_checkout'] ?? {};
-    final highestTurnSnap = snap['x01_highest_turn_score'] ?? {};
-    final winSnap = snap['x01.winRate'] ?? {};
-    final legsSnap = snap['x01.legs'] ?? {};
-    final bucketsSnap = snap['x01.highScoreBuckets'] ?? {};
-    final firstNineSnap = snap['x01.firstNinePpr'] ?? {};
-    final bestLegPprSnap = snap['x01.bestLegPpr'] ?? {};
-    final avgCheckoutSnap = snap['x01.avgCheckoutScore'] ?? {};
-    final bestGameCoSnap = snap['x01.bestGameCheckoutPercentage'] ?? {};
-
-    return PlayerStats(
-      playerId: playerId,
-      gameType: gameType,
+      events: events,
       totalGames: totalGames,
       totalDartsThrown: totalDartsThrown,
-      threeDartAverage: (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0,
-      bustRate: (bustSnap['bustRate'] as num?)?.toDouble() ?? 0.0,
-      checkoutPercentage: (checkoutSnap['checkoutPercentage'] as num?)?.toDouble(),
-      highestCheckout: highestCheckoutSnap['highestCheckout'] as int?,
-      highestTurnScore: highestTurnSnap['highestTurnScore'] as int? ?? 0,
-      dartsPerLeg: (dartsPerLegSnap['dartsPerLeg'] as num?)?.toDouble() ?? 0.0,
-      winRate: (winSnap['winRate'] as num?)?.toDouble() ?? 0.0,
-      gamesWon: winSnap['gamesWon'] as int? ?? 0,
-      legsPlayed: legsSnap['legsPlayed'] as int? ?? 0,
-      legsWon: legsSnap['legsWon'] as int? ?? 0,
-      sixtyPlusTurns: bucketsSnap['sixtyPlusTurns'] as int? ?? 0,
-      oneHundredPlusTurns: bucketsSnap['oneHundredPlusTurns'] as int? ?? 0,
-      oneFortyPlusTurns: bucketsSnap['oneFortyPlusTurns'] as int? ?? 0,
-      oneEightyTurns: bucketsSnap['oneEightyTurns'] as int? ?? 0,
-      firstNinePpr: (firstNineSnap['firstNinePpr'] as num?)?.toDouble(),
-      bestLegPpr: (bestLegPprSnap['bestLegPpr'] as num?)?.toDouble(),
-      bestFirstNinePpr: (bestLegPprSnap['bestFirstNinePpr'] as num?)?.toDouble(),
-      avgCheckoutScore: (avgCheckoutSnap['avgCheckoutScore'] as num?)?.toDouble(),
-      bestGameCheckoutPercentage:
-          (bestGameCoSnap['bestGameCheckoutPercentage'] as num?)?.toDouble(),
+      inStrategy: inStrategy,
+      outStrategy: outStrategy,
+      atcVariant: atcVariant,
     );
   }
 
@@ -1246,386 +1108,6 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     }
   }
 
-  // ── Practice statistics ────────────────────────────────────────────────────
-
-  PlayerStats _buildPracticePlayerStats(
-    String playerId,
-    GameType gameType,
-    List<Map<String, dynamic>> games,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    return switch (gameType) {
-      GameType.aroundTheClock =>
-          _computeAtcStats(playerId, games, events, totalGames, totalDartsThrown),
-      GameType.bobs27 =>
-          _computeBobs27Stats(playerId, events, totalGames, totalDartsThrown),
-      GameType.shanghai =>
-          _computeShanghaiStats(playerId, events, totalGames, totalDartsThrown),
-      GameType.catch40 =>
-          _computeCatch40Stats(playerId, events, totalGames, totalDartsThrown),
-      GameType.checkoutPractice =>
-          _computeCheckoutStats(playerId, events, totalGames, totalDartsThrown),
-      _ => throw ArgumentError('Not a practice game type: $gameType'),
-    };
-  }
-
-  PlayerStats _emptyPracticeStats(String playerId, GameType gameType, int totalGames) =>
-      PlayerStats(
-        playerId: playerId,
-        gameType: gameType,
-        totalGames: totalGames,
-        gamesWon: 0,
-        winRate: 0.0,
-        threeDartAverage: 0.0,
-        highestTurnScore: 0,
-        totalDartsThrown: 0,
-        dartsPerLeg: 0.0,
-        bustRate: 0.0,
-      );
-
-  // Around the Clock
-  PlayerStats _computeAtcStats(
-    String playerId,
-    List<Map<String, dynamic>> games,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    // Read variant from the first game's config_json (or latest)
-    String variant = 'standard';
-    if (games.isNotEmpty) {
-      final configJson = games.first['config_json'] as String?;
-      if (configJson != null) {
-        try {
-          final cfg = jsonDecode(configJson) as Map<String, dynamic>;
-          variant = cfg['variant'] as String? ?? 'standard';
-        } catch (_) {}
-      }
-    }
-
-    int totalDartsAtTargets = 0;
-    int totalHits = 0;
-    int completions = 0;
-    int totalTurnsForCompletions = 0;
-    int? bestTurns;
-    final Map<int, int> segHits = {};
-    final Map<int, int> segAttempts = {};
-
-    // Per-game state
-    int currentTarget = 1;
-    int gameTurns = 0;
-    bool inPlayerTurn = false;
-
-    for (final event in events) {
-      switch (event.eventType) {
-        case 'TurnStarted':
-          inPlayerTurn = true;
-          gameTurns++;
-        case 'DartThrown':
-          if (!inPlayerTurn) break;
-          final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
-          final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-          if (currentTarget <= 20) {
-            totalDartsAtTargets++;
-            segAttempts[currentTarget] = (segAttempts[currentTarget] ?? 0) + 1;
-            final hit = variant == 'doublesOnly'
-                ? (seg == currentTarget && mult == 2)
-                : (seg == currentTarget);
-            if (hit) {
-              totalHits++;
-              segHits[currentTarget] = (segHits[currentTarget] ?? 0) + 1;
-              currentTarget++;
-            }
-          }
-        case 'TurnEnded':
-          inPlayerTurn = false;
-        case 'LegCompleted':
-          // ATC leg completed = drill done
-          if (currentTarget > 20) {
-            completions++;
-            totalTurnsForCompletions += gameTurns;
-            if (bestTurns == null || gameTurns < bestTurns) {
-              bestTurns = gameTurns;
-            }
-          }
-          currentTarget = 1;
-          gameTurns = 0;
-          inPlayerTurn = false;
-        case 'GameCompleted':
-          // ATC is a 1-leg practice game: GameCompleted signals drill completion
-          // (LegCompleted is never emitted when legsToWin==1)
-          if (currentTarget > 20) {
-            completions++;
-            totalTurnsForCompletions += gameTurns;
-            if (bestTurns == null || gameTurns < bestTurns) {
-              bestTurns = gameTurns;
-            }
-          }
-          currentTarget = 1;
-          gameTurns = 0;
-          inPlayerTurn = false;
-      }
-    }
-
-    final hitRate = totalDartsAtTargets > 0 ? totalHits / totalDartsAtTargets : null;
-    final avgTurns = completions > 0 ? totalTurnsForCompletions / completions : null;
-
-    return _emptyPracticeStats(playerId, GameType.aroundTheClock, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
-      atcCompletions: completions,
-      atcHitRate: hitRate,
-      atcAvgTurns: avgTurns,
-      atcBestTurns: bestTurns,
-      atcSegmentHits: segHits,
-      atcSegmentAttempts: segAttempts,
-    );
-  }
-
-  // Bob's 27
-  PlayerStats _computeBobs27Stats(
-    String playerId,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    int totalScore = 0;
-    int? bestScore;
-    int completedGames = 0;
-    int successfulCompletions = 0; // score > 0 at end
-    int doubleAttempts = 0;
-    int doubleHits = 0;
-
-    int currentRound = 1;
-    int currentScore = 27;
-    int turnDoubleHits = 0;
-    bool inPlayerTurn = false;
-
-    for (final event in events) {
-      final epid = event.payload['player_id'] as String?;
-      switch (event.eventType) {
-        case 'TurnStarted':
-          if (epid != playerId) break;
-          inPlayerTurn = true;
-          turnDoubleHits = 0;
-        case 'DartThrown':
-          if (!inPlayerTurn || epid != playerId) break;
-          final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
-          final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-          if (mult == 2) {
-            doubleAttempts++;
-            if (seg == currentRound) {
-              doubleHits++;
-              turnDoubleHits++;
-            }
-          }
-        case 'TurnEnded':
-          if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          // Apply Bob's 27 scoring: each double hit of currentRound = currentRound * 2
-          // Miss all: score -= currentRound * 2
-          if (turnDoubleHits > 0) {
-            currentScore += turnDoubleHits * currentRound * 2;
-          } else {
-            currentScore -= currentRound * 2;
-          }
-          currentRound++;
-        case 'LegCompleted':
-          completedGames++;
-          if (currentScore > 0) {
-            successfulCompletions++;
-            totalScore += currentScore;
-            if (bestScore == null || currentScore > bestScore) {
-              bestScore = currentScore;
-            }
-          }
-          // Reset for next drill
-          currentRound = 1;
-          currentScore = 27;
-          inPlayerTurn = false;
-        case 'GameCompleted':
-          currentRound = 1;
-          currentScore = 27;
-          inPlayerTurn = false;
-      }
-    }
-
-    final avgScore = successfulCompletions > 0 ? totalScore / successfulCompletions : null;
-    final completionRate = completedGames > 0 ? successfulCompletions / completedGames : null;
-    final doubleHitRate = doubleAttempts > 0 ? doubleHits / doubleAttempts : null;
-
-    return _emptyPracticeStats(playerId, GameType.bobs27, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
-      bobs27AvgScore: avgScore,
-      bobs27BestScore: bestScore,
-      bobs27CompletionRate: completionRate,
-      bobs27DoubleHitRate: doubleHitRate,
-    );
-  }
-
-  // Shanghai
-  PlayerStats _computeShanghaiStats(
-    String playerId,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    int shanghaiCount = 0;
-    int scoreAcc = 0;
-    int gamesCompleted = 0;
-    int totalScore = 0;
-    int? bestScore;
-
-    int currentRound = 1;
-    bool inPlayerTurn = false;
-    final Set<int> turnMultipliers = {}; // for Shanghai detection (all 3 mults in one turn)
-
-    for (final event in events) {
-      final epid = event.payload['player_id'] as String?;
-      switch (event.eventType) {
-        case 'TurnStarted':
-          if (epid != playerId) break;
-          inPlayerTurn = true;
-          turnMultipliers.clear();
-        case 'DartThrown':
-          if (epid != playerId) break;
-          final score = (event.payload['score'] as num?)?.toInt() ?? 0;
-          scoreAcc += score;
-          if (inPlayerTurn) {
-            final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
-            final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-            if (seg == currentRound) turnMultipliers.add(mult);
-          }
-        case 'TurnEnded':
-          if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          if (turnMultipliers.containsAll({1, 2, 3})) shanghaiCount++;
-          currentRound++;
-        case 'LegCompleted':
-          gamesCompleted++;
-          totalScore += scoreAcc;
-          if (bestScore == null || scoreAcc > bestScore) bestScore = scoreAcc;
-          scoreAcc = 0;
-          currentRound = 1;
-          inPlayerTurn = false;
-        case 'GameCompleted':
-          scoreAcc = 0;
-          currentRound = 1;
-          inPlayerTurn = false;
-      }
-    }
-
-    final avgScore = gamesCompleted > 0 ? totalScore / gamesCompleted : null;
-
-    return _emptyPracticeStats(playerId, GameType.shanghai, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
-      shanghaiAvgScore: avgScore,
-      shanghaiBestScore: bestScore,
-      shanghaiCount: shanghaiCount,
-    );
-  }
-
-  // Catch-40
-  PlayerStats _computeCatch40Stats(
-    String playerId,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    int totalScore = 0;
-    int? bestScore;
-    int gamesCompleted = 0;
-    int twoDart = 0;
-    int threeDart = 0;
-    int fourSixDart = 0;
-    int failed = 0;
-
-    int gameScore = 0;
-    int turnDarts = 0;
-    bool inPlayerTurn = false;
-
-    for (final event in events) {
-      final epid = event.payload['player_id'] as String?;
-      switch (event.eventType) {
-        case 'TurnStarted':
-          if (epid != playerId) break;
-          inPlayerTurn = true;
-          turnDarts = 0;
-        case 'DartThrown':
-          if (!inPlayerTurn || epid != playerId) break;
-          final score = (event.payload['score'] as num?)?.toInt() ?? 0;
-          gameScore += score;
-          turnDarts++;
-        case 'TurnEnded':
-          if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          // Classify checkout by turn dart count
-          final reason = event.payload['reason'] as String?;
-          if (reason == 'checkout') {
-            if (turnDarts == 2) twoDart++;
-            else if (turnDarts == 3) threeDart++;
-            else if (turnDarts >= 4 && turnDarts <= 6) fourSixDart++;
-          } else if (reason == 'failed') {
-            failed++;
-          }
-        case 'LegCompleted':
-          gamesCompleted++;
-          totalScore += gameScore;
-          if (bestScore == null || gameScore > bestScore) bestScore = gameScore;
-          gameScore = 0;
-          inPlayerTurn = false;
-        case 'GameCompleted':
-          gameScore = 0;
-          inPlayerTurn = false;
-      }
-    }
-
-    final avgScore = gamesCompleted > 0 ? totalScore / gamesCompleted : null;
-
-    return _emptyPracticeStats(playerId, GameType.catch40, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
-      catch40AvgScore: avgScore,
-      catch40BestScore: bestScore,
-      catch40TwoDartCheckouts: twoDart,
-      catch40ThreeDartCheckouts: threeDart,
-      catch40FourSixDartCheckouts: fourSixDart,
-      catch40FailedCheckouts: failed,
-    );
-  }
-
-  // Checkout Practice
-  PlayerStats _computeCheckoutStats(
-    String playerId,
-    List<GameEvent> events,
-    int totalGames,
-    int totalDartsThrown,
-  ) {
-    int attempts = 0;
-    int successes = 0;
-
-    for (final event in events) {
-      final epid = event.payload['player_id'] as String?;
-      if (epid != playerId) continue;
-      switch (event.eventType) {
-        case 'TurnEnded':
-          attempts++;
-          final reason = event.payload['reason'] as String?;
-          if (reason == 'checkout') successes++;
-        default:
-          break;
-      }
-    }
-
-    final successRate = attempts > 0 ? successes / attempts : null;
-
-    return _emptyPracticeStats(playerId, GameType.checkoutPractice, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
-      checkoutAttempts: attempts,
-      checkoutSuccesses: successes,
-      checkoutSuccessRate: successRate,
-    );
-  }
 
   // Helper method to calculate bust rate
   Future<double> _calculateBustRate(String playerId, GameType? gameType, {String? gameId}) async {
