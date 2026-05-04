@@ -89,7 +89,7 @@ curl -L -o web/sqlite3.wasm \
   "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-v<VERSION>/sqlite3.wasm"
 ```
 
-Missing any of these files causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting (note: `BUILD.md` still says `drift_worker.dart` is checked in — that's stale since the `web/` cleanup).
+Missing any of these files causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting.
 
 ---
 

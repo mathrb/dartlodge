@@ -25,7 +25,14 @@ Flutter Web is the primary development and debug target. Game logic and UI behav
 
 ### One-time web asset setup
 
-The web build requires two files that are **not** produced by `flutter build web` automatically. They must be present in `web/` before building, after which the build copies them into `build/web/` automatically.
+`web/` is gitignored, so a fresh clone has no `web/` directory at all. Scaffold it once per machine, then build the two assets that `flutter build web` does **not** produce automatically. Once present in `web/`, the build copies them into `build/web/` automatically.
+
+#### 0. Scaffold `web/` (fresh clone only)
+
+```bash
+flutter create --platforms=web .                  # creates web/index.html, manifest, icons
+printf "import 'package:drift/wasm.dart';\n\nvoid main() {\n  WasmDatabase.workerMainForOpen();\n}\n" > web/drift_worker.dart
+```
 
 #### 1. Compile the Drift web worker
 
@@ -33,7 +40,7 @@ The web build requires two files that are **not** produced by `flutter build web
 dart compile js -O4 -o web/drift_worker.dart.js web/drift_worker.dart
 ```
 
-`web/drift_worker.dart` is already checked into the repository. You only need to recompile it when the `drift` package version changes.
+You only need to recompile `web/drift_worker.dart` when the `drift` package version changes.
 
 #### 2. Download sqlite3.wasm
 
