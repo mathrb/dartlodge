@@ -70,6 +70,15 @@ Check the relevant spec before implementing. These are the source of truth.
 
 ### Web — one-time asset setup (required before first `flutter run`)
 
+`web/` is gitignored (like `android/`). Each dev scaffolds it once per machine:
+
+```bash
+flutter create --platforms=web .                  # scaffolds web/ (index.html, manifest, icons)
+printf "import 'package:drift/wasm.dart';\n\nvoid main() {\n  WasmDatabase.workerMainForOpen();\n}\n" > web/drift_worker.dart
+```
+
+Then build the two assets the Flutter web build does NOT produce automatically:
+
 ```bash
 # 1. Compile the Drift web worker (only needed when drift version changes)
 dart compile js -O4 -o web/drift_worker.dart.js web/drift_worker.dart
@@ -80,7 +89,7 @@ curl -L -o web/sqlite3.wasm \
   "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-v<VERSION>/sqlite3.wasm"
 ```
 
-Missing either file causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting.
+Missing any of these files causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting.
 
 ---
 
@@ -237,6 +246,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 **Spec edits:** When asked to update a spec or document, only edit that document — do not modify code files unless explicitly asked.
 
 **UI refactors:** After any widget redesign or UI refactor, update the corresponding test expectations in the same session before committing.
+
+**Navigation — `context.go()` vs `context.push()`:** `context.go()` REPLACES the entire route stack — Android's physical back button then has nothing to pop and exits the app. Use `context.push()` for any forward navigation that should be back-poppable (Home → Stats/History/Players/Settings, list → detail, etc.). Reserve `context.go()` for intentional stack resets: game completion → home, post-deletion redirects, deep-link landing pages. If a screen MUST be reached via `go()` (e.g. the variant selection flow), wrap its body in `PopScope(canPop: false, onPopInvokedWithResult: (didPop, _) { if (!didPop) context.go(GameRoutes.home); })` like `variant_selection_page.dart` does, so the Android back button still works.
 
 **Branch naming:** All work goes on a branch off `main` named `<type>/<slug>` where type ∈ {`feat`, `fix`, `docs`, `chore`, `hotfix`}. Slugs are short and dash-separated (`feat/cricket-stats-export`). Never commit directly to `main`.
 
