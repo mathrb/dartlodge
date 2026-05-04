@@ -70,6 +70,15 @@ Check the relevant spec before implementing. These are the source of truth.
 
 ### Web — one-time asset setup (required before first `flutter run`)
 
+`web/` is gitignored (like `android/`). Each dev scaffolds it once per machine:
+
+```bash
+flutter create --platforms=web .                  # scaffolds web/ (index.html, manifest, icons)
+printf "import 'package:drift/wasm.dart';\n\nvoid main() {\n  WasmDatabase.workerMainForOpen();\n}\n" > web/drift_worker.dart
+```
+
+Then build the two assets the Flutter web build does NOT produce automatically:
+
 ```bash
 # 1. Compile the Drift web worker (only needed when drift version changes)
 dart compile js -O4 -o web/drift_worker.dart.js web/drift_worker.dart
@@ -80,7 +89,7 @@ curl -L -o web/sqlite3.wasm \
   "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-v<VERSION>/sqlite3.wasm"
 ```
 
-Missing either file causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting.
+Missing any of these files causes a silent 404 that breaks the database provider. See `docs/BUILD.md` for full troubleshooting (note: `BUILD.md` still says `drift_worker.dart` is checked in — that's stale since the `web/` cleanup).
 
 ---
 
