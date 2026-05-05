@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
-import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -17,6 +16,7 @@ import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
+import '../widgets/pulsing_next_button_widget.dart';
 
 enum _DrillAction { resetDrill, endDrill }
 
@@ -394,6 +394,7 @@ class PracticeBoardPage extends ConsumerWidget {
                     (gs.catch40TargetRemaining == 0 ||
                         gs.catch40DartsOnTarget >= 6) &&
                     !gs.isComplete,
+                pulseNext: !gs.isComplete && !gs.turnActive,
                 onUndo: notifier.undoDart,
                 onNextRound: notifier.startNextTurn,
                 onEndDrill: notifier.endDrill,
@@ -496,6 +497,7 @@ class _BottomBar extends StatelessWidget {
     required this.gameType,
     required this.canUndo,
     required this.showNextRound,
+    required this.pulseNext,
     required this.onUndo,
     required this.onNextRound,
     required this.onEndDrill,
@@ -506,6 +508,7 @@ class _BottomBar extends StatelessWidget {
   final bool canUndo;
   final bool showNextRound;
   final bool showNextTarget;
+  final bool pulseNext;
   final VoidCallback onUndo;
   final Future<void> Function() onNextRound;
   final Future<void> Function() onEndDrill;
@@ -558,23 +561,10 @@ class _BottomBar extends StatelessWidget {
             const SizedBox(width: 10),
             // Next — wide primary neon button
             Expanded(
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: cs.primaryFixed,
-                  foregroundColor: AppColors.onPrimaryFixed,
-                  disabledBackgroundColor:
-                      cs.primaryFixed.withValues(alpha: AppTheme.opacityDisabled),
-                  disabledForegroundColor:
-                      AppColors.onPrimaryFixed.withValues(alpha: AppTheme.opacityDisabled),
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusMedium),
-                  ),
-                ),
+              child: PulsingNextButtonWidget(
+                label: nextLabel,
                 onPressed: onNext,
-                icon: const Icon(Icons.arrow_forward, semanticLabel: ''),
-                label: Text(nextLabel),
+                pulse: pulseNext,
               ),
             ),
           ],

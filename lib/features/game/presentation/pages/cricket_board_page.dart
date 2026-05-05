@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
-import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
@@ -15,6 +14,7 @@ import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
+import '../widgets/pulsing_next_button_widget.dart';
 
 class CricketBoardPage extends ConsumerStatefulWidget {
   const CricketBoardPage({required this.gameId, super.key});
@@ -223,6 +223,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 canNext: canNext,
                 isMultiplayer: gameState.competitors.length > 1,
                 dartsThrownInTurn: dartsThrownInTurn,
+                pulseNext: canNext && !gameState.turnActive,
                 onUndo: () => notifier.undoDart(),
                 onNextRound: () => notifier.nextPlayer(),
               ),
@@ -269,6 +270,7 @@ class _BottomActionBar extends StatelessWidget {
     required this.canNext,
     required this.isMultiplayer,
     required this.dartsThrownInTurn,
+    required this.pulseNext,
     required this.onUndo,
     required this.onNextRound,
   });
@@ -277,6 +279,7 @@ class _BottomActionBar extends StatelessWidget {
   final bool canNext;
   final bool isMultiplayer;
   final int dartsThrownInTurn;
+  final bool pulseNext;
   final VoidCallback onUndo;
   final VoidCallback onNextRound;
 
@@ -341,23 +344,10 @@ class _BottomActionBar extends StatelessWidget {
             const SizedBox(width: 10),
             // Next player / round — primary neon button
             Expanded(
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: cs.primaryFixed,
-                  foregroundColor: AppColors.onPrimaryFixed,
-                  disabledBackgroundColor:
-                      cs.primaryFixed.withValues(alpha: AppTheme.opacityDisabled),
-                  disabledForegroundColor:
-                      AppColors.onPrimaryFixed.withValues(alpha: AppTheme.opacityDisabled),
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusMedium),
-                  ),
-                ),
+              child: PulsingNextButtonWidget(
+                label: isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND',
                 onPressed: canNext ? handleAdvance : null,
-                icon: const Icon(Icons.arrow_forward, semanticLabel: ''),
-                label: Text(isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND'),
+                pulse: pulseNext,
               ),
             ),
           ],
