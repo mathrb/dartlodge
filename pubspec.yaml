@@ -39,6 +39,9 @@ dependencies:
   # Error monitoring
   sentry_flutter: ^9.16.1
 
+  # Screen wakelock
+  wakelock_plus: ^1.6.0
+
   # Settings / preferences
   shared_preferences: ^2.3.4
   package_info_plus: ">=8.1.4 <11.0.0"
