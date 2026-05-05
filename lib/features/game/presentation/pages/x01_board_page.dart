@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
@@ -35,6 +36,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     _bustFlashController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
@@ -57,6 +59,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     _bustFlashController.dispose();
     super.dispose();
   }

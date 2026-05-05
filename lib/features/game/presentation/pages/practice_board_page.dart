@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
@@ -20,14 +21,31 @@ import '../widgets/pulsing_next_button_widget.dart';
 
 enum _DrillAction { resetDrill, endDrill }
 
-class PracticeBoardPage extends ConsumerWidget {
+class PracticeBoardPage extends ConsumerStatefulWidget {
   const PracticeBoardPage({required this.gameId, super.key});
 
   final String gameId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final asyncState = ref.watch(activePracticeProvider(gameId));
+  ConsumerState<PracticeBoardPage> createState() => _PracticeBoardPageState();
+}
+
+class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
+  @override
+  void initState() {
+    super.initState();
+    WakelockPlus.enable();
+  }
+
+  @override
+  void dispose() {
+    WakelockPlus.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final asyncState = ref.watch(activePracticeProvider(widget.gameId));
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -37,7 +55,7 @@ class PracticeBoardPage extends ConsumerWidget {
         body: ErrorRetryWidget(
           title: 'Failed to load drill.',
           message: '$err',
-          onRetry: () => ref.invalidate(activePracticeProvider(gameId)),
+          onRetry: () => ref.invalidate(activePracticeProvider(widget.gameId)),
         ),
       ),
       data: (practiceState) {
@@ -56,7 +74,7 @@ class PracticeBoardPage extends ConsumerWidget {
         }
 
         final gs = practiceState.gameState;
-        final notifier = ref.read(activePracticeProvider(gameId).notifier);
+        final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
         final competitor = gs.competitors[gs.currentTurnIndex];
         final allDarts = competitor.dartThrows;
         final currentTurnDarts =
