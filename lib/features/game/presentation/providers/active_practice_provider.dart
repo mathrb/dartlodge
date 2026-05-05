@@ -8,12 +8,15 @@ import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_practice_state.dart';
 import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/constants.dart';
+import 'action_serializer.dart';
 import 'game_replay_provider.dart';
 
 part 'active_practice_provider.g.dart';
 
 @riverpod
 class ActivePracticeNotifier extends _$ActivePracticeNotifier {
+  final ActionSerializer _serializer = ActionSerializer();
+
   @override
   Future<ActivePracticeState?> build(String gameId) async {
     final gs = await ref.read(loadedGameStateProvider(gameId).future);
@@ -21,7 +24,10 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     return ActivePracticeState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) async {
+  Future<void> processDart(String segment) =>
+      _serializer.run(() => _processDartImpl(segment));
+
+  Future<void> _processDartImpl(String segment) async {
     final current = state.value;
     if (current == null) return;
 
@@ -93,7 +99,9 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         gs.competitors.any((c) => c.dartThrows.isNotEmpty);
   }
 
-  Future<void> undoDart() async {
+  Future<void> undoDart() => _serializer.run(_undoDartImpl);
+
+  Future<void> _undoDartImpl() async {
     if (!canUndo) return;
     final current = state.value;
     if (current == null) return;
@@ -208,7 +216,9 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     return current;
   }
 
-  Future<void> startNextTurn() async {
+  Future<void> startNextTurn() => _serializer.run(_startNextTurnImpl);
+
+  Future<void> _startNextTurnImpl() async {
     final current = state.value;
     if (current == null) return;
     final gs = current.gameState;
@@ -237,7 +247,9 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     await future;
   }
 
-  Future<void> endDrill() async {
+  Future<void> endDrill() => _serializer.run(_endDrillImpl);
+
+  Future<void> _endDrillImpl() async {
     final current = state.value;
     if (current == null) return;
 

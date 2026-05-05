@@ -8,12 +8,15 @@ import '../../domain/models/game_state.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_cricket_game_state.dart';
 import '../../../../core/persistence/database_provider.dart';
+import 'action_serializer.dart';
 import 'game_replay_provider.dart';
 
 part 'active_cricket_game_provider.g.dart';
 
 @riverpod
 class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
+  final ActionSerializer _serializer = ActionSerializer();
+
   @override
   Future<ActiveCricketGameState?> build(String gameId) async {
     final gs = await ref.read(loadedGameStateProvider(gameId).future);
@@ -21,7 +24,10 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     return ActiveCricketGameState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) async {
+  Future<void> processDart(String segment) =>
+      _serializer.run(() => _processDartImpl(segment));
+
+  Future<void> _processDartImpl(String segment) async {
     final current = state.value;
     if (current == null) return;
 
@@ -70,7 +76,9 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
         gs.competitors.any((c) => c.dartThrows.isNotEmpty);
   }
 
-  Future<void> undoDart() async {
+  Future<void> undoDart() => _serializer.run(_undoDartImpl);
+
+  Future<void> _undoDartImpl() async {
     if (!canUndo) return;
     final current = state.value;
     if (current == null) return;
@@ -91,7 +99,9 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
   }
 
-  Future<void> nextPlayer() async {
+  Future<void> nextPlayer() => _serializer.run(_nextPlayerImpl);
+
+  Future<void> _nextPlayerImpl() async {
     final current = state.value;
     if (current == null) return;
     var updated = current.gameState;
@@ -241,7 +251,10 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   /// Finalizes an ambiguous round-cap leg after the UI picks a winner. Emits
   /// a synthetic LegCompleted through the engine so Table J / K / L fire
   /// uniformly.
-  Future<void> selectCapWinner(String competitorId) async {
+  Future<void> selectCapWinner(String competitorId) =>
+      _serializer.run(() => _selectCapWinnerImpl(competitorId));
+
+  Future<void> _selectCapWinnerImpl(String competitorId) async {
     final current = state.value;
     if (current == null || !current.pendingCapSelection) return;
     final gs = current.gameState;

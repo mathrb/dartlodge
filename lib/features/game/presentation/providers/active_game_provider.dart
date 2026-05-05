@@ -7,12 +7,15 @@ import '../../domain/models/game_config.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_game_state.dart';
 import '../../../../core/persistence/database_provider.dart';
+import 'action_serializer.dart';
 import 'game_replay_provider.dart';
 
 part 'active_game_provider.g.dart';
 
 @riverpod
 class ActiveGameNotifier extends _$ActiveGameNotifier {
+  final ActionSerializer _serializer = ActionSerializer();
+
   @override
   Future<ActiveGameState?> build(String gameId) async {
     final gs = await ref.read(loadedGameStateProvider(gameId).future);
@@ -20,7 +23,10 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
     return ActiveGameState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) async {
+  Future<void> processDart(String segment) =>
+      _serializer.run(() => _processDartImpl(segment));
+
+  Future<void> _processDartImpl(String segment) async {
     final current = state.value;
     if (current == null) return;
 
@@ -206,7 +212,10 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
   /// Finalizes an ambiguous round-cap leg after the UI picks a winner. Emits
   /// a synthetic LegCompleted through the engine so Table J / K / L fire
   /// uniformly.
-  Future<void> selectCapWinner(String competitorId) async {
+  Future<void> selectCapWinner(String competitorId) =>
+      _serializer.run(() => _selectCapWinnerImpl(competitorId));
+
+  Future<void> _selectCapWinnerImpl(String competitorId) async {
     final current = state.value;
     if (current == null || !current.pendingCapSelection) return;
     final gs = current.gameState;
@@ -286,7 +295,9 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
         gs.competitors.any((c) => c.dartThrows.isNotEmpty);
   }
 
-  Future<void> undoDart() async {
+  Future<void> undoDart() => _serializer.run(_undoDartImpl);
+
+  Future<void> _undoDartImpl() async {
     if (!canUndo) return;
     final current = state.value;
     if (current == null) return;
@@ -307,12 +318,14 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
     state = state.whenData((s) => s?.copyWith(pendingLegWinnerId: null));
   }
 
-  Future<void> advanceTurn() async {
+  Future<void> advanceTurn() => _serializer.run(_advanceTurnImpl);
+
+  Future<void> _advanceTurnImpl() async {
     dismissBust();
     dismissLegModal();
     var gs = state.value?.gameState;
     while (gs != null && gs.turnActive) {
-      await processDart('MISS');
+      await _processDartImpl('MISS');
       gs = state.value?.gameState;
     }
     await _startNextTurn();

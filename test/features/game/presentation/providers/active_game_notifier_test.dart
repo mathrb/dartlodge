@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
@@ -549,5 +550,47 @@ void main() {
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
       endTime: anyNamed('endTime'),
     ));
+  });
+
+  // ── Regression: rapid concurrent processDart calls do not collide on
+  //    local_sequence (issue #98). The mock simulates the
+  //    (game_id, local_sequence) unique constraint — without serialization,
+  //    two concurrent calls both read getLatestSequence=N and both try to
+  //    write N+1, raising SequenceConflictException.
+  test('concurrent processDart calls do not collide on local_sequence',
+      () async {
+    final accepted = <int>{1}; // TurnStarted at seq=1 from build
+    int currentMax = 1;
+
+    when(mockEventRepo.getLatestSequence('g1'))
+        .thenAnswer((_) async => currentMax);
+    when(mockEventRepo.appendEvents(any)).thenAnswer((inv) async {
+      final events = inv.positionalArguments[0] as List<GameEvent>;
+      for (final e in events) {
+        if (accepted.contains(e.localSequence)) {
+          throw SequenceConflictException(e.gameId, e.localSequence);
+        }
+        accepted.add(e.localSequence);
+        if (e.localSequence > currentMax) currentMax = e.localSequence;
+      }
+    });
+
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeGameProvider('g1').future);
+
+    final notifier = container.read(activeGameProvider('g1').notifier);
+    final futures = [
+      notifier.processDart('1'),
+      notifier.processDart('1'),
+      notifier.processDart('1'),
+    ];
+
+    await Future.wait(futures);
+
+    expect(accepted.containsAll({2, 3, 4}), isTrue,
+        reason: 'expected sequences 2, 3, 4 — got $accepted');
+    final s = container.read(activeGameProvider('g1')).value!;
+    expect(s.gameState.competitors[0].score, 37); // 40 - 1 - 1 - 1
+    expect(s.gameState.dartsThrownInTurn, 3);
   });
 }
