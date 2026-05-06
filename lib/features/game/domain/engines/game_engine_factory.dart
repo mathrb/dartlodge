@@ -6,6 +6,7 @@ import 'stateless_bobs_27_engine.dart';
 import 'stateless_shanghai_engine.dart';
 import 'stateless_catch_40_engine.dart';
 import 'stateless_checkout_practice_engine.dart';
+import 'stateless_count_up_engine.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 
 /// Game Engine Factory
@@ -28,6 +29,8 @@ class GameEngineFactory {
         return StatelessCatch40Engine();
       case GameType.checkoutPractice:
         return StatelessCheckoutPracticeEngine();
+      case GameType.countUp:
+        return StatelessCountUpEngine();
       default:
         throw GameEngineException('Game type $gameType not supported');
     }
@@ -43,6 +46,7 @@ class GameEngineFactory {
       GameType.shanghai,
       GameType.catch40,
       GameType.checkoutPractice,
+      GameType.countUp,
     ];
   }
   
