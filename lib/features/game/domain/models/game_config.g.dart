@@ -277,3 +277,23 @@ Map<String, dynamic> _$CheckoutPracticeGameConfigToJson(
   'targetSuccesses': instance.targetSuccesses,
   'runtimeType': instance.$type,
 };
+
+CountUpGameConfig _$CountUpGameConfigFromJson(Map<String, dynamic> json) =>
+    CountUpGameConfig(
+      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? 8,
+      handicaps:
+          (json['handicaps'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          const <String, int>{},
+      startingPlayerId: json['startingPlayerId'] as String? ?? null,
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$CountUpGameConfigToJson(CountUpGameConfig instance) =>
+    <String, dynamic>{
+      'totalRounds': instance.totalRounds,
+      'handicaps': instance.handicaps,
+      'startingPlayerId': instance.startingPlayerId,
+      'runtimeType': instance.$type,
+    };

@@ -150,6 +150,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       catch40: (_) => [],
       bobs27: (_) => [],
       checkoutPractice: _buildCheckoutPracticeFields,
+      countUp: (_) => [],
     );
   }
 

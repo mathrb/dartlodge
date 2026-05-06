@@ -85,6 +85,18 @@ abstract class GameConfig with _$GameConfig {
     @Default(null) int? targetSuccesses,
   }) = CheckoutPracticeGameConfig;
 
+  /// Count-Up: multi-player score-accumulation game.
+  /// See `docs/games/count-up.md` for the authoritative spec.
+  ///
+  /// `totalRounds` ∈ {8, 12, 16, 20}; default 8.
+  /// `handicaps` is keyed by **competitorId**; values ∈ {0, 50, 100, 150, 200}.
+  /// Players omitted from the map start at 0.
+  const factory GameConfig.countUp({
+    @Default(8) int totalRounds,
+    @Default(<String, int>{}) Map<String, int> handicaps,
+    @Default(null) String? startingPlayerId,
+  }) = CountUpGameConfig;
+
   factory GameConfig.fromJson(Map<String, dynamic> json) => _$GameConfigFromJson(json);
 }
 

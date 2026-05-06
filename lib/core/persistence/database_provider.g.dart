@@ -216,7 +216,7 @@ final class GameRepositoryProvider
   }
 }
 
-String _$gameRepositoryHash() => r'f88c7b025f6036dda181931bd50275bdc959ba09';
+String _$gameRepositoryHash() => r'a63440ae9531761276c9a280406d5d6435f1bcbe';
 
 @ProviderFor(dartThrowRepository)
 final dartThrowRepositoryProvider = DartThrowRepositoryProvider._();
@@ -264,7 +264,7 @@ final class DartThrowRepositoryProvider
 }
 
 String _$dartThrowRepositoryHash() =>
-    r'ac0c7b6b56eda8ae6fcb1f6286e16b456c02f5e9';
+    r'8e04ae46e616574db7b6238f3eac4f07642a3cc4';
 
 @ProviderFor(gameEventRepository)
 final gameEventRepositoryProvider = GameEventRepositoryProvider._();
@@ -312,7 +312,7 @@ final class GameEventRepositoryProvider
 }
 
 String _$gameEventRepositoryHash() =>
-    r'4df835353ade6d736302176a3d5292ef5470f45b';
+    r'478ed6d77c806f08c3ba840f2e6fae49f1a37f17';
 
 @ProviderFor(computeLegStatsUseCase)
 final computeLegStatsUseCaseProvider = ComputeLegStatsUseCaseProvider._();
@@ -408,7 +408,7 @@ final class StatisticsRepositoryProvider
 }
 
 String _$statisticsRepositoryHash() =>
-    r'697dbc2d293598ca5117bf9a3695590b74bd9216';
+    r'f3a63d8c85ace8b322df885c2acc0efb1fc868b9';
 
 @ProviderFor(x01Engine)
 final x01EngineProvider = X01EngineProvider._();

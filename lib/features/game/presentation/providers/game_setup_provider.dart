@@ -283,6 +283,9 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         GameType.catch40          => const GameConfig.catch40(startingPlayerId: ''),
         GameType.bobs27           => const GameConfig.bobs27(startingPlayerId: ''),
         GameType.checkoutPractice => const GameConfig.checkoutPractice(startingPlayerId: ''),
+        GameType.countUp          => const GameConfig.countUp(
+            totalRounds: GameConfigurationConstants.countUpDefaultRounds,
+          ),
       };
 
   static GameType _gameTypeFor(GameConfig config) => config.map(
@@ -304,5 +307,6 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         catch40: (_) => GameType.catch40,
         bobs27: (_) => GameType.bobs27,
         checkoutPractice: (_) => GameType.checkoutPractice,
+        countUp: (_) => GameType.countUp,
       );
 }

@@ -51,7 +51,7 @@ final class ActiveGameNotifierProvider
 }
 
 String _$activeGameNotifierHash() =>
-    r'7614ba860ea8a84760b5b158f6c2c94980ca055a';
+    r'041595152be50f7890ffce20081933e0ec49abc1';
 
 final class ActiveGameNotifierFamily extends $Family
     with

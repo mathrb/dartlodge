@@ -70,6 +70,8 @@ class GameSummaryCardWidget extends StatelessWidget {
         return "Bob's 27";
       case GameType.checkoutPractice:
         return 'Checkout Practice';
+      case GameType.countUp:
+        return 'Count-Up';
     }
   }
 

@@ -34,6 +34,7 @@ abstract class GameState with _$GameState {
     @Default(0) int catch40TargetRemaining,
     @Default(0) int catch40DartsOnTarget,
     int? checkoutTargetSuccesses,
+    int? countUpTotalRounds,
   }) = _GameState;
 
   factory GameState.fromJson(Map<String, dynamic> json) => _$GameStateFromJson(json);
@@ -75,6 +76,8 @@ abstract class GameState with _$GameState {
       startingScore = 27;
     } else if (game.config is CheckoutPracticeGameConfig) {
       startingScore = 170;
+    } else if (game.config is CountUpGameConfig) {
+      startingScore = 0;
     } else {
       startingScore = 0;
     }
@@ -87,7 +90,9 @@ abstract class GameState with _$GameState {
 
     final Map<String, int> handicaps = game.config is X01GameConfig
         ? (game.config as X01GameConfig).handicaps
-        : const {};
+        : game.config is CountUpGameConfig
+            ? (game.config as CountUpGameConfig).handicaps
+            : const {};
 
     // Convert competitors to competitor states
     final competitorStates = competitors.map((competitor) {
@@ -139,6 +144,9 @@ abstract class GameState with _$GameState {
       catch40TargetRemaining: catch40TargetRemaining,
       catch40DartsOnTarget: 0,
       checkoutTargetSuccesses: checkoutTargetSuccesses,
+      countUpTotalRounds: game.config is CountUpGameConfig
+          ? (game.config as CountUpGameConfig).totalRounds
+          : null,
     );
   }
 }
