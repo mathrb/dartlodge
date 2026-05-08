@@ -24,6 +24,7 @@ Future<GameState?> loadedGameState(Ref ref, String gameId) async {
     GameType.shanghai: ref.read(shanghaiEngineProvider),
     GameType.catch40: ref.read(catch40EngineProvider),
     GameType.checkoutPractice: ref.read(checkoutPracticeEngineProvider),
+    GameType.countUp: ref.read(countUpEngineProvider),
   };
 
   final game = await gameRepo.getGame(gameId);
