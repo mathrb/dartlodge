@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_cricket_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
@@ -285,6 +286,7 @@ void main() {
       expect(correctionEvent.eventType, 'DartCorrected');
       expect(correctionEvent.payload['original_event_id'], 'dt1');
       expect(correctionEvent.payload['corrected_dart_id'], 'dt1');
+      expect(correctionEvent.payload['superseded_event_ids'], isEmpty);
     });
 
     test('deleteDart is called with the correct dartId', () async {
@@ -370,6 +372,173 @@ void main() {
       final stateAfterSecond = await useCase.execute(state);
       expect(stateAfterSecond.competitors[0].score, 501);
       expect(stateAfterSecond.dartsThrownInTurn, 0);
+    });
+  });
+
+  // ── regression: issue #108 ────────────────────────────────────────────────
+
+  group('Issue #108 — undo across turn boundary does not transfer marks',
+      () {
+    // Cricket no-score, 2 players, legsToWin=1.
+    //
+    // Scenario from the bug report:
+    //   1) Player A throws 20, 20, 20.
+    //   2) Press next player.
+    //   3) Player B hits 19.
+    //   4) Undo (removes B's 19).
+    //   5) Undo (removes A's third 20).
+    //   6) Player A throws 20.
+    //   7) Press next player.
+    //   8) Player B hits 19.
+    //   9) Undo.
+    //
+    // Expected: A has 3 marks on 20, B has 0 marks on 20.
+    // Pre-fix: A had 2 marks on 20, B had 1 mark on 20 — the third 20 thrown
+    // in step 6 was attributed to B because the stale TurnStarted from
+    // step 2 (now superseded by the step-5 undo) was being re-applied
+    // during the step-9 replay, shifting currentTurnIndex to B.
+
+    GameState _cricketState() {
+      return GameState(
+        gameId: 'cg',
+        gameType: GameType.cricket,
+        competitors: [
+          CompetitorState(
+            competitorId: 'cA',
+            name: 'A',
+            playerIds: const ['pA'],
+            score: 0,
+            isIn: true,
+          ),
+          CompetitorState(
+            competitorId: 'cB',
+            name: 'B',
+            playerIds: const ['pB'],
+            score: 0,
+            isIn: true,
+          ),
+        ],
+        currentTurnIndex: 0,
+        dartsThrownInTurn: 0,
+        isComplete: false,
+        status: GameEngineStatus.inProgress,
+        turnActive: true,
+        legsToWin: 1,
+        startingScore: 0,
+        cricketVariant: 'no-score',
+      );
+    }
+
+    GameEvent _ev(
+      String id,
+      String type,
+      int seq, [
+      Map<String, dynamic> payload = const {},
+    ]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'cg',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, String competitorId, int segment) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': competitorId,
+          'segment': segment,
+          'multiplier': 1,
+          'input_method': 'manual',
+        });
+
+    test(
+        'third undo (after re-throw) attributes new mark to A, not B',
+        () async {
+      final cricketEngine = StatelessCricketEngine();
+      final cricketUseCase =
+          UndoLastDartUseCase(mockEventRepo, mockDartRepo, cricketEngine);
+
+      // Mutable event log the mock returns; each undo appends to it via
+      // [appendEvent]'s side effect so the next undo sees prior corrections.
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'cricket',
+          'rules_payload': {},
+          'competitors': ['cA', 'cB'],
+        }),
+        _ev('tsA1', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('dA1', 3, 'cA', 20),
+        _dart('dA2', 4, 'cA', 20),
+        _dart('dA3', 5, 'cA', 20),
+        _ev('teA1', 'TurnEnded', 6, {'competitor_id': 'cA'}),
+        _ev('tsB1', 'TurnStarted', 7,
+            {'competitor_id': 'cB', 'turn_index': 1, 'leg_index': 0}),
+        _dart('dB1', 8, 'cB', 19),
+      ];
+
+      when(mockEventRepo.getEventsForGame('cg'))
+          .thenAnswer((_) async => List.of(events));
+      when(mockEventRepo.getLatestSequence('cg'))
+          .thenAnswer((_) async => events.last.localSequence);
+      when(mockEventRepo.appendEvent(any))
+          .thenAnswer((invocation) async {
+        events.add(invocation.positionalArguments[0] as GameEvent);
+      });
+      when(mockDartRepo.deleteDart(any)).thenAnswer((_) async {});
+
+      // Step 4: First undo — removes B's 19.
+      var state = await cricketUseCase.execute(_cricketState());
+      final corr1 = events.last;
+      expect(corr1.eventType, 'DartCorrected');
+      expect(corr1.payload['original_event_id'], 'dB1');
+      expect(corr1.payload['superseded_event_ids'], isEmpty);
+      expect(state.competitors[0].marksPerNumber['20'], 3);
+      expect(state.competitors[1].marksPerNumber['19'] ?? 0, 0);
+
+      // Step 5: Second undo — removes A's third 20. The TurnEnded(A) and
+      // TurnStarted(B) bracketing the now-empty B turn must be persisted as
+      // superseded so future replays don't shift currentTurnIndex back to B.
+      state = await cricketUseCase.execute(state);
+      final corr2 = events.last;
+      expect(corr2.payload['original_event_id'], 'dA3');
+      expect(
+        (corr2.payload['superseded_event_ids'] as List).cast<String>(),
+        containsAll(<String>['teA1', 'tsB1']),
+      );
+      expect(state.competitors[0].marksPerNumber['20'], 2);
+      expect(state.currentTurnIndex, 0);
+      expect(state.dartsThrownInTurn, 2);
+
+      // Steps 6–8: A throws 20 (third mark), next player, B throws 19.
+      events.addAll(<GameEvent>[
+        _dart('dA4', 11, 'cA', 20),
+        _ev('teA2', 'TurnEnded', 12, {'competitor_id': 'cA'}),
+        _ev('tsB2', 'TurnStarted', 13,
+            {'competitor_id': 'cB', 'turn_index': 1, 'leg_index': 0}),
+        _dart('dB2', 14, 'cB', 19),
+      ]);
+
+      // Step 9: Third undo — removes B's 19. The regression: replay must
+      // honour the persisted superseded ids so DA4 is attributed to A and
+      // does NOT bleed onto B's marks.
+      // State passed to undo only matters for guards; replay rebuilds it.
+      final stateBeforeUndo = state.copyWith(
+        currentTurnIndex: 1,
+        dartsThrownInTurn: 1,
+      );
+      state = await cricketUseCase.execute(stateBeforeUndo);
+
+      expect(state.competitors[0].marksPerNumber['20'], 3,
+          reason: 'A keeps all 3 marks on 20');
+      expect(state.competitors[1].marksPerNumber['20'] ?? 0, 0,
+          reason: 'B never hit 20 — must not inherit a mark from A');
+      expect(state.competitors[1].marksPerNumber['19'] ?? 0, 0,
+          reason: "B's 19 was undone");
     });
   });
 }

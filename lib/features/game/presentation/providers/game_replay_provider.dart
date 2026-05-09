@@ -38,8 +38,34 @@ Future<GameState?> loadedGameState(Ref ref, String gameId) async {
   final competitors = await gameRepo.getCompetitors(gameId);
   final events = await eventRepo.getEventsForGame(gameId);
 
+  // Build skip sets from DartCorrected events so undone darts and the
+  // turn-boundary events that bracketed them aren't re-applied on cold load.
+  // Without this, an undo that spans a turn boundary leaves a stale
+  // TurnStarted in the log; replaying it shifts currentTurnIndex and any
+  // later DartThrown gets attributed to the wrong competitor (issue #108).
+  final correctedDartIds = <String>{};
+  final supersededEventIds = <String>{};
+  for (final e in events) {
+    if (e.eventType != 'DartCorrected') continue;
+    final origId = e.payload['original_event_id'];
+    if (origId is String) correctedDartIds.add(origId);
+    final superseded = e.payload['superseded_event_ids'];
+    if (superseded is List) {
+      for (final id in superseded) {
+        if (id is String) supersededEventIds.add(id);
+      }
+    }
+  }
+
   var gs = GameState.initial(game, competitors);
   for (final event in events) {
+    if (event.eventType == 'DartThrown' &&
+        correctedDartIds.contains(event.eventId)) {
+      continue;
+    }
+    if (supersededEventIds.contains(event.eventId)) {
+      continue;
+    }
     gs = engine.apply(gs, event).state;
   }
   return gs;
