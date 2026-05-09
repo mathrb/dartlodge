@@ -44,6 +44,7 @@ String _configSummaryFor(GameConfig config) {
     catch40: (_) => 'Catch 40',
     bobs27: (_) => "Bob's 27",
     shanghai: (c) => 'Shanghai · ${c.totalRounds} Rounds',
+    countUp: (c) => 'Count-Up · ${c.totalRounds} Rounds',
     checkoutPractice: (_) => '170 Checkout',
     orElse: () => 'Game',
   );
