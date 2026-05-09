@@ -195,19 +195,28 @@ class GameSetupNotifier extends _$GameSetupNotifier {
       ));
     }
 
+    Map<String, int> handicapsByCompetitor() {
+      if (s.playerHandicaps.isEmpty) return const {};
+      final result = <String, int>{};
+      for (var i = 0; i < s.selectedPlayerIds.length; i++) {
+        final handicap = s.playerHandicaps[s.selectedPlayerIds[i]];
+        if (handicap != null && handicap != 0) {
+          result[competitors[i].competitorId] = handicap;
+        }
+      }
+      return result;
+    }
+
     final GameConfig finalConfig = s.config.maybeMap(
       x01: (x01) {
-        if (s.playerHandicaps.isEmpty) return x01;
-        final handicapsByCompetitor = <String, int>{};
-        for (var i = 0; i < s.selectedPlayerIds.length; i++) {
-          final handicap = s.playerHandicaps[s.selectedPlayerIds[i]];
-          if (handicap != null && handicap != 0) {
-            handicapsByCompetitor[competitors[i].competitorId] = handicap;
-          }
-        }
-        return handicapsByCompetitor.isEmpty
-            ? x01
-            : x01.copyWith(handicaps: handicapsByCompetitor);
+        final handicaps = handicapsByCompetitor();
+        return handicaps.isEmpty ? x01 : x01.copyWith(handicaps: handicaps);
+      },
+      countUp: (countUp) {
+        final handicaps = handicapsByCompetitor();
+        return handicaps.isEmpty
+            ? countUp
+            : countUp.copyWith(handicaps: handicaps);
       },
       orElse: () => s.config,
     );
@@ -283,6 +292,9 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         GameType.catch40          => const GameConfig.catch40(startingPlayerId: ''),
         GameType.bobs27           => const GameConfig.bobs27(startingPlayerId: ''),
         GameType.checkoutPractice => const GameConfig.checkoutPractice(startingPlayerId: ''),
+        GameType.countUp          => const GameConfig.countUp(
+            totalRounds: GameConfigurationConstants.countUpDefaultRounds,
+          ),
       };
 
   static GameType _gameTypeFor(GameConfig config) => config.map(
@@ -304,5 +316,6 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         catch40: (_) => GameType.catch40,
         bobs27: (_) => GameType.bobs27,
         checkoutPractice: (_) => GameType.checkoutPractice,
+        countUp: (_) => GameType.countUp,
       );
 }

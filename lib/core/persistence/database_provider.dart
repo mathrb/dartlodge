@@ -34,6 +34,7 @@ import '../../features/game/domain/engines/stateless_bobs_27_engine.dart';
 import '../../features/game/domain/engines/stateless_shanghai_engine.dart';
 import '../../features/game/domain/engines/stateless_catch_40_engine.dart';
 import '../../features/game/domain/engines/stateless_checkout_practice_engine.dart';
+import '../../features/game/domain/engines/stateless_count_up_engine.dart';
 import '../../features/game/domain/usecases/process_dart_use_case.dart';
 import '../../features/game/domain/usecases/process_cricket_dart_use_case.dart';
 import '../../features/game/domain/usecases/process_practice_dart_use_case.dart';
@@ -205,6 +206,28 @@ StatelessCatch40Engine catch40Engine(Ref ref) => StatelessCatch40Engine();
 @Riverpod(keepAlive: true)
 StatelessCheckoutPracticeEngine checkoutPracticeEngine(Ref ref) =>
     StatelessCheckoutPracticeEngine();
+
+@Riverpod(keepAlive: true)
+StatelessCountUpEngine countUpEngine(Ref ref) => StatelessCountUpEngine();
+
+/// Count-up reuses the X01-shaped ProcessDartUseCase: DartThrown is purely
+/// additive (no bust, no leg-end mid-dart), so the same scaffolding works.
+/// Game-end detection happens on TurnEnded inside the count-up engine — see
+/// ActiveCountUpNotifier._startNextTurn for the surrounding orchestration.
+@Riverpod(keepAlive: true)
+ProcessDartUseCase processCountUpDartUseCase(Ref ref) => ProcessDartUseCase(
+      ref.watch(gameRepositoryProvider),
+      ref.watch(gameEventRepositoryProvider),
+      ref.watch(dartThrowRepositoryProvider),
+      ref.watch(countUpEngineProvider),
+    );
+
+@Riverpod(keepAlive: true)
+UndoLastDartUseCase undoCountUpLastDartUseCase(Ref ref) => UndoLastDartUseCase(
+      ref.watch(gameEventRepositoryProvider),
+      ref.watch(dartThrowRepositoryProvider),
+      ref.watch(countUpEngineProvider),
+    );
 
 // ProcessPracticeDartUseCase providers — one per practice game type
 @Riverpod(keepAlive: true)

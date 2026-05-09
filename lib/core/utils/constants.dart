@@ -20,13 +20,15 @@ enum GameType {
   chaseTheDragon,
   catch40,
   bobs27,
-  checkoutPractice;
+  checkoutPractice,
+  countUp;
 
   /// Maximum number of players allowed for this game type, or null if unlimited.
   int? get maxPlayers => switch (this) {
     GameType.x01 => 6,
     GameType.cricket || GameType.blindCricket => 6,
     GameType.catch40 || GameType.bobs27 || GameType.checkoutPractice => 1,
+    GameType.countUp => 6,
     _ => null,
   };
 }
@@ -151,4 +153,9 @@ class GameConfigurationConstants {
     'random',
   ];
   static const List<int> aroundTheClockRequiredHits = [1, 2, 3];
+
+  // Count-up game (rounds-based, additive scoring with optional handicap).
+  static const List<int> countUpAllowedRounds = [8, 12, 16, 20];
+  static const int countUpDefaultRounds = 8;
+  static const List<int> countUpAllowedHandicaps = [0, 50, 100, 150, 200];
 }

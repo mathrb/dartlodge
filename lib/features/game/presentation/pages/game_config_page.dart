@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/config_stepper_widget.dart';
 
@@ -150,6 +151,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       catch40: (_) => [],
       bobs27: (_) => [],
       checkoutPractice: _buildCheckoutPracticeFields,
+      countUp: _buildCountUpFields,
     );
   }
 
@@ -332,6 +334,22 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         child: _RoundsDropdown(
           value: c.totalRounds,
           items: const [10, 15, 20, 25, 50],
+          onChanged: (v) {
+            if (v == null) return;
+            setState(() => _draftConfig = c.copyWith(totalRounds: v));
+          },
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildCountUpFields(CountUpGameConfig c) {
+    return [
+      _FieldSection(
+        label: 'ROUNDS',
+        child: _RoundsDropdown(
+          value: c.totalRounds,
+          items: GameConfigurationConstants.countUpAllowedRounds,
           onChanged: (v) {
             if (v == null) return;
             setState(() => _draftConfig = c.copyWith(totalRounds: v));

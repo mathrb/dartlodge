@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/constants.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 
@@ -17,8 +18,12 @@ class PlayerScoreSectionWidget extends StatelessWidget {
 
   String _pprDisplay(CompetitorState cs) {
     if (cs.dartThrows.length < 3) return '—';
-    final totalReduction = gameState.startingScore - cs.score;
-    return ((totalReduction / cs.dartThrows.length) * 3).toStringAsFixed(1);
+    // Count-up adds, X01 subtracts — both yield the same magnitude of
+    // accumulated points but from opposite directions.
+    final pointsScored = gameState.gameType == GameType.countUp
+        ? cs.score - cs.startingScore
+        : gameState.startingScore - cs.score;
+    return ((pointsScored / cs.dartThrows.length) * 3).toStringAsFixed(1);
   }
 
   TextStyle _activeScoreStyle(BuildContext context) {

@@ -57,4 +57,5 @@ const _$GameTypeEnumMap = {
   GameType.catch40: 'catch40',
   GameType.bobs27: 'bobs27',
   GameType.checkoutPractice: 'checkoutPractice',
+  GameType.countUp: 'countUp',
 };

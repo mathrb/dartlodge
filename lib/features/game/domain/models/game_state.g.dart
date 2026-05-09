@@ -35,6 +35,7 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
       (json['catch40TargetRemaining'] as num?)?.toInt() ?? 0,
   catch40DartsOnTarget: (json['catch40DartsOnTarget'] as num?)?.toInt() ?? 0,
   checkoutTargetSuccesses: (json['checkoutTargetSuccesses'] as num?)?.toInt(),
+  countUpTotalRounds: (json['countUpTotalRounds'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
@@ -62,6 +63,7 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
       'catch40TargetRemaining': instance.catch40TargetRemaining,
       'catch40DartsOnTarget': instance.catch40DartsOnTarget,
       'checkoutTargetSuccesses': instance.checkoutTargetSuccesses,
+      'countUpTotalRounds': instance.countUpTotalRounds,
     };
 
 const _$GameTypeEnumMap = {
@@ -83,6 +85,7 @@ const _$GameTypeEnumMap = {
   GameType.catch40: 'catch40',
   GameType.bobs27: 'bobs27',
   GameType.checkoutPractice: 'checkoutPractice',
+  GameType.countUp: 'countUp',
 };
 
 const _$GameEngineStatusEnumMap = {

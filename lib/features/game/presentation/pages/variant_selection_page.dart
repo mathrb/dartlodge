@@ -193,6 +193,12 @@ class VariantSelectionPage extends ConsumerWidget {
           label: '170 Checkout',
           config: GameConfig.checkoutPractice(),
         ),
+        _VariantEntry(
+          label: 'Count-Up',
+          config: GameConfig.countUp(
+            totalRounds: GameConfigurationConstants.countUpDefaultRounds,
+          ),
+        ),
       ];
 }
 

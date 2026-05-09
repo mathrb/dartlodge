@@ -14,6 +14,7 @@ import 'package:dart_lodge/features/players/presentation/pages/player_detail_pag
 import 'package:dart_lodge/features/players/presentation/pages/player_list_page.dart';
 import 'package:dart_lodge/features/settings/presentation/pages/settings_page.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/stats_tab_page.dart';
+import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/cricket_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/practice_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/x01_board_page.dart';
@@ -38,6 +39,7 @@ abstract final class GameRoutes {
   static const activeX01        = '/game/active/x01';
   static const activeCricket    = '/game/active/cricket';
   static const activePractice   = '/practice-board';
+  static const activeCountUp    = '/game/active/count-up';
 
   static String gameDetail(String id) => '/game/history/$id';
   static String playerStats(String id) => '/stats/player/$id';
@@ -102,6 +104,8 @@ Widget _cricketBoardPage(BuildContext _, GoRouterState s) =>
     CricketBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _practiceBoardPage(BuildContext _, GoRouterState s) =>
     PracticeBoardPage(gameId: s.pathParameters['gameId']!);
+Widget _countUpBoardPage(BuildContext _, GoRouterState s) =>
+    CountUpBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _playerStatsPage(BuildContext _, GoRouterState s) =>
     PlayerStatsPage(playerId: s.pathParameters['playerId']!);
 Widget _postGameSummaryPage(BuildContext _, GoRouterState s) =>
@@ -147,6 +151,9 @@ List<RouteBase> _buildRoutes() => [
       GoRoute(
           path: '${GameRoutes.activePractice}/:gameId',
           builder: _practiceBoardPage),
+      GoRoute(
+          path: '${GameRoutes.activeCountUp}/:gameId',
+          builder: _countUpBoardPage),
       GoRoute(
           path: '/stats/player/:playerId',
           builder: _playerStatsPage),

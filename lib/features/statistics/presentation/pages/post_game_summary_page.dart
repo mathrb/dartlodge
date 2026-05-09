@@ -39,17 +39,26 @@ class _SummaryBody extends StatelessWidget {
 
   final GameStats gameStats;
 
+  /// Picks the winner via legsWon. Returns null when no competitor has any
+  /// legs (e.g. count-up tie → LegCompleted carries winner_competitor_id =
+  /// null, so all competitors stay at legsWon = 0) or when ≥2 competitors
+  /// share the top legsWon count.
   CompetitorStats? _findWinner() {
     if (gameStats.byCompetitor.isEmpty) return null;
-    return gameStats.byCompetitor.reduce(
-      (a, b) => a.legsWon >= b.legsWon ? a : b,
-    );
+    final maxLegs = gameStats.byCompetitor
+        .map((c) => c.legsWon)
+        .reduce((a, b) => a > b ? a : b);
+    if (maxLegs == 0) return null;
+    final leaders =
+        gameStats.byCompetitor.where((c) => c.legsWon == maxLegs).toList();
+    return leaders.length == 1 ? leaders.first : null;
   }
 
   @override
   Widget build(BuildContext context) {
     final winner = _findWinner();
     final isCricket = gameStats.gameType == GameType.cricket.name;
+    final isCountUp = gameStats.gameType == GameType.countUp.name;
     final opponents = winner == null
         ? gameStats.byCompetitor
         : gameStats.byCompetitor
@@ -72,7 +81,11 @@ class _SummaryBody extends StatelessWidget {
                 ),
               ),
               if (winner != null) ...[
-                _WinnerCard(winner: winner, isCricket: isCricket),
+                _WinnerCard(
+                  winner: winner,
+                  isCricket: isCricket,
+                  isCountUp: isCountUp,
+                ),
                 const SizedBox(height: 16),
               ],
               if (opponents.isNotEmpty) ...[
@@ -86,6 +99,7 @@ class _SummaryBody extends StatelessWidget {
                 allCompetitors: gameStats.byCompetitor,
                 winnerId: winner?.competitorId,
                 isCricket: isCricket,
+                isCountUp: isCountUp,
               ),
             ],
           ),
@@ -104,10 +118,15 @@ class _SummaryBody extends StatelessWidget {
 // ── Winner Card ───────────────────────────────────────────────────────────────
 
 class _WinnerCard extends StatelessWidget {
-  const _WinnerCard({required this.winner, required this.isCricket});
+  const _WinnerCard({
+    required this.winner,
+    required this.isCricket,
+    required this.isCountUp,
+  });
 
   final CompetitorStats winner;
   final bool isCricket;
+  final bool isCountUp;
 
   @override
   Widget build(BuildContext context) {
@@ -186,14 +205,15 @@ class _WinnerCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          '${winner.legsWon} LEG${winner.legsWon == 1 ? '' : 'S'} WON',
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                            letterSpacing: 1.2,
-                            fontWeight: FontWeight.w600,
+                        if (!isCountUp)
+                          Text(
+                            '${winner.legsWon} LEG${winner.legsWon == 1 ? '' : 'S'} WON',
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ],
@@ -392,11 +412,13 @@ class _StatsBreakdownSection extends StatelessWidget {
     required this.allCompetitors,
     required this.winnerId,
     required this.isCricket,
+    required this.isCountUp,
   });
 
   final List<CompetitorStats> allCompetitors;
   final String? winnerId;
   final bool isCricket;
+  final bool isCountUp;
 
   @override
   Widget build(BuildContext context) {
@@ -435,6 +457,7 @@ class _StatsBreakdownSection extends StatelessWidget {
               allCompetitors: allCompetitors,
               winnerId: winnerId,
               isCricket: isCricket,
+              isCountUp: isCountUp,
             ),
           ),
         ),
@@ -448,11 +471,13 @@ class _StatsTable extends StatelessWidget {
     required this.allCompetitors,
     required this.winnerId,
     required this.isCricket,
+    required this.isCountUp,
   });
 
   final List<CompetitorStats> allCompetitors;
   final String? winnerId;
   final bool isCricket;
+  final bool isCountUp;
 
   @override
   Widget build(BuildContext context) {
@@ -460,7 +485,48 @@ class _StatsTable extends StatelessWidget {
     final tt = Theme.of(context).textTheme;
 
     final noHighlight = allCompetitors.map((_) => false).toList();
-    final rows = isCricket
+    final countUpRows = <_StatRow>[
+      _StatRow(
+        category: 'Avg PPR',
+        values: allCompetitors
+            .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
+            .toList(),
+        highlights: allCompetitors
+            .map((c) => c.competitorId == winnerId)
+            .toList(),
+      ),
+      _StatRow(
+        category: '180s',
+        values: allCompetitors
+            .map((c) => c.oneEightyTurns.toString())
+            .toList(),
+        highlights: noHighlight,
+      ),
+      _StatRow(
+        category: '140+',
+        values: allCompetitors
+            .map((c) => c.oneFortyPlusTurns.toString())
+            .toList(),
+        highlights: noHighlight,
+      ),
+      _StatRow(
+        category: '100+',
+        values: allCompetitors
+            .map((c) => c.oneHundredPlusTurns.toString())
+            .toList(),
+        highlights: noHighlight,
+      ),
+      _StatRow(
+        category: '60+',
+        values: allCompetitors
+            .map((c) => c.sixtyPlusTurns.toString())
+            .toList(),
+        highlights: noHighlight,
+      ),
+    ];
+    final rows = isCountUp
+        ? countUpRows
+        : isCricket
         ? <_StatRow>[
             _StatRow(
               category: 'Avg MPR',

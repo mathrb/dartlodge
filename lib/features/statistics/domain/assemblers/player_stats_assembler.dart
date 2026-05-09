@@ -18,6 +18,9 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_average_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_first_nine_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_high_score_buckets_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
@@ -86,6 +89,7 @@ class PlayerStatsAssembler {
     }
 
     final isCricket = gameType == GameType.cricket;
+    final isCountUp = gameType == GameType.countUp;
     final context = ProjectionContext(
       playerId: playerId,
       gameType: gameType,
@@ -104,23 +108,29 @@ class PlayerStatsAssembler {
             CricketBestLegMptProjection(),
             CricketBestGameHitRateProjection(),
           ])
-        : ProjectionRunner([
-            X01AverageProjection(),
-            X01BustRateProjection(),
-            X01CheckoutProjection(),
-            X01DartsPerLegProjection(),
-            X01DoubleOutProjection(),
-            X01FirstDartInProjection(),
-            X01HighestCheckoutProjection(),
-            X01HighestTurnScoreProjection(),
-            X01LegsProjection(),
-            X01WinRateProjection(),
-            X01HighScoreBucketsProjection(),
-            X01FirstNinePprProjection(),
-            X01BestLegPprProjection(),
-            X01AvgCheckoutScoreProjection(),
-            X01BestGameCheckoutPercentageProjection(),
-          ]);
+        : isCountUp
+            ? ProjectionRunner([
+                CountUpAverageProjection(),
+                CountUpFirstNinePprProjection(),
+                CountUpHighScoreBucketsProjection(),
+              ])
+            : ProjectionRunner([
+                X01AverageProjection(),
+                X01BustRateProjection(),
+                X01CheckoutProjection(),
+                X01DartsPerLegProjection(),
+                X01DoubleOutProjection(),
+                X01FirstDartInProjection(),
+                X01HighestCheckoutProjection(),
+                X01HighestTurnScoreProjection(),
+                X01LegsProjection(),
+                X01WinRateProjection(),
+                X01HighScoreBucketsProjection(),
+                X01FirstNinePprProjection(),
+                X01BestLegPprProjection(),
+                X01AvgCheckoutScoreProjection(),
+                X01BestGameCheckoutPercentageProjection(),
+              ]);
 
     runner.init(context);
     runner.run(events);
@@ -134,6 +144,33 @@ class PlayerStatsAssembler {
     }
 
     final snap = runner.snapshot();
+
+    if (isCountUp) {
+      final avgSnap = snap['count_up.average'] ?? {};
+      final firstNineSnap = snap['count_up.firstNineAverage'] ?? {};
+      final bucketsSnap = snap['count_up.highScoreBuckets'] ?? {};
+
+      return PlayerStats(
+        playerId: playerId,
+        gameType: gameType,
+        totalGames: totalGames,
+        totalDartsThrown: totalDartsThrown,
+        threeDartAverage:
+            (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0,
+        bustRate: 0.0,
+        highestTurnScore: 0,
+        dartsPerLeg: 0.0,
+        winRate: 0.0,
+        gamesWon: 0,
+        legsPlayed: 0,
+        legsWon: 0,
+        firstNinePpr: (firstNineSnap['firstNinePpr'] as num?)?.toDouble(),
+        sixtyPlusTurns: bucketsSnap['sixtyPlusTurns'] as int? ?? 0,
+        oneHundredPlusTurns: bucketsSnap['oneHundredPlusTurns'] as int? ?? 0,
+        oneFortyPlusTurns: bucketsSnap['oneFortyPlusTurns'] as int? ?? 0,
+        oneEightyTurns: bucketsSnap['oneEightyTurns'] as int? ?? 0,
+      );
+    }
 
     if (isCricket) {
       final mptSnap = snap['cricket.mpt'] ?? {};
@@ -245,6 +282,7 @@ class PlayerStatsAssembler {
 
     final isX01 = gameType == GameType.x01;
     final isCricket = gameType == GameType.cricket;
+    final isCountUp = gameType == GameType.countUp;
 
     final List<CompetitorStats> competitorStats = [];
     for (final entry in byCompetitor.entries) {
@@ -333,6 +371,27 @@ class PlayerStatsAssembler {
                   hc > competitorHighestCheckout)) {
             competitorHighestCheckout = hc;
           }
+        }
+      } else if (isCountUp) {
+        for (final playerId in playerIds) {
+          final runner = ProjectionRunner([
+            CountUpHighScoreBucketsProjection(),
+          ]);
+          runner.init(ProjectionContext(
+            playerId: playerId,
+            gameType: GameType.countUp,
+            inStrategy: 'straight',
+            outStrategy: 'straight',
+            playerIds: playerIds,
+          ));
+          runner.run(events);
+          final snap = runner.snapshot();
+
+          final buckets = snap['count_up.highScoreBuckets'] ?? {};
+          totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
+          totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
+          totalHundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
+          totalSixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
         }
       } else if (isCricket) {
         for (final playerId in playerIds) {
@@ -436,6 +495,50 @@ class PlayerStatsAssembler {
         competitorId: competitor.competitorId,
         competitorName: competitor.name,
         dartsThrown: darts,
+      );
+    }
+
+    if (gameType == GameType.countUp) {
+      var scoredPoints = 0;
+      var scoringDarts = 0;
+      var oneEighty = 0, sixtyPlus = 0, hundredPlus = 0, fortyPlus = 0;
+
+      for (final playerId in playerIds) {
+        final runner = ProjectionRunner([
+          CountUpAverageProjection(),
+          CountUpHighScoreBucketsProjection(),
+        ]);
+        runner.init(ProjectionContext(
+          playerId: playerId,
+          gameType: GameType.countUp,
+          inStrategy: 'straight',
+          outStrategy: 'straight',
+          playerIds: allPlayerIds,
+        ));
+        runner.run(events);
+        final snap = runner.snapshot();
+
+        final avg = snap['count_up.average'] ?? const {};
+        scoredPoints += (avg['totalScoredPoints'] as int? ?? 0);
+        scoringDarts += (avg['totalDartsThrown'] as int? ?? 0);
+
+        final buckets = snap['count_up.highScoreBuckets'] ?? const {};
+        oneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
+        sixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
+        hundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
+        fortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
+      }
+
+      return LegCompetitorStats(
+        competitorId: competitor.competitorId,
+        competitorName: competitor.name,
+        dartsThrown: darts,
+        threeDartAverage:
+            scoringDarts > 0 ? (scoredPoints / scoringDarts) * 3 : null,
+        oneEightyTurns: oneEighty,
+        sixtyPlusTurns: sixtyPlus,
+        oneHundredPlusTurns: hundredPlus,
+        oneFortyPlusTurns: fortyPlus,
       );
     }
 
@@ -578,6 +681,48 @@ class PlayerStatsAssembler {
     final threeDartAverage = playerDartsInGame > 0
         ? (playerScoreInGame / playerDartsInGame) * 3
         : 0.0;
+
+    if (gameType == GameType.countUp) {
+      final runner = ProjectionRunner([
+        CountUpFirstNinePprProjection(),
+        CountUpHighScoreBucketsProjection(),
+      ]);
+      runner.init(ProjectionContext(
+        playerId: playerId,
+        gameType: GameType.countUp,
+        inStrategy: 'straight',
+        outStrategy: 'straight',
+        playerIds: [playerId],
+      ));
+      runner.run(events);
+      final snap = runner.snapshot();
+
+      final firstNineSnap = snap['count_up.firstNineAverage'] ?? {};
+      final bucketsSnap = snap['count_up.highScoreBuckets'] ?? {};
+
+      // count-up has no winner-per-game distinction at the player level
+      // (winner is a competitor); the caller can derive it from
+      // GameCompleted's winner_id payload instead.
+      return PlayerStats(
+        playerId: playerId,
+        gameType: gameType,
+        totalGames: 1,
+        gamesWon: 0,
+        winRate: 0.0,
+        threeDartAverage: threeDartAverage,
+        bustRate: 0.0,
+        highestTurnScore: 0,
+        totalDartsThrown: playerDartsInGame,
+        dartsPerLeg: 0.0,
+        legsPlayed: 1,
+        legsWon: 0,
+        firstNinePpr: (firstNineSnap['firstNinePpr'] as num?)?.toDouble(),
+        sixtyPlusTurns: bucketsSnap['sixtyPlusTurns'] as int? ?? 0,
+        oneHundredPlusTurns: bucketsSnap['oneHundredPlusTurns'] as int? ?? 0,
+        oneFortyPlusTurns: bucketsSnap['oneFortyPlusTurns'] as int? ?? 0,
+        oneEightyTurns: bucketsSnap['oneEightyTurns'] as int? ?? 0,
+      );
+    }
 
     final runner = ProjectionRunner([
       X01BustRateProjection(),
