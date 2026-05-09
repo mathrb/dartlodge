@@ -65,7 +65,7 @@ jobs:
           fi
           echo "Using sqlite3 v$SQLITE_VERSION"
           curl -fL -o web/sqlite3.wasm \
-            "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-v${SQLITE_VERSION}/sqlite3.wasm"
+            "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-${SQLITE_VERSION}/sqlite3.wasm"
 
       # --base-href must match the GitHub Pages project subpath
       # (https://mathrb.github.io/dartlodge/) or asset URLs and go_router
