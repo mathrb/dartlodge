@@ -1,8 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
+
+Game _game(GameType type) {
+  final config = type == GameType.cricket
+      ? const GameConfig.cricket(
+          variant: 'standard',
+          numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+        )
+      : const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+        );
+  return Game(
+    gameId: 'g',
+    gameType: type,
+    config: config,
+    startTime: DateTime(2024),
+  );
+}
 
 LegStatsBreakdown _leg({
   required int number,
@@ -62,7 +83,7 @@ void main() {
           bobDarts: 9,
         ),
       ],
-      gameType: GameType.x01,
+      game: _game(GameType.x01),
     )));
 
     // Leg 1: 3 + 0 = 3
@@ -96,7 +117,7 @@ void main() {
           aliceOneEighty: 1,
         ),
       ],
-      gameType: GameType.x01,
+      game: _game(GameType.x01),
     )));
 
     final toggles = find.byIcon(Icons.expand_more);
@@ -125,7 +146,7 @@ void main() {
           bobDarts: 12,
         ),
       ],
-      gameType: GameType.cricket,
+      game: _game(GameType.cricket),
     )));
     expect(find.byIcon(Icons.expand_more), findsNothing);
     expect(find.byIcon(Icons.expand_less), findsNothing);
@@ -156,7 +177,7 @@ void main() {
     );
     await tester.pumpWidget(_wrap(LegBreakdownTableWidget(
       legs: [leg, leg.copyWith(legNumber: 2)],
-      gameType: GameType.cricket,
+      game: _game(GameType.cricket),
     )));
     await tester.tap(find.byIcon(Icons.expand_more).first);
     await tester.pumpAndSettle();
@@ -166,9 +187,9 @@ void main() {
   });
 
   testWidgets('empty legs shows placeholder', (tester) async {
-    await tester.pumpWidget(_wrap(const LegBreakdownTableWidget(
-      legs: [],
-      gameType: GameType.x01,
+    await tester.pumpWidget(_wrap(LegBreakdownTableWidget(
+      legs: const [],
+      game: _game(GameType.x01),
     )));
     expect(find.text('No legs completed'), findsOneWidget);
   });

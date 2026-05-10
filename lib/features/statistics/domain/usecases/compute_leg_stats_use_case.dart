@@ -12,16 +12,21 @@ class ComputeLegStatsUseCase {
   final PlayerStatsAssembler _assembler;
 
   /// Events must be sorted by `localSequence` ascending.
+  ///
+  /// Emits one [LegStatsBreakdown] per `LegCompleted` event for every game
+  /// type. For X01/Cricket the per-competitor stats are populated via the
+  /// projection assembler; for other game types only `dartsThrown` is
+  /// counted (other fields stay null/0) so that callers can still render
+  /// a per-leg row + a turn breakdown.
   List<LegStatsBreakdown> execute({
     required List<GameEvent> events,
     required List<Competitor> competitors,
     required GameType gameType,
   }) {
     if (competitors.isEmpty) return const [];
-    if (gameType != GameType.x01 && gameType != GameType.cricket) {
-      return const [];
-    }
 
+    final supportsRichStats =
+        gameType == GameType.x01 || gameType == GameType.cricket;
     final allPlayerIds = <String>[
       for (final c in competitors)
         for (final p in c.players) p.playerId,
@@ -43,22 +48,43 @@ class ComputeLegStatsUseCase {
               .firstOrNull ??
           '—';
 
+      final dartsByCompetitor = supportsRichStats
+          ? const <String, int>{}
+          : _countDartsByCompetitor(legEvents);
+
       legs.add(LegStatsBreakdown(
         legNumber: legNumber++,
         winnerCompetitorId: winnerCompetitorId,
         winnerName: winnerName,
         byCompetitor: [
           for (final competitor in competitors)
-            _assembler.legCompetitorStatsFromEvents(
-              events: legEvents,
-              competitor: competitor,
-              allPlayerIds: allPlayerIds,
-              gameType: gameType,
-            ),
+            supportsRichStats
+                ? _assembler.legCompetitorStatsFromEvents(
+                    events: legEvents,
+                    competitor: competitor,
+                    allPlayerIds: allPlayerIds,
+                    gameType: gameType,
+                  )
+                : LegCompetitorStats(
+                    competitorId: competitor.competitorId,
+                    competitorName: competitor.name,
+                    dartsThrown:
+                        dartsByCompetitor[competitor.competitorId] ?? 0,
+                  ),
         ],
       ));
       legStart = i + 1;
     }
     return legs;
+  }
+
+  Map<String, int> _countDartsByCompetitor(List<GameEvent> legEvents) {
+    final counts = <String, int>{};
+    for (final e in legEvents) {
+      if (e.eventType != 'DartThrown') continue;
+      final id = e.payload['competitor_id'] as String?;
+      if (id != null) counts[id] = (counts[id] ?? 0) + 1;
+    }
+    return counts;
   }
 }

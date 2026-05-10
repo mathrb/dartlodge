@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
 
 class HistoryFilterBarWidget extends StatelessWidget {
   final GameType? selectedGameType;
@@ -20,7 +21,7 @@ class HistoryFilterBarWidget extends StatelessWidget {
     super.key,
   });
 
-  String _formatDate(DateTime d) => DateFormat('d MMM y').format(d);
+  String _formatDateShort(DateTime d) => DateFormat('d MMM').format(d);
 
   bool get _isFilterActive =>
       selectedGameType != null ||
@@ -45,44 +46,64 @@ class HistoryFilterBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel =
-        selectedDateFrom != null && selectedDateTo != null
-            ? '${_formatDate(selectedDateFrom!)} – ${_formatDate(selectedDateTo!)}'
-            : 'Date Range';
+    final hasRange = selectedDateFrom != null && selectedDateTo != null;
+    final dateLabel = hasRange
+        ? '${_formatDateShort(selectedDateFrom!)} – ${_formatDateShort(selectedDateTo!)}'
+        : 'Date Range';
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          FilterChip(
-            label: const Text('All'),
-            selected: selectedGameType == null,
-            onSelected: (_) => onGameTypeChanged(null),
+          Expanded(
+            flex: 5,
+            child: DropdownButtonFormField<GameType?>(
+              initialValue: selectedGameType,
+              isExpanded: true,
+              isDense: true,
+              decoration: const InputDecoration(
+                labelText: 'Game type',
+                border: OutlineInputBorder(),
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              ),
+              items: <DropdownMenuItem<GameType?>>[
+                const DropdownMenuItem<GameType?>(
+                  value: null,
+                  child: Text('All'),
+                ),
+                ...GameType.values.map(
+                  (t) => DropdownMenuItem<GameType?>(
+                    value: t,
+                    child: Text(
+                      GameSummaryCardWidget.gameTypeName(t),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+              ],
+              onChanged: onGameTypeChanged,
+            ),
           ),
           const SizedBox(width: 8),
-          FilterChip(
-            label: const Text('X01'),
-            selected: selectedGameType == GameType.x01,
-            onSelected: (_) => onGameTypeChanged(GameType.x01),
-          ),
-          const SizedBox(width: 8),
-          FilterChip(
-            label: const Text('Cricket'),
-            selected: selectedGameType == GameType.cricket,
-            onSelected: (_) => onGameTypeChanged(GameType.cricket),
-          ),
-          const SizedBox(width: 8),
-          TextButton.icon(
-            icon: const Icon(Icons.date_range, size: 18),
-            label: Text(dateLabel),
-            onPressed: () => _pickDateRange(context),
+          Expanded(
+            flex: 4,
+            child: OutlinedButton.icon(
+              icon: const Icon(Icons.date_range, size: 18),
+              label: Text(
+                dateLabel,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                softWrap: false,
+              ),
+              onPressed: () => _pickDateRange(context),
+            ),
           ),
           if (_isFilterActive) ...[
-            const SizedBox(width: 8),
-            TextButton.icon(
-              icon: const Icon(Icons.clear, size: 18),
-              label: const Text('Clear'),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.clear),
+              tooltip: 'Clear filters',
               onPressed: onClearFilters,
             ),
           ],

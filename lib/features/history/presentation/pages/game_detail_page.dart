@@ -10,9 +10,7 @@ import 'package:dart_lodge/features/history/presentation/state/game_detail_state
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
-import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
-// Cross-feature import: StatsCardWidget is a pure display widget with no domain logic
-import 'package:dart_lodge/features/statistics/presentation/widgets/stats_card_widget.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/game_summary_section_widget.dart';
 
 class GameDetailPage extends ConsumerWidget {
   final String gameId;
@@ -62,7 +60,7 @@ class GameDetailPage extends ConsumerWidget {
           _buildMatchHeader(context, game, sortedCompetitors, winner, theme),
           if (detail.gameStats != null) ...[
             const SizedBox(height: 16),
-            _buildStatsSection(context, detail.gameStats!, sortedCompetitors, theme),
+            GameSummarySectionWidget(gameStats: detail.gameStats!),
           ],
           const SizedBox(height: 16),
           Text(
@@ -74,7 +72,9 @@ class GameDetailPage extends ConsumerWidget {
           const SizedBox(height: 8),
           LegBreakdownTableWidget(
             legs: detail.legStats,
-            gameType: game.gameType,
+            game: game,
+            competitors: detail.competitors,
+            events: detail.events,
           ),
         ],
       ),
@@ -160,64 +160,4 @@ class GameDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatsSection(
-    BuildContext context,
-    GameStats gameStats,
-    List<Competitor> sortedCompetitors,
-    ThemeData theme,
-  ) {
-    final statsByComp = {
-      for (final cs in gameStats.byCompetitor) cs.competitorId: cs,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Stats',
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ...sortedCompetitors.map((c) {
-          final cs = statsByComp[c.competitorId];
-          if (cs == null) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  c.name,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    StatsCardWidget(
-                      label: '3-Dart Avg',
-                      value: StatsCardWidget.format(cs.threeDartAverage),
-                    ),
-                    StatsCardWidget(
-                      label: 'Legs Won',
-                      value: StatsCardWidget.formatInt(cs.legsWon),
-                    ),
-                    StatsCardWidget(
-                      label: 'Total Darts',
-                      value: StatsCardWidget.formatInt(cs.totalDartsThrown),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
 }

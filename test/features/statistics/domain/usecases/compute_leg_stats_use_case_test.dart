@@ -114,15 +114,20 @@ void main() {
       );
     });
 
-    test('unsupported game type → empty list', () {
-      expect(
-        useCase.execute(
-          events: [_legCompleted(winnerCompetitorId: 'c1', winnerPlayerId: 'p1')],
-          competitors: [c1, c2],
-          gameType: GameType.shanghai,
-        ),
-        isEmpty,
+    test('non-X01/Cricket game type → minimal leg row, no rich stats', () {
+      final result = useCase.execute(
+        events: [_legCompleted(winnerCompetitorId: 'c1', winnerPlayerId: 'p1')],
+        competitors: [c1, c2],
+        gameType: GameType.shanghai,
       );
+      expect(result, hasLength(1));
+      expect(result.first.legNumber, 1);
+      expect(result.first.winnerCompetitorId, 'c1');
+      // byCompetitor is populated with entries but rich stats stay null/0
+      // so callers can still render leg metadata + a turn breakdown.
+      expect(result.first.byCompetitor, hasLength(2));
+      expect(result.first.byCompetitor.first.threeDartAverage, isNull);
+      expect(result.first.byCompetitor.first.marksPerRound, isNull);
     });
   });
 
