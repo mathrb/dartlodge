@@ -76,27 +76,38 @@ The dark palette is rooted in `surface` (#0c0e10), providing a deep, obsidian ba
 
 ### 2.2 Light Mode Palette
 
-The light palette uses a warm neutral base with the same neon `primaryFixed` (#00FFAB) as the brand anchor.
+The light palette uses a neutral M3 grayscale base. The brand neon (`primaryFixed` `#00FFAB`) and primary tonal family are **identical to dark mode** — neon green stays neon green across themes.
 
 | Token | Hex | Usage |
 |---|---|---|
-| `surface` | `#F9F9F9` | App scaffold background — Level 0 base |
+| `surface` | `#FCFCFC` | App scaffold background — Level 0 base |
 | `surfaceContainerLowest` | `#FFFFFF` | Lifted cards / dialogs |
-| `surfaceContainerLow` | `#F3F3F3` | Level-1 sections, active player card bg |
-| `surfaceContainer` | `#EEEEEE` | Level-2 interactive cards, inactive player card bg |
-| `surfaceContainerHighest` | `#E2E2E2` | Singles segment buttons, config summary chip |
-| `primary` | `#006C46` | Primary action text / icons |
-| `onPrimary` | `#FFFFFF` | Text on `primary` backgrounds |
+| `surfaceContainerLow` | `#F6F6F6` | Level-1 sections, active player card bg |
+| `surfaceContainer` | `#F0F0F0` | Level-2 interactive cards, inactive player card bg |
+| `surfaceContainerHigh` | `#EAEAEA` | Active player panel tint, intermediate elevation |
+| `surfaceContainerHighest` | `#E4E4E4` | Singles segment buttons, config summary chip |
+| `surfaceBright` | `#FFFFFF` | Floating elements / popovers |
+| `surfaceVariant` | `#E6E6E6` | Inset variants |
+| `primary` | `#AFFFD1` | Primary tonal — button fills, accents (matches dark) |
+| `onPrimary` | `#004A2F` | Text on `primary` backgrounds |
+| `primaryContainer` | `#005234` | Primary container fill |
+| `onPrimaryContainer` | `#00ED9F` | Text on `primaryContainer` |
 | `primaryFixed` | `#00FFAB` | Brand neon — CTA fills, active player accent |
-| `primaryFixedDim` | `#00E297` | Hover / pressed neon state |
+| `primaryFixedDim` | `#00F2A2` | Hover / pressed neon state |
 | `onPrimaryFixed` | `#002112` | Text on any neon fill — 8.9:1 contrast |
-| `onSurface` | `#1A1C1C` | Primary body text and icons |
-| `onSurfaceVariant` | `#6B7070` | Secondary labels, metadata, placeholder text |
-| `outlineVariant` | `#B9CBBE` | Ghost border at 20% opacity only |
-| `error` | `#D32F2F` | Bust indicator, validation errors |
+| `primaryDim` | `#00D38C` | Dimmed neon variant |
+| `secondary` | `#1FC46A` | Secondary actions |
+| `onSecondary` | `#FFFFFF` | Text on `secondary` |
+| `secondaryContainer` | `#B6F0C8` | Secondary tonal container |
+| `onSecondaryContainer` | `#002111` | Text on `secondaryContainer` |
+| `onSurface` | `#1A1C1E` | Primary body text and icons |
+| `onSurfaceVariant` | `#6B6E72` | Secondary labels, metadata, placeholder text |
+| `outline` | `#75787C` | Structural outlines when required |
+| `outlineVariant` | `#C7C7C7` | Ghost border at 20% opacity only |
+| `error` | `#BA1A1A` | Bust indicator, validation errors |
 | `onError` | `#FFFFFF` | Text on error-colored backgrounds |
-| `errorContainer` | `#FFEBEE` | Bust snackbar background, error cards |
-| `onErrorContainer` | `#B71C1C` | Text inside error container |
+| `errorContainer` | `#FFDAD6` | Bust snackbar background, error cards |
+| `onErrorContainer` | `#410002` | Text inside error container |
 | `kineticSplashColor` | `#0D00FFAB` | Ripple — neon at 5% opacity (same as dark) |
 
 ### 2.3 Surface Hierarchy & Nesting
@@ -105,16 +116,16 @@ Treat the UI as physical layers of glass.
 
 | Level | Token | Dark Hex | Light Hex | Role |
 |---|---|---|---|---|
-| **0 — Base** | `surface` | `#0C0E10` | `#F9F9F9` | Global scaffold background |
-| **1 — Sections** | `surfaceContainerLow` | `#111416` | `#F3F3F3` | Distinct content zones, active player card |
-| **2 — Cards** | `surfaceContainer` | `#171A1C` | `#EEEEEE` | Interactive cards, inactive player card |
-| **3 — Popovers** | `surfaceBright` | `#2B2C2C` | — | Floating elements, modals (dark mode) |
+| **0 — Base** | `surface` | `#0C0E10` | `#FCFCFC` | Global scaffold background |
+| **1 — Sections** | `surfaceContainerLow` | `#111416` | `#F6F6F6` | Distinct content zones, active player card |
+| **2 — Cards** | `surfaceContainer` | `#171A1C` | `#F0F0F0` | Interactive cards, inactive player card |
+| **3 — Popovers** | `surfaceBright` | `#2B2C2C` | `#FFFFFF` | Floating elements, modals |
 
 `surfaceContainerHighest` sits above Level 2 and is used for singles segment buttons and the bottom action bar.
 
 ### 2.4 Glass & Gradient Rule
 
-For the homepage **Kinetic Card** decoration, use a linear gradient at **135°** from `#66232629` (dark warm grey, 40% opacity) to `#CC111416` (obsidian, 80% opacity), with a 1px ghost border at `#0DFFFFFF` (white, 5% opacity). This gives cards a "lithium-ion" depth regardless of light/dark mode.
+For the homepage **Kinetic Card** decoration, use a linear gradient at **135°** from `cs.surfaceContainerHigh` @ 40% opacity to `cs.surfaceContainerLow` @ 80% opacity, with a 1px ghost border at `cs.outlineVariant` @ 10% opacity. Endpoints are sourced from the active `ColorScheme` so the card reads as obsidian-on-obsidian in dark mode and near-white-with-hairline in light mode.
 
 For modal overlays: use `scrim` (`#000000`) at **80% opacity** + **20px backdrop-blur**.
 
@@ -131,8 +142,8 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 
 | Token | Light resolves to | Dark resolves to | Meaning |
 |---|---|---|---|
-| `activePlayerBg` | `surfaceContainerLow` (`#F3F3F3`) | `surfaceContainerHigh` (`#1E2124`) | Panel background tint for active player — *game board widgets use `cs.surfaceContainerLow` directly* |
-| `inactiveScore` | `outlineVariant` (`#B9CBBE`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
+| `activePlayerBg` | `surfaceContainerHigh` (`#EAEAEA`) | `surfaceContainerHigh` (`#1E2124`) | Panel background tint for active player — *game board widgets use `cs.surfaceContainerLow` directly* |
+| `inactiveScore` | `onSurfaceVariant` (`#6B6E72`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
 | `cricketClosed` | `primaryFixed` | `primaryFixed` | Cricket number closed indicator |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
@@ -342,7 +353,7 @@ If contrast is required for accessibility on a floating element, use a "Ghost Bo
 
 **Kinetic Homepage Game Card**
 - Height: 80dp
-- Background: `kineticCardDecoration()` — gradient `#66232629` → `#CC111416`, 135°, 1px `#0DFFFFFF` ghost border
+- Background: `kineticCardDecoration(cs)` — 135° gradient from `cs.surfaceContainerHigh` @ 40% to `cs.surfaceContainerLow` @ 80%, 1px `cs.outlineVariant` @ 10% ghost border
 - Border-radius: `radiusLarge` (16dp)
 - Icon container: 44×44dp, `radiusLarge`, `primaryFixed` @ 12% bg, 1px `primaryFixed` @ 25% border, icon 22dp
 - Label: uppercase, `label-md` + w700 + letterSpacing 0.5, `onSurface`

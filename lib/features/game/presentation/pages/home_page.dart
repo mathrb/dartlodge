@@ -107,7 +107,7 @@ class _KineticGameCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: AppTheme.kineticCardDecoration(),
+      decoration: AppTheme.kineticCardDecoration(cs),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

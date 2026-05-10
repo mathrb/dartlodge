@@ -1,46 +1,58 @@
 import 'package:flutter/material.dart';
 
-/// Design token constants — light mode (Kinetic Precision theme).
+/// Design token constants — light mode (Kinetic Precision · Material).
 abstract final class AppColors {
-  // Surface hierarchy (tonal, no shadows/borders)
-  static const surface                  = Color(0xFFF9F9F9); // Level-0 scaffold
-  static const surfaceContainerLowest   = Color(0xFFFFFFFF); // Lifted cards/dialogs
-  static const surfaceContainerLow      = Color(0xFFF3F3F3); // Level-1 cards
-  static const surfaceContainer         = Color(0xFFEEEEEE);
-  static const surfaceContainerHighest  = Color(0xFFE2E2E2); // Coming-soon cards
+  // Surface hierarchy (tonal depth, no borders) — neutral M3 light grays
+  static const surface                  = Color(0xFFFCFCFC); // base
+  static const surfaceContainerLowest   = Color(0xFFFFFFFF);
+  static const surfaceContainerLow      = Color(0xFFF6F6F6); // Level-1 cards
+  static const surfaceContainer         = Color(0xFFF0F0F0);
+  static const surfaceContainerHigh     = Color(0xFFEAEAEA);
+  static const surfaceContainerHighest  = Color(0xFFE4E4E4);
+  static const surfaceBright            = Color(0xFFFFFFFF);
+  static const surfaceVariant           = Color(0xFFE6E6E6);
 
-  // Aliases for screens still referencing old names (clean-up is a follow-on)
+  // Aliases
   static const background               = surface;
   static const onBackground             = onSurface;
 
-  // Primary / brand
-  static const primary              = Color(0xFF006C46); // Dark green
-  static const onPrimary            = Color(0xFFFFFFFF);
-  static const primaryContainer     = Color(0xFF00FFAB); // Brand neon
+  // Primary / brand — IDENTICAL to dark (neon green stays neon green)
+  static const primary              = Color(0xFFAFFFD1);
+  static const onPrimary            = Color(0xFF004A2F);
+  static const primaryContainer     = Color(0xFF005234);
+  static const onPrimaryContainer   = Color(0xFF00ED9F);
+  static const primaryFixed         = Color(0xFF00FFAB);
+  static const primaryFixedDim      = Color(0xFF00F2A2);
   static const onPrimaryFixed       = Color(0xFF002112); // Text on neon fills
-  static const primaryFixedDim      = Color(0xFF00E297); // Hover/pressed neon
+  static const primaryDim           = Color(0xFF00D38C);
 
-  // Error
-  static const error                = Color(0xFFD32F2F);
+  // Secondary
+  static const secondary            = Color(0xFF1FC46A);
+  static const onSecondary          = Color(0xFFFFFFFF);
+  static const secondaryContainer   = Color(0xFFB6F0C8);
+  static const onSecondaryContainer = Color(0xFF002111);
+
+  // Error (M3 light)
+  static const error                = Color(0xFFBA1A1A);
   static const onError              = Color(0xFFFFFFFF);
-  static const errorContainer       = Color(0xFFFFEBEE);
-  static const onErrorContainer     = Color(0xFFB71C1C);
+  static const errorContainer       = Color(0xFFFFDAD6);
+  static const onErrorContainer     = Color(0xFF410002);
 
   // Outline
-  static const outline              = Color(0xFFB9CBBE); // Use at 20% opacity only
-  static const outlineVariant       = Color(0xFFB9CBBE); // Ghost border at 20% opacity only
+  static const outline              = Color(0xFF75787C);
+  static const outlineVariant       = Color(0xFFC7C7C7);
   static const scrim                = Color(0xFF000000);
 
   // Text
-  static const onSurface            = Color(0xFF1A1C1C); // Primary text
-  static const onSurfaceVariant     = Color(0xFF6B7070); // Secondary labels
+  static const onSurface            = Color(0xFF1A1C1E);
+  static const onSurfaceVariant     = Color(0xFF6B6E72);
 
   // Game-specific semantic tokens (light)
-  static const activePlayerBg  = surfaceContainerLow;   // #F3F3F3
-  static const inactiveScore   = outlineVariant;        // #B9CBBE
-  static const cricketClosed   = primaryContainer;      // #00FFAB (neon)
-  static const win             = primary;               // #006C46
-  static const winContainer    = surfaceContainerLow;   // #F3F3F3
+  static const activePlayerBg   = surfaceContainerHigh;
+  static const inactiveScore    = onSurfaceVariant;
+  static const cricketClosed    = primaryFixed;
+  static const win              = primary;
+  static const winContainer     = surfaceContainerLow;
 }
 
 /// Design token constants — dark mode (Kinetic Precision theme).

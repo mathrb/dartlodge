@@ -269,7 +269,7 @@ class _LastPlayedCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0x66232629),
+            cs.surfaceContainerHigh.withValues(alpha: 0.40),
             cs.primaryFixed.withValues(alpha: 0.08),
           ],
         ),
@@ -448,12 +448,12 @@ class _VariantRow extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(minHeight: 64),
             decoration: isSelected
-                ? AppTheme.kineticCardDecoration().copyWith(
+                ? AppTheme.kineticCardDecoration(cs).copyWith(
                     border: Border(
                       left: BorderSide(color: cs.primaryFixed, width: 4),
                     ),
                   )
-                : AppTheme.kineticCardDecoration(),
+                : AppTheme.kineticCardDecoration(cs),
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
             child: Row(
               children: [
