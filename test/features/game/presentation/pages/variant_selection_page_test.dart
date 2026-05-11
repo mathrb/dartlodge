@@ -213,4 +213,49 @@ void main() {
       expect(find.text('Select your match variation to begin'), findsOneWidget);
     });
   });
+
+  group('VariantSelectionPage — rules info icon', () {
+    testWidgets('each enabled X01 row has an info icon', (tester) async {
+      await tester.pumpWidget(_buildApp('x01'));
+      await tester.pumpAndSettle();
+
+      // 4 enabled X01 rows × 1 info_outline each.
+      expect(find.byIcon(Icons.info_outline), findsNWidgets(4));
+    });
+
+    testWidgets('disabled Custom row has no info icon', (tester) async {
+      await tester.pumpWidget(_buildApp('x01'));
+      await tester.pumpAndSettle();
+
+      // The 501/301/701/901 row pile has tooltips "How to play 501" etc.
+      // Custom has no info icon at all — its tooltip is the disabled hint.
+      expect(
+        find.byWidgetPredicate(
+            (w) => w is Tooltip && w.message == 'How to play Custom'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('tapping info icon opens rules sheet without navigating',
+        (tester) async {
+      final pushed = <String>[];
+      await tester.pumpWidget(_buildApp('cricket', pushedRoutes: pushed));
+      await tester.pumpAndSettle();
+
+      // Tap the info icon next to "STANDARD".
+      final standardRow = find.ancestor(
+        of: find.text('STANDARD'),
+        matching: find.byType(Row),
+      ).first;
+      final infoIcon = find.descendant(
+        of: standardRow,
+        matching: find.byIcon(Icons.info_outline),
+      );
+      await tester.tap(infoIcon);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cricket — Standard'), findsOneWidget);
+      expect(find.text('player-selection'), findsNothing);
+    });
+  });
 }

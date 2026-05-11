@@ -9,6 +9,7 @@ import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/features/game/presentation/rules/rules_bottom_sheet.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 
 class VariantSelectionPage extends ConsumerWidget {
@@ -83,6 +84,7 @@ class VariantSelectionPage extends ConsumerWidget {
       final v = variants[i];
       rows.add(_VariantRow(
         title: v.label,
+        rulesSlug: v.rulesSlug,
         isSelected: v.config != null && v.config == selectedConfig,
         isEnabled: v.isEnabled,
         onTap: v.config == null
@@ -99,6 +101,7 @@ class VariantSelectionPage extends ConsumerWidget {
   static List<_VariantEntry> _x01Variants() => const [
         _VariantEntry(
           label: '501',
+          rulesSlug: 'x01-501',
           config: GameConfig.x01(
             startingScore: 501,
             inStrategy: 'straight',
@@ -108,6 +111,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: '301',
+          rulesSlug: 'x01-301',
           config: GameConfig.x01(
             startingScore: 301,
             inStrategy: 'straight',
@@ -117,6 +121,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: '701',
+          rulesSlug: 'x01-701',
           config: GameConfig.x01(
             startingScore: 701,
             inStrategy: 'straight',
@@ -126,6 +131,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: '901',
+          rulesSlug: 'x01-901',
           config: GameConfig.x01(
             startingScore: 901,
             inStrategy: 'straight',
@@ -139,6 +145,7 @@ class VariantSelectionPage extends ConsumerWidget {
   static List<_VariantEntry> _cricketVariants() => [
         _VariantEntry(
           label: 'Standard',
+          rulesSlug: 'cricket-standard',
           config: GameConfig.cricket(
             variant: 'standard',
             numbers: GameConfigurationConstants.cricketNumbers,
@@ -147,6 +154,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: 'No Score',
+          rulesSlug: 'cricket-no-score',
           config: GameConfig.cricket(
             variant: 'no-score',
             numbers: GameConfigurationConstants.cricketNumbers,
@@ -155,6 +163,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: 'Cut Throat',
+          rulesSlug: 'cricket-cut-throat',
           config: GameConfig.cricket(
             variant: 'cut-throat',
             numbers: GameConfigurationConstants.cricketNumbers,
@@ -163,6 +172,7 @@ class VariantSelectionPage extends ConsumerWidget {
         ),
         _VariantEntry(
           label: 'Tactics',
+          rulesSlug: 'cricket-tactics',
           config: GameConfig.cricket(
             variant: 'tactics',
             numbers: GameConfigurationConstants.cricketNumbers,
@@ -175,26 +185,32 @@ class VariantSelectionPage extends ConsumerWidget {
   static List<_VariantEntry> _practiceVariants() => const [
         _VariantEntry(
           label: 'Around the Clock',
+          rulesSlug: 'practice-atc',
           config: GameConfig.aroundTheClock(),
         ),
         _VariantEntry(
           label: 'Catch 40',
+          rulesSlug: 'practice-catch40',
           config: GameConfig.catch40(),
         ),
         _VariantEntry(
           label: "Bob's 27",
+          rulesSlug: 'practice-bobs27',
           config: GameConfig.bobs27(),
         ),
         _VariantEntry(
           label: 'Shanghai',
+          rulesSlug: 'practice-shanghai',
           config: GameConfig.shanghai(),
         ),
         _VariantEntry(
           label: '170 Checkout',
+          rulesSlug: 'practice-170-checkout',
           config: GameConfig.checkoutPractice(),
         ),
         _VariantEntry(
           label: 'Count-Up',
+          rulesSlug: 'practice-count-up',
           config: GameConfig.countUp(
             totalRounds: GameConfigurationConstants.countUpDefaultRounds,
           ),
@@ -419,12 +435,14 @@ class _MetaChip extends StatelessWidget {
 class _VariantRow extends StatelessWidget {
   const _VariantRow({
     required this.title,
+    this.rulesSlug,
     this.isSelected = false,
     this.isEnabled = true,
     this.onTap,
   });
 
   final String title;
+  final String? rulesSlug;
   final bool isSelected;
   final bool isEnabled;
   final VoidCallback? onTap;
@@ -454,7 +472,7 @@ class _VariantRow extends StatelessWidget {
                     ),
                   )
                 : AppTheme.kineticCardDecoration(),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 20),
+            padding: const EdgeInsets.fromLTRB(32, 20, 16, 20),
             child: Row(
               children: [
                 Expanded(
@@ -467,6 +485,12 @@ class _VariantRow extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isEnabled && rulesSlug != null)
+                  IconButton(
+                    icon: Icon(Icons.info_outline, color: cs.onSurfaceVariant),
+                    tooltip: 'How to play $title',
+                    onPressed: () => showRules(context, rulesSlug!),
+                  ),
                 Icon(
                   Icons.chevron_right,
                   color: cs.onSurfaceVariant,
@@ -498,10 +522,12 @@ class _VariantEntry {
   const _VariantEntry({
     required this.label,
     this.config,
+    this.rulesSlug,
     this.isEnabled = true,
   });
 
   final String label;
   final GameConfig? config;
+  final String? rulesSlug;
   final bool isEnabled;
 }
