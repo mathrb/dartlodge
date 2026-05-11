@@ -161,28 +161,29 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          appBar: AppHeader(
-            boardMode: true,
-            showBack: true,
-            onBack: () => _confirmBack(context),
-            trailing: InkWell(
-              onTap: () => _showEndGameDialog(context),
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              splashColor: AppTheme.kineticSplashColor,
-              highlightColor: AppTheme.kineticSplashColor,
-              child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white,
-                  semanticLabel: 'Game options',
+          body: SafeArea(
+            bottom: false,
+            child: Column(
+            children: [
+              AppHeader(
+                showBack: true,
+                onBack: () => _confirmBack(context),
+                trailing: InkWell(
+                  onTap: () => _showEndGameDialog(context),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  splashColor: AppTheme.kineticSplashColor,
+                  highlightColor: AppTheme.kineticSplashColor,
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Icon(
+                      Icons.settings_outlined,
+                      color: cs.onSurface,
+                      semanticLabel: 'Game options',
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          body: Column(
-            children: [
               GameStatusBarWidget(
                 configLabel: variantLabel,
                 currentLegIndex: gameState.currentLegIndex,
@@ -241,6 +242,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 onNextRound: () => notifier.nextPlayer(),
               ),
             ],
+          ),
           ),
           ),
         );

@@ -139,21 +139,23 @@ abstract final class AppTheme {
   /// Endpoints come from the active [ColorScheme] so the card's tonal depth
   /// reads correctly in both light and dark mode (DESIGN_SYSTEM §2.4).
   /// Use on [Container] with [clipBehavior: Clip.antiAlias].
-  static BoxDecoration kineticCardDecoration(ColorScheme cs) => BoxDecoration(
-    gradient: LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        cs.surfaceContainerHigh.withValues(alpha: 0.40),
-        cs.surfaceContainerLow.withValues(alpha: 0.80),
-      ],
-    ),
-    borderRadius: BorderRadius.circular(radiusLarge),
-    border: Border.all(
-      color: cs.outlineVariant.withValues(alpha: opacityGhostBorderLight),
-      width: 1,
-    ),
-  );
+  static BoxDecoration kineticCardDecoration(ColorScheme cs) {
+    final isDark = cs.brightness == Brightness.dark;
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [cs.surfaceContainerHigh, cs.surfaceContainerLow],
+      ),
+      borderRadius: BorderRadius.circular(radiusLarge),
+      border: Border.all(
+        color: isDark
+            ? cs.outlineVariant.withValues(alpha: opacityGhostBorderLight)
+            : cs.scrim.withValues(alpha: opacityGhostBorderLight),
+        width: 1,
+      ),
+    );
+  }
 
   static TextTheme _textTheme() => TextTheme(
     displayLarge:   AppTextStyles.displayLarge,

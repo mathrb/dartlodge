@@ -16,9 +16,12 @@ abstract final class AppColors {
   static const background               = surface;
   static const onBackground             = onSurface;
 
-  // Primary / brand — IDENTICAL to dark (neon green stays neon green)
-  static const primary              = Color(0xFFAFFFD1);
-  static const onPrimary            = Color(0xFF004A2F);
+  // Primary / brand
+  // `primary` adapts per theme for accent text/icon readability on neutral
+  // surfaces (M3 role). `primaryFixed` / `primaryFixedDim` carry the neon
+  // brand identity and stay identical to dark.
+  static const primary              = Color(0xFF006D45); // accessible green on light surfaces
+  static const onPrimary            = Color(0xFFFFFFFF);
   static const primaryContainer     = Color(0xFF005234);
   static const onPrimaryContainer   = Color(0xFF00ED9F);
   static const primaryFixed         = Color(0xFF00FFAB);

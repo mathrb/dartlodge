@@ -324,35 +324,39 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          appBar: AppHeader(
-            boardMode: true,
-            showBack: true,
-            onBack: () => _confirmBack(context),
-            trailing: PopupMenuButton<_DrillAction>(
-              icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (action) async {
-                switch (action) {
-                  case _DrillAction.resetDrill:
-                    await notifier.resetDrill();
-                  case _DrillAction.endDrill:
-                    await notifier.endDrill();
-                    if (context.mounted) context.go(GameRoutes.home);
-                }
-              },
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: _DrillAction.resetDrill,
-                  child: Text('Reset Drill'),
-                ),
-                PopupMenuItem(
-                  value: _DrillAction.endDrill,
-                  child: Text('End Drill'),
-                ),
-              ],
-            ),
-          ),
-          body: Column(
+          body: SafeArea(
+            bottom: false,
+            child: Column(
             children: [
+              AppHeader(
+                showBack: true,
+                onBack: () => _confirmBack(context),
+                trailing: PopupMenuButton<_DrillAction>(
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  onSelected: (action) async {
+                    switch (action) {
+                      case _DrillAction.resetDrill:
+                        await notifier.resetDrill();
+                      case _DrillAction.endDrill:
+                        await notifier.endDrill();
+                        if (context.mounted) context.go(GameRoutes.home);
+                    }
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
+                      value: _DrillAction.resetDrill,
+                      child: Text('Reset Drill'),
+                    ),
+                    PopupMenuItem(
+                      value: _DrillAction.endDrill,
+                      child: Text('End Drill'),
+                    ),
+                  ],
+                ),
+              ),
               GameStatusBarWidget(
                 configLabel: _modeName(gs.gameType),
                 roundInLeg: competitor.practiceRound,
@@ -418,6 +422,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 onEndDrill: notifier.endDrill,
               ),
             ],
+          ),
           ),
           ),
         );
