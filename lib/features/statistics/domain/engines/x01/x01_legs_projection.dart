@@ -27,6 +27,9 @@ class X01LegsProjection extends ProjectionEngine {
   @override
   void apply(GameEvent event) {
     if (event.eventType != 'LegCompleted') return;
+    // Solo games (one competitor) are practice / sandbox runs — exclude their
+    // legs from the multiplayer-only legs played/won totals. See issue #106.
+    if (_context?.soloGameIds.contains(event.gameId) ?? false) return;
     _legsPlayed++;
     final winnerId = event.payload['winner_player_id'] as String?;
     if (winnerId == _context?.playerId) _legsWon++;

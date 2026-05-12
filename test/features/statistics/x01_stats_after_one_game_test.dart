@@ -23,18 +23,25 @@ void main() {
       final statsRepo = await base.createStatisticsRepository();
 
       const playerId = 'p1';
+      const opponentId = 'p2';
       const gameId = 'g1';
       const competitorId = 'c1';
 
-      // 1. Create player
+      // 1. Create players
       await playerRepo.createPlayer(Player(
         playerId: playerId,
         name: 'Test Player',
         createdAt: DateTime.now(),
         lastActive: DateTime.now(),
       ));
+      await playerRepo.createPlayer(Player(
+        playerId: opponentId,
+        name: 'Opponent',
+        createdAt: DateTime.now(),
+        lastActive: DateTime.now(),
+      ));
 
-      // 2. Create X01 game
+      // 2. Create X01 game (multiplayer so legs count — see issue #106)
       await gameRepo.createGame(
         Game(
           gameId: gameId,
@@ -56,6 +63,16 @@ void main() {
             players: [
               CompetitorPlayer(
                   playerId: playerId, rotationPosition: 0),
+            ],
+          ),
+          Competitor(
+            competitorId: 'c2',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Opponent',
+            players: [
+              CompetitorPlayer(
+                  playerId: opponentId, rotationPosition: 1),
             ],
           ),
         ],

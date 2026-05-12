@@ -9,6 +9,10 @@ class ProjectionContext {
   final String inStrategy;
   final String outStrategy;
   final List<String> playerIds;
+  // Games with a single competitor. Projections that should only count
+  // multiplayer outcomes (e.g. legs won) skip events whose gameId is in this
+  // set. Empty when the caller does not know or does not care.
+  final Set<String> soloGameIds;
 
   const ProjectionContext({
     required this.playerId,
@@ -16,6 +20,7 @@ class ProjectionContext {
     required this.inStrategy,
     required this.outStrategy,
     required this.playerIds,
+    this.soloGameIds = const {},
   });
 }
 

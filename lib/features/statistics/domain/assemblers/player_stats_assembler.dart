@@ -76,6 +76,7 @@ class PlayerStatsAssembler {
     String inStrategy = 'straight',
     String outStrategy = 'double',
     String atcVariant = 'standard',
+    Set<String> soloGameIds = const {},
   }) {
     if (_practiceGameTypes.contains(gameType)) {
       return _buildPracticeStats(
@@ -96,6 +97,7 @@ class PlayerStatsAssembler {
       inStrategy: inStrategy,
       outStrategy: outStrategy,
       playerIds: [playerId],
+      soloGameIds: soloGameIds,
     );
 
     final runner = isCricket

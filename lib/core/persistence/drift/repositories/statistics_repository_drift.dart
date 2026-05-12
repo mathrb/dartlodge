@@ -222,6 +222,26 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       final gameIds = games.map((g) => g.gameId).toList();
       final totalGames = gameIds.length;
 
+      // Identify solo (single-competitor) games so leg projections can exclude
+      // them — legs played/won is a multiplayer-only metric (see issue #106).
+      final soloGameIds = <String>{};
+      if (gameIds.isNotEmpty) {
+        final competitorCountQuery = _db.selectOnly(_db.competitors)
+          ..addColumns(
+              [_db.competitors.gameId, _db.competitors.competitorId.count()])
+          ..where(_db.competitors.gameId.isIn(gameIds))
+          ..groupBy([_db.competitors.gameId]);
+        final competitorCountRows = await competitorCountQuery.get();
+        for (final row in competitorCountRows) {
+          final gid = row.read(_db.competitors.gameId);
+          final cnt =
+              row.read(_db.competitors.competitorId.count()) ?? 0;
+          if (gid != null && cnt <= 1) {
+            soloGameIds.add(gid);
+          }
+        }
+      }
+
       // 4. Total dart count for this player across these games.
       final dartCountQuery = _db.selectOnly(_db.dartThrows)
         ..addColumns([_db.dartThrows.dartId.count()])
@@ -287,6 +307,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         inStrategy: inStrategy,
         outStrategy: outStrategy,
         atcVariant: atcVariant,
+        soloGameIds: soloGameIds,
       );
     } on RepositoryException {
       rethrow;

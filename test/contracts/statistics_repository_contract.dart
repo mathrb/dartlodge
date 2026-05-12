@@ -267,6 +267,47 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
           await statsRepo.getPlayerStats('p1', gameType: GameType.cricket);
       expect(stats.nineMarkTurns, 1); // only turn 1 (T20+T20+T20)
     });
+
+    test('solo cricket games are excluded from legsPlayed and legsWon (#106)',
+        () async {
+      await _setupCompletedCricketGame(
+          playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+          playerId: 'p1',
+          gameId: 'g1',
+          competitorId: 'c1',
+          multiplayer: false);
+
+      final stats =
+          await statsRepo.getPlayerStats('p1', gameType: GameType.cricket);
+      expect(stats.legsPlayed, 0);
+      expect(stats.legsWon, 0);
+      // Other stats from solo games still count.
+      expect(stats.marksPerTurn, isNotNull);
+      expect(stats.totalDartsThrown, greaterThan(0));
+    });
+
+    test(
+        'mixed solo + multiplayer cricket games only count multiplayer legs (#106)',
+        () async {
+      // Solo game: should not contribute to legs counts.
+      await _setupCompletedCricketGame(
+          playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+          playerId: 'p1',
+          gameId: 'g-solo',
+          competitorId: 'c-solo',
+          multiplayer: false);
+      // Multiplayer game: should contribute 1 leg played + 1 won.
+      await _setupCompletedCricketGame(
+          playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+          playerId: 'p1',
+          gameId: 'g-multi',
+          competitorId: 'c-multi');
+
+      final stats =
+          await statsRepo.getPlayerStats('p1', gameType: GameType.cricket);
+      expect(stats.legsPlayed, 1);
+      expect(stats.legsWon, 1);
+    });
   });
 
   // ── getPlayerCricketVariants ───────────────────────────────────────────────
@@ -294,22 +335,53 @@ void runStatisticsRepositoryContractTests(DatabaseTestBase base) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 Future<void> _createPlayer(PlayerRepository repo, String playerId) async {
-  await repo.createPlayer(Player(
-    playerId: playerId,
-    name: 'Player $playerId',
-    createdAt: DateTime.now(),
-    lastActive: DateTime.now(),
-  ));
+  try {
+    await repo.createPlayer(Player(
+      playerId: playerId,
+      name: 'Player $playerId',
+      createdAt: DateTime.now(),
+      lastActive: DateTime.now(),
+    ));
+  } on DuplicatePlayerException {
+    // Idempotent — tests that compose multiple fixtures may seed the same
+    // player more than once.
+  }
 }
 
 /// Creates a player, a complete game, and a solo competitor linking the two.
+/// When [multiplayer] is true (default), also creates a second player and a
+/// ghost competitor with no throws so the game qualifies as multiplayer for
+/// the issue #106 solo-game filter.
 Future<void> _createPlayerAndGame(
   PlayerRepository playerRepo,
   GameRepository gameRepo, {
   required String playerId,
   required String gameId,
+  bool multiplayer = true,
 }) async {
   await _createPlayer(playerRepo, playerId);
+  final competitors = <Competitor>[
+    Competitor(
+      competitorId: 'c1',
+      gameId: gameId,
+      type: CompetitorType.solo,
+      name: 'Player $playerId',
+      players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
+    ),
+  ];
+  if (multiplayer) {
+    final opponentId = '${playerId}_opp';
+    await _createPlayer(playerRepo, opponentId);
+    competitors.add(Competitor(
+      competitorId: 'c-opp',
+      gameId: gameId,
+      type: CompetitorType.solo,
+      name: 'Player $opponentId',
+      players: [
+        CompetitorPlayer(playerId: opponentId, rotationPosition: 1),
+      ],
+    ));
+  }
   await gameRepo.createGame(
     Game(
       gameId: gameId,
@@ -322,15 +394,7 @@ Future<void> _createPlayerAndGame(
       startTime: DateTime.now(),
       isComplete: false,
     ),
-    [
-      Competitor(
-        competitorId: 'c1',
-        gameId: gameId,
-        type: CompetitorType.solo,
-        name: 'Player $playerId',
-        players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
-      ),
-    ],
+    competitors,
   );
 }
 
@@ -371,9 +435,32 @@ Future<void> _setupCompletedCricketGame(
   required String playerId,
   required String gameId,
   required String competitorId,
+  bool multiplayer = true,
 }) async {
   await _createPlayer(playerRepo, playerId);
 
+  final competitors = <Competitor>[
+    Competitor(
+      competitorId: competitorId,
+      gameId: gameId,
+      type: CompetitorType.solo,
+      name: 'Player $playerId',
+      players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
+    ),
+  ];
+  if (multiplayer) {
+    final opponentId = '${playerId}_opp';
+    await _createPlayer(playerRepo, opponentId);
+    competitors.add(Competitor(
+      competitorId: '${competitorId}_opp',
+      gameId: gameId,
+      type: CompetitorType.solo,
+      name: 'Player $opponentId',
+      players: [
+        CompetitorPlayer(playerId: opponentId, rotationPosition: 1),
+      ],
+    ));
+  }
   await gameRepo.createGame(
     Game(
       gameId: gameId,
@@ -386,15 +473,7 @@ Future<void> _setupCompletedCricketGame(
       startTime: DateTime.now(),
       isComplete: false,
     ),
-    [
-      Competitor(
-        competitorId: competitorId,
-        gameId: gameId,
-        type: CompetitorType.solo,
-        name: 'Player $playerId',
-        players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
-      ),
-    ],
+    competitors,
   );
 
   // dart_throws — queried directly by the Drift implementation.

@@ -391,6 +391,23 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
     var gameIds = gamesResult.map((r) => r['game_id'] as String).toList();
     final totalGames = gameIds.length;
 
+    // Identify solo (single-competitor) games so leg projections can exclude
+    // them — legs played/won is a multiplayer-only metric (see issue #106).
+    final soloGameIds = <String>{};
+    if (gameIds.isNotEmpty) {
+      final soloPlaceholders = gameIds.map((_) => '?').join(',');
+      final competitorCounts = await _db.rawQuery(
+        'SELECT game_id, COUNT(*) as cnt FROM competitors '
+        'WHERE game_id IN ($soloPlaceholders) GROUP BY game_id',
+        gameIds,
+      );
+      for (final row in competitorCounts) {
+        if ((row['cnt'] as int? ?? 0) <= 1) {
+          soloGameIds.add(row['game_id'] as String);
+        }
+      }
+    }
+
     // Apply legLimit: keep only the last legLimit completed legs by slicing game list
     // (full leg-level limit is handled after projection via legLimit on the runner snapshot)
     // For simplicity we pass legLimit into the events and trim after projection.
@@ -445,6 +462,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
       inStrategy: inStrategy,
       outStrategy: outStrategy,
       atcVariant: atcVariant,
+      soloGameIds: soloGameIds,
     );
   }
 
