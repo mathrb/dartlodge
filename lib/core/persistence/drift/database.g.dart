@@ -4495,6 +4495,46 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GameEventsTable gameEvents = $GameEventsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final $GameSessionsTable gameSessions = $GameSessionsTable(this);
+  late final Index idxCompetitorsGameId = Index(
+    'idx_competitors_game_id',
+    'CREATE INDEX idx_competitors_game_id ON competitors (game_id)',
+  );
+  late final Index idxCompetitorPlayersPlayerId = Index(
+    'idx_competitor_players_player_id',
+    'CREATE INDEX idx_competitor_players_player_id ON competitor_players (player_id)',
+  );
+  late final Index idxDartThrowsGameId = Index(
+    'idx_dart_throws_game_id',
+    'CREATE INDEX idx_dart_throws_game_id ON dart_throws (game_id)',
+  );
+  late final Index idxDartThrowsPlayerId = Index(
+    'idx_dart_throws_player_id',
+    'CREATE INDEX idx_dart_throws_player_id ON dart_throws (player_id)',
+  );
+  late final Index idxDartThrowsCompetitorId = Index(
+    'idx_dart_throws_competitor_id',
+    'CREATE INDEX idx_dart_throws_competitor_id ON dart_throws (competitor_id)',
+  );
+  late final Index idxDartThrowsTurnOrder = Index(
+    'idx_dart_throws_turn_order',
+    'CREATE INDEX idx_dart_throws_turn_order ON dart_throws (game_id, turn_number, dart_number)',
+  );
+  late final Index idxGameEventsGameId = Index(
+    'idx_game_events_game_id',
+    'CREATE INDEX idx_game_events_game_id ON game_events (game_id)',
+  );
+  late final Index idxGameEventsSequence = Index(
+    'idx_game_events_sequence',
+    'CREATE INDEX idx_game_events_sequence ON game_events (game_id, local_sequence)',
+  );
+  late final Index idxSyncQueueStatus = Index(
+    'idx_sync_queue_status',
+    'CREATE INDEX idx_sync_queue_status ON sync_queue (status)',
+  );
+  late final Index idxGameSessionsGameId = Index(
+    'idx_game_sessions_game_id',
+    'CREATE INDEX idx_game_sessions_game_id ON game_sessions (game_id)',
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4509,6 +4549,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     gameEvents,
     syncQueue,
     gameSessions,
+    idxCompetitorsGameId,
+    idxCompetitorPlayersPlayerId,
+    idxDartThrowsGameId,
+    idxDartThrowsPlayerId,
+    idxDartThrowsCompetitorId,
+    idxDartThrowsTurnOrder,
+    idxGameEventsGameId,
+    idxGameEventsSequence,
+    idxSyncQueueStatus,
+    idxGameSessionsGameId,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([

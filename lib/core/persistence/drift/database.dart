@@ -2,7 +2,6 @@
 // IndexedDB-based database for web using drift
 
 import 'package:drift/drift.dart';
-import 'package:dart_lodge/core/utils/constants.dart';
 
 part 'database.g.dart';
 
@@ -39,6 +38,7 @@ class Games extends Table {
   Set<Column> get primaryKey => {gameId};
 }
 
+@TableIndex(name: 'idx_competitors_game_id', columns: {#gameId})
 class Competitors extends Table {
   TextColumn get competitorId => text()();
   TextColumn get gameId =>
@@ -50,6 +50,7 @@ class Competitors extends Table {
   Set<Column> get primaryKey => {competitorId};
 }
 
+@TableIndex(name: 'idx_competitor_players_player_id', columns: {#playerId})
 class CompetitorPlayers extends Table {
   TextColumn get competitorId => text()
       .references(Competitors, #competitorId, onDelete: KeyAction.cascade)();
@@ -61,6 +62,13 @@ class CompetitorPlayers extends Table {
   Set<Column> get primaryKey => {competitorId, playerId};
 }
 
+@TableIndex(name: 'idx_dart_throws_game_id', columns: {#gameId})
+@TableIndex(name: 'idx_dart_throws_player_id', columns: {#playerId})
+@TableIndex(name: 'idx_dart_throws_competitor_id', columns: {#competitorId})
+@TableIndex(
+  name: 'idx_dart_throws_turn_order',
+  columns: {#gameId, #turnNumber, #dartNumber},
+)
 class DartThrows extends Table {
   TextColumn get dartId => text()();
   TextColumn get gameId =>
@@ -80,6 +88,8 @@ class DartThrows extends Table {
   Set<Column> get primaryKey => {dartId};
 }
 
+@TableIndex(name: 'idx_game_events_game_id', columns: {#gameId})
+@TableIndex(name: 'idx_game_events_sequence', columns: {#gameId, #localSequence})
 class GameEvents extends Table {
   TextColumn get eventId => text()();
   TextColumn get gameId =>
@@ -115,6 +125,7 @@ class Accounts extends Table {
   Set<Column> get primaryKey => {accountId};
 }
 
+@TableIndex(name: 'idx_sync_queue_status', columns: {#status})
 class SyncQueue extends Table {
   TextColumn get operationId => text()();
   TextColumn get entityType => text()();
@@ -131,6 +142,7 @@ class SyncQueue extends Table {
   Set<Column> get primaryKey => {operationId};
 }
 
+@TableIndex(name: 'idx_game_sessions_game_id', columns: {#gameId})
 class GameSessions extends Table {
   TextColumn get sessionId => text()();
   TextColumn get gameId =>
@@ -168,8 +180,16 @@ class GameSessions extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
+  // Drift schema version is decoupled from `DatabaseConstants.databaseVersion`
+  // (sqflite) so we can evolve drift independently as we migrate the mobile
+  // backend off sqflite. See issue #112.
+  // v2: added secondary indexes (`@TableIndex` annotations) to mirror the
+  //     sqflite DDL — `idx_competitors_game_id`, `idx_competitor_players_player_id`,
+  //     `idx_dart_throws_{game_id,player_id,competitor_id,turn_order}`,
+  //     `idx_game_events_{game_id,sequence}`, `idx_sync_queue_status`,
+  //     `idx_game_sessions_game_id`.
   @override
-  int get schemaVersion => DatabaseConstants.databaseVersion;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration {
@@ -177,11 +197,28 @@ class AppDatabase extends _$AppDatabase {
       onCreate: (Migrator m) async {
         // Enable foreign key constraints
         await m.database.customStatement('PRAGMA foreign_keys = ON;');
-        
+
         await m.createAll();
         await m.database.customStatement(
           'CREATE UNIQUE INDEX idx_games_single_active ON games(is_complete) WHERE is_complete = 0;',
         );
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          // Create secondary indexes that existed in sqflite but were missing
+          // from drift v1. The generated `Index` objects live on the database
+          // class itself (one per `@TableIndex` annotation).
+          await m.createIndex(idxCompetitorsGameId);
+          await m.createIndex(idxCompetitorPlayersPlayerId);
+          await m.createIndex(idxDartThrowsGameId);
+          await m.createIndex(idxDartThrowsPlayerId);
+          await m.createIndex(idxDartThrowsCompetitorId);
+          await m.createIndex(idxDartThrowsTurnOrder);
+          await m.createIndex(idxGameEventsGameId);
+          await m.createIndex(idxGameEventsSequence);
+          await m.createIndex(idxSyncQueueStatus);
+          await m.createIndex(idxGameSessionsGameId);
+        }
       },
       beforeOpen: (OpeningDetails details) async {
         // Enable foreign key constraints for every connection
