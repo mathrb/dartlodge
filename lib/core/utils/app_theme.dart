@@ -74,30 +74,33 @@ abstract final class AppTheme {
 
   static ColorScheme _lightScheme() => const ColorScheme(
     brightness: Brightness.light,
-    primaryFixed:         AppColors.primaryContainer,
-    onPrimaryFixed:       AppColors.onPrimaryFixed,
-    primary:              AppColors.primary,
-    onPrimary:            AppColors.onPrimary,
-    primaryContainer:     AppColors.primaryContainer,
-    onPrimaryContainer:   AppColors.onPrimaryFixed,
-    secondary:            AppColors.primary,
-    onSecondary:          AppColors.onPrimary,
-    secondaryContainer:   AppColors.primaryContainer,
-    onSecondaryContainer: AppColors.onPrimaryFixed,
-    error:                AppColors.error,
-    onError:              AppColors.onError,
-    errorContainer:       AppColors.errorContainer,
-    onErrorContainer:     AppColors.onErrorContainer,
+    primaryFixed:             AppColors.primaryFixed,
+    primaryFixedDim:          AppColors.primaryFixedDim,
+    onPrimaryFixed:           AppColors.onPrimaryFixed,
+    primary:                  AppColors.primary,
+    onPrimary:                AppColors.onPrimary,
+    primaryContainer:         AppColors.primaryContainer,
+    onPrimaryContainer:       AppColors.onPrimaryContainer,
+    secondary:                AppColors.secondary,
+    onSecondary:              AppColors.onSecondary,
+    secondaryContainer:       AppColors.secondaryContainer,
+    onSecondaryContainer:     AppColors.onSecondaryContainer,
+    error:                    AppColors.error,
+    onError:                  AppColors.onError,
+    errorContainer:           AppColors.errorContainer,
+    onErrorContainer:         AppColors.onErrorContainer,
     surface:                  AppColors.surface,
     onSurface:                AppColors.onSurface,
     surfaceContainerLowest:   AppColors.surfaceContainerLowest,
     surfaceContainerLow:      AppColors.surfaceContainerLow,
     surfaceContainer:         AppColors.surfaceContainer,
+    surfaceContainerHigh:     AppColors.surfaceContainerHigh,
     surfaceContainerHighest:  AppColors.surfaceContainerHighest,
-    onSurfaceVariant:     AppColors.onSurfaceVariant,
-    outline:              AppColors.outline,
-    outlineVariant:       AppColors.outlineVariant,
-    scrim:                AppColors.scrim,
+    surfaceBright:            AppColors.surfaceBright,
+    onSurfaceVariant:         AppColors.onSurfaceVariant,
+    outline:                  AppColors.outline,
+    outlineVariant:           AppColors.outlineVariant,
+    scrim:                    AppColors.scrim,
   );
 
   static ColorScheme _darkScheme() => const ColorScheme(
@@ -133,22 +136,26 @@ abstract final class AppTheme {
   static const Color kineticSplashColor = Color(0x0D00FFAB);
 
   /// Gradient card decoration for primary game cards (Kinetic Architect design).
+  /// Endpoints come from the active [ColorScheme] so the card's tonal depth
+  /// reads correctly in both light and dark mode (DESIGN_SYSTEM §2.4).
   /// Use on [Container] with [clipBehavior: Clip.antiAlias].
-  static BoxDecoration kineticCardDecoration() => BoxDecoration(
-    gradient: const LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        Color(0x66232629), // surfaceContainerHigh ~40% opacity
-        Color(0xCC111416), // surfaceContainerLow  ~80% opacity
-      ],
-    ),
-    borderRadius: BorderRadius.circular(radiusLarge),
-    border: Border.all(
-      color: const Color(0x0DFFFFFF), // rgba(255,255,255,0.05) ghost border
-      width: 1,
-    ),
-  );
+  static BoxDecoration kineticCardDecoration(ColorScheme cs) {
+    final isDark = cs.brightness == Brightness.dark;
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [cs.surfaceContainerHigh, cs.surfaceContainerLow],
+      ),
+      borderRadius: BorderRadius.circular(radiusLarge),
+      border: Border.all(
+        color: isDark
+            ? cs.outlineVariant.withValues(alpha: opacityGhostBorderLight)
+            : cs.scrim.withValues(alpha: opacityGhostBorderLight),
+        width: 1,
+      ),
+    );
+  }
 
   static TextTheme _textTheme() => TextTheme(
     displayLarge:   AppTextStyles.displayLarge,

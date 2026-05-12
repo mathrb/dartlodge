@@ -286,12 +286,11 @@ void main() {
     await tester.pumpAndSettle();
 
     // The active player card has a neon accent bar: a Container with
-    // BoxDecoration color == cs.primaryFixed (which equals AppColors.primaryContainer
-    // in light mode) and width == 4.
+    // BoxDecoration color == cs.primaryFixed (== AppColors.primaryFixed) and width == 4.
     final containers = tester.widgetList<Container>(find.byType(Container));
     final accentBars = containers.where((c) {
       if (c.decoration is BoxDecoration) {
-        return (c.decoration as BoxDecoration).color == AppColors.primaryContainer;
+        return (c.decoration as BoxDecoration).color == AppColors.primaryFixed;
       }
       return false;
     }).toList();

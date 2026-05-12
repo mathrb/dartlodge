@@ -195,28 +195,29 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          appBar: AppHeader(
-            boardMode: true,
-            showBack: true,
-            onBack: () => _confirmBack(context),
-            trailing: InkWell(
-              onTap: () => _showEndGameDialog(context),
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              splashColor: AppTheme.kineticSplashColor,
-              highlightColor: AppTheme.kineticSplashColor,
-              child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(
-                  Icons.settings_outlined,
-                  color: Colors.white,
-                  semanticLabel: 'Game options',
-                ),
-              ),
-            ),
-          ),
-          body: Column(
+          body: SafeArea(
+            bottom: false,
+            child: Column(
             children: [
+                  AppHeader(
+                    showBack: true,
+                    onBack: () => _confirmBack(context),
+                    trailing: InkWell(
+                      onTap: () => _showEndGameDialog(context),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                      splashColor: AppTheme.kineticSplashColor,
+                      highlightColor: AppTheme.kineticSplashColor,
+                      child: SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Icon(
+                          Icons.settings_outlined,
+                          color: cs.onSurface,
+                          semanticLabel: 'Game options',
+                        ),
+                      ),
+                    ),
+                  ),
                   GameStatusBarWidget(
                     configLabel: '${gameState.startingScore}',
                     currentLegIndex: gameState.currentLegIndex,
@@ -251,6 +252,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                         .advanceTurn(),
                   ),
                 ],
+          ),
           ),
           ),
         );

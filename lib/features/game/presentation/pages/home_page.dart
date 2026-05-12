@@ -107,7 +107,7 @@ class _KineticGameCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: AppTheme.kineticCardDecoration(),
+      decoration: AppTheme.kineticCardDecoration(cs),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -125,14 +125,10 @@ class _KineticGameCard extends StatelessWidget {
                   height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: cs.primaryFixed.withValues(alpha: AppTheme.opacityKineticIconBackground),
+                    color: cs.primaryContainer,
                     borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                    border: Border.all(
-                      color: cs.primaryFixed.withValues(alpha: AppTheme.opacityKineticIconBorder),
-                      width: 1,
-                    ),
                   ),
-                  child: Icon(icon, color: cs.primaryFixed, size: 22),
+                  child: Icon(icon, color: cs.onPrimaryContainer, size: 22),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
