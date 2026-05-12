@@ -54,8 +54,13 @@ String _$sharedPreferencesHash() => r'ad13470fe866595ad0f58a3e26f11048d94ef22e';
 final databaseProvider = DatabaseProvider._();
 
 final class DatabaseProvider
-    extends $FunctionalProvider<AsyncValue<dynamic>, dynamic, FutureOr<dynamic>>
-    with $FutureModifier<dynamic>, $FutureProvider<dynamic> {
+    extends
+        $FunctionalProvider<
+          AsyncValue<AppDatabase>,
+          AppDatabase,
+          FutureOr<AppDatabase>
+        >
+    with $FutureModifier<AppDatabase>, $FutureProvider<AppDatabase> {
   DatabaseProvider._()
     : super(
         from: null,
@@ -72,64 +77,17 @@ final class DatabaseProvider
 
   @$internal
   @override
-  $FutureProviderElement<dynamic> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<AppDatabase> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<dynamic> create(Ref ref) {
+  FutureOr<AppDatabase> create(Ref ref) {
     return database(ref);
   }
 }
 
-String _$databaseHash() => r'ef53a182f91de0d4e4ceabd6c422edf7b00dddb1';
-
-@ProviderFor(dataChangeNotifier)
-final dataChangeProvider = DataChangeNotifierProvider._();
-
-final class DataChangeNotifierProvider
-    extends
-        $FunctionalProvider<
-          DataChangeNotifier,
-          DataChangeNotifier,
-          DataChangeNotifier
-        >
-    with $Provider<DataChangeNotifier> {
-  DataChangeNotifierProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'dataChangeProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$dataChangeNotifierHash();
-
-  @$internal
-  @override
-  $ProviderElement<DataChangeNotifier> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  DataChangeNotifier create(Ref ref) {
-    return dataChangeNotifier(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DataChangeNotifier value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<DataChangeNotifier>(value),
-    );
-  }
-}
-
-String _$dataChangeNotifierHash() =>
-    r'55a1e08aca205d71f0fe434b6cfbab8b4ea42ad5';
+String _$databaseHash() => r'327d82d59233f01964b65e2ecd9e98d66caab007';
 
 @ProviderFor(playerRepository)
 final playerRepositoryProvider = PlayerRepositoryProvider._();
@@ -175,7 +133,7 @@ final class PlayerRepositoryProvider
   }
 }
 
-String _$playerRepositoryHash() => r'f2736bab1daaa1468c86204623ecb4f33324a654';
+String _$playerRepositoryHash() => r'f6d5e27c2bf9b1868ebe3c18294e31cda2e8c540';
 
 @ProviderFor(gameRepository)
 final gameRepositoryProvider = GameRepositoryProvider._();
@@ -216,7 +174,7 @@ final class GameRepositoryProvider
   }
 }
 
-String _$gameRepositoryHash() => r'a63440ae9531761276c9a280406d5d6435f1bcbe';
+String _$gameRepositoryHash() => r'5646b8aa7090375fec7f816e27c92b3fb9aaba2c';
 
 @ProviderFor(dartThrowRepository)
 final dartThrowRepositoryProvider = DartThrowRepositoryProvider._();
@@ -264,7 +222,7 @@ final class DartThrowRepositoryProvider
 }
 
 String _$dartThrowRepositoryHash() =>
-    r'8e04ae46e616574db7b6238f3eac4f07642a3cc4';
+    r'07824732886f9cfd6c15b82cbf1525b4ff259485';
 
 @ProviderFor(gameEventRepository)
 final gameEventRepositoryProvider = GameEventRepositoryProvider._();
@@ -312,7 +270,7 @@ final class GameEventRepositoryProvider
 }
 
 String _$gameEventRepositoryHash() =>
-    r'478ed6d77c806f08c3ba840f2e6fae49f1a37f17';
+    r'906c11aaba24a7e2066f0646528b5eda218e4f6e';
 
 @ProviderFor(computeLegStatsUseCase)
 final computeLegStatsUseCaseProvider = ComputeLegStatsUseCaseProvider._();
@@ -408,7 +366,7 @@ final class StatisticsRepositoryProvider
 }
 
 String _$statisticsRepositoryHash() =>
-    r'f3a63d8c85ace8b322df885c2acc0efb1fc868b9';
+    r'28abdff3dde657f85c34b95ff81a514b97ca07aa';
 
 @ProviderFor(x01Engine)
 final x01EngineProvider = X01EngineProvider._();
@@ -1836,4 +1794,4 @@ final class ClearAllDataProvider
   }
 }
 
-String _$clearAllDataHash() => r'c6ca75376ad078bfc57c98914a92cbd949264c25';
+String _$clearAllDataHash() => r'832d4722e4a303045c0c31a72f4a23da09fc72b8';

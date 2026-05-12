@@ -4,11 +4,7 @@
 import 'dart:convert';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'data_change_notifier.dart';
-import 'database_helper.dart';
 import 'drift/drift_helper.dart';
 import 'drift/database.dart';
 import 'drift/repositories/player_repository_drift.dart';
@@ -17,15 +13,10 @@ import 'drift/repositories/dart_throw_repository_drift.dart';
 import 'drift/repositories/game_event_repository_drift.dart';
 import 'drift/repositories/statistics_repository_drift.dart';
 import '../../features/players/domain/repositories/player_repository.dart';
-import '../../features/players/data/repositories/player_repository_impl.dart';
 import '../../features/game/domain/repositories/game_repository.dart';
-import '../../features/game/data/repositories/game_repository_impl.dart';
 import '../../features/game/domain/repositories/dart_throw_repository.dart';
-import '../../features/game/data/repositories/dart_throw_repository_impl.dart';
 import '../../features/game/domain/repositories/game_event_repository.dart';
-import '../../features/game/data/repositories/game_event_repository_impl.dart';
 import '../../features/statistics/domain/repositories/statistics_repository.dart';
-import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/statistics/domain/usecases/compute_leg_stats_use_case.dart';
 import '../../features/game/domain/engines/stateless_x01_engine.dart';
 import '../../features/game/domain/engines/stateless_cricket_engine.dart';
@@ -49,75 +40,31 @@ part 'database_provider.g.dart';
 Future<SharedPreferences> sharedPreferences(Ref ref) =>
     SharedPreferences.getInstance();
 
-// Database provider - platform specific
 @Riverpod(keepAlive: true)
-Future<dynamic> database(Ref ref) async {
-  if (kIsWeb) {
-    // Use Drift for web
-    return await DriftHelper.instance.database;
-  } else {
-    // Use SQLite for mobile
-    return await DatabaseHelper.instance.database;
-  }
-}
-
-// Coarse-grained "something changed" signal published by sqflite write-side
-// repositories and consumed by sqflite read-side repositories to drive their
-// watchXxx streams. Drift exposes its own per-query reactivity natively, so
-// this notifier is mobile-only in practice (the constructor params are
-// optional everywhere).
-@Riverpod(keepAlive: true)
-DataChangeNotifier dataChangeNotifier(Ref ref) {
-  final notifier = DataChangeNotifier();
-  ref.onDispose(notifier.dispose);
-  return notifier;
-}
+Future<AppDatabase> database(Ref ref) => DriftHelper.instance.database;
 
 @Riverpod(keepAlive: true)
 PlayerRepository playerRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
-  
-  if (kIsWeb) {
-    return PlayerRepositoryDrift(db as AppDatabase);
-  } else {
-    return PlayerRepositoryImpl(db as Database);
-  }
+  return PlayerRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
 GameRepository gameRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
-
-  if (kIsWeb) {
-    return GameRepositoryDrift(db as AppDatabase);
-  } else {
-    return GameRepositoryImpl(db as Database,
-        changeNotifier: ref.watch(dataChangeProvider));
-  }
+  return GameRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
 DartThrowRepository dartThrowRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
-
-  if (kIsWeb) {
-    return DartThrowRepositoryDrift(db as AppDatabase);
-  } else {
-    return DartThrowRepositoryImpl(db as Database,
-        changeNotifier: ref.watch(dataChangeProvider));
-  }
+  return DartThrowRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
 GameEventRepository gameEventRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
-
-  if (kIsWeb) {
-    return GameEventRepositoryDrift(db as AppDatabase);
-  } else {
-    return GameEventRepositoryImpl(db as Database,
-        changeNotifier: ref.watch(dataChangeProvider));
-  }
+  return GameEventRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
@@ -127,13 +74,7 @@ ComputeLegStatsUseCase computeLegStatsUseCase(Ref ref) =>
 @Riverpod(keepAlive: true)
 StatisticsRepository statisticsRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
-
-  if (kIsWeb) {
-    return StatisticsRepositoryDrift(db as AppDatabase);
-  } else {
-    return StatisticsRepositoryImpl(db as Database,
-        changeNotifier: ref.watch(dataChangeProvider));
-  }
+  return StatisticsRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
@@ -353,10 +294,6 @@ class LastGameConfig extends _$LastGameConfig {
 @riverpod
 Future<void> Function() clearAllData(Ref ref) {
   return () async {
-    if (kIsWeb) {
-      await DriftHelper.instance.clearAllData();
-    } else {
-      await DatabaseHelper.instance.clearAllData();
-    }
+    await DriftHelper.instance.clearAllData();
   };
 }
