@@ -39,6 +39,7 @@ class Games extends Table {
   Set<Column> get primaryKey => {gameId};
 }
 
+@TableIndex(name: 'idx_competitors_game_id', columns: {#gameId})
 class Competitors extends Table {
   TextColumn get competitorId => text()();
   TextColumn get gameId =>
@@ -50,6 +51,7 @@ class Competitors extends Table {
   Set<Column> get primaryKey => {competitorId};
 }
 
+@TableIndex(name: 'idx_competitor_players_player_id', columns: {#playerId})
 class CompetitorPlayers extends Table {
   TextColumn get competitorId => text()
       .references(Competitors, #competitorId, onDelete: KeyAction.cascade)();
@@ -61,6 +63,13 @@ class CompetitorPlayers extends Table {
   Set<Column> get primaryKey => {competitorId, playerId};
 }
 
+@TableIndex(name: 'idx_dart_throws_game_id', columns: {#gameId})
+@TableIndex(name: 'idx_dart_throws_player_id', columns: {#playerId})
+@TableIndex(name: 'idx_dart_throws_competitor_id', columns: {#competitorId})
+@TableIndex(
+  name: 'idx_dart_throws_turn_order',
+  columns: {#gameId, #turnNumber, #dartNumber},
+)
 class DartThrows extends Table {
   TextColumn get dartId => text()();
   TextColumn get gameId =>
@@ -80,6 +89,8 @@ class DartThrows extends Table {
   Set<Column> get primaryKey => {dartId};
 }
 
+@TableIndex(name: 'idx_game_events_game_id', columns: {#gameId})
+@TableIndex(name: 'idx_game_events_sequence', columns: {#gameId, #localSequence})
 class GameEvents extends Table {
   TextColumn get eventId => text()();
   TextColumn get gameId =>
@@ -115,6 +126,7 @@ class Accounts extends Table {
   Set<Column> get primaryKey => {accountId};
 }
 
+@TableIndex(name: 'idx_sync_queue_status', columns: {#status})
 class SyncQueue extends Table {
   TextColumn get operationId => text()();
   TextColumn get entityType => text()();
@@ -131,6 +143,7 @@ class SyncQueue extends Table {
   Set<Column> get primaryKey => {operationId};
 }
 
+@TableIndex(name: 'idx_game_sessions_game_id', columns: {#gameId})
 class GameSessions extends Table {
   TextColumn get sessionId => text()();
   TextColumn get gameId =>
@@ -171,13 +184,17 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => DatabaseConstants.databaseVersion;
 
+  // No `onUpgrade` is provided: pre-1.0 we accept that existing web installs
+  // miss the `@TableIndex` indexes added in this commit until they clear site
+  // data (or until the sqflite-removal consolidation resets schemas). Fresh
+  // installs get them via `m.createAll()` in `onCreate`. See issue #112.
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
       onCreate: (Migrator m) async {
         // Enable foreign key constraints
         await m.database.customStatement('PRAGMA foreign_keys = ON;');
-        
+
         await m.createAll();
         await m.database.customStatement(
           'CREATE UNIQUE INDEX idx_games_single_active ON games(is_complete) WHERE is_complete = 0;',
