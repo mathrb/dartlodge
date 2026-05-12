@@ -264,8 +264,8 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       _FieldSection(
         label: 'VARIANT',
         child: _SegmentedOptionGroup<String>(
-          values: const ['standard', 'cut-throat', 'no-score', 'tactics'],
-          labels: const ['STANDARD', 'CUT-THROAT', 'NO SCORE', 'TACTICS'],
+          values: const ['standard', 'cut-throat', 'no-score'],
+          labels: const ['STANDARD', 'CUT-THROAT', 'NO SCORE'],
           selected: c.variant,
           onSelected: (v) =>
               setState(() => _draftConfig = c.copyWith(variant: v)),

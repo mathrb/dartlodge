@@ -151,14 +151,13 @@ void main() {
   });
 
   group('VariantSelectionPage — Cricket', () {
-    testWidgets('renders 4 enabled rows and 1 disabled Custom', (tester) async {
+    testWidgets('renders 3 enabled rows and 1 disabled Custom', (tester) async {
       await tester.pumpWidget(_buildApp('cricket'));
       await tester.pumpAndSettle();
 
       expect(find.text('STANDARD'), findsOneWidget);
       expect(find.text('NO SCORE'), findsOneWidget);
       expect(find.text('CUT THROAT', skipOffstage: false), findsOneWidget);
-      expect(find.text('TACTICS', skipOffstage: false), findsOneWidget);
       expect(find.text('CUSTOM', skipOffstage: false), findsOneWidget);
     });
 

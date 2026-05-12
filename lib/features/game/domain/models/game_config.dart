@@ -20,7 +20,7 @@ abstract class GameConfig with _$GameConfig {
   }) = X01GameConfig;
 
   const factory GameConfig.cricket({
-    required String variant, // 'standard', 'cut-throat', 'no-score', 'tactics'
+    required String variant, // 'standard', 'cut-throat', 'no-score'
     required List<String> numbers, // ['15', '16', '17', '18', '19', '20', 'bull']
     @Default(1) int legsToWin,
     @Default(null) int? totalRounds,

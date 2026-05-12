@@ -12,7 +12,6 @@ void main() {
     'cricket-standard',
     'cricket-no-score',
     'cricket-cut-throat',
-    'cricket-tactics',
     'practice-atc',
     'practice-catch40',
     'practice-bobs27',

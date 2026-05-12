@@ -506,9 +506,9 @@ class CricketGameConfig implements GameConfig {
   factory CricketGameConfig.fromJson(Map<String, dynamic> json) => _$CricketGameConfigFromJson(json);
 
  final  String variant;
-// 'standard', 'cut-throat', 'no-score', 'tactics'
+// 'standard', 'cut-throat', 'no-score'
  final  List<String> _numbers;
-// 'standard', 'cut-throat', 'no-score', 'tactics'
+// 'standard', 'cut-throat', 'no-score'
  List<String> get numbers {
   if (_numbers is EqualUnmodifiableListView) return _numbers;
   // ignore: implicit_dynamic_type

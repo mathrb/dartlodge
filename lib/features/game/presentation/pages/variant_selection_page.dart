@@ -170,15 +170,6 @@ class VariantSelectionPage extends ConsumerWidget {
             legsToWin: 1,
           ),
         ),
-        _VariantEntry(
-          label: 'Tactics',
-          rulesSlug: 'cricket-tactics',
-          config: GameConfig.cricket(
-            variant: 'tactics',
-            numbers: GameConfigurationConstants.cricketNumbers,
-            legsToWin: 1,
-          ),
-        ),
         const _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
@@ -352,7 +343,6 @@ class _LastPlayedCard extends StatelessWidget {
         cricket: (c) => switch (c.variant) {
           'cut-throat' => 'Cut Throat',
           'no-score' => 'No Score',
-          'tactics' => 'Tactics',
           _ => 'Standard',
         },
         orElse: () => '',

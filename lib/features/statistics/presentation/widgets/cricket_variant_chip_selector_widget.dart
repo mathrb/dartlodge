@@ -15,7 +15,6 @@ class CricketVariantChipSelectorWidget extends ConsumerWidget {
       'standard' => 'Standard',
       'noScore' => 'No Score',
       'cutThroat' => 'Cut-Throat',
-      'tactics' => 'Tactics',
       _ => variant,
     };
   }

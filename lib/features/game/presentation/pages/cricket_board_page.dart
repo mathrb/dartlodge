@@ -137,7 +137,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final variantLabel = switch (gameState.cricketVariant) {
           'cut-throat' => 'Cut Throat',
           'no-score' => 'No Score',
-          'tactics' => 'Tactics',
           _ => 'Standard',
         };
 

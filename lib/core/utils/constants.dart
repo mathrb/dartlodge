@@ -135,7 +135,6 @@ class GameConfigurationConstants {
     'standard',
     'cut-throat',
     'no-score',
-    'tactics',
   ];
   static const List<String> cricketNumbers = [
     '15',

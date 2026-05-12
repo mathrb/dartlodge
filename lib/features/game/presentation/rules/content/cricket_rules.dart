@@ -36,10 +36,6 @@ const cricketStandardRules = GameRules(
       name: 'Cut Throat',
       summary: 'Points hit on a number only you have closed are given to opponents. Lowest score wins.',
     ),
-    RulesVariant(
-      name: 'Tactics',
-      summary: 'A variant of Cricket with the same target set and closing rules. Currently plays like Standard with a different name on the scoreboard.',
-    ),
   ],
 );
 
@@ -75,10 +71,6 @@ const cricketNoScoreRules = GameRules(
     RulesVariant(
       name: 'Cut Throat',
       summary: 'Points from closed numbers go to opponents instead. Lowest score wins.',
-    ),
-    RulesVariant(
-      name: 'Tactics',
-      summary: 'A named variant of Cricket using the same 15-to-20 plus bull target set.',
     ),
   ],
 );
@@ -126,51 +118,6 @@ const cricketCutThroatRules = GameRules(
     RulesVariant(
       name: 'No Score',
       summary: 'No points are tracked. The first to close every target wins.',
-    ),
-    RulesVariant(
-      name: 'Tactics',
-      summary: 'A named variant of Cricket using the same 15-to-20 plus bull target set.',
-    ),
-  ],
-);
-
-const cricketTacticsRules = GameRules(
-  title: 'Cricket — Tactics',
-  tagline: 'A Cricket variant using the same target set as Standard.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Close all the cricket targets before your opponents and finish ahead on points. '
-          'Tactics currently shares its target set and closing rules with Standard Cricket; the variant is selectable on the scoreboard.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'The targets are 15, 16, 17, 18, 19, 20 and the bullseye.',
-        'You throw three darts per turn. A single is one hit on a target, a double is two, and a triple is three. The outer bull counts as one hit and the inner bull as two.',
-        'Hit a target three times to close it. Once you have closed a number, further hits score points for you while at least one opponent still has the number open.',
-      ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'You win the leg when you have closed every target and your score is at least as high as every opponent\'s. '
-          'Until both conditions are met the leg continues.',
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'Standard',
-      summary: 'Same target set; the headline Cricket variant.',
-    ),
-    RulesVariant(
-      name: 'No Score',
-      summary: 'Closing only — no points tracked. First to close every target wins.',
-    ),
-    RulesVariant(
-      name: 'Cut Throat',
-      summary: 'Closed-number points go to opponents instead of you. Lowest score wins.',
     ),
   ],
 );

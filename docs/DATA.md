@@ -154,7 +154,7 @@ Every variant supports an optional `startingPlayerId` (UUID, nullable). Only the
 
 ```json
 {
-  "variant": "standard" | "cut-throat" | "no-score" | "tactics",
+  "variant": "standard" | "cut-throat" | "no-score",
   "numbers": ["15", "16", "17", "18", "19", "20", "bull"],
   "legsToWin": 1,
   "totalRounds": integer | null,

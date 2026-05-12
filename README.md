@@ -11,7 +11,7 @@ IndexedDB; clearing site data wipes your games.
 ## Game modes
 
 - **X01** — 301 / 501 / 701 / 901 with configurable starting score, double-out / straight-out / master-out, leg/match formats
-- **Cricket** — Standard, No-Score, Cut Throat, Tactics, Random
+- **Cricket** — Standard, No-Score, Cut Throat, Random
 - **Around the Clock** — single / double / triple variants
 - **Bob's 27**, **Catch 40**, **Shanghai**
 - **Checkout Practice** (170 finishing drill)
