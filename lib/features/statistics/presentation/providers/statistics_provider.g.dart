@@ -228,51 +228,6 @@ final class GameStatsFamily extends $Family
   String toString() => r'gameStatsProvider';
 }
 
-@ProviderFor(Leaderboard)
-final leaderboardProvider = LeaderboardProvider._();
-
-final class LeaderboardProvider
-    extends $AsyncNotifierProvider<Leaderboard, List<PlayerStats>> {
-  LeaderboardProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'leaderboardProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$leaderboardHash();
-
-  @$internal
-  @override
-  Leaderboard create() => Leaderboard();
-}
-
-String _$leaderboardHash() => r'98abb16d37529cd7a8fe9cae8602a7d25df38522';
-
-abstract class _$Leaderboard extends $AsyncNotifier<List<PlayerStats>> {
-  FutureOr<List<PlayerStats>> build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final ref =
-        this.ref as $Ref<AsyncValue<List<PlayerStats>>, List<PlayerStats>>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<PlayerStats>>, List<PlayerStats>>,
-              AsyncValue<List<PlayerStats>>,
-              Object?,
-              Object?
-            >;
-    element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(PlayerStatsPage)
 final playerStatsPageProvider = PlayerStatsPageFamily._();
 

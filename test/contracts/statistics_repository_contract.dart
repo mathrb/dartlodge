@@ -152,24 +152,65 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
     });
   });
 
-  // ── getLeaderboard ────────────────────────────────────────────────────────
+  // ── watchGameStats ────────────────────────────────────────────────────────
 
-  group('getLeaderboard', () {
-    test('returns empty list when no players meet minGames requirement', () async {
-      final leaderboard = await statsRepo.getLeaderboard(
-        gameType: GameType.x01,
-        minGames: 100,
-      );
-      expect(leaderboard, isEmpty);
-    });
+  group('watchGameStats', () {
+    test(
+        'stream re-fires when a game_events row is appended without a dart insert',
+        () async {
+      // Regression for issue #129 sub-task 7/8: streams previously watched
+      // only `dart_throws`. Event-only writes (LegCompleted, GameCompleted,
+      // empty-turn busts via TurnEnded) didn't re-trigger the stream because
+      // `game_events` wasn't in the watched-table set.
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1',
+          gameId: 'g1',
+          competitorId: 'c1',
+          playerId: 'p1',
+          score: 60);
 
-    test('respects the limit parameter', () async {
-      final leaderboard = await statsRepo.getLeaderboard(
-        gameType: GameType.x01,
-        minGames: 1,
-        limit: 5,
-      );
-      expect(leaderboard.length, lessThanOrEqualTo(5));
+      final stream = statsRepo.watchGameStats('g1');
+      final emissions = <int>[];
+      final sub = stream.listen((stats) {
+        // Track per-emission competitor count as a stand-in for "stream
+        // produced a value". The exact stat values aren't load-bearing —
+        // what matters is that an emission occurred after the event-only
+        // write.
+        emissions.add(stats.byCompetitor.length);
+      });
+
+      // Wait for the initial emission so we observe the stream alive.
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      final initialCount = emissions.length;
+      expect(initialCount, greaterThanOrEqualTo(1),
+          reason: 'expected initial emission before event-only write');
+
+      // Append a LegCompleted event — no same-transaction dart insert. On
+      // `main` (`cecf6d5`) this does NOT re-trigger the stream because
+      // `watchGameStats` only watches `dart_throws`.
+      await gameEventRepo.appendEvent(GameEvent(
+        eventId: 'g1-evt-leg-completed',
+        gameId: 'g1',
+        eventType: 'LegCompleted',
+        localSequence: 1,
+        occurredAt: DateTime.now(),
+        payload: {'winner_player_id': 'p1', 'winner_competitor_id': 'c1'},
+        synced: false,
+        actorId: 'p1',
+        source: EventSource.client,
+      ));
+
+      // Give the watcher time to react. With the fix, drift sees the
+      // game_events write and re-runs the asyncMap, producing a new
+      // emission.
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await sub.cancel();
+
+      expect(emissions.length, greaterThan(initialCount),
+          reason:
+              'watchGameStats must re-emit after a game_events-only write');
     });
   });
 

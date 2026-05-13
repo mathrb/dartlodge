@@ -30,31 +30,6 @@ Future<GameStats> gameStats(Ref ref, String gameId) {
   return repository.getGameStats(gameId);
 }
 
-@riverpod
-class Leaderboard extends _$Leaderboard {
-  GameType _gameType = GameType.x01;
-  int _minGames = 5;
-
-  @override
-  Future<List<PlayerStats>> build() async {
-    final repository = ref.read(statisticsRepositoryProvider);
-    return repository.getLeaderboard(
-      gameType: _gameType,
-      minGames: _minGames,
-    );
-  }
-
-  void setGameType(GameType gameType) {
-    _gameType = gameType;
-    ref.invalidateSelf();
-  }
-
-  void setMinGames(int min) {
-    _minGames = min;
-    ref.invalidateSelf();
-  }
-}
-
 // ── Player Stats Page providers ───────────────────────────────────────────────
 
 @riverpod

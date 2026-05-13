@@ -119,11 +119,15 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
   @override
   Stream<GameStats> watchGameStats(String gameId) {
-    final dartThrowsQuery = _db.select(_db.dartThrows)
-      ..where((t) => t.gameId.equals(gameId));
+    // Watch both `dart_throws` and `game_events`. Events appended without a
+    // same-transaction dart insert (LegCompleted, GameCompleted, empty-turn
+    // busts via TurnEnded) must re-trigger the stream — watching dart_throws
+    // alone misses those updates (issue #129).
+    final tableUpdates = _db.tableUpdates(
+      TableUpdateQuery.onAllTables([_db.dartThrows, _db.gameEvents]),
+    );
 
-    return dartThrowsQuery
-        .watch()
+    return _emitInitialThenOn(tableUpdates)
         .asyncMap((_) async => getGameStats(gameId))
         .handleError((error) {
       if (error is RepositoryException) throw error;
@@ -385,14 +389,17 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   @override
   Stream<PlayerStats> watchPlayerStats(String playerId,
       {required GameType gameType}) {
-    final dartThrowsQuery = _db.select(_db.dartThrows)
-      ..where((t) => t.playerId.equals(playerId));
-    final joinedQuery = dartThrowsQuery.join([
-      innerJoin(_db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId)),
-    ]);
-    joinedQuery.where(_db.games.gameType.equals(gameType.name));
-    return joinedQuery
-        .watch()
+    // Watch both `dart_throws` and `game_events`. Event-only writes
+    // (LegCompleted, GameCompleted, empty-turn busts via TurnEnded) must
+    // re-trigger the stream — watching dart_throws alone misses them
+    // (issue #129). We can't filter to this player at the table-update layer
+    // since updates are table-granular; `getPlayerStats` does the per-player
+    // scoping on each refresh.
+    final tableUpdates = _db.tableUpdates(
+      TableUpdateQuery.onAllTables([_db.dartThrows, _db.gameEvents]),
+    );
+
+    return _emitInitialThenOn(tableUpdates)
         .asyncMap((_) async => getPlayerStats(playerId, gameType: gameType))
         .handleError((error) {
       if (error is RepositoryException) throw error;
@@ -401,49 +408,21 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     });
   }
 
-  @override
-  Future<List<PlayerStats>> getLeaderboard({
-    required GameType gameType,
-    int minGames = 1,
-    int limit = 50,
-  }) async {
-    try {
-      final gamesPerPlayerQuery = _db.selectOnly(_db.dartThrows)
-        ..addColumns([_db.dartThrows.playerId, _db.dartThrows.gameId.count(distinct: true)])
-        ..join([
-          innerJoin(
-              _db.games, _db.games.gameId.equalsExp(_db.dartThrows.gameId))
-        ])
-        ..where(_db.games.gameType.equals(gameType.name))
-        ..groupBy([_db.dartThrows.playerId]);
-
-      final gamesPerPlayerResults = await gamesPerPlayerQuery.get();
-      final playerGameCounts = <String, int>{};
-      for (final row in gamesPerPlayerResults) {
-        final pId = row.read(_db.dartThrows.playerId);
-        final gameCount = row.read(_db.dartThrows.gameId.count(distinct: true)) ?? 0;
-        if (pId != null && gameCount >= minGames) {
-          playerGameCounts[pId] = gameCount;
-        }
-      }
-
-      final leaderboard = await Future.wait(
-        playerGameCounts.keys.map((pId) => getPlayerStats(pId, gameType: gameType)),
-      );
-
-      leaderboard
-          .sort((a, b) => b.threeDartAverage.compareTo(a.threeDartAverage));
-
-      return leaderboard.take(limit).toList();
-    } on RepositoryException {
-      rethrow;
-    } catch (e) {
-      throw StatisticsException(
-          'Failed to retrieve leaderboard: ${e.toString()}');
-    }
-  }
-
   // ── Helper methods ──────────────────────────────────────────────────────────
+
+  /// Yields once immediately, then again on every table update emission.
+  ///
+  /// `_db.tableUpdates(...)` only fires on actual writes, so a fresh listener
+  /// would otherwise wait for a write before receiving anything. The watched
+  /// stats streams contract requires a prompt initial emission so consumers
+  /// can render the current snapshot (see the `watchPlayerStats` "emits an
+  /// initial value promptly without waiting on a poll tick" regression test
+  /// in the contract suite). Emitting a leading `null` synthesises that
+  /// initial tick without losing any subsequent table-update notifications.
+  Stream<void> _emitInitialThenOn(Stream<dynamic> updates) async* {
+    yield null;
+    yield* updates;
+  }
 
   PlayerStats _createEmptyPlayerStats(String playerId, GameType gameType) {
     return PlayerStats(
