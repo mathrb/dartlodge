@@ -3,6 +3,7 @@
 // 20 rounds, each targeting D{round}. Hit scores round*2*hitCount; miss deducts round*2.
 // Drill ends after round 20 or if score drops to <= 0.
 
+import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
@@ -69,7 +70,8 @@ class StatelessBobs27Engine implements GameEngine {
     final multiplier = payload['multiplier'] as int;
 
     // Build canonical string and record the dart throw
-    final canonicalString = _toCanonicalString(segmentNum, multiplier);
+    final canonicalString =
+        Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
     final currentCompetitor = updatedCompetitors[state.currentTurnIndex];
     updatedCompetitors[state.currentTurnIndex] = currentCompetitor.copyWith(
@@ -151,16 +153,4 @@ class StatelessBobs27Engine implements GameEngine {
     );
   }
 
-  String _toCanonicalString(int segment, int multiplier) {
-    if (segment == 0) return 'MISS';
-    if (segment == 25) {
-      return multiplier == 2 ? 'DB' : 'SB';
-    }
-    return switch (multiplier) {
-      1 => '$segment',
-      2 => 'D$segment',
-      3 => 'T$segment',
-      _ => '$segment',
-    };
-  }
 }

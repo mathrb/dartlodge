@@ -11,6 +11,7 @@
 //   Failed (6 darts, no checkout) → +0 pts
 // competitor.score = cumulative drill points (max 120 over 40 targets).
 
+import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
@@ -68,7 +69,8 @@ class StatelessCatch40Engine implements GameEngine {
     final segmentNum = payload['segment'] as int;
     final multiplier = payload['multiplier'] as int;
 
-    final canonical = _toCanonicalString(segmentNum, multiplier);
+    final canonical =
+        Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
     final isDouble = multiplier == 2; // D1–D20 or DB
     final segValue = _dartValue(segmentNum, multiplier);
 
@@ -168,18 +170,6 @@ class StatelessCatch40Engine implements GameEngine {
     return 1; // 4–6 darts
   }
 
-  String _toCanonicalString(int segment, int multiplier) {
-    if (segment == 0) return 'MISS';
-    if (segment == 25) {
-      return multiplier == 2 ? 'DB' : 'SB';
-    }
-    return switch (multiplier) {
-      1 => '$segment',
-      2 => 'D$segment',
-      3 => 'T$segment',
-      _ => '$segment',
-    };
-  }
 
   int _dartValue(int segment, int multiplier) {
     if (segment == 0) return 0;

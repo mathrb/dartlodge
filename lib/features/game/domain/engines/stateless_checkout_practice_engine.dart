@@ -4,6 +4,7 @@
 // Bust (score < 0, == 1, or 0 on non-double): reverts to turn-start score, turn ends.
 // Checkout (score == 0 on a double): game completes, player is winner.
 
+import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
@@ -71,7 +72,8 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
 
     if (newScore == 0 && _isDouble(segmentNum, multiplier)) {
-      final canonical = _toCanonicalString(segmentNum, multiplier);
+      final canonical =
+          Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         dartThrows: [...competitor.dartThrows, canonical],
         score: 0,
@@ -103,7 +105,8 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     }
 
     // Normal: subtract dart value
-    final canonical = _toCanonicalString(segmentNum, multiplier);
+    final canonical =
+        Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
     updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
       dartThrows: [...competitor.dartThrows, canonical],
       score: newScore,
@@ -142,14 +145,4 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     return multiplier == 2;
   }
 
-  String _toCanonicalString(int segment, int multiplier) {
-    if (segment == 0) return 'MISS';
-    if (segment == 25) return multiplier == 2 ? 'DB' : 'SB';
-    return switch (multiplier) {
-      1 => '$segment',
-      2 => 'D$segment',
-      3 => 'T$segment',
-      _ => '$segment',
-    };
-  }
 }

@@ -12,7 +12,6 @@ import 'package:dart_lodge/features/statistics/domain/repositories/statistics_re
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
-import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_segment_utils.dart';
 import '../database.dart' as drift_db;
 
 class StatisticsRepositoryDrift implements StatisticsRepository {
@@ -21,14 +20,6 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
   StatisticsRepositoryDrift(this._db, {PlayerStatsAssembler? assembler})
       : _assembler = assembler ?? const PlayerStatsAssembler();
-
-  static const _practiceGameTypes = {
-    GameType.aroundTheClock,
-    GameType.bobs27,
-    GameType.shanghai,
-    GameType.catch40,
-    GameType.checkoutPractice,
-  };
 
   @override
   Future<GameStats> getGameStats(String gameId) async {
@@ -500,9 +491,10 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
       if (filtered.isEmpty) return [];
 
-      final isPracticeGame =
-          gameType != null && _practiceGameTypes.contains(gameType);
-
+      // Per-leg accumulation lives in `PlayerStatsAssembler.legHistoryFromEvents`
+      // (CLAUDE.md "Statistics loader vs computation"). The loader's job is
+      // limited to: load events per game, materialise them as domain events,
+      // delegate; concatenate; apply the trailing limit.
       final List<PlayerLegSnapshot> snapshots = [];
       int legIndex = 0;
 
@@ -516,179 +508,42 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           gamStartingScore = cfg['startingScore'] as int?;
         } catch (_) {}
 
-        // Get events for this game
-        final events = await (_db.select(_db.gameEvents)
+        // Get events for this game.
+        final eventRows = await (_db.select(_db.gameEvents)
               ..where((e) => e.gameId.equals(gameId))
               ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
             .get();
 
-        // Scan events to accumulate per-leg stats
-        int legDartCount = 0;
-        int legScoreTotal = 0;
-        int legTotalMarks = 0;
-        int legTotalTurns = 0;
-        int currentTurnMarks = 0;
+        final domainEvents = <domain.GameEvent>[
+          for (final event in eventRows)
+            domain.GameEvent(
+              eventId: event.eventId,
+              gameId: event.gameId,
+              eventType: event.eventType,
+              localSequence: event.localSequence,
+              occurredAt: DateTime.parse(event.occurredAt),
+              payload: jsonDecode(event.payloadJson) as Map<String, dynamic>,
+              synced: event.synced == 1,
+              actorId: event.actorId,
+              globalSequence: event.globalSequence,
+              source: EventSource.client,
+            ),
+        ];
 
-        // ATC hit-rate tracking
-        int atcDartsAtTarget = 0;
-        int atcHits = 0;
-        int atcCurrentTarget = 1;
-        bool atcInPlayerTurn = false;
-
-        // X01 checkout-score tracking: starting_score from this player's most
-        // recent TurnStarted before LegCompleted. If they win the leg, that's
-        // the score they checked out on.
-        int? lastPlayerTurnStartingScore;
-
-        // Per-leg event buffer for X01 checkout-% computation. We feed this
-        // slice to `PlayerStatsAssembler.legCheckoutStatsFromEvents` at each
-        // LegCompleted so the percentage is derived from real successes ÷
-        // attempts (via X01CheckoutProjection) — replacing the historical
-        // bogus inline formula `(1 / checkoutAttempts) * 100`.
-        final List<domain.GameEvent> currentLegEvents = [];
-
-        for (final event in events) {
-          final payload =
-              jsonDecode(event.payloadJson) as Map<String, dynamic>;
-          // Materialise as a domain GameEvent for the assembler helper. We
-          // only need the fields the projection reads (eventType, payload),
-          // but keep the full shape to stay consistent with other call sites.
-          final domainEvent = domain.GameEvent(
-            eventId: event.eventId,
-            gameId: event.gameId,
-            eventType: event.eventType,
-            localSequence: event.localSequence,
-            occurredAt: DateTime.parse(event.occurredAt),
-            payload: payload,
-            synced: event.synced == 1,
-            actorId: event.actorId,
-            globalSequence: event.globalSequence,
-            source: EventSource.client,
-          );
-          currentLegEvents.add(domainEvent);
-
-          switch (event.eventType) {
-            case 'TurnStarted':
-              final pid = payload['player_id'] as String?;
-              if (pid != playerId) break;
-              currentTurnMarks = 0;
-              atcInPlayerTurn = true;
-              lastPlayerTurnStartingScore =
-                  (payload['starting_score'] as num?)?.toInt();
-            case 'DartThrown':
-              final pid = payload['player_id'] as String?;
-              if (pid != playerId) break;
-              legDartCount++;
-              final seg = (payload['segment'] as num?)?.toInt();
-              final mult = (payload['multiplier'] as num?)?.toInt();
-              final score = (seg != null && mult != null)
-                  ? seg * mult
-                  : (payload['score'] as num?)?.toInt() ?? 0;
-              legScoreTotal += score;
-              // Cricket marks
-              final rawSeg = payload['segment'];
-              if (rawSeg is String) {
-                currentTurnMarks += cricketMarksForSegment(rawSeg);
-              } else if (rawSeg is num) {
-                final segInt = rawSeg.toInt();
-                final multInt =
-                    (payload['multiplier'] as num?)?.toInt() ?? 1;
-                if (kCricketTargets.contains(segInt)) {
-                  currentTurnMarks += multInt.clamp(0, 3);
-                }
-              }
-              // ATC hit tracking
-              if (isPracticeGame &&
-                  gameType == GameType.aroundTheClock &&
-                  atcInPlayerTurn) {
-                final segVal =
-                    (payload['segment'] as num?)?.toInt() ?? 0;
-                if (atcCurrentTarget <= 20) {
-                  atcDartsAtTarget++;
-                  if (segVal == atcCurrentTarget) {
-                    atcHits++;
-                    atcCurrentTarget++;
-                  }
-                }
-              }
-            case 'TurnEnded':
-              final pid = payload['player_id'] as String?;
-              if (pid != playerId) break;
-              legTotalMarks += currentTurnMarks;
-              legTotalTurns++;
-              currentTurnMarks = 0;
-              atcInPlayerTurn = false;
-            case 'LegCompleted':
-              legIndex++;
-              final ppr = legDartCount > 0
-                  ? (legScoreTotal / legDartCount) * 3
-                  : 0.0;
-              final mpt = legTotalTurns > 0
-                  ? legTotalMarks / legTotalTurns
-                  : null;
-
-              // Compute checkout % via X01CheckoutProjection over the leg's
-              // events (Decision 4 of issue #129). Previously the loader
-              // used `(1 / checkoutAttempts) * 100`, which is nonsensical:
-              // the numerator was hardcoded to 1, and `checkout_score` was
-              // read from the payload but ignored. Now the percentage is
-              // `successes / attempts * 100` for this player in this leg.
-              // For non-X01 game types the projection's snapshot stays at
-              // zero attempts (it only consumes TurnStarted/LegCompleted for
-              // the configured player), so the result is null — matching
-              // the prior behaviour of leaving checkoutPct null off-X01.
-              final checkoutStats = _assembler.legCheckoutStatsFromEvents(
-                playerId: playerId,
-                legEvents: currentLegEvents,
-              );
-              final double? checkoutPct = checkoutStats.percentage;
-
-              final winnerPlayerId =
-                  payload['winner_player_id'] as String?;
-              final legCheckoutScore = winnerPlayerId == playerId
-                  ? lastPlayerTurnStartingScore
-                  : null;
-
-              double? practiceScore;
-              if (isPracticeGame) {
-                if (gameType == GameType.aroundTheClock) {
-                  practiceScore = atcDartsAtTarget > 0
-                      ? atcHits / atcDartsAtTarget
-                      : null;
-                } else {
-                  practiceScore = legScoreTotal.toDouble();
-                }
-              }
-
-              snapshots.add(PlayerLegSnapshot(
-                gameId: gameId,
-                legIndex: legIndex,
-                gameDate: gameDate,
-                ppr: ppr,
-                checkoutPct: checkoutPct,
-                checkoutScore: legCheckoutScore,
-                startingScore: gamStartingScore,
-                mpt: mpt,
-                practiceScore: practiceScore,
-              ));
-
-              // Reset for next leg
-              legDartCount = 0;
-              legScoreTotal = 0;
-              legTotalMarks = 0;
-              legTotalTurns = 0;
-              currentTurnMarks = 0;
-              atcDartsAtTarget = 0;
-              atcHits = 0;
-              atcCurrentTarget = 1;
-              atcInPlayerTurn = false;
-              lastPlayerTurnStartingScore = null;
-              currentLegEvents.clear();
-          }
-        }
+        final gameSnapshots = _assembler.legHistoryFromEvents(
+          playerId: playerId,
+          gameId: gameId,
+          gameDate: gameDate,
+          gameType: gameType,
+          startingScore: gamStartingScore,
+          events: domainEvents,
+          startingLegIndex: legIndex,
+        );
+        snapshots.addAll(gameSnapshots);
+        legIndex += gameSnapshots.length;
       }
 
-      // Apply limit by taking last N items (most recent legs)
+      // Apply limit by taking last N items (most recent legs).
       if (limit != null && snapshots.length > limit) {
         return snapshots.sublist(snapshots.length - limit);
       }

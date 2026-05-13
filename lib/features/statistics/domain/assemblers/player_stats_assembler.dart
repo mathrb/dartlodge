@@ -13,9 +13,11 @@
 //   - reactivity / streams (platform repo job)
 
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_average_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_first_nine_ppr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_high_score_buckets_projection.dart';
@@ -365,34 +367,47 @@ class PlayerStatsAssembler {
 
       final playerIds = byPlayer.keys.toList();
 
+      // Per-player engine instances. We walk `events` ONCE and dispatch each
+      // event to every player's engine set — the engines already filter on
+      // `context.playerId`, so this is the cheapest way to keep the existing
+      // snapshot contract while eliminating the O(P × E) re-pass that
+      // `ProjectionRunner.run(events)` would impose per player. (Issue #137
+      // sub-task 4.)
       if (isX01) {
+        final perPlayer = <String, List<ProjectionEngine>>{};
         for (final playerId in playerIds) {
-          final runner = ProjectionRunner([
+          final engines = <ProjectionEngine>[
             X01CheckoutProjection(),
             X01HighScoreBucketsProjection(),
             X01HighestCheckoutProjection(),
-          ]);
-          runner.init(ProjectionContext(
-            playerId: playerId,
-            gameType: GameType.x01,
-            inStrategy: 'straight',
-            outStrategy: 'double',
-          ));
-          runner.run(events);
-          final snap = runner.snapshot();
-
-          final buckets = snap['x01.highScoreBuckets'] ?? {};
+          ];
+          for (final engine in engines) {
+            engine.init(ProjectionContext(
+              playerId: playerId,
+              gameType: GameType.x01,
+              inStrategy: 'straight',
+              outStrategy: 'double',
+            ));
+          }
+          perPlayer[playerId] = engines;
+        }
+        _runMultiPlayer(events, perPlayer.values);
+        for (final engines in perPlayer.values) {
+          final snap = <String, Map<String, dynamic>>{
+            for (final e in engines) e.descriptor.id: e.snapshot(),
+          };
+          final buckets = snap['x01.highScoreBuckets'] ?? const {};
           totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
           totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
           totalHundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
           totalSixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
 
-          final checkout = snap['x01_checkout'] ?? {};
+          final checkout = snap['x01_checkout'] ?? const {};
           totalCheckoutAttempts += (checkout['checkoutAttempts'] as int? ?? 0);
           totalSuccessfulCheckouts +=
               (checkout['successfulCheckouts'] as int? ?? 0);
 
-          final hcSnap = snap['x01_highest_checkout'] ?? {};
+          final hcSnap = snap['x01_highest_checkout'] ?? const {};
           final hc = hcSnap['highestCheckout'] as int?;
           if (hc != null &&
               (competitorHighestCheckout == null ||
@@ -401,53 +416,67 @@ class PlayerStatsAssembler {
           }
         }
       } else if (isCountUp) {
+        final perPlayer = <String, List<ProjectionEngine>>{};
         for (final playerId in playerIds) {
-          final runner = ProjectionRunner([
+          final engines = <ProjectionEngine>[
             CountUpHighScoreBucketsProjection(),
-          ]);
-          runner.init(ProjectionContext(
-            playerId: playerId,
-            gameType: GameType.countUp,
-            inStrategy: 'straight',
-            outStrategy: 'straight',
-          ));
-          runner.run(events);
-          final snap = runner.snapshot();
-
-          final buckets = snap['count_up.highScoreBuckets'] ?? {};
+          ];
+          for (final engine in engines) {
+            engine.init(ProjectionContext(
+              playerId: playerId,
+              gameType: GameType.countUp,
+              inStrategy: 'straight',
+              outStrategy: 'straight',
+            ));
+          }
+          perPlayer[playerId] = engines;
+        }
+        _runMultiPlayer(events, perPlayer.values);
+        for (final engines in perPlayer.values) {
+          final snap = <String, Map<String, dynamic>>{
+            for (final e in engines) e.descriptor.id: e.snapshot(),
+          };
+          final buckets = snap['count_up.highScoreBuckets'] ?? const {};
           totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
           totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
           totalHundredPlus += (buckets['oneHundredPlusTurns'] as int? ?? 0);
           totalSixtyPlus += (buckets['sixtyPlusTurns'] as int? ?? 0);
         }
       } else if (isCricket) {
+        final perPlayer = <String, List<ProjectionEngine>>{};
         for (final playerId in playerIds) {
-          final runner = ProjectionRunner([
+          final engines = <ProjectionEngine>[
             CricketMarksPerTurnProjection(),
             CricketMarkBucketsProjection(),
             CricketFirstNineMprProjection(),
-          ]);
-          runner.init(ProjectionContext(
-            playerId: playerId,
-            gameType: GameType.cricket,
-            inStrategy: 'straight',
-            outStrategy: 'straight',
-          ));
-          runner.run(events);
-          final snap = runner.snapshot();
-
-          final mptSnap = snap['cricket.mpt'] ?? {};
+          ];
+          for (final engine in engines) {
+            engine.init(ProjectionContext(
+              playerId: playerId,
+              gameType: GameType.cricket,
+              inStrategy: 'straight',
+              outStrategy: 'straight',
+            ));
+          }
+          perPlayer[playerId] = engines;
+        }
+        _runMultiPlayer(events, perPlayer.values);
+        for (final engines in perPlayer.values) {
+          final snap = <String, Map<String, dynamic>>{
+            for (final e in engines) e.descriptor.id: e.snapshot(),
+          };
+          final mptSnap = snap['cricket.mpt'] ?? const {};
           totalMarks += (mptSnap['totalMarks'] as int? ?? 0);
           totalTurns += (mptSnap['totalTurns'] as int? ?? 0);
 
-          final bucketsSnap = snap['cricket.markBuckets'] ?? {};
+          final bucketsSnap = snap['cricket.markBuckets'] ?? const {};
           cricketFiveMark += (bucketsSnap['fiveMarkExact'] as int? ?? 0);
           cricketSixMark += (bucketsSnap['sixMarkExact'] as int? ?? 0);
           cricketSevenMark += (bucketsSnap['sevenMarkExact'] as int? ?? 0);
           cricketEightMark += (bucketsSnap['eightMarkExact'] as int? ?? 0);
           cricketNineMark += (bucketsSnap['nineMarkExact'] as int? ?? 0);
 
-          final fn9Snap = snap['cricket.firstNineMpr'] ?? {};
+          final fn9Snap = snap['cricket.firstNineMpr'] ?? const {};
           firstNineMarksTotal += (fn9Snap['totalFirstNineMarks'] as int? ?? 0);
           firstNineLegsTotal += (fn9Snap['totalFirstNineLegs'] as int? ?? 0);
         }
@@ -568,20 +597,27 @@ class PlayerStatsAssembler {
       var scoringDarts = 0;
       var oneEighty = 0, sixtyPlus = 0, hundredPlus = 0, fortyPlus = 0;
 
+      final perPlayer = <String, List<ProjectionEngine>>{};
       for (final playerId in playerIds) {
-        final runner = ProjectionRunner([
+        final engines = <ProjectionEngine>[
           CountUpAverageProjection(),
           CountUpHighScoreBucketsProjection(),
-        ]);
-        runner.init(ProjectionContext(
-          playerId: playerId,
-          gameType: GameType.countUp,
-          inStrategy: 'straight',
-          outStrategy: 'straight',
-        ));
-        runner.run(events);
-        final snap = runner.snapshot();
-
+        ];
+        for (final engine in engines) {
+          engine.init(ProjectionContext(
+            playerId: playerId,
+            gameType: GameType.countUp,
+            inStrategy: 'straight',
+            outStrategy: 'straight',
+          ));
+        }
+        perPlayer[playerId] = engines;
+      }
+      _runMultiPlayer(events, perPlayer.values);
+      for (final engines in perPlayer.values) {
+        final snap = <String, Map<String, dynamic>>{
+          for (final e in engines) e.descriptor.id: e.snapshot(),
+        };
         final avg = snap['count_up.average'] ?? const {};
         scoredPoints += (avg['totalScoredPoints'] as int? ?? 0);
         scoringDarts += (avg['totalDartsThrown'] as int? ?? 0);
@@ -614,22 +650,29 @@ class PlayerStatsAssembler {
       int? highestCheckout;
       var oneEighty = 0, sixtyPlus = 0, hundredPlus = 0, fortyPlus = 0;
 
+      final perPlayer = <String, List<ProjectionEngine>>{};
       for (final playerId in playerIds) {
-        final runner = ProjectionRunner([
+        final engines = <ProjectionEngine>[
           X01AverageProjection(),
           X01CheckoutProjection(),
           X01HighestCheckoutProjection(),
           X01HighScoreBucketsProjection(),
-        ]);
-        runner.init(ProjectionContext(
-          playerId: playerId,
-          gameType: GameType.x01,
-          inStrategy: 'straight',
-          outStrategy: 'double',
-        ));
-        runner.run(events);
-        final snap = runner.snapshot();
-
+        ];
+        for (final engine in engines) {
+          engine.init(ProjectionContext(
+            playerId: playerId,
+            gameType: GameType.x01,
+            inStrategy: 'straight',
+            outStrategy: 'double',
+          ));
+        }
+        perPlayer[playerId] = engines;
+      }
+      _runMultiPlayer(events, perPlayer.values);
+      for (final engines in perPlayer.values) {
+        final snap = <String, Map<String, dynamic>>{
+          for (final e in engines) e.descriptor.id: e.snapshot(),
+        };
         final avg = snap['x01_average'] ?? const {};
         scoredPoints += (avg['totalScoredPoints'] as int? ?? 0);
         scoringDarts += (avg['totalDartsThrown'] as int? ?? 0);
@@ -679,20 +722,28 @@ class PlayerStatsAssembler {
     var firstNineMarks = 0;
     var firstNineLegs = 0;
 
+    final perPlayer = <String, List<ProjectionEngine>>{};
     for (final playerId in playerIds) {
-      final runner = ProjectionRunner([
+      final engines = <ProjectionEngine>[
         CricketMarksPerTurnProjection(),
         CricketMarkBucketsProjection(),
         CricketFirstNineMprProjection(),
-      ]);
-      runner.init(ProjectionContext(
-        playerId: playerId,
-        gameType: GameType.cricket,
-        inStrategy: 'straight',
-        outStrategy: 'straight',
-      ));
-      runner.run(events);
-      final snap = runner.snapshot();
+      ];
+      for (final engine in engines) {
+        engine.init(ProjectionContext(
+          playerId: playerId,
+          gameType: GameType.cricket,
+          inStrategy: 'straight',
+          outStrategy: 'straight',
+        ));
+      }
+      perPlayer[playerId] = engines;
+    }
+    _runMultiPlayer(events, perPlayer.values);
+    for (final engines in perPlayer.values) {
+      final snap = <String, Map<String, dynamic>>{
+        for (final e in engines) e.descriptor.id: e.snapshot(),
+      };
 
       final mpt = snap['cricket.mpt'] ?? const {};
       totalMarks += (mpt['totalMarks'] as int? ?? 0);
@@ -723,6 +774,185 @@ class PlayerStatsAssembler {
       eightMarkTurns: eightMarks,
       nineMarkTurns: nineMarks,
     );
+  }
+
+  // ── Per-leg history (single player × single game) ──────────────────────────
+
+  /// Builds a `List<PlayerLegSnapshot>` for one player across one game.
+  ///
+  /// Walks [events] in order, tracking per-leg accumulators (PPR, MPT,
+  /// ATC hit-rate, X01 checkout score/percentage) and emitting one snapshot
+  /// at every `LegCompleted`. The returned list reflects whichever legs
+  /// completed within [events] — caller is responsible for cross-game
+  /// concatenation and any global limit slicing.
+  ///
+  /// Scope is `(playerId, gameId)`: all output snapshots inherit [gameId],
+  /// [gameDate] and [startingScore]; only events whose `player_id` matches
+  /// [playerId] feed the player-scoped accumulators (darts/score/marks).
+  /// Events with no `player_id` (e.g. `LegCompleted`) still drive leg-end
+  /// emission.
+  ///
+  /// Behaviour preserved from the historical drift-loader implementation
+  /// (issue #137 §legHistoryFromEvents):
+  ///   - PPR = (legScoreTotal / legDartCount) * 3, zero when no darts.
+  ///   - MPT = legTotalMarks / legTotalTurns, null when no turns.
+  ///   - X01 checkout-% goes through [legCheckoutStatsFromEvents] (real
+  ///     successes ÷ attempts) — never the legacy `(1 / attempts) * 100`.
+  ///   - X01 `checkoutScore` is the player's most recent `TurnStarted`
+  ///     `starting_score` BEFORE `LegCompleted` IFF that player won the leg.
+  ///   - ATC practice score = atcHits / atcDartsAtTarget for current player;
+  ///     other practice gametypes use raw leg score.
+  ///     **Caveat:** the ATC hit-rate tracking hard-codes the ascending
+  ///     `standard` variant (target = legDartCount, walking 1→20). The
+  ///     `reverse` (20→1) and `doublesOnly` ATC variants are NOT modelled and
+  ///     will silently produce incorrect `practiceScore` values for non-standard
+  ///     games. Full multi-variant support is tracked separately.
+  ///
+  /// [gameType] selects the practice-score branch. Pass `null` to treat the
+  /// game as non-practice (no `practiceScore`).
+  List<PlayerLegSnapshot> legHistoryFromEvents({
+    required String playerId,
+    required String gameId,
+    required DateTime gameDate,
+    required GameType? gameType,
+    required int? startingScore,
+    required List<GameEvent> events,
+    int startingLegIndex = 0,
+  }) {
+    final isPracticeGame =
+        gameType != null && _practiceGameTypes.contains(gameType);
+
+    final snapshots = <PlayerLegSnapshot>[];
+    int legIndex = startingLegIndex;
+
+    int legDartCount = 0;
+    int legScoreTotal = 0;
+    int legTotalMarks = 0;
+    int legTotalTurns = 0;
+    int currentTurnMarks = 0;
+
+    // ATC hit-rate tracking (player-scoped).
+    int atcDartsAtTarget = 0;
+    int atcHits = 0;
+    int atcCurrentTarget = 1;
+    bool atcInPlayerTurn = false;
+
+    // X01 checkout-score tracking.
+    int? lastPlayerTurnStartingScore;
+
+    final currentLegEvents = <GameEvent>[];
+
+    for (final event in events) {
+      currentLegEvents.add(event);
+      final payload = event.payload;
+      switch (event.eventType) {
+        case 'TurnStarted':
+          final pid = payload['player_id'] as String?;
+          if (pid != playerId) break;
+          currentTurnMarks = 0;
+          atcInPlayerTurn = true;
+          lastPlayerTurnStartingScore =
+              (payload['starting_score'] as num?)?.toInt();
+        case 'DartThrown':
+          final pid = payload['player_id'] as String?;
+          if (pid != playerId) break;
+          legDartCount++;
+          final rawSeg = payload['segment'];
+          final segInt = rawSeg is num ? rawSeg.toInt() : null;
+          final mult = (payload['multiplier'] as num?)?.toInt();
+          final score = (segInt != null && mult != null)
+              ? segInt * mult
+              : (payload['score'] as num?)?.toInt() ?? 0;
+          legScoreTotal += score;
+
+          // Cricket marks (numeric or canonical-string segment).
+          if (rawSeg is String) {
+            currentTurnMarks += cricketMarksForSegment(rawSeg);
+          } else if (segInt != null) {
+            final multInt = mult ?? 1;
+            if (kCricketTargets.contains(segInt)) {
+              currentTurnMarks += multInt.clamp(0, 3);
+            }
+          }
+
+          // ATC progression (player-scoped, standard variant matches segment).
+          if (isPracticeGame &&
+              gameType == GameType.aroundTheClock &&
+              atcInPlayerTurn) {
+            final segVal = segInt ?? 0;
+            if (atcCurrentTarget <= 20) {
+              atcDartsAtTarget++;
+              if (segVal == atcCurrentTarget) {
+                atcHits++;
+                atcCurrentTarget++;
+              }
+            }
+          }
+        case 'TurnEnded':
+          final pid = payload['player_id'] as String?;
+          if (pid != playerId) break;
+          legTotalMarks += currentTurnMarks;
+          legTotalTurns++;
+          currentTurnMarks = 0;
+          atcInPlayerTurn = false;
+        case 'LegCompleted':
+          legIndex++;
+          final ppr =
+              legDartCount > 0 ? (legScoreTotal / legDartCount) * 3 : 0.0;
+          final mpt =
+              legTotalTurns > 0 ? legTotalMarks / legTotalTurns : null;
+
+          // Checkout % via X01CheckoutProjection (decision 4 of issue #129).
+          // For non-X01 games the projection's snapshot stays at zero
+          // attempts, so the resulting percentage is null — matching the
+          // prior behaviour off-X01.
+          final checkoutStats = legCheckoutStatsFromEvents(
+            playerId: playerId,
+            legEvents: currentLegEvents,
+          );
+
+          final winnerPlayerId = payload['winner_player_id'] as String?;
+          final legCheckoutScore =
+              winnerPlayerId == playerId ? lastPlayerTurnStartingScore : null;
+
+          double? practiceScore;
+          if (isPracticeGame) {
+            if (gameType == GameType.aroundTheClock) {
+              practiceScore =
+                  atcDartsAtTarget > 0 ? atcHits / atcDartsAtTarget : null;
+            } else {
+              practiceScore = legScoreTotal.toDouble();
+            }
+          }
+
+          snapshots.add(PlayerLegSnapshot(
+            gameId: gameId,
+            legIndex: legIndex,
+            gameDate: gameDate,
+            ppr: ppr,
+            checkoutPct: checkoutStats.percentage,
+            checkoutScore: legCheckoutScore,
+            startingScore: startingScore,
+            mpt: mpt,
+            practiceScore: practiceScore,
+          ));
+
+          // Reset for next leg.
+          legDartCount = 0;
+          legScoreTotal = 0;
+          legTotalMarks = 0;
+          legTotalTurns = 0;
+          currentTurnMarks = 0;
+          atcDartsAtTarget = 0;
+          atcHits = 0;
+          atcCurrentTarget = 1;
+          atcInPlayerTurn = false;
+          lastPlayerTurnStartingScore = null;
+          currentLegEvents.clear();
+      }
+    }
+
+    return snapshots;
   }
 
   // ── Per-game player stats ──────────────────────────────────────────────────
@@ -890,6 +1120,58 @@ class PlayerStatsAssembler {
     );
   }
 
+  // ── Multi-player single-pass projection helper ─────────────────────────────
+
+  /// Single-pass projection driver for multiple per-player engine sets.
+  ///
+  /// Mirrors `ProjectionRunner.run`'s reset/apply ordering (turn reset on
+  /// `TurnStarted`, leg reset on `LegCompleted`, match reset on
+  /// `GameCompleted`) but folds all per-player engine sets into one event
+  /// walk. The engines already self-filter on `context.playerId`, so it is
+  /// safe to dispatch every event to every player's engines; this collapses
+  /// the historical O(P × E) "fresh ProjectionRunner per player" loop into
+  /// O(E) work (issue #137 sub-task 4).
+  ///
+  /// Caller is responsible for `init()`-ing each engine with the correct
+  /// `ProjectionContext`. Events are sorted by `(gameId, localSequence)`
+  /// before the pass — `local_sequence` restarts at 1 per game, so a global
+  /// sort interleaves games and corrupts projection state across game
+  /// boundaries (per CLAUDE.md "local_sequence is per-game").
+  void _runMultiPlayer(
+    List<GameEvent> events,
+    Iterable<List<ProjectionEngine>> perPlayerEngines,
+  ) {
+    final sorted = [...events]
+      ..sort((a, b) {
+        final byGame = a.gameId.compareTo(b.gameId);
+        if (byGame != 0) return byGame;
+        return a.localSequence.compareTo(b.localSequence);
+      });
+    final allEngines = perPlayerEngines.expand((e) => e).toList(growable: false);
+
+    for (final event in sorted) {
+      if (event.eventType == 'TurnStarted') {
+        for (final engine in allEngines) {
+          engine.reset(ProjectionScope.turn);
+        }
+      }
+      for (final engine in allEngines) {
+        if (engine.descriptor.consumedEventTypes.contains(event.eventType)) {
+          engine.apply(event);
+        }
+      }
+      if (event.eventType == 'LegCompleted') {
+        for (final engine in allEngines) {
+          engine.reset(ProjectionScope.leg);
+        }
+      } else if (event.eventType == 'GameCompleted') {
+        for (final engine in allEngines) {
+          engine.reset(ProjectionScope.match);
+        }
+      }
+    }
+  }
+
   // ── Practice statistics ────────────────────────────────────────────────────
 
   PlayerStats _buildPracticeStats({
@@ -916,7 +1198,7 @@ class PlayerStatsAssembler {
   }
 
   PlayerStats _emptyPracticeStats(
-          String playerId, GameType gameType, int totalGames) =>
+          String playerId, GameType gameType, int totalGames, int totalDartsThrown) =>
       PlayerStats(
         playerId: playerId,
         gameType: gameType,
@@ -925,7 +1207,7 @@ class PlayerStatsAssembler {
         winRate: 0.0,
         threeDartAverage: 0.0,
         highestTurnScore: 0,
-        totalDartsThrown: 0,
+        totalDartsThrown: totalDartsThrown,
         dartsPerLeg: 0.0,
         bustRate: 0.0,
       );
@@ -1004,9 +1286,12 @@ class PlayerStatsAssembler {
     final avgTurns =
         completions > 0 ? totalTurnsForCompletions / completions : null;
 
-    return _emptyPracticeStats(playerId, GameType.aroundTheClock, totalGames)
-        .copyWith(
-      totalDartsThrown: totalDartsThrown,
+    return _emptyPracticeStats(
+      playerId,
+      GameType.aroundTheClock,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
       atcCompletions: completions,
       atcHitRate: hitRate,
       atcAvgTurns: avgTurns,
@@ -1087,8 +1372,12 @@ class PlayerStatsAssembler {
     final doubleHitRate =
         doubleAttempts > 0 ? doubleHits / doubleAttempts : null;
 
-    return _emptyPracticeStats(playerId, GameType.bobs27, totalGames).copyWith(
-      totalDartsThrown: totalDartsThrown,
+    return _emptyPracticeStats(
+      playerId,
+      GameType.bobs27,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
       bobs27AvgScore: avgScore,
       bobs27BestScore: bestScore,
       bobs27CompletionRate: completionRate,
@@ -1149,9 +1438,12 @@ class PlayerStatsAssembler {
 
     final avgScore = gamesCompleted > 0 ? totalScore / gamesCompleted : null;
 
-    return _emptyPracticeStats(playerId, GameType.shanghai, totalGames)
-        .copyWith(
-      totalDartsThrown: totalDartsThrown,
+    return _emptyPracticeStats(
+      playerId,
+      GameType.shanghai,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
       shanghaiAvgScore: avgScore,
       shanghaiBestScore: bestScore,
       shanghaiCount: shanghaiCount,
@@ -1217,9 +1509,12 @@ class PlayerStatsAssembler {
 
     final avgScore = gamesCompleted > 0 ? totalScore / gamesCompleted : null;
 
-    return _emptyPracticeStats(playerId, GameType.catch40, totalGames)
-        .copyWith(
-      totalDartsThrown: totalDartsThrown,
+    return _emptyPracticeStats(
+      playerId,
+      GameType.catch40,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
       catch40AvgScore: avgScore,
       catch40BestScore: bestScore,
       catch40TwoDartCheckouts: twoDart,
@@ -1253,9 +1548,12 @@ class PlayerStatsAssembler {
 
     final successRate = attempts > 0 ? successes / attempts : null;
 
-    return _emptyPracticeStats(playerId, GameType.checkoutPractice, totalGames)
-        .copyWith(
-      totalDartsThrown: totalDartsThrown,
+    return _emptyPracticeStats(
+      playerId,
+      GameType.checkoutPractice,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
       checkoutAttempts: attempts,
       checkoutSuccesses: successes,
       checkoutSuccessRate: successRate,

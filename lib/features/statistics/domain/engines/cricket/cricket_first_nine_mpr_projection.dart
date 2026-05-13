@@ -67,8 +67,10 @@ class CricketFirstNineMprProjection extends ProjectionEngine {
   @override
   void reset(ProjectionScope scope) {
     if (scope == ProjectionScope.turn) {
+      // `_inFirstNine` is derived state (set by `apply(TurnStarted)` based on
+      // `_turnIndexInLeg`); intentionally NOT cleared here to avoid depending
+      // on runner reset/apply ordering. `apply` is the only writer.
       _currentTurnMarks = 0;
-      _inFirstNine = false;
     }
     if (scope == ProjectionScope.leg) {
       _turnIndexInLeg = 0;

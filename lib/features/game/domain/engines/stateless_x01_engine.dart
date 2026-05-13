@@ -138,13 +138,7 @@ class StatelessX01Engine implements GameEngine {
     final multiplier = payload['multiplier'] as int;
     
     // Create segment from base number and multiplier
-    final parsedSegment = (segment == 0)
-        ? const Segment.miss()
-        : multiplier == 1
-            ? (segment == 25 ? const Segment.singleBull() : Segment.single(segment))
-            : (multiplier == 2
-                ? (segment == 25 ? const Segment.doubleBull() : Segment.doubleSegment(segment))
-                : Segment.triple(segment));
+    final parsedSegment = Segment.fromBoardHit(segment, multiplier);
     
     // Miss guard (Table 5 - Note 5)
     if (parsedSegment.isMiss) {
