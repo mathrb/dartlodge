@@ -7,9 +7,23 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../providers/statistics_provider.dart';
 import '../widgets/game_summary_section_widget.dart';
+
+/// Maps a game type name (e.g. `GameType.x01.name`) to the variant-selection
+/// category route segment used by `/game/variant-selection/:category`.
+///
+/// Only `x01` and `cricket` have dedicated categories; every other game type
+/// (count-up, around-the-clock, catch40, bobs27, checkoutPractice, shanghai)
+/// is routed through the shared `practice` category.
+@visibleForTesting
+String categoryForGameType(String gameTypeName) {
+  if (gameTypeName == GameType.x01.name) return 'x01';
+  if (gameTypeName == GameType.cricket.name) return 'cricket';
+  return 'practice';
+}
 
 class PostGameSummaryPage extends ConsumerWidget {
   const PostGameSummaryPage({required this.gameId, super.key});
@@ -20,38 +34,47 @@ class PostGameSummaryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStats = ref.watch(gameStatsProvider(gameId));
 
-    return Scaffold(
-      body: SafeArea(
-        child: asyncStats.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Error: $err')),
-          data: (gameStats) => Stack(
-            children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppHeader(
-                      showBack: true,
-                      onBack: () => context.go('/'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.settings_outlined,
-                            semanticLabel: 'Settings'),
-                        onPressed: () => context.push(GameRoutes.settings),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(GameRoutes.home);
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: asyncStats.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, _) => Center(child: Text('Error: $err')),
+            data: (gameStats) => Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppHeader(
+                        showBack: true,
+                        onBack: () => context.go('/'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.settings_outlined,
+                              semanticLabel: 'Settings'),
+                          onPressed: () => context.push(GameRoutes.settings),
+                        ),
                       ),
-                    ),
-                    GameSummarySectionWidget(gameStats: gameStats),
-                  ],
+                      GameSummarySectionWidget(gameStats: gameStats),
+                    ],
+                  ),
                 ),
-              ),
-              const Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _StickyFooter(),
-              ),
-            ],
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _StickyFooter(
+                    playAgainCategory:
+                        categoryForGameType(gameStats.gameType),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -62,7 +85,9 @@ class PostGameSummaryPage extends ConsumerWidget {
 // ── Sticky Footer ─────────────────────────────────────────────────────────────
 
 class _StickyFooter extends StatelessWidget {
-  const _StickyFooter();
+  const _StickyFooter({required this.playAgainCategory});
+
+  final String playAgainCategory;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +114,7 @@ class _StickyFooter extends StatelessWidget {
                   label: 'DONE',
                   icon: Icons.check_circle_outline,
                   isPrimary: false,
-                  onTap: () => context.go('/'),
+                  onTap: () => context.go(GameRoutes.home),
                 ),
               ),
               const SizedBox(width: 10),
@@ -98,7 +123,9 @@ class _StickyFooter extends StatelessWidget {
                   label: 'PLAY AGAIN',
                   icon: Icons.refresh,
                   isPrimary: true,
-                  onTap: () => context.go('/game-setup'),
+                  onTap: () => context.go(
+                    '${GameRoutes.variantSelection}/$playAgainCategory',
+                  ),
                 ),
               ),
             ],

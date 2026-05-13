@@ -526,4 +526,134 @@ void main() {
     );
     expect(gridInInputButtons, findsOneWidget);
   });
+
+  // ── 20. Completion dialog does not stack on rebuilds ──────────────────────
+  //
+  // Regression for #130: previously the page used addPostFrameCallback inside
+  // build() gated on `gs.isComplete`; because dismissGameModal() does not
+  // clear isComplete, any rebuild while the dialog was visible would queue
+  // ANOTHER dialog → users saw 2+ dialogs stacked. The ref.listen refactor
+  // means the dialog fires only on the transition (prev != complete →
+  // next = complete), not on every rebuild.
+
+  testWidgets('20. Completion dialog does not stack across rebuilds (Bobs27)',
+      (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(
+          () => _FakeActivePracticeNotifier(
+            _activeState(
+              gameState: _practiceState(
+                gameType: GameType.bobs27,
+                isComplete: false,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pump();
+
+    final notifier = container
+        .read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+
+    // Initially no completion dialog.
+    expect(find.byType(AlertDialog), findsNothing);
+
+    // Transition to complete — dialog should fire exactly once.
+    final completeGs = _practiceState(
+      gameType: GameType.bobs27,
+      isComplete: true,
+      competitor: _practiceCompetitor(
+        id: 'c1',
+        name: 'Alice',
+        practiceRound: 21,
+      ),
+    );
+    // ignore: invalid_use_of_protected_member
+    notifier.state = AsyncValue.data(_activeState(
+      gameState: completeGs,
+      pendingGameWinnerId: null,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'one dialog after completion transition');
+
+    // Now force ANOTHER rebuild with a different-but-still-complete state.
+    // Vary an unrelated field (dartsThrownInTurn) so equality is broken and
+    // the rebuild actually happens. With the buggy addPostFrameCallback in
+    // build() this would schedule a SECOND showDialog; with ref.listen the
+    // transition has already happened, so the listener no-ops.
+    final completeGs2 = completeGs.copyWith(dartsThrownInTurn: 1);
+    // ignore: invalid_use_of_protected_member
+    notifier.state = AsyncValue.data(_activeState(
+      gameState: completeGs2,
+      pendingGameWinnerId: null,
+    ));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'dialog must not stack on rebuilds while still complete');
+  });
+
+  testWidgets('21. Winner-set dialog does not stack across rebuilds',
+      (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(
+          () => _FakeActivePracticeNotifier(
+            _activeState(
+              gameState: _practiceState(
+                gameType: GameType.aroundTheClock,
+                isComplete: false,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pump();
+
+    final notifier = container
+        .read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+
+    expect(find.byType(AlertDialog), findsNothing);
+
+    // Transition to winner-set — dialog should fire exactly once.
+    final completeGs = _practiceState(
+      gameType: GameType.aroundTheClock,
+      isComplete: true,
+    );
+    // ignore: invalid_use_of_protected_member
+    notifier.state = AsyncValue.data(_activeState(
+      gameState: completeGs,
+      pendingGameWinnerId: 'c1',
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+
+    // Rebuild with a different state object but still winner-set.
+    final completeGs2 = completeGs.copyWith(dartsThrownInTurn: 1);
+    // ignore: invalid_use_of_protected_member
+    notifier.state = AsyncValue.data(_activeState(
+      gameState: completeGs2,
+      pendingGameWinnerId: 'c1',
+    ));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(AlertDialog), findsOneWidget,
+        reason: 'winner-set dialog must not stack on rebuilds');
+  });
 }

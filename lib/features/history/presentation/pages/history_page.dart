@@ -45,7 +45,15 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+        leading: BackButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(GameRoutes.home);
+            }
+          },
+        ),
         title: const Text('History'),
       ),
       body: asyncState.when(

@@ -126,7 +126,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(onPressed: () => context.go(GameRoutes.home)),
+        leading: BackButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(GameRoutes.home);
+            }
+          },
+        ),
         title: const Text('Settings'),
       ),
       body: ListView(
