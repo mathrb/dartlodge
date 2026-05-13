@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/cricket_segment_utils.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_state.dart';
 
 // ── File-private helpers ──────────────────────────────────────────────────────
@@ -171,7 +172,7 @@ class _PlayerHeaderCell extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                mpr.toStringAsFixed(1),
+                StatFormatter.fmtDouble(mpr),
                 style: AppTextStyles.labelMedium.copyWith(
                   color: isActive ? cs.primary : cs.onSurfaceVariant,
                 ),

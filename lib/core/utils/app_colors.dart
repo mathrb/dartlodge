@@ -1,5 +1,28 @@
 import 'package:flutter/material.dart';
 
+/// Identity palette — formalized exception to the no-hardcoded-colors rule.
+///
+/// Stable, distinguishable hues used to color-code player identity (avatar
+/// rings/fills, lineup chips). Indexed by `playerId.hashCode % length`, so
+/// the same player always receives the same color across sessions.
+///
+/// Not part of the semantic color system — these colors carry no state or
+/// action meaning. Foreground text on any of these MUST use a fixed dark or
+/// light "on" color (e.g. `Colors.white` for the avatar initial) because the
+/// hue palette is theme-independent.
+///
+/// See DESIGN_SYSTEM.md §2.7 "Identity palette".
+const List<Color> kAvatarPalette = [
+  Color(0xFF1976D2), // blue
+  Color(0xFF388E3C), // green
+  Color(0xFFF57C00), // orange
+  Color(0xFF7B1FA2), // purple
+  Color(0xFFC62828), // red
+  Color(0xFF00838F), // cyan
+  Color(0xFF558B2F), // light green
+  Color(0xFF6D4C41), // brown
+];
+
 /// Design token constants — light mode (Kinetic Precision · Material).
 abstract final class AppColors {
   // Surface hierarchy (tonal depth, no borders) — neutral M3 light grays
@@ -56,6 +79,22 @@ abstract final class AppColors {
   static const cricketClosed    = primaryFixed;
   static const win              = primary;
   static const winContainer     = surfaceContainerLow;
+
+  // Status / accent semantic tokens (light)
+  // `award`: trophy / medal / 1st-place accent — themable amber/gold.
+  // `success`: positive outcomes ("best segment" highlights, OK indicators).
+  static const award            = Color(0xFFB58A00); // accessible amber on light
+  static const onAward          = Color(0xFF1E1500);
+  static const success          = Color(0xFF2E7D32); // green 800 (AA on surface)
+  static const onSuccess        = Color(0xFFFFFFFF);
+
+  // Identity palette accessor — exposes [kAvatarPalette] under the AppColors
+  // namespace so usage matches the AppColors.X convention.
+  static const List<Color> avatarPalette = kAvatarPalette;
+
+  // Text color used on identity-palette fills. Hue palette is theme-fixed,
+  // so the on-color is also theme-fixed.
+  static const Color onAvatar = Color(0xFFFFFFFF);
 }
 
 /// Design token constants — dark mode (Kinetic Precision theme).
@@ -110,4 +149,16 @@ abstract final class AppColorsDark {
   static const cricketClosed    = primaryFixed;
   static const win              = primary;
   static const winContainer     = surfaceContainerLow;
+
+  // Status / accent semantic tokens (dark)
+  // `award`: trophy / medal / 1st-place accent — themable amber/gold.
+  // `success`: positive outcomes ("best segment" highlights, OK indicators).
+  static const award            = Color(0xFFFFC957); // brighter on dark surface
+  static const onAward          = Color(0xFF2A1F00);
+  static const success          = Color(0xFF66BB6A); // green 400 (AA on dark)
+  static const onSuccess        = Color(0xFF002106);
+
+  // Identity palette — same hues across themes; intentional. See AppColors.
+  static const List<Color> avatarPalette = kAvatarPalette;
+  static const Color onAvatar = Color(0xFFFFFFFF);
 }

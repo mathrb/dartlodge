@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
@@ -148,8 +149,8 @@ class GameSummaryCardWidget extends StatelessWidget {
                   child: Row(
                     children: [
                       if (isWinner)
-                        const Icon(Icons.emoji_events,
-                            size: 16, color: Colors.amber),
+                        Icon(Icons.emoji_events,
+                            size: 16, color: AppTheme.award(context)),
                       if (isWinner) const SizedBox(width: 4),
                       Text(
                         c.name,

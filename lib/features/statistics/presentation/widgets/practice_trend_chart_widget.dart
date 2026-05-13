@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
@@ -84,8 +85,8 @@ class PracticeTrendChartWidget extends ConsumerWidget {
                 final drill = history[idx];
                 final dateStr = DateFormat.MMMd().format(drill.gameDate);
                 final valStr = isPct
-                    ? '${(spot.y * 100).toStringAsFixed(1)}%'
-                    : spot.y.toStringAsFixed(1);
+                    ? StatFormatter.fmtPct(spot.y)
+                    : StatFormatter.fmtDouble(spot.y);
                 return LineTooltipItem(
                   '$valStr $label\n$dateStr',
                   TextStyle(

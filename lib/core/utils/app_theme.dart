@@ -44,6 +44,12 @@ abstract final class AppTheme {
   // Chart area fill (data visualisation)
   static const double opacityChartAreaFill = 0.30; // trend chart background area
 
+  // Elevation shadow alpha tokens (centralized; see DESIGN_SYSTEM §5).
+  // Three semantic intensities — pick by component, never by literal.
+  // `opacityActiveCardShadow` (0.50) above is the spec'd active-player shadow.
+  static const double shadowAlphaSheet  = 0.20; // bottom sheets, floating modals
+  static const double shadowAlphaCard   = 0.40; // elevated Match Mode card stack
+
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark()  => _build(Brightness.dark);
 
@@ -134,6 +140,33 @@ abstract final class AppTheme {
 
   /// Splash / highlight color for kinetic card InkWell surfaces.
   static const Color kineticSplashColor = Color(0x0D00FFAB);
+
+  /// `award` — trophy / medal / 1st-place accent. Brightness-aware.
+  /// Resolves to a deep amber on light surfaces (AA) and a softer gold on
+  /// dark surfaces. See DESIGN_SYSTEM.md §2.6.
+  static Color award(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppColorsDark.award
+          : AppColors.award;
+
+  /// `onAward` — text/icon color on `award` fills.
+  static Color onAward(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppColorsDark.onAward
+          : AppColors.onAward;
+
+  /// `success` — positive-outcome accent (e.g. "best segment" highlights).
+  /// Brightness-aware: AA on light, AA on dark.
+  static Color success(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppColorsDark.success
+          : AppColors.success;
+
+  /// `onSuccess` — text/icon color on `success` fills.
+  static Color onSuccess(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppColorsDark.onSuccess
+          : AppColors.onSuccess;
 
   /// Gradient card decoration for primary game cards (Kinetic Architect design).
   /// Endpoints come from the active [ColorScheme] so the card's tonal depth

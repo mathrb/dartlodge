@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
@@ -86,7 +87,7 @@ class PprTrendChartWidget extends ConsumerWidget {
                 final dateStr = DateFormat.MMMd().format(leg.gameDate);
                 if (spot.barIndex == 0) {
                   return LineTooltipItem(
-                    '${leg.ppr.toStringAsFixed(1)} PPR\n$dateStr',
+                    '${StatFormatter.fmtDouble(leg.ppr)} PPR\n$dateStr',
                     TextStyle(
                       color: theme.colorScheme.onPrimaryContainer,
                       fontSize: 12,

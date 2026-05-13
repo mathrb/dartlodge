@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
@@ -140,8 +141,8 @@ class GameDetailPage extends ConsumerWidget {
                 child: Row(
                   children: [
                     if (isWinner)
-                      const Icon(Icons.emoji_events,
-                          size: 18, color: Colors.amber),
+                      Icon(Icons.emoji_events,
+                          size: 18, color: AppTheme.award(context)),
                     if (isWinner) const SizedBox(width: 6),
                     Text(
                       c.name,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/stat_formatter.dart';
 
 class AtcSummaryColumnWidget extends StatelessWidget {
   const AtcSummaryColumnWidget({
@@ -16,7 +18,6 @@ class AtcSummaryColumnWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     final totalAttempts = attempts.values.fold(0, (a, b) => a + b);
     final totalHits = hits.values.fold(0, (a, b) => a + b);
@@ -42,10 +43,9 @@ class AtcSummaryColumnWidget extends StatelessWidget {
         .take(3)
         .toList();
 
-    final colorSuccess =
-        isDark ? Colors.green.shade400 : Colors.green.shade700;
+    final colorSuccess = AppTheme.success(context);
 
-    String fmtRate(double v) => '${(v * 100).round()}%';
+    String fmtRate(double v) => StatFormatter.fmtPct(v, decimals: 0);
 
     Widget sectionHeader(String text) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),

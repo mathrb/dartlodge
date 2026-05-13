@@ -147,6 +147,47 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `cricketClosed` | `primaryFixed` | `primaryFixed` | Cricket number closed indicator |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
+| `award` | `#B58A00` | `#FFC957` | Trophy / medal / 1st-place accent — game history winner icons, podium badges |
+| `onAward` | `#1E1500` | `#2A1F00` | Text / icon color on `award` fills |
+| `success` | `#2E7D32` | `#66BB6A` | Positive-outcome accent — ATC "best segment" rates, OK indicators |
+| `onSuccess` | `#FFFFFF` | `#002106` | Text / icon color on `success` fills |
+
+`award` and `success` are brightness-aware. Reach them through the
+`AppTheme.award(context)` / `AppTheme.success(context)` helpers so the
+correct value resolves from the active theme at call time.
+
+### 2.7 Identity Palette (formalized exception)
+
+The 8-color **identity palette** is the **only** documented exception to the
+no-hardcoded-colors rule. It is used to color-code per-player identity
+(avatars, lineup chips) where stable, distinguishable hues across sessions
+are more important than aligning with the semantic theme.
+
+Defined in `lib/core/utils/app_colors.dart` as `AppColors.avatarPalette`
+(both `AppColors` and `AppColorsDark` expose the same list — the palette is
+intentionally theme-independent).
+
+| Index | Hex | Hue |
+|---|---|---|
+| 0 | `#1976D2` | Blue |
+| 1 | `#388E3C` | Green |
+| 2 | `#F57C00` | Orange |
+| 3 | `#7B1FA2` | Purple |
+| 4 | `#C62828` | Red |
+| 5 | `#00838F` | Cyan |
+| 6 | `#558B2F` | Light green |
+| 7 | `#6D4C41` | Brown |
+
+**Indexing rule:** `palette[player.playerId.hashCode.abs() % palette.length]`.
+This is the canonical assignment — never randomise per session.
+
+**Foreground text** on any palette color uses `AppColors.onAvatar` (`#FFFFFF`),
+which is theme-fixed because the palette itself is theme-fixed. Do NOT use
+`colorScheme.onPrimary` here — the contrast is only guaranteed against the
+palette hues, not against arbitrary primary surfaces.
+
+Outside `PlayerAvatarWidget`, no widget should reference this palette. If a
+new identity component appears, add it here and link from this section.
 
 ---
 
@@ -245,12 +286,23 @@ Avoid shadows in Admin views. Instead, stack tonal surface tokens to create an "
 ### Elevation Shadow (Active Player Card — Match Mode)
 
 Active player cards use a soft directional shadow:
-- **Color:** `Colors.black` at 50% opacity
+- **Color:** `Colors.black` at 50% opacity — `AppTheme.opacityActiveCardShadow`
 - **Blur:** 24px
 - **Offset:** 4px down
 - **Spread:** -4px
 
 This creates depth separation between the active and inactive player cards without a harsh border.
+
+### Shadow Alpha Tokens
+
+All drop-shadow `Colors.black.withValues(alpha: …)` calls reference one of
+three centralized constants. Never inline a raw float.
+
+| Token | Value | Usage |
+|---|---|---|
+| `AppTheme.shadowAlphaSheet` | 0.20 | Floating sheets / modal containers (low-elevation lift, soft halo) |
+| `AppTheme.shadowAlphaCard` | 0.40 | Elevated Match Mode card stack (cricket board cards) |
+| `AppTheme.opacityActiveCardShadow` | 0.50 | Active player card only — see spec above |
 
 ### The "Ghost Border" Fallback
 

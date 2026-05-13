@@ -1,33 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
+/// Round avatar showing a player's first initial on a stable identity color.
+///
+/// Hue is picked from the design system's identity palette
+/// (`AppColors.avatarPalette`) — a formalized exception to the
+/// no-hardcoded-colors rule. See `docs/design/DESIGN_SYSTEM.md` §2.7.
 class PlayerAvatarWidget extends StatelessWidget {
   final Player player;
   final double size;
 
   const PlayerAvatarWidget({super.key, required this.player, this.size = 40});
 
-  static const List<Color> _colors = [
-    Color(0xFF1976D2), // blue
-    Color(0xFF388E3C), // green
-    Color(0xFFF57C00), // orange
-    Color(0xFF7B1FA2), // purple
-    Color(0xFFC62828), // red
-    Color(0xFF00838F), // cyan
-    Color(0xFF558B2F), // light green
-    Color(0xFF6D4C41), // brown
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final color = _colors[player.playerId.hashCode.abs() % _colors.length];
+    final palette = AppColors.avatarPalette;
+    final color = palette[player.playerId.hashCode.abs() % palette.length];
     final initial = player.name.isNotEmpty ? player.name[0].toUpperCase() : '?';
     return CircleAvatar(
       radius: size / 2,
       backgroundColor: color,
       child: Text(
         initial,
-        style: TextStyle(fontSize: size * 0.45, color: Colors.white),
+        style: TextStyle(fontSize: size * 0.45, color: AppColors.onAvatar),
       ),
     );
   }

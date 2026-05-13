@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 
@@ -23,7 +24,7 @@ class PlayerScoreSectionWidget extends StatelessWidget {
     final pointsScored = gameState.gameType == GameType.countUp
         ? cs.score - cs.startingScore
         : gameState.startingScore - cs.score;
-    return ((pointsScored / cs.dartThrows.length) * 3).toStringAsFixed(1);
+    return StatFormatter.fmtDouble((pointsScored / cs.dartThrows.length) * 3);
   }
 
   TextStyle _activeScoreStyle(BuildContext context) {

@@ -36,6 +36,17 @@ jobs:
         # block CI. Errors and warnings still do. See docs/RELEASES.md.
         run: flutter analyze --no-fatal-infos
 
+      - name: Stats UI formatter gate
+        # Block reintroduction of `toStringAsFixed` in feature presentation
+        # layers. All stats display must route through StatFormatter so
+        # trailing zeros / null fallbacks ('—') are consistent across the UI.
+        # See issue #138.
+        run: |
+          if grep -rn "toStringAsFixed" lib/features/*/presentation/ 2>/dev/null; then
+            echo "Error: toStringAsFixed found in lib/features/*/presentation/. Use StatFormatter instead."
+            exit 1
+          fi
+
       - name: Run tests with coverage
         run: flutter test --coverage
 

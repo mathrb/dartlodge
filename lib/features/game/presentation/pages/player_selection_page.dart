@@ -8,6 +8,7 @@ import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
@@ -610,7 +611,7 @@ class _ActivePlayerCard extends ConsumerWidget {
 
     final statsAsync = ref.watch(playerStatsProvider(player.playerId));
     final avg = statsAsync.value?.threeDartAverage;
-    final avgLabel = avg != null ? 'AVG ${avg.toStringAsFixed(1)}' : 'AVG —';
+    final avgLabel = 'AVG ${StatFormatter.fmtDouble(avg)}';
 
     final isFirst = index == 0;
     final badgeBg = isFirst ? cs.primaryFixed : cs.surfaceContainerHighest;
