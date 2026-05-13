@@ -29,12 +29,12 @@ class X01FirstDartInProjection extends ProjectionEngine {
     _awaitingFirstDart = false;
   }
 
-  bool get _isActive => _context?.inStrategy != 'Straight In';
+  bool get _isActive => _context?.inStrategy != 'straight';
 
   bool _isValidInMultiplier(int multiplier) {
     final strategy = _context?.inStrategy ?? '';
-    if (strategy == 'Double In') return multiplier == 2;
-    if (strategy == 'Master In') return multiplier == 2 || multiplier == 3;
+    if (strategy == 'double') return multiplier == 2;
+    if (strategy == 'master') return multiplier == 2 || multiplier == 3;
     return false;
   }
 

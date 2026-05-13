@@ -28,8 +28,8 @@ GameEvent _makeEvent(
 ProjectionContext _makeContext({String playerId = 'p1'}) => ProjectionContext(
       playerId: playerId,
       gameType: GameType.x01,
-      inStrategy: 'Straight In',
-      outStrategy: 'Double Out',
+      inStrategy: 'straight',
+      outStrategy: 'double',
       playerIds: ['p1', 'p2'],
     );
 
