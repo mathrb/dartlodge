@@ -31,6 +31,8 @@ _PlayerStats _$PlayerStatsFromJson(Map<String, dynamic> json) => _PlayerStats(
   avgCheckoutScore: (json['avgCheckoutScore'] as num?)?.toDouble(),
   bestGameCheckoutPercentage: (json['bestGameCheckoutPercentage'] as num?)
       ?.toDouble(),
+  doubleOutSuccessRate: (json['doubleOutSuccessRate'] as num?)?.toDouble(),
+  firstDartInSuccessRate: (json['firstDartInSuccessRate'] as num?)?.toDouble(),
   marksPerTurn: (json['marksPerTurn'] as num?)?.toDouble(),
   hitRate: (json['hitRate'] as num?)?.toDouble(),
   sixMarkTurns: (json['sixMarkTurns'] as num?)?.toInt() ?? 0,
@@ -98,6 +100,8 @@ Map<String, dynamic> _$PlayerStatsToJson(_PlayerStats instance) =>
       'bestFirstNinePpr': instance.bestFirstNinePpr,
       'avgCheckoutScore': instance.avgCheckoutScore,
       'bestGameCheckoutPercentage': instance.bestGameCheckoutPercentage,
+      'doubleOutSuccessRate': instance.doubleOutSuccessRate,
+      'firstDartInSuccessRate': instance.firstDartInSuccessRate,
       'marksPerTurn': instance.marksPerTurn,
       'hitRate': instance.hitRate,
       'sixMarkTurns': instance.sixMarkTurns,

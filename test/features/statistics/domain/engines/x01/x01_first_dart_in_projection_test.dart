@@ -23,13 +23,13 @@ GameEvent _makeEvent(
 
 ProjectionContext _makeContext({
   String playerId = 'p1',
-  String inStrategy = 'Double In',
+  String inStrategy = 'double',
 }) =>
     ProjectionContext(
       playerId: playerId,
       gameType: GameType.x01,
       inStrategy: inStrategy,
-      outStrategy: 'Double Out',
+      outStrategy: 'double',
       playerIds: ['p1', 'p2'],
     );
 
@@ -42,7 +42,7 @@ void main() {
 
   // ── Category A ─────────────────────────────────────────────────────────────
 
-  test('A1 — init with Double In produces zero counters', () {
+  test('A1 — init with double in produces zero counters', () {
     engine.init(_makeContext());
     final s = engine.snapshot();
     expect(s['firstDartInSuccessRate'], isNull);
@@ -50,8 +50,8 @@ void main() {
     expect(s['inSuccesses'], 0);
   });
 
-  test('A1 — init with Straight In returns empty snapshot', () {
-    engine.init(_makeContext(inStrategy: 'Straight In'));
+  test('A1 — init with straight in returns empty snapshot', () {
+    engine.init(_makeContext(inStrategy: 'straight'));
     expect(engine.snapshot(), isEmpty);
   });
 
@@ -62,7 +62,7 @@ void main() {
 
   // ── Category B ─────────────────────────────────────────────────────────────
 
-  test('B1 — TurnStarted then double dart succeeds (Double In)', () {
+  test('B1 — TurnStarted then double dart succeeds (double in)', () {
     engine.init(_makeContext());
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1'}, seq: 1));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 'D20', 'score': 40}, seq: 2));
@@ -70,7 +70,7 @@ void main() {
     expect(engine.snapshot()['inSuccesses'], 1);
   });
 
-  test('B1 — TurnStarted then single dart fails (Double In)', () {
+  test('B1 — TurnStarted then single dart fails (double in)', () {
     engine.init(_makeContext());
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1'}, seq: 1));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': '20', 'score': 20}, seq: 2));
@@ -78,16 +78,16 @@ void main() {
     expect(engine.snapshot()['inSuccesses'], 0);
   });
 
-  test('B1 — Master In: triple dart succeeds', () {
-    engine.init(_makeContext(inStrategy: 'Master In'));
+  test('B1 — master in: triple dart succeeds', () {
+    engine.init(_makeContext(inStrategy: 'master'));
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1'}, seq: 1));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 'T20', 'score': 60}, seq: 2));
     expect(engine.snapshot()['inAttempts'], 1);
     expect(engine.snapshot()['inSuccesses'], 1);
   });
 
-  test('B1 — Master In: single dart fails', () {
-    engine.init(_makeContext(inStrategy: 'Master In'));
+  test('B1 — master in: single dart fails', () {
+    engine.init(_makeContext(inStrategy: 'master'));
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1'}, seq: 1));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': '20', 'score': 20}, seq: 2));
     expect(engine.snapshot()['inAttempts'], 1);
@@ -250,8 +250,8 @@ void main() {
     expect(engine.descriptor.supportedGameTypes.contains(GameType.cricket), isFalse);
   });
 
-  test('GS3 — Straight In context returns empty snapshot', () {
-    engine.init(_makeContext(inStrategy: 'Straight In'));
+  test('GS3 — straight in context returns empty snapshot', () {
+    engine.init(_makeContext(inStrategy: 'straight'));
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1'}, seq: 1));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 'D20', 'score': 40}, seq: 2));
     expect(engine.snapshot(), isEmpty);

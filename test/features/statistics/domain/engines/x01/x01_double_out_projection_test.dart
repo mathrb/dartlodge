@@ -23,12 +23,12 @@ GameEvent _makeEvent(
 
 ProjectionContext _makeContext({
   String playerId = 'p1',
-  String outStrategy = 'Double Out',
+  String outStrategy = 'double',
 }) =>
     ProjectionContext(
       playerId: playerId,
       gameType: GameType.x01,
-      inStrategy: 'Straight In',
+      inStrategy: 'straight',
       outStrategy: outStrategy,
       playerIds: ['p1', 'p2'],
     );
@@ -42,7 +42,7 @@ void main() {
 
   // ── Category A ─────────────────────────────────────────────────────────────
 
-  test('A1 — init with Double Out produces null rate and zero counters', () {
+  test('A1 — init with double out produces null rate and zero counters', () {
     engine.init(_makeContext());
     final s = engine.snapshot();
     expect(s['doubleOutSuccessRate'], isNull);
@@ -50,8 +50,8 @@ void main() {
     expect(s['doubleSuccesses'], 0);
   });
 
-  test('A1 — init with Straight Out returns empty snapshot', () {
-    engine.init(_makeContext(outStrategy: 'Straight Out'));
+  test('A1 — init with straight out returns empty snapshot', () {
+    engine.init(_makeContext(outStrategy: 'straight'));
     expect(engine.snapshot(), isEmpty);
   });
 
@@ -145,8 +145,8 @@ void main() {
     expect(engine.snapshot()['doubleOutSuccessRate'], closeTo(50.0, 0.001));
   });
 
-  test('C1 — Master Out: triple segment counts as attempt', () {
-    engine.init(_makeContext(outStrategy: 'Master Out'));
+  test('C1 — master out: triple segment counts as attempt', () {
+    engine.init(_makeContext(outStrategy: 'master'));
     engine.apply(_makeEvent('DartThrown', {
       'player_id': 'p1', 'segment': 'T10', 'score': 30, 'remaining_after': 10,
     }));
@@ -269,8 +269,8 @@ void main() {
     expect(engine.descriptor.supportedGameTypes.contains(GameType.cricket), isFalse);
   });
 
-  test('GS3 — Straight Out context returns empty snapshot', () {
-    engine.init(_makeContext(outStrategy: 'Straight Out'));
+  test('GS3 — straight out context returns empty snapshot', () {
+    engine.init(_makeContext(outStrategy: 'straight'));
     engine.apply(_makeEvent('DartThrown', {
       'player_id': 'p1', 'segment': 'D20', 'score': 40, 'remaining_after': 0,
     }));

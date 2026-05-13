@@ -219,6 +219,8 @@ class PlayerStatsAssembler {
     final bestLegPprSnap = snap['x01.bestLegPpr'] ?? {};
     final avgCheckoutSnap = snap['x01.avgCheckoutScore'] ?? {};
     final bestGameCoSnap = snap['x01.bestGameCheckoutPercentage'] ?? {};
+    final doubleOutSnap = snap['x01.doubleOut'] ?? {};
+    final firstDartInSnap = snap['x01.firstDartIn'] ?? {};
 
     return PlayerStats(
       playerId: playerId,
@@ -248,6 +250,10 @@ class PlayerStatsAssembler {
           (avgCheckoutSnap['avgCheckoutScore'] as num?)?.toDouble(),
       bestGameCheckoutPercentage:
           (bestGameCoSnap['bestGameCheckoutPercentage'] as num?)?.toDouble(),
+      doubleOutSuccessRate:
+          (doubleOutSnap['doubleOutSuccessRate'] as num?)?.toDouble(),
+      firstDartInSuccessRate:
+          (firstDartInSnap['firstDartInSuccessRate'] as num?)?.toDouble(),
     );
   }
 

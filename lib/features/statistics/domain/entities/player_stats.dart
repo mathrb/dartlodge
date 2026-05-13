@@ -34,6 +34,10 @@ abstract class PlayerStats with _$PlayerStats {
     double? bestFirstNinePpr,
     double? avgCheckoutScore,
     double? bestGameCheckoutPercentage,
+    // X01 strategy-conditional metrics (null when strategy is 'straight' or
+    // when no attempts recorded). Values are percentages (0–100).
+    double? doubleOutSuccessRate,
+    double? firstDartInSuccessRate,
     // Cricket-specific fields (null for non-cricket games)
     double? marksPerTurn,
     double? hitRate,

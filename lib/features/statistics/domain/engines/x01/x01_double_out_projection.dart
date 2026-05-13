@@ -25,12 +25,12 @@ class X01DoubleOutProjection extends ProjectionEngine {
     _doubleSuccesses = 0;
   }
 
-  bool get _isActive => _context?.outStrategy != 'Straight Out';
+  bool get _isActive => _context?.outStrategy != 'straight';
 
   bool _isDoubleAttemptMultiplier(int multiplier) {
     final strategy = _context?.outStrategy ?? '';
-    if (strategy == 'Double Out') return multiplier == 2;
-    if (strategy == 'Master Out') return multiplier == 2 || multiplier == 3;
+    if (strategy == 'double') return multiplier == 2;
+    if (strategy == 'master') return multiplier == 2 || multiplier == 3;
     return false;
   }
 
