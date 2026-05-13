@@ -35,6 +35,14 @@ jobs:
           flutter-version: '3.41.1'
           channel: 'stable'
 
+      - name: Cache pub-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -71,11 +79,14 @@ jobs:
       # (https://mathrb.github.io/dartlodge/) or asset URLs and go_router
       # routes resolve to the wrong path and the app 404s on reload.
       - name: Build web bundle
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
         run: |
           flutter build web --release \
             --base-href "/dartlodge/" \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
-            --dart-define=SENTRY_ENVIRONMENT=production
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
 
       # GitHub Pages serves /<path> and /<path>/ but not arbitrary deep links
       # without a fallback. Copying index.html → 404.html makes any unknown

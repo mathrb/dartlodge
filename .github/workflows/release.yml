@@ -66,6 +66,24 @@ jobs:
           flutter-version: '3.41.1'
           channel: 'stable'
 
+      - name: Cache pub-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -84,12 +102,15 @@ jobs:
         run: bash tools/configure-android-signing.sh
 
       - name: Build signed release APK
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_ENVIRONMENT: production
         run: |
           flutter build apk --release \
             --build-name="${{ steps.tag.outputs.version_name }}" \
             --build-number="${{ steps.tag.outputs.version_code }}" \
-            --dart-define=SENTRY_DSN=${{ secrets.SENTRY_DSN }} \
-            --dart-define=SENTRY_ENVIRONMENT=production
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
 
       - name: Rename and checksum APK
         id: artifacts

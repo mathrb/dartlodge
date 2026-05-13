@@ -33,7 +33,11 @@ fi
 
 # `flutter create` regenerates the default counter-app smoke test that
 # references a non-existent `MyApp` class. Drop it so `flutter analyze` stays
-# clean.
-rm -f test/widget_test.dart
+# clean — but only if the file is the generated smoke test (matches `MyApp`).
+# Without this guard a real test file at that path would silently disappear
+# on every `flutter create` rerun.
+if [[ -f test/widget_test.dart ]] && grep -q "MyApp" test/widget_test.dart; then
+  rm -f test/widget_test.dart
+fi
 
 echo "android applicationId set to app.dartlodge, label set to DartLodge"

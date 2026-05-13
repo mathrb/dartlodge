@@ -42,7 +42,10 @@ dependencies:
 
   # Settings / preferences
   shared_preferences: ^2.3.4
-  package_info_plus: ">=8.1.4 <11.0.0"
+  # Pinned via caret to match wakelock_plus ^1.6.0's transitive requirement
+  # (package_info_plus ^10.0.0). Issue #139 originally proposed ^8.1.4 but
+  # that constraint is unsolvable while wakelock_plus stays on 1.6.x.
+  package_info_plus: ^10.1.0
   
   # Code generation
   freezed_annotation: ^3.1.0
