@@ -31,7 +31,7 @@ The Darts App follows a layered architecture with clear separation of concerns. 
 
 ### 3. Data Layer (drift / SQLite)
 - **Responsibility**: Local data persistence
-- **Implementation**: [`drift`](https://pub.dev/packages/drift) on every platform. Mobile/desktop uses `NativeDatabase.createInBackground`; web uses `WasmDatabase` over IndexedDB (via the bundled `sqlite3.wasm` + `drift_worker.dart.js` assets). Platform selection happens once in the drift factory (`lib/core/persistence/drift/database_factory_{native,web}.dart`); everywhere else only sees the repository interfaces. See [`DATABASE_DDL.md`](DATABASE_DDL.md) for the canonical schema.
+- **Implementation**: [`drift`](https://pub.dev/packages/drift) on every platform. Mobile/desktop uses `NativeDatabase.createInBackground`; web uses the synchronous `WasmDatabase` constructor — `sqlite3.wasm` loaded on the main thread, persistence via `IndexedDbFileSystem`. The `WasmDatabase.open()` worker-based approach is explicitly avoided because it hangs in Firefox / Edge during development (see comment in `lib/core/persistence/drift/database_factory_web.dart`). Platform selection happens once in the drift factory (`lib/core/persistence/drift/database_factory_{native,web}.dart`); everywhere else only sees the repository interfaces. See [`DATABASE_DDL.md`](DATABASE_DDL.md) for the canonical schema.
 - **Key Components**:
   - Drift table classes (`lib/core/persistence/drift/database.dart`) — single source of truth for schema
   - Generated Data Access Objects via `drift_dev` / `build_runner`
