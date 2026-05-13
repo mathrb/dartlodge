@@ -263,6 +263,25 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **"Unused" in `lib/` may be forgotten wiring:** When `flutter analyze` flags an unused field, parameter, or import in `lib/`, check whether it represents incomplete wiring (a setter that updates a field nothing reads, a constructor param never used in the body) before deleting. If unsure, ask — silent deletion can lock in a no-op user-facing control as the intended behavior.
 
+**X01 strategy values are lowercase short forms:** `'straight'` / `'double'` / `'master'` for both `inStrategy` and `outStrategy` (`GameState` defaults). Engines and projections compare against these literals; UI labels (e.g. "Double Out") live in a display mapper only. Never store the friendly labels.
+
+**`DartCorrected` payload key is `original_event_id`:** a string referencing the corrected `DartThrown.eventId`. Any replay-aware code path (`UndoLastDartUseCase`, `PlayerStatsAssembler.fromEvents`) must collect these and skip the originals.
+
+**Projection snapshots are two-level:** top level keyed by `engine.descriptor.id` (e.g. `'x01.doubleOut'`), inner map keyed by field name (e.g. `'doubleOutSuccessRate'`). Wiring a new engine into `PlayerStatsAssembler.fromEvents` means reading at both levels — running an engine without reading its snapshot is a silent no-op.
+
+**`.flutter-plugins-dependencies`** regenerates on every `flutter pub get` / `flutter run`; never commit it (commonly shows `M` in `git status`).
+
+---
+
+## Issue tracker conventions
+
+**Priority labels** (color-coded on GitHub):
+- `P0` (red) — critical: wrong user-facing output or broken core flows
+- `P1` (orange) — important: correctness or architectural inconsistencies
+- `P2` (yellow) — hygiene: anti-patterns, dead code, doc drift
+
+PR titles for issues that ship in multiple PRs use `(refs #N)` and the body ends with `Closes parts of #N.`; the closing `Closes #N` is reserved for the final PR.
+
 ---
 
 ## Things You Must Not Do
