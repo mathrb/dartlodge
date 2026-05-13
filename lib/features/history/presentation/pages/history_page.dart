@@ -74,13 +74,19 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             ),
             Expanded(
               child: historyState.games.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.history, size: 64, color: Colors.grey),
-                          SizedBox(height: 8),
-                          Text('No completed games yet'),
+                          Icon(
+                            Icons.history,
+                            size: 64,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('No completed games yet'),
                         ],
                       ),
                     )

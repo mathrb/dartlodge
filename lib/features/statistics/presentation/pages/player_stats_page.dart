@@ -7,6 +7,7 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../players/presentation/providers/players_provider.dart';
 import '../../domain/entities/player_stats.dart';
@@ -328,9 +329,6 @@ class _PracticeSummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String fmtPct(double? v) =>
-        v != null ? '${(v * 100).toStringAsFixed(1)}%' : '—';
-
     final (label1, val1, label2, val2, label3, val3) = switch (stats.gameType) {
       GameType.aroundTheClock => (
           'Drills Played',
@@ -338,21 +336,21 @@ class _PracticeSummaryCards extends StatelessWidget {
           'Completions',
           stats.atcCompletions.toString(),
           'Hit Rate',
-          fmtPct(stats.atcHitRate),
+          StatFormatter.fmtPct(stats.atcHitRate),
         ),
       GameType.bobs27 => (
           'Drills Played',
           stats.totalGames.toString(),
           'Best Score',
-          stats.bobs27BestScore?.toString() ?? '—',
+          StatFormatter.fmtInt(stats.bobs27BestScore),
           'Avg Score',
-          stats.bobs27AvgScore?.toStringAsFixed(1) ?? '—',
+          StatFormatter.fmtDouble(stats.bobs27AvgScore),
         ),
       GameType.shanghai => (
           'Drills Played',
           stats.totalGames.toString(),
           'Best Score',
-          stats.shanghaiBestScore?.toString() ?? '—',
+          StatFormatter.fmtInt(stats.shanghaiBestScore),
           'Shanghais',
           stats.shanghaiCount.toString(),
         ),
@@ -360,9 +358,9 @@ class _PracticeSummaryCards extends StatelessWidget {
           'Drills Played',
           stats.totalGames.toString(),
           'Best Score',
-          stats.catch40BestScore?.toString() ?? '—',
+          StatFormatter.fmtInt(stats.catch40BestScore),
           'Avg Score',
-          stats.catch40AvgScore?.toStringAsFixed(1) ?? '—',
+          StatFormatter.fmtDouble(stats.catch40AvgScore),
         ),
       GameType.checkoutPractice => (
           'Attempts',
@@ -370,7 +368,7 @@ class _PracticeSummaryCards extends StatelessWidget {
           'Successes',
           stats.checkoutSuccesses.toString(),
           'Success Rate',
-          fmtPct(stats.checkoutSuccessRate),
+          StatFormatter.fmtPct(stats.checkoutSuccessRate),
         ),
       _ => (
           'Games Played',

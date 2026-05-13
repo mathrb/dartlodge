@@ -11,9 +11,12 @@ class StatFormatter {
 
   /// [isRatio] = true means v is 0.0–1.0 and needs ×100.
   /// false means v is already 0–100.
-  static String fmtPct(double? v, {bool isRatio = true}) => v != null
-      ? '${_stripTrailingZeros((isRatio ? v * 100 : v).toStringAsFixed(1))}%'
-      : '—';
+  /// [decimals] controls the precision of the rendered number; trailing zeros
+  /// are always stripped, so `fmtPct(0.5, decimals: 0)` → `'50%'`.
+  static String fmtPct(double? v, {bool isRatio = true, int decimals = 1}) =>
+      v != null
+          ? '${_stripTrailingZeros((isRatio ? v * 100 : v).toStringAsFixed(decimals))}%'
+          : '—';
 
   static String fmtInt(int? v) => v != null ? v.toString() : '—';
 

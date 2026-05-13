@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/statistics_provider.dart';
@@ -32,7 +34,8 @@ class StatsOverlayWidget extends ConsumerWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
+                color: Colors.black
+                    .withValues(alpha: AppTheme.shadowAlphaSheet),
                 blurRadius: 8,
                 offset: const Offset(0, -2),
               ),
@@ -96,7 +99,7 @@ class StatsOverlayWidget extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              'Avg: ${cs.threeDartAverage.toStringAsFixed(1)} | Darts: ${cs.totalDartsThrown}',
+                              'Avg: ${StatFormatter.fmtDouble(cs.threeDartAverage)} | Darts: ${cs.totalDartsThrown}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),

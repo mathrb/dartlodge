@@ -209,7 +209,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.40),
+                            color: Colors.black
+                                .withValues(alpha: AppTheme.shadowAlphaCard),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           ),

@@ -343,7 +343,7 @@ void main() {
   testWidgets('8. PPR shows numeric value after 3 darts (60/3×3=60.0)',
       (tester) async {
     _setPhoneViewport(tester);
-    // delta = 501 - 441 = 60; darts = 3; PPR = (60/3)*3 = 60.0
+    // delta = 501 - 441 = 60; darts = 3; PPR = (60/3)*3 = 60.0 → fmtDouble strips trailing zero → '60'
     final gs = _gameState(
       competitors: [
         _competitor(score: 441, dartThrows: const ['20', '20', '20']),
@@ -357,7 +357,7 @@ void main() {
 
     // PPR label and value are separate Text widgets in the redesigned card
     expect(find.text('PPR'), findsOneWidget);
-    expect(find.text('60.0'), findsOneWidget);
+    expect(find.text('60'), findsOneWidget);
   });
 
   // ── 9. Status bar — no dart info when no darts thrown ───────────────────────
