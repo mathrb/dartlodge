@@ -295,8 +295,8 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       if (latestConfigJson != null) {
         try {
           final cfg = jsonDecode(latestConfigJson) as Map<String, dynamic>;
-          inStrategy = cfg['in_strategy'] as String? ?? inStrategy;
-          outStrategy = cfg['out_strategy'] as String? ?? outStrategy;
+          inStrategy = cfg['inStrategy'] as String? ?? inStrategy;
+          outStrategy = cfg['outStrategy'] as String? ?? outStrategy;
           atcVariant = cfg['variant'] as String? ?? atcVariant;
         } catch (_) {}
       }
