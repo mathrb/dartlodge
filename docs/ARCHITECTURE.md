@@ -4,7 +4,9 @@ This document provides a detailed architectural overview aligned with the existi
 
 ## Global Architecture Overview
 
-The Darts App follows a layered architecture with clear separation of concerns. The Flutter UI layer handles user interaction, the business logic layer processes game rules and statistics, the data layer manages local persistence via SQLite, and an optional backend layer provides advanced features like auto-scoring and synchronization.
+The Darts App follows a layered architecture with clear separation of concerns. The Flutter UI layer handles user interaction, the business logic layer processes game rules and statistics, the data layer manages local persistence via SQLite (through `drift` on every platform), and an optional backend layer provides advanced features like auto-scoring and synchronization.
+
+> See [`ARCHITECTURE_COMPLETE.md`](ARCHITECTURE_COMPLETE.md) for the canonical, in-depth architecture reference. This document is an overview.
 
 ## Layered Architecture
 
@@ -27,14 +29,14 @@ The Darts App follows a layered architecture with clear separation of concerns. 
   - Backend Sync Manager (optional)
   - Game State Management
 
-### 3. Data Layer (SQLite)
+### 3. Data Layer (drift / SQLite)
 - **Responsibility**: Local data persistence
-- **Implementation**: SQLite via `sqflite` and `path_provider` packages on mobile; SQLite WASM (via `drift` with automatic OPFS/IndexedDB fallback) when running as a web debug target
+- **Implementation**: [`drift`](https://pub.dev/packages/drift) on every platform. Mobile/desktop uses `NativeDatabase.createInBackground`; web uses `WasmDatabase` over IndexedDB (via the bundled `sqlite3.wasm` + `drift_worker.dart.js` assets). Platform selection happens once in the drift factory (`lib/core/persistence/drift/database_factory_{native,web}.dart`); everywhere else only sees the repository interfaces. See [`DATABASE_DDL.md`](DATABASE_DDL.md) for the canonical schema.
 - **Key Components**:
-  - Database schema management
-  - Data Access Objects (DAOs)
-  - Query builders
-  - Data validation
+  - Drift table classes (`lib/core/persistence/drift/database.dart`) — single source of truth for schema
+  - Generated Data Access Objects via `drift_dev` / `build_runner`
+  - Type-safe query builders (drift's Dart DSL plus raw SQL where needed)
+  - Foreign keys enforced at runtime (`PRAGMA foreign_keys = ON` in `MigrationStrategy.beforeOpen`)
   - Backup/restore functionality
 
 ### 4. Optional Backend Layer
@@ -91,7 +93,7 @@ The database follows a relational design with these core entities:
 
 ### Database Helper
 
-The Database Helper provides a singleton interface for all database operations, handling all CRUD operations and ensuring proper database initialization. It follows the repository pattern to abstract database operations from the business logic layer, with the underlying storage implementation varying by platform (SQLite via `sqflite` on mobile, SQLite WASM via `drift` with automatic OPFS/IndexedDB fallback on web).
+The Database Helper provides a singleton interface for all database operations, handling all CRUD operations and ensuring proper database initialization. It follows the repository pattern to abstract database operations from the business logic layer. The same `drift` engine is used on every platform; only the underlying `QueryExecutor` differs (`NativeDatabase.createInBackground` on mobile/desktop, `WasmDatabase` over IndexedDB on web), wired in the drift factory.
 
 Key responsibilities:
 - Database initialization and schema management
@@ -137,7 +139,7 @@ The state management system ensures consistent game state across the application
 
 ### 1. Local-First with Optional Backend
 - **Rationale**: Offline capability is essential for darts apps
-- **Implementation**: SQLite for local storage, optional REST API sync
+- **Implementation**: SQLite (via `drift`) for local storage, optional REST API sync
 - **Benefits**: Works without internet, user privacy, no server costs
 
 ### 2. Flutter for Cross-Platform
@@ -145,16 +147,16 @@ The state management system ensures consistent game state across the application
 - **Implementation**: Flutter widgets with platform-specific adaptations; Flutter Web used as a debug target in headless environments
 - **Benefits**: Faster development, consistent UI, hot reload, no physical device required during early development
 
-### 3. Repository Abstraction for Platform-Conditional Storage
-- **Rationale**: `sqflite` does not support Flutter Web; the data layer must be abstracted to allow platform-appropriate implementations
-- **Implementation**: Repository interfaces defined in the domain layer; mobile resolves to `sqflite`, web resolves to SQLite WASM via `drift` with automatic OPFS/IndexedDB fallback. Conditional wiring happens at the dependency injection root (`main.dart`)
-- **Benefits**: Game logic and UI remain identical across platforms; storage implementation is swappable without touching business logic
+### 3. Repository Abstraction with a Single Drift Engine
+- **Rationale**: Flutter targets web in addition to mobile/desktop; the data layer must abstract over different `QueryExecutor` implementations while keeping a single schema and a single ORM
+- **Implementation**: Repository interfaces defined in the domain layer; a single `drift` schema (see `lib/core/persistence/drift/database.dart`) used by all platforms. Conditional `QueryExecutor` wiring lives in the drift factory: `NativeDatabase.createInBackground` for mobile/desktop, `WasmDatabase` over IndexedDB for web. Repository implementations and business logic are platform-agnostic.
+- **Benefits**: Game logic and UI remain identical across platforms; one schema, one set of migrations, one set of repository implementations; storage executor is swappable without touching business logic
 - **Web limitations**: The web build is a development/debug target only. Features requiring native APIs (camera for computer vision, native file system) are not available on web and should be stubbed or disabled when running in a browser
 
-### 4. SQLite for Data Storage (Mobile)
-- **Rationale**: Relational data, complex queries for statistics
-- **Implementation**: sqflite package with proper schema
-- **Benefits**: Better for statistics, long-term maintainability
+### 4. SQLite (via drift) for Data Storage
+- **Rationale**: Relational data and complex queries for statistics; a single ORM-backed schema across mobile, desktop, and web
+- **Implementation**: `drift` package with the schema in `lib/core/persistence/drift/database.dart`. Build artefacts come from `build_runner` (`dart run build_runner build --delete-conflicting-outputs`)
+- **Benefits**: Type-safe queries, watchable streams via `select(...).watch()`, identical behaviour across platforms, long-term maintainability
 
 ### 5. Game Engine Pattern
 - **Rationale**: Separate game logic from UI
@@ -169,38 +171,34 @@ The state management system ensures consistent game state across the application
 ## Next Steps
 
 1. **Implement Core Game Types**: X01, Cricket, Around the Clock
-2. **Develop Database Layer**: Complete SQLite implementation with repository abstraction for web compatibility
+2. **Develop Database Layer**: Complete drift implementation with repository abstraction for web compatibility
 3. **Build UI Components**: Game boards, score displays, statistics views
 4. **Implement Statistics Engine**: Compute various metrics from dart data
 5. **Add Optional Backend**: Computer vision integration
 6. **Testing**: Unit tests, integration tests, UI tests
 
-## Web Database Migration (Completed)
+## Appendix: Historical — Web Database Migration
 
-### From IndexedDB to SQLite WASM
+> This section is **historical context only**. It documents how the web data layer
+> arrived at its current state. For the canonical architecture, see
+> [`ARCHITECTURE_COMPLETE.md`](ARCHITECTURE_COMPLETE.md); for the canonical schema,
+> see [`DATABASE_DDL.md`](DATABASE_DDL.md). The mobile-side migration off `sqflite`
+> onto a single drift engine on every platform is tracked in PRs #122–#124
+> (issue #112).
 
-The project has migrated from the deprecated `WebDatabase` (IndexedDB-only) to the modern `WasmDatabase` approach:
+### From IndexedDB to SQLite WASM (web)
 
-**Key Improvements:**
-- **Cross-Platform Consistency**: Same SQLite engine on web and native platforms
-- **Automatic Storage Selection**: OPFS (preferred) → IndexedDB → Memory fallback
-- **Better Performance**: Native SQLite operations vs IndexedDB adapter overhead
-- **Simplified Architecture**: No manual web worker configuration required
+The project migrated from the deprecated `WebDatabase` (IndexedDB-only) to the
+`WasmDatabase` approach:
 
-**Implementation Details:**
-- Uses `package:drift/wasm.dart` with `WasmDatabase.open()`
-- Automatic fallback chain based on browser capabilities
-- Maintains identical schema and behavior across platforms
-- Requires `sqlite3.wasm` and `drift_worker.dart.js` assets
+**Improvements delivered:**
+- Cross-platform consistency: the same SQLite engine (via `drift`) on web and native platforms
+- Automatic storage selection on web: OPFS (preferred) → IndexedDB → Memory fallback
+- Better performance than the IndexedDB adapter overhead
+- Simplified architecture: no manual web-worker configuration in app code
 
-**Benefits for Contract Testing:**
-- True SQLite behavior on web matches native SQLite exactly
-- Eliminates subtle differences between IndexedDB and SQLite
-- More reliable constraint violation detection
-- Easier to verify identical behavior across platforms
-
-**Migration Status:** ✅ Complete
-- All repository implementations updated to use `DriftWrappedException`
-- Web factory uses modern WASM approach
-- Documentation updated to reflect new architecture
-- Deprecated API usage documented with migration path
+**Implementation outcome:**
+- Web factory uses `package:drift/wasm.dart` with `WasmDatabase.open()`
+- Identical schema and behaviour across platforms
+- Requires `sqlite3.wasm` and `drift_worker.dart.js` assets to be served (see the web one-time asset setup in `CLAUDE.md`)
+- All repository implementations wrap engine errors in `DriftWrappedException`

@@ -1,5 +1,9 @@
-// Comprehensive Hybrid Database Tests
-// Demonstrates testing both SQLite and Drift engines
+// Comprehensive Database Contract Tests
+//
+// Runs the shared repository contract suites against the single drift backend
+// used on every platform. The "hybrid" file/runner name is vestigial from the
+// dual-backend (sqflite ↔ drift) era (see issue #112 and the corresponding note
+// in CLAUDE.md); there is now only one backend.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';

@@ -1,5 +1,10 @@
 // Drift Database Implementation
-// IndexedDB-based database for web using drift
+//
+// Drift is the canonical persistence layer on every platform: mobile/desktop
+// runs through `NativeDatabase.createInBackground`, web runs through
+// `WasmDatabase` over IndexedDB. The table classes in this file are the single
+// source of truth for the schema — see `docs/DATABASE_DDL.md` for the rendered
+// SQL DDL reference and `CLAUDE.md` for the database rule.
 
 import 'package:drift/drift.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -8,8 +13,7 @@ part 'database.g.dart';
 
 // Data classes for all tables.
 //
-// Foreign keys here mirror the canonical schema in `database_migrations.dart`
-// (sqflite). `winner_competitor_id` on `games` is intentionally NOT a FK —
+// `winner_competitor_id` on `games` is intentionally NOT a foreign key —
 // competitors are game-scoped and consistency is enforced by application logic.
 class Players extends Table {
   TextColumn get playerId => text()();
