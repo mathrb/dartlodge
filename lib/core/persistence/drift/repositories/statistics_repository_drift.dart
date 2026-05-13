@@ -415,7 +415,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   /// `_db.tableUpdates(...)` only fires on actual writes, so a fresh listener
   /// would otherwise wait for a write before receiving anything. The watched
   /// stats streams contract requires a prompt initial emission so consumers
-  /// can render the current snapshot (see the `watchPlayerStats` regression
+  /// can render the current snapshot (see the `watchGameStats` regression
   /// test in the contract suite). Emitting a leading `null` synthesises that
   /// initial tick without losing any subsequent table-update notifications.
   Stream<void> _emitInitialThenOn(Stream<dynamic> updates) async* {

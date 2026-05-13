@@ -13,8 +13,11 @@ abstract interface class StatisticsRepository {
   /// Throws [GameNotFoundException] if [gameId] does not exist.
   Future<GameStats> getGameStats(String gameId);
 
-  /// Emits updated [GameStats] whenever a new dart throw is inserted for
-  /// [gameId]. Used for live statistics during an active game.
+  /// Emits an initial snapshot promptly on subscribe, then a new [GameStats]
+  /// whenever a `dart_throws` or `game_events` row is written for [gameId].
+  /// Watching both tables matters for events without a same-transaction dart
+  /// insert (e.g. `LegCompleted`, `GameCompleted`, empty-turn busts via
+  /// `TurnEnded`). Used for live statistics during an active game.
   Stream<GameStats> watchGameStats(String gameId);
 
   // Per-player (career) statistics
@@ -60,8 +63,10 @@ abstract interface class StatisticsRepository {
   /// Throws [PlayerNotFoundException] if [playerId] did not participate.
   Future<PlayerStats> getPlayerStatsForGame(String playerId, String gameId);
 
-  /// Emits updated career [PlayerStats] whenever a game involving [playerId]
-  /// is completed. Used to keep the statistics dashboard current.
+  /// Emits an initial snapshot promptly on subscribe, then updated career
+  /// [PlayerStats] whenever a `dart_throws` or `game_events` row is written
+  /// for any game involving [playerId]. Used to keep the statistics dashboard
+  /// current.
   ///
   /// [gameType] is required for the same reasons as [getPlayerStats].
   Stream<PlayerStats> watchPlayerStats(String playerId,
