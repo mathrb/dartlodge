@@ -118,6 +118,37 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       expect(x01Stats.totalDartsThrown, greaterThan(0));
       expect(cricketStats.totalDartsThrown, 0);
     });
+
+    test(
+        'startingScore filter matches games whose config has that startingScore (#154)',
+        () async {
+      // The fixture configures the X01 game with startingScore: 501. Pre-#154
+      // the loader read `cfg['starting_score']` (snake_case) while the on-disk
+      // JSON encoding uses camelCase (`startingScore`), so this filter
+      // silently matched nothing. With the fix, `startingScore: 501` matches
+      // the fixture game and yields a non-zero dart count; `startingScore: 301`
+      // matches no games and yields zero darts.
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1',
+          gameId: 'g1',
+          competitorId: 'c1',
+          playerId: 'p1',
+          score: 60);
+      await gameRepo.completeGame(
+          gameId: 'g1',
+          winnerCompetitorId: 'c1',
+          endTime: DateTime.now());
+
+      final matchingStats = await statsRepo.getPlayerStats('p1',
+          gameType: GameType.x01, startingScore: 501);
+      final nonMatchingStats = await statsRepo.getPlayerStats('p1',
+          gameType: GameType.x01, startingScore: 301);
+
+      expect(matchingStats.totalDartsThrown, greaterThan(0));
+      expect(nonMatchingStats.totalDartsThrown, 0);
+    });
   });
 
   // ── getPlayerStatsForGame ─────────────────────────────────────────────────
@@ -398,10 +429,11 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       final snap = history.single;
       expect(snap.gameId, 'g1');
       expect(snap.legIndex, 1);
-      // We don't assert `snap.startingScore` here: the loader reads
-      // `cfg['starting_score']` from `g.config_json`, but the JSON encoding
-      // uses camelCase (`startingScore`). That mismatch is a separate
-      // pre-existing bug — keep this test green and surface it for a follow-up.
+      // The fixture configures the X01 game with startingScore: 501 (see
+      // `_setupCompletedX01Game`). With the cfg key fix in #154, the loader
+      // now reads `cfg['startingScore']` correctly from the camelCase JSON
+      // encoding on disk, so `snap.startingScore` populates as expected.
+      expect(snap.startingScore, 501);
       // PPR is event-driven (not config-driven) so it remains a valid positive
       // check: 6 T20s + closing T20+T19+D12 over 9 darts → PPR ≈ 167.
       expect(snap.ppr, greaterThan(0.0));
@@ -419,14 +451,17 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       expect(scores, isEmpty);
     });
 
-    test('returns a list (positive-path) for a completed X01 game', () async {
-      // Contract: method resolves successfully and returns a List<int> for
-      // a completed X01 game. We deliberately don't assert the contents:
-      // the loader reads `cfg['starting_score']` from `g.config_json`, but
-      // the JSON encoding uses camelCase (`startingScore`). That mismatch
-      // is a separate pre-existing bug — surface via follow-up rather than
-      // pinning this test to the broken behaviour. The contract verified
-      // here is that the method returns successfully without throwing.
+    test('returns the distinct startingScores of completed X01 games',
+        () async {
+      // Contract: method returns the distinct `startingScore` values from
+      // every completed X01 game the player participated in. The fixture
+      // `_createPlayerAndGame` configures `startingScore: 501`, so the
+      // returned list must contain 501.
+      //
+      // Pre-#154 this loader read `cfg['starting_score']` from
+      // `g.config_json`, but the JSON encoding uses camelCase
+      // (`startingScore`), so the method returned `[]` for every player.
+      // With the fix, the assertion below is meaningful.
       await _createPlayerAndGame(playerRepo, gameRepo,
           playerId: 'p1', gameId: 'g1');
       await gameRepo.completeGame(
@@ -435,7 +470,7 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
           endTime: DateTime.now());
 
       final scores = await statsRepo.getPlayerX01StartingScores('p1');
-      expect(scores, isA<List<int>>());
+      expect(scores, [501]);
     });
   });
 
