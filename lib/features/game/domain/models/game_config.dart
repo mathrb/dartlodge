@@ -113,6 +113,32 @@ abstract class Segment with _$Segment {
 
   const Segment._();
 
+  /// Construct a Segment from a raw board hit `(baseNumber, multiplier)`
+  /// payload as emitted by engines and stored on `DartThrown` events.
+  ///
+  /// Convention:
+  ///   - `baseNumber == 0` → `Segment.miss()` (multiplier ignored).
+  ///   - `baseNumber == 25` → bull; `multiplier == 2` → `doubleBull`, anything
+  ///     else → `singleBull`.
+  ///   - `baseNumber in 1..20` → `single`/`doubleSegment`/`triple` selected by
+  ///     `multiplier`; any unknown multiplier falls back to `single`.
+  ///
+  /// This is the single source of truth previously duplicated as a private
+  /// `_toCanonicalString(int, int)` helper across the stateless game engines.
+  static Segment fromBoardHit(int baseNumber, int multiplier) {
+    if (baseNumber == 0) return const Segment.miss();
+    if (baseNumber == 25) {
+      return multiplier == 2
+          ? const Segment.doubleBull()
+          : const Segment.singleBull();
+    }
+    return switch (multiplier) {
+      2 => Segment.doubleSegment(baseNumber),
+      3 => Segment.triple(baseNumber),
+      _ => Segment.single(baseNumber),
+    };
+  }
+
   /// Parse segment from canonical string format
   /// Supported formats: '20', 'D20', 'T20', 'SB', 'DB', 'MISS', '0'
   static Segment parse(String segmentString) {

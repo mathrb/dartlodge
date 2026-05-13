@@ -39,64 +39,60 @@ abstract class GameState with _$GameState {
 
   factory GameState.fromJson(Map<String, dynamic> json) => _$GameStateFromJson(json);
 
-  /// Creates an initial GameState from a Game and its competitors
-  /// This is used for state reconstruction from events
+  /// Creates an initial GameState from a Game and its competitors.
+  /// Used for state reconstruction from events.
+  ///
+  /// Configuration extraction uses `GameConfig.maybeMap(...)` (per CLAUDE.md
+  /// "Key Rules"); the `orElse` branch covers config variants without
+  /// game-specific state (Killer/Baseball/Golf/Scram/HalveIt/HighScore and
+  /// the Blind* set), all of which start scoreless with default flags.
   factory GameState.initial(Game game, List<Competitor> competitors) {
-    // Extract configuration from game config
-    int startingScore = 501; // Default for X01 games
-    String inStrategy = 'straight';
-    String outStrategy = 'straight';
+    final config = game.config;
 
-    // Use runtime type checking to extract configuration
-    String cricketVariant = 'standard';
-    String aroundTheClockVariant = 'standard';
-    int shanghaiTotalRounds = 7;
-    int catch40TargetRemaining = 0;
-    int? checkoutTargetSuccesses;
+    // Bundle of per-config initial values. Every field has a safe default so
+    // the `orElse` branch (unhandled variants) doesn't have to repeat them.
+    final init = config.maybeMap(
+      x01: (c) => _GameStateInit(
+        startingScore: c.startingScore,
+        inStrategy: c.inStrategy,
+        outStrategy: c.outStrategy,
+        legsToWin: c.legsToWin,
+        x01TotalRounds: c.totalRounds,
+        handicaps: c.handicaps,
+      ),
+      cricket: (c) => _GameStateInit(
+        startingScore: 0,
+        cricketVariant: c.variant,
+        legsToWin: c.legsToWin,
+        cricketTotalRounds: c.totalRounds,
+      ),
+      aroundTheClock: (c) => _GameStateInit(
+        startingScore: 0,
+        aroundTheClockVariant: c.variant,
+        initialTarget: c.variant == 'reverse' ? 20 : 1,
+      ),
+      shanghai: (c) => _GameStateInit(
+        startingScore: 0,
+        shanghaiTotalRounds: c.totalRounds,
+      ),
+      catch40: (c) => const _GameStateInit(
+        startingScore: 0,
+        catch40TargetRemaining: 61, // First target is 61
+      ),
+      bobs27: (c) => const _GameStateInit(startingScore: 27),
+      checkoutPractice: (c) => const _GameStateInit(startingScore: 170),
+      countUp: (c) => _GameStateInit(
+        startingScore: 0,
+        handicaps: c.handicaps,
+        countUpTotalRounds: c.totalRounds,
+      ),
+      orElse: () => const _GameStateInit(startingScore: 0),
+    );
 
-    if (game.config is X01GameConfig) {
-      final x01Config = game.config as X01GameConfig;
-      startingScore = x01Config.startingScore;
-      inStrategy = x01Config.inStrategy;
-      outStrategy = x01Config.outStrategy;
-    } else if (game.config is CricketGameConfig) {
-      startingScore = 0;
-      final cricketConfig = game.config as CricketGameConfig;
-      cricketVariant = cricketConfig.variant;
-    } else if (game.config is AroundTheClockGameConfig) {
-      startingScore = 0;
-      aroundTheClockVariant = (game.config as AroundTheClockGameConfig).variant;
-    } else if (game.config is ShanghaiGameConfig) {
-      startingScore = 0;
-      shanghaiTotalRounds = (game.config as ShanghaiGameConfig).totalRounds;
-    } else if (game.config is Catch40GameConfig) {
-      startingScore = 0;
-      catch40TargetRemaining = 61; // First target is 61
-    } else if (game.config is Bobs27GameConfig) {
-      startingScore = 27;
-    } else if (game.config is CheckoutPracticeGameConfig) {
-      startingScore = 170;
-    } else if (game.config is CountUpGameConfig) {
-      startingScore = 0;
-    } else {
-      startingScore = 0;
-    }
-
-    // Per-competitor initial target depends on game type
-    int? initialTarget;
-    if (game.config is AroundTheClockGameConfig) {
-      initialTarget = aroundTheClockVariant == 'reverse' ? 20 : 1;
-    }
-
-    final Map<String, int> handicaps = game.config is X01GameConfig
-        ? (game.config as X01GameConfig).handicaps
-        : game.config is CountUpGameConfig
-            ? (game.config as CountUpGameConfig).handicaps
-            : const {};
-
-    // Convert competitors to competitor states
+    // Convert competitors to competitor states.
     final competitorStates = competitors.map((competitor) {
-      final effectiveStart = startingScore + (handicaps[competitor.competitorId] ?? 0);
+      final effectiveStart =
+          init.startingScore + (init.handicaps[competitor.competitorId] ?? 0);
       return CompetitorState(
         competitorId: competitor.competitorId,
         name: competitor.name,
@@ -108,7 +104,7 @@ abstract class GameState with _$GameState {
         isIn: false,
         legsWon: 0,
         turnStartScore: null,
-        currentTarget: initialTarget,
+        currentTarget: init.initialTarget,
         practiceRound: 1,
       );
     }).toList();
@@ -123,32 +119,57 @@ abstract class GameState with _$GameState {
       winnerCompetitorId: game.winnerCompetitorId,
       status: GameEngineStatus.initialized,
       turnActive: false,
-      legsToWin: game.config is X01GameConfig
-          ? (game.config as X01GameConfig).legsToWin
-          : game.config is CricketGameConfig
-              ? (game.config as CricketGameConfig).legsToWin
-              : 1,
-      x01TotalRounds: game.config is X01GameConfig
-          ? (game.config as X01GameConfig).totalRounds
-          : null,
-      cricketTotalRounds: game.config is CricketGameConfig
-          ? (game.config as CricketGameConfig).totalRounds
-          : null,
+      legsToWin: init.legsToWin,
+      x01TotalRounds: init.x01TotalRounds,
+      cricketTotalRounds: init.cricketTotalRounds,
       currentLegIndex: 0,
-      inStrategy: inStrategy,
-      outStrategy: outStrategy,
-      startingScore: startingScore,
-      cricketVariant: cricketVariant,
-      aroundTheClockVariant: aroundTheClockVariant,
-      shanghaiTotalRounds: shanghaiTotalRounds,
-      catch40TargetRemaining: catch40TargetRemaining,
+      inStrategy: init.inStrategy,
+      outStrategy: init.outStrategy,
+      startingScore: init.startingScore,
+      cricketVariant: init.cricketVariant,
+      aroundTheClockVariant: init.aroundTheClockVariant,
+      shanghaiTotalRounds: init.shanghaiTotalRounds,
+      catch40TargetRemaining: init.catch40TargetRemaining,
       catch40DartsOnTarget: 0,
-      checkoutTargetSuccesses: checkoutTargetSuccesses,
-      countUpTotalRounds: game.config is CountUpGameConfig
-          ? (game.config as CountUpGameConfig).totalRounds
-          : null,
+      checkoutTargetSuccesses: null,
+      countUpTotalRounds: init.countUpTotalRounds,
     );
   }
+}
+
+/// Internal scratchpad collecting per-config initialisers for `GameState.initial`.
+/// Kept private to this file — it is purely a code-organisation aid and never
+/// crosses the file boundary.
+class _GameStateInit {
+  final int startingScore;
+  final String inStrategy;
+  final String outStrategy;
+  final int legsToWin;
+  final int? x01TotalRounds;
+  final int? cricketTotalRounds;
+  final String cricketVariant;
+  final String aroundTheClockVariant;
+  final int shanghaiTotalRounds;
+  final int catch40TargetRemaining;
+  final int? countUpTotalRounds;
+  final int? initialTarget;
+  final Map<String, int> handicaps;
+
+  const _GameStateInit({
+    required this.startingScore,
+    this.inStrategy = 'straight',
+    this.outStrategy = 'straight',
+    this.legsToWin = 1,
+    this.x01TotalRounds,
+    this.cricketTotalRounds,
+    this.cricketVariant = 'standard',
+    this.aroundTheClockVariant = 'standard',
+    this.shanghaiTotalRounds = 7,
+    this.catch40TargetRemaining = 0,
+    this.countUpTotalRounds,
+    this.initialTarget,
+    this.handicaps = const {},
+  });
 }
 
 @freezed

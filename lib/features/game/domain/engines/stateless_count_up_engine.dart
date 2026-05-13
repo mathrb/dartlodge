@@ -8,6 +8,7 @@
 // the competitor with the highest score after the final TurnEnded; tie → no
 // winner. Solo games always award the single competitor the win.
 
+import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
@@ -81,7 +82,8 @@ class StatelessCountUpEngine implements GameEngine {
     final payload = event.payload;
     final segmentNum = payload['segment'] as int;
     final multiplier = payload['multiplier'] as int;
-    final canonicalString = _toCanonicalString(segmentNum, multiplier);
+    final canonicalString =
+        Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
 
     // Score formula: segment * multiplier (covers MISS=0*1=0, SB=25*1, DB=25*2,
     // singles/doubles/triples 1–20). No bust, no upper bound.
@@ -172,14 +174,4 @@ class StatelessCountUpEngine implements GameEngine {
     return null;
   }
 
-  String _toCanonicalString(int segment, int multiplier) {
-    if (segment == 0) return 'MISS';
-    if (segment == 25) return multiplier == 2 ? 'DB' : 'SB';
-    return switch (multiplier) {
-      1 => '$segment',
-      2 => 'D$segment',
-      3 => 'T$segment',
-      _ => '$segment',
-    };
-  }
 }

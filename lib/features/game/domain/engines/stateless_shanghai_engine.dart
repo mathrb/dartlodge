@@ -6,6 +6,7 @@
 // Game completes when all competitors finish the final round (via TurnEnded).
 // Single-player ends with no winner; multi-player: highest score wins.
 
+import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
@@ -72,7 +73,8 @@ class StatelessShanghaiEngine implements GameEngine {
     final segmentNum = payload['segment'] as int;
     final multiplier = payload['multiplier'] as int;
 
-    final canonicalString = _toCanonicalString(segmentNum, multiplier);
+    final canonicalString =
+        Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
     final currentCompetitor = updatedCompetitors[state.currentTurnIndex];
     final roundNum = currentCompetitor.practiceRound;
@@ -183,14 +185,4 @@ class StatelessShanghaiEngine implements GameEngine {
     );
   }
 
-  String _toCanonicalString(int segment, int multiplier) {
-    if (segment == 0) return 'MISS';
-    if (segment == 25) return multiplier == 2 ? 'DB' : 'SB';
-    return switch (multiplier) {
-      1 => '$segment',
-      2 => 'D$segment',
-      3 => 'T$segment',
-      _ => '$segment',
-    };
-  }
 }
