@@ -839,7 +839,7 @@ ref.watch(activeGameProvider).when(
 );
 
 // Or use map for partial handling
-final game = ref.watch(activeGameProvider).valueOrNull;
+final game = ref.watch(activeGameProvider).value;
 if (game == null) {
   return const LoadingView();
 }
@@ -884,14 +884,14 @@ bool canStartGame(CanStartGameRef ref) {
 
 @riverpod
 String currentPlayerName(CurrentPlayerNameRef ref) {
-  final game = ref.watch(activeGameProvider).valueOrNull;
+  final game = ref.watch(activeGameProvider).value;
   if (game == null) return '';
   
   final currentCompetitor = game.competitors[game.currentTurnIndex];
   final currentPlayerIndex = currentCompetitor.currentRotationIndex;
   final playerId = currentCompetitor.playerIds[currentPlayerIndex];
   
-  final player = ref.watch(playerProvider(playerId)).valueOrNull;
+  final player = ref.watch(playerProvider(playerId)).value;
   return player?.name ?? '';
 }
 ```
@@ -1184,7 +1184,7 @@ When refactoring:
 // Only rebuild when specific field changes
 final currentScore = ref.watch(
   activeGameProvider.select((state) => 
-    state.valueOrNull?.competitors[0].score
+    state.value?.competitors[0].score
   ),
 );
 
