@@ -357,6 +357,330 @@ void main() {
     });
   });
 
+  // ── DartCorrected handling (regression tests for issue #129) ───────────────
+
+  group('DartCorrected replay', () {
+    // Helper: build an event for an arbitrary game and sequence (the global
+    // `event()` helper above hardcodes gameId='g1' and uses a monotonic
+    // counter, which breaks multi-game fixtures where local_sequence must
+    // restart at 1 per game).
+    GameEvent rawEvent({
+      required String gameId,
+      required int seq,
+      required String type,
+      required Map<String, dynamic> payload,
+      String eventId = '',
+    }) {
+      return GameEvent(
+        eventId: eventId.isEmpty ? '$gameId-$seq-$type' : eventId,
+        gameId: gameId,
+        eventType: type,
+        localSequence: seq,
+        occurredAt: fixedTime,
+        payload: payload,
+        synced: false,
+        actorId: playerId,
+        source: EventSource.client,
+      );
+    }
+
+    test(
+        'replayFrom does not drop uncorrected co-loaded game events '
+        '(regression #129 sub-task 3)', () {
+      // Two games co-loaded for the same player:
+      //   - game-A: a turn followed by a DartCorrected at seq=5. game-A
+      //     itself has no 180.
+      //   - game-B: a clean 180 turn (3×T20), NO corrections. game-B's
+      //     events occupy local_sequence 1..5 — exactly the range the
+      //     pre-fix global cutoff would drop (`seq >= 5`).
+      //
+      // Pre-fix (global cutoff): the replay re-init dropped game-B's
+      // seq 1-4, so game-B's 180 was silently lost from the snapshot.
+      // Post-fix (per-game cutoff): game-B has no entry in the cutoff map
+      // and therefore replays in full → its 180 is preserved.
+      GameEvent dartFor(String gameId, int seq, int segment, int multiplier,
+          {String eventId = ''}) =>
+          rawEvent(
+            gameId: gameId,
+            seq: seq,
+            type: 'DartThrown',
+            payload: {
+              'player_id': playerId,
+              'segment': segment,
+              'multiplier': multiplier,
+              'score': segment * multiplier,
+            },
+            eventId: eventId,
+          );
+
+      final events = <GameEvent>[
+        // game-A: TurnStarted, 3×S20 (60 total, NOT a 180), TurnEnded,
+        // followed by a DartCorrected at seq=5 referring to a phantom dart.
+        rawEvent(
+          gameId: 'game-A',
+          seq: 1,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 501},
+        ),
+        dartFor('game-A', 2, 20, 1),
+        dartFor('game-A', 3, 20, 1),
+        dartFor('game-A', 4, 20, 1),
+        rawEvent(
+          gameId: 'game-A',
+          seq: 5,
+          type: 'DartCorrected',
+          payload: {
+            // The presence of any DartCorrected is what triggered the buggy
+            // global filter — the referent doesn't have to exist for this
+            // test to exercise the path.
+            'original_event_id': 'phantom',
+          },
+        ),
+        rawEvent(
+          gameId: 'game-A',
+          seq: 6,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+        // game-B: TurnStarted, 3×T20 = 180, TurnEnded (no corrections).
+        rawEvent(
+          gameId: 'game-B',
+          seq: 1,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 501},
+        ),
+        dartFor('game-B', 2, 20, 3),
+        dartFor('game-B', 3, 20, 3),
+        dartFor('game-B', 4, 20, 3),
+        rawEvent(
+          gameId: 'game-B',
+          seq: 5,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.x01,
+        events: events,
+        totalGames: 2,
+        totalDartsThrown: 6,
+      );
+
+      // game-B's 180 must survive: under the pre-fix global cutoff its
+      // seq=1..4 events were filtered (< 5), dropping the bucket entirely.
+      expect(stats.oneEightyTurns, 1,
+          reason:
+              'game-B\'s 180 must count; per-game cutoff must not drop its '
+              'seq=1..4 events just because game-A has a DartCorrected at '
+              'seq=5.');
+    });
+
+    test(
+        'assembler excludes corrected DartThrown event IDs from replay '
+        '(regression #129 sub-task 4)', () {
+      // The min-DartCorrected-seq cutoff alone does NOT exclude every
+      // corrected dart: a LATER correction may reference a dart whose seq
+      // is itself >= cutoff, and that dart slips through the cutoff filter.
+      //
+      // Layout (single game):
+      //   seq=1  TurnStarted
+      //   seq=2  DartThrown 'bad-1' (T20=60)
+      //   seq=3  DartCorrected → original_event_id='bad-1'   (sets cutoff=3)
+      //   seq=4  DartThrown 'fix-1' (T20=60)
+      //   seq=5  TurnEnded
+      //   seq=6  TurnStarted
+      //   seq=7  DartThrown 'bad-2' (T20=60)
+      //   seq=8  DartCorrected → original_event_id='bad-2'
+      //   seq=9  DartThrown 'fix-2' (T20=60)
+      //   seq=10 TurnEnded
+      //
+      // Pre-fix: cutoff=3 retains 'bad-2' at seq=7 → AVG = (60+60+60)/3*3 = 180.
+      // Post-fix: 'bad-1' AND 'bad-2' are both in the skip set → only 'fix-1'
+      // and 'fix-2' contribute → AVG = (60+60)/2*3 = 180. The discriminator
+      // is the dart count, not the average.
+      final events = <GameEvent>[
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 1,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 501},
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 2,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'bad-1',
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 3,
+          type: 'DartCorrected',
+          payload: {'original_event_id': 'bad-1'},
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 4,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'fix-1',
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 5,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 6,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 441},
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 7,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'bad-2',
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 8,
+          type: 'DartCorrected',
+          payload: {'original_event_id': 'bad-2'},
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 9,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'fix-2',
+        ),
+        rawEvent(
+          gameId: 'g-corr',
+          seq: 10,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+      ];
+
+      // Control fixture: same TWO turns but with no corrections — only
+      // 'fix-1' and 'fix-2' present. This is the canonical "post-correction"
+      // state the assembler should converge to.
+      final control = <GameEvent>[
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 1,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 501},
+        ),
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 2,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'ctrl-1',
+        ),
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 3,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 4,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 441},
+        ),
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 5,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+          eventId: 'ctrl-2',
+        ),
+        rawEvent(
+          gameId: 'g-ctrl',
+          seq: 6,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId},
+        ),
+      ];
+
+      // Probe via the high-score bucket. Each kept dart is a single T20=60.
+      // Control: two 60-point turns → 2 in the 60+ bucket, 0 in the 100+.
+      // Pre-fix: in turn 2 (starting at the seq=6 TurnStarted), the cutoff
+      // is min(DartCorrected.seq)=3. Events seq>=3 all replay → turn 2 sees
+      // both 'bad-2' (seq=7) and 'fix-2' (seq=9) → turn score = 120 → ONE
+      // 100+ bucket and zero 60+ buckets for that turn.
+      final correctedStats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.x01,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 2,
+      );
+
+      final controlStats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.x01,
+        events: control,
+        totalGames: 1,
+        totalDartsThrown: 2,
+      );
+
+      // Control: two clean 60+ turns, zero 100+ turns.
+      expect(controlStats.sixtyPlusTurns, 2);
+      expect(controlStats.oneHundredPlusTurns, 0);
+
+      // Corrected fixture must converge to the same shape after the fix:
+      // bad-2 must be excluded so turn 2's score stays 60.
+      expect(correctedStats.oneHundredPlusTurns, 0,
+          reason:
+              'Corrected DartThrown (bad-2) must be excluded from replay. '
+              'Otherwise turn 2 sees bad-2 (60) + fix-2 (60) = 120 and lands '
+              'in the 100+ bucket instead of the 60+ bucket.');
+      expect(correctedStats.sixtyPlusTurns, controlStats.sixtyPlusTurns,
+          reason:
+              '60+ bucket count must match the control after honouring '
+              'corrections.');
+    });
+  });
+
   group('totalGames / totalDartsThrown passthrough', () {
     test('values from caller are preserved on the result', () {
       final stats = assembler.fromEvents(

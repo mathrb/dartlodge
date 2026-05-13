@@ -12,8 +12,6 @@
 //   - leg-limit event trimming (caller passes already-trimmed events)
 //   - reactivity / streams (platform repo job)
 
-import 'dart:math' show min;
-
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
@@ -134,15 +132,39 @@ class PlayerStatsAssembler {
                 X01BestGameCheckoutPercentageProjection(),
               ]);
 
-    runner.init(context);
-    runner.run(events);
+    // Collect correction metadata from DartCorrected events:
+    //   - per-game min localSequence → replay cutoff per game (local_sequence
+    //     restarts at 1 per game, so a global cutoff silently drops early
+    //     events from any co-loaded uncorrected game).
+    //   - DartThrown eventIds referenced by `original_event_id` → must be
+    //     excluded from the replay so the original (pre-correction) darts
+    //     stop contributing to the snapshot (mirrors UndoLastDartUseCase).
+    final fromSequencePerGame = <String, int>{};
+    final correctedDartIds = <String>{};
+    for (final e in events) {
+      if (e.eventType != 'DartCorrected') continue;
+      final existing = fromSequencePerGame[e.gameId];
+      if (existing == null || e.localSequence < existing) {
+        fromSequencePerGame[e.gameId] = e.localSequence;
+      }
+      final origId = e.payload['original_event_id'];
+      if (origId is String) correctedDartIds.add(origId);
+    }
 
-    // Replay from the earliest DartCorrected if any are present.
-    final correctedEvents =
-        events.where((e) => e.eventType == 'DartCorrected').toList();
-    if (correctedEvents.isNotEmpty) {
-      final minSeq = correctedEvents.map((e) => e.localSequence).reduce(min);
-      runner.replayFrom(events, minSeq);
+    final filteredEvents = correctedDartIds.isEmpty
+        ? events
+        : events
+            .where((e) =>
+                e.eventType != 'DartThrown' ||
+                !correctedDartIds.contains(e.eventId))
+            .toList();
+
+    runner.init(context);
+    runner.run(filteredEvents);
+
+    // Replay from the earliest DartCorrected per game if any are present.
+    if (fromSequencePerGame.isNotEmpty) {
+      runner.replayFrom(filteredEvents, fromSequencePerGame);
     }
 
     final snap = runner.snapshot();

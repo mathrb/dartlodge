@@ -52,13 +52,24 @@ class ProjectionRunner {
         for (final engine in _engines) engine.descriptor.id: engine.snapshot(),
       };
 
-  void replayFrom(List<GameEvent> allEvents, int fromSequence) {
+  /// Re-initialises engines and replays a per-game window of [allEvents].
+  ///
+  /// [fromSequencePerGame] is keyed by `gameId`; an event passes the filter
+  /// iff its `localSequence >= fromSequencePerGame[gameId]`. Games absent
+  /// from the map are NOT filtered (full replay) — `local_sequence`
+  /// restarts at 1 per game, so a single global cutoff would silently drop
+  /// events from co-loaded games that share the same sequence range.
+  void replayFrom(
+    List<GameEvent> allEvents,
+    Map<String, int> fromSequencePerGame,
+  ) {
     final context = _context;
     if (context == null) throw StateError('init() must be called before replayFrom()');
     for (final engine in _engines) engine.init(context);
-    final filtered = allEvents
-        .where((e) => e.localSequence >= fromSequence)
-        .toList();
+    final filtered = allEvents.where((e) {
+      final cutoff = fromSequencePerGame[e.gameId];
+      return cutoff == null || e.localSequence >= cutoff;
+    }).toList();
     run(filtered);
   }
 }

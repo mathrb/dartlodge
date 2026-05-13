@@ -146,8 +146,69 @@ void main() {
     runner.run(allEvents);
     expect(runner.snapshot()['x01.legs']!['legsWon'], 3);
 
-    // Replay from seq=2 → only events at seq 2 and 3 are replayed
-    runner.replayFrom(allEvents, 2);
+    // Replay from seq=2 in game-1 → only events at seq 2 and 3 are replayed
+    runner.replayFrom(allEvents, {'game-1': 2});
     expect(runner.snapshot()['x01.legs']!['legsWon'], 2);
+  });
+
+  // ── Test 7 ──────────────────────────────────────────────────────────────────
+
+  test('T7 — replayFrom() applies per-game cutoffs; absent games replay fully', () {
+    final ctx = _makeContext();
+    final runner = ProjectionRunner([X01LegsProjection()]);
+    runner.init(ctx);
+
+    // Two games' events interleaved. local_sequence restarts at 1 per game.
+    final allEvents = <GameEvent>[
+      GameEvent(
+        eventId: 'e-a1',
+        gameId: 'game-a',
+        eventType: 'LegCompleted',
+        localSequence: 1,
+        occurredAt: DateTime(2024),
+        payload: {'winner_player_id': 'p1'},
+        synced: false,
+        actorId: 'p1',
+        source: EventSource.client,
+      ),
+      GameEvent(
+        eventId: 'e-b1',
+        gameId: 'game-b',
+        eventType: 'LegCompleted',
+        localSequence: 1,
+        occurredAt: DateTime(2024),
+        payload: {'winner_player_id': 'p1'},
+        synced: false,
+        actorId: 'p1',
+        source: EventSource.client,
+      ),
+      GameEvent(
+        eventId: 'e-a2',
+        gameId: 'game-a',
+        eventType: 'LegCompleted',
+        localSequence: 2,
+        occurredAt: DateTime(2024),
+        payload: {'winner_player_id': 'p1'},
+        synced: false,
+        actorId: 'p1',
+        source: EventSource.client,
+      ),
+      GameEvent(
+        eventId: 'e-b2',
+        gameId: 'game-b',
+        eventType: 'LegCompleted',
+        localSequence: 2,
+        occurredAt: DateTime(2024),
+        payload: {'winner_player_id': 'p1'},
+        synced: false,
+        actorId: 'p1',
+        source: EventSource.client,
+      ),
+    ];
+
+    // Cutoff only for game-a (>=2). game-b has no entry → replays in full.
+    runner.replayFrom(allEvents, {'game-a': 2});
+    // game-a: only seq=2 counts (1 leg). game-b: both seqs count (2 legs).
+    expect(runner.snapshot()['x01.legs']!['legsWon'], 3);
   });
 }
