@@ -16,7 +16,8 @@ class Settings extends _$Settings {
     return switch (stored) {
       'dark' => ThemeMode.dark,
       'light' => ThemeMode.light,
-      _ => ThemeMode.light, // dark mode TBD per Kinetic Precision spec
+      'system' => ThemeMode.system,
+      _ => ThemeMode.system,
     };
   }
 
