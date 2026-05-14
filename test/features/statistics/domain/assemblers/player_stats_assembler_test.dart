@@ -792,6 +792,106 @@ void main() {
               '60+ bucket count must match the control after honouring '
               'corrections.');
     });
+
+    test(
+        'TurnStarted-consuming projections survive when DartCorrected exists '
+        '(regression #164)', () {
+      // X01CheckoutProjection counts a "checkout attempt" on every TurnStarted
+      // event whose starting_score <= 170. Pre-fix, PlayerStatsAssembler ran
+      // a second `replayFrom(filteredEvents, fromSequencePerGame)` pass after
+      // the initial `run` — that second pass re-initialised every engine and
+      // applied only events with localSequence >= DartCorrected.localSequence,
+      // silently dropping the seq=1 TurnStarted and resetting the checkout
+      // counter to zero.
+      //
+      // Layout (single game):
+      //   seq=1  TurnStarted        starting_score=170
+      //   seq=2  DartThrown T20
+      //   seq=3  DartThrown T20
+      //   seq=4  DartThrown DB      (170 → 0)
+      //   seq=5  LegCompleted       winner_player_id=p1
+      //   seq=6  GameCompleted
+      //   seq=7  DartCorrected → original_event_id='phantom'
+      //
+      // The DartCorrected references no real event in this fixture — its
+      // sole job is to populate fromSequencePerGame and trigger the buggy
+      // replayFrom path.
+      final events = <GameEvent>[
+        rawEvent(
+          gameId: 'g-co',
+          seq: 1,
+          type: 'TurnStarted',
+          payload: {'player_id': playerId, 'starting_score': 170},
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 2,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 3,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 20,
+            'multiplier': 3,
+            'score': 60,
+          },
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 4,
+          type: 'DartThrown',
+          payload: {
+            'player_id': playerId,
+            'segment': 25,
+            'multiplier': 2,
+            'score': 50,
+          },
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 5,
+          type: 'LegCompleted',
+          payload: {'winner_player_id': playerId},
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 6,
+          type: 'GameCompleted',
+          payload: {'winner_player_id': playerId},
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 7,
+          type: 'DartCorrected',
+          payload: {'original_event_id': 'phantom'},
+        ),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.x01,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      // 1 turn at <=170 → 1 attempt, leg won → 1 success → 100% checkout.
+      expect(stats.checkoutPercentage, 100.0,
+          reason:
+              'TurnStarted at seq=1 must reach X01CheckoutProjection even '
+              'when a DartCorrected event exists later in the log. Pre-fix, '
+              'the second replay pass dropped seq < DartCorrected.seq and '
+              'this assertion failed with checkoutPercentage = null/0.');
+    });
   });
 
   group('totalGames / totalDartsThrown passthrough', () {
