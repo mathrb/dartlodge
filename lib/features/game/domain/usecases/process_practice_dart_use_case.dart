@@ -53,6 +53,8 @@ class ProcessPracticeDartUseCase {
       localSequence: nextSeq++,
       segment: segmentValue,
       multiplier: multiplier,
+      score: parsedSegment.scoreValue,
+      playerId: currentPlayerId,
     );
 
     // 5. Apply DartThrown through engine
