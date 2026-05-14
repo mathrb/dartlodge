@@ -174,7 +174,13 @@ class UndoLastDartUseCase {
             competitorId: c.competitorId,
             name: c.name,
             playerIds: c.playerIds,
-            score: source.startingScore,
+            // Per-competitor starting score, set by GameState.initial to
+            // include any X01 handicap. Reusing source.startingScore here
+            // (the game-level field) drops the handicap and — worse — when
+            // CompetitorState.startingScore is left to its 0 default,
+            // engine._resetLeg restarts every subsequent leg at 0.
+            score: c.startingScore,
+            startingScore: c.startingScore,
             isIn: false,
             legsWon: 0,
             isComplete: false,
