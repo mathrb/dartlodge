@@ -8,7 +8,7 @@ import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/post_game_summary_page.dart';
-import 'package:dart_lodge/features/statistics/presentation/providers/statistics_provider.dart';
+import 'package:dart_lodge/core/providers/statistics_providers.dart';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 

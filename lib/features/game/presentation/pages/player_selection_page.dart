@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:uuid/uuid.dart';
 import 'package:dart_lodge/app/app_router.dart';
-import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
@@ -16,9 +15,10 @@ import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/presentation/pages/game_config_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
+import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
-import 'package:dart_lodge/features/statistics/presentation/providers/statistics_provider.dart';
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
@@ -977,15 +977,12 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
       _error = null;
     });
     try {
-      final now = DateTime.now().toUtc();
-      final player = Player(
-        playerId: const Uuid().v4(),
-        name: name,
-        createdAt: now,
-        lastActive: now,
-      );
-      await ref.read(playerRepositoryProvider).createPlayer(player);
-      ref.invalidate(allPlayersProvider);
+      // Go through the feature notifier (widget → notifier → use case) rather
+      // than punching past it directly to the use case. AllPlayers is a drift
+      // `.watch()` stream — drift surfaces the insert automatically, so no
+      // manual `ref.invalidate(allPlayersProvider)` here.
+      final player =
+          await ref.read(createPlayerProvider.notifier).createPlayer(name);
       if (mounted) {
         widget.onPlayerCreated(player.playerId);
         Navigator.of(context).pop();
@@ -994,7 +991,7 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
       if (mounted) {
         setState(() {
           _isCreating = false;
-          _error = e.toString();
+          _error = e is RepositoryException ? e.message : e.toString();
         });
       }
     }

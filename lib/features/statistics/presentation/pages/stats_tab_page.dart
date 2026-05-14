@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import 'package:dart_lodge/app/app_router.dart';
-import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
-import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
+import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
-import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
-import 'package:dart_lodge/features/players/presentation/widgets/player_card_widget.dart';
 
 class StatsTabPage extends ConsumerWidget {
   const StatsTabPage({super.key});
@@ -83,10 +84,9 @@ class _PlayerPickerList extends StatelessWidget {
             itemCount: players.length,
             itemBuilder: (context, i) {
               final p = players[i];
-              return PlayerCardWidget(
+              return _StatsPlayerTile(
                 player: p,
                 onTap: () => context.push(GameRoutes.playerStats(p.playerId)),
-                trailing: const Icon(Icons.chevron_right),
               );
             },
           ),
@@ -94,6 +94,52 @@ class _PlayerPickerList extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Compact roster cell for the stats tab. Inlined here (rather than importing
+/// `PlayerCardWidget` from the players feature) to keep stats from depending
+/// on another feature's presentation layer.
+class _StatsPlayerTile extends StatelessWidget {
+  final Player player;
+  final VoidCallback onTap;
+
+  const _StatsPlayerTile({required this.player, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppColors.avatarPalette;
+    final color = palette[player.playerId.hashCode.abs() % palette.length];
+    final initial =
+        player.name.isNotEmpty ? player.name[0].toUpperCase() : '?';
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+      minTileHeight: 64,
+      leading: CircleAvatar(
+        radius: 20,
+        backgroundColor: color,
+        child: Text(
+          initial,
+          style: const TextStyle(fontSize: 18, color: AppColors.onAvatar),
+        ),
+      ),
+      title: Text(player.name),
+      subtitle: Text('Last active: ${_formatLastActive(player.lastActive)}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
+    );
+  }
+}
+
+String _formatLastActive(DateTime lastActive) {
+  final now = DateTime.now();
+  final local = lastActive.toLocal();
+  final diff = DateTime(now.year, now.month, now.day)
+      .difference(DateTime(local.year, local.month, local.day))
+      .inDays;
+  if (diff <= 0) return 'Today';
+  if (diff == 1) return 'Yesterday';
+  if (diff < 7) return '$diff days ago';
+  return DateFormat.yMMMd().format(local);
 }
 
 class _EmptyState extends StatelessWidget {

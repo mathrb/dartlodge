@@ -12,7 +12,7 @@ import 'package:dart_lodge/features/game/presentation/providers/game_setup_provi
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
-import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/core/providers/players_providers.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
 

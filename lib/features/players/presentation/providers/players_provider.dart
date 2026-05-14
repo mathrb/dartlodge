@@ -1,35 +1,18 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/domain/validators.dart';
 import 'package:dart_lodge/features/players/presentation/state/player_form_state.dart';
 
 part 'players_provider.g.dart';
 
-String _playerFormErrorMessage(Object e) => e is DuplicatePlayerException
-    ? 'A player with this name already exists'
-    : e.toString();
-
-@riverpod
-class AllPlayers extends _$AllPlayers {
-  @override
-  Stream<List<Player>> build() {
-    return ref.watch(playerRepositoryProvider).watchAllPlayers();
-  }
-}
-
-@riverpod
-Future<Player?> player(Ref ref, String id) async {
-  final players = await ref.watch(allPlayersProvider.future);
-  try {
-    return players.firstWhere((p) => p.playerId == id);
-  } on StateError {
-    return null;
-  }
-}
+String _playerFormErrorMessage(Object e) =>
+    (e is DuplicatePlayerException || e is DuplicatePlayerNameException)
+        ? 'A player with this name already exists'
+        : e.toString();
 
 @riverpod
 class EditPlayerNotifier extends _$EditPlayerNotifier {
@@ -59,7 +42,7 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
             p.playerId != playerId &&
             p.name.toLowerCase() == name.toLowerCase(),
       )) {
-        throw DuplicatePlayerException(name);
+        throw DuplicatePlayerNameException(name);
       }
       await repo.updatePlayerName(playerId, name);
     });
@@ -109,6 +92,9 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
     state = PlayerFormState.initial();
   }
 
+  /// Form-driven submit used by [CreatePlayerPage]. Reads [state.name],
+  /// surfaces validation/duplicate errors on the form state, and leaves the
+  /// caller to navigate on success.
   Future<void> submit() async {
     final name = state.name.trim();
 
@@ -121,19 +107,7 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
     state = state.copyWith(isSubmitting: true, nameError: null);
 
     final result = await AsyncValue.guard(() async {
-      final repo = ref.read(playerRepositoryProvider);
-      final existing = await repo.getAllPlayers();
-      if (existing.any((p) => p.name.toLowerCase() == name.toLowerCase())) {
-        throw DuplicatePlayerException(name);
-      }
-      final now = DateTime.now().toUtc();
-      final player = Player(
-        playerId: const Uuid().v4(),
-        name: name,
-        createdAt: now,
-        lastActive: now,
-      );
-      await repo.createPlayer(player);
+      await ref.read(createPlayerUseCaseProvider).call(name);
     });
 
     result.when(
@@ -149,4 +123,13 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
       loading: () {},
     );
   }
+
+  /// One-shot creation path used by widgets that manage their own local UI
+  /// state (e.g. the inline new-player sheet on the player-selection screen).
+  ///
+  /// Returns the new [Player] on success. Throws [ValidationException] or
+  /// [DuplicatePlayerNameException] on failure — callers translate to UI messages.
+  /// Does not touch this notifier's form state.
+  Future<Player> createPlayer(String name) =>
+      ref.read(createPlayerUseCaseProvider).call(name);
 }

@@ -135,6 +135,54 @@ final class PlayerRepositoryProvider
 
 String _$playerRepositoryHash() => r'f6d5e27c2bf9b1868ebe3c18294e31cda2e8c540';
 
+@ProviderFor(createPlayerUseCase)
+final createPlayerUseCaseProvider = CreatePlayerUseCaseProvider._();
+
+final class CreatePlayerUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CreatePlayerUseCase,
+          CreatePlayerUseCase,
+          CreatePlayerUseCase
+        >
+    with $Provider<CreatePlayerUseCase> {
+  CreatePlayerUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'createPlayerUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$createPlayerUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CreatePlayerUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CreatePlayerUseCase create(Ref ref) {
+    return createPlayerUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CreatePlayerUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CreatePlayerUseCase>(value),
+    );
+  }
+}
+
+String _$createPlayerUseCaseHash() =>
+    r'f22f35d37ea4661153776e435437814a0026af8c';
+
 @ProviderFor(gameRepository)
 final gameRepositoryProvider = GameRepositoryProvider._();
 

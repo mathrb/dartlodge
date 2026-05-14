@@ -10,7 +10,7 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
-import '../providers/statistics_provider.dart';
+import '../providers/player_stats_page_provider.dart';
 
 class PracticeTrendChartWidget extends ConsumerWidget {
   final String playerId;

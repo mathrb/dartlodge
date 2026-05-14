@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/filter_chip_row_widget.dart';
-import '../providers/statistics_provider.dart';
+import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
 
 class PracticeGameTypeChipSelectorWidget extends ConsumerWidget {

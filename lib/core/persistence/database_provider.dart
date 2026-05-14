@@ -13,6 +13,7 @@ import 'drift/repositories/dart_throw_repository_drift.dart';
 import 'drift/repositories/game_event_repository_drift.dart';
 import 'drift/repositories/statistics_repository_drift.dart';
 import '../../features/players/domain/repositories/player_repository.dart';
+import '../../features/players/domain/usecases/create_player_use_case.dart';
 import '../../features/game/domain/repositories/game_repository.dart';
 import '../../features/game/domain/repositories/dart_throw_repository.dart';
 import '../../features/game/domain/repositories/game_event_repository.dart';
@@ -48,6 +49,10 @@ PlayerRepository playerRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
   return PlayerRepositoryDrift(db);
 }
+
+@Riverpod(keepAlive: true)
+CreatePlayerUseCase createPlayerUseCase(Ref ref) =>
+    CreatePlayerUseCase(ref.watch(playerRepositoryProvider));
 
 @Riverpod(keepAlive: true)
 GameRepository gameRepository(Ref ref) {

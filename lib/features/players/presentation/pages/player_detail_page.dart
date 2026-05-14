@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/providers/players_providers.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/players_provider.dart';
 import '../widgets/player_avatar_widget.dart';

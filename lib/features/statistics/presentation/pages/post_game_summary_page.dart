@@ -9,7 +9,7 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
-import '../providers/statistics_provider.dart';
+import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import '../widgets/game_summary_section_widget.dart';
 
 /// Maps a game type name (e.g. `GameType.x01.name`) to the variant-selection
