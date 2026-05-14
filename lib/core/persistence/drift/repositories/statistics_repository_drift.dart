@@ -503,9 +503,11 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         final gameDate =
             DateTime.tryParse(gameRow.startTime) ?? DateTime.now();
         int? gamStartingScore;
+        String gameAtcVariant = 'standard';
         try {
           final cfg = jsonDecode(gameRow.configJson) as Map<String, dynamic>;
           gamStartingScore = cfg['startingScore'] as int?;
+          gameAtcVariant = cfg['variant'] as String? ?? gameAtcVariant;
         } catch (_) {}
 
         // Get events for this game.
@@ -538,6 +540,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           startingScore: gamStartingScore,
           events: domainEvents,
           startingLegIndex: legIndex,
+          atcVariant: gameAtcVariant,
         );
         snapshots.addAll(gameSnapshots);
         legIndex += gameSnapshots.length;

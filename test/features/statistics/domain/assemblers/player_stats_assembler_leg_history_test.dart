@@ -309,6 +309,113 @@ void main() {
       );
       expect(snaps.single.practiceScore, isNull);
     });
+
+    test('reverse variant: descending target progression 20 → 19 → 18', () {
+      // Reverse ATC starts at target 20 and decrements. Three darts: miss
+      // target 20 with S5, hit S20 → target 19, hit S19 → target 18.
+      final events = [
+        turnStarted(),
+        dart(5, 1), // miss target 20
+        dart(20, 1), // hit target 20 → currentTarget = 19
+        dart(19, 1), // hit target 19 → currentTarget = 18
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.aroundTheClock,
+        startingScore: null,
+        events: events,
+        atcVariant: 'reverse',
+      );
+
+      expect(snaps, hasLength(1));
+      // 3 darts at targets, 2 hits → hit rate 2/3.
+      expect(snaps[0].practiceScore, closeTo(2 / 3, 1e-9));
+    });
+
+    test('reverse variant: a standard ascending hit no longer counts', () {
+      // In reverse mode the first target is 20, not 1. A pure S1 dart that
+      // would have counted as a hit under 'standard' must register as a miss.
+      final events = [
+        turnStarted(),
+        dart(1, 1), // miss target 20 (was hit under standard)
+        dart(1, 1), // miss target 20
+        dart(1, 1), // miss target 20
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.aroundTheClock,
+        startingScore: null,
+        events: events,
+        atcVariant: 'reverse',
+      );
+
+      // 3 darts at target, 0 hits → 0.0 (not 1.0 as the standard branch
+      // would have computed).
+      expect(snaps.single.practiceScore, 0.0);
+    });
+
+    test('doublesOnly variant: only multiplier==2 hits advance the target',
+        () {
+      // doublesOnly still ascends 1 → 20, but a hit requires D<N>. A single
+      // S1 must register as a miss; D1 must count as a hit and advance.
+      final events = [
+        turnStarted(),
+        dart(1, 1), // S1 → miss (singles don't count in doublesOnly)
+        dart(1, 2), // D1 → hit → currentTarget = 2
+        dart(2, 2), // D2 → hit → currentTarget = 3
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.aroundTheClock,
+        startingScore: null,
+        events: events,
+        atcVariant: 'doublesOnly',
+      );
+
+      expect(snaps, hasLength(1));
+      // 3 darts at targets, 2 hits → 2/3.
+      expect(snaps[0].practiceScore, closeTo(2 / 3, 1e-9));
+    });
+
+    test('doublesOnly variant: triples are NOT hits (multiplier strictly 2)',
+        () {
+      final events = [
+        turnStarted(),
+        dart(1, 3), // T1 — multiplier 3, not a hit in doublesOnly
+        dart(1, 3), // T1 — still a miss
+        dart(1, 3), // T1 — still a miss
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.aroundTheClock,
+        startingScore: null,
+        events: events,
+        atcVariant: 'doublesOnly',
+      );
+
+      // 3 darts at target 1, 0 hits.
+      expect(snaps.single.practiceScore, 0.0);
+    });
   });
 
   group('legHistoryFromEvents — non-ATC practice → raw leg score', () {
