@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
-import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/domain/validators.dart';
 import 'package:dart_lodge/features/players/presentation/state/player_form_state.dart';
 
@@ -123,13 +122,4 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
       loading: () {},
     );
   }
-
-  /// One-shot creation path used by widgets that manage their own local UI
-  /// state (e.g. the inline new-player sheet on the player-selection screen).
-  ///
-  /// Returns the new [Player] on success. Throws [ValidationException] or
-  /// [DuplicatePlayerNameException] on failure — callers translate to UI messages.
-  /// Does not touch this notifier's form state.
-  Future<Player> createPlayer(String name) =>
-      ref.read(createPlayerUseCaseProvider).call(name);
 }

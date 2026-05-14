@@ -95,7 +95,7 @@ final class CreatePlayerNotifierProvider
 }
 
 String _$createPlayerNotifierHash() =>
-    r'b212fa8eabfbcea0c7bb00d33a9fe3ad08935668';
+    r'8e791952297da5d1b0c025e81b0fab7b99aa2ba9';
 
 abstract class _$CreatePlayerNotifier extends $Notifier<PlayerFormState> {
   PlayerFormState build();

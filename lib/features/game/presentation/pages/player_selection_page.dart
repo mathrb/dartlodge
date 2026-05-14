@@ -18,7 +18,7 @@ import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dar
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
-import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
@@ -977,12 +977,13 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
       _error = null;
     });
     try {
-      // Go through the feature notifier (widget → notifier → use case) rather
-      // than punching past it directly to the use case. AllPlayers is a drift
+      // Use the core use-case provider directly: this is a one-shot create
+      // with no form-state lifecycle, so going through CreatePlayerNotifier
+      // would only add a cross-feature import. AllPlayers is a drift
       // `.watch()` stream — drift surfaces the insert automatically, so no
       // manual `ref.invalidate(allPlayersProvider)` here.
       final player =
-          await ref.read(createPlayerProvider.notifier).createPlayer(name);
+          await ref.read(createPlayerUseCaseProvider).call(name);
       if (mounted) {
         widget.onPlayerCreated(player.playerId);
         Navigator.of(context).pop();
