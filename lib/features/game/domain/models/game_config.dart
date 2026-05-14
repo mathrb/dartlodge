@@ -31,43 +31,10 @@ abstract class GameConfig with _$GameConfig {
     @Default('standard') String variant, // 'standard', 'reverse', 'doublesOnly'
     @Default(null) String? startingPlayerId,
   }) = AroundTheClockGameConfig;
-  const factory GameConfig.killer({
-    @Default(null) String? startingPlayerId,
-  }) = KillerGameConfig;
-  const factory GameConfig.baseball({
-    @Default(null) String? startingPlayerId,
-  }) = BaseballGameConfig;
-  const factory GameConfig.golf({
-    @Default(null) String? startingPlayerId,
-  }) = GolfGameConfig;
   const factory GameConfig.shanghai({
     @Default(7) int totalRounds,
     @Default(null) String? startingPlayerId,
   }) = ShanghaiGameConfig;
-  const factory GameConfig.scram({
-    @Default(null) String? startingPlayerId,
-  }) = ScramGameConfig;
-  const factory GameConfig.halveIt({
-    @Default(null) String? startingPlayerId,
-  }) = HalveItGameConfig;
-  const factory GameConfig.highScore({
-    @Default(null) String? startingPlayerId,
-  }) = HighScoreGameConfig;
-  const factory GameConfig.blindCricket({
-    @Default(null) String? startingPlayerId,
-  }) = BlindCricketGameConfig;
-  const factory GameConfig.blindGolf({
-    @Default(null) String? startingPlayerId,
-  }) = BlindGolfGameConfig;
-  const factory GameConfig.blindKiller({
-    @Default(null) String? startingPlayerId,
-  }) = BlindKillerGameConfig;
-  const factory GameConfig.blindShanghai({
-    @Default(null) String? startingPlayerId,
-  }) = BlindShanghaiGameConfig;
-  const factory GameConfig.chaseTheDragon({
-    @Default(null) String? startingPlayerId,
-  }) = ChaseTheDragonGameConfig;
 
   const factory GameConfig.catch40({
     @Default(null) String? startingPlayerId,

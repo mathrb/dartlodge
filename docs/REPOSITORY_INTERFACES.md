@@ -61,7 +61,7 @@ class Player {
 // lib/features/game/domain/entities/game.dart
 class Game {
   final String gameId;
-  final GameType gameType;       // enum: x01, cricket, aroundTheClock, killer
+  final GameType gameType;       // enum: x01, cricket, aroundTheClock, shanghai, catch40, bobs27, checkoutPractice, countUp
   final GameConfig config;       // sealed class — see DATA.md §7
   final DateTime startTime;
   final DateTime? endTime;

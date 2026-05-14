@@ -137,27 +137,6 @@ void main() {
       );
     });
 
-    test('killer → configuringGame with killer config', () {
-      container
-          .read(gameSetupProvider.notifier)
-          .selectGameType(GameType.killer);
-      container.read(gameSetupProvider).maybeMap(
-            configuringGame: (s) =>
-                expect(s.config, const GameConfig.killer()),
-            orElse: () => fail('Expected configuringGame'),
-          );
-    });
-
-    test('highScore → configuringGame with highScore config', () {
-      container
-          .read(gameSetupProvider.notifier)
-          .selectGameType(GameType.highScore);
-      container.read(gameSetupProvider).maybeMap(
-            configuringGame: (s) =>
-                expect(s.config, const GameConfig.highScore()),
-            orElse: () => fail('Expected configuringGame'),
-          );
-    });
   });
 
   // ── selectVariant ───────────────────────────────────────────────────────────

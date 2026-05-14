@@ -31,8 +31,6 @@ class GameEngineFactory {
         return StatelessCheckoutPracticeEngine();
       case GameType.countUp:
         return StatelessCountUpEngine();
-      default:
-        throw GameEngineException('Game type $gameType not supported');
     }
   }
 

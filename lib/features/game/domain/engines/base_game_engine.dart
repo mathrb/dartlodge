@@ -40,11 +40,3 @@ enum GameEngineStatus {
   completed,
   cancelled
 }
-
-class GameEngineException implements Exception {
-  final String message;
-  const GameEngineException(this.message);
-  
-  @override
-  String toString() => 'GameEngineException: $message';
-}
