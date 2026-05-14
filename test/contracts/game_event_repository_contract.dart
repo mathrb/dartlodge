@@ -39,7 +39,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'ruleset': 'X01'},
         synced: false,
@@ -48,7 +48,7 @@ void runGameEventRepositoryContractTests({
       );
 
       await repo.appendEvent(event);
-      
+
       final events = await repo.getEventsForGame(gameId);
       expect(events.length, 1);
       expect(events[0].eventId, 'e1');
@@ -63,7 +63,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {'ruleset': 'X01'},
         synced: false,
@@ -73,8 +73,8 @@ void runGameEventRepositoryContractTests({
 
       await repo.appendEvent(event);
       // Append same event ID again
-      await repo.appendEvent(event.copyWith(localSequence: 1)); 
-      
+      await repo.appendEvent(event.copyWith(localSequence: 2));
+
       final events = await repo.getEventsForGame(gameId);
       expect(events.length, 1); // Still only 1 because ID matched
     });
@@ -85,7 +85,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e-nonexistent',
           gameId: 'no-such-game',
           eventType: 'GameCreated',
-          localSequence: 0,
+          localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {},
           synced: false,
@@ -104,7 +104,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {},
         synced: false,
@@ -117,7 +117,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e2', // Different ID
           gameId: gameId,
           eventType: 'SomethingElse',
-          localSequence: 0, // SAME sequence!
+          localSequence: 1, // SAME sequence!
           occurredAt: DateTime.now(),
           payload: {},
           synced: false,
@@ -137,7 +137,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e1',
           gameId: 'g1',
           eventType: 'GameCreated',
-          localSequence: 0,
+          localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {'ruleset': 'X01'},
           synced: false,
@@ -148,7 +148,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e2',
           gameId: 'g2', // Different game!
           eventType: 'GameCreated',
-          localSequence: 0,
+          localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {'ruleset': 'X01'},
           synced: false,
@@ -173,7 +173,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {},
         synced: false,
@@ -229,7 +229,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {},
         synced: false,
@@ -294,7 +294,7 @@ void runGameEventRepositoryContractTests({
         eventId: 'e1',
         gameId: gameId,
         eventType: 'GameCreated',
-        localSequence: 0,
+        localSequence: 1,
         occurredAt: DateTime.now(),
         payload: {},
         synced: false,
@@ -347,7 +347,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e-after',
           gameId: gameId,
           eventType: 'DartThrown',
-          localSequence: 0,
+          localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {},
           synced: false,
@@ -384,7 +384,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e-after-1',
           gameId: gameId,
           eventType: 'DartThrown',
-          localSequence: 0,
+          localSequence: 1,
           occurredAt: DateTime.now(),
           payload: {},
           synced: false,
@@ -395,7 +395,7 @@ void runGameEventRepositoryContractTests({
           eventId: 'e-after-2',
           gameId: gameId,
           eventType: 'DartThrown',
-          localSequence: 1,
+          localSequence: 2,
           occurredAt: DateTime.now(),
           payload: {},
           synced: false,

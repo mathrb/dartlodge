@@ -189,7 +189,7 @@ CREATE TABLE game_events (
     event_id        TEXT     NOT NULL PRIMARY KEY,  -- UUID, globally unique
     game_id         TEXT     NOT NULL REFERENCES games(game_id) ON DELETE CASCADE,
     event_type      TEXT     NOT NULL,              -- See GAME-EVENT-SPECIFICATIONS.md for the authoritative event catalogue
-    local_sequence  INTEGER  NOT NULL,              -- Client-assigned monotonically increasing integer per game
+    local_sequence  INTEGER  NOT NULL,              -- Client-assigned monotonically increasing integer per game (1-based, restarts at 1 per game)
     occurred_at     TEXT     NOT NULL,              -- ISO 8601
     payload_json    TEXT     NOT NULL,              -- JSON: event-type-specific payload (see GAME-EVENT-SPECIFICATIONS.md §4)
     synced          INTEGER  NOT NULL DEFAULT 0,    -- 0 = local only, 1 = confirmed by backend
@@ -206,7 +206,7 @@ CREATE INDEX idx_game_events_sequence ON game_events(game_id, local_sequence);
 
 **Notes:**
 - Events are immutable once inserted. `DartCorrected` does not modify an existing row; it inserts a new event that references the original.
-- `local_sequence` is assigned by the client and is unique per game. The backend assigns its own `global_sequence` on sync; this is stored in the `global_sequence` column.
+- `local_sequence` is assigned by the client and is unique per game. It is **1-based and restarts at 1 per game** — the first event of every game lands at `local_sequence = 1`. `GameEventRepository.getLatestSequence` returns `0` for a game with no events so callers can compute `getLatestSequence(...) + 1` uniformly. Because `local_sequence` restarts per game, any query that loads events across multiple games MUST sort by `(game_id, local_sequence)` — sorting by `local_sequence` alone interleaves games and corrupts replay/projection state. The backend assigns its own `global_sequence` on sync; this is stored in the `global_sequence` column.
 - `synced = 0` rows are candidates for the backend sync queue (see `sync_queue` table).
 - `actor_id` identifies the player or system actor who caused the event. For player actions, this is the player UUID. For system events, it's 'system'.
 - `source` indicates the origin: 0=client app, 1=server, 2=computer vision system.

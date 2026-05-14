@@ -172,44 +172,52 @@ void main() {
   });
 
   group('3rd dart — turn ends normally', () {
-    test('only DartThrown appended; turnActive=false, dartsThrownInTurn=3', () async {
+    test('DartThrown + TurnEnded appended; turnActive=false, dartsThrownInTurn=3', () async {
       final state = _makeState(score1: 501, dartsThrownInTurn: 2);
       final dart = _makeDart(segment: '20', score: 20);
 
       final newState = await useCase.execute(state, dart);
 
-      // Score updated; turn is NOT yet advanced (user must tap NEXT ROUND)
+      // Score updated; turn rotation deferred to startNextTurn() — finalState
+      // still reflects the pre-rotation engine result (currentTurnIndex
+      // unchanged, dartsThrownInTurn=3).
       expect(newState.competitors[0].score, 481);
       expect(newState.currentTurnIndex, 0);
       expect(newState.dartsThrownInTurn, 3);
       expect(newState.turnActive, false);
 
-      // Only DartThrown persisted — TurnEnded+TurnStarted come from startNextTurn()
+      // DartThrown + TurnEnded persisted — TurnEnded is eager on every
+      // !turnActive boundary so the event log is coherent without needing
+      // the UI to tap NEXT ROUND. TurnStarted is appended by startNextTurn().
       final events = _captureEvents();
-      expect(events.length, 1);
+      expect(events.length, 2);
       expect(events[0].eventType, 'DartThrown');
+      expect(events[1].eventType, 'TurnEnded');
     });
   });
 
   group('Bust dart', () {
-    test('only DartThrown(bust=true) appended; turnActive=false, dartsThrownInTurn=3', () async {
+    test('DartThrown(bust=true) + TurnEnded appended; turnActive=false, dartsThrownInTurn=3', () async {
       // score=2, throw single 1 → score becomes 1 → bust
       final state = _makeState(score1: 2, dartsThrownInTurn: 0);
       final dart = _makeDart(segment: '1', score: 1);
 
       final newState = await useCase.execute(state, dart);
 
-      // Score restored (bust recovery); turn NOT yet advanced
+      // Score restored (bust recovery); turn rotation deferred to
+      // startNextTurn().
       expect(newState.competitors[0].score, 2);
       expect(newState.currentTurnIndex, 0);
       expect(newState.dartsThrownInTurn, 3);
       expect(newState.turnActive, false);
 
-      // Only DartThrown persisted — TurnEnded+TurnStarted come from startNextTurn()
+      // DartThrown(bust) + TurnEnded persisted — eager emission of TurnEnded
+      // on every !turnActive boundary (including bust).
       final events = _captureEvents();
-      expect(events.length, 1);
+      expect(events.length, 2);
       expect(events[0].eventType, 'DartThrown');
       expect(events[0].payload['bust'], true);
+      expect(events[1].eventType, 'TurnEnded');
     });
   });
 

@@ -85,32 +85,40 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
     if (gs.isComplete || gs.turnActive) return;
 
     state = await AsyncValue.guard(() async {
-      int nextSeq =
-          await ref.read(gameEventRepositoryProvider).getLatestSequence(gs.gameId) + 1;
+      // The TurnEnded event was already persisted by ProcessDartUseCase when
+      // the turn ended (3 darts, bust, or leg/game-completing dart). We
+      // re-fetch the latest sequence so any newly emitted events here pick up
+      // sequence numbers after that TurnEnded. We also re-apply TurnEnded
+      // through the engine locally (NOT persisting it again) so the engine
+      // outcome — round-cap, leg, or game — drives what happens next.
+      int nextSeq = await ref
+              .read(gameEventRepositoryProvider)
+              .getLatestSequence(gs.gameId) +
+          1;
 
       final currentCompetitor = gs.competitors[gs.currentTurnIndex];
       final actorId = currentCompetitor.playerIds.isNotEmpty
           ? currentCompetitor.playerIds.first
           : 'system';
 
-      final turnEndedEvent = buildTurnEndedEvent(
+      // Construct a transient TurnEnded matching the one already in the log
+      // so the engine can compute the post-turn state (cap detection,
+      // currentTurnIndex rotation). This event is NOT appended.
+      final transientTurnEnded = buildTurnEndedEvent(
         gameId: gs.gameId,
         competitorId: currentCompetitor.competitorId,
         playerId: actorId,
-        localSequence: nextSeq++,
+        localSequence: -1,
         actorId: actorId,
         reason: current.showBust ? 'bust' : 'normal',
       );
 
       final engine = ref.read(x01EngineProvider);
-      final turnEndedResult = engine.apply(gs, turnEndedEvent);
+      final turnEndedResult = engine.apply(gs, transientTurnEnded);
       var newGs = turnEndedResult.state;
-      final eventsToStore = <GameEvent>[turnEndedEvent];
+      final eventsToStore = <GameEvent>[];
 
       if (turnEndedResult.outcome == LegOutcome.roundCapReached) {
-        await ref
-            .read(gameEventRepositoryProvider)
-            .appendEvents([turnEndedEvent]);
         return ActiveGameState(
           gameState: newGs,
           pendingCapSelection: true,
@@ -182,6 +190,7 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
         );
       }
 
+      // Normal rotation — only TurnStarted is persisted.
       final nextCompetitor = newGs.competitors[newGs.currentTurnIndex];
       final nextActorId = nextCompetitor.playerIds.isNotEmpty
           ? nextCompetitor.playerIds.first

@@ -587,8 +587,11 @@ void main() {
 
     await Future.wait(futures);
 
-    expect(accepted.containsAll({2, 3, 4}), isTrue,
-        reason: 'expected sequences 2, 3, 4 — got $accepted');
+    // Sequences 2..4 are the three DartThrown events. Seq 5 is the eager
+    // TurnEnded emitted by ProcessDartUseCase on the !turnActive boundary
+    // (the 3rd dart ends the turn).
+    expect(accepted.containsAll({2, 3, 4, 5}), isTrue,
+        reason: 'expected sequences 2, 3, 4, 5 — got $accepted');
     final s = container.read(activeGameProvider('g1')).value!;
     expect(s.gameState.competitors[0].score, 37); // 40 - 1 - 1 - 1
     expect(s.gameState.dartsThrownInTurn, 3);

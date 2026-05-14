@@ -61,7 +61,7 @@ void main() {
     useCase = CreateGameUseCase(mockGameRepo, mockEventRepo, mockPlayerRepo);
 
     when(mockGameRepo.createGame(any, any)).thenAnswer((_) async {});
-    when(mockEventRepo.getLatestSequence(any)).thenAnswer((_) async => -1);
+    when(mockEventRepo.getLatestSequence(any)).thenAnswer((_) async => 0);
     when(mockEventRepo.appendEvent(any)).thenAnswer((_) async {});
     when(mockPlayerRepo.touchPlayer(any)).thenAnswer((_) async {});
   });

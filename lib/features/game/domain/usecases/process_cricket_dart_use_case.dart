@@ -121,12 +121,10 @@ class ProcessCricketDartUseCase {
         );
         eventsToStore.add(turnStartedEvent);
         finalState = _engine.apply(finalState, turnStartedEvent).state;
-
       }
-      // Normal 3-dart turn end: only DartThrown is persisted here.
-      // TurnEnded + TurnStarted are appended when the player taps NEXT PLAYER
-      // (via ActiveCricketGameNotifier.nextPlayer). finalState remains result.state
-      // with turnActive=false, dartsThrownInTurn=3.
+      // Normal 3-dart turn end: DartThrown + TurnEnded already persisted above.
+      // ActiveCricketGameNotifier.nextPlayer appends the TurnStarted for the
+      // next player on tap.
     }
 
     // 8. Persist: dart first, then events

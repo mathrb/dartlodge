@@ -49,7 +49,10 @@ class GameEventRepositoryDrift implements GameEventRepository {
     final result = await query.getSingleOrNull();
     final maxSequence = result?.read(_db.gameEvents.localSequence.max());
 
-    return maxSequence ?? -1;
+    // Returns 0 when no events exist. Callers compute `getLatestSequence + 1`
+    // so the first event of every game lands at `local_sequence = 1`
+    // (1-based, restarts per game). See docs/DATABASE_DDL.md.
+    return maxSequence ?? 0;
   }
 
   @override

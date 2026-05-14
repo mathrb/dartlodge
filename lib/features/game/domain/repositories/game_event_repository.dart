@@ -17,8 +17,10 @@ abstract interface class GameEventRepository {
   /// ([synced = false]), ordered by (game_id, local_sequence).
   Future<List<GameEvent>> getUnsyncedEvents();
 
-  /// Returns the highest [localSequence] for [gameId], or -1 if no events
-  /// exist. Used to assign the next sequence number before insertion.
+  /// Returns the highest [localSequence] for [gameId], or 0 if no events
+  /// exist. Callers compute `getLatestSequence(...) + 1` to assign the next
+  /// sequence; with the 0 sentinel, the first event of every game lands at
+  /// `local_sequence = 1` (1-based, restarts per game).
   Future<int> getLatestSequence(String gameId);
 
   // Writes

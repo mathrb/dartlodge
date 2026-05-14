@@ -75,15 +75,19 @@ class ProcessDartUseCase {
     bool needsCompleteGame = false;
 
     if (!finalState.turnActive) {
+      // Turn ended (normal 3-dart end, bust, or leg/game-completing dart) —
+      // always append TurnEnded eagerly so the event log is coherent without
+      // waiting for the UI to tap NEXT ROUND. Mirrors cricket's structure.
+      eventsToStore.add(buildTurnEndedEvent(
+        gameId: currentState.gameId,
+        competitorId: dartThrow.competitorId,
+        playerId: currentPlayerId,
+        localSequence: nextSeq++,
+      ));
+
       if (result.outcome == LegOutcome.gameCompleted) {
-        // Append TurnEnded + LegCompleted + GameCompleted; call completeGame()
+        // Append LegCompleted + GameCompleted; call completeGame()
         final winnerPlayerId = getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
-        eventsToStore.add(buildTurnEndedEvent(
-          gameId: currentState.gameId,
-          competitorId: dartThrow.competitorId,
-          playerId: currentPlayerId,
-          localSequence: nextSeq++,
-        ));
         eventsToStore.add(buildLegCompletedEvent(
           gameId: currentState.gameId,
           winnerCompetitorId: result.winnerCompetitorId,
@@ -100,14 +104,8 @@ class ProcessDartUseCase {
         // finalState stays as result.state (game is over, no TurnStarted)
 
       } else if (result.outcome == LegOutcome.legCompleted) {
-        // Append TurnEnded + LegCompleted + TurnStarted for first player of new leg
+        // Append LegCompleted + TurnStarted for first player of new leg
         final winnerPlayerId = getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
-        eventsToStore.add(buildTurnEndedEvent(
-          gameId: currentState.gameId,
-          competitorId: dartThrow.competitorId,
-          playerId: currentPlayerId,
-          localSequence: nextSeq++,
-        ));
         eventsToStore.add(buildLegCompletedEvent(
           gameId: currentState.gameId,
           winnerCompetitorId: result.winnerCompetitorId,
@@ -131,12 +129,10 @@ class ProcessDartUseCase {
         );
         eventsToStore.add(turnStartedEvent);
         finalState = _engine.apply(finalState, turnStartedEvent).state;
-
       }
-      // Normal or bust turn end: only DartThrown is persisted here.
-      // TurnEnded + TurnStarted are appended when the player taps NEXT ROUND
-      // (via ActiveGameNotifier.startNextTurn). finalState remains result.state
-      // with turnActive=false, dartsThrownInTurn=3.
+      // Normal 3-dart turn end or bust: only DartThrown + TurnEnded persisted
+      // here. ActiveGameNotifier._startNextTurn appends the TurnStarted for
+      // the next player on tap.
     }
 
     // 9. Persist: dart first, then events
