@@ -13,10 +13,24 @@ final class PlayerNotFoundException extends RepositoryException {
       : super('Player not found: $playerId');
 }
 
+/// Thrown by the data layer when a player INSERT conflicts on the primary
+/// key (i.e. the [playerId] UUID is already in use). The Drift repository
+/// surfaces this when `INSERT INTO players` violates the UNIQUE constraint.
+/// For "a player with this NAME already exists" use
+/// [DuplicatePlayerNameException] instead.
 final class DuplicatePlayerException extends RepositoryException {
   final String playerId;
   const DuplicatePlayerException(this.playerId)
       : super('Player already exists: $playerId');
+}
+
+/// Thrown by the domain use case when a new player's name collides with an
+/// existing player (case-insensitive). Distinct from [DuplicatePlayerException]
+/// which is the data-layer's primary-key conflict signal.
+final class DuplicatePlayerNameException extends RepositoryException {
+  final String name;
+  const DuplicatePlayerNameException(this.name)
+      : super('A player with this name already exists: $name');
 }
 
 final class PlayerHasGameHistoryException extends RepositoryException {

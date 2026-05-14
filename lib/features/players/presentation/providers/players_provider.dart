@@ -9,9 +9,10 @@ import 'package:dart_lodge/features/players/presentation/state/player_form_state
 
 part 'players_provider.g.dart';
 
-String _playerFormErrorMessage(Object e) => e is DuplicatePlayerException
-    ? 'A player with this name already exists'
-    : e.toString();
+String _playerFormErrorMessage(Object e) =>
+    (e is DuplicatePlayerException || e is DuplicatePlayerNameException)
+        ? 'A player with this name already exists'
+        : e.toString();
 
 @riverpod
 class EditPlayerNotifier extends _$EditPlayerNotifier {
@@ -41,7 +42,7 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
             p.playerId != playerId &&
             p.name.toLowerCase() == name.toLowerCase(),
       )) {
-        throw DuplicatePlayerException(name);
+        throw DuplicatePlayerNameException(name);
       }
       await repo.updatePlayerName(playerId, name);
     });
@@ -127,7 +128,7 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
   /// state (e.g. the inline new-player sheet on the player-selection screen).
   ///
   /// Returns the new [Player] on success. Throws [ValidationException] or
-  /// [DuplicatePlayerException] on failure — callers translate to UI messages.
+  /// [DuplicatePlayerNameException] on failure — callers translate to UI messages.
   /// Does not touch this notifier's form state.
   Future<Player> createPlayer(String name) =>
       ref.read(createPlayerUseCaseProvider).call(name);

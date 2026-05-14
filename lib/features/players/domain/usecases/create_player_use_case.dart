@@ -12,7 +12,7 @@ import 'package:dart_lodge/features/players/domain/validators.dart';
 ///
 /// Throws:
 /// * [ValidationException] when [name] is invalid (empty or too long).
-/// * [DuplicatePlayerException] when another player already has the same name.
+/// * [DuplicatePlayerNameException] when another player already has the same name.
 class CreatePlayerUseCase {
   final PlayerRepository _playerRepository;
   final Uuid _uuid;
@@ -29,7 +29,7 @@ class CreatePlayerUseCase {
 
     final existing = await _playerRepository.getAllPlayers();
     if (existing.any((p) => p.name.toLowerCase() == trimmed.toLowerCase())) {
-      throw DuplicatePlayerException(trimmed);
+      throw DuplicatePlayerNameException(trimmed);
     }
 
     final now = DateTime.now().toUtc();
