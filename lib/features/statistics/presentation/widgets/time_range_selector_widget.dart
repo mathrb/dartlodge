@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:dart_lodge/core/providers/statistics_providers.dart';
+import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
 
 class TimeRangeSelectorWidget extends ConsumerWidget {

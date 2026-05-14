@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
-import 'package:dart_lodge/core/providers/statistics_providers.dart';
+import 'package:dart_lodge/features/statistics/presentation/providers/player_stats_page_provider.dart';
 import 'package:dart_lodge/features/statistics/presentation/widgets/ppr_trend_chart_widget.dart';
 
 PlayerLegSnapshot _snap({

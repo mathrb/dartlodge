@@ -11,7 +11,7 @@ import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import '../../domain/entities/player_stats.dart';
-import 'package:dart_lodge/core/providers/statistics_providers.dart';
+import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
 import '../widgets/atc_annotated_dartboard_widget.dart';
 import '../widgets/atc_summary_column_widget.dart';
