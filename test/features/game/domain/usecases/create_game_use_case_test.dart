@@ -188,7 +188,7 @@ void main() {
 
   // ── Validation: startingScore ─────────────────────────────────────────────
 
-  for (final valid in [101, 201, 301, 401, 501, 701, 1001]) {
+  for (final valid in GameConfigurationConstants.x01StartingScores) {
     test('accepts valid startingScore $valid', () async {
       await expectLater(
         useCase.execute(_makeGame(startingScore: valid), _makeCompetitors()),
@@ -202,6 +202,19 @@ void main() {
       () => useCase.execute(_makeGame(startingScore: 999), _makeCompetitors()),
       throwsA(isA<ValidationException>()),
     );
+  });
+
+  test('rejects starting scores no longer offered by the UI', () {
+    // Defends against the bug where the use case validated a stale superset
+    // (101/201/401/1001) while the UI offered 901 — see issue #166.
+    for (final stale in [101, 201, 401, 1001]) {
+      expect(
+        () =>
+            useCase.execute(_makeGame(startingScore: stale), _makeCompetitors()),
+        throwsA(isA<ValidationException>()),
+        reason: '$stale must be rejected — not in x01StartingScores',
+      );
+    }
   });
 
   // ── Validation: inStrategy / outStrategy ──────────────────────────────────

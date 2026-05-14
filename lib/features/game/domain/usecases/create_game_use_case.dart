@@ -23,8 +23,12 @@ class CreateGameUseCase {
     this._playerRepository,
   );
 
-  static const _validX01StartingScores = {101, 201, 301, 401, 501, 701, 1001};
-  static const _validStrategies = {'straight', 'double', 'master'};
+  static final Set<int> _validX01StartingScores =
+      GameConfigurationConstants.x01StartingScores.toSet();
+  static final Set<String> _validStrategies = {
+    ...GameConfigurationConstants.x01InStrategies,
+    ...GameConfigurationConstants.x01OutStrategies,
+  };
 
   Future<Game> execute(Game game, List<Competitor> competitors) async {
     _validate(game, competitors);
