@@ -41,30 +41,8 @@ class GameSummaryCardWidget extends StatelessWidget {
         return 'Cricket';
       case GameType.aroundTheClock:
         return 'Around the Clock';
-      case GameType.killer:
-        return 'Killer';
-      case GameType.baseball:
-        return 'Baseball';
-      case GameType.golf:
-        return 'Golf';
       case GameType.shanghai:
         return 'Shanghai';
-      case GameType.scram:
-        return 'Scram';
-      case GameType.halveIt:
-        return 'Halve It';
-      case GameType.highScore:
-        return 'High Score';
-      case GameType.blindCricket:
-        return 'Blind Cricket';
-      case GameType.blindGolf:
-        return 'Blind Golf';
-      case GameType.blindKiller:
-        return 'Blind Killer';
-      case GameType.blindShanghai:
-        return 'Blind Shanghai';
-      case GameType.chaseTheDragon:
-        return 'Chase the Dragon';
       case GameType.catch40:
         return 'Catch 40';
       case GameType.bobs27:

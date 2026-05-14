@@ -48,7 +48,7 @@ A single dart thrown by a player and credited to a competitor.
 ### Game Fields
 
 * `game_id` — UUID (string)
-* `game_type` — string. Stored as the camelCase Dart enum name (e.g. `"x01"`, `"cricket"`, `"aroundTheClock"`, `"killer"`, `"baseball"`, `"golf"`, `"shanghai"`, `"scram"`, `"halveIt"`, `"highScore"`, `"blindCricket"`, `"blindGolf"`, `"blindKiller"`, `"blindShanghai"`, `"chaseTheDragon"`, `"catch40"`, `"bobs27"`, `"checkoutPractice"`). The canonical list lives in the `GameType` enum (`lib/core/utils/constants.dart`).
+* `game_type` — string. Stored as the camelCase Dart enum name (e.g. `"x01"`, `"cricket"`, `"aroundTheClock"`, `"shanghai"`, `"catch40"`, `"bobs27"`, `"checkoutPractice"`, `"countUp"`). The canonical list lives in the `GameType` enum (`lib/core/utils/constants.dart`).
 * `start_time` — ISO 8601 timestamp
 * `end_time` — ISO 8601 timestamp (nullable)
 * `winner_competitor_id` — UUID (nullable)
@@ -207,10 +207,6 @@ Every variant supports an optional `startingPlayerId` (UUID, nullable). Only the
   "startingPlayerId": "<uuid>" | null
 }
 ```
-
-### Other variants
-
-The following game types currently carry only `startingPlayerId` in their config: `killer`, `baseball`, `golf`, `scram`, `halveIt`, `highScore`, `blindCricket`, `blindGolf`, `blindKiller`, `blindShanghai`, `chaseTheDragon`. Their rules are defined in code (`lib/features/game/domain/engines/`) and in `docs/games/` where applicable; this document does not enumerate gameplay parameters that are not yet persisted in `config_json`.
 
 ---
 

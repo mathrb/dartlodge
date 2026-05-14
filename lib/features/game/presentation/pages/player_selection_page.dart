@@ -418,7 +418,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
       } else {
         final routeBase = switch (gameType) {
           GameType.x01 => GameRoutes.activeX01,
-          GameType.cricket || GameType.blindCricket => GameRoutes.activeCricket,
+          GameType.cricket => GameRoutes.activeCricket,
           GameType.countUp => GameRoutes.activeCountUp,
           _ => GameRoutes.activePractice,
         };
