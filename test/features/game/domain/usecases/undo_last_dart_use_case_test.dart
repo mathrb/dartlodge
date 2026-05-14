@@ -67,13 +67,17 @@ void main() {
           name: 'P1',
           playerIds: const ['p1'],
           score: score1,
+          // Mirror GameState.initial: per-competitor startingScore is what
+          // engine._resetLeg reads when starting a fresh leg.
+          startingScore: startingScore,
           isIn: true,
         ),
         CompetitorState(
           competitorId: 'c2',
           name: 'P2',
           playerIds: const ['p2'],
-          score: 501,
+          score: startingScore,
+          startingScore: startingScore,
           isIn: true,
         ),
       ],
@@ -373,6 +377,132 @@ void main() {
       final stateAfterSecond = await useCase.execute(state);
       expect(stateAfterSecond.competitors[0].score, 501);
       expect(stateAfterSecond.dartsThrownInTurn, 0);
+    });
+  });
+
+  // ── regression: issue #165 ────────────────────────────────────────────────
+
+  group('Issue #165 — undo across leg boundary restores per-competitor '
+      'startingScore', () {
+    // X01, double-out, startingScore = 40 (chosen so D20 wins outright),
+    // legsToWin = 2.
+    //
+    // Sequence:
+    //   1) c1 throws D20 → leg 1 win, engine internally resets the leg.
+    //   2) c1 throws S1 in leg 2 → score 40 - 1 = 39.
+    //   3) Undo S1.
+    //
+    // Expected: c1.score == 40 (per-competitor startingScore preserved).
+    // Pre-fix: c1.score == 0 — _buildInitialState omitted CompetitorState.
+    // startingScore (defaulted to 0), and engine._resetLeg, which reads
+    // competitor.startingScore, restarted every leg at zero.
+
+    GameState _legBoundaryState() {
+      return GameState(
+        gameId: 'g1',
+        gameType: GameType.x01,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'P1',
+            playerIds: ['p1'],
+            score: 39,
+            startingScore: 40,
+            legsWon: 1,
+            isIn: true,
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'P2',
+            playerIds: ['p2'],
+            score: 40,
+            startingScore: 40,
+            isIn: true,
+          ),
+        ],
+        currentTurnIndex: 0,
+        dartsThrownInTurn: 1,
+        currentLegIndex: 1,
+        isComplete: false,
+        status: GameEngineStatus.inProgress,
+        turnActive: true,
+        inStrategy: 'straight',
+        outStrategy: 'double',
+        legsToWin: 2,
+        startingScore: 40,
+      );
+    }
+
+    List<GameEvent> _legBoundaryEvents() => [
+          _event(
+            eventId: 'e-created',
+            eventType: 'GameCreated',
+            localSequence: 1,
+            payload: {
+              'ruleset': 'X01',
+              'rules_payload': {},
+              'competitors': ['c1', 'c2'],
+            },
+          ),
+          _event(
+            eventId: 'e-turn-0',
+            eventType: 'TurnStarted',
+            localSequence: 2,
+            payload: {
+              'competitor_id': 'c1',
+              'turn_index': 0,
+              'leg_index': 0,
+            },
+          ),
+          _event(
+            eventId: 'dt-d20',
+            eventType: 'DartThrown',
+            localSequence: 3,
+            payload: {
+              'competitor_id': 'c1',
+              'segment': 20,
+              'multiplier': 2,
+              'input_method': 'manual',
+            },
+          ),
+          _event(
+            eventId: 'e-turn-1',
+            eventType: 'TurnStarted',
+            localSequence: 4,
+            payload: {
+              'competitor_id': 'c1',
+              'turn_index': 0,
+              'leg_index': 1,
+            },
+          ),
+          _event(
+            eventId: 'dt-s1',
+            eventType: 'DartThrown',
+            localSequence: 5,
+            payload: {
+              'competitor_id': 'c1',
+              'segment': 1,
+              'multiplier': 1,
+              'input_method': 'manual',
+            },
+          ),
+        ];
+
+    test('undo of the only dart in leg 2 restores c1.score to 40, not 0',
+        () async {
+      final state = _legBoundaryState();
+      when(mockEventRepo.getEventsForGame('g1'))
+          .thenAnswer((_) async => _legBoundaryEvents());
+
+      final newState = await useCase.execute(state);
+
+      expect(newState.competitors[0].score, 40,
+          reason: 'leg 2 must restart at startingScore, not 0');
+      expect(newState.competitors[0].startingScore, 40);
+      expect(newState.competitors[1].score, 40);
+      expect(newState.competitors[1].startingScore, 40);
+      expect(newState.competitors[0].legsWon, 1,
+          reason: 'leg 1 was already won; the undone dart was in leg 2');
     });
   });
 
