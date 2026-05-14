@@ -1,5 +1,11 @@
 // Main entry point for the Darts App
-// This file initializes the application and sets up the provider scope
+// This file initializes the application and sets up the provider scope.
+//
+// Crash-reporting handlers (FlutterError.onError + PlatformDispatcher.instance.
+// onError) are auto-installed by SentryFlutter.init via FlutterErrorIntegration
+// and OnErrorIntegration respectively (sentry_flutter >= ~7.x; current pin is
+// 9.19.0). Do NOT add manual handlers here — they would override Sentry's and
+// silence the crash pipeline.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
