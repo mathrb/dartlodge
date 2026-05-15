@@ -39,9 +39,11 @@ class EndCheckoutPracticeUseCase {
       source: EventSource.client,
     );
 
-    await _eventRepository.appendEvent(gameCompletedEvent);
-
-    await _gameRepository.completeGame(
+    // Atomic: append GameCompleted AND mark the game complete in one
+    // transaction so a crash between them can't leave the event log and
+    // games.is_complete in disagreement (#188).
+    await _gameRepository.appendEventsAndCompleteGame(
+      events: [gameCompletedEvent],
       gameId: currentState.gameId,
       winnerCompetitorId: null,
       endTime: DateTime.now(),

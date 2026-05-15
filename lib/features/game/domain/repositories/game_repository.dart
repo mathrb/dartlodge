@@ -2,6 +2,7 @@
 // Defines the contract for game data access
 
 import '../entities/game.dart';
+import '../entities/game_event.dart';
 import '../entities/competitor.dart';
 import '../models/game_state_snapshot.dart';
 import '../../../../core/utils/constants.dart';
@@ -53,6 +54,24 @@ abstract interface class GameRepository {
   /// Throws [GameNotFoundException] if [gameId] does not exist.
   /// Throws [GameAlreadyCompleteException] if already complete.
   Future<void> completeGame({
+    required String gameId,
+    required String? winnerCompetitorId,
+    required DateTime endTime,
+  });
+
+  /// Appends [events] AND marks the game complete in a single transaction.
+  /// Either both writes land, or neither does — preventing the failure mode
+  /// where a crash between `appendEvents(...)` and `completeGame(...)` leaves
+  /// the event log saying the game is complete while `games.is_complete`
+  /// stays 0 (#188).
+  ///
+  /// All [events] must share the same [gameId]; otherwise throws
+  /// [ValidationException].
+  /// Throws [GameNotFoundException] if [gameId] does not exist.
+  /// Throws [GameAlreadyCompleteException] if already complete.
+  /// Throws [SequenceConflictException] on any sequence collision (rolls back).
+  Future<void> appendEventsAndCompleteGame({
+    required List<GameEvent> events,
     required String gameId,
     required String? winnerCompetitorId,
     required DateTime endTime,

@@ -9,6 +9,8 @@ import 'package:dart_lodge/core/utils/constants.dart' as _i9;
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart'
     as _i7;
 import 'package:dart_lodge/features/game/domain/entities/game.dart' as _i2;
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart'
+    as _i11;
 import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart'
     as _i10;
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart'
@@ -220,6 +222,25 @@ class MockGameRepository extends _i1.Mock implements _i8.GameRepository {
   }) =>
       (super.noSuchMethod(
             Invocation.method(#completeGame, [], {
+              #gameId: gameId,
+              #winnerCompetitorId: winnerCompetitorId,
+              #endTime: endTime,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> appendEventsAndCompleteGame({
+    required List<_i11.GameEvent>? events,
+    required String? gameId,
+    required String? winnerCompetitorId,
+    required DateTime? endTime,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#appendEventsAndCompleteGame, [], {
+              #events: events,
               #gameId: gameId,
               #winnerCompetitorId: winnerCompetitorId,
               #endTime: endTime,
