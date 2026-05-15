@@ -93,7 +93,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
           if (winnerId == null) {
-            context.go('/post-game/${widget.gameId}');
+            context.go(GameRoutes.postGame(widget.gameId));
             return;
           }
           final winner =
@@ -104,7 +104,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
             builder: (_) => GameCompleteModalWidget(
               winnerName: winner.name,
               onNewGame: () => context.go(GameRoutes.home),
-              onViewStats: () => context.go('/post-game/${widget.gameId}'),
+              onViewStats: () => context.go(GameRoutes.postGame(widget.gameId)),
             ),
           );
         });

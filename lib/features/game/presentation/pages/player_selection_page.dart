@@ -81,7 +81,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
       next.maybeMap(
         selectingType: (_) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) context.go('/');
+            if (mounted) context.go(GameRoutes.home);
           });
         },
         orElse: () {},
@@ -151,7 +151,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                     semanticLabel: 'Settings',
                   ),
                   tooltip: 'Settings',
-                  onPressed: () => context.go(GameRoutes.settings),
+                  onPressed: () => context.push(GameRoutes.settings),
                 ),
               ),
             ),

@@ -33,7 +33,7 @@ class HomePage extends ConsumerWidget {
                 icon: Icons.adjust,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
-                  context.go('${GameRoutes.variantSelection}/x01');
+                  context.push('${GameRoutes.variantSelection}/x01');
                 },
               ),
               const SizedBox(height: 12),
@@ -43,7 +43,7 @@ class HomePage extends ConsumerWidget {
                 icon: Icons.sports_cricket,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
-                  context.go('${GameRoutes.variantSelection}/cricket');
+                  context.push('${GameRoutes.variantSelection}/cricket');
                 },
               ),
               const SizedBox(height: 12),
@@ -53,7 +53,7 @@ class HomePage extends ConsumerWidget {
                 icon: Icons.track_changes,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
-                  context.go('${GameRoutes.variantSelection}/practice');
+                  context.push('${GameRoutes.variantSelection}/practice');
                 },
               ),
               const SizedBox(height: 24),

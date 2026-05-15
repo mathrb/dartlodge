@@ -101,7 +101,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       if (!prevComplete && nextComplete) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
-          context.go('/post-game/${widget.gameId}');
+          context.go(GameRoutes.postGame(widget.gameId));
         });
       }
     });

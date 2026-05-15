@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/app_router.dart';
 import '../providers/players_provider.dart';
 import '../state/player_form_state.dart';
 import '../widgets/player_form_field_widget.dart';
@@ -81,7 +82,11 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
 
     if (!mounted) return;
     if (ok) {
-      context.go('/players');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(GameRoutes.players);
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

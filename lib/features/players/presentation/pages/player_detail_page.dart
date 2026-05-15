@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../app/app_router.dart';
 import '../../../../core/providers/players_providers.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/players_provider.dart';
@@ -48,7 +49,11 @@ class PlayerDetailPage extends ConsumerWidget {
 
     if (!context.mounted) return;
     if (ok) {
-      context.go('/players');
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(GameRoutes.players);
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

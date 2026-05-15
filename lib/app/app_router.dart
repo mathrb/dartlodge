@@ -43,6 +43,7 @@ abstract final class GameRoutes {
 
   static String gameDetail(String id) => '/game/history/$id';
   static String playerStats(String id) => '/stats/player/$id';
+  static String postGame(String id) => '/post-game/$id';
 }
 
 // ── RouterNotifier ────────────────────────────────────────────────────────────

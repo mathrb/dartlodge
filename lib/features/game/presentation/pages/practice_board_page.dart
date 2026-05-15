@@ -172,7 +172,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 const Text('Game not found'),
                 TextButton(
-                  onPressed: () => context.go('/'),
+                  onPressed: () => context.go(GameRoutes.home),
                   child: const Text('Back'),
                 ),
               ]),
