@@ -89,20 +89,12 @@ Map<String, dynamic> _$ShanghaiGameConfigToJson(ShanghaiGameConfig instance) =>
 Catch40GameConfig _$Catch40GameConfigFromJson(Map<String, dynamic> json) =>
     Catch40GameConfig(
       startingPlayerId: json['startingPlayerId'] as String? ?? null,
-      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? 8,
-      roundTargets:
-          (json['roundTargets'] as List<dynamic>?)
-              ?.map((e) => (e as num).toInt())
-              .toList() ??
-          const [10, 15, 20, 25, 30, 35, 40, 45],
       $type: json['runtimeType'] as String?,
     );
 
 Map<String, dynamic> _$Catch40GameConfigToJson(Catch40GameConfig instance) =>
     <String, dynamic>{
       'startingPlayerId': instance.startingPlayerId,
-      'totalRounds': instance.totalRounds,
-      'roundTargets': instance.roundTargets,
       'runtimeType': instance.$type,
     };
 

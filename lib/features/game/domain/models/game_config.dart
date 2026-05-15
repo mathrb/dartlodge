@@ -38,8 +38,6 @@ abstract class GameConfig with _$GameConfig {
 
   const factory GameConfig.catch40({
     @Default(null) String? startingPlayerId,
-    @Default(8) int totalRounds,
-    @Default([10, 15, 20, 25, 30, 35, 40, 45]) List<int> roundTargets,
   }) = Catch40GameConfig;
 
   const factory GameConfig.bobs27({
