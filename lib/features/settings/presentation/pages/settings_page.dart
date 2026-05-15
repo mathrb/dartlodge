@@ -140,18 +140,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       body: ListView(
         children: [
           _SectionHeader(label: 'Theme', cs: cs, tt: tt),
-          _ToggleRow(
-            title: 'Dark Mode',
-            value: themeMode == ThemeMode.dark,
-            cs: cs,
-            onChanged: (on) =>
-                notifier.setThemeMode(on ? ThemeMode.dark : ThemeMode.light),
-          ),
-          _OptionRow(
-            title: 'Use system default',
-            selected: themeMode == ThemeMode.system,
-            cs: cs,
-            onTap: () => notifier.setThemeMode(ThemeMode.system),
+          _ThemeModeSelector(
+            value: themeMode,
+            onChanged: notifier.setThemeMode,
           ),
           const Divider(height: 1),
           _SectionHeader(label: 'About', cs: cs, tt: tt),
@@ -241,52 +232,46 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _ToggleRow extends StatelessWidget {
-  final String title;
-  final bool value;
-  final ColorScheme cs;
-  final ValueChanged<bool> onChanged;
+/// 3-way Light / System / Dark theme-mode selector.
+///
+/// Replaces the previous combination of a Switch ("Dark Mode") + a
+/// separate "Use system default" tile, which made System mode hard to
+/// reach (two unrelated controls competing for the same setting) and
+/// left ambiguous state when both rows looked "off".
+class _ThemeModeSelector extends StatelessWidget {
+  final ThemeMode value;
+  final ValueChanged<ThemeMode> onChanged;
 
-  const _ToggleRow({
-    required this.title,
+  const _ThemeModeSelector({
     required this.value,
-    required this.cs,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      title: Text(title),
-      value: value,
-      activeTrackColor: cs.primary,
-      inactiveTrackColor: cs.outlineVariant,
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _OptionRow extends StatelessWidget {
-  final String title;
-  final bool selected;
-  final ColorScheme cs;
-  final VoidCallback onTap;
-
-  const _OptionRow({
-    required this.title,
-    required this.selected,
-    required this.cs,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(title),
-      trailing: selected
-          ? Icon(Icons.check, color: cs.primary)
-          : null,
-      onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SegmentedButton<ThemeMode>(
+        segments: const [
+          ButtonSegment(
+            value: ThemeMode.light,
+            label: Text('Light'),
+            icon: Icon(Icons.light_mode_outlined),
+          ),
+          ButtonSegment(
+            value: ThemeMode.system,
+            label: Text('System'),
+            icon: Icon(Icons.brightness_auto_outlined),
+          ),
+          ButtonSegment(
+            value: ThemeMode.dark,
+            label: Text('Dark'),
+            icon: Icon(Icons.dark_mode_outlined),
+          ),
+        ],
+        selected: {value},
+        onSelectionChanged: (set) => onChanged(set.first),
+      ),
     );
   }
 }
