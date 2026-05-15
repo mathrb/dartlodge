@@ -32,17 +32,8 @@ class GameRepositoryDrift implements GameRepository {
     final result = await query.getSingleOrNull();
 
     if (result == null) return null;
-    
-    return Game(
-      gameId: result.gameId,
-      gameType: parseGameTypeFromColumn(result.gameType),
-      config: GameConfig.fromJson(json.decode(result.configJson)),
-      startTime: DateTime.parse(result.startTime),
-      endTime: result.endTime != null ? DateTime.parse(result.endTime!) : null,
-      winnerCompetitorId: result.winnerCompetitorId,
-      isComplete: result.isComplete == 1,
-      activeState: result.gameStateJson != null ? GameStateSnapshot.fromJson(json.decode(result.gameStateJson!)) : null,
-    );
+
+    return _rowToGame(result);
   }
 
   @override
@@ -173,17 +164,8 @@ class GameRepositoryDrift implements GameRepository {
     final result = await query.getSingleOrNull();
 
     if (result == null) return null;
-    
-    return Game(
-      gameId: result.gameId,
-      gameType: parseGameTypeFromColumn(result.gameType),
-      config: GameConfig.fromJson(json.decode(result.configJson)),
-      startTime: DateTime.parse(result.startTime),
-      endTime: result.endTime != null ? DateTime.parse(result.endTime!) : null,
-      winnerCompetitorId: result.winnerCompetitorId,
-      isComplete: result.isComplete == 1,
-      activeState: result.gameStateJson != null ? GameStateSnapshot.fromJson(json.decode(result.gameStateJson!)) : null,
-    );
+
+    return _rowToGame(result);
   }
 
   @override
@@ -259,6 +241,45 @@ class GameRepositoryDrift implements GameRepository {
     );
   }
 
+  /// Maps a drift `games` row to a domain `Game`. Wraps json.decode +
+  /// fromJson in a try/catch so a corrupt or schema-drifted column surfaces
+  /// as `DatabaseException` rather than a bare `FormatException` /
+  /// `CheckedFromJsonException` / `TypeError` (violation of the CLAUDE.md
+  /// "all repository errors extend RepositoryException" rule — see #194).
+  Game _rowToGame(drift_db.Game row) {
+    try {
+      return Game(
+        gameId: row.gameId,
+        gameType: parseGameTypeFromColumn(row.gameType),
+        config: GameConfig.fromJson(json.decode(row.configJson)),
+        startTime: DateTime.parse(row.startTime),
+        endTime: row.endTime != null ? DateTime.parse(row.endTime!) : null,
+        winnerCompetitorId: row.winnerCompetitorId,
+        isComplete: row.isComplete == 1,
+        activeState: row.gameStateJson != null
+            ? GameStateSnapshot.fromJson(json.decode(row.gameStateJson!))
+            : null,
+      );
+    } on RepositoryException {
+      // parseGameTypeFromColumn already throws DatabaseException — don't
+      // double-wrap.
+      rethrow;
+    } on FormatException catch (e) {
+      throw DatabaseException(
+        'Corrupt JSON column for game ${row.gameId}',
+        cause: e,
+      );
+    } catch (e) {
+      // Catches CheckedFromJsonException, TypeError, and anything else
+      // thrown by fromJson when the persisted shape diverges from the
+      // current code's expectations.
+      throw DatabaseException(
+        'Failed to decode persisted state for game ${row.gameId}',
+        cause: e,
+      );
+    }
+  }
+
   @override
   Future<List<Game>> getCompletedGames({
     int limit = 20,
@@ -290,16 +311,7 @@ class GameRepositoryDrift implements GameRepository {
 
     final results = await query.get();
 
-    return results.map((row) => Game(
-      gameId: row.gameId,
-      gameType: parseGameTypeFromColumn(row.gameType),
-      config: GameConfig.fromJson(json.decode(row.configJson)),
-      startTime: DateTime.parse(row.startTime),
-      endTime: row.endTime != null ? DateTime.parse(row.endTime!) : null,
-      winnerCompetitorId: row.winnerCompetitorId,
-      isComplete: row.isComplete == 1,
-      activeState: row.gameStateJson != null ? GameStateSnapshot.fromJson(json.decode(row.gameStateJson!)) : null,
-    )).toList();
+    return results.map(_rowToGame).toList();
   }
 
   @override
@@ -333,16 +345,7 @@ class GameRepositoryDrift implements GameRepository {
       ..where((t) => t.isComplete.equals(0))
       ..limit(1))
       .watchSingleOrNull()
-      .map((row) => row != null ? Game(
-            gameId: row.gameId,
-            gameType: parseGameTypeFromColumn(row.gameType),
-            config: GameConfig.fromJson(json.decode(row.configJson)),
-            startTime: DateTime.parse(row.startTime),
-            endTime: row.endTime != null ? DateTime.parse(row.endTime!) : null,
-            winnerCompetitorId: row.winnerCompetitorId,
-            isComplete: row.isComplete == 1,
-            activeState: row.gameStateJson != null ? GameStateSnapshot.fromJson(json.decode(row.gameStateJson!)) : null,
-          ) : null);
+      .map((row) => row != null ? _rowToGame(row) : null);
   }
 
   @override
@@ -355,17 +358,7 @@ class GameRepositoryDrift implements GameRepository {
       query.where((t) => t.gameType.equals(filterByType.name));
     }
 
-    return query.watch()
-      .map((rows) => rows.map((row) => Game(
-            gameId: row.gameId,
-            gameType: parseGameTypeFromColumn(row.gameType),
-            config: GameConfig.fromJson(json.decode(row.configJson)),
-            startTime: DateTime.parse(row.startTime),
-            endTime: row.endTime != null ? DateTime.parse(row.endTime!) : null,
-            winnerCompetitorId: row.winnerCompetitorId,
-            isComplete: row.isComplete == 1,
-            activeState: row.gameStateJson != null ? GameStateSnapshot.fromJson(json.decode(row.gameStateJson!)) : null,
-          )).toList());
+    return query.watch().map((rows) => rows.map(_rowToGame).toList());
   }
 
 
