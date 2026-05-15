@@ -20,7 +20,7 @@ import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
-enum _DrillAction { resetDrill, endDrill }
+enum _DrillAction { endDrill }
 
 class PracticeBoardPage extends ConsumerStatefulWidget {
   const PracticeBoardPage({required this.gameId, super.key});
@@ -221,18 +221,12 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                   ),
                   onSelected: (action) async {
                     switch (action) {
-                      case _DrillAction.resetDrill:
-                        await notifier.resetDrill();
                       case _DrillAction.endDrill:
                         await notifier.endDrill();
                         if (context.mounted) context.go(GameRoutes.home);
                     }
                   },
                   itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: _DrillAction.resetDrill,
-                      child: Text('Reset Drill'),
-                    ),
                     PopupMenuItem(
                       value: _DrillAction.endDrill,
                       child: Text('End Drill'),

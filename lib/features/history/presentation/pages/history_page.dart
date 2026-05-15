@@ -59,7 +59,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
       body: asyncState.when(
         loading: () => const LoadingSpinnerWidget(),
         error: (e, _) => ErrorRetryWidget(
-          message: 'Error loading history: $e',
+          message: 'Failed to load history. Tap retry to try again.',
           onRetry: () => ref.invalidate(gameHistoryProvider),
         ),
         data: (historyState) => Column(

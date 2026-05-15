@@ -24,7 +24,6 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
   int undoCalls = 0;
   int nextTurnCalls = 0;
   int endDrillCalls = 0;
-  int resetCalls = 0;
 
   @override
   Future<ActivePracticeState?> build(String gameId) async => _state;
@@ -40,9 +39,6 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
 
   @override
   Future<void> endDrill() async => endDrillCalls++;
-
-  @override
-  Future<void> resetDrill() async => resetCalls++;
 }
 
 /// Notifier whose [build] hangs forever → provider stays in loading state.
@@ -272,10 +268,9 @@ void main() {
     expect(find.text('Number 3'), findsOneWidget);
   });
 
-  // ── 6. AppBar overflow menu shows Reset/End Drill ─────────────────────────
+  // ── 6. AppBar overflow menu shows End Drill ───────────────────────────────
 
-  testWidgets('6. Overflow menu shows Reset Drill and End Drill',
-      (tester) async {
+  testWidgets('6. Overflow menu shows End Drill', (tester) async {
     final notifier = _FakeActivePracticeNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
@@ -283,8 +278,10 @@ void main() {
     await tester.tap(find.byIcon(Icons.more_vert));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reset Drill'), findsOneWidget);
     expect(find.text('End Drill'), findsOneWidget);
+    // Reset Drill was removed in #195 hygiene sweep — it was a no-op
+    // (invalidateSelf replays the same event log → same state).
+    expect(find.text('Reset Drill'), findsNothing);
   });
 
   // ── 7. DartboardHighlightWidget present with Expanded ancestor ────────────

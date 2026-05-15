@@ -240,13 +240,6 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
   }
 
-  Future<void> resetDrill() async {
-    // GameEventRepository does not expose deleteEventsForGame, so Reset Drill
-    // re-runs build() which replays the existing event log.
-    ref.invalidateSelf();
-    await future;
-  }
-
   Future<void> endDrill() => _serializer.run(_endDrillImpl);
 
   Future<void> _endDrillImpl() async {

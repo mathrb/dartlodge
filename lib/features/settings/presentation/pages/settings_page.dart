@@ -165,7 +165,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             title: 'Open Source Licenses',
             onTap: () => showLicensePage(
               context: context,
-              applicationName: 'Darts',
+              applicationName: 'DartLodge',
             ),
           ),
           const Divider(height: 1),

@@ -62,7 +62,11 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
     );
   }
 
-  /// Returns true on success, false when player has game history.
+  /// Returns true on success, false on any failure (callers show a
+  /// SnackBar). Generic failures don't bleed `error.toString()` into the
+  /// invisible `nameError` field — the previous behavior was misleading
+  /// because the edit form's name input may already be gone by the time
+  /// the error surfaces.
   Future<bool> deletePlayer(String playerId) async {
     final result = await AsyncValue.guard(() async {
       await ref.read(playerRepositoryProvider).deletePlayer(playerId);
@@ -72,8 +76,6 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
       ref.invalidate(allPlayersProvider);
       return true;
     }
-    if (result.error is PlayerHasGameHistoryException) return false;
-    state = state.copyWith(nameError: result.error.toString());
     return false;
   }
 }
