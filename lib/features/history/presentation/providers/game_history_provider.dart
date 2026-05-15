@@ -13,7 +13,6 @@ class GameHistoryNotifier extends _$GameHistoryNotifier {
   GameType? _filterGameType;
   DateTime? _filterDateFrom;
   DateTime? _filterDateTo;
-  List<String> _filterPlayerIds = [];
 
   // Synchronous in-flight flag for loadNextPage. The AsyncValue-based
   // `isLoadingMore` check (state.value!.isLoadingMore) is unreliable as a
@@ -48,7 +47,6 @@ class GameHistoryNotifier extends _$GameHistoryNotifier {
       filterGameType: _filterGameType,
       filterDateFrom: _filterDateFrom,
       filterDateTo: _filterDateTo,
-      filterPlayerIds: _filterPlayerIds,
     );
   }
 
@@ -111,7 +109,6 @@ class GameHistoryNotifier extends _$GameHistoryNotifier {
     _filterGameType = null;
     _filterDateFrom = null;
     _filterDateTo = null;
-    _filterPlayerIds = [];
     ref.invalidateSelf();
   }
 }

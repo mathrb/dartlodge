@@ -190,7 +190,6 @@ abstract class CompetitorState with _$CompetitorState {
     @Default(1) int practiceRound,
     @Default(0) int practiceAttempts,
     @Default(0) int practiceSuccesses,
-    @Default(0) int routeProgress,
     @Default(0) int startingScore,
   }) = _CompetitorState;
 

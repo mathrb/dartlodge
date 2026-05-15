@@ -16,7 +16,6 @@ abstract class GameHistoryState with _$GameHistoryState {
     GameType? filterGameType,
     DateTime? filterDateFrom,
     DateTime? filterDateTo,
-    @Default(<String>[]) List<String> filterPlayerIds,
   }) = _GameHistoryState;
 
   factory GameHistoryState.initial() => const GameHistoryState();

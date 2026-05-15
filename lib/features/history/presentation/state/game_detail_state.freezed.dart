@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$GameDetailState {
 
- Game? get game; List<Competitor> get competitors; List<GameEvent> get events; List<DartThrow> get darts; GameStats? get gameStats; List<LegStatsBreakdown> get legStats;
+ Game? get game; List<Competitor> get competitors; List<GameEvent> get events; GameStats? get gameStats; List<LegStatsBreakdown> get legStats;
 /// Create a copy of GameDetailState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $GameDetailStateCopyWith<GameDetailState> get copyWith => _$GameDetailStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other.competitors, competitors)&&const DeepCollectionEquality().equals(other.events, events)&&const DeepCollectionEquality().equals(other.darts, darts)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other.legStats, legStats));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other.competitors, competitors)&&const DeepCollectionEquality().equals(other.events, events)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other.legStats, legStats));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(competitors),const DeepCollectionEquality().hash(events),const DeepCollectionEquality().hash(darts),gameStats,const DeepCollectionEquality().hash(legStats));
+int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(competitors),const DeepCollectionEquality().hash(events),gameStats,const DeepCollectionEquality().hash(legStats));
 
 @override
 String toString() {
-  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, darts: $darts, gameStats: $gameStats, legStats: $legStats)';
+  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, gameStats: $gameStats, legStats: $legStats)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $GameDetailStateCopyWith<$Res>  {
   factory $GameDetailStateCopyWith(GameDetailState value, $Res Function(GameDetailState) _then) = _$GameDetailStateCopyWithImpl;
 @useResult
 $Res call({
- Game? game, List<Competitor> competitors, List<GameEvent> events, List<DartThrow> darts, GameStats? gameStats, List<LegStatsBreakdown> legStats
+ Game? game, List<Competitor> competitors, List<GameEvent> events, GameStats? gameStats, List<LegStatsBreakdown> legStats
 });
 
 
@@ -62,13 +62,12 @@ class _$GameDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of GameDetailState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? game = freezed,Object? competitors = null,Object? events = null,Object? darts = null,Object? gameStats = freezed,Object? legStats = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? game = freezed,Object? competitors = null,Object? events = null,Object? gameStats = freezed,Object? legStats = null,}) {
   return _then(_self.copyWith(
 game: freezed == game ? _self.game : game // ignore: cast_nullable_to_non_nullable
 as Game?,competitors: null == competitors ? _self.competitors : competitors // ignore: cast_nullable_to_non_nullable
 as List<Competitor>,events: null == events ? _self.events : events // ignore: cast_nullable_to_non_nullable
-as List<GameEvent>,darts: null == darts ? _self.darts : darts // ignore: cast_nullable_to_non_nullable
-as List<DartThrow>,gameStats: freezed == gameStats ? _self.gameStats : gameStats // ignore: cast_nullable_to_non_nullable
+as List<GameEvent>,gameStats: freezed == gameStats ? _self.gameStats : gameStats // ignore: cast_nullable_to_non_nullable
 as GameStats?,legStats: null == legStats ? _self.legStats : legStats // ignore: cast_nullable_to_non_nullable
 as List<LegStatsBreakdown>,
   ));
@@ -179,10 +178,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  List<DartThrow> darts,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GameDetailState() when $default != null:
-return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.gameStats,_that.legStats);case _:
+return $default(_that.game,_that.competitors,_that.events,_that.gameStats,_that.legStats);case _:
   return orElse();
 
 }
@@ -200,10 +199,10 @@ return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.game
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  List<DartThrow> darts,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)  $default,) {final _that = this;
 switch (_that) {
 case _GameDetailState():
-return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.gameStats,_that.legStats);case _:
+return $default(_that.game,_that.competitors,_that.events,_that.gameStats,_that.legStats);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -220,10 +219,10 @@ return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.game
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  List<DartThrow> darts,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Game? game,  List<Competitor> competitors,  List<GameEvent> events,  GameStats? gameStats,  List<LegStatsBreakdown> legStats)?  $default,) {final _that = this;
 switch (_that) {
 case _GameDetailState() when $default != null:
-return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.gameStats,_that.legStats);case _:
+return $default(_that.game,_that.competitors,_that.events,_that.gameStats,_that.legStats);case _:
   return null;
 
 }
@@ -235,7 +234,7 @@ return $default(_that.game,_that.competitors,_that.events,_that.darts,_that.game
 
 
 class _GameDetailState implements GameDetailState {
-  const _GameDetailState({this.game, final  List<Competitor> competitors = const <Competitor>[], final  List<GameEvent> events = const <GameEvent>[], final  List<DartThrow> darts = const <DartThrow>[], this.gameStats, final  List<LegStatsBreakdown> legStats = const <LegStatsBreakdown>[]}): _competitors = competitors,_events = events,_darts = darts,_legStats = legStats;
+  const _GameDetailState({this.game, final  List<Competitor> competitors = const <Competitor>[], final  List<GameEvent> events = const <GameEvent>[], this.gameStats, final  List<LegStatsBreakdown> legStats = const <LegStatsBreakdown>[]}): _competitors = competitors,_events = events,_legStats = legStats;
   
 
 @override final  Game? game;
@@ -251,13 +250,6 @@ class _GameDetailState implements GameDetailState {
   if (_events is EqualUnmodifiableListView) return _events;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_events);
-}
-
- final  List<DartThrow> _darts;
-@override@JsonKey() List<DartThrow> get darts {
-  if (_darts is EqualUnmodifiableListView) return _darts;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_darts);
 }
 
 @override final  GameStats? gameStats;
@@ -279,16 +271,16 @@ _$GameDetailStateCopyWith<_GameDetailState> get copyWith => __$GameDetailStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other._competitors, _competitors)&&const DeepCollectionEquality().equals(other._events, _events)&&const DeepCollectionEquality().equals(other._darts, _darts)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other._legStats, _legStats));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other._competitors, _competitors)&&const DeepCollectionEquality().equals(other._events, _events)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other._legStats, _legStats));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(_competitors),const DeepCollectionEquality().hash(_events),const DeepCollectionEquality().hash(_darts),gameStats,const DeepCollectionEquality().hash(_legStats));
+int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(_competitors),const DeepCollectionEquality().hash(_events),gameStats,const DeepCollectionEquality().hash(_legStats));
 
 @override
 String toString() {
-  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, darts: $darts, gameStats: $gameStats, legStats: $legStats)';
+  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, gameStats: $gameStats, legStats: $legStats)';
 }
 
 
@@ -299,7 +291,7 @@ abstract mixin class _$GameDetailStateCopyWith<$Res> implements $GameDetailState
   factory _$GameDetailStateCopyWith(_GameDetailState value, $Res Function(_GameDetailState) _then) = __$GameDetailStateCopyWithImpl;
 @override @useResult
 $Res call({
- Game? game, List<Competitor> competitors, List<GameEvent> events, List<DartThrow> darts, GameStats? gameStats, List<LegStatsBreakdown> legStats
+ Game? game, List<Competitor> competitors, List<GameEvent> events, GameStats? gameStats, List<LegStatsBreakdown> legStats
 });
 
 
@@ -316,13 +308,12 @@ class __$GameDetailStateCopyWithImpl<$Res>
 
 /// Create a copy of GameDetailState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? game = freezed,Object? competitors = null,Object? events = null,Object? darts = null,Object? gameStats = freezed,Object? legStats = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? game = freezed,Object? competitors = null,Object? events = null,Object? gameStats = freezed,Object? legStats = null,}) {
   return _then(_GameDetailState(
 game: freezed == game ? _self.game : game // ignore: cast_nullable_to_non_nullable
 as Game?,competitors: null == competitors ? _self._competitors : competitors // ignore: cast_nullable_to_non_nullable
 as List<Competitor>,events: null == events ? _self._events : events // ignore: cast_nullable_to_non_nullable
-as List<GameEvent>,darts: null == darts ? _self._darts : darts // ignore: cast_nullable_to_non_nullable
-as List<DartThrow>,gameStats: freezed == gameStats ? _self.gameStats : gameStats // ignore: cast_nullable_to_non_nullable
+as List<GameEvent>,gameStats: freezed == gameStats ? _self.gameStats : gameStats // ignore: cast_nullable_to_non_nullable
 as GameStats?,legStats: null == legStats ? _self._legStats : legStats // ignore: cast_nullable_to_non_nullable
 as List<LegStatsBreakdown>,
   ));
