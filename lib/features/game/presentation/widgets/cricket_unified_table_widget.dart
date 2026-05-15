@@ -142,7 +142,7 @@ class _PlayerHeaderCell extends StatelessWidget {
         children: [
           Text(
             '${competitor.score}',
-            style: AppTextStyles.scoreMedium(context).copyWith(
+            style: AppTextStyles.scoreMedium.copyWith(
               color: isActive ? cs.primary : cs.onSurfaceVariant,
             ),
           ),

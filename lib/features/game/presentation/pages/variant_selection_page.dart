@@ -263,7 +263,7 @@ class _PageHeader extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           _title.toUpperCase(),
-          style: AppTextStyles.scoreLarge(context).copyWith(
+          style: AppTextStyles.scoreLarge.copyWith(
             fontWeight: FontWeight.w900,
             letterSpacing: -2.0,
             color: cs.onSurface,
@@ -341,7 +341,7 @@ class _LastPlayedCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     _displayTitle,
-                    style: AppTextStyles.scoreSmall(context).copyWith(color: cs.onSurface),
+                    style: AppTextStyles.scoreSmall.copyWith(color: cs.onSurface),
                   ),
                   const SizedBox(height: 8),
                   _MetadataRow(config: config),
@@ -484,7 +484,7 @@ class _VariantRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title.toUpperCase(),
-                    style: AppTextStyles.scoreMedium(context).copyWith(
+                    style: AppTextStyles.scoreMedium.copyWith(
                       fontWeight: FontWeight.w900,
                       letterSpacing: -2.4,
                       color: isSelected ? cs.primaryFixed : cs.onSurface,

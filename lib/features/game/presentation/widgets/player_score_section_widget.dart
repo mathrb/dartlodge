@@ -29,17 +29,17 @@ class PlayerScoreSectionWidget extends StatelessWidget {
 
   TextStyle _activeScoreStyle(BuildContext context) {
     final n = gameState.competitors.length;
-    if (n == 1) return AppTextStyles.scoreActive(context);
-    if (n == 2) return AppTextStyles.scoreLarge(context);
-    if (n <= 4) return AppTextStyles.scoreMedium(context);
-    return AppTextStyles.scoreSmall(context);
+    if (n == 1) return AppTextStyles.scoreActive;
+    if (n == 2) return AppTextStyles.scoreLarge;
+    if (n <= 4) return AppTextStyles.scoreMedium;
+    return AppTextStyles.scoreSmall;
   }
 
   TextStyle _inactiveScoreStyle(BuildContext context) {
     final n = gameState.competitors.length;
-    if (n == 1) return AppTextStyles.scoreInactive(context);
-    if (n == 2) return AppTextStyles.scoreMedium(context);
-    return AppTextStyles.scoreSmall(context);
+    if (n == 1) return AppTextStyles.scoreInactive;
+    if (n == 2) return AppTextStyles.scoreMedium;
+    return AppTextStyles.scoreSmall;
   }
 
   int _roundSum(CompetitorState cs, bool isActive) {

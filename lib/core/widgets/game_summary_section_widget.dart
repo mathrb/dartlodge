@@ -240,7 +240,7 @@ class _BigStat extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: AppTextStyles.scoreMedium(context).copyWith(color: color),
+          style: AppTextStyles.scoreMedium.copyWith(color: color),
         ),
       ],
     );
@@ -345,7 +345,7 @@ class _SmallStat extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           value,
-          style: AppTextStyles.scoreSmall(context).copyWith(
+          style: AppTextStyles.scoreSmall.copyWith(
             color: cs.onSurface,
           ),
         ),

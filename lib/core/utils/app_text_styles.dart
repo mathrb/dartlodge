@@ -7,24 +7,19 @@ import 'package:google_fonts/google_fonts.dart';
 /// Inter: body text, titles, game-specific button labels.
 abstract final class AppTextStyles {
   // ── Score display (Space Grotesk Bold) ──────────────────────────────────
-  // ignore: avoid_unused_parameters
-  static TextStyle scoreActive(BuildContext context) =>
+  static TextStyle get scoreActive =>
       GoogleFonts.spaceGrotesk(fontSize: 80, fontWeight: FontWeight.w700, height: 1.0);
 
-  // ignore: avoid_unused_parameters
-  static TextStyle scoreLarge(BuildContext context) =>
+  static TextStyle get scoreLarge =>
       GoogleFonts.spaceGrotesk(fontSize: 64, fontWeight: FontWeight.w700, height: 1.0);
 
-  // ignore: avoid_unused_parameters
-  static TextStyle scoreInactive(BuildContext context) =>
+  static TextStyle get scoreInactive =>
       GoogleFonts.spaceGrotesk(fontSize: 56, fontWeight: FontWeight.w700, height: 1.0);
 
-  // ignore: avoid_unused_parameters
-  static TextStyle scoreMedium(BuildContext context) =>
+  static TextStyle get scoreMedium =>
       GoogleFonts.spaceGrotesk(fontSize: 48, fontWeight: FontWeight.w700, height: 52 / 48);
 
-  // ignore: avoid_unused_parameters
-  static TextStyle scoreSmall(BuildContext context) =>
+  static TextStyle get scoreSmall =>
       GoogleFonts.spaceGrotesk(fontSize: 36, fontWeight: FontWeight.w700, height: 40 / 36);
 
   // ── Headlines / Display (Space Grotesk) ─────────────────────────────────
@@ -71,14 +66,4 @@ abstract final class AppTextStyles {
 
   static TextStyle get multiplierLabel =>
       GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w500, height: 14 / 11);
-
-  // ── Deprecated aliases — kept until all call sites are migrated ──────────
-  @Deprecated('Use headlineLarge')
-  static TextStyle get headingLarge => headlineLarge;
-
-  @Deprecated('Use headlineMedium')
-  static TextStyle get headingMedium => headlineMedium;
-
-  @Deprecated('Use headlineSmall')
-  static TextStyle get headingSmall => headlineSmall;
 }
