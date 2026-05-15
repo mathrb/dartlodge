@@ -42,6 +42,12 @@ void main() {
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
       endTime: anyNamed('endTime'),
     )).thenAnswer((_) async {});
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
   });
 
   // ── helpers ──────────────────────────────────────────────────────────────
@@ -274,7 +280,29 @@ void main() {
       expect(newState.isComplete, true);
       expect(newState.winnerCompetitorId, 'c1');
 
-      final events = _captureEvents();
+      // Game-end persistence goes through the atomic
+      // appendEventsAndCompleteGame method (#188), NOT appendEvents +
+      // completeGame separately.
+      verifyNever(mockEventRepo.appendEvents(any));
+      verifyNever(mockGameRepo.completeGame(
+        gameId: anyNamed('gameId'),
+        winnerCompetitorId: anyNamed('winnerCompetitorId'),
+        endTime: anyNamed('endTime'),
+      ));
+
+      // Capture and assert the atomic call's args in one verify so the
+      // call isn't consumed twice (each `verify(...)` consumes the call).
+      final call = verify(mockGameRepo.appendEventsAndCompleteGame(
+        events: captureAnyNamed('events'),
+        gameId: captureAnyNamed('gameId'),
+        winnerCompetitorId: captureAnyNamed('winnerCompetitorId'),
+        endTime: anyNamed('endTime'),
+      ))..called(1);
+      final captured = call.captured;
+      final events = captured[0] as List<GameEvent>;
+      expect(captured[1], 'g1');
+      expect(captured[2], 'c1');
+
       expect(events.length, 4);
       expect(events[0].eventType, 'DartThrown');
       expect(events[1].eventType, 'TurnEnded');
@@ -282,13 +310,6 @@ void main() {
       expect(events[2].eventType, 'LegCompleted');
       expect(events[3].eventType, 'GameCompleted');
       expect(events[3].payload['winner_id'], 'c1');
-
-      // completeGame MUST be called
-      verify(mockGameRepo.completeGame(
-        gameId: 'g1',
-        winnerCompetitorId: 'c1',
-        endTime: anyNamed('endTime'),
-      )).called(1);
     });
   });
 

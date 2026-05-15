@@ -135,16 +135,20 @@ class ProcessDartUseCase {
       // the next player on tap.
     }
 
-    // 9. Persist: dart first, then events
+    // 9. Persist: dart first, then events (+ completeGame atomically when
+    //    the game ends, so the event log and games.is_complete can't diverge
+    //    on a crash between the two writes — see #188).
     await _dartThrowRepository.insertDart(dartThrow);
-    await _eventRepository.appendEvents(eventsToStore);
 
     if (needsCompleteGame) {
-      await _gameRepository.completeGame(
+      await _gameRepository.appendEventsAndCompleteGame(
+        events: eventsToStore,
         gameId: currentState.gameId,
         winnerCompetitorId: result.winnerCompetitorId,
         endTime: DateTime.now(),
       );
+    } else {
+      await _eventRepository.appendEvents(eventsToStore);
     }
 
     return finalState;

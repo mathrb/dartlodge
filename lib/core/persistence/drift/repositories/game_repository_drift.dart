@@ -7,6 +7,7 @@ import 'package:drift/drift.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart';
@@ -153,6 +154,104 @@ class GameRepositoryDrift implements GameRepository {
           winnerCompetitorId: Value(winnerCompetitorId),
           endTime: Value(endTime.toIso8601String()),
           gameStateJson: const Value(null), // Clear active state
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<void> appendEventsAndCompleteGame({
+    required List<GameEvent> events,
+    required String gameId,
+    required String? winnerCompetitorId,
+    required DateTime endTime,
+  }) async {
+    // Validate same-game batch BEFORE opening the transaction so a malformed
+    // call short-circuits cleanly (mirrors appendEvents in
+    // GameEventRepositoryDrift).
+    if (events.isNotEmpty) {
+      final gameIds = events.map((e) => e.gameId).toSet();
+      if (gameIds.length != 1 || gameIds.first != gameId) {
+        throw const ValidationException(
+          'appendEventsAndCompleteGame requires all events to belong to the '
+          'target gameId',
+        );
+      }
+    }
+
+    await _db.transaction(() async {
+      // Gate read inside the transaction so a concurrent completeGame can't
+      // slip in between the check and the writes (#189). Both the event
+      // appends and the games-row update must land atomically (#188).
+      final existing = await (_db.select(_db.games)
+            ..where((t) => t.gameId.equals(gameId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (existing == null) {
+        throw GameNotFoundException(gameId);
+      }
+      if (existing.isComplete == 1) {
+        throw GameAlreadyCompleteException(gameId);
+      }
+
+      // Insert events — inlined from GameEventRepositoryDrift.appendEvents so
+      // the transactional boundary stays local. Idempotent on duplicate
+      // event_id (matches sibling-repo behavior).
+      for (final event in events) {
+        try {
+          await _db.into(_db.gameEvents).insert(
+                drift_db.GameEventsCompanion.insert(
+                  eventId: event.eventId,
+                  gameId: event.gameId,
+                  eventType: event.eventType,
+                  localSequence: event.localSequence,
+                  occurredAt: event.occurredAt.toIso8601String(),
+                  payloadJson: json.encode(event.payload),
+                  synced: Value(event.synced ? 1 : 0),
+                  actorId: event.actorId,
+                  globalSequence: Value.absentIfNull(event.globalSequence),
+                  source: Value(event.source.index),
+                ),
+                mode: InsertMode.insertOrFail,
+              );
+        } on Exception catch (e) {
+          if (isUniqueConstraintViolation(e)) {
+            final existingEvent = await (_db.select(_db.gameEvents)
+                  ..where((t) => t.eventId.equals(event.eventId))
+                  ..limit(1))
+                .getSingleOrNull();
+            if (existingEvent != null) continue;
+
+            final seqExisting = await (_db.select(_db.gameEvents)
+                  ..where((t) =>
+                      t.gameId.equals(event.gameId) &
+                      t.localSequence.equals(event.localSequence))
+                  ..limit(1))
+                .getSingleOrNull();
+            if (seqExisting != null &&
+                seqExisting.eventId != event.eventId) {
+              throw SequenceConflictException(
+                  event.gameId, event.localSequence);
+            }
+          }
+          if (e is RepositoryException) rethrow;
+          throw DatabaseException(
+            'Failed to append game event ${event.eventId} to game '
+            '${event.gameId}',
+            cause: e,
+          );
+        }
+      }
+
+      // Mark the game complete inside the same transaction.
+      await (_db.update(_db.games)
+            ..where((t) => t.gameId.equals(gameId)))
+          .write(
+        drift_db.GamesCompanion(
+          isComplete: const Value(1),
+          winnerCompetitorId: Value(winnerCompetitorId),
+          endTime: Value(endTime.toIso8601String()),
+          gameStateJson: const Value(null),
         ),
       );
     });

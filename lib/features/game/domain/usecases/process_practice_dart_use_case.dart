@@ -75,9 +75,11 @@ class ProcessPracticeDartUseCase {
       eventsToStore.add(gameCompletedEvent);
       finalState = _engine.apply(finalState, gameCompletedEvent).state;
 
-      await _eventRepository.appendEvents(eventsToStore);
-
-      await _gameRepository.completeGame(
+      // Atomically append the completion events AND mark the game complete
+      // so a crash between the two writes can't leave the event log saying
+      // "GameCompleted" while games.is_complete stays 0 (#188).
+      await _gameRepository.appendEventsAndCompleteGame(
+        events: eventsToStore,
         gameId: currentState.gameId,
         winnerCompetitorId: result.winnerCompetitorId,
         endTime: DateTime.now(),
