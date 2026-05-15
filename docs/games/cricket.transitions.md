@@ -173,6 +173,17 @@ Evaluated **after each DartThrown** (may trigger LegCompleted immediately).
 | `all_closed == true`   | `score < any opponent's score`      | Continue     |
 | `all_closed == false`  | —                                   | Continue     |
 
+**Tie-breaking (Standard):**
+
+If multiple all-closed competitors satisfy `score ≥ all opponents'
+scores` (only reachable when their scores are equal — two players
+both at the rotation's highest score):
+
+* Winner = player with earliest `close_order`
+
+Mirrors Cut-Throat (G2), NoScore (G3), and Table N. Without this rule
+the implementation falls back to rotation order, which is arbitrary.
+
 ### G2 — Cut-Throat Cricket Win
 
 | State                  | Guard                               | Result                           |

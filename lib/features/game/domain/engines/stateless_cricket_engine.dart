@@ -228,17 +228,23 @@ class StatelessCricketEngine implements GameEngine {
           (a.closeOrder ?? 999999).compareTo(b.closeOrder ?? 999999));
       winnerId = closedCompetitors.first.competitorId;
     } else if (variant == 'standard') {
-      // G1: all-closed + score >= all opponents' scores
-      for (final candidate in closedCompetitors) {
+      // G1: all-closed AND score >= all opponents' scores. When multiple
+      // candidates qualify with equal scores (both closed, same score, no
+      // strict score winner) the comment used to claim a closeOrder
+      // tie-break but the loop walked rotation order — picking whoever
+      // happened to appear first in `state.competitors`. Aligns Standard
+      // with Cut-Throat / NoScore / Table N: sort candidates by
+      // closeOrder ascending so the earliest-closer wins the tie.
+      final sortedClosed = [...closedCompetitors]
+        ..sort((a, b) =>
+            (a.closeOrder ?? 999999).compareTo(b.closeOrder ?? 999999));
+      for (final candidate in sortedClosed) {
         final allOpponentsHaveLowerOrEqualScore = state.competitors
             .where((c) => c.competitorId != candidate.competitorId)
             .every((opp) => candidate.score >= opp.score);
         if (allOpponentsHaveLowerOrEqualScore) {
-          // Candidate wins if their score is highest (or tied)
-          // If tied, use closeOrder tie-break
-          if (winnerId == null) {
-            winnerId = candidate.competitorId;
-          }
+          winnerId = candidate.competitorId;
+          break;
         }
       }
     } else if (variant == 'cut-throat') {

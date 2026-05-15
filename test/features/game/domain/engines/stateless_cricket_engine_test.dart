@@ -569,6 +569,44 @@ void main() {
       expect(result.outcome, LegOutcome.none);
       expect(result.winnerCompetitorId, isNull);
     });
+
+    test('closeOrder tie-break: earliest close wins when scores tied', () {
+      // Both c1 and c2 are all-closed with equal scores. Per the doc
+      // (G1 tie-breaking rule, mirrored from G2/G3/Table N): the earliest
+      // closer wins. c2 has closeOrder 5 (closed earlier), c1 has 10
+      // (closed later), so c2 should win even though c1 appears first
+      // in rotation order — proves the loop respects closeOrder rather
+      // than falling back to iteration order.
+      final marksAll = <String, int>{
+        '15': 3, '16': 3, '17': 3, '18': 3, '19': 3, '20': 3, 'Bull': 3,
+      };
+      final competitors = [
+        CompetitorState(
+          competitorId: 'c1',
+          name: 'Alice',
+          playerIds: ['p1'],
+          score: 50,
+          marksPerNumber: marksAll,
+          closeOrder: 10, // closed later
+        ),
+        CompetitorState(
+          competitorId: 'c2',
+          name: 'Bob',
+          playerIds: ['p2'],
+          score: 50,
+          marksPerNumber: marksAll,
+          closeOrder: 5, // closed earlier
+        ),
+      ];
+      final state =
+          _makeState(turnActive: true, competitors: competitors);
+      // Any dart that triggers win evaluation works — both candidates
+      // already qualify (all-closed + equal scores).
+      final result = engine.apply(
+          state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 1));
+      expect(result.outcome, isNot(LegOutcome.none));
+      expect(result.winnerCompetitorId, 'c2');
+    });
   });
 
   // ─────────────────────────────────────────────────────────────
