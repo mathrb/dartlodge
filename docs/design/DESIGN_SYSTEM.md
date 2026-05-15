@@ -296,11 +296,10 @@ This creates depth separation between the active and inactive player cards witho
 ### Shadow Alpha Tokens
 
 All drop-shadow `Colors.black.withValues(alpha: …)` calls reference one of
-three centralized constants. Never inline a raw float.
+the centralized constants below. Never inline a raw float.
 
 | Token | Value | Usage |
 |---|---|---|
-| `AppTheme.shadowAlphaSheet` | 0.20 | Floating sheets / modal containers (low-elevation lift, soft halo) |
 | `AppTheme.shadowAlphaCard` | 0.40 | Elevated Match Mode card stack (cricket board cards) |
 | `AppTheme.opacityActiveCardShadow` | 0.50 | Active player card only — see spec above |
 
