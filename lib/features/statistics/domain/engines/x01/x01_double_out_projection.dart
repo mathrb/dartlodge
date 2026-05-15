@@ -7,7 +7,7 @@ class X01DoubleOutProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01.doubleOut',
     supportedGameTypes: {GameType.x01},
-    consumedEventTypes: {'DartThrown', 'LegCompleted'},
+    consumedEventTypes: {'TurnStarted', 'DartThrown', 'LegCompleted'},
     scope: ProjectionScope.leg,
   );
 
@@ -18,11 +18,20 @@ class X01DoubleOutProjection extends ProjectionEngine {
   int _doubleAttempts = 0;
   int _doubleSuccesses = 0;
 
+  // Score remaining BEFORE the next dart in the current turn, for the player
+  // this projection is scoped to. Seeded from `TurnStarted.starting_score`,
+  // decremented by each `DartThrown.score`. Null between turns or before the
+  // first `TurnStarted`. `buildDartThrownEvent` does NOT include a
+  // `remaining_after` field, so reconstructing locally is the only way to
+  // know whether a dart was thrown at a checkout-range remaining. See #185.
+  int? _currentTurnRemaining;
+
   @override
   void init(ProjectionContext context) {
     _context = context;
     _doubleAttempts = 0;
     _doubleSuccesses = 0;
+    _currentTurnRemaining = null;
   }
 
   bool get _isActive => _context?.outStrategy != 'straight';
@@ -38,17 +47,25 @@ class X01DoubleOutProjection extends ProjectionEngine {
   void apply(GameEvent event) {
     if (!_isActive) return;
     switch (event.eventType) {
+      case 'TurnStarted':
+        final playerId = event.payload['player_id'] as String?;
+        if (playerId != _context?.playerId) return;
+        final start = (event.payload['starting_score'] as num?)?.toInt();
+        _currentTurnRemaining = start;
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        final remainingAfter =
-            (event.payload['remaining_after'] as num?)?.toInt() ?? -1;
+        final remaining = _currentTurnRemaining;
+        // Without a TurnStarted seed we cannot tell whether the dart was
+        // thrown at a checkout-range remaining; skip rather than guess.
+        // Mirrors the X01 first-nine PPR projection's TurnStarted dependency.
+        if (remaining == null) return;
         final score = (event.payload['score'] as num?)?.toInt() ?? 0;
-        final preDartRemaining = remainingAfter + score;
-        if (preDartRemaining <= 50) {
+        if (remaining <= 50) {
           final s = readSegmentFromPayload(event.payload);
           if (_isDoubleAttemptMultiplier(s.multiplier)) _doubleAttempts++;
         }
+        _currentTurnRemaining = remaining - score;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
         if (winnerId == _context?.playerId) _doubleSuccesses++;
@@ -57,7 +74,15 @@ class X01DoubleOutProjection extends ProjectionEngine {
 
   @override
   void reset(ProjectionScope scope) {
-    // cumulative lifetime stat — no reset
+    // Per-turn remaining is reseeded on the next TurnStarted, so explicit
+    // clearing isn't required for correctness — but doing so on leg/match
+    // resets makes the engine robust if the runner ever feeds events out of
+    // turn-bounded order.
+    if (scope == ProjectionScope.leg || scope == ProjectionScope.match) {
+      _currentTurnRemaining = null;
+    }
+    // doubleAttempts / doubleSuccesses are cumulative lifetime stats —
+    // no reset across leg/match/turn.
   }
 
   @override
