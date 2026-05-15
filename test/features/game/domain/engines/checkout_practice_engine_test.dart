@@ -226,11 +226,78 @@ void main() {
       expect(result.state.dartsThrownInTurn, 3);
     });
 
-    test('bust dart is NOT added to dartThrows', () {
+    test(
+        'bust dart IS recorded in dartThrows + MISS padding (regression for #186)',
+        () {
+      // Bust on dart 1 (turn was empty going in). After:
+      //   dartsThrownInTurn = 3
+      //   dartThrows = [T20, MISS, MISS] — 3-aligned for the dropped turn
+      // Pre-fix this assertion was reversed (dartThrows empty), which silently
+      // lost the bust dart from replay history and any consumer of
+      // CompetitorState.dartThrows.
       final state = _makeState(score: 20, turnActive: true, turnStartScore: 20);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3));
-      expect(result.state.competitors[0].dartThrows, isEmpty);
+      expect(result.state.competitors[0].dartThrows, ['T20', 'MISS', 'MISS']);
+    });
+
+    test('bust on dart 2 records [prev, bust, MISS]', () {
+      // Pre-state: dart 1 already in dartThrows, dart 2 busts.
+      // After: dartThrows length 3, padded with one MISS.
+      const state = GameState(
+        gameId: 'g',
+        gameType: GameType.checkoutPractice,
+        competitors: [
+          CompetitorState(
+            competitorId: 'c1',
+            name: 'Player 1',
+            playerIds: ['p1'],
+            score: 50,
+            isIn: true,
+            dartThrows: ['20'],
+            turnStartScore: 70,
+          ),
+        ],
+        currentTurnIndex: 0,
+        dartsThrownInTurn: 1,
+        isComplete: false,
+        status: GameEngineStatus.inProgress,
+        turnActive: true,
+        startingScore: 170,
+      );
+      final result = engine.apply(
+          state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3));
+      expect(result.isBust, isTrue);
+      expect(result.state.competitors[0].dartThrows, ['20', 'T20', 'MISS']);
+    });
+
+    test('bust on dart 3 records all three darts, no padding', () {
+      // Pre-state: darts 1+2 already in dartThrows, dart 3 busts.
+      const state = GameState(
+        gameId: 'g',
+        gameType: GameType.checkoutPractice,
+        competitors: [
+          CompetitorState(
+            competitorId: 'c1',
+            name: 'Player 1',
+            playerIds: ['p1'],
+            score: 30,
+            isIn: true,
+            dartThrows: ['20', '20'],
+            turnStartScore: 70,
+          ),
+        ],
+        currentTurnIndex: 0,
+        dartsThrownInTurn: 2,
+        isComplete: false,
+        status: GameEngineStatus.inProgress,
+        turnActive: true,
+        startingScore: 170,
+      );
+      final result = engine.apply(
+          state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3));
+      expect(result.isBust, isTrue);
+      expect(result.state.competitors[0].dartThrows, ['20', '20', 'T20']);
     });
 
     test('score landing on 1 is a bust', () {
