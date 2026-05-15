@@ -438,6 +438,49 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       // check: 6 T20s + closing T20+T19+D12 over 9 darts → PPR ≈ 167.
       expect(snap.ppr, greaterThan(0.0));
     });
+
+    test(
+      'multi-game history loads in start_time order without cross-bleed',
+      () async {
+        // Regression for the N+1 → single-query refactor: load events for
+        // every filtered game in one batched SELECT, then group by gameId
+        // in Dart. The assembler is invoked per-game so events from
+        // different games (each with their own per-game `local_sequence`
+        // sequence restarting at 1) must NOT interleave or bleed.
+        //
+        // This test seeds two completed X01 games for the same player and
+        // asserts: both snapshots are returned, in start_time ASC order,
+        // with the correct gameId attribution and accumulating legIndex.
+        await _setupCompletedX01Game(
+            playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+            playerId: 'p1', gameId: 'g1', competitorId: 'c1');
+        await _setupCompletedX01Game(
+            playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+            playerId: 'p1', gameId: 'g2', competitorId: 'c2');
+
+        final history =
+            await statsRepo.getPlayerLegHistory('p1', gameType: GameType.x01);
+        expect(history, hasLength(2));
+
+        // start_time ASC ordering preserved from the games query.
+        expect(history[0].gameId, 'g1');
+        expect(history[1].gameId, 'g2');
+
+        // legIndex accumulates monotonically across games (1, then 2).
+        expect(history[0].legIndex, 1);
+        expect(history[1].legIndex, 2);
+
+        // Both snapshots resolved their own startingScore (no cross-bleed
+        // from one game's config_json into the other's snapshot).
+        expect(history[0].startingScore, 501);
+        expect(history[1].startingScore, 501);
+
+        // Both completed identically (same fixture), so PPR is positive
+        // and equal — proves events were grouped correctly per gameId.
+        expect(history[0].ppr, greaterThan(0.0));
+        expect(history[1].ppr, equals(history[0].ppr));
+      },
+    );
   });
 
   // ── getPlayerX01StartingScores ────────────────────────────────────────────

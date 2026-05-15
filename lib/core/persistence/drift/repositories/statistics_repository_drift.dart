@@ -488,11 +488,47 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
 
       // Per-leg accumulation lives in `PlayerStatsAssembler.legHistoryFromEvents`
       // (CLAUDE.md "Statistics loader vs computation"). The loader's job is
-      // limited to: load events per game, materialise them as domain events,
-      // delegate; concatenate; apply the trailing limit.
+      // limited to: load events for the filtered games, materialise them as
+      // domain events, group by gameId, delegate; concatenate; apply the
+      // trailing limit.
+      //
+      // Single batched event query (replaces the previous N+1 — one query
+      // per game). Sorted by (game_id, local_sequence) per the CLAUDE.md
+      // rule that `local_sequence` is per-game and any multi-game event
+      // query MUST sort that way so projection state doesn't bleed across
+      // game boundaries.
+      final gameIds = [for (final g in filtered) g.gameId];
+      final eventRows = await (_db.select(_db.gameEvents)
+            ..where((e) => e.gameId.isIn(gameIds))
+            ..orderBy([
+              (e) => OrderingTerm.asc(e.gameId),
+              (e) => OrderingTerm.asc(e.localSequence),
+            ]))
+          .get();
+
+      final eventsByGame = <String, List<domain.GameEvent>>{};
+      for (final event in eventRows) {
+        (eventsByGame[event.gameId] ??= <domain.GameEvent>[]).add(
+          domain.GameEvent(
+            eventId: event.eventId,
+            gameId: event.gameId,
+            eventType: event.eventType,
+            localSequence: event.localSequence,
+            occurredAt: DateTime.parse(event.occurredAt),
+            payload: jsonDecode(event.payloadJson) as Map<String, dynamic>,
+            synced: event.synced == 1,
+            actorId: event.actorId,
+            globalSequence: event.globalSequence,
+            source: parseEventSourceFromColumn(event.source),
+          ),
+        );
+      }
+
       final List<PlayerLegSnapshot> snapshots = [];
       int legIndex = 0;
 
+      // Iterate `filtered` to preserve the start_time ASC ordering set up
+      // by the games query.
       for (final gameRow in filtered) {
         final gameId = gameRow.gameId;
         final gameDate =
@@ -505,27 +541,8 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           gameAtcVariant = cfg['variant'] as String? ?? gameAtcVariant;
         } catch (_) {}
 
-        // Get events for this game.
-        final eventRows = await (_db.select(_db.gameEvents)
-              ..where((e) => e.gameId.equals(gameId))
-              ..orderBy([(e) => OrderingTerm.asc(e.localSequence)]))
-            .get();
-
-        final domainEvents = <domain.GameEvent>[
-          for (final event in eventRows)
-            domain.GameEvent(
-              eventId: event.eventId,
-              gameId: event.gameId,
-              eventType: event.eventType,
-              localSequence: event.localSequence,
-              occurredAt: DateTime.parse(event.occurredAt),
-              payload: jsonDecode(event.payloadJson) as Map<String, dynamic>,
-              synced: event.synced == 1,
-              actorId: event.actorId,
-              globalSequence: event.globalSequence,
-              source: parseEventSourceFromColumn(event.source),
-            ),
-        ];
+        final domainEvents =
+            eventsByGame[gameId] ?? const <domain.GameEvent>[];
 
         final gameSnapshots = _assembler.legHistoryFromEvents(
           playerId: playerId,
