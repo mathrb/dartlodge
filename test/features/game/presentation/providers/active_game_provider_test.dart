@@ -55,7 +55,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [
@@ -111,7 +110,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [
@@ -169,7 +167,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [
@@ -292,7 +289,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [
@@ -325,7 +321,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [
@@ -353,7 +348,6 @@ void main() {
         endTime: null,
         winnerCompetitorId: null,
         isComplete: false,
-        activeState: null,
       );
 
       final competitors = [

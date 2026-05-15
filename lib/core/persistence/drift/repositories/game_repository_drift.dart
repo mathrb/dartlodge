@@ -10,7 +10,6 @@ import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
-import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart';
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import '../database.dart' as drift_db;
 import '../repository_parsers.dart';
@@ -73,7 +72,6 @@ class GameRepositoryDrift implements GameRepository {
             endTime: Value.absentIfNull(game.endTime?.toIso8601String()),
             winnerCompetitorId: Value.absentIfNull(game.winnerCompetitorId),
             isComplete: Value(game.isComplete == true ? 1 : 0),
-            gameStateJson: Value.absentIfNull(game.activeState?.toJson() != null ? json.encode(game.activeState!.toJson()) : null),
           ),
           mode: InsertMode.insertOrFail,
         );
@@ -153,7 +151,6 @@ class GameRepositoryDrift implements GameRepository {
           isComplete: const Value(1),
           winnerCompetitorId: Value(winnerCompetitorId),
           endTime: Value(endTime.toIso8601String()),
-          gameStateJson: const Value(null), // Clear active state
         ),
       );
     });
@@ -251,7 +248,6 @@ class GameRepositoryDrift implements GameRepository {
           isComplete: const Value(1),
           winnerCompetitorId: Value(winnerCompetitorId),
           endTime: Value(endTime.toIso8601String()),
-          gameStateJson: const Value(null),
         ),
       );
     });
@@ -358,9 +354,6 @@ class GameRepositoryDrift implements GameRepository {
         endTime: row.endTime != null ? DateTime.parse(row.endTime!) : null,
         winnerCompetitorId: row.winnerCompetitorId,
         isComplete: row.isComplete == 1,
-        activeState: row.gameStateJson != null
-            ? GameStateSnapshot.fromJson(json.decode(row.gameStateJson!))
-            : null,
       );
     } on RepositoryException {
       // parseGameTypeFromColumn already throws DatabaseException — don't
@@ -414,34 +407,6 @@ class GameRepositoryDrift implements GameRepository {
     final results = await query.get();
 
     return results.map(_rowToGame).toList();
-  }
-
-  @override
-  Future<void> saveGameState(String gameId, GameStateSnapshot state) async {
-    await _db.transaction(() async {
-      // Pre-check and write inside one transaction so a concurrent
-      // completeGame can't slip between the gate read and the snapshot
-      // write and leave an "active" snapshot on a just-finalized game
-      // (#189).
-      final existing = await (_db.select(_db.games)
-            ..where((t) => t.gameId.equals(gameId))
-            ..limit(1))
-          .getSingleOrNull();
-      if (existing == null) {
-        throw GameNotFoundException(gameId);
-      }
-      if (existing.isComplete == 1) {
-        throw GameAlreadyCompleteException(gameId);
-      }
-
-      await (_db.update(_db.games)
-            ..where((t) => t.gameId.equals(gameId)))
-          .write(
-        drift_db.GamesCompanion(
-          gameStateJson: Value(json.encode(state.toJson())),
-        ),
-      );
-    });
   }
 
   @override

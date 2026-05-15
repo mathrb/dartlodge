@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Game {
 
-@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType get gameType;@JsonKey(name: 'config_json') GameConfig get config;@JsonKey(name: 'start_time') DateTime get startTime;@JsonKey(name: 'end_time') DateTime? get endTime;@JsonKey(name: 'winner_competitor_id') String? get winnerCompetitorId;@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? get isComplete;@JsonKey(name: 'game_state_json') GameStateSnapshot? get activeState;
+@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType get gameType;@JsonKey(name: 'config_json') GameConfig get config;@JsonKey(name: 'start_time') DateTime get startTime;@JsonKey(name: 'end_time') DateTime? get endTime;@JsonKey(name: 'winner_competitor_id') String? get winnerCompetitorId;@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? get isComplete;
 /// Create a copy of Game
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $GameCopyWith<Game> get copyWith => _$GameCopyWithImpl<Game>(this as Game, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&(identical(other.activeState, activeState) || other.activeState == activeState));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete,activeState);
+int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete);
 
 @override
 String toString() {
-  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete, activeState: $activeState)';
+  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $GameCopyWith<$Res>  {
   factory $GameCopyWith(Game value, $Res Function(Game) _then) = _$GameCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType gameType,@JsonKey(name: 'config_json') GameConfig config,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime? endTime,@JsonKey(name: 'winner_competitor_id') String? winnerCompetitorId,@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? isComplete,@JsonKey(name: 'game_state_json') GameStateSnapshot? activeState
+@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType gameType,@JsonKey(name: 'config_json') GameConfig config,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime? endTime,@JsonKey(name: 'winner_competitor_id') String? winnerCompetitorId,@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? isComplete
 });
 
 
-$GameConfigCopyWith<$Res> get config;$GameStateSnapshotCopyWith<$Res>? get activeState;
+$GameConfigCopyWith<$Res> get config;
 
 }
 /// @nodoc
@@ -65,7 +65,7 @@ class _$GameCopyWithImpl<$Res>
 
 /// Create a copy of Game
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? gameId = null,Object? gameType = null,Object? config = null,Object? startTime = null,Object? endTime = freezed,Object? winnerCompetitorId = freezed,Object? isComplete = freezed,Object? activeState = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? gameId = null,Object? gameType = null,Object? config = null,Object? startTime = null,Object? endTime = freezed,Object? winnerCompetitorId = freezed,Object? isComplete = freezed,}) {
   return _then(_self.copyWith(
 gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -74,8 +74,7 @@ as GameConfig,startTime: null == startTime ? _self.startTime : startTime // igno
 as DateTime,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,winnerCompetitorId: freezed == winnerCompetitorId ? _self.winnerCompetitorId : winnerCompetitorId // ignore: cast_nullable_to_non_nullable
 as String?,isComplete: freezed == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
-as bool?,activeState: freezed == activeState ? _self.activeState : activeState // ignore: cast_nullable_to_non_nullable
-as GameStateSnapshot?,
+as bool?,
   ));
 }
 /// Create a copy of Game
@@ -86,18 +85,6 @@ $GameConfigCopyWith<$Res> get config {
   
   return $GameConfigCopyWith<$Res>(_self.config, (value) {
     return _then(_self.copyWith(config: value));
-  });
-}/// Create a copy of Game
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$GameStateSnapshotCopyWith<$Res>? get activeState {
-    if (_self.activeState == null) {
-    return null;
-  }
-
-  return $GameStateSnapshotCopyWith<$Res>(_self.activeState!, (value) {
-    return _then(_self.copyWith(activeState: value));
   });
 }
 }
@@ -181,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete, @JsonKey(name: 'game_state_json')  GameStateSnapshot? activeState)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Game() when $default != null:
-return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete,_that.activeState);case _:
+return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete);case _:
   return orElse();
 
 }
@@ -202,10 +189,10 @@ return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete, @JsonKey(name: 'game_state_json')  GameStateSnapshot? activeState)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete)  $default,) {final _that = this;
 switch (_that) {
 case _Game():
-return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete,_that.activeState);case _:
+return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -222,10 +209,10 @@ return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.e
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete, @JsonKey(name: 'game_state_json')  GameStateSnapshot? activeState)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'game_id')  String gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01)  GameType gameType, @JsonKey(name: 'config_json')  GameConfig config, @JsonKey(name: 'start_time')  DateTime startTime, @JsonKey(name: 'end_time')  DateTime? endTime, @JsonKey(name: 'winner_competitor_id')  String? winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt)  bool? isComplete)?  $default,) {final _that = this;
 switch (_that) {
 case _Game() when $default != null:
-return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete,_that.activeState);case _:
+return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.endTime,_that.winnerCompetitorId,_that.isComplete);case _:
   return null;
 
 }
@@ -237,7 +224,7 @@ return $default(_that.gameId,_that.gameType,_that.config,_that.startTime,_that.e
 @JsonSerializable()
 
 class _Game implements Game {
-  const _Game({@JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) required this.gameType, @JsonKey(name: 'config_json') required this.config, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') this.endTime, @JsonKey(name: 'winner_competitor_id') this.winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) this.isComplete, @JsonKey(name: 'game_state_json') this.activeState});
+  const _Game({@JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) required this.gameType, @JsonKey(name: 'config_json') required this.config, @JsonKey(name: 'start_time') required this.startTime, @JsonKey(name: 'end_time') this.endTime, @JsonKey(name: 'winner_competitor_id') this.winnerCompetitorId, @JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) this.isComplete});
   factory _Game.fromJson(Map<String, dynamic> json) => _$GameFromJson(json);
 
 @override@JsonKey(name: 'game_id') final  String gameId;
@@ -247,7 +234,6 @@ class _Game implements Game {
 @override@JsonKey(name: 'end_time') final  DateTime? endTime;
 @override@JsonKey(name: 'winner_competitor_id') final  String? winnerCompetitorId;
 @override@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) final  bool? isComplete;
-@override@JsonKey(name: 'game_state_json') final  GameStateSnapshot? activeState;
 
 /// Create a copy of Game
 /// with the given fields replaced by the non-null parameter values.
@@ -262,16 +248,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete)&&(identical(other.activeState, activeState) || other.activeState == activeState));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete,activeState);
+int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete);
 
 @override
 String toString() {
-  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete, activeState: $activeState)';
+  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete)';
 }
 
 
@@ -282,11 +268,11 @@ abstract mixin class _$GameCopyWith<$Res> implements $GameCopyWith<$Res> {
   factory _$GameCopyWith(_Game value, $Res Function(_Game) _then) = __$GameCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType gameType,@JsonKey(name: 'config_json') GameConfig config,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime? endTime,@JsonKey(name: 'winner_competitor_id') String? winnerCompetitorId,@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? isComplete,@JsonKey(name: 'game_state_json') GameStateSnapshot? activeState
+@JsonKey(name: 'game_id') String gameId,@JsonKey(name: 'game_type', unknownEnumValue: GameType.x01) GameType gameType,@JsonKey(name: 'config_json') GameConfig config,@JsonKey(name: 'start_time') DateTime startTime,@JsonKey(name: 'end_time') DateTime? endTime,@JsonKey(name: 'winner_competitor_id') String? winnerCompetitorId,@JsonKey(name: 'is_complete', fromJson: _parseBoolFromDynamic, toJson: _convertBoolToInt) bool? isComplete
 });
 
 
-@override $GameConfigCopyWith<$Res> get config;@override $GameStateSnapshotCopyWith<$Res>? get activeState;
+@override $GameConfigCopyWith<$Res> get config;
 
 }
 /// @nodoc
@@ -299,7 +285,7 @@ class __$GameCopyWithImpl<$Res>
 
 /// Create a copy of Game
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? gameId = null,Object? gameType = null,Object? config = null,Object? startTime = null,Object? endTime = freezed,Object? winnerCompetitorId = freezed,Object? isComplete = freezed,Object? activeState = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? gameId = null,Object? gameType = null,Object? config = null,Object? startTime = null,Object? endTime = freezed,Object? winnerCompetitorId = freezed,Object? isComplete = freezed,}) {
   return _then(_Game(
 gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -308,8 +294,7 @@ as GameConfig,startTime: null == startTime ? _self.startTime : startTime // igno
 as DateTime,endTime: freezed == endTime ? _self.endTime : endTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,winnerCompetitorId: freezed == winnerCompetitorId ? _self.winnerCompetitorId : winnerCompetitorId // ignore: cast_nullable_to_non_nullable
 as String?,isComplete: freezed == isComplete ? _self.isComplete : isComplete // ignore: cast_nullable_to_non_nullable
-as bool?,activeState: freezed == activeState ? _self.activeState : activeState // ignore: cast_nullable_to_non_nullable
-as GameStateSnapshot?,
+as bool?,
   ));
 }
 
@@ -321,18 +306,6 @@ $GameConfigCopyWith<$Res> get config {
   
   return $GameConfigCopyWith<$Res>(_self.config, (value) {
     return _then(_self.copyWith(config: value));
-  });
-}/// Create a copy of Game
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$GameStateSnapshotCopyWith<$Res>? get activeState {
-    if (_self.activeState == null) {
-    return null;
-  }
-
-  return $GameStateSnapshotCopyWith<$Res>(_self.activeState!, (value) {
-    return _then(_self.copyWith(activeState: value));
   });
 }
 }

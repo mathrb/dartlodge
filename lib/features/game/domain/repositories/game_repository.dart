@@ -4,7 +4,6 @@
 import '../entities/game.dart';
 import '../entities/game_event.dart';
 import '../entities/competitor.dart';
-import '../models/game_state_snapshot.dart';
 import '../../../../core/utils/constants.dart';
 
 abstract interface class GameRepository {
@@ -44,13 +43,8 @@ abstract interface class GameRepository {
   /// one competitor.
   Future<void> createGame(Game game, List<Competitor> competitors);
 
-  /// Overwrites the [activeState] column for [gameId].
-  /// Throws [GameNotFoundException] if [gameId] does not exist.
-  /// Throws [GameAlreadyCompleteException] if the game is already marked complete.
-  Future<void> saveGameState(String gameId, GameStateSnapshot state);
-
   /// Marks the game as complete: sets [isComplete = true], [endTime],
-  /// and [winnerCompetitorId]. Clears [activeState].
+  /// and [winnerCompetitorId].
   /// Throws [GameNotFoundException] if [gameId] does not exist.
   /// Throws [GameAlreadyCompleteException] if already complete.
   Future<void> completeGame({

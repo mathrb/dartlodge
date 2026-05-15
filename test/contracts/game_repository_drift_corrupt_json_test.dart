@@ -1,7 +1,7 @@
-// Drift-specific regression tests for #194: corrupted JSON columns
-// (`config_json`, `game_state_json`) must surface as `DatabaseException`
-// rather than raw `FormatException` / `TypeError`. Bypasses the public
-// `createGame` API (which would validate) by inserting directly via drift's
+// Drift-specific regression tests for #194: a corrupted `config_json`
+// column must surface as `DatabaseException` rather than raw
+// `FormatException` / `TypeError`. Bypasses the public `createGame` API
+// (which would validate) by inserting directly via drift's
 // `customStatement` to force the row-to-entity mapping to encounter
 // malformed input.
 
@@ -26,7 +26,6 @@ void main() {
     Future<void> insertMalformedGame({
       required String gameId,
       required String configJson,
-      String? gameStateJson,
     }) async {
       await base.db.rawInsert('games', {
         'game_id': gameId,
@@ -34,7 +33,6 @@ void main() {
         'config_json': configJson,
         'start_time': '2026-05-15T00:00:00.000',
         'is_complete': 0,
-        if (gameStateJson != null) 'game_state_json': gameStateJson,
       });
     }
 
@@ -104,22 +102,5 @@ void main() {
       );
     });
 
-    test('getGame throws DatabaseException on malformed game_state_json',
-        () async {
-      // Valid config_json, malformed game_state_json — the second decode
-      // path inside _rowToGame should still surface DatabaseException.
-      await insertMalformedGame(
-        gameId: 'bad-state',
-        configJson:
-            '{"runtimeType":"x01","startingScore":501,"inStrategy":"straight","outStrategy":"double","legsToWin":1}',
-        gameStateJson: '{also broken',
-      );
-
-      final repo = await base.createGameRepository();
-      await expectLater(
-        () => repo.getGame('bad-state'),
-        throwsA(isA<DatabaseException>()),
-      );
-    });
   });
 }

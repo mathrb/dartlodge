@@ -20,11 +20,6 @@ _Game _$GameFromJson(Map<String, dynamic> json) => _Game(
       : DateTime.parse(json['end_time'] as String),
   winnerCompetitorId: json['winner_competitor_id'] as String?,
   isComplete: _parseBoolFromDynamic(json['is_complete']),
-  activeState: json['game_state_json'] == null
-      ? null
-      : GameStateSnapshot.fromJson(
-          json['game_state_json'] as Map<String, dynamic>,
-        ),
 );
 
 Map<String, dynamic> _$GameToJson(_Game instance) => <String, dynamic>{
@@ -35,7 +30,6 @@ Map<String, dynamic> _$GameToJson(_Game instance) => <String, dynamic>{
   'end_time': instance.endTime?.toIso8601String(),
   'winner_competitor_id': instance.winnerCompetitorId,
   'is_complete': _convertBoolToInt(instance.isComplete),
-  'game_state_json': instance.activeState,
 };
 
 const _$GameTypeEnumMap = {

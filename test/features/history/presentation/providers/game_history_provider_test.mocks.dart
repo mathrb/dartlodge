@@ -10,8 +10,6 @@ import 'package:dart_lodge/features/game/domain/entities/competitor.dart'
     as _i6;
 import 'package:dart_lodge/features/game/domain/entities/game.dart' as _i4;
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart'
-    as _i8;
-import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart'
     as _i7;
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart'
     as _i2;
@@ -99,18 +97,6 @@ class MockGameRepository extends _i1.Mock implements _i2.GameRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> saveGameState(
-    String? gameId,
-    _i7.GameStateSnapshot? state,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#saveGameState, [gameId, state]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
-
-  @override
   _i3.Future<void> completeGame({
     required String? gameId,
     required String? winnerCompetitorId,
@@ -129,7 +115,7 @@ class MockGameRepository extends _i1.Mock implements _i2.GameRepository {
 
   @override
   _i3.Future<void> appendEventsAndCompleteGame({
-    required List<_i8.GameEvent>? events,
+    required List<_i7.GameEvent>? events,
     required String? gameId,
     required String? winnerCompetitorId,
     required DateTime? endTime,

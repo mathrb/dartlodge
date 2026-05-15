@@ -9,16 +9,14 @@ import 'package:dart_lodge/core/utils/constants.dart' as _i5;
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart'
     as _i6;
 import 'package:dart_lodge/features/game/domain/entities/dart_throw.dart'
-    as _i11;
+    as _i10;
 import 'package:dart_lodge/features/game/domain/entities/game.dart' as _i4;
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart'
-    as _i8;
-import 'package:dart_lodge/features/game/domain/models/game_state_snapshot.dart'
     as _i7;
 import 'package:dart_lodge/features/game/domain/repositories/dart_throw_repository.dart'
-    as _i10;
-import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart'
     as _i9;
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart'
+    as _i8;
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart'
     as _i2;
 import 'package:mockito/mockito.dart' as _i1;
@@ -105,18 +103,6 @@ class MockGameRepository extends _i1.Mock implements _i2.GameRepository {
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> saveGameState(
-    String? gameId,
-    _i7.GameStateSnapshot? state,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#saveGameState, [gameId, state]),
-            returnValue: _i3.Future<void>.value(),
-            returnValueForMissingStub: _i3.Future<void>.value(),
-          )
-          as _i3.Future<void>);
-
-  @override
   _i3.Future<void> completeGame({
     required String? gameId,
     required String? winnerCompetitorId,
@@ -135,7 +121,7 @@ class MockGameRepository extends _i1.Mock implements _i2.GameRepository {
 
   @override
   _i3.Future<void> appendEventsAndCompleteGame({
-    required List<_i8.GameEvent>? events,
+    required List<_i7.GameEvent>? events,
     required String? gameId,
     required String? winnerCompetitorId,
     required DateTime? endTime,
@@ -177,43 +163,43 @@ class MockGameRepository extends _i1.Mock implements _i2.GameRepository {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGameEventRepository extends _i1.Mock
-    implements _i9.GameEventRepository {
+    implements _i8.GameEventRepository {
   MockGameEventRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<List<_i8.GameEvent>> getEventsForGame(String? gameId) =>
+  _i3.Future<List<_i7.GameEvent>> getEventsForGame(String? gameId) =>
       (super.noSuchMethod(
             Invocation.method(#getEventsForGame, [gameId]),
-            returnValue: _i3.Future<List<_i8.GameEvent>>.value(
-              <_i8.GameEvent>[],
+            returnValue: _i3.Future<List<_i7.GameEvent>>.value(
+              <_i7.GameEvent>[],
             ),
           )
-          as _i3.Future<List<_i8.GameEvent>>);
+          as _i3.Future<List<_i7.GameEvent>>);
 
   @override
-  _i3.Future<List<_i8.GameEvent>> getEventsSince(
+  _i3.Future<List<_i7.GameEvent>> getEventsSince(
     String? gameId,
     int? afterSequence,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getEventsSince, [gameId, afterSequence]),
-            returnValue: _i3.Future<List<_i8.GameEvent>>.value(
-              <_i8.GameEvent>[],
+            returnValue: _i3.Future<List<_i7.GameEvent>>.value(
+              <_i7.GameEvent>[],
             ),
           )
-          as _i3.Future<List<_i8.GameEvent>>);
+          as _i3.Future<List<_i7.GameEvent>>);
 
   @override
-  _i3.Future<List<_i8.GameEvent>> getUnsyncedEvents() =>
+  _i3.Future<List<_i7.GameEvent>> getUnsyncedEvents() =>
       (super.noSuchMethod(
             Invocation.method(#getUnsyncedEvents, []),
-            returnValue: _i3.Future<List<_i8.GameEvent>>.value(
-              <_i8.GameEvent>[],
+            returnValue: _i3.Future<List<_i7.GameEvent>>.value(
+              <_i7.GameEvent>[],
             ),
           )
-          as _i3.Future<List<_i8.GameEvent>>);
+          as _i3.Future<List<_i7.GameEvent>>);
 
   @override
   _i3.Future<int> getLatestSequence(String? gameId) =>
@@ -224,7 +210,7 @@ class MockGameEventRepository extends _i1.Mock
           as _i3.Future<int>);
 
   @override
-  _i3.Future<void> appendEvent(_i8.GameEvent? event) =>
+  _i3.Future<void> appendEvent(_i7.GameEvent? event) =>
       (super.noSuchMethod(
             Invocation.method(#appendEvent, [event]),
             returnValue: _i3.Future<void>.value(),
@@ -233,7 +219,7 @@ class MockGameEventRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> appendEvents(List<_i8.GameEvent>? events) =>
+  _i3.Future<void> appendEvents(List<_i7.GameEvent>? events) =>
       (super.noSuchMethod(
             Invocation.method(#appendEvents, [events]),
             returnValue: _i3.Future<void>.value(),
@@ -260,48 +246,48 @@ class MockGameEventRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
-  _i3.Stream<List<_i8.GameEvent>> watchEventsForGame(String? gameId) =>
+  _i3.Stream<List<_i7.GameEvent>> watchEventsForGame(String? gameId) =>
       (super.noSuchMethod(
             Invocation.method(#watchEventsForGame, [gameId]),
-            returnValue: _i3.Stream<List<_i8.GameEvent>>.empty(),
+            returnValue: _i3.Stream<List<_i7.GameEvent>>.empty(),
           )
-          as _i3.Stream<List<_i8.GameEvent>>);
+          as _i3.Stream<List<_i7.GameEvent>>);
 }
 
 /// A class which mocks [DartThrowRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockDartThrowRepository extends _i1.Mock
-    implements _i10.DartThrowRepository {
+    implements _i9.DartThrowRepository {
   MockDartThrowRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i3.Future<List<_i11.DartThrow>> getDartsForGame(String? gameId) =>
+  _i3.Future<List<_i10.DartThrow>> getDartsForGame(String? gameId) =>
       (super.noSuchMethod(
             Invocation.method(#getDartsForGame, [gameId]),
-            returnValue: _i3.Future<List<_i11.DartThrow>>.value(
-              <_i11.DartThrow>[],
+            returnValue: _i3.Future<List<_i10.DartThrow>>.value(
+              <_i10.DartThrow>[],
             ),
           )
-          as _i3.Future<List<_i11.DartThrow>>);
+          as _i3.Future<List<_i10.DartThrow>>);
 
   @override
-  _i3.Future<List<_i11.DartThrow>> getDartsForCompetitor(
+  _i3.Future<List<_i10.DartThrow>> getDartsForCompetitor(
     String? gameId,
     String? competitorId,
   ) =>
       (super.noSuchMethod(
             Invocation.method(#getDartsForCompetitor, [gameId, competitorId]),
-            returnValue: _i3.Future<List<_i11.DartThrow>>.value(
-              <_i11.DartThrow>[],
+            returnValue: _i3.Future<List<_i10.DartThrow>>.value(
+              <_i10.DartThrow>[],
             ),
           )
-          as _i3.Future<List<_i11.DartThrow>>);
+          as _i3.Future<List<_i10.DartThrow>>);
 
   @override
-  _i3.Future<List<_i11.DartThrow>> getDartsForPlayer(
+  _i3.Future<List<_i10.DartThrow>> getDartsForPlayer(
     String? playerId, {
     int? limit = 100,
     int? offset = 0,
@@ -312,14 +298,14 @@ class MockDartThrowRepository extends _i1.Mock
               [playerId],
               {#limit: limit, #offset: offset},
             ),
-            returnValue: _i3.Future<List<_i11.DartThrow>>.value(
-              <_i11.DartThrow>[],
+            returnValue: _i3.Future<List<_i10.DartThrow>>.value(
+              <_i10.DartThrow>[],
             ),
           )
-          as _i3.Future<List<_i11.DartThrow>>);
+          as _i3.Future<List<_i10.DartThrow>>);
 
   @override
-  _i3.Future<void> insertDart(_i11.DartThrow? dart) =>
+  _i3.Future<void> insertDart(_i10.DartThrow? dart) =>
       (super.noSuchMethod(
             Invocation.method(#insertDart, [dart]),
             returnValue: _i3.Future<void>.value(),
@@ -328,7 +314,7 @@ class MockDartThrowRepository extends _i1.Mock
           as _i3.Future<void>);
 
   @override
-  _i3.Future<void> insertDarts(List<_i11.DartThrow>? darts) =>
+  _i3.Future<void> insertDarts(List<_i10.DartThrow>? darts) =>
       (super.noSuchMethod(
             Invocation.method(#insertDarts, [darts]),
             returnValue: _i3.Future<void>.value(),
