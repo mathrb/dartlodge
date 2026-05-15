@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/utils/app_text_styles.dart';
-import '../../../../core/utils/app_theme.dart';
-import '../../../../core/utils/constants.dart';
-import '../../../../core/utils/name_formatter.dart';
-import '../../../../core/utils/stat_formatter.dart';
-import '../../domain/entities/game_stats.dart';
+import '../utils/app_text_styles.dart';
+import '../utils/app_theme.dart';
+import '../utils/constants.dart';
+import '../utils/name_formatter.dart';
+import '../utils/stat_formatter.dart';
+import '../../features/statistics/domain/entities/game_stats.dart';
 
 /// Renders the post-game summary body — winner card, opponent cards, and
 /// stats breakdown table — without any page chrome (no header, no footer).

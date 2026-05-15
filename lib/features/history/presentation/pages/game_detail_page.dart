@@ -11,7 +11,7 @@ import 'package:dart_lodge/features/history/presentation/state/game_detail_state
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
-import 'package:dart_lodge/features/statistics/presentation/widgets/game_summary_section_widget.dart';
+import 'package:dart_lodge/core/widgets/game_summary_section_widget.dart';
 
 class GameDetailPage extends ConsumerWidget {
   final String gameId;
