@@ -591,13 +591,21 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   @override
   Future<List<String>> getPlayerCricketVariants(String playerId) async {
     try {
+      // Join through competitors/competitor_players (the "this player
+      // participated" relation) rather than dart_throws. The previous join
+      // dropped cricket games where the player was registered as a
+      // competitor but threw no darts — e.g. a game they joined then
+      // abandoned, or a multi-competitor game that ended before they took
+      // a turn. Sister method getPlayerX01StartingScores already uses this
+      // join shape (#193).
       final sql = '''
         SELECT DISTINCT JSON_EXTRACT(g.config_json, '\$.variant') AS variant
         FROM games g
-        JOIN dart_throws dt ON dt.game_id = g.game_id
+        JOIN competitors c ON g.game_id = c.game_id
+        JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
         WHERE g.game_type = 'cricket'
         AND g.is_complete = 1
-        AND dt.player_id = ?
+        AND cp.player_id = ?
         AND JSON_EXTRACT(g.config_json, '\$.variant') IS NOT NULL
       ''';
 

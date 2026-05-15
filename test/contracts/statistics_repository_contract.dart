@@ -493,6 +493,50 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       final variants = await statsRepo.getPlayerCricketVariants('p1');
       expect(variants, contains('standard'));
     });
+
+    test(
+        'returns variants for cricket games where player threw no darts '
+        '(regression for #193)', () async {
+      // Player registered as a competitor but never took a turn (e.g. game
+      // was created and immediately abandoned/auto-completed). Pre-fix the
+      // SQL joined through dart_throws which dropped the row entirely.
+      await _createPlayer(playerRepo, 'p1');
+      await gameRepo.createGame(
+        Game(
+          gameId: 'g-empty',
+          gameType: GameType.cricket,
+          config: const GameConfig.cricket(
+            variant: 'cut-throat',
+            numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+            legsToWin: 1,
+          ),
+          startTime: DateTime.now(),
+          isComplete: false,
+        ),
+        [
+          Competitor(
+            competitorId: 'c-empty',
+            gameId: 'g-empty',
+            type: CompetitorType.solo,
+            name: 'Player p1',
+            players: [
+              const CompetitorPlayer(playerId: 'p1', rotationPosition: 0),
+            ],
+          ),
+        ],
+      );
+      await gameRepo.completeGame(
+        gameId: 'g-empty',
+        winnerCompetitorId: null,
+        endTime: DateTime.now(),
+      );
+
+      final variants = await statsRepo.getPlayerCricketVariants('p1');
+      expect(variants, contains('cut-throat'),
+          reason:
+              'variant must appear even when the player threw no darts in '
+              'the cricket game');
+    });
   });
 }
 
