@@ -418,7 +418,7 @@ void main() {
     });
   });
 
-  group('legHistoryFromEvents — non-ATC practice → raw leg score', () {
+  group('legHistoryFromEvents — non-ATC practice score semantics', () {
     test('Shanghai practice: practiceScore = legScoreTotal', () {
       final events = [
         turnStarted(),
@@ -438,6 +438,78 @@ void main() {
         events: events,
       );
       expect(snaps.single.practiceScore, 6.0);
+    });
+
+    test(
+        "Bob's 27: practiceScore uses bonus/penalty mechanics, not raw sum "
+        '(regression for #190)', () {
+      // Round 1 (target = 1): player throws D1 → 1 double hit on target.
+      // Round 2 (target = 2): no doubles on 2.
+      //
+      // Canonical Bob's 27 score:
+      //   Start: 27
+      //   Round 1: +1 * 1 * 2 = +2  → 29
+      //   Round 2: -2 * 2 = -4      → 25
+      //
+      // Pre-fix: practiceScore = sum of DartThrown.score across the leg.
+      //   = (1*2)  +  0  +  0   from round 1 (D1=2)
+      //   + (1*1)  + (5*1) + (8*1) from round 2 (random misses 1,5,8 = 14)
+      //   = 16   (wrong — would plot a wildly different trend line)
+      //
+      // Post-fix: practiceScore = 25.0 (matches _computeBobs27Stats).
+      final events = [
+        turnStarted(turnNumber: 1),
+        dart(1, 2),  // D1 — hits round 1's target
+        dart(20, 1), // miss target 1
+        dart(20, 1),
+        turnEnded(),
+        turnStarted(turnNumber: 2),
+        dart(1, 1),  // S1 — wrong round; not target 2
+        dart(5, 1),
+        dart(8, 1),
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.bobs27,
+        startingScore: null,
+        events: events,
+      );
+      expect(snaps.single.practiceScore, 25.0,
+          reason:
+              "Bob's 27 score must use the canonical bonus/penalty replay, "
+              'not a raw sum of dart scores');
+    });
+
+    test(
+        'Checkout Practice: practiceScore is null (no per-leg score concept)',
+        () {
+      // Checkout practice has no canonical per-leg score — only attempts /
+      // successes. Pre-fix legHistoryFromEvents emitted a meaningless raw
+      // dart sum here; post-fix should be null.
+      final events = [
+        turnStarted(),
+        dart(20, 3), // T20 = 60
+        dart(20, 3), // T20 = 60
+        dart(25, 2), // DB = 50
+        turnEnded(reason: 'checkout'),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.checkoutPractice,
+        startingScore: null,
+        events: events,
+      );
+      expect(snaps.single.practiceScore, isNull,
+          reason: 'Checkout Practice has no per-leg score');
     });
   });
 

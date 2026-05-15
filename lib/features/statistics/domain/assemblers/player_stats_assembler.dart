@@ -60,6 +60,47 @@ class PlayerStatsAssembler {
     GameType.checkoutPractice,
   };
 
+  /// Computes the canonical Bob's 27 score for one leg of events, scoped to
+  /// [playerId]. Mirrors the bonus/penalty replay in `_computeBobs27Stats`:
+  /// starts at 27, adds `turnDoubleHits * currentRound * 2` per turn that
+  /// landed at least one double on the round's target, otherwise subtracts
+  /// `currentRound * 2`. Returns null if no player turns were observed.
+  /// See #190.
+  static int? _bobs27LegScore(List<GameEvent> legEvents, String playerId) {
+    int score = 27;
+    int currentRound = 1;
+    int turnDoubleHits = 0;
+    bool inPlayerTurn = false;
+    bool sawAnyTurn = false;
+
+    for (final event in legEvents) {
+      final epid = event.payload['player_id'] as String?;
+      switch (event.eventType) {
+        case 'TurnStarted':
+          if (epid != playerId) break;
+          inPlayerTurn = true;
+          turnDoubleHits = 0;
+          sawAnyTurn = true;
+        case 'DartThrown':
+          if (!inPlayerTurn || epid != playerId) break;
+          final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
+          final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
+          if (mult == 2 && seg == currentRound) turnDoubleHits++;
+        case 'TurnEnded':
+          if (!inPlayerTurn || epid != playerId) break;
+          inPlayerTurn = false;
+          if (turnDoubleHits > 0) {
+            score += turnDoubleHits * currentRound * 2;
+          } else {
+            score -= currentRound * 2;
+          }
+          currentRound++;
+      }
+    }
+
+    return sawAnyTurn ? score : null;
+  }
+
   /// Strips DartThrown events whose IDs appear in any DartCorrected
   /// payload's `original_event_id`. Replay-aware code must skip the
   /// original (pre-correction) darts so the snapshot reflects post-undo
@@ -959,11 +1000,44 @@ class PlayerStatsAssembler {
 
           double? practiceScore;
           if (isPracticeGame) {
-            if (gameType == GameType.aroundTheClock) {
-              practiceScore =
-                  atcDartsAtTarget > 0 ? atcHits / atcDartsAtTarget : null;
-            } else {
-              practiceScore = legScoreTotal.toDouble();
+            // Per-leg score must match the canonical score the game-specific
+            // _compute*Stats methods produce — otherwise the leg-history
+            // trend chart plots a different series than the post-game /
+            // detail screens (#190).
+            //
+            // - aroundTheClock: hit ratio (matches _computeAtcStats).
+            // - bobs27: bonus/penalty mechanics (matches _computeBobs27Stats);
+            //   raw dart sum is WRONG because Bob's 27 doesn't accumulate
+            //   dart values — doubles on the current round target add
+            //   `currentRound * 2`, misses subtract `currentRound * 2`.
+            // - shanghai / catch40: raw dart sum matches the existing
+            //   _computeShanghaiStats / _computeCatch40Stats logic. Both
+            //   methods sum `DartThrown.score` directly. (Whether THAT
+            //   matches the canonical game-rule score is a separate concern
+            //   tracked outside #190; here we just keep the trend chart
+            //   consistent with the detail screen.)
+            // - checkoutPractice: no per-leg score concept; the canonical
+            //   metric is attempts/successes (consumer should pivot to
+            //   _computeCheckoutStats for that).
+            switch (gameType) {
+              case GameType.aroundTheClock:
+                practiceScore =
+                    atcDartsAtTarget > 0 ? atcHits / atcDartsAtTarget : null;
+              case GameType.bobs27:
+                practiceScore =
+                    _bobs27LegScore(currentLegEvents, playerId)?.toDouble();
+              case GameType.shanghai:
+              case GameType.catch40:
+                practiceScore = legScoreTotal.toDouble();
+              case GameType.checkoutPractice:
+                practiceScore = null;
+              case GameType.x01:
+              case GameType.cricket:
+              case GameType.countUp:
+                // Not practice game types — should be unreachable given the
+                // isPracticeGame gate, but kept explicit to satisfy the
+                // exhaustive switch.
+                practiceScore = null;
             }
           }
 
