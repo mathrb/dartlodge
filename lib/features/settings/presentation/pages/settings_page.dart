@@ -6,6 +6,7 @@ import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/utils/app_spacing.dart';
 import '../providers/settings_provider.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -250,7 +251,10 @@ class _ThemeModeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space4,
+        vertical: AppSpacing.space2,
+      ),
       child: SegmentedButton<ThemeMode>(
         segments: const [
           ButtonSegment(
