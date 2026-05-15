@@ -90,10 +90,24 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
 
     // Bust: score < 0, lands on 1, or reaches 0 on non-double.
     // dartsThrownInTurn is set to 3 so the provider treats the turn as full
-    // and the NEXT ROUND button becomes available immediately.
+    // and the NEXT ROUND button becomes available immediately. Record the
+    // bust dart in dartThrows (X01 does the same — without this, replay and
+    // any other consumer of CompetitorState.dartThrows would silently lose
+    // the dart that caused the bust). Pad remaining slots with 'MISS' so
+    // dartThrows.length stays aligned with dartsThrownInTurn = 3.
     if (newScore < 2) {
+      final canonical =
+          Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
+      final dartsActuallyThrown = state.dartsThrownInTurn + 1;
+      final missesToPad = 3 - dartsActuallyThrown;
+      final paddedDartThrows = [
+        ...competitor.dartThrows,
+        canonical,
+        for (var i = 0; i < missesToPad; i++) 'MISS',
+      ];
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         score: competitor.turnStartScore ?? competitor.score,
+        dartThrows: paddedDartThrows,
       );
       return EngineResult(
         state: state.copyWith(
