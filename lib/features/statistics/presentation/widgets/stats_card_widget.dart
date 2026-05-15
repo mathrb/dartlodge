@@ -39,7 +39,7 @@ class StatsCardWidget extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               value,
-              style: AppTextStyles.scoreSmall(context).copyWith(
+              style: AppTextStyles.scoreSmall.copyWith(
                 color: theme.colorScheme.primary,
               ),
             ),

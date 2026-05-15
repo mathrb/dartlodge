@@ -65,7 +65,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
       children: [
         Text(
           _targetLabel,
-          style: AppTextStyles.scoreMedium(context).copyWith(
+          style: AppTextStyles.scoreMedium.copyWith(
             color: colorScheme.primary,
           ),
           textAlign: TextAlign.center,

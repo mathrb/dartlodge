@@ -98,12 +98,12 @@ class AtcSummaryColumnWidget extends StatelessWidget {
             overall != null
                 ? Text(
                     fmtRate(overall),
-                    style: AppTextStyles.scoreSmall(context)
+                    style: AppTextStyles.scoreSmall
                         .copyWith(color: colorScheme.primary),
                   )
                 : Text(
                     '—',
-                    style: AppTextStyles.scoreSmall(context)
+                    style: AppTextStyles.scoreSmall
                         .copyWith(color: colorScheme.onSurfaceVariant),
                   ),
             Divider(color: colorScheme.outline, height: 16),

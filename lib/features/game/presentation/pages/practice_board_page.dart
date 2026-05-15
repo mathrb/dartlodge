@@ -341,7 +341,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         title: Text(
           title,
-          style: AppTextStyles.headingLarge.copyWith(
+          style: AppTextStyles.headlineLarge.copyWith(
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
@@ -374,7 +374,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         title: Text(
           title,
-          style: AppTextStyles.headingLarge.copyWith(
+          style: AppTextStyles.headlineLarge.copyWith(
             color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
