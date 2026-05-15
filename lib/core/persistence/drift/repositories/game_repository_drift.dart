@@ -129,23 +129,25 @@ class GameRepositoryDrift implements GameRepository {
     required String? winnerCompetitorId,
     required DateTime endTime,
   }) async {
-    // Pre-check: game must exist and not already be complete
-    final existing = await (_db.select(_db.games)
-          ..where((t) => t.gameId.equals(gameId))
-          ..limit(1))
-        .getSingleOrNull();
+    await _db.transaction(() async {
+      // Pre-check and write inside the same transaction so two concurrent
+      // completeGame calls can't both pass the is_complete==0 gate and
+      // race their writes — last-writer-wins would otherwise lose one
+      // winner / endTime (#189).
+      final existing = await (_db.select(_db.games)
+            ..where((t) => t.gameId.equals(gameId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (existing == null) {
+        throw GameNotFoundException(gameId);
+      }
+      if (existing.isComplete == 1) {
+        throw GameAlreadyCompleteException(gameId);
+      }
 
-    if (existing == null) {
-      throw GameNotFoundException(gameId);
-    }
-
-    if (existing.isComplete == 1) {
-      throw GameAlreadyCompleteException(gameId);
-    }
-
-    await (_db.update(_db.games)
-      ..where((t) => t.gameId.equals(gameId)))
-      .write(
+      await (_db.update(_db.games)
+            ..where((t) => t.gameId.equals(gameId)))
+          .write(
         drift_db.GamesCompanion(
           isComplete: const Value(1),
           winnerCompetitorId: Value(winnerCompetitorId),
@@ -153,6 +155,7 @@ class GameRepositoryDrift implements GameRepository {
           gameStateJson: const Value(null), // Clear active state
         ),
       );
+    });
   }
 
   @override
@@ -316,27 +319,30 @@ class GameRepositoryDrift implements GameRepository {
 
   @override
   Future<void> saveGameState(String gameId, GameStateSnapshot state) async {
-    // Pre-check: game must exist and not be complete
-    final existing = await (_db.select(_db.games)
-          ..where((t) => t.gameId.equals(gameId))
-          ..limit(1))
-        .getSingleOrNull();
+    await _db.transaction(() async {
+      // Pre-check and write inside one transaction so a concurrent
+      // completeGame can't slip between the gate read and the snapshot
+      // write and leave an "active" snapshot on a just-finalized game
+      // (#189).
+      final existing = await (_db.select(_db.games)
+            ..where((t) => t.gameId.equals(gameId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (existing == null) {
+        throw GameNotFoundException(gameId);
+      }
+      if (existing.isComplete == 1) {
+        throw GameAlreadyCompleteException(gameId);
+      }
 
-    if (existing == null) {
-      throw GameNotFoundException(gameId);
-    }
-
-    if (existing.isComplete == 1) {
-      throw GameAlreadyCompleteException(gameId);
-    }
-
-    await (_db.update(_db.games)
-      ..where((t) => t.gameId.equals(gameId)))
-      .write(
+      await (_db.update(_db.games)
+            ..where((t) => t.gameId.equals(gameId)))
+          .write(
         drift_db.GamesCompanion(
           gameStateJson: Value(json.encode(state.toJson())),
         ),
       );
+    });
   }
 
   @override

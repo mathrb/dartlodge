@@ -104,37 +104,38 @@ class DartThrowRepositoryDrift implements DartThrowRepository {
 
   @override
   Future<void> insertDart(DartThrow dart) async {
-    // Verify game exists and is not complete
-    final gameQuery = _db.select(_db.games)
-      ..where((t) => t.gameId.equals(dart.gameId))
-      ..limit(1);
-
-    final game = await gameQuery.getSingleOrNull();
-
-    if (game == null) {
-      throw GameNotFoundException(dart.gameId);
-    }
-
-    if (game.isComplete == 1) {
-      throw GameAlreadyCompleteException(dart.gameId);
-    }
-
     try {
-      await _db.into(_db.dartThrows).insert(
-        drift_db.DartThrowsCompanion.insert(
-          dartId: dart.dartId,
-          gameId: dart.gameId,
-          competitorId: dart.competitorId,
-          playerId: dart.playerId,
-          turnNumber: dart.turnNumber,
-          dartNumber: dart.dartNumber,
-          segment: dart.segment,
-          score: dart.score,
-          x: Value.absentIfNull(dart.x),
-          y: Value.absentIfNull(dart.y),
-        ),
-        mode: InsertMode.insertOrFail,
-      );
+      await _db.transaction(() async {
+        // Pre-check and insert are wrapped in a transaction so a concurrent
+        // completeGame can't slip between the gate read and the insert and
+        // leave a dart on a just-finalized game (#189).
+        final game = await (_db.select(_db.games)
+              ..where((t) => t.gameId.equals(dart.gameId))
+              ..limit(1))
+            .getSingleOrNull();
+        if (game == null) {
+          throw GameNotFoundException(dart.gameId);
+        }
+        if (game.isComplete == 1) {
+          throw GameAlreadyCompleteException(dart.gameId);
+        }
+
+        await _db.into(_db.dartThrows).insert(
+          drift_db.DartThrowsCompanion.insert(
+            dartId: dart.dartId,
+            gameId: dart.gameId,
+            competitorId: dart.competitorId,
+            playerId: dart.playerId,
+            turnNumber: dart.turnNumber,
+            dartNumber: dart.dartNumber,
+            segment: dart.segment,
+            score: dart.score,
+            x: Value.absentIfNull(dart.x),
+            y: Value.absentIfNull(dart.y),
+          ),
+          mode: InsertMode.insertOrFail,
+        );
+      });
     } on Exception catch (e) {
       if (isUniqueConstraintViolation(e)) {
         throw DuplicateDartException(dart.dartId);
@@ -151,23 +152,33 @@ class DartThrowRepositoryDrift implements DartThrowRepository {
   Future<void> insertDarts(List<DartThrow> darts) async {
     if (darts.isEmpty) return;
 
-    // Verify all darts belong to the same game and it's not complete
+    // Validate ALL darts target the same gameId. Pre-fix the code only
+    // checked darts.first.gameId, so a malformed batch where later darts
+    // referenced a different (possibly completed) game would slip past
+    // the gate and either succeed against the wrong game or trip a
+    // generic FK error (#189). Mirror appendEvents' same-game check.
+    final gameIds = darts.map((d) => d.gameId).toSet();
+    if (gameIds.length > 1) {
+      throw DatabaseException(
+        'insertDarts called with darts from multiple games: $gameIds',
+      );
+    }
     final gameId = darts.first.gameId;
-    final gameQuery = _db.select(_db.games)
-      ..where((t) => t.gameId.equals(gameId))
-      ..limit(1);
-
-    final game = await gameQuery.getSingleOrNull();
-
-    if (game == null) {
-      throw GameNotFoundException(gameId);
-    }
-
-    if (game.isComplete == 1) {
-      throw GameAlreadyCompleteException(gameId);
-    }
 
     await _db.transaction(() async {
+      // Pre-check and insert wrapped in the same transaction so a
+      // concurrent completeGame can't slip in between (#189).
+      final game = await (_db.select(_db.games)
+            ..where((t) => t.gameId.equals(gameId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (game == null) {
+        throw GameNotFoundException(gameId);
+      }
+      if (game.isComplete == 1) {
+        throw GameAlreadyCompleteException(gameId);
+      }
+
       for (final dart in darts) {
         try {
           await _db.into(_db.dartThrows).insert(
@@ -201,36 +212,33 @@ class DartThrowRepositoryDrift implements DartThrowRepository {
 
   @override
   Future<void> deleteDart(String dartId) async {
-    // Get the dart to verify it exists and get game info
-    final dartQuery = _db.select(_db.dartThrows)
-      ..where((t) => t.dartId.equals(dartId))
-      ..limit(1);
+    await _db.transaction(() async {
+      // Look up dart + game and delete inside one transaction so a
+      // concurrent completeGame can't slip between the gate read and the
+      // delete and leave a half-finished undo on a just-finalized game
+      // (#189).
+      final dart = await (_db.select(_db.dartThrows)
+            ..where((t) => t.dartId.equals(dartId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (dart == null) {
+        throw DartNotFoundException(dartId);
+      }
 
-    final dart = await dartQuery.getSingleOrNull();
+      final game = await (_db.select(_db.games)
+            ..where((t) => t.gameId.equals(dart.gameId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (game == null) {
+        throw GameNotFoundException(dart.gameId);
+      }
+      if (game.isComplete == 1) {
+        throw GameAlreadyCompleteException(dart.gameId);
+      }
 
-    if (dart == null) {
-      throw DartNotFoundException(dartId);
-    }
-
-    final gameId = dart.gameId;
-
-    // Verify game is not complete
-    final gameQuery = _db.select(_db.games)
-      ..where((t) => t.gameId.equals(gameId))
-      ..limit(1);
-
-    final game = await gameQuery.getSingleOrNull();
-
-    if (game == null) {
-      throw GameNotFoundException(gameId);
-    }
-
-    if (game.isComplete == 1) {
-      throw GameAlreadyCompleteException(gameId);
-    }
-
-    await (_db.delete(_db.dartThrows)
-      ..where((t) => t.dartId.equals(dartId)))
-      .go();
+      await (_db.delete(_db.dartThrows)
+            ..where((t) => t.dartId.equals(dartId)))
+          .go();
+    });
   }
 }
