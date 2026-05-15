@@ -63,13 +63,30 @@ class _DartboardPainter extends CustomPainter {
   static const double _rDoubleInner = 0.825;
   static const double _rDoubleOuter = 0.900;
 
-  // Base colors
-  static const Color _darkBase = Color(0xFF212121);
-  static const Color _lightBase = Color(0xFFE0D5C1);
-  static final Color _darkColored = Colors.green[800]!;
-  static final Color _lightColored = Colors.red[800]!;
-  static final Color _bullSingle = Colors.green[600]!;
-  static final Color _bullDouble = Colors.red[700]!;
+  // ── Dartboard segment colors ────────────────────────────────────────────
+  //
+  // These are intentionally hardcoded literals, NOT theme tokens. The widget
+  // renders an approximation of a physical dartboard, whose segment colours
+  // are part of the sport's visual identity: black/cream alternating singles,
+  // red/green for the double and triple rings, red bullseye with green outer
+  // bull. Substituting `cs.primary` / `cs.error` etc. would make the board
+  // render in arbitrary theme colours and break recognition.
+  //
+  // The label `Colors.white` further down (around line ~338) is similarly
+  // canonical — real boards have white painted numbers on the outer ring.
+  //
+  // If a future themed-board variant is wanted (e.g. "high-contrast" or
+  // "monochrome"), it should be a separate widget or a config-driven
+  // palette swap, not a blanket migration of these constants. Audit issues
+  // flagging these as "hardcoded colours" should be closed with a pointer
+  // to this comment.
+
+  static const Color _darkBase = Color(0xFF212121); // segment black
+  static const Color _lightBase = Color(0xFFE0D5C1); // segment cream
+  static final Color _darkColored = Colors.green[800]!; // doubles/triples green
+  static final Color _lightColored = Colors.red[800]!;  // doubles/triples red
+  static final Color _bullSingle = Colors.green[600]!;  // outer bull (25)
+  static final Color _bullDouble = Colors.red[700]!;    // bullseye (50)
 
   bool get _hasHighlight {
     if (noHighlight) return false;
@@ -335,6 +352,9 @@ class _DartboardPainter extends CustomPainter {
         text: TextSpan(
           text: '$number',
           style: TextStyle(
+            // Canonical white — matches the white-painted numbers on a
+            // physical dartboard's outer ring. Not themed; see the
+            // segment-colour comment block at the top of the class.
             color: Colors.white.withValues(alpha: opacity),
             fontSize: radius * 0.08,
             fontWeight: FontWeight.bold,
