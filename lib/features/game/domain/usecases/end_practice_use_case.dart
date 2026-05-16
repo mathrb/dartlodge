@@ -1,6 +1,8 @@
-// End Checkout Practice Use Case
-// Allows explicit early exit from a checkout practice session before the
-// engine auto-completes. Marks the game complete with no winner.
+// End Practice Use Case
+// Allows explicit early exit ("End Drill") from any practice session before
+// the engine auto-completes. Marks the game complete with no winner. The
+// logic is game-type agnostic: every practice engine's GameCompleted handler
+// accepts a null winner.
 
 import '../engines/base_game_engine.dart';
 import '../entities/game_event.dart';
@@ -10,11 +12,11 @@ import '../models/game_state.dart';
 import 'package:uuid/uuid.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 
-class EndCheckoutPracticeUseCase {
+class EndPracticeUseCase {
   final GameRepository _gameRepository;
   final GameEventRepository _eventRepository;
 
-  EndCheckoutPracticeUseCase(
+  EndPracticeUseCase(
     this._gameRepository,
     this._eventRepository,
   );

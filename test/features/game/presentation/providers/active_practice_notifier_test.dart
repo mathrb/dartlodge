@@ -302,7 +302,32 @@ void main() {
 
     final s = container.read(activePracticeProvider('g1')).value!;
     expect(s.gameState.isComplete, true);
-    // EndCheckoutPracticeUseCase completes with no winner
+    // EndPracticeUseCase completes with no winner
     expect(s.pendingGameWinnerId, null);
+  });
+
+  // ── 10. endDrill completes a non-checkout drill (regression for #224) ──────
+  //
+  // Before #224, _endDrillImpl early-returned for any gameType other than
+  // checkoutPractice, leaving the game is_complete=0 and bricking new starts.
+
+  test('endDrill completes a non-checkout (ATC) drill with no winner',
+      () async {
+    stubBuild(game: makeAtcGame(), events: [turnStartedEvent()]);
+    await container.read(activePracticeProvider('g1').future);
+
+    await container
+        .read(activePracticeProvider('g1').notifier)
+        .endDrill();
+
+    final s = container.read(activePracticeProvider('g1')).value!;
+    expect(s.gameState.isComplete, true);
+    expect(s.pendingGameWinnerId, null);
+    verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: null,
+      endTime: anyNamed('endTime'),
+    )).called(1);
   });
 }

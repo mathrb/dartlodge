@@ -247,11 +247,10 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     if (current == null) return;
 
     final gs = current.gameState;
-    if (gs.gameType != GameType.checkoutPractice) return;
 
     state = await AsyncValue.guard(() async {
       final newGs =
-          await ref.read(endCheckoutPracticeUseCaseProvider).execute(gs);
+          await ref.read(endPracticeUseCaseProvider).execute(gs);
       return ActivePracticeState(
         gameState: newGs,
         pendingGameWinnerId: newGs.winnerCompetitorId,
