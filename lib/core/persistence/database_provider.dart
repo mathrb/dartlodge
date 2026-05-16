@@ -30,7 +30,7 @@ import '../../features/game/domain/engines/stateless_count_up_engine.dart';
 import '../../features/game/domain/usecases/process_dart_use_case.dart';
 import '../../features/game/domain/usecases/process_cricket_dart_use_case.dart';
 import '../../features/game/domain/usecases/process_practice_dart_use_case.dart';
-import '../../features/game/domain/usecases/end_checkout_practice_use_case.dart';
+import '../../features/game/domain/usecases/end_practice_use_case.dart';
 import '../../features/game/domain/usecases/undo_last_dart_use_case.dart';
 import '../../features/game/domain/usecases/create_game_use_case.dart';
 import '../../features/game/domain/models/game_config.dart';
@@ -262,10 +262,10 @@ UndoLastDartUseCase undoPracticeCheckoutPracticeLastDartUseCase(Ref ref) =>
       ref.watch(checkoutPracticeEngineProvider),
     );
 
-// Checkout practice exit use case
+// Practice drill exit use case ("End Drill") — works for every practice type
 @Riverpod(keepAlive: true)
-EndCheckoutPracticeUseCase endCheckoutPracticeUseCase(Ref ref) =>
-    EndCheckoutPracticeUseCase(
+EndPracticeUseCase endPracticeUseCase(Ref ref) =>
+    EndPracticeUseCase(
       ref.watch(gameRepositoryProvider),
       ref.watch(gameEventRepositoryProvider),
     );

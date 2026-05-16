@@ -1643,54 +1643,53 @@ final class UndoPracticeCheckoutPracticeLastDartUseCaseProvider
 String _$undoPracticeCheckoutPracticeLastDartUseCaseHash() =>
     r'bf5a3bdf1267ef8c18d199488cee1ef1eb2c882f';
 
-@ProviderFor(endCheckoutPracticeUseCase)
-final endCheckoutPracticeUseCaseProvider =
-    EndCheckoutPracticeUseCaseProvider._();
+@ProviderFor(endPracticeUseCase)
+final endPracticeUseCaseProvider = EndPracticeUseCaseProvider._();
 
-final class EndCheckoutPracticeUseCaseProvider
+final class EndPracticeUseCaseProvider
     extends
         $FunctionalProvider<
-          EndCheckoutPracticeUseCase,
-          EndCheckoutPracticeUseCase,
-          EndCheckoutPracticeUseCase
+          EndPracticeUseCase,
+          EndPracticeUseCase,
+          EndPracticeUseCase
         >
-    with $Provider<EndCheckoutPracticeUseCase> {
-  EndCheckoutPracticeUseCaseProvider._()
+    with $Provider<EndPracticeUseCase> {
+  EndPracticeUseCaseProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'endCheckoutPracticeUseCaseProvider',
+        name: r'endPracticeUseCaseProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$endCheckoutPracticeUseCaseHash();
+  String debugGetCreateSourceHash() => _$endPracticeUseCaseHash();
 
   @$internal
   @override
-  $ProviderElement<EndCheckoutPracticeUseCase> $createElement(
+  $ProviderElement<EndPracticeUseCase> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  EndCheckoutPracticeUseCase create(Ref ref) {
-    return endCheckoutPracticeUseCase(ref);
+  EndPracticeUseCase create(Ref ref) {
+    return endPracticeUseCase(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(EndCheckoutPracticeUseCase value) {
+  Override overrideWithValue(EndPracticeUseCase value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<EndCheckoutPracticeUseCase>(value),
+      providerOverride: $SyncValueProvider<EndPracticeUseCase>(value),
     );
   }
 }
 
-String _$endCheckoutPracticeUseCaseHash() =>
-    r'4c654335729ff4c6b6438c4e8458319a4cc3af21';
+String _$endPracticeUseCaseHash() =>
+    r'34a35681dc9f14a2a4c227aea98eac5c41aeec93';
 
 /// Persists the last-used [GameConfig] per game category ('x01' or 'cricket').
 /// Used by VariantSelectionPage to show a "Last Used" quick-start tile.
