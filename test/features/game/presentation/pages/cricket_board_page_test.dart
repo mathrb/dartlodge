@@ -11,7 +11,6 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/cricket_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_cricket_game_state.dart';
-import 'package:dart_lodge/features/game/presentation/widgets/game_complete_modal_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
 
@@ -636,10 +635,11 @@ void main() {
     expect(inactiveColoredTexts, isNotEmpty);
   });
 
-  // ── 21. Game complete shown when pendingGameWinnerId set ──────────────────
+  // ── 21. Game completion navigates straight to post-game (no modal) ────────
 
-  testWidgets('21. Game complete modal shown when pendingGameWinnerId set',
-      (tester) async {
+  testWidgets(
+      '21. Game completion navigates straight to post-game summary, '
+      'no winner modal (consistent with x01)', (tester) async {
     final gs = _cricketState(
       competitors: [
         _competitor(id: 'c1', name: 'Alice'),
@@ -653,7 +653,7 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.byType(GameCompleteModalWidget), findsOneWidget);
+    expect(find.text('post-game'), findsOneWidget);
   });
 
   // ── 22. AppBar subtitle shows 'Cut Throat' for cut-throat variant ─────────

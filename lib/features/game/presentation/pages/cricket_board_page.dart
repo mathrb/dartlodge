@@ -12,7 +12,6 @@ import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
-import '../widgets/game_complete_modal_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
@@ -89,24 +88,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
       final prevComplete = prevValue?.gameState.isComplete ?? false;
       if (!prevComplete && gs.isComplete) {
-        final winnerId = nextValue.pendingGameWinnerId;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
-          if (winnerId == null) {
-            context.go(GameRoutes.postGame(widget.gameId));
-            return;
-          }
-          final winner =
-              gs.competitors.firstWhere((c) => c.competitorId == winnerId);
-          showDialog<void>(
-            context: context,
-            barrierDismissible: false,
-            builder: (_) => GameCompleteModalWidget(
-              winnerName: winner.name,
-              onNewGame: () => context.go(GameRoutes.home),
-              onViewStats: () => context.go(GameRoutes.postGame(widget.gameId)),
-            ),
-          );
+          context.go(GameRoutes.postGame(widget.gameId));
         });
       }
     });
