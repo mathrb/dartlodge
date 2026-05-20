@@ -90,6 +90,7 @@ class VariantSelectionPage extends ConsumerWidget {
     final variants = switch (category) {
       'x01' => _x01Variants(),
       'cricket' => _cricketVariants(),
+      'casual' => _casualVariants(),
       'practice' => _practiceVariants(),
       _ => <_VariantEntry>[],
     };
@@ -189,6 +190,21 @@ class VariantSelectionPage extends ConsumerWidget {
         const _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
+  static List<_VariantEntry> _casualVariants() => const [
+        _VariantEntry(
+          label: 'Shanghai',
+          rulesSlug: 'practice-shanghai',
+          config: GameConfig.shanghai(),
+        ),
+        _VariantEntry(
+          label: 'Count-Up',
+          rulesSlug: 'practice-count-up',
+          config: GameConfig.countUp(
+            totalRounds: GameConfigurationConstants.countUpDefaultRounds,
+          ),
+        ),
+      ];
+
   static List<_VariantEntry> _practiceVariants() => const [
         _VariantEntry(
           label: 'Around the Clock',
@@ -206,21 +222,9 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.bobs27(),
         ),
         _VariantEntry(
-          label: 'Shanghai',
-          rulesSlug: 'practice-shanghai',
-          config: GameConfig.shanghai(),
-        ),
-        _VariantEntry(
           label: '170 Checkout',
           rulesSlug: 'practice-170-checkout',
           config: GameConfig.checkoutPractice(),
-        ),
-        _VariantEntry(
-          label: 'Count-Up',
-          rulesSlug: 'practice-count-up',
-          config: GameConfig.countUp(
-            totalRounds: GameConfigurationConstants.countUpDefaultRounds,
-          ),
         ),
       ];
 }
@@ -235,6 +239,7 @@ class _PageHeader extends StatelessWidget {
   String get _title => switch (category) {
         'x01' => 'X01',
         'cricket' => 'Cricket',
+        'casual' => 'Casual',
         'practice' => 'Practice',
         _ => category,
       };

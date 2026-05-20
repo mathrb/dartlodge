@@ -48,6 +48,16 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _KineticGameCard(
+                label: 'Casual',
+                subtitle: 'Shanghai, Count-Up',
+                icon: Icons.casino,
+                onTap: () {
+                  ref.read(gameSetupProvider.notifier).reset();
+                  context.push('${GameRoutes.variantSelection}/casual');
+                },
+              ),
+              const SizedBox(height: 12),
+              _KineticGameCard(
                 label: 'Practice',
                 subtitle: 'Improve Skills',
                 icon: Icons.track_changes,

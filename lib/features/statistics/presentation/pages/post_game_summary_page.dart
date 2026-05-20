@@ -15,13 +15,17 @@ import '../../../../core/widgets/game_summary_section_widget.dart';
 /// Maps a game type name (e.g. `GameType.x01.name`) to the variant-selection
 /// category route segment used by `/game/variant-selection/:category`.
 ///
-/// Only `x01` and `cricket` have dedicated categories; every other game type
-/// (count-up, around-the-clock, catch40, bobs27, checkoutPractice, shanghai)
-/// is routed through the shared `practice` category.
+/// Categories: `x01`, `cricket`, `casual` (shanghai, count-up), `practice`
+/// (around-the-clock, catch40, bobs27, checkoutPractice). Drives the
+/// PLAY AGAIN button's replay-category target.
 @visibleForTesting
 String categoryForGameType(String gameTypeName) {
   if (gameTypeName == GameType.x01.name) return 'x01';
   if (gameTypeName == GameType.cricket.name) return 'cricket';
+  if (gameTypeName == GameType.shanghai.name ||
+      gameTypeName == GameType.countUp.name) {
+    return 'casual';
+  }
   return 'practice';
 }
 

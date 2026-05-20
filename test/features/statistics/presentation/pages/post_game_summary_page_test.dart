@@ -80,14 +80,22 @@ void main() {
       expect(categoryForGameType(GameType.cricket.name), 'cricket');
     });
 
-    test('maps practice game types to practice category', () {
+    test('maps shanghai and count-up to casual category', () {
+      for (final type in [GameType.shanghai, GameType.countUp]) {
+        expect(
+          categoryForGameType(type.name),
+          'casual',
+          reason: '${type.name} should map to casual',
+        );
+      }
+    });
+
+    test('maps drill game types to practice category', () {
       for (final type in [
-        GameType.countUp,
         GameType.aroundTheClock,
         GameType.catch40,
         GameType.bobs27,
         GameType.checkoutPractice,
-        GameType.shanghai,
       ]) {
         expect(
           categoryForGameType(type.name),
@@ -127,7 +135,7 @@ void main() {
       expect(find.text('variant-selection:cricket'), findsOneWidget);
     });
 
-    testWidgets('routes to variant-selection/practice for practice games',
+    testWidgets('routes to variant-selection/practice for drill games',
         (tester) async {
       await tester.pumpWidget(_buildApp(gameStats: _statsForGameType(GameType.checkoutPractice)));
       await tester.pumpAndSettle();
@@ -137,6 +145,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('variant-selection:practice'), findsOneWidget);
+    });
+
+    testWidgets('routes to variant-selection/casual for casual games',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(gameStats: _statsForGameType(GameType.shanghai)));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.text('PLAY AGAIN'));
+      await tester.tap(find.text('PLAY AGAIN'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('variant-selection:casual'), findsOneWidget);
     });
 
     testWidgets('DONE button navigates to home', (tester) async {

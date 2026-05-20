@@ -111,12 +111,13 @@ void main() {
       expect(find.text('DARTLODGE'), findsOneWidget);
     });
 
-    testWidgets('renders all three game cards', (tester) async {
+    testWidgets('renders all four game cards', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
       expect(find.text('X01'), findsOneWidget);
       expect(find.text('CRICKET'), findsOneWidget);
+      expect(find.text('CASUAL'), findsOneWidget);
       expect(find.text('PRACTICE'), findsOneWidget);
     });
 
@@ -151,9 +152,9 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // X01, Cricket and Practice cards each render their icon.
       expect(find.byIcon(Icons.adjust), findsOneWidget);
       expect(find.byIcon(Icons.sports_cricket), findsOneWidget);
+      expect(find.byIcon(Icons.casino), findsOneWidget);
       expect(find.byIcon(Icons.track_changes), findsOneWidget);
     });
 
@@ -164,7 +165,7 @@ void main() {
       final boxes = tester.widgetList<SizedBox>(
         find.byWidgetPredicate((w) => w is SizedBox && w.height == 80),
       );
-      expect(boxes.length, greaterThanOrEqualTo(3));
+      expect(boxes.length, greaterThanOrEqualTo(4));
     });
   });
 
@@ -194,6 +195,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('variant-selection-cricket'), findsOneWidget);
+    });
+
+    testWidgets(
+        'tapping Casual row navigates to /game/variant-selection/casual',
+        (tester) async {
+      final captured = <String>[];
+      await tester.pumpWidget(_buildApp(router: _navRouter(captured)));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('CASUAL'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('variant-selection-casual'), findsOneWidget);
     });
 
     testWidgets(
@@ -236,6 +250,7 @@ void main() {
       await tester.pumpWidget(_buildApp(router: _navRouter(captured)));
       await tester.pumpAndSettle();
 
+      await tester.ensureVisible(find.text('PLAYERS'));
       await tester.tap(find.text('PLAYERS'));
       await tester.pumpAndSettle();
 
@@ -266,8 +281,8 @@ void main() {
           (w) => w is Icon && w.icon == Icons.chevron_right,
         ),
       );
-      // Three game cards each have a chevron.
-      expect(chevrons.length, greaterThanOrEqualTo(3));
+      // Four game cards each have a chevron.
+      expect(chevrons.length, greaterThanOrEqualTo(4));
     });
   });
 }

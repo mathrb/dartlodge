@@ -170,15 +170,18 @@ void main() {
   });
 
   group('VariantSelectionPage — Practice', () {
-    testWidgets('renders 5 enabled rows', (tester) async {
+    testWidgets('renders 4 drill rows (no Shanghai or Count-Up)', (tester) async {
       await tester.pumpWidget(_buildApp('practice'));
       await tester.pumpAndSettle();
 
       expect(find.text('AROUND THE CLOCK'), findsOneWidget);
       expect(find.text('CATCH 40', skipOffstage: false), findsOneWidget);
       expect(find.text("BOB'S 27", skipOffstage: false), findsOneWidget);
-      expect(find.text('SHANGHAI', skipOffstage: false), findsOneWidget);
       expect(find.text('170 CHECKOUT', skipOffstage: false), findsOneWidget);
+
+      // Shanghai and Count-Up moved to the Casual category.
+      expect(find.text('SHANGHAI', skipOffstage: false), findsNothing);
+      expect(find.text('COUNT-UP', skipOffstage: false), findsNothing);
     });
 
     testWidgets('no disabled rows in practice', (tester) async {
@@ -194,6 +197,37 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('PRACTICE'), findsOneWidget);
+    });
+  });
+
+  group('VariantSelectionPage — Casual', () {
+    testWidgets('renders Shanghai and Count-Up only', (tester) async {
+      await tester.pumpWidget(_buildApp('casual'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SHANGHAI'), findsOneWidget);
+      expect(find.text('COUNT-UP'), findsOneWidget);
+
+      // Drills do not appear under Casual.
+      expect(find.text('AROUND THE CLOCK', skipOffstage: false), findsNothing);
+      expect(find.text('CATCH 40', skipOffstage: false), findsNothing);
+      expect(find.text("BOB'S 27", skipOffstage: false), findsNothing);
+      expect(find.text('170 CHECKOUT', skipOffstage: false), findsNothing);
+    });
+
+    testWidgets('no disabled rows in casual', (tester) async {
+      await tester.pumpWidget(_buildApp('casual'));
+      await tester.pumpAndSettle();
+
+      final opacities = tester.widgetList<Opacity>(find.byType(Opacity));
+      expect(opacities.where((o) => o.opacity == 0.38), isEmpty);
+    });
+
+    testWidgets('page title "Casual" is displayed', (tester) async {
+      await tester.pumpWidget(_buildApp('casual'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CASUAL'), findsOneWidget);
     });
   });
 
