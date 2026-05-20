@@ -6,8 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_result.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/post_game_summary_page.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/practice_summary_widget.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/shanghai_summary_widget.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -60,6 +63,26 @@ Widget _buildApp({required GameStats gameStats}) {
   return ProviderScope(
     overrides: [
       gameStatsProvider('game-1').overrideWith((_) async => gameStats),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: router,
+    ),
+  );
+}
+
+Widget _buildAppWithResult({
+  required GameStats gameStats,
+  required GameResult? gameResult,
+}) {
+  final router = GoRouter(
+    initialLocation: '/post-game/game-1',
+    routes: _routes,
+  );
+  return ProviderScope(
+    overrides: [
+      gameStatsProvider('game-1').overrideWith((_) async => gameStats),
+      gameResultProvider('game-1').overrideWith((_) async => gameResult),
     ],
     child: MaterialApp.router(
       theme: AppTheme.light(),
@@ -168,6 +191,83 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('home'), findsOneWidget);
+    });
+  });
+
+  group('PostGameSummaryPage body branching', () {
+    testWidgets('shanghai renders ShanghaiSummaryWidget',
+        (tester) async {
+      await tester.pumpWidget(_buildAppWithResult(
+        gameStats: _statsForGameType(GameType.shanghai),
+        gameResult: const GameResult.shanghai(
+          competitorName: 'Alice',
+          totalScore: 100,
+          shanghaiBonuses: 1,
+          bestRound: 40,
+          roundsPlayed: 7,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ShanghaiSummaryWidget), findsOneWidget);
+      expect(find.byType(PracticeSummaryWidget), findsNothing);
+    });
+
+    testWidgets('checkout practice renders PracticeSummaryWidget',
+        (tester) async {
+      await tester.pumpWidget(_buildAppWithResult(
+        gameStats: _statsForGameType(GameType.checkoutPractice),
+        gameResult: const GameResult.checkoutPractice(
+          competitorName: 'Alice',
+          checkedOut: true,
+          dartsThrown: 9,
+          fromScore: 170,
+          remainingScore: 0,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PracticeSummaryWidget), findsOneWidget);
+      expect(find.byType(ShanghaiSummaryWidget), findsNothing);
+    });
+
+    testWidgets('around-the-clock renders PracticeSummaryWidget',
+        (tester) async {
+      await tester.pumpWidget(_buildAppWithResult(
+        gameStats: _statsForGameType(GameType.aroundTheClock),
+        gameResult: const GameResult.aroundTheClock(
+          competitorName: 'Alice',
+          turnsToComplete: 12,
+          totalDarts: 35,
+          doublesOnly: false,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PracticeSummaryWidget), findsOneWidget);
+    });
+
+    testWidgets('x01 path does NOT touch gameResultProvider',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(
+        gameStats: _statsForGameType(GameType.x01),
+      ));
+      await tester.pumpAndSettle();
+
+      // The x01 branch consumes gameStatsProvider only.
+      expect(find.byType(ShanghaiSummaryWidget), findsNothing);
+      expect(find.byType(PracticeSummaryWidget), findsNothing);
+    });
+
+    testWidgets('null game result shows fallback message',
+        (tester) async {
+      await tester.pumpWidget(_buildAppWithResult(
+        gameStats: _statsForGameType(GameType.bobs27),
+        gameResult: null,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No result available for this game.'), findsOneWidget);
     });
   });
 }

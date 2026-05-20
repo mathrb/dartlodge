@@ -11,6 +11,9 @@ import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import '../../../../core/widgets/game_summary_section_widget.dart';
+import '../../../game/domain/models/game_result.dart';
+import '../widgets/practice_summary_widget.dart';
+import '../widgets/shanghai_summary_widget.dart';
 
 /// Maps a game type name (e.g. `GameType.x01.name`) to the variant-selection
 /// category route segment used by `/game/variant-selection/:category`.
@@ -28,6 +31,15 @@ String categoryForGameType(String gameTypeName) {
   }
   return 'practice';
 }
+
+/// Game types whose post-game summary still consumes `gameStatsProvider`
+/// (x01-shaped chrome via [GameSummarySectionWidget]). All other types go
+/// through `gameResultProvider` to render their per-type summary.
+final _gameStatsBackedTypes = <String>{
+  GameType.x01.name,
+  GameType.cricket.name,
+  GameType.countUp.name,
+};
 
 class PostGameSummaryPage extends ConsumerWidget {
   const PostGameSummaryPage({required this.gameId, super.key});
@@ -48,40 +60,81 @@ class PostGameSummaryPage extends ConsumerWidget {
           child: asyncStats.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text('Error: $err')),
-            data: (gameStats) => Stack(
-              children: [
-                SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppHeader(
-                        showBack: true,
-                        onBack: () => context.go('/'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.settings_outlined,
-                              semanticLabel: 'Settings'),
-                          onPressed: () => context.push(GameRoutes.settings),
+            data: (gameStats) {
+              final usesGameStats =
+                  _gameStatsBackedTypes.contains(gameStats.gameType);
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppHeader(
+                          showBack: true,
+                          onBack: () => context.go('/'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.settings_outlined,
+                                semanticLabel: 'Settings'),
+                            onPressed: () =>
+                                context.push(GameRoutes.settings),
+                          ),
                         ),
-                      ),
-                      GameSummarySectionWidget(gameStats: gameStats),
-                    ],
+                        if (usesGameStats)
+                          GameSummarySectionWidget(gameStats: gameStats)
+                        else
+                          _GameResultBody(gameId: gameId),
+                      ],
+                    ),
                   ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: _StickyFooter(
-                    playAgainCategory:
-                        categoryForGameType(gameStats.gameType),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: _StickyFooter(
+                      playAgainCategory:
+                          categoryForGameType(gameStats.gameType),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+}
+
+class _GameResultBody extends ConsumerWidget {
+  const _GameResultBody({required this.gameId});
+
+  final String gameId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncResult = ref.watch(gameResultProvider(gameId));
+    return asyncResult.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, _) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Text('Error: $err'),
+      ),
+      data: (result) {
+        if (result == null) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Text('No result available for this game.'),
+          );
+        }
+        return switch (result) {
+          ShanghaiResult() => ShanghaiSummaryWidget(result: result),
+          _ => PracticeSummaryWidget(result: result),
+        };
+      },
     );
   }
 }

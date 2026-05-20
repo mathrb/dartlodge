@@ -14,7 +14,12 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ActivePracticeState {
 
- GameState get gameState; String? get pendingGameWinnerId; bool get showShanghaiBonus;
+ GameState get gameState; String? get pendingGameWinnerId; bool get showShanghaiBonus;/// Set to `true` when `EndPracticeUseCase` was invoked via the
+/// "End Drill" menu (i.e. the user manually abandoned the drill).
+/// `practice_board_page` distinguishes manual completions from natural
+/// engine completions to decide whether to navigate to the post-game
+/// summary (natural) or home (manual).
+ bool get wasEndedManually;
 /// Create a copy of ActivePracticeState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +30,16 @@ $ActivePracticeStateCopyWith<ActivePracticeState> get copyWith => _$ActivePracti
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus)&&(identical(other.wasEndedManually, wasEndedManually) || other.wasEndedManually == wasEndedManually));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus);
+int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus,wasEndedManually);
 
 @override
 String toString() {
-  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus)';
+  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus, wasEndedManually: $wasEndedManually)';
 }
 
 
@@ -45,7 +50,7 @@ abstract mixin class $ActivePracticeStateCopyWith<$Res>  {
   factory $ActivePracticeStateCopyWith(ActivePracticeState value, $Res Function(ActivePracticeState) _then) = _$ActivePracticeStateCopyWithImpl;
 @useResult
 $Res call({
- GameState gameState, String? pendingGameWinnerId, bool showShanghaiBonus
+ GameState gameState, String? pendingGameWinnerId, bool showShanghaiBonus, bool wasEndedManually
 });
 
 
@@ -62,11 +67,12 @@ class _$ActivePracticeStateCopyWithImpl<$Res>
 
 /// Create a copy of ActivePracticeState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? pendingGameWinnerId = freezed,Object? showShanghaiBonus = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? pendingGameWinnerId = freezed,Object? showShanghaiBonus = null,Object? wasEndedManually = null,}) {
   return _then(_self.copyWith(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,pendingGameWinnerId: freezed == pendingGameWinnerId ? _self.pendingGameWinnerId : pendingGameWinnerId // ignore: cast_nullable_to_non_nullable
 as String?,showShanghaiBonus: null == showShanghaiBonus ? _self.showShanghaiBonus : showShanghaiBonus // ignore: cast_nullable_to_non_nullable
+as bool,wasEndedManually: null == wasEndedManually ? _self.wasEndedManually : wasEndedManually // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -161,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus,  bool wasEndedManually)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ActivePracticeState() when $default != null:
-return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus);case _:
+return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus,_that.wasEndedManually);case _:
   return orElse();
 
 }
@@ -182,10 +188,10 @@ return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonu
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus,  bool wasEndedManually)  $default,) {final _that = this;
 switch (_that) {
 case _ActivePracticeState():
-return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus);case _:
+return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus,_that.wasEndedManually);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +208,10 @@ return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonu
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( GameState gameState,  String? pendingGameWinnerId,  bool showShanghaiBonus,  bool wasEndedManually)?  $default,) {final _that = this;
 switch (_that) {
 case _ActivePracticeState() when $default != null:
-return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus);case _:
+return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonus,_that.wasEndedManually);case _:
   return null;
 
 }
@@ -217,12 +223,18 @@ return $default(_that.gameState,_that.pendingGameWinnerId,_that.showShanghaiBonu
 
 
 class _ActivePracticeState implements ActivePracticeState {
-  const _ActivePracticeState({required this.gameState, this.pendingGameWinnerId, this.showShanghaiBonus = false});
+  const _ActivePracticeState({required this.gameState, this.pendingGameWinnerId, this.showShanghaiBonus = false, this.wasEndedManually = false});
   
 
 @override final  GameState gameState;
 @override final  String? pendingGameWinnerId;
 @override@JsonKey() final  bool showShanghaiBonus;
+/// Set to `true` when `EndPracticeUseCase` was invoked via the
+/// "End Drill" menu (i.e. the user manually abandoned the drill).
+/// `practice_board_page` distinguishes manual completions from natural
+/// engine completions to decide whether to navigate to the post-game
+/// summary (natural) or home (manual).
+@override@JsonKey() final  bool wasEndedManually;
 
 /// Create a copy of ActivePracticeState
 /// with the given fields replaced by the non-null parameter values.
@@ -234,16 +246,16 @@ _$ActivePracticeStateCopyWith<_ActivePracticeState> get copyWith => __$ActivePra
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus)&&(identical(other.wasEndedManually, wasEndedManually) || other.wasEndedManually == wasEndedManually));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus);
+int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus,wasEndedManually);
 
 @override
 String toString() {
-  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus)';
+  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus, wasEndedManually: $wasEndedManually)';
 }
 
 
@@ -254,7 +266,7 @@ abstract mixin class _$ActivePracticeStateCopyWith<$Res> implements $ActivePract
   factory _$ActivePracticeStateCopyWith(_ActivePracticeState value, $Res Function(_ActivePracticeState) _then) = __$ActivePracticeStateCopyWithImpl;
 @override @useResult
 $Res call({
- GameState gameState, String? pendingGameWinnerId, bool showShanghaiBonus
+ GameState gameState, String? pendingGameWinnerId, bool showShanghaiBonus, bool wasEndedManually
 });
 
 
@@ -271,11 +283,12 @@ class __$ActivePracticeStateCopyWithImpl<$Res>
 
 /// Create a copy of ActivePracticeState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? gameState = null,Object? pendingGameWinnerId = freezed,Object? showShanghaiBonus = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? gameState = null,Object? pendingGameWinnerId = freezed,Object? showShanghaiBonus = null,Object? wasEndedManually = null,}) {
   return _then(_ActivePracticeState(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,pendingGameWinnerId: freezed == pendingGameWinnerId ? _self.pendingGameWinnerId : pendingGameWinnerId // ignore: cast_nullable_to_non_nullable
 as String?,showShanghaiBonus: null == showShanghaiBonus ? _self.showShanghaiBonus : showShanghaiBonus // ignore: cast_nullable_to_non_nullable
+as bool,wasEndedManually: null == wasEndedManually ? _self.wasEndedManually : wasEndedManually // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

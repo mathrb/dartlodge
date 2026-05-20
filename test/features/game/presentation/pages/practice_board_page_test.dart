@@ -92,10 +92,14 @@ GameState _practiceState({
 ActivePracticeState _activeState({
   GameState? gameState,
   String? pendingGameWinnerId,
+  bool showShanghaiBonus = false,
+  bool wasEndedManually = false,
 }) =>
     ActivePracticeState(
       gameState: gameState ?? _practiceState(),
       pendingGameWinnerId: pendingGameWinnerId,
+      showShanghaiBonus: showShanghaiBonus,
+      wasEndedManually: wasEndedManually,
     );
 
 // ── Test app builders ──────────────────────────────────────────────────────────
@@ -109,6 +113,11 @@ List<RouteBase> _testRoutes({String gameId = 'game-1'}) => [
       GoRoute(
         path: '/',
         builder: (_, __) => const Scaffold(body: Text('home')),
+      ),
+      GoRoute(
+        path: '/post-game/:gameId',
+        builder: (_, s) =>
+            Scaffold(body: Text('post-game:${s.pathParameters['gameId']}')),
       ),
     ];
 
@@ -416,18 +425,47 @@ void main() {
     expect(nextRoundBtn.onPressed, isNotNull);
   });
 
-  // ── 16. Completion dialog shown when pendingGameWinnerId set ──────────────
+  // ── 16. Natural completion navigates to post-game summary ────────────────
 
-  testWidgets('16. Completion dialog shown when pendingGameWinnerId set',
+  testWidgets('16. Natural completion transition navigates to post-game',
       (tester) async {
-    final gs = _practiceState(isComplete: true);
-    final notifier = _FakeActivePracticeNotifier(
-      _activeState(gameState: gs, pendingGameWinnerId: 'c1'),
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(
+          () => _FakeActivePracticeNotifier(
+            _activeState(
+              gameState: _practiceState(
+                gameType: GameType.bobs27,
+                isComplete: false,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
-    await tester.pumpWidget(_buildApp(notifier));
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pump();
+
+    expect(find.text('post-game:game-1'), findsNothing);
+
+    final notifier = container
+        .read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+    final completeGs = _practiceState(
+      gameType: GameType.bobs27,
+      isComplete: true,
+    );
+    // ignore: invalid_use_of_protected_member
+    notifier.state =
+        AsyncValue.data(_activeState(gameState: completeGs));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('post-game:game-1'), findsOneWidget,
+        reason: 'natural completion navigates to post-game summary');
+    expect(find.byType(AlertDialog), findsNothing,
+        reason: 'no completion dialog after modal removal');
   });
 
   // ── 17. Bottom bar has SafeArea above its Row ─────────────────────────────
@@ -524,16 +562,15 @@ void main() {
     expect(gridInInputButtons, findsOneWidget);
   });
 
-  // ── 20. Completion dialog does not stack on rebuilds ──────────────────────
+  // ── 20. Manual "End Drill" navigates home, NOT post-game ─────────────────
   //
-  // Regression for #130: previously the page used addPostFrameCallback inside
-  // build() gated on `gs.isComplete`; because dismissGameModal() does not
-  // clear isComplete, any rebuild while the dialog was visible would queue
-  // ANOTHER dialog → users saw 2+ dialogs stacked. The ref.listen refactor
-  // means the dialog fires only on the transition (prev != complete →
-  // next = complete), not on every rebuild.
+  // Distinguishing natural completion (→ post-game) from manual End Drill
+  // (→ home) is the central invariant of the navigation rework (#230). The
+  // notifier's `endDrill()` sets `wasEndedManually: true`; the completion
+  // listener no-ops for that case, and the menu handler does the
+  // `context.go(home)` directly.
 
-  testWidgets('20. Completion dialog does not stack across rebuilds (Bobs27)',
+  testWidgets('20. End Drill menu navigates home and skips post-game',
       (tester) async {
     final container = ProviderContainer(
       overrides: [
@@ -552,54 +589,27 @@ void main() {
     addTearDown(container.dispose);
 
     await tester.pumpWidget(_buildAppWithContainer(container));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     final notifier = container
         .read(activePracticeProvider('game-1').notifier)
         as _FakeActivePracticeNotifier;
 
-    // Initially no completion dialog.
-    expect(find.byType(AlertDialog), findsNothing);
-
-    // Transition to complete — dialog should fire exactly once.
-    final completeGs = _practiceState(
-      gameType: GameType.bobs27,
-      isComplete: true,
-      competitor: _practiceCompetitor(
-        id: 'c1',
-        name: 'Alice',
-        practiceRound: 21,
-      ),
-    );
-    // ignore: invalid_use_of_protected_member
-    notifier.state = AsyncValue.data(_activeState(
-      gameState: completeGs,
-      pendingGameWinnerId: null,
-    ));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('End Drill'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget,
-        reason: 'one dialog after completion transition');
-
-    // Now force ANOTHER rebuild with a different-but-still-complete state.
-    // Vary an unrelated field (dartsThrownInTurn) so equality is broken and
-    // the rebuild actually happens. With the buggy addPostFrameCallback in
-    // build() this would schedule a SECOND showDialog; with ref.listen the
-    // transition has already happened, so the listener no-ops.
-    final completeGs2 = completeGs.copyWith(dartsThrownInTurn: 1);
-    // ignore: invalid_use_of_protected_member
-    notifier.state = AsyncValue.data(_activeState(
-      gameState: completeGs2,
-      pendingGameWinnerId: null,
-    ));
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.byType(AlertDialog), findsOneWidget,
-        reason: 'dialog must not stack on rebuilds while still complete');
+    expect(notifier.endDrillCalls, 1);
+    expect(find.text('home'), findsOneWidget);
+    expect(find.text('post-game:game-1'), findsNothing,
+        reason: 'manual end-drill must not route to post-game');
   });
 
-  testWidgets('21. Winner-set dialog does not stack across rebuilds',
+  // ── 21. Manual completion with wasEndedManually skips post-game nav ──────
+
+  testWidgets(
+      '21. Completion with wasEndedManually=true does not navigate to post-game',
       (tester) async {
     final container = ProviderContainer(
       overrides: [
@@ -624,9 +634,6 @@ void main() {
         .read(activePracticeProvider('game-1').notifier)
         as _FakeActivePracticeNotifier;
 
-    expect(find.byType(AlertDialog), findsNothing);
-
-    // Transition to winner-set — dialog should fire exactly once.
     final completeGs = _practiceState(
       gameType: GameType.aroundTheClock,
       isComplete: true,
@@ -634,23 +641,101 @@ void main() {
     // ignore: invalid_use_of_protected_member
     notifier.state = AsyncValue.data(_activeState(
       gameState: completeGs,
-      pendingGameWinnerId: 'c1',
+      wasEndedManually: true,
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(find.text('post-game:game-1'), findsNothing,
+        reason:
+            'listener must skip post-game nav when wasEndedManually is true');
+  });
 
-    // Rebuild with a different state object but still winner-set.
-    final completeGs2 = completeGs.copyWith(dartsThrownInTurn: 1);
+  // ── 22. Shanghai-on-final-dart defers nav while banner is animating ──────
+
+  testWidgets(
+      '22. Shanghai completion with showShanghaiBonus delays nav by 1.3s',
+      (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(
+          () => _FakeActivePracticeNotifier(
+            _activeState(
+              gameState: _practiceState(
+                gameType: GameType.shanghai,
+                isComplete: false,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pump();
+
+    final notifier = container
+        .read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+    final completeGs = _practiceState(
+      gameType: GameType.shanghai,
+      isComplete: true,
+    );
     // ignore: invalid_use_of_protected_member
     notifier.state = AsyncValue.data(_activeState(
-      gameState: completeGs2,
-      pendingGameWinnerId: 'c1',
+      gameState: completeGs,
+      showShanghaiBonus: true,
     ));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    // Still on the practice board because the 1.3s delay hasn't elapsed.
+    expect(find.text('post-game:game-1'), findsNothing,
+        reason: 'nav must be deferred while Shanghai banner is animating');
+
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pumpAndSettle();
+
+    expect(find.text('post-game:game-1'), findsOneWidget,
+        reason: 'nav fires after the banner animation delay');
+  });
+
+  // ── 23. Non-Shanghai completion navigates immediately ────────────────────
+
+  testWidgets(
+      '23. Non-shanghai completion navigates to post-game immediately',
+      (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(
+          () => _FakeActivePracticeNotifier(
+            _activeState(
+              gameState: _practiceState(
+                gameType: GameType.aroundTheClock,
+                isComplete: false,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pump();
 
-    expect(find.byType(AlertDialog), findsOneWidget,
-        reason: 'winner-set dialog must not stack on rebuilds');
+    final notifier = container
+        .read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+    final completeGs = _practiceState(
+      gameType: GameType.aroundTheClock,
+      isComplete: true,
+    );
+    // ignore: invalid_use_of_protected_member
+    notifier.state =
+        AsyncValue.data(_activeState(gameState: completeGs));
+    await tester.pumpAndSettle();
+
+    expect(find.text('post-game:game-1'), findsOneWidget);
   });
 }

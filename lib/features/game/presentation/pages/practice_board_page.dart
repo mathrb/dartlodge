@@ -22,6 +22,11 @@ import '../widgets/pulsing_next_button_widget.dart';
 
 enum _DrillAction { endDrill }
 
+/// Defer used by the Shanghai-on-final-dart path so the inline `_ShanghaiBonus`
+/// banner (1300ms animation) finishes before we navigate away. All other
+/// completion paths navigate immediately.
+const Duration _shanghaiBonusNavDelay = Duration(milliseconds: 1300);
+
 class PracticeBoardPage extends ConsumerStatefulWidget {
   const PracticeBoardPage({required this.gameId, super.key});
 
@@ -46,109 +51,36 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen for completion transitions and fire the appropriate dialog
-    // exactly once per transition. We must not use `addPostFrameCallback`
-    // inside `build()` — that re-fires (stacking dialogs) on every rebuild
-    // while `isComplete` stays true. See cricket_board_page.dart for the
-    // same pattern.
+    // Listen for natural completion transitions and navigate to the post-game
+    // summary — mirroring x01/cricket boards. Manual "End Drill" sets
+    // `wasEndedManually: true` on the practice state; the menu handler then
+    // routes home directly, and this listener no-ops for that case.
+    //
+    // Shanghai-on-final-dart: when the inline `_ShanghaiBonus` banner is
+    // still animating, delay the nav by 1.3s so the user sees the banner
+    // before being whisked away.
     ref.listen<AsyncValue<ActivePracticeState?>>(
       activePracticeProvider(widget.gameId),
       (prev, next) {
         final prevValue = prev?.value;
         final nextValue = next.value;
         if (nextValue == null) return;
+        if (nextValue.wasEndedManually) return;
 
         final gs = nextValue.gameState;
-        final prevGs = prevValue?.gameState;
-        final notifier =
-            ref.read(activePracticeProvider(widget.gameId).notifier);
-        final competitor = gs.competitors[gs.currentTurnIndex];
+        final prevComplete = prevValue?.gameState.isComplete ?? false;
+        if (prevComplete || !gs.isComplete) return;
 
-        final isAtc = gs.gameType == GameType.aroundTheClock;
-        final isBobs27 = gs.gameType == GameType.bobs27;
-        final isCatch40 = gs.gameType == GameType.catch40;
-        final isShanghai = gs.gameType == GameType.shanghai;
-        final isCheckout = gs.gameType == GameType.checkoutPractice;
+        final delay = (gs.gameType == GameType.shanghai &&
+                nextValue.showShanghaiBonus)
+            ? _shanghaiBonusNavDelay
+            : Duration.zero;
 
-        final prevWinner = prevValue?.pendingGameWinnerId;
-        final nextWinner = nextValue.pendingGameWinnerId;
-        final winnerTransition = prevWinner == null && nextWinner != null;
-
-        final prevComplete = prevGs?.isComplete ?? false;
-        final completeTransition = !prevComplete && gs.isComplete;
-
-        // 1. Shanghai completion — completion-based, winner may be null.
-        if (isShanghai && completeTransition) {
-          final delay = nextValue.showShanghaiBonus
-              ? const Duration(milliseconds: 1300)
-              : Duration.zero;
-          WidgetsBinding.instance.addPostFrameCallback((_) async {
-            if (delay != Duration.zero) await Future.delayed(delay);
-            if (!context.mounted) return;
-            _showShanghaiCompleteDialog(context, notifier, competitor);
-          });
-          return;
-        }
-
-        // 2. Winner-set transition — ATC / Checkout-success / generic winner.
-        if (winnerTransition) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!context.mounted) return;
-            if (isAtc) {
-              _showAtcCompleteDialog(context, notifier, competitor);
-            } else if (isCheckout) {
-              _showCheckoutModal(
-                context,
-                'Checkout!',
-                competitor.dartThrows.length,
-                competitor.turnStartScore,
-                0,
-                () {
-                  Navigator.of(context).pop();
-                  context.go(GameRoutes.home);
-                  notifier.dismissGameModal();
-                },
-              );
-            } else {
-              final winner = gs.competitors
-                  .firstWhere((c) => c.competitorId == nextWinner);
-              _showGenericWinnerDialog(context, notifier, winner.name);
-            }
-          });
-          return;
-        }
-
-        // 3. Catch40 completion.
-        if (isCatch40 && completeTransition) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!context.mounted) return;
-            _showCatch40CompleteDialog(context, notifier, competitor);
-          });
-          return;
-        }
-
-        // 4. Bobs27 / Checkout "drill ended" (no winner).
-        if (completeTransition) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!context.mounted) return;
-            if (isBobs27) {
-              _showBobs27CompleteDialog(context, notifier, competitor);
-            } else if (isCheckout) {
-              _showCheckoutModal(
-                context,
-                'Drill Ended',
-                competitor.dartThrows.length,
-                null,
-                competitor.score,
-                () {
-                  Navigator.of(context).pop();
-                  context.go(GameRoutes.home);
-                  notifier.dismissGameModal();
-                },
-              );
-            }
-          });
-        }
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (delay != Duration.zero) await Future.delayed(delay);
+          if (!context.mounted) return;
+          context.go(GameRoutes.postGame(widget.gameId));
+        });
       },
     );
 
@@ -296,7 +228,6 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 pulseNext: !gs.isComplete && !gs.turnActive,
                 onUndo: notifier.undoDart,
                 onNextRound: notifier.startNextTurn,
-                onEndDrill: notifier.endDrill,
               ),
             ],
           ),
@@ -317,163 +248,6 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         },
         onCancel: () => Navigator.of(dialogContext).pop(),
       ),
-    );
-  }
-
-  static void _showCheckoutModal(
-    BuildContext context,
-    String title,
-    int dartsThrown,
-    int? checkoutScore,
-    int remainingScore,
-    VoidCallback onDismiss,
-  ) {
-    final content = checkoutScore != null
-        ? 'Checked out from $checkoutScore\nDarts thrown: $dartsThrown'
-        : 'Score remaining: $remainingScore\nDarts thrown: $dartsThrown';
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        title: Text(
-          title,
-          style: AppTextStyles.headlineLarge.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        content: Text(
-          content,
-          style: AppTextStyles.bodyMedium.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        actions: [
-          FilledButton(onPressed: onDismiss, child: const Text('NEW DRILL')),
-        ],
-      ),
-    );
-  }
-
-  static void _showSimpleCompletionDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier, {
-    required String title,
-    String? content,
-  }) {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-        title: Text(
-          title,
-          style: AppTextStyles.headlineLarge.copyWith(
-            color: Theme.of(context).colorScheme.onSurface,
-          ),
-        ),
-        content: content == null
-            ? null
-            : Text(
-                content,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-        actions: [
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.go(GameRoutes.home);
-              notifier.dismissGameModal();
-            },
-            child: const Text('NEW DRILL'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  static void _showShanghaiCompleteDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier,
-    CompetitorState competitor,
-  ) {
-    final score = competitor.score;
-    final shanghaiCount = competitor.practiceSuccesses;
-    _showSimpleCompletionDialog(
-      context,
-      notifier,
-      title: 'Drill Complete!',
-      content: 'Total score: $score\n'
-          'Shanghai bonuses: $shanghaiCount'
-          '${shanghaiCount > 0 ? '\nNice shooting!' : ''}',
-    );
-  }
-
-  static void _showAtcCompleteDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier,
-    CompetitorState competitor,
-  ) {
-    final totalDarts = competitor.dartThrows.length;
-    final totalTurns = (totalDarts + 2) ~/ 3;
-    _showSimpleCompletionDialog(
-      context,
-      notifier,
-      title: 'Drill Complete!',
-      content:
-          'You completed Around the Clock in $totalTurns turns ($totalDarts darts)',
-    );
-  }
-
-  static void _showCatch40CompleteDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier,
-    CompetitorState competitor,
-  ) {
-    _showSimpleCompletionDialog(
-      context,
-      notifier,
-      title: 'Drill Complete!',
-      content: 'Total score: ${competitor.score} (max 120)\n'
-          'Targets checked out: ${competitor.practiceSuccesses} / 40',
-    );
-  }
-
-  static void _showBobs27CompleteDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier,
-    CompetitorState competitor,
-  ) {
-    final score = competitor.score;
-    final drillEnded = score <= 0;
-    final roundReached = competitor.practiceRound - 1;
-    _showSimpleCompletionDialog(
-      context,
-      notifier,
-      title: drillEnded ? 'Drill Ended' : 'Drill Complete!',
-      content: drillEnded
-          ? 'Your score went to zero. You reached round $roundReached. Final score: $score'
-          : 'Final score: $score',
-    );
-  }
-
-  static void _showGenericWinnerDialog(
-    BuildContext context,
-    ActivePracticeNotifier notifier,
-    String winnerName,
-  ) {
-    _showSimpleCompletionDialog(
-      context,
-      notifier,
-      title: '$winnerName wins!',
     );
   }
 
@@ -519,7 +293,6 @@ class _BottomBar extends StatelessWidget {
     required this.pulseNext,
     required this.onUndo,
     required this.onNextRound,
-    required this.onEndDrill,
     this.showNextTarget = false,
   });
 
@@ -530,7 +303,6 @@ class _BottomBar extends StatelessWidget {
   final bool pulseNext;
   final VoidCallback onUndo;
   final Future<void> Function() onNextRound;
-  final Future<void> Function() onEndDrill;
 
   @override
   Widget build(BuildContext context) {

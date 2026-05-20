@@ -254,6 +254,7 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       return ActivePracticeState(
         gameState: newGs,
         pendingGameWinnerId: newGs.winnerCompetitorId,
+        wasEndedManually: true,
       );
     });
   }
