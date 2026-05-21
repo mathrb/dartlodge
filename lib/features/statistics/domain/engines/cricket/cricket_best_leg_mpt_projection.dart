@@ -4,13 +4,21 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'cricket_segment_utils.dart';
+import 'cricket_targets_mixin.dart';
 
 /// Tracks the best single-leg MPT (Marks Per Turn) across all legs.
-class CricketBestLegMptProjection extends ProjectionEngine {
+class CricketBestLegMptProjection extends ProjectionEngine
+    with CricketTargetsTracker {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'cricket.bestLegMpt',
     supportedGameTypes: {GameType.cricket},
-    consumedEventTypes: {'DartThrown', 'TurnEnded', 'LegCompleted'},
+    consumedEventTypes: {
+      'GameCreated',
+      'CricketTargetsAssigned',
+      'DartThrown',
+      'TurnEnded',
+      'LegCompleted',
+    },
     scope: ProjectionScope.leg,
   );
 
@@ -34,16 +42,19 @@ class CricketBestLegMptProjection extends ProjectionEngine {
     _legTurns = 0;
     _turnMarks = 0;
     _bestLegMpt = null;
+    resetCricketTargets();
   }
 
   @override
   void apply(GameEvent event) {
+    if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         final s = readSegmentFromPayload(event.payload);
-        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier);
+        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
+            targets: activeCricketTargets);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;

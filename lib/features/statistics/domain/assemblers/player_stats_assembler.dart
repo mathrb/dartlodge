@@ -909,12 +909,26 @@ class PlayerStatsAssembler {
     // X01 checkout-score tracking.
     int? lastPlayerTurnStartingScore;
 
+    // Active cricket target set for this game. Resets to the canonical
+    // fixed set on each `GameCreated`; replaced by the assigned 6 numbers
+    // (+ implicit Bull 25) on `CricketTargetsAssigned`. See
+    // `docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
+    Set<int> activeCricketTargets = kCricketTargets;
+
     final currentLegEvents = <GameEvent>[];
 
     for (final event in events) {
       currentLegEvents.add(event);
       final payload = event.payload;
       switch (event.eventType) {
+        case 'GameCreated':
+          activeCricketTargets = kCricketTargets;
+        case 'CricketTargetsAssigned':
+          final raw = payload['targets'] as List<dynamic>;
+          activeCricketTargets = {
+            for (final t in raw) (t as num).toInt(),
+            25,
+          };
         case 'TurnStarted':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
@@ -934,12 +948,14 @@ class PlayerStatsAssembler {
               : (payload['score'] as num?)?.toInt() ?? 0;
           legScoreTotal += score;
 
-          // Cricket marks (numeric or canonical-string segment).
+          // Cricket marks (numeric or canonical-string segment). Uses the
+          // active target set so Random Cricket marks land correctly.
           if (rawSeg is String) {
-            currentTurnMarks += cricketMarksForSegment(rawSeg);
+            currentTurnMarks +=
+                cricketMarksForSegment(rawSeg, targets: activeCricketTargets);
           } else if (segInt != null) {
             final multInt = mult ?? 1;
-            if (kCricketTargets.contains(segInt)) {
+            if (activeCricketTargets.contains(segInt)) {
               currentTurnMarks += multInt.clamp(0, 3);
             }
           }

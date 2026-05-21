@@ -121,3 +121,42 @@ const cricketCutThroatRules = GameRules(
     ),
   ],
 );
+
+const cricketRandomRules = GameRules(
+  title: 'Cricket — Random',
+  tagline: 'Six random numbers plus the Bull, fixed for the whole game.',
+  sections: [
+    RulesSection(
+      heading: 'Objective',
+      body:
+          'Same as Standard Cricket — close every target and finish ahead on points — but the six numbers are drawn at random when the game starts. '
+          'The Bull is always a target. The assigned set stays the same across every leg of the game.',
+    ),
+    RulesSection(
+      heading: 'How to play',
+      bullets: [
+        'When the game begins, six numbers from 1 to 20 are drawn at random and shown on the board. Together with the Bull they form your seven targets.',
+        'The targets do not change between legs — what was drawn is what you play, start to finish.',
+        'You throw three darts per turn. A single is one hit on a target, a double is two, and a triple is three. The outer bull counts as one hit, the inner bull as two.',
+        'Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.',
+        'Once every player has closed a number it is dead, and nobody can score on it.',
+      ],
+    ),
+    RulesSection(
+      heading: 'Winning',
+      body:
+          'You win the leg the moment all of your targets are closed and your score is at least as high as every opponent\'s. '
+          'Closing first while trailing on points does not end the leg — you need to score on, or have opponents close, the targets you are leading on.',
+    ),
+  ],
+  relatedVariants: [
+    RulesVariant(
+      name: 'Standard',
+      summary: 'The classic 15–20 + Bull target set. No randomness.',
+    ),
+    RulesVariant(
+      name: 'Cut Throat',
+      summary: 'Random Cricket can be combined with Cut Throat scoring — points go to opponents instead.',
+    ),
+  ],
+);
