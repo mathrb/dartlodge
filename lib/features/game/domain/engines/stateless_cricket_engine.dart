@@ -194,11 +194,16 @@ class StatelessCricketEngine implements GameEngine {
     // Crazy Cricket — global lock on close. The instant any player reaches
     // 3 marks on a number, that number is permanently locked onto the
     // board (never re-randomised again). Other players still must close
-    // it individually to win. No effect under fixed/random modes (the
-    // set never rotates anyway). Bull is always a fixed door — locking
-    // it is a no-op semantically but kept for symmetry. See design §4.
+    // it individually to win. Bull is **excluded** from the locked set:
+    // it is implicit on the board (always present as a 7th door, never in
+    // `cricketTargets`, never in the `open_targets` payload), so adding
+    // 25 would make `rollCrazyOpenTargets` reserve a slot for it and the
+    // engine would then carry both `'25'` and `'Bull'` keys — `'25'`
+    // having no marks and never resolving via `_isAllClosed`, deadlocking
+    // the leg. See design §4 ("Bull is a fixed door, never rolled").
     if (newState.cricketTargetMode == 'crazy' &&
         newHits == 3 &&
+        segmentNum != 25 &&
         !newState.cricketLockedTargets.contains(segmentNum)) {
       newState = newState.copyWith(
         cricketLockedTargets: {...newState.cricketLockedTargets, segmentNum},

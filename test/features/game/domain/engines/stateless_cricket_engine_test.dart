@@ -1746,6 +1746,46 @@ void main() {
       expect(result.state.cricketLockedTargets, contains(7));
     });
 
+    test('closing Bull does NOT add 25 to cricketLockedTargets', () {
+      // Bull is a fixed door, never in cricketTargets and never in the
+      // CrazyTargetsRolled payload's open_targets. Locking 25 would make
+      // `rollCrazyOpenTargets` reserve a slot for it and the engine would
+      // carry both '25' and 'Bull' keys, deadlocking subsequent leg-win
+      // detection.
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+        legsToWin: 2,
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'Bull': 2},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+          ),
+        ],
+      );
+      // Single Bull (SB) → closes Bull → Bull marks reach 3.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 25, multiplier: 1,
+      ));
+
+      expect(result.state.competitors[0].marksPerNumber['Bull'], 3);
+      expect(result.state.cricketLockedTargets, isNot(contains(25)),
+          reason: 'Bull must never be added to cricketLockedTargets — it '
+              'is implicit on the board and the locked set is restricted '
+              'to 1..20.');
+    });
+
     test('leg reset clears cricketLockedTargets (per-leg scope)', () {
       // c1 closes everything in leg 1 → locks accumulate → leg completes.
       final targets = [3, 7, 11, 14, 18, 20];

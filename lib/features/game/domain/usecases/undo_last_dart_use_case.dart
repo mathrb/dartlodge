@@ -91,7 +91,15 @@ class UndoLastDartUseCase {
       if (event.eventType == 'TurnStarted' ||
           event.eventType == 'TurnEnded' ||
           event.eventType == 'LegCompleted' ||
-          event.eventType == 'GameCompleted') {
+          event.eventType == 'GameCompleted' ||
+          // Crazy Cricket: every TurnStarted is followed by a
+          // CrazyTargetsRolled carrying that turn's rolled set. If we
+          // supersede the TurnStarted, we must also supersede the trailing
+          // roll — otherwise replay applies the cancelled turn's targets
+          // and leaves `cricketTargets` pointing at the wrong set
+          // (discard-on-rotate would also wipe legitimate marks against
+          // a fabricated rotation). See design §4.
+          event.eventType == 'CrazyTargetsRolled') {
         newSupersededIds.add(event.eventId);
       }
     }
@@ -145,6 +153,12 @@ class UndoLastDartUseCase {
         continue;
       }
       if (event.eventType == 'TurnStarted' &&
+          allSupersededIds.contains(event.eventId)) {
+        continue;
+      }
+      // Crazy Cricket: a superseded CrazyTargetsRolled would otherwise
+      // overwrite `cricketTargets` with the cancelled turn's rolls.
+      if (event.eventType == 'CrazyTargetsRolled' &&
           allSupersededIds.contains(event.eventId)) {
         continue;
       }

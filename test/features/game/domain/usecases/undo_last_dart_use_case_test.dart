@@ -840,4 +840,142 @@ void main() {
       expect(newState.aroundTheClockVariant, 'reverse');
     });
   });
+
+  group('Crazy Cricket — undo at turn boundary supersedes CrazyTargetsRolled',
+      () {
+    // After undoing the dart that triggered a turn change in Crazy
+    // Cricket, the TurnStarted for the new (now-cancelled) turn is
+    // superseded. The CrazyTargetsRolled emitted immediately after it
+    // must also be superseded, otherwise replay overwrites
+    // cricketTargets with the cancelled turn's rolled set.
+
+    GameState _crazyState() {
+      return GameState(
+        gameId: 'cg',
+        gameType: GameType.cricket,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'cA',
+            name: 'A',
+            playerIds: ['pA'],
+            score: 0,
+            isIn: true,
+          ),
+          const CompetitorState(
+            competitorId: 'cB',
+            name: 'B',
+            playerIds: ['pB'],
+            score: 0,
+            isIn: true,
+          ),
+        ],
+        currentTurnIndex: 0,
+        dartsThrownInTurn: 3,
+        isComplete: false,
+        status: GameEngineStatus.inProgress,
+        turnActive: true,
+        legsToWin: 1,
+        startingScore: 0,
+        cricketScoring: 'standard',
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+      );
+    }
+
+    GameEvent _ev(
+      String id,
+      String type,
+      int seq, [
+      Map<String, dynamic> payload = const {},
+    ]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'cg',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    test('replay does NOT apply the cancelled turn\'s CrazyTargetsRolled',
+        () async {
+      final engine = StatelessCricketEngine();
+      final useCase =
+          UndoLastDartUseCase(mockEventRepo, mockDartRepo, engine);
+
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'CRICKET',
+          'rules_payload': {
+            'scoring': 'standard',
+            'targetMode': 'crazy',
+            'numbers': ['15', '16', '17', '18', '19', '20', 'bull'],
+          },
+          'competitors': ['cA', 'cB'],
+        }),
+        _ev('tsA', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _ev('rA', 'CrazyTargetsRolled', 3, {
+          'competitor_id': 'cA',
+          'round': 1,
+          'open_targets': [3, 7, 11, 14, 18, 20],
+        }),
+        _ev('d1', 'DartThrown', 4, {
+          'competitor_id': 'cA',
+          'segment': 3,
+          'multiplier': 1,
+          'input_method': 'manual',
+        }),
+        _ev('d2', 'DartThrown', 5, {
+          'competitor_id': 'cA',
+          'segment': 7,
+          'multiplier': 1,
+          'input_method': 'manual',
+        }),
+        _ev('d3', 'DartThrown', 6, {
+          'competitor_id': 'cA',
+          'segment': 11,
+          'multiplier': 1,
+          'input_method': 'manual',
+        }),
+        _ev('teA', 'TurnEnded', 7, {'competitor_id': 'cA'}),
+        _ev('tsB', 'TurnStarted', 8,
+            {'competitor_id': 'cB', 'turn_index': 1, 'leg_index': 0}),
+        // Critical: B's turn has a DIFFERENT rolled set. If undo of d3
+        // doesn't supersede this CrazyTargetsRolled, the replay state
+        // will end up with cricketTargets = [2,5,8,17,18,20].
+        _ev('rB', 'CrazyTargetsRolled', 9, {
+          'competitor_id': 'cB',
+          'round': 1,
+          'open_targets': [2, 5, 8, 17, 18, 20],
+        }),
+      ];
+      when(mockEventRepo.getEventsForGame('cg'))
+          .thenAnswer((_) async => events);
+      when(mockEventRepo.getLatestSequence('cg'))
+          .thenAnswer((_) async => 9);
+
+      // Capture the superseded ids from the appended DartCorrected.
+      final correctionPayloads = <Map<String, dynamic>>[];
+      when(mockEventRepo.appendEvent(any)).thenAnswer((inv) async {
+        final e = inv.positionalArguments[0] as GameEvent;
+        if (e.eventType == 'DartCorrected') correctionPayloads.add(e.payload);
+      });
+
+      final newState = await useCase.execute(_crazyState());
+
+      // Both A's TurnEnded, B's TurnStarted, and B's CrazyTargetsRolled
+      // are superseded (they all describe the now-cancelled turn change).
+      expect(correctionPayloads, isNotEmpty);
+      final superseded =
+          (correctionPayloads.first['superseded_event_ids'] as List).cast<String>();
+      expect(superseded, containsAll(['teA', 'tsB', 'rB']));
+
+      // Post-undo, cricketTargets must be A's set, not B's.
+      expect(newState.cricketTargets, [3, 7, 11, 14, 18, 20]);
+    });
+  });
 }
