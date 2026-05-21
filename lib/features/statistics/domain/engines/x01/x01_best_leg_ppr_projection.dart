@@ -5,11 +5,24 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 
 /// Tracks best single-leg PPR and best single-leg First 9 PPR across all legs.
+///
+/// Both metrics are derived from the points actually scored by darts — the
+/// same convention as `X01AverageProjection`. Leg PPR is NOT derived from the
+/// leg's starting score: an X01 handicap is baked into the `starting_score`
+/// payload, so a starting-score-based PPR would credit the player with points
+/// the handicap granted rather than threw, and it would also miss busted
+/// darts. Summing dart scores keeps best-leg PPR consistent with the player's
+/// 3-dart average. See issue #246.
 class X01BestLegPprProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01.bestLegPpr',
     supportedGameTypes: {GameType.x01},
-    consumedEventTypes: {'TurnStarted', 'DartThrown', 'TurnEnded', 'LegCompleted'},
+    consumedEventTypes: {
+      'TurnStarted',
+      'DartThrown',
+      'TurnEnded',
+      'LegCompleted',
+    },
     scope: ProjectionScope.leg,
   );
 
@@ -18,27 +31,31 @@ class X01BestLegPprProjection extends ProjectionEngine {
 
   ProjectionContext? _context;
 
-  // Per-leg state (null legStartingScore means not yet captured)
-  int? _legStartingScore;
+  // Per-leg state.
+  int _legScore = 0;
   int _legDartsCount = 0;
   int _turnIndex = 0;
   int _firstNineScore = 0;
   int _currentTurnScore = 0;
 
-  // Career bests
+  // Career bests.
   double? _bestLegPpr;
   double? _bestFirstNinePpr;
 
   @override
   void init(ProjectionContext context) {
     _context = context;
-    _legStartingScore = null;
+    _resetLeg();
+    _bestLegPpr = null;
+    _bestFirstNinePpr = null;
+  }
+
+  void _resetLeg() {
+    _legScore = 0;
     _legDartsCount = 0;
     _turnIndex = 0;
     _firstNineScore = 0;
     _currentTurnScore = 0;
-    _bestLegPpr = null;
-    _bestFirstNinePpr = null;
   }
 
   @override
@@ -49,35 +66,30 @@ class X01BestLegPprProjection extends ProjectionEngine {
         if (playerId != _context?.playerId) return;
         _turnIndex++;
         _currentTurnScore = 0;
-        _legStartingScore ??=
-            (event.payload['starting_score'] as num?)?.toInt() ?? 0;
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         _legDartsCount++;
-        if (_turnIndex <= 3) {
-          final seg = (event.payload['segment'] as num?)?.toInt();
-          final mult = (event.payload['multiplier'] as num?)?.toInt();
-          final score = (seg != null && mult != null)
-              ? seg * mult
-              : (event.payload['score'] as num?)?.toInt() ?? 0;
-          _currentTurnScore += score;
-        }
+        final seg = (event.payload['segment'] as num?)?.toInt();
+        final mult = (event.payload['multiplier'] as num?)?.toInt();
+        final score = (seg != null && mult != null)
+            ? seg * mult
+            : (event.payload['score'] as num?)?.toInt() ?? 0;
+        _currentTurnScore += score;
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
+        // PPR counts every dart's score, busts included — see
+        // X01AverageProjection for the rationale.
+        _legScore += _currentTurnScore;
         if (_turnIndex <= 3) {
-          // Best-leg first-9 PPR counts every dart's score, busts included.
-          // See X01AverageProjection for rationale.
           _firstNineScore += _currentTurnScore;
-          _currentTurnScore = 0;
         }
+        _currentTurnScore = 0;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
-        if (winnerId == _context?.playerId &&
-            _legStartingScore != null &&
-            _legDartsCount > 0) {
-          final legPpr = _legStartingScore! / _legDartsCount * 3;
+        if (winnerId == _context?.playerId && _legDartsCount > 0) {
+          final legPpr = _legScore / _legDartsCount * 3;
           _bestLegPpr =
               _bestLegPpr == null ? legPpr : max(_bestLegPpr!, legPpr);
           if (_turnIndex >= 3) {
@@ -87,23 +99,14 @@ class X01BestLegPprProjection extends ProjectionEngine {
                 : max(_bestFirstNinePpr!, firstNinePpr);
           }
         }
-        // Reset per-leg state
-        _legStartingScore = null;
-        _legDartsCount = 0;
-        _turnIndex = 0;
-        _firstNineScore = 0;
-        _currentTurnScore = 0;
+        _resetLeg();
     }
   }
 
   @override
   void reset(ProjectionScope scope) {
     if (scope == ProjectionScope.leg) {
-      _legStartingScore = null;
-      _legDartsCount = 0;
-      _turnIndex = 0;
-      _firstNineScore = 0;
-      _currentTurnScore = 0;
+      _resetLeg();
     }
   }
 

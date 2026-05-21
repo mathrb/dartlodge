@@ -35,10 +35,9 @@ void main() {
           lastActive: DateTime.now(),
         ));
 
-        // ── Game 1: 18 darts to win (leg PPR = 501/18*3 = 83.5) ───────────
-        // The projection only needs the starting score from the first
-        // TurnStarted (501), the dart count, and a winning LegCompleted —
-        // exact dart values don't influence the leg PPR formula.
+        // ── Game 1: 18 darts of S20 (leg PPR = 360/18*3 = 60.0) ──────────
+        // Leg PPR sums the points actually thrown, so the lower-scoring
+        // game must lose to Game 2's 9-darter below.
         await _playSoloX01Game(
           gameRepo: gameRepo,
           dartThrowRepo: dartThrowRepo,
