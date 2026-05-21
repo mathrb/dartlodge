@@ -134,6 +134,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     int? startingScore,
     String? variant,
     int? legLimit,
+    String cricketTargetMode = 'fixed',
   }) async {
     try {
       // 1. Verify player exists.
@@ -210,21 +211,22 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           }
         }).toList();
       }
-      // Cricket target-mode cohort scaffolding: only `fixed` exists today
-      // (random/crazy land in subsequent PRs #237/#238). Legacy games carry
-      // no `targetMode` field and map to `fixed`. Keeping each mode's stats
-      // separate prevents future cohorts from polluting Standard Cricket
-      // career numbers.
+      // Cricket target-mode cohort filter: each mode's stats are kept
+      // separate so Random/Crazy don't pollute Standard Cricket career
+      // numbers (the canonical target sets differ, so closure rate and MPR
+      // are not directly comparable). Legacy games carry no `targetMode`
+      // field and map to `fixed`. Crazy lands in #238. See
+      // `docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
       if (gameType == GameType.cricket) {
         games = games.where((g) {
           final cj = g.configJson;
-          if (cj == null) return true;
+          if (cj == null) return cricketTargetMode == 'fixed';
           try {
             final cfg = jsonDecode(cj) as Map<String, dynamic>;
             final mode = cfg['targetMode'] ?? 'fixed';
-            return mode == 'fixed';
+            return mode == cricketTargetMode;
           } catch (_) {
-            return true;
+            return cricketTargetMode == 'fixed';
           }
         }).toList();
       }
@@ -454,6 +456,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     int? startingScore,
     String? variant,
     int? limit,
+    String cricketTargetMode = 'fixed',
   }) async {
     try {
       // 1. Find completed games for this player
@@ -507,17 +510,16 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           }
         }).toList();
       }
-      // Cricket target-mode cohort scaffolding: only `fixed` exists today
-      // (random/crazy land in subsequent PRs #237/#238). Legacy games carry
-      // no `targetMode` field and map to `fixed`.
+      // Cricket target-mode cohort filter (see counterpart comment on
+      // getPlayerStats for rationale).
       if (gameType == GameType.cricket) {
         filtered = filtered.where((g) {
           try {
             final cfg = jsonDecode(g.configJson) as Map<String, dynamic>;
             final mode = cfg['targetMode'] ?? 'fixed';
-            return mode == 'fixed';
+            return mode == cricketTargetMode;
           } catch (_) {
-            return true;
+            return cricketTargetMode == 'fixed';
           }
         }).toList();
       }

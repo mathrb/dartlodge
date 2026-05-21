@@ -55,6 +55,11 @@ These are *derived state*, never directly mutated outside transitions.
 ## 2. Event Set (Relevant to Cricket)
 
 * `GameCreated`
+* `CricketTargetsAssigned` — emitted once for `target_mode = random`
+  immediately after `GameCreated`. Payload `targets: List<int>` carries
+  6 distinct numbers from 1–20; Bull is implicit. Game-scoped (same set
+  across all legs). RNG runs once in the creation use case; replay is
+  deterministic from the persisted payload.
 * `TurnStarted`
 * `DartThrown`
 * `TurnEnded`

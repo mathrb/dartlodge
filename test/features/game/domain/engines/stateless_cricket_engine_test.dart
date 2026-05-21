@@ -62,6 +62,8 @@ GameState _makeState({
   int currentTurnIndex = 0,
   int dartsThrownInTurn = 0,
   List<CompetitorState>? competitors,
+  String cricketTargetMode = 'fixed',
+  List<int> cricketTargets = const [15, 16, 17, 18, 19, 20],
 }) {
   competitors ??= [
     const CompetitorState(
@@ -89,6 +91,8 @@ GameState _makeState({
     legsToWin: legsToWin,
     currentLegIndex: 0,
     cricketScoring: variant,
+    cricketTargetMode: cricketTargetMode,
+    cricketTargets: cricketTargets,
   );
 }
 
@@ -1503,6 +1507,102 @@ void main() {
       expect(result.winnerCompetitorId, isNull);
       expect(result.state.isComplete, true);
       expect(result.state.winnerCompetitorId, isNull);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // CricketTargetsAssigned — Random Cricket (#237)
+  // ─────────────────────────────────────────────────────────────
+  group('CricketTargetsAssigned', () {
+    test('replaces cricketTargets with payload targets', () {
+      final state = _makeState(
+        cricketTargetMode: 'random',
+        cricketTargets: const [],
+      );
+      final event = _event(
+        type: 'CricketTargetsAssigned',
+        payload: {'targets': [3, 7, 11, 14, 18, 20]},
+      );
+
+      final result = engine.apply(state, event);
+
+      expect(result.state.cricketTargets, [3, 7, 11, 14, 18, 20]);
+    });
+
+    test('only the payload numbers (plus Bull) count as valid segments',
+        () {
+      // Random Cricket should accept hits on the assigned numbers and
+      // Bull (always implicit), but ignore the canonical 15–20 set.
+      final state = _makeState(
+        cricketTargetMode: 'random',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+        turnActive: true,
+        currentTurnIndex: 0,
+      );
+
+      // Hit on assigned number 3 → mark recorded
+      final hitAssigned = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 3, multiplier: 1,
+      ));
+      expect(hitAssigned.state.competitors[0].marksPerNumber['3'], 1);
+
+      // Hit on non-assigned number 15 → counts as a dart thrown but no
+      // mark recorded (Table C).
+      final stateAfter = hitAssigned.state.copyWith(dartsThrownInTurn: 0);
+      final hitUnassigned = engine.apply(stateAfter, _dartThrown(
+        competitorId: 'c1', segment: 15, multiplier: 1,
+      ));
+      expect(hitUnassigned.state.competitors[0].marksPerNumber['15'], isNull);
+
+      // Bull always valid even under random.
+      final stateAfter2 = hitUnassigned.state.copyWith(dartsThrownInTurn: 0);
+      final hitBull = engine.apply(stateAfter2, _dartThrown(
+        competitorId: 'c1', segment: 25, multiplier: 1,
+      ));
+      expect(hitBull.state.competitors[0].marksPerNumber['Bull'], 1);
+    });
+
+    test('targets persist across leg reset (game-scoped)', () {
+      // Build a near-end state for leg 1: c1 closes all 6 assigned
+      // numbers + Bull and has a higher score (standard scoring) than c2.
+      final targets = [2, 5, 8, 11, 14, 17];
+      final closedMarks = <String, int>{
+        for (final t in targets) t.toString(): 3,
+        'Bull': 3,
+      };
+      final state = _makeState(
+        cricketTargetMode: 'random',
+        cricketTargets: targets,
+        legsToWin: 2,
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: const ['p1'],
+            score: 10,
+            marksPerNumber: closedMarks,
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+          ),
+        ],
+      ).copyWith(dartsThrownInTurn: 2);
+
+      // Closing the final Bull triggers leg win; legsToWin=2 so it
+      // doesn't end the game — just resets.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 25, multiplier: 1,
+      ));
+
+      expect(result.outcome, LegOutcome.legCompleted);
+      expect(result.state.cricketTargets, targets,
+          reason: 'Random Cricket targets are game-scoped — must survive '
+              'leg reset, never re-rolled');
     });
   });
 }

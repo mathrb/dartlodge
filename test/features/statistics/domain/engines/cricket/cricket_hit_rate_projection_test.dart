@@ -132,8 +132,15 @@ void main() {
     expect(engine.descriptor.supportedGameTypes, {GameType.cricket});
   });
 
-  test('G3 — consumes DartThrown only', () {
-    expect(engine.descriptor.consumedEventTypes, {'DartThrown'});
+  test('G3 — consumes DartThrown plus cricket target-set lifecycle events', () {
+    // `GameCreated` and `CricketTargetsAssigned` are consumed so the
+    // projection tracks the active cricket target set (random mode);
+    // they are otherwise inert for hit-rate counting. See
+    // `docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
+    expect(
+      engine.descriptor.consumedEventTypes,
+      {'GameCreated', 'CricketTargetsAssigned', 'DartThrown'},
+    );
   });
 
   // ── GS1–GS3 ───────────────────────────────────────────────────────────────

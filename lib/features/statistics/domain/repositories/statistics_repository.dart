@@ -43,15 +43,25 @@ abstract interface class StatisticsRepository {
     int? startingScore,
     String? variant,
     int? legLimit,
+    String cricketTargetMode = 'fixed',
   });
 
   /// Returns per-leg PPR/MPT snapshots ordered oldest → newest.
+  ///
+  /// [cricketTargetMode] selects the cricket target-mode cohort
+  /// (`fixed` / `random` / `crazy`) — see
+  /// `docs/plans/2026-05-19-cricket-target-modes-design.md` §6. Default is
+  /// `fixed` because Standard Cricket career stats are the most common
+  /// query and the bulk of historical data is fixed-mode. Random and Crazy
+  /// stats are kept separate to avoid distorting the closure-rate and
+  /// MPR shapes that depend on a known target set.
   Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
     String playerId, {
     GameType? gameType,
     int? startingScore,
     String? variant,
     int? limit,
+    String cricketTargetMode = 'fixed',
   });
 
   /// Returns distinct X01 starting scores for the player's completed games,

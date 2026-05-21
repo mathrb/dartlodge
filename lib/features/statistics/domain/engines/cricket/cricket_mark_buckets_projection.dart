@@ -2,13 +2,20 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'cricket_segment_utils.dart';
+import 'cricket_targets_mixin.dart';
 
 /// Counts high-mark turns: turns scoring 6+ marks or 9 marks (maximum).
-class CricketMarkBucketsProjection extends ProjectionEngine {
+class CricketMarkBucketsProjection extends ProjectionEngine
+    with CricketTargetsTracker {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'cricket.markBuckets',
     supportedGameTypes: {GameType.cricket},
-    consumedEventTypes: {'DartThrown', 'TurnEnded'},
+    consumedEventTypes: {
+      'GameCreated',
+      'CricketTargetsAssigned',
+      'DartThrown',
+      'TurnEnded',
+    },
     scope: ProjectionScope.turn,
   );
 
@@ -36,16 +43,19 @@ class CricketMarkBucketsProjection extends ProjectionEngine {
     _sevenMarkExact = 0;
     _eightMarkExact = 0;
     _nineMarkExact = 0;
+    resetCricketTargets();
   }
 
   @override
   void apply(GameEvent event) {
+    if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         final s = readSegmentFromPayload(event.payload);
-        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier);
+        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
+            targets: activeCricketTargets);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;

@@ -2,14 +2,16 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'cricket_segment_utils.dart';
+import 'cricket_targets_mixin.dart';
 
 /// Computes hit rate: fraction of darts that land on a valid cricket target.
 /// hitRate = cricketDarts / totalDarts (0.0–1.0).
-class CricketHitRateProjection extends ProjectionEngine {
+class CricketHitRateProjection extends ProjectionEngine
+    with CricketTargetsTracker {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'cricket.hitRate',
     supportedGameTypes: {GameType.cricket},
-    consumedEventTypes: {'DartThrown'},
+    consumedEventTypes: {'GameCreated', 'CricketTargetsAssigned', 'DartThrown'},
     scope: ProjectionScope.career,
   );
 
@@ -25,16 +27,18 @@ class CricketHitRateProjection extends ProjectionEngine {
     _context = context;
     _totalDarts = 0;
     _cricketDarts = 0;
+    resetCricketTargets();
   }
 
   @override
   void apply(GameEvent event) {
+    if (maybeApplyCricketTargets(event)) return;
     if (event.eventType != 'DartThrown') return;
     final playerId = event.payload['player_id'] as String?;
     if (playerId != _context?.playerId) return;
     _totalDarts++;
     final s = readSegmentFromPayload(event.payload);
-    if (isCricketTargetNumeric(s.segment)) {
+    if (isCricketTargetNumeric(s.segment, targets: activeCricketTargets)) {
       _cricketDarts++;
     }
   }

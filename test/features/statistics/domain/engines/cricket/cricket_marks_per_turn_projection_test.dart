@@ -220,4 +220,80 @@ void main() {
     // 15+16+17+18+19+20 = 6 singles + SB=1 + DB=2 = 9 marks total
     expect(engine.snapshot()['totalMarks'], 9);
   });
+
+  // ── Random Cricket (#237) ─────────────────────────────────────────────────
+
+  test('RC1 — after CricketTargetsAssigned, hits on assigned numbers count',
+      () {
+    engine.init(_makeContext());
+    // Numeric (segment, multiplier) payload — the engine event format.
+    engine.apply(_makeEvent('GameCreated', {}, seq: 1));
+    engine.apply(_makeEvent(
+        'CricketTargetsAssigned', {'targets': [3, 7, 11, 14, 18, 20]},
+        seq: 2));
+    // T3 on assigned target → 3 marks
+    engine.apply(_makeEvent('DartThrown',
+        {'player_id': 'p1', 'segment': 3, 'multiplier': 3},
+        seq: 3));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1'}, seq: 4));
+    expect(engine.snapshot()['totalMarks'], 3);
+  });
+
+  test('RC2 — hits on numbers NOT in the assigned set do NOT count', () {
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('GameCreated', {}, seq: 1));
+    engine.apply(_makeEvent(
+        'CricketTargetsAssigned', {'targets': [3, 7, 11, 14, 18, 20]},
+        seq: 2));
+    // T15 — 15 is a canonical cricket number but NOT in this random set
+    engine.apply(_makeEvent('DartThrown',
+        {'player_id': 'p1', 'segment': 15, 'multiplier': 3},
+        seq: 3));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1'}, seq: 4));
+    expect(engine.snapshot()['totalMarks'], 0,
+        reason: 'Random Cricket: 15 is not in the assigned set, so a T15 '
+            'must contribute 0 marks even though 15 is in the canonical '
+            'fixed-cricket target list');
+  });
+
+  test('RC3 — Bull always counts (implicit 7th target)', () {
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('GameCreated', {}, seq: 1));
+    engine.apply(_makeEvent(
+        'CricketTargetsAssigned', {'targets': [3, 7, 11, 14, 18, 20]},
+        seq: 2));
+    engine.apply(_makeEvent('DartThrown',
+        {'player_id': 'p1', 'segment': 25, 'multiplier': 2},
+        seq: 3));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1'}, seq: 4));
+    expect(engine.snapshot()['totalMarks'], 2);
+  });
+
+  test('RC4 — GameCreated resets target set so later fixed games are not '
+      'polluted by an earlier random game', () {
+    engine.init(_makeContext());
+    // Game 1: random targets that include 3.
+    engine.apply(_makeEvent('GameCreated', {}, seq: 1));
+    engine.apply(_makeEvent(
+        'CricketTargetsAssigned', {'targets': [3, 7, 11, 14, 18, 20]},
+        seq: 2));
+    engine.apply(_makeEvent('DartThrown',
+        {'player_id': 'p1', 'segment': 3, 'multiplier': 1},
+        seq: 3));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1'}, seq: 4));
+    engine.apply(_makeEvent('GameCompleted', {}, seq: 5));
+
+    // Game 2: fixed (no CricketTargetsAssigned). A hit on 3 should NOT
+    // count anymore — the previous game's random set must have been reset.
+    engine.apply(_makeEvent('GameCreated', {}, seq: 6));
+    engine.apply(_makeEvent('DartThrown',
+        {'player_id': 'p1', 'segment': 3, 'multiplier': 1},
+        seq: 7));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1'}, seq: 8));
+
+    // Total marks across both games: 1 (game 1's S3) + 0 (game 2's S3
+    // outside the canonical 15–20+Bull set) = 1.
+    expect(engine.snapshot()['totalMarks'], 1);
+    expect(engine.snapshot()['totalTurns'], 2);
+  });
 }

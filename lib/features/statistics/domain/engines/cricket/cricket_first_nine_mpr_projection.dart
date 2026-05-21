@@ -2,14 +2,23 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'cricket_segment_utils.dart';
+import 'cricket_targets_mixin.dart';
 
 /// Computes Marks Per Round (MPR) for the first 9 darts (first 3 turns) of each leg.
 /// Mirrors X01FirstNinePprProjection but counts cricket marks instead of score.
-class CricketFirstNineMprProjection extends ProjectionEngine {
+class CricketFirstNineMprProjection extends ProjectionEngine
+    with CricketTargetsTracker {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'cricket.firstNineMpr',
     supportedGameTypes: {GameType.cricket},
-    consumedEventTypes: {'TurnStarted', 'DartThrown', 'TurnEnded', 'LegCompleted'},
+    consumedEventTypes: {
+      'GameCreated',
+      'CricketTargetsAssigned',
+      'TurnStarted',
+      'DartThrown',
+      'TurnEnded',
+      'LegCompleted',
+    },
     scope: ProjectionScope.turn,
   );
 
@@ -31,10 +40,12 @@ class CricketFirstNineMprProjection extends ProjectionEngine {
     _currentTurnMarks = 0;
     _totalFirstNineMarks = 0;
     _totalFirstNineLegs = 0;
+    resetCricketTargets();
   }
 
   @override
   void apply(GameEvent event) {
+    if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'TurnStarted':
         final playerId = event.payload['player_id'] as String?;
@@ -47,7 +58,8 @@ class CricketFirstNineMprProjection extends ProjectionEngine {
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         final s = readSegmentFromPayload(event.payload);
-        _currentTurnMarks += cricketMarksFromPayload(s.segment, s.multiplier);
+        _currentTurnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
+            targets: activeCricketTargets);
       case 'TurnEnded':
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
