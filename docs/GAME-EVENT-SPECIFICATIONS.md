@@ -103,6 +103,33 @@ is absent, so existing event logs continue to deserialise.
 
 ---
 
+#### `CricketTargetsAssigned`
+
+```text
+targets    List<Integer>    Exactly 6 distinct numbers drawn uniformly
+                            from 1–20. Bull (25) is implicit as a 7th
+                            target and never randomised.
+```
+
+**Emitted by**
+
+* Cricket games with `target_mode = "random"`, immediately after
+  `GameCreated` and before the first `TurnStarted`. The RNG runs
+  **once** in `CreateGameUseCase` and is persisted in the payload —
+  `engine.apply()` is pure and just reads the list, so replay is
+  deterministic by construction (no replay-time RNG).
+
+**Invariants**
+
+* Exactly one per game; never emitted for `target_mode = "fixed"`.
+* `targets.length == 6`, no duplicates, all values ∈ 1..20.
+* **Game-scoped**: the assigned set persists across all legs (no
+  re-roll on leg reset). Mirrors the DARTSLIVE "Random Cricket" /
+  Mulligan canonical rules. See
+  `docs/plans/2026-05-19-cricket-target-modes-design.md` §3.
+
+---
+
 ### 4.2 Turn Control
 
 #### `TurnStarted`

@@ -13,6 +13,7 @@ import 'package:dart_lodge/features/game/domain/repositories/game_event_reposito
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import 'package:dart_lodge/features/game/domain/usecases/create_game_use_case.dart';
 import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
+import 'dart:math' as math;
 
 import 'create_game_use_case_test.mocks.dart';
 
@@ -357,6 +358,100 @@ void main() {
       expect(callOrder.last, 'touchPlayer');
       expect(callOrder.indexOf('appendEvent'),
           lessThan(callOrder.indexOf('touchPlayer')));
+    });
+  });
+
+  // ── Random Cricket (#237) ──────────────────────────────────────────
+  group('Random Cricket — CricketTargetsAssigned', () {
+    Game _cricketRandom() => Game(
+          gameId: 'g1',
+          gameType: GameType.cricket,
+          config: const GameConfig.cricket(
+            scoring: 'standard',
+            targetMode: 'random',
+            numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+          ),
+          startTime: DateTime.now(),
+        );
+
+    Game _cricketFixed() => Game(
+          gameId: 'g1',
+          gameType: GameType.cricket,
+          config: const GameConfig.cricket(
+            scoring: 'standard',
+            numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+          ),
+          startTime: DateTime.now(),
+        );
+
+    test('Fixed cricket emits no CricketTargetsAssigned event', () async {
+      final captured = <GameEvent>[];
+      when(mockEventRepo.appendEvent(any)).thenAnswer((inv) async {
+        captured.add(inv.positionalArguments[0] as GameEvent);
+      });
+
+      await useCase.execute(_cricketFixed(), _makeCompetitors());
+
+      expect(
+        captured.map((e) => e.eventType),
+        ['GameCreated', 'TurnStarted'],
+      );
+    });
+
+    test('Random cricket emits CricketTargetsAssigned between '
+        'GameCreated and TurnStarted', () async {
+      // Seed RNG so the test is deterministic.
+      useCase = CreateGameUseCase(
+        mockGameRepo,
+        mockEventRepo,
+        mockPlayerRepo,
+        random: math.Random(42),
+      );
+
+      final captured = <GameEvent>[];
+      when(mockEventRepo.appendEvent(any)).thenAnswer((inv) async {
+        captured.add(inv.positionalArguments[0] as GameEvent);
+      });
+
+      await useCase.execute(_cricketRandom(), _makeCompetitors());
+
+      expect(
+        captured.map((e) => e.eventType),
+        ['GameCreated', 'CricketTargetsAssigned', 'TurnStarted'],
+      );
+      // local_sequence is contiguous and ascending.
+      expect(captured[0].localSequence, 1);
+      expect(captured[1].localSequence, 2);
+      expect(captured[2].localSequence, 3);
+    });
+
+    test('CricketTargetsAssigned payload contains 6 distinct numbers in 1..20',
+        () async {
+      useCase = CreateGameUseCase(
+        mockGameRepo,
+        mockEventRepo,
+        mockPlayerRepo,
+        random: math.Random(1),
+      );
+
+      final captured = <GameEvent>[];
+      when(mockEventRepo.appendEvent(any)).thenAnswer((inv) async {
+        captured.add(inv.positionalArguments[0] as GameEvent);
+      });
+
+      await useCase.execute(_cricketRandom(), _makeCompetitors());
+
+      final targetsEvent =
+          captured.firstWhere((e) => e.eventType == 'CricketTargetsAssigned');
+      final raw = targetsEvent.payload['targets'] as List;
+      final targets = raw.map((n) => (n as num).toInt()).toList();
+
+      expect(targets, hasLength(6));
+      expect(targets.toSet(), hasLength(6),
+          reason: 'targets must be distinct (uniform without replacement)');
+      for (final t in targets) {
+        expect(t, inInclusiveRange(1, 20));
+      }
     });
   });
 }

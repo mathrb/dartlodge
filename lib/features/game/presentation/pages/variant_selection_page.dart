@@ -187,6 +187,16 @@ class VariantSelectionPage extends ConsumerWidget {
             legsToWin: 1,
           ),
         ),
+        _VariantEntry(
+          label: 'Random',
+          rulesSlug: 'cricket-random',
+          config: GameConfig.cricket(
+            scoring: 'standard',
+            targetMode: 'random',
+            numbers: GameConfigurationConstants.cricketNumbers,
+            legsToWin: 1,
+          ),
+        ),
         const _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
@@ -361,10 +371,18 @@ class _LastPlayedCard extends StatelessWidget {
 
   String get _displayTitle => config.maybeMap(
         x01: (c) => '${c.startingScore}',
-        cricket: (c) => switch (c.scoring) {
-          'cut-throat' => 'Cut Throat',
-          'no-score' => 'No Score',
-          _ => 'Standard',
+        cricket: (c) {
+          final scoringLabel = switch (c.scoring) {
+            'cut-throat' => 'Cut Throat',
+            'no-score' => 'No Score',
+            _ => 'Standard',
+          };
+          final modeLabel = switch (c.targetMode) {
+            'random' => 'Random',
+            'crazy' => 'Crazy',
+            _ => null,
+          };
+          return modeLabel == null ? scoringLabel : '$modeLabel · $scoringLabel';
         },
         orElse: () => '',
       );

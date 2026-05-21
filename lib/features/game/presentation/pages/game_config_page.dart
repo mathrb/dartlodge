@@ -261,6 +261,18 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         ),
       ),
       const SizedBox(height: AppSpacing.space4),
+      _FieldSection(
+        label: 'TARGETS',
+        child: _SegmentedOptionGroup<String>(
+          // `crazy` is reserved for #238 and is intentionally absent here.
+          values: const ['fixed', 'random'],
+          labels: const ['FIXED', 'RANDOM'],
+          selected: c.targetMode,
+          onSelected: (v) =>
+              setState(() => _draftConfig = c.copyWith(targetMode: v)),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.space4),
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -10,18 +10,22 @@ import '../repositories/game_event_repository.dart';
 import '../../../players/domain/repositories/player_repository.dart';
 import '../../../../core/error/repository_exception.dart';
 import '../../../../core/utils/constants.dart';
+import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 
 class CreateGameUseCase {
   final GameRepository _gameRepository;
   final GameEventRepository _eventRepository;
   final PlayerRepository _playerRepository;
+  // Pluggable for deterministic tests. Production calls use `math.Random()`.
+  final math.Random _random;
 
   CreateGameUseCase(
     this._gameRepository,
     this._eventRepository,
-    this._playerRepository,
-  );
+    this._playerRepository, {
+    math.Random? random,
+  }) : _random = random ?? math.Random();
 
   static final Set<int> _validX01StartingScores =
       GameConfigurationConstants.x01StartingScores.toSet();
@@ -57,6 +61,34 @@ class CreateGameUseCase {
     );
     await _eventRepository.appendEvent(gameCreatedEvent);
 
+    // 3a. Random Cricket: emit `CricketTargetsAssigned` with 6 distinct
+    // numbers drawn uniformly from 1–20. RNG runs here once at game
+    // creation; the engine's `apply()` is pure and just reads the payload
+    // — replay is therefore deterministic by construction (no replay-time
+    // RNG). Game-scoped: targets stay fixed across all legs. Bull is
+    // implicit as a 7th target and never randomised.
+    // See `docs/plans/2026-05-19-cricket-target-modes-design.md` §3.
+    var sequenceCursor = latestSeq + 1;
+    final randomCricketTargets = game.config.maybeMap(
+      cricket: (c) => c.targetMode == 'random' ? _rollRandomTargets() : null,
+      orElse: () => null,
+    );
+    if (randomCricketTargets != null) {
+      sequenceCursor += 1;
+      final targetsAssignedEvent = GameEvent(
+        eventId: const Uuid().v4(),
+        gameId: game.gameId,
+        eventType: 'CricketTargetsAssigned',
+        localSequence: sequenceCursor,
+        occurredAt: DateTime.now(),
+        payload: {'targets': randomCricketTargets},
+        synced: false,
+        actorId: 'system',
+        source: EventSource.client,
+      );
+      await _eventRepository.appendEvent(targetsAssignedEvent);
+    }
+
     // 4. Append TurnStarted for the first competitor (index 0 goes first)
     final firstPlayerId = competitors.first.players.isNotEmpty
         ? competitors.first.players.first.playerId
@@ -65,11 +97,12 @@ class CreateGameUseCase {
       x01: (c) => c.startingScore,
       orElse: () => null,
     );
+    sequenceCursor += 1;
     final turnStartedEvent = GameEvent(
       eventId: const Uuid().v4(),
       gameId: game.gameId,
       eventType: 'TurnStarted',
-      localSequence: latestSeq + 2,
+      localSequence: sequenceCursor,
       occurredAt: DateTime.now(),
       payload: {
         'game_id': game.gameId,
@@ -139,5 +172,17 @@ class CreateGameUseCase {
         );
       }
     }
+  }
+
+  /// Draw 6 distinct numbers from 1..20 (uniform without replacement).
+  /// Bull is always implicit as a 7th target and never randomised.
+  List<int> _rollRandomTargets() {
+    final pool = [for (var i = 1; i <= 20; i++) i];
+    final picked = <int>[];
+    for (var i = 0; i < 6; i++) {
+      final idx = _random.nextInt(pool.length);
+      picked.add(pool.removeAt(idx));
+    }
+    return picked;
   }
 }

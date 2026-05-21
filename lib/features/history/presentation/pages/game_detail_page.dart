@@ -91,7 +91,9 @@ class GameDetailPage extends ConsumerWidget {
   ) {
     final variant = game.config.maybeMap(
       x01: (c) => '${c.startingScore}',
-      cricket: (c) => c.scoring,
+      cricket: (c) => c.targetMode == 'random'
+          ? 'random ${c.scoring}'
+          : c.scoring,
       aroundTheClock: (c) => c.variant,
       orElse: () => '',
     );

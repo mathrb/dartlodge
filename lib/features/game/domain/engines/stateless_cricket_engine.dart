@@ -32,6 +32,8 @@ class StatelessCricketEngine implements GameEngine {
     return switch (event.eventType) {
       'GameCreated' => EngineResult(
           state: state.copyWith(status: GameEngineStatus.inProgress)),
+      'CricketTargetsAssigned' =>
+          EngineResult(state: _applyCricketTargetsAssigned(state, event)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
       'TurnEnded' => _applyTurnEnded(state, event),
@@ -41,6 +43,17 @@ class StatelessCricketEngine implements GameEngine {
           outcome: LegOutcome.gameCompleted),
       _ => EngineResult(state: state),
     };
+  }
+
+  /// Apply `CricketTargetsAssigned` — the once-per-game randomised target set
+  /// emitted right after `GameCreated` for `targetMode: random`. The payload
+  /// carries 6 distinct numbers from 1–20; Bull is implicit (always a 7th
+  /// target). The RNG is run **once** in the creation use case and persisted
+  /// here, so replay is deterministic by construction.
+  GameState _applyCricketTargetsAssigned(GameState state, GameEvent event) {
+    final rawTargets = event.payload['targets'] as List<dynamic>;
+    final targets = rawTargets.map((t) => (t as num).toInt()).toList();
+    return state.copyWith(cricketTargets: targets);
   }
 
   @override
