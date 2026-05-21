@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/engines/base_game_engine.dart';
@@ -16,6 +18,10 @@ part 'active_cricket_game_provider.g.dart';
 @riverpod
 class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   final ActionSerializer _serializer = ActionSerializer();
+  // Crazy Cricket: turn-start RNG. Held as a notifier field for stable
+  // replay in widget tests (override the family if a deterministic seed
+  // is needed).
+  final math.Random _random = math.Random();
 
   @override
   Future<ActiveCricketGameState?> build(String gameId) async {
@@ -217,6 +223,21 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
         eventsToStore.add(turnStartedEvent);
         updated = engine.apply(updated, turnStartedEvent).state;
 
+        if (updated.cricketTargetMode == 'crazy') {
+          final rollEvent = buildCrazyTargetsRolledEvent(
+            gameId: updated.gameId,
+            competitorId: nextCompetitor.competitorId,
+            round: updated.currentRoundInLeg,
+            openTargets: rollCrazyOpenTargets(
+              locked: updated.cricketLockedTargets,
+              random: _random,
+            ),
+            localSequence: nextSeq++,
+          );
+          eventsToStore.add(rollEvent);
+          updated = engine.apply(updated, rollEvent).state;
+        }
+
         await ref
             .read(gameEventRepositoryProvider)
             .appendEvents(eventsToStore);
@@ -243,6 +264,21 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
 
       updated = engine.apply(updated, turnStartedEvent).state;
       eventsToStore.add(turnStartedEvent);
+
+      if (updated.cricketTargetMode == 'crazy') {
+        final rollEvent = buildCrazyTargetsRolledEvent(
+          gameId: updated.gameId,
+          competitorId: nextCompetitor.competitorId,
+          round: updated.currentRoundInLeg,
+          openTargets: rollCrazyOpenTargets(
+            locked: updated.cricketLockedTargets,
+            random: _random,
+          ),
+          localSequence: nextSeq++,
+        );
+        eventsToStore.add(rollEvent);
+        updated = engine.apply(updated, rollEvent).state;
+      }
 
       await ref
           .read(gameEventRepositoryProvider)
@@ -319,6 +355,21 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
       );
       eventsToStore.add(turnStartedEvent);
       newGs = engine.apply(newGs, turnStartedEvent).state;
+
+      if (newGs.cricketTargetMode == 'crazy') {
+        final rollEvent = buildCrazyTargetsRolledEvent(
+          gameId: newGs.gameId,
+          competitorId: nextCompetitor.competitorId,
+          round: newGs.currentRoundInLeg,
+          openTargets: rollCrazyOpenTargets(
+            locked: newGs.cricketLockedTargets,
+            random: _random,
+          ),
+          localSequence: nextSeq++,
+        );
+        eventsToStore.add(rollEvent);
+        newGs = engine.apply(newGs, rollEvent).state;
+      }
 
       await ref.read(gameEventRepositoryProvider).appendEvents(eventsToStore);
       return ActiveCricketGameState(

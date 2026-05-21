@@ -929,6 +929,18 @@ class PlayerStatsAssembler {
             for (final t in raw) (t as num).toInt(),
             25,
           };
+        case 'CrazyTargetsRolled':
+          // Crazy Cricket: targets rotate every turn. Marks here are
+          // counted from `DartThrown` payloads within each turn (this
+          // assembler is already turn-scoped via `currentTurnMarks`),
+          // never from cross-turn board diffs — discard-on-rotate makes
+          // cumulative marks non-monotonic. See
+          // `docs/statistics/statistics.architecture.md` §7.3.
+          final raw = payload['open_targets'] as List<dynamic>;
+          activeCricketTargets = {
+            for (final t in raw) (t as num).toInt(),
+            25,
+          };
         case 'TurnStarted':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;

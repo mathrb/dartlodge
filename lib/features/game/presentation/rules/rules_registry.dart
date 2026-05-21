@@ -17,6 +17,7 @@ const Map<String, GameRules> kGameRules = {
   'cricket-no-score': cricketNoScoreRules,
   'cricket-cut-throat': cricketCutThroatRules,
   'cricket-random': cricketRandomRules,
+  'cricket-crazy': cricketCrazyRules,
   'practice-atc': aroundTheClockRules,
   'practice-catch40': catch40Rules,
   'practice-bobs27': bobs27Rules,

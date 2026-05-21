@@ -27,17 +27,23 @@ mixin CricketTargetsTracker {
     _activeTargets = kCricketTargets;
   }
 
-  /// Returns `true` when [event] handles a target-set lifecycle event
-  /// (`GameCreated` resets to the canonical fixed set;
-  /// `CricketTargetsAssigned` replaces it with the random set). Mixers
-  /// should early-return when this returns true so their own switch
-  /// doesn't double-handle the event.
+  /// Returns `true` when [event] handles a target-set lifecycle event:
+  /// `GameCreated` resets to the canonical fixed set; `CricketTargetsAssigned`
+  /// replaces it with the random set; `CrazyTargetsRolled` replaces it
+  /// with the per-turn open targets. Mixers should early-return when this
+  /// returns true so their own switch doesn't double-handle the event.
   ///
   /// Resetting on `GameCreated` keeps career replay correct across game
-  /// boundaries: a random game emitting its `CricketTargetsAssigned`
-  /// would otherwise leak its random target set into the next fixed
-  /// game (which emits no such event) and silently distort that game's
-  /// mark counts.
+  /// boundaries: a random/crazy game's emitted target events would
+  /// otherwise leak their target set into the next fixed game (which
+  /// emits no such event) and silently distort that game's mark counts.
+  ///
+  /// For Crazy Cricket the target set rotates **every turn**; cumulative
+  /// marks can decrease across turns via discard-on-rotate. Projections
+  /// that count marks must do so from `DartThrown` payloads within a
+  /// turn (turn-scoped, additive) — never from cross-turn board-state
+  /// diffs — to stay correct under discard. See
+  /// `docs/statistics/statistics.architecture.md` §7.3.
   bool maybeApplyCricketTargets(GameEvent event) {
     if (event.eventType == 'GameCreated') {
       _activeTargets = kCricketTargets;
@@ -48,6 +54,14 @@ mixin CricketTargetsTracker {
       _activeTargets = {
         for (final t in raw) (t as num).toInt(),
         25, // Bull is implicit; always a 7th target.
+      };
+      return true;
+    }
+    if (event.eventType == 'CrazyTargetsRolled') {
+      final raw = event.payload['open_targets'] as List<dynamic>;
+      _activeTargets = {
+        for (final t in raw) (t as num).toInt(),
+        25,
       };
       return true;
     }

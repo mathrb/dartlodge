@@ -130,6 +130,41 @@ targets    List<Integer>    Exactly 6 distinct numbers drawn uniformly
 
 ---
 
+#### `CrazyTargetsRolled`
+
+```text
+competitor_id   UUID            The competitor whose turn just started.
+round           Integer         The leg-relative round number (1-indexed).
+open_targets    List<Integer>   The 6 active numbers for the new turn:
+                                locked numbers preserved, non-locked
+                                slots freshly rolled uniformly from 1–20
+                                (distinct within the board, excluding
+                                locked). Bull (25) is implicit and never
+                                appears in this list.
+```
+
+**Emitted by**
+
+* Cricket games with `target_mode = "crazy"`, immediately after **every**
+  `TurnStarted`. The RNG runs once per turn in the use case emitting the
+  TurnStarted; `engine.apply()` is pure and just reads the payload, so
+  replay is deterministic by construction.
+
+**Invariants**
+
+* `open_targets.length == 6`, no duplicates, all values ∈ 1..20.
+* All currently-locked numbers are present in `open_targets`
+  (they don't get re-randomised once locked — design §4).
+* **Leg-scoped**: leg reset clears `cricketLockedTargets`; the next
+  `CrazyTargetsRolled` therefore rolls all 6 slots fresh.
+* Engine effect: replaces `state.cricketTargets` with `open_targets`
+  and **discards** marks on any number that was active last turn but
+  is not in the new set and not locked ("discard on rotate"). Marks
+  on locked numbers and on numbers that stay active are preserved.
+  See `docs/plans/2026-05-19-cricket-target-modes-design.md` §4.
+
+---
+
 ### 4.2 Turn Control
 
 #### `TurnStarted`

@@ -2,6 +2,8 @@
 // Business logic for handling a dart throw event in Cricket game types.
 // Mirrors ProcessDartUseCase but omits the bust path — cricket has no bust.
 
+import 'dart:math' as math;
+
 import '../entities/game_event.dart';
 import '../entities/dart_throw.dart';
 import '../repositories/game_repository.dart';
@@ -19,13 +21,17 @@ class ProcessCricketDartUseCase {
   final GameEventRepository _eventRepository;
   final DartThrowRepository _dartThrowRepository;
   final StatelessCricketEngine _engine;
+  // Pluggable for deterministic Crazy Cricket tests; production uses
+  // `math.Random()`.
+  final math.Random _random;
 
   ProcessCricketDartUseCase(
     this._gameRepository,
     this._eventRepository,
     this._dartThrowRepository,
-    this._engine,
-  );
+    this._engine, {
+    math.Random? random,
+  }) : _random = random ?? math.Random();
 
   Future<GameState> execute(GameState currentState, DartThrow dartThrow) async {
     // 1. Guard: game already complete
@@ -121,6 +127,21 @@ class ProcessCricketDartUseCase {
         );
         eventsToStore.add(turnStartedEvent);
         finalState = _engine.apply(finalState, turnStartedEvent).state;
+
+        if (finalState.cricketTargetMode == 'crazy') {
+          final rollEvent = buildCrazyTargetsRolledEvent(
+            gameId: finalState.gameId,
+            competitorId: nextCompetitor.competitorId,
+            round: finalState.currentRoundInLeg,
+            openTargets: rollCrazyOpenTargets(
+              locked: finalState.cricketLockedTargets,
+              random: _random,
+            ),
+            localSequence: nextSeq++,
+          );
+          eventsToStore.add(rollEvent);
+          finalState = _engine.apply(finalState, rollEvent).state;
+        }
       }
       // Normal 3-dart turn end: DartThrown + TurnEnded already persisted above.
       // ActiveCricketGameNotifier.nextPlayer appends the TurnStarted for the

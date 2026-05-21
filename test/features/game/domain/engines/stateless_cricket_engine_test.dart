@@ -64,6 +64,7 @@ GameState _makeState({
   List<CompetitorState>? competitors,
   String cricketTargetMode = 'fixed',
   List<int> cricketTargets = const [15, 16, 17, 18, 19, 20],
+  Set<int> cricketLockedTargets = const <int>{},
 }) {
   competitors ??= [
     const CompetitorState(
@@ -93,6 +94,7 @@ GameState _makeState({
     cricketScoring: variant,
     cricketTargetMode: cricketTargetMode,
     cricketTargets: cricketTargets,
+    cricketLockedTargets: cricketLockedTargets,
   );
 }
 
@@ -1603,6 +1605,227 @@ void main() {
       expect(result.state.cricketTargets, targets,
           reason: 'Random Cricket targets are game-scoped — must survive '
               'leg reset, never re-rolled');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // CrazyTargetsRolled — Crazy Cricket (#238)
+  // ─────────────────────────────────────────────────────────────
+  group('CrazyTargetsRolled', () {
+    test('replaces cricketTargets with rolled set', () {
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [],
+      );
+      final event = _event(
+        type: 'CrazyTargetsRolled',
+        payload: {
+          'competitor_id': 'c1',
+          'round': 1,
+          'open_targets': [2, 7, 11, 14, 18, 20],
+        },
+      );
+
+      final result = engine.apply(state, event);
+
+      expect(result.state.cricketTargets, [2, 7, 11, 14, 18, 20]);
+    });
+
+    test('discards marks on numbers that rotated out (and are not locked)',
+        () {
+      // Before: targets = [2,7,11,14,18,20], c1 has 1 mark on 7 (partial).
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [2, 7, 11, 14, 18, 20],
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'7': 1, '14': 2},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+            marksPerNumber: {'7': 1},
+          ),
+        ],
+      );
+      // New roll keeps 14 but drops 7.
+      final event = _event(
+        type: 'CrazyTargetsRolled',
+        payload: {
+          'competitor_id': 'c1',
+          'round': 2,
+          'open_targets': [2, 5, 11, 14, 18, 20],
+        },
+      );
+
+      final result = engine.apply(state, event);
+
+      // 7 rotated out → marks wiped for everyone
+      expect(result.state.competitors[0].marksPerNumber['7'], isNull);
+      expect(result.state.competitors[1].marksPerNumber['7'], isNull);
+      // 14 stayed → marks preserved
+      expect(result.state.competitors[0].marksPerNumber['14'], 2);
+    });
+
+    test('does NOT discard marks on locked numbers when they rotate', () {
+      // A locked number must persist on the board, but `_applyCrazyTargetsRolled`
+      // diffs cricketTargets against the new set: even if a locked number
+      // somehow doesn't appear in the new payload, the discard logic must
+      // skip it (the locked set is the source of truth for permanence).
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+        cricketLockedTargets: const {3},
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'3': 3, '7': 2},
+          ),
+        ],
+      );
+      // (Hypothetical) new roll that excludes both 3 and 7. The engine
+      // must preserve marks on 3 (locked) but discard on 7.
+      final event = _event(
+        type: 'CrazyTargetsRolled',
+        payload: {
+          'competitor_id': 'c1',
+          'round': 2,
+          'open_targets': [3, 5, 8, 11, 14, 18],
+        },
+      );
+
+      final result = engine.apply(state, event);
+
+      expect(result.state.competitors[0].marksPerNumber['3'], 3,
+          reason: 'Locked number 3 keeps its marks');
+      expect(result.state.competitors[0].marksPerNumber['7'], isNull,
+          reason: 'Non-locked rotated-out 7 has marks wiped');
+    });
+
+    test('DartThrown that reaches 3 marks adds the number to '
+        'cricketLockedTargets (global lock-on-close)', () {
+      // Pre-state: c1 has 2 marks on segment 7 (an active target).
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+        cricketLockedTargets: const {},
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'7': 2},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+          ),
+        ],
+      );
+
+      // Single 7 → closes the number → locks globally.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 7, multiplier: 1,
+      ));
+
+      expect(result.state.competitors[0].marksPerNumber['7'], 3);
+      expect(result.state.cricketLockedTargets, contains(7));
+    });
+
+    test('closing Bull does NOT add 25 to cricketLockedTargets', () {
+      // Bull is a fixed door, never in cricketTargets and never in the
+      // CrazyTargetsRolled payload's open_targets. Locking 25 would make
+      // `rollCrazyOpenTargets` reserve a slot for it and the engine would
+      // carry both '25' and 'Bull' keys, deadlocking subsequent leg-win
+      // detection.
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [3, 7, 11, 14, 18, 20],
+        legsToWin: 2,
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'Bull': 2},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+          ),
+        ],
+      );
+      // Single Bull (SB) → closes Bull → Bull marks reach 3.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 25, multiplier: 1,
+      ));
+
+      expect(result.state.competitors[0].marksPerNumber['Bull'], 3);
+      expect(result.state.cricketLockedTargets, isNot(contains(25)),
+          reason: 'Bull must never be added to cricketLockedTargets — it '
+              'is implicit on the board and the locked set is restricted '
+              'to 1..20.');
+    });
+
+    test('leg reset clears cricketLockedTargets (per-leg scope)', () {
+      // c1 closes everything in leg 1 → locks accumulate → leg completes.
+      final targets = [3, 7, 11, 14, 18, 20];
+      final closedMarks = <String, int>{
+        for (final t in targets) t.toString(): 3,
+        'Bull': 3,
+      };
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: targets,
+        cricketLockedTargets: targets.toSet(),
+        legsToWin: 2,
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: const ['p1'],
+            score: 10,
+            marksPerNumber: closedMarks,
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+          ),
+        ],
+      ).copyWith(dartsThrownInTurn: 2);
+
+      // Final Bull seals the leg.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 25, multiplier: 1,
+      ));
+
+      expect(result.outcome, LegOutcome.legCompleted);
+      expect(result.state.cricketLockedTargets, isEmpty,
+          reason: 'Per design §4: Table L leg reset clears the global '
+              'locked set, so the next leg rolls all 6 slots fresh');
     });
   });
 }

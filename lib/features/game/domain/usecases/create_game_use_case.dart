@@ -10,6 +10,7 @@ import '../repositories/game_event_repository.dart';
 import '../../../players/domain/repositories/player_repository.dart';
 import '../../../../core/error/repository_exception.dart';
 import '../../../../core/utils/constants.dart';
+import 'game_use_case_helpers.dart';
 import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 
@@ -117,6 +118,31 @@ class CreateGameUseCase {
       source: EventSource.client,
     );
     await _eventRepository.appendEvent(turnStartedEvent);
+
+    // 4a. Crazy Cricket: emit `CrazyTargetsRolled` right after the first
+    // `TurnStarted` with the freshly rolled active set (no locks yet, so
+    // 6 fresh numbers from 1–20). Subsequent TurnStarteds emit their own
+    // CrazyTargetsRolled at the respective sites (process_cricket_dart
+    // use case, active_cricket_game_provider). See design §4.
+    final isCrazy = game.config.maybeMap(
+      cricket: (c) => c.targetMode == 'crazy',
+      orElse: () => false,
+    );
+    if (isCrazy) {
+      sequenceCursor += 1;
+      final crazyTargets = rollCrazyOpenTargets(
+        locked: const <int>{},
+        random: _random,
+      );
+      final rollEvent = buildCrazyTargetsRolledEvent(
+        gameId: game.gameId,
+        competitorId: competitors.first.competitorId,
+        round: 1,
+        openTargets: crazyTargets,
+        localSequence: sequenceCursor,
+      );
+      await _eventRepository.appendEvent(rollEvent);
+    }
 
     final playerIds = <String>{
       for (final c in competitors) for (final cp in c.players) cp.playerId,

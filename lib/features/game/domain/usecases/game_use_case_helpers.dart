@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../entities/game_event.dart';
 import '../models/game_state.dart';
 import '../../../../core/error/repository_exception.dart';
@@ -174,6 +176,60 @@ GameEvent buildGameEvent({
     localSequence: localSequence,
     occurredAt: DateTime.now(),
     payload: payload,
+    synced: false,
+    actorId: actorId,
+    source: EventSource.client,
+  );
+}
+
+/// Rolls the active number set for a new Crazy Cricket turn.
+///
+/// Per design §4: each non-locked slot shows a fresh uniform 1–20 number,
+/// distinct within the board, excluding [locked] numbers. The 7th door
+/// (Bull) is implicit and never randomised.
+///
+/// Returns 6 distinct numbers: the [locked] set unchanged plus
+/// (6 − |locked|) freshly drawn values from `1..20 \ locked`. Locked
+/// numbers appear first in the returned list for stability.
+List<int> rollCrazyOpenTargets({
+  required Set<int> locked,
+  required math.Random random,
+}) {
+  final pool = <int>[];
+  for (var i = 1; i <= 20; i++) {
+    if (!locked.contains(i)) pool.add(i);
+  }
+  final slotsToFill = 6 - locked.length;
+  final picks = <int>[];
+  for (var i = 0; i < slotsToFill; i++) {
+    final idx = random.nextInt(pool.length);
+    picks.add(pool.removeAt(idx));
+  }
+  return [...locked, ...picks];
+}
+
+/// Builds the `CrazyTargetsRolled` event emitted right after every
+/// `TurnStarted` in Crazy Cricket. Payload format and emission contract
+/// are documented in `docs/GAME-EVENT-SPECIFICATIONS.md` §4.1.
+GameEvent buildCrazyTargetsRolledEvent({
+  required String gameId,
+  required String competitorId,
+  required int round,
+  required List<int> openTargets,
+  required int localSequence,
+  String actorId = 'system',
+}) {
+  return GameEvent(
+    eventId: const Uuid().v4(),
+    gameId: gameId,
+    eventType: 'CrazyTargetsRolled',
+    localSequence: localSequence,
+    occurredAt: DateTime.now(),
+    payload: {
+      'competitor_id': competitorId,
+      'round': round,
+      'open_targets': openTargets,
+    },
     synced: false,
     actorId: actorId,
     source: EventSource.client,

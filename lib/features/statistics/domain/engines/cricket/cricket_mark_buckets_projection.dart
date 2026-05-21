@@ -13,6 +13,7 @@ class CricketMarkBucketsProjection extends ProjectionEngine
     consumedEventTypes: {
       'GameCreated',
       'CricketTargetsAssigned',
+      'CrazyTargetsRolled',
       'DartThrown',
       'TurnEnded',
     },

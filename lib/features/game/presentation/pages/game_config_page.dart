@@ -264,9 +264,8 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       _FieldSection(
         label: 'TARGETS',
         child: _SegmentedOptionGroup<String>(
-          // `crazy` is reserved for #238 and is intentionally absent here.
-          values: const ['fixed', 'random'],
-          labels: const ['FIXED', 'RANDOM'],
+          values: const ['fixed', 'random', 'crazy'],
+          labels: const ['FIXED', 'RANDOM', 'CRAZY'],
           selected: c.targetMode,
           onSelected: (v) =>
               setState(() => _draftConfig = c.copyWith(targetMode: v)),

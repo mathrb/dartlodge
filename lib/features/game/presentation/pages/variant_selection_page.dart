@@ -197,6 +197,16 @@ class VariantSelectionPage extends ConsumerWidget {
             legsToWin: 1,
           ),
         ),
+        _VariantEntry(
+          label: 'Crazy',
+          rulesSlug: 'cricket-crazy',
+          config: GameConfig.cricket(
+            scoring: 'standard',
+            targetMode: 'crazy',
+            numbers: GameConfigurationConstants.cricketNumbers,
+            legsToWin: 1,
+          ),
+        ),
         const _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
@@ -382,6 +392,10 @@ class _LastPlayedCard extends StatelessWidget {
             'crazy' => 'Crazy',
             _ => null,
           };
+          // Random/Crazy default to standard scoring — show just the mode
+          // label unless the user explicitly picked a non-standard scoring
+          // axis, in which case `Mode · Scoring` is shown together.
+          if (modeLabel != null && c.scoring == 'standard') return modeLabel;
           return modeLabel == null ? scoringLabel : '$modeLabel · $scoringLabel';
         },
         orElse: () => '',
