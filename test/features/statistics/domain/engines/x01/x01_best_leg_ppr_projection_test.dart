@@ -125,9 +125,9 @@ void main() {
 
   test('C1 — best of two legs keeps the higher value', () {
     engine.init(_makeContext());
-    // Leg 1: 501 in 18 darts → PPR = 501/18*3 = 83.5
-    // Leg 2: 501 in 9 darts → PPR = 501/9*3 = 167.0
-    // Best = 167.0
+    // Leg 1: 18 darts of T5 (15) → 270 scored → PPR = 270/18*3 = 45.0
+    // Leg 2: 9 darts of T20 (60) → 540 scored → PPR = 540/9*3 = 180.0
+    // Best = 180.0
     int seq = 1;
 
     // Leg 1: 18 darts
@@ -141,13 +141,31 @@ void main() {
     // Leg 2: 9 darts
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, seq: seq++));
     for (int i = 0; i < 9; i++) {
-      engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 5, 'multiplier': 3}, seq: seq++));
+      engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
     }
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, seq: seq++));
     engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: seq++));
 
-    final bestLeg2 = 501 / 9 * 3;
-    expect(engine.snapshot()['bestLegPpr'], closeTo(bestLeg2, 0.001));
+    expect(engine.snapshot()['bestLegPpr'], closeTo(180.0, 0.001));
+  });
+
+  // ── Regression: issue #246 ────────────────────────────────────────────────
+
+  test('R246 — leg PPR ignores handicap baked into starting_score', () {
+    engine.init(_makeContext());
+    // X01 handicap inflates `starting_score` (e.g. 301 base + 50 handicap).
+    // Leg PPR must reflect only the points actually thrown, not the handicap:
+    // 3 darts of T20 (180 scored) → PPR = 180/3*3 = 180.0, regardless of the
+    // 351 reported as starting_score.
+    int seq = 1;
+    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 351}, seq: seq++));
+    for (int i = 0; i < 3; i++) {
+      engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
+    }
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, seq: seq++));
+    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: seq++));
+
+    expect(engine.snapshot()['bestLegPpr'], closeTo(180.0, 0.001));
   });
 
   // ── Category D ─────────────────────────────────────────────────────────────
