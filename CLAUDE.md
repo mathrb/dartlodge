@@ -16,7 +16,7 @@ A local-first, open-source darts scoring app for Android and iOS built with Flut
 
 ```bash
 flutter pub get
-dart run build_runner build --delete-conflicting-outputs  # after any @freezed or @riverpod change
+dart run build_runner build  # after any @freezed or @riverpod change (the legacy `--delete-conflicting-outputs` flag is now a silent no-op)
 flutter run -d chrome
 flutter run -d web-server --web-port 8087 --web-hostname 0.0.0.0  # headless/remote server
 flutter test
@@ -201,7 +201,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Contract tests:** Every repository implementation must pass the shared contract tests in `test/contracts/`. Never skip or comment out tests to make CI pass.
 
-**Database:** drift on every platform (`NativeDatabase.createInBackground` on mobile/desktop, `WasmDatabase` over IndexedDB on web). Schema lives in `lib/core/persistence/drift/database.dart`; `databaseVersion = 1`. `PRAGMA foreign_keys = ON` is set in `MigrationStrategy.beforeOpen`. Completed games are read-only — enforced in application logic, not triggers. The canonical SQL DDL reference is `docs/DATABASE_DDL.md`. After editing drift table classes, run `dart run build_runner build --delete-conflicting-outputs`.
+**Database:** drift on every platform (`NativeDatabase.createInBackground` on mobile/desktop, `WasmDatabase` over IndexedDB on web). Schema lives in `lib/core/persistence/drift/database.dart`; `databaseVersion = 1`. `PRAGMA foreign_keys = ON` is set in `MigrationStrategy.beforeOpen`. Completed games are read-only — enforced in application logic, not triggers. The canonical SQL DDL reference is `docs/DATABASE_DDL.md`. After editing drift table classes, run `dart run build_runner build`.
 
 **Drift foreign keys:** Plain `text()()` emits NO foreign key clause — you must call `.references(Type, #col, onDelete: KeyAction.{cascade|restrict|setNull})` explicitly. `PRAGMA foreign_keys = ON` is a no-op without `.references()`. When two columns in a table reference the same parent (e.g. `game_sessions.host_player_id` and `current_turn_player_id` both → `players`), add `@ReferenceName('xxx')` annotations to disambiguate manager-API helpers, or build_runner warns.
 
@@ -224,6 +224,12 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 **Watchable queries:** drift's per-query reactivity is automatic — `select(...).watch()` re-fires whenever drift sees a write to one of the referenced tables. No notify-after-write protocol to remember.
 
 **Repository contract tests:** `runHybridTests` (`test/hybrid_test_runner.dart`) spins up a fresh in-memory `AppDatabase` per test against the shared `*_contract.dart` suites. The "hybrid" name is vestigial from the dual-backend era (issue #112) — there is now a single backend.
+
+**Adding a cricket variant:** four coordinated edits — (1) `_cricketVariants()` entry in `variant_selection_page.dart`, (2) a `cricketXxxRules` content block in `rules/content/cricket_rules.dart`, (3) the slug → rules entry in `kGameRules` (`rules_registry.dart`), (4) the slug in `expectedSlugs` in `rules_registry_test.dart` (the registry test fails CI if you miss this). The info-icon shows "Rules unavailable." silently if (3) is missing — only the test enforces coverage.
+
+**Adding a "right-after-TurnStarted" cricket event:** every site that emits the event (`CreateGameUseCase`, `ProcessCricketDartUseCase`, the three TurnStarted emission sites in `active_cricket_game_provider.dart`) must emit it; AND `UndoLastDartUseCase` must add the event type to BOTH its supersession-collection loop and its replay-skip branch — otherwise a turn-boundary undo replays the cancelled turn's event and corrupts state. Same applies to projections: add to `consumedEventTypes` on every cricket projection (or extend the shared `CricketTargetsTracker` mixin) AND the `legHistoryFromEvents` inline tracker in `PlayerStatsAssembler`.
+
+**RNG in use cases:** event-emitting use cases that need randomness (e.g. `CreateGameUseCase`, `ProcessCricketDartUseCase` for `CrazyTargetsRolled`) accept an optional `math.Random?` constructor parameter that defaults to `math.Random()` in production. Tests inject a seeded `math.Random(seed)` for determinism. RNG runs **once at emission**, the value lands in the event payload, and `engine.apply()` is pure — replay never re-rolls.
 
 **Cricket scoring × target mode are orthogonal axes:** `CricketGameConfig` exposes `scoring` ∈ {`standard`, `cut-throat`, `no-score`} and `targetMode` ∈ {`fixed`, `random`, `crazy`}; `GameState` mirrors them as `cricketScoring`/`cricketTargetMode` plus a dynamic `cricketTargets: List<int>` (+ implicit Bull) and `cricketLockedTargets: Set<int>`. The engine reads the target set from state — never from a hardcoded `[15..20]` constant — so any target mode is accepted by the same code path. Legacy configs carrying a single `variant` string deserialise to `{scoring: <that>, targetMode: 'fixed'}` via a `readValue` mapping at JSON read time; **no event migration**, historical replay stays correct. Stats loader buckets cricket games by `targetMode` (today only `fixed` is wired; `random`/`crazy` cohorts arrive with PRs #237/#238). See `docs/plans/2026-05-19-cricket-target-modes-design.md`.
 
@@ -273,7 +279,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Projection snapshots are two-level:** top level keyed by `engine.descriptor.id` (e.g. `'x01.doubleOut'`), inner map keyed by field name (e.g. `'doubleOutSuccessRate'`). Wiring a new engine into `PlayerStatsAssembler.fromEvents` means reading at both levels — running an engine without reading its snapshot is a silent no-op.
 
-**`.flutter-plugins-dependencies`** regenerates on every `flutter pub get` / `flutter run`; never commit it (commonly shows `M` in `git status`).
+**`.flutter-plugins-dependencies` and `pubspec.lock`** regenerate on every `flutter pub get` / `flutter run` / `build_runner build`; never commit either unless the dep set actually changed. Both commonly show `M` in `git status` — `git checkout pubspec.lock .flutter-plugins-dependencies` before staging to keep PR diffs clean.
 
 **Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin 9.19.0). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
 
