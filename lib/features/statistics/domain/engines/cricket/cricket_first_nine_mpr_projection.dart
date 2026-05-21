@@ -14,6 +14,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
     consumedEventTypes: {
       'GameCreated',
       'CricketTargetsAssigned',
+      'CrazyTargetsRolled',
       'TurnStarted',
       'DartThrown',
       'TurnEnded',

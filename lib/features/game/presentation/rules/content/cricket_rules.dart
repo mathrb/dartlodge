@@ -122,6 +122,52 @@ const cricketCutThroatRules = GameRules(
   ],
 );
 
+const cricketCrazyRules = GameRules(
+  title: 'Cricket — Crazy',
+  tagline: 'The board re-rolls every turn. Close a number to lock it in.',
+  sections: [
+    RulesSection(
+      heading: 'Objective',
+      body:
+          'Close all 6 active numbers and the Bull, ahead on points (per the chosen scoring rules). '
+          'The catch: the active numbers change every turn until a player closes one.',
+    ),
+    RulesSection(
+      heading: 'How to play',
+      bullets: [
+        'Each turn, every still-open slot shows a fresh number from 1 to 20, drawn at random when your turn starts. The Bull is always one of the seven targets and never re-rolls.',
+        'You throw three darts per turn. A single is one hit, a double is two, a triple is three. The outer bull counts as one hit, the inner bull as two.',
+        'Hit a number three times to close it — and the moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.',
+        'If a number you partially hit (one or two marks) rotates away on the next turn, your partial marks on it are wiped. A reappearing number starts fresh at 0.',
+        'Once you close every active number plus Bull and you are ahead on points (per the scoring rules), you win the leg.',
+      ],
+    ),
+    RulesSection(
+      heading: 'Winning',
+      body:
+          'Identical to Standard Cricket: close everything and finish ahead on points. '
+          'Since the target set keeps churning, expect bursts of progress on locked numbers and a lot of wasted darts on numbers that get rotated out.',
+    ),
+    RulesSection(
+      heading: 'Tips',
+      bullets: [
+        'Locking a number is doubly valuable: it sticks on the board AND opponents still have to close it. Focus high-mark darts on numbers you can close quickly.',
+        'Spreading hits across multiple open numbers is risky — partial marks are wiped on rotate. Better to commit to closing one number before moving on.',
+      ],
+    ),
+  ],
+  relatedVariants: [
+    RulesVariant(
+      name: 'Standard',
+      summary: 'The classic 15–20 + Bull target set. No randomness, no churn.',
+    ),
+    RulesVariant(
+      name: 'Random',
+      summary: 'Six random numbers drawn once at game start, then fixed for the whole game.',
+    ),
+  ],
+);
+
 const cricketRandomRules = GameRules(
   title: 'Cricket — Random',
   tagline: 'Six random numbers plus the Bull, fixed for the whole game.',

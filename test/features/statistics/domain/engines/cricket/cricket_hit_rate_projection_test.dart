@@ -139,7 +139,12 @@ void main() {
     // `docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
     expect(
       engine.descriptor.consumedEventTypes,
-      {'GameCreated', 'CricketTargetsAssigned', 'DartThrown'},
+      {
+        'GameCreated',
+        'CricketTargetsAssigned',
+        'CrazyTargetsRolled',
+        'DartThrown',
+      },
     );
   });
 

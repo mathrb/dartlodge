@@ -201,13 +201,34 @@ These depend on rules:
 
 Cricket career stats are bucketed by `targetMode` ∈ {`fixed`, `random`,
 `crazy`} in addition to the existing `gameType` requirement. Random and
-Crazy Cricket use a different target set than Standard Cricket, so
+Crazy Cricket use different target sets than Standard Cricket, so
 pooling them together would distort closure rates and MPR. Legacy games
-(carrying no `targetMode`) fall into the `fixed` cohort. Today the
-loader (`statistics_repository_drift.dart`) only retains the `fixed`
-cohort; the `random` and `crazy` cohorts come online with PRs #237 /
-#238. See
+(carrying no `targetMode`) fall into the `fixed` cohort. The loader
+(`statistics_repository_drift.dart`) accepts a `cricketTargetMode`
+parameter (default `fixed`); callers select a specific cohort. See
 `docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
+
+**Crazy Cricket — turn-scoped marks caveat (load-bearing).** Under
+Crazy Cricket, the active target set rotates every turn and any
+non-locked number that leaves the active set has its per-competitor
+marks wiped ("discard on rotate", design §4). Cumulative marks can
+therefore **decrease** across turns — they are not monotonically
+increasing the way they are under Standard or Random Cricket.
+
+Projection consequences:
+
+* Mark / MPR / MPT projections **must** count marks from `DartThrown`
+  payloads inside each turn (turn-scoped, additive), never from a
+  cross-turn diff of board state. The current cricket projections
+  (`CricketMarksPerTurnProjection`, `CricketBestLegMptProjection`,
+  `CricketMarkBucketsProjection`, `CricketFirstNineMprProjection`) do
+  this correctly: they accumulate marks per dart via
+  `cricketMarksFromPayload` and reset per-turn counters on
+  `TurnStarted`/`TurnEnded`.
+* The shared `CricketTargetsTracker` mixin keeps the active target set
+  in sync by consuming `GameCreated` / `CricketTargetsAssigned` /
+  `CrazyTargetsRolled` so the per-dart mark-counting helper sees the
+  right set in effect at the moment the dart was thrown.
 
 Game-specific projections:
 

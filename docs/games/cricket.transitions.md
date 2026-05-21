@@ -60,6 +60,14 @@ These are *derived state*, never directly mutated outside transitions.
   6 distinct numbers from 1–20; Bull is implicit. Game-scoped (same set
   across all legs). RNG runs once in the creation use case; replay is
   deterministic from the persisted payload.
+* `CrazyTargetsRolled` — emitted for `target_mode = crazy` immediately
+  after **every** `TurnStarted`. Payload
+  `{ competitor_id, round, open_targets: List<int> }` carries the 6
+  active numbers for that turn (locked numbers preserved, non-locked
+  slots freshly rolled distinct within board, excluding locked). Per-leg
+  scope: `cricketLockedTargets` resets on leg reset. Discard-on-rotate:
+  marks on numbers that just left the active set (and aren't locked)
+  are wiped.
 * `TurnStarted`
 * `DartThrown`
 * `TurnEnded`

@@ -57,9 +57,11 @@ class GameSummaryCardWidget extends StatelessWidget {
   String _variantLabel(GameConfig config) {
     return config.maybeMap(
       x01: (c) => '${c.startingScore}',
-      cricket: (c) => c.targetMode == 'random'
-          ? 'random ${c.scoring}'
-          : c.scoring,
+      cricket: (c) => switch (c.targetMode) {
+        'random' => 'random ${c.scoring}',
+        'crazy' => 'crazy ${c.scoring}',
+        _ => c.scoring,
+      },
       aroundTheClock: (c) => c.variant,
       orElse: () => '',
     );

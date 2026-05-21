@@ -34,6 +34,8 @@ class StatelessCricketEngine implements GameEngine {
           state: state.copyWith(status: GameEngineStatus.inProgress)),
       'CricketTargetsAssigned' =>
           EngineResult(state: _applyCricketTargetsAssigned(state, event)),
+      'CrazyTargetsRolled' =>
+          EngineResult(state: _applyCrazyTargetsRolled(state, event)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
       'TurnEnded' => _applyTurnEnded(state, event),
@@ -54,6 +56,46 @@ class StatelessCricketEngine implements GameEngine {
     final rawTargets = event.payload['targets'] as List<dynamic>;
     final targets = rawTargets.map((t) => (t as num).toInt()).toList();
     return state.copyWith(cricketTargets: targets);
+  }
+
+  /// Apply `CrazyTargetsRolled` — emitted right after every `TurnStarted` for
+  /// `targetMode: crazy`. Payload carries the active number set for the new
+  /// turn (locked numbers included, Bull implicit). Numbers that just left
+  /// the active set and aren't locked have their per-competitor marks wiped
+  /// ("discard on rotate", design §4): cumulative marks can therefore
+  /// *decrease* across turns, which is why mark/MPR projections must count
+  /// marks from `DartThrown` payloads within the turn rather than from
+  /// cross-turn state diffs (statistics architecture §7.3).
+  GameState _applyCrazyTargetsRolled(GameState state, GameEvent event) {
+    final rawTargets = event.payload['open_targets'] as List<dynamic>;
+    final newTargets = rawTargets.map((t) => (t as num).toInt()).toList();
+    final newSet = newTargets.toSet();
+
+    // Discard on rotate: any number that was active last turn but is not
+    // in the new set and not globally locked has its per-competitor marks
+    // wiped (a fresh appearance later starts at 0).
+    final discarded = <int>{};
+    for (final n in state.cricketTargets) {
+      if (!newSet.contains(n) && !state.cricketLockedTargets.contains(n)) {
+        discarded.add(n);
+      }
+    }
+
+    List<CompetitorState> updatedCompetitors = state.competitors;
+    if (discarded.isNotEmpty) {
+      updatedCompetitors = state.competitors.map((c) {
+        final next = Map<String, int>.from(c.marksPerNumber);
+        for (final n in discarded) {
+          next.remove(n.toString());
+        }
+        return c.copyWith(marksPerNumber: next);
+      }).toList();
+    }
+
+    return state.copyWith(
+      cricketTargets: newTargets,
+      competitors: updatedCompetitors,
+    );
   }
 
   @override
@@ -148,6 +190,20 @@ class StatelessCricketEngine implements GameEngine {
       ..[newState.currentTurnIndex] = competitorWithMarks;
 
     newState = newState.copyWith(competitors: competitorsAfterMarks);
+
+    // Crazy Cricket — global lock on close. The instant any player reaches
+    // 3 marks on a number, that number is permanently locked onto the
+    // board (never re-randomised again). Other players still must close
+    // it individually to win. No effect under fixed/random modes (the
+    // set never rotates anyway). Bull is always a fixed door — locking
+    // it is a no-op semantically but kept for symmetry. See design §4.
+    if (newState.cricketTargetMode == 'crazy' &&
+        newHits == 3 &&
+        !newState.cricketLockedTargets.contains(segmentNum)) {
+      newState = newState.copyWith(
+        cricketLockedTargets: {...newState.cricketLockedTargets, segmentNum},
+      );
+    }
 
     // Table E — Overflow scoring
     if (overflow > 0) {
@@ -526,6 +582,13 @@ class StatelessCricketEngine implements GameEngine {
       turnActive: false,
       winnerCompetitorId: null,
       currentRoundInLeg: 1,
+      // Crazy Cricket: leg scope is per-leg, so the globally-locked set
+      // resets on leg boundary (design §3). Random/fixed never populate
+      // this set, so the no-op cost is fine. `cricketTargets` is *not*
+      // reset here: random keeps the assigned set game-wide, and crazy
+      // will receive a fresh `CrazyTargetsRolled` immediately after the
+      // next `TurnStarted` to repopulate it.
+      cricketLockedTargets: const <int>{},
     );
   }
 

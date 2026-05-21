@@ -11,7 +11,8 @@ class CricketHitRateProjection extends ProjectionEngine
   static const _kDescriptor = ProjectionDescriptor(
     id: 'cricket.hitRate',
     supportedGameTypes: {GameType.cricket},
-    consumedEventTypes: {'GameCreated', 'CricketTargetsAssigned', 'DartThrown'},
+    consumedEventTypes: {'GameCreated', 'CricketTargetsAssigned',
+      'CrazyTargetsRolled', 'DartThrown'},
     scope: ProjectionScope.career,
   );
 

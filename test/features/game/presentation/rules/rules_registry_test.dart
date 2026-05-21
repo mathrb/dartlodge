@@ -13,6 +13,7 @@ void main() {
     'cricket-no-score',
     'cricket-cut-throat',
     'cricket-random',
+    'cricket-crazy',
     'practice-atc',
     'practice-catch40',
     'practice-bobs27',

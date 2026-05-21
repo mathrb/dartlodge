@@ -35,23 +35,31 @@ class CricketUnifiedTableWidget extends StatelessWidget {
   final ValueChanged<String> onSegmentTapped;
   final VoidCallback onMiss;
 
-  static const _numbers = [20, 19, 18, 17, 16, 15, 25];
+  /// Render order: the active 6 numbers descending, then Bull (25) last.
+  /// Driven by `state.cricketTargets` so all target modes (fixed, random,
+  /// crazy) use the same widget. Bull is implicit and always present.
+  List<int> _renderOrder() {
+    final sorted = [...gameState.cricketTargets]..sort((a, b) => b.compareTo(a));
+    return [...sorted, 25];
+  }
 
   @override
   Widget build(BuildContext context) {
+    final numbers = _renderOrder();
     return Column(
       children: [
         _CricketHeaderRow(
           gameState: gameState,
           onMiss: onMiss,
         ),
-        for (final n in _numbers)
+        for (final n in numbers)
           Expanded(
             child: _CricketNumberRow(
               target: n,
               competitors: gameState.competitors,
               currentTurnIndex: gameState.currentTurnIndex,
               isRowClosed: _isRowClosed(n, gameState),
+              isLocked: n != 25 && gameState.cricketLockedTargets.contains(n),
               onSegmentTapped: onSegmentTapped,
             ),
           ),
@@ -237,6 +245,7 @@ class _CricketNumberRow extends StatelessWidget {
     required this.currentTurnIndex,
     required this.isRowClosed,
     required this.onSegmentTapped,
+    this.isLocked = false,
   });
 
   final int target;
@@ -244,6 +253,11 @@ class _CricketNumberRow extends StatelessWidget {
   final int currentTurnIndex;
   final bool isRowClosed;
   final ValueChanged<String> onSegmentTapped;
+  // Crazy Cricket only: number is globally locked to the board (closed by
+  // at least one player, never re-rolled again). Renders a token-based
+  // "locked" affordance and treats the row the same as Standard for input
+  // — opponents still need to close it.
+  final bool isLocked;
 
   @override
   Widget build(BuildContext context) {
@@ -252,7 +266,9 @@ class _CricketNumberRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: isRowClosed
             ? cs.surfaceContainerHighest.withValues(alpha: AppTheme.opacityDisabled)
-            : null,
+            : isLocked
+                ? cs.primaryContainer.withValues(alpha: 0.10)
+                : null,
         border: Border(
           bottom: BorderSide(
             color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderLight),

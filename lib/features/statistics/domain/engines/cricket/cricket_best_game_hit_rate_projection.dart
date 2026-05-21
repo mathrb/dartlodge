@@ -14,6 +14,7 @@ class CricketBestGameHitRateProjection extends ProjectionEngine
     consumedEventTypes: {
       'GameCreated',
       'CricketTargetsAssigned',
+      'CrazyTargetsRolled',
       'DartThrown',
       'GameCompleted',
     },
