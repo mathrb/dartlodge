@@ -65,7 +65,7 @@ const _x01Config = GameConfig.x01(
 );
 
 const _cricketConfig = GameConfig.cricket(
-  variant: 'standard',
+  scoring: 'standard',
   numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
   legsToWin: 1,
 );

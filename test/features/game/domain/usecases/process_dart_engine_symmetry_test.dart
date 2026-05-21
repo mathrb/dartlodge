@@ -123,7 +123,7 @@ void main() {
       turnActive: true,
       legsToWin: legsToWin,
       currentLegIndex: 0,
-      cricketVariant: 'standard',
+      cricketScoring: 'standard',
     );
   }
 

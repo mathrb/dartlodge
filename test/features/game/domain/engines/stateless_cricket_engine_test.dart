@@ -88,7 +88,7 @@ GameState _makeState({
     turnActive: turnActive,
     legsToWin: legsToWin,
     currentLegIndex: 0,
-    cricketVariant: variant,
+    cricketScoring: variant,
   );
 }
 

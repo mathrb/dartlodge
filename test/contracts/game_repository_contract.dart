@@ -234,7 +234,7 @@ void runGameRepositoryContractTests(
       final game2 = Game(
         gameId: 'g2',
         gameType: GameType.cricket,
-        config: const GameConfig.cricket(variant: 'standard', numbers: ['15', '16', '17', '18', '19', '20', 'bull'], legsToWin: 1),
+        config: const GameConfig.cricket(scoring: 'standard', numbers: ['15', '16', '17', '18', '19', '20', 'bull'], legsToWin: 1),
         startTime: DateTime.now(),
         isComplete: false,
       );

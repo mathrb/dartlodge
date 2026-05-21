@@ -197,6 +197,18 @@ These depend on rules:
 | X01     | Checkout %, double-out success |
 | Cricket | Marks per turn, closure rate   |
 
+### 7.3 Cricket Career Cohorts (target-mode aware)
+
+Cricket career stats are bucketed by `targetMode` ∈ {`fixed`, `random`,
+`crazy`} in addition to the existing `gameType` requirement. Random and
+Crazy Cricket use a different target set than Standard Cricket, so
+pooling them together would distort closure rates and MPR. Legacy games
+(carrying no `targetMode`) fall into the `fixed` cohort. Today the
+loader (`statistics_repository_drift.dart`) only retains the `fixed`
+cohort; the `random` and `crazy` cohorts come online with PRs #237 /
+#238. See
+`docs/plans/2026-05-19-cricket-target-modes-design.md` §6.
+
 Game-specific projections:
 
 * Must declare required rules
