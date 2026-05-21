@@ -251,13 +251,13 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
   List<Widget> _buildCricketFields(CricketGameConfig c) {
     return [
       _FieldSection(
-        label: 'VARIANT',
+        label: 'SCORING',
         child: _SegmentedOptionGroup<String>(
           values: const ['standard', 'cut-throat', 'no-score'],
           labels: const ['STANDARD', 'CUT-THROAT', 'NO SCORE'],
-          selected: c.variant,
+          selected: c.scoring,
           onSelected: (v) =>
-              setState(() => _draftConfig = c.copyWith(variant: v)),
+              setState(() => _draftConfig = c.copyWith(scoring: v)),
         ),
       ),
       const SizedBox(height: AppSpacing.space4),

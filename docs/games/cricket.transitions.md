@@ -12,7 +12,24 @@ These are *derived state*, never directly mutated outside transitions.
 
 ### Per Game
 
-* `variant` ∈ {Standard, CutThroat, NoScore}
+* `scoring` ∈ {Standard, CutThroat, NoScore} — how points work
+* `target_mode` ∈ {Fixed, Random, Crazy} — which numbers are targets
+  (orthogonal to `scoring`; see
+  `docs/plans/2026-05-19-cricket-target-modes-design.md`).
+  Today only **Fixed** ships end-to-end; Random/Crazy land in
+  follow-up PRs #237/#238 (PR #236 wires up the foundation so the
+  engine reads the target set from state instead of hardcoded
+  constants).
+* `cricket_targets` — List<int> of the 6 active number-slots
+  (Bull is implicit as a 7th, always present and never randomised).
+  - `fixed` → `[15, 16, 17, 18, 19, 20]`
+  - `random` → assigned once via `CricketTargetsAssigned`
+  - `crazy` → locked numbers plus this turn's rolled faces
+* `cricket_locked_targets` — Set<int> of numbers permanently locked
+  on the board (Crazy only; empty otherwise).
+* **Backward compatibility:** legacy configs carrying a single
+  `variant` string deserialise to `{scoring: <that>, target_mode: fixed}`
+  at read time. No event migration; historical replay stays correct.
 * `legs_to_win`
 * `current_leg_index`
 * `game_complete`
@@ -20,7 +37,8 @@ These are *derived state*, never directly mutated outside transitions.
 ### Per Leg / Player
 
 * `hits` — Map of number → hit_count ∈ {0, 1, 2, 3}
-  * Numbers: 15, 16, 17, 18, 19, 20, Bull
+  * Numbers: the current `cricket_targets` plus Bull
+    (today `[15, 16, 17, 18, 19, 20, Bull]`; dynamic under Crazy)
 * `score` — Integer (points accumulated)
 * `legs_won`
 * `all_closed` — Boolean (derived: all numbers have hits ≥ 3)
@@ -111,7 +129,7 @@ Let:
 **Notes**
 
 * Hits are capped at 3 per number
-* Overflow hits (beyond 3) may score points depending on variant
+* Overflow hits (beyond 3) may score points depending on `scoring`
 
 ---
 
@@ -120,7 +138,7 @@ Let:
 **Overflow calculation:**
 * `overflow = max(0, (current_hits + hit_increment) - 3)`
 
-Apply based on variant:
+Apply based on `scoring`:
 
 ### E1 — Standard Cricket Scoring
 
@@ -130,7 +148,7 @@ Apply based on variant:
 | Current player closed       | `overflow > 0` | (No other player affected)                |
 | Opponent has NOT closed     | `overflow > 0` | (No effect on opponent)                   |
 | Opponent has closed         | `overflow > 0` | (No scoring possible)                     |
-| **NoScore variant**         | Any            | Skip all scoring (Table E is no-op)       |
+| **NoScore scoring**         | Any            | Skip all scoring (Table E is no-op)       |
 
 ### E2 — Cut-Throat Cricket Scoring
 
@@ -287,7 +305,7 @@ cap_reached = cricket_total_rounds != null
            && current_turn_index == competitors.length - 1   // last competitor
 ```
 
-**Winner selection by variant (no existing Table G winner on the board)**
+**Winner selection by `scoring` (no existing Table G winner on the board)**
 
 Winner is chosen by the primary metric below; when the top two competitors
 share the metric, tie-break prefers the **earliest `close_order`** (a player
@@ -351,7 +369,7 @@ The following interpretations are **required** for determinism:
    * This matches standard cricket scoring: bull value is always 25 per hit
 3. **Cut-throat tie-breaking:** If multiple players finish with same lowest score, earliest `close_order` wins
 4. **Win evaluation timing:** Checked immediately after each dart, not just at end of turn
-5. **NoScore variant:** All scoring logic (Table E) is skipped; only hit tracking matters
+5. **NoScore scoring:** All scoring logic (Table E) is skipped; only hit tracking matters
 6. **Invalid numbers:** Darts that hit 1–14, 21–25 (except bull) count as thrown but have no effect
 
 ---
@@ -381,9 +399,9 @@ The following interpretations are **required** for determinism:
 From this table you can now:
 
 * Write a pure `CricketEngine.apply(state, event)`
-* Generate exhaustive unit tests for all variants
+* Generate exhaustive unit tests for all scoring modes
 * Enforce server-side validation
-* Handle Standard, Cut-Throat, and NoScore variants with single engine
+* Handle Standard, Cut-Throat, and NoScore scoring modes with single engine
 * Reconcile vision corrections safely
 
 No rule interpretation remains implicit.

@@ -111,7 +111,7 @@ void main() {
           expect(s.gameType, GameType.cricket);
           s.config.maybeMap(
             cricket: (c) {
-              expect(c.variant, 'standard');
+              expect(c.scoring, 'standard');
               expect(c.numbers, GameConfigurationConstants.cricketNumbers);
               expect(c.legsToWin, 1);
             },

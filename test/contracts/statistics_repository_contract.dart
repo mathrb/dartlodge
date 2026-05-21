@@ -549,7 +549,7 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
           gameId: 'g-empty',
           gameType: GameType.cricket,
           config: const GameConfig.cricket(
-            variant: 'cut-throat',
+            scoring: 'cut-throat',
             numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
             legsToWin: 1,
           ),
@@ -717,7 +717,7 @@ Future<void> _setupCompletedCricketGame(
       gameId: gameId,
       gameType: GameType.cricket,
       config: const GameConfig.cricket(
-        variant: 'standard',
+        scoring: 'standard',
         numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
         legsToWin: 1,
       ),

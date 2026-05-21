@@ -28,7 +28,10 @@ abstract class GameState with _$GameState {
     @Default('straight') String inStrategy,
     @Default('double') String outStrategy,
     @Default(501) int startingScore,
-    @Default('standard') String cricketVariant,
+    @Default('standard') String cricketScoring,
+    @Default('fixed') String cricketTargetMode,
+    @Default(<int>[15, 16, 17, 18, 19, 20]) List<int> cricketTargets,
+    @Default(<int>{}) Set<int> cricketLockedTargets,
     @Default('standard') String aroundTheClockVariant,
     @Default(7) int shanghaiTotalRounds,
     @Default(0) int catch40TargetRemaining,
@@ -62,7 +65,8 @@ abstract class GameState with _$GameState {
       ),
       cricket: (c) => _GameStateInit(
         startingScore: 0,
-        cricketVariant: c.variant,
+        cricketScoring: c.scoring,
+        cricketTargetMode: c.targetMode,
         legsToWin: c.legsToWin,
         cricketTotalRounds: c.totalRounds,
       ),
@@ -126,7 +130,14 @@ abstract class GameState with _$GameState {
       inStrategy: init.inStrategy,
       outStrategy: init.outStrategy,
       startingScore: init.startingScore,
-      cricketVariant: init.cricketVariant,
+      cricketScoring: init.cricketScoring,
+      cricketTargetMode: init.cricketTargetMode,
+      // Issue #236: only `fixed` is populated; random/crazy seed targets via
+      // their respective events (CricketTargetsAssigned / CrazyTargetsRolled).
+      cricketTargets: init.cricketTargetMode == 'fixed'
+          ? const <int>[15, 16, 17, 18, 19, 20]
+          : const <int>[],
+      cricketLockedTargets: const <int>{},
       aroundTheClockVariant: init.aroundTheClockVariant,
       shanghaiTotalRounds: init.shanghaiTotalRounds,
       catch40TargetRemaining: init.catch40TargetRemaining,
@@ -147,7 +158,8 @@ class _GameStateInit {
   final int legsToWin;
   final int? x01TotalRounds;
   final int? cricketTotalRounds;
-  final String cricketVariant;
+  final String cricketScoring;
+  final String cricketTargetMode;
   final String aroundTheClockVariant;
   final int shanghaiTotalRounds;
   final int catch40TargetRemaining;
@@ -162,7 +174,8 @@ class _GameStateInit {
     this.legsToWin = 1,
     this.x01TotalRounds,
     this.cricketTotalRounds,
-    this.cricketVariant = 'standard',
+    this.cricketScoring = 'standard',
+    this.cricketTargetMode = 'fixed',
     this.aroundTheClockVariant = 'standard',
     this.shanghaiTotalRounds = 7,
     this.catch40TargetRemaining = 0,

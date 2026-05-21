@@ -66,7 +66,7 @@ GameState _cricketState({
   int dartsThrownInTurn = 0,
   bool isComplete = false,
   bool turnActive = true,
-  String cricketVariant = 'standard',
+  String cricketScoring = 'standard',
   List<CompetitorState>? competitors,
 }) =>
     GameState(
@@ -81,7 +81,7 @@ GameState _cricketState({
       dartsThrownInTurn: dartsThrownInTurn,
       isComplete: isComplete,
       turnActive: turnActive,
-      cricketVariant: cricketVariant,
+      cricketScoring: cricketScoring,
     );
 
 ActiveCricketGameState _activeState({
@@ -660,7 +660,7 @@ void main() {
 
   testWidgets('22. AppBar subtitle shows "Cut Throat" for cut-throat variant',
       (tester) async {
-    final gs = _cricketState(cricketVariant: 'cut-throat');
+    final gs = _cricketState(cricketScoring: 'cut-throat');
     final notifier =
         _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
     await tester.pumpWidget(_buildApp(notifier));

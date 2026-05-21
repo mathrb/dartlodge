@@ -28,7 +28,18 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
   inStrategy: json['inStrategy'] as String? ?? 'straight',
   outStrategy: json['outStrategy'] as String? ?? 'double',
   startingScore: (json['startingScore'] as num?)?.toInt() ?? 501,
-  cricketVariant: json['cricketVariant'] as String? ?? 'standard',
+  cricketScoring: json['cricketScoring'] as String? ?? 'standard',
+  cricketTargetMode: json['cricketTargetMode'] as String? ?? 'fixed',
+  cricketTargets:
+      (json['cricketTargets'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList() ??
+      const <int>[15, 16, 17, 18, 19, 20],
+  cricketLockedTargets:
+      (json['cricketLockedTargets'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toSet() ??
+      const <int>{},
   aroundTheClockVariant: json['aroundTheClockVariant'] as String? ?? 'standard',
   shanghaiTotalRounds: (json['shanghaiTotalRounds'] as num?)?.toInt() ?? 7,
   catch40TargetRemaining:
@@ -57,7 +68,10 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
       'inStrategy': instance.inStrategy,
       'outStrategy': instance.outStrategy,
       'startingScore': instance.startingScore,
-      'cricketVariant': instance.cricketVariant,
+      'cricketScoring': instance.cricketScoring,
+      'cricketTargetMode': instance.cricketTargetMode,
+      'cricketTargets': instance.cricketTargets,
+      'cricketLockedTargets': instance.cricketLockedTargets.toList(),
       'aroundTheClockVariant': instance.aroundTheClockVariant,
       'shanghaiTotalRounds': instance.shanghaiTotalRounds,
       'catch40TargetRemaining': instance.catch40TargetRemaining,

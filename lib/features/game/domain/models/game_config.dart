@@ -19,9 +19,22 @@ abstract class GameConfig with _$GameConfig {
     @Default(<String, int>{}) Map<String, int> handicaps,
   }) = X01GameConfig;
 
+  /// Cricket configuration with **orthogonal axes**:
+  /// - [scoring] ∈ {`standard`, `cut-throat`, `no-score`} — how points work.
+  /// - [targetMode] ∈ {`fixed`, `random`, `crazy`} — which numbers are targets.
+  ///
+  /// Legacy payloads carrying a single `variant` string deserialise to
+  /// `{scoring: <that>, targetMode: 'fixed'}` via [_readCricketScoring].
+  /// See `docs/plans/2026-05-19-cricket-target-modes-design.md` §2.
   const factory GameConfig.cricket({
-    required String variant, // 'standard', 'cut-throat', 'no-score'
-    required List<String> numbers, // ['15', '16', '17', '18', '19', '20', 'bull']
+    @JsonKey(readValue: _readCricketScoring)
+    @Default('standard')
+        String scoring,
+    @JsonKey(readValue: _readCricketTargetMode)
+    @Default('fixed')
+        String targetMode,
+    @Default(<String>['15', '16', '17', '18', '19', '20', 'bull'])
+        List<String> numbers,
     @Default(1) int legsToWin,
     @Default(null) int? totalRounds,
     @Default(null) String? startingPlayerId,
@@ -64,6 +77,17 @@ abstract class GameConfig with _$GameConfig {
 
   factory GameConfig.fromJson(Map<String, dynamic> json) => _$GameConfigFromJson(json);
 }
+
+/// Backward-compat reader for cricket scoring: legacy payloads stored the
+/// scoring mode under `variant`; new payloads write `scoring`. See
+/// `docs/plans/2026-05-19-cricket-target-modes-design.md` §2.
+Object? _readCricketScoring(Map<dynamic, dynamic> json, String key) =>
+    json['scoring'] ?? json['variant'] ?? 'standard';
+
+/// Backward-compat reader for cricket target mode: absent on legacy payloads,
+/// which all map to `fixed`.
+Object? _readCricketTargetMode(Map<dynamic, dynamic> json, String key) =>
+    json['targetMode'] ?? 'fixed';
 
 /// Canonical Segment Representation
 /// Standardized format for dart board segments as specified in AGENTS.md

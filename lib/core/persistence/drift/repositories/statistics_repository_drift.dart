@@ -201,9 +201,30 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           if (cj == null) return false;
           try {
             final cfg = jsonDecode(cj) as Map<String, dynamic>;
-            return cfg['variant'] == variant;
+            // New configs serialize cricket scoring under `scoring`; legacy
+            // payloads use `variant`. See cricket target-modes design §2.
+            final scoring = cfg['scoring'] ?? cfg['variant'];
+            return scoring == variant;
           } catch (_) {
             return false;
+          }
+        }).toList();
+      }
+      // Cricket target-mode cohort scaffolding: only `fixed` exists today
+      // (random/crazy land in subsequent PRs #237/#238). Legacy games carry
+      // no `targetMode` field and map to `fixed`. Keeping each mode's stats
+      // separate prevents future cohorts from polluting Standard Cricket
+      // career numbers.
+      if (gameType == GameType.cricket) {
+        games = games.where((g) {
+          final cj = g.configJson;
+          if (cj == null) return true;
+          try {
+            final cfg = jsonDecode(cj) as Map<String, dynamic>;
+            final mode = cfg['targetMode'] ?? 'fixed';
+            return mode == 'fixed';
+          } catch (_) {
+            return true;
           }
         }).toList();
       }
@@ -477,9 +498,26 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         filtered = filtered.where((g) {
           try {
             final cfg = jsonDecode(g.configJson) as Map<String, dynamic>;
-            return cfg['variant'] == variant;
+            // New configs serialize cricket scoring under `scoring`; legacy
+            // payloads use `variant`. See cricket target-modes design §2.
+            final scoring = cfg['scoring'] ?? cfg['variant'];
+            return scoring == variant;
           } catch (_) {
             return false;
+          }
+        }).toList();
+      }
+      // Cricket target-mode cohort scaffolding: only `fixed` exists today
+      // (random/crazy land in subsequent PRs #237/#238). Legacy games carry
+      // no `targetMode` field and map to `fixed`.
+      if (gameType == GameType.cricket) {
+        filtered = filtered.where((g) {
+          try {
+            final cfg = jsonDecode(g.configJson) as Map<String, dynamic>;
+            final mode = cfg['targetMode'] ?? 'fixed';
+            return mode == 'fixed';
+          } catch (_) {
+            return true;
           }
         }).toList();
       }
@@ -615,15 +653,28 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       // abandoned, or a multi-competitor game that ended before they took
       // a turn. Sister method getPlayerX01StartingScores already uses this
       // join shape (#193).
+      //
+      // New configs serialise the cricket scoring axis as `scoring`; legacy
+      // configs use the single `variant` key. `COALESCE` lets one query
+      // surface both. Restricted to `targetMode = 'fixed'` (or absent =
+      // legacy) so the picker doesn't list Random/Crazy values here once
+      // those modes land — they get their own cohort.
       final sql = '''
-        SELECT DISTINCT JSON_EXTRACT(g.config_json, '\$.variant') AS variant
+        SELECT DISTINCT COALESCE(
+          JSON_EXTRACT(g.config_json, '\$.scoring'),
+          JSON_EXTRACT(g.config_json, '\$.variant')
+        ) AS variant
         FROM games g
         JOIN competitors c ON g.game_id = c.game_id
         JOIN competitor_players cp ON c.competitor_id = cp.competitor_id
         WHERE g.game_type = 'cricket'
         AND g.is_complete = 1
         AND cp.player_id = ?
-        AND JSON_EXTRACT(g.config_json, '\$.variant') IS NOT NULL
+        AND COALESCE(JSON_EXTRACT(g.config_json, '\$.targetMode'), 'fixed') = 'fixed'
+        AND COALESCE(
+          JSON_EXTRACT(g.config_json, '\$.scoring'),
+          JSON_EXTRACT(g.config_json, '\$.variant')
+        ) IS NOT NULL
       ''';
 
       final rows = await _db

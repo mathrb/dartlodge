@@ -205,7 +205,10 @@ class UndoLastDartUseCase {
       inStrategy: source.inStrategy,
       outStrategy: source.outStrategy,
       startingScore: source.startingScore,
-      cricketVariant: source.cricketVariant,
+      cricketScoring: source.cricketScoring,
+      cricketTargetMode: source.cricketTargetMode,
+      cricketTargets: source.cricketTargets,
+      cricketLockedTargets: source.cricketLockedTargets,
       aroundTheClockVariant: source.aroundTheClockVariant,
       shanghaiTotalRounds: source.shanghaiTotalRounds,
       catch40TargetRemaining:

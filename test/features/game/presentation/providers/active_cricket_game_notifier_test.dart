@@ -28,7 +28,7 @@ void main() {
         gameId: 'g1',
         gameType: GameType.cricket,
         config: GameConfig.cricket(
-          variant: 'standard',
+          scoring: 'standard',
           numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
           legsToWin: 1,
         ),
@@ -379,7 +379,7 @@ void main() {
         gameId: 'g1',
         gameType: GameType.cricket,
         config: GameConfig.cricket(
-          variant: variant,
+          scoring: variant,
           numbers: const ['15', '16', '17', '18', '19', '20', 'bull'],
           legsToWin: legsToWin,
           totalRounds: totalRounds,

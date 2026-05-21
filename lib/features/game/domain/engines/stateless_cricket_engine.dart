@@ -8,11 +8,24 @@ import '../entities/game_event.dart';
 import 'base_game_engine.dart';
 
 class StatelessCricketEngine implements GameEngine {
-  static const List<String> _cricketNumbers = [
-    '15', '16', '17', '18', '19', '20', 'Bull'
-  ];
-  // Valid cricket segment base numbers (25 = Bull)
-  static const Set<int> _validCricketSegments = {15, 16, 17, 18, 19, 20, 25};
+  // The cricket target set is no longer hardcoded: it is derived from
+  // `state.cricketTargets` (+ implicit Bull) at every use site, so the
+  // engine accepts any target mode (fixed/random/crazy). Bull (25) is
+  // always a target; it never appears in `cricketTargets`.
+  // See `docs/plans/2026-05-19-cricket-target-modes-design.md` §5.
+
+  /// Cricket mark-keys for the current target set: `['15', '16', ..., 'Bull']`
+  /// for fixed; for random/crazy it follows whatever numbers are active.
+  /// Bull is always appended last.
+  List<String> _cricketKeys(GameState state) => [
+        for (final n in state.cricketTargets) n.toString(),
+        'Bull',
+      ];
+
+  /// Valid cricket segment base numbers for the current target set
+  /// (always includes 25 for Bull).
+  Set<int> _validCricketSegments(GameState state) =>
+      {...state.cricketTargets, 25};
 
   @override
   EngineResult apply(GameState state, GameEvent event) {
@@ -100,7 +113,7 @@ class StatelessCricketEngine implements GameEngine {
     );
 
     // Table C — Valid cricket numbers check
-    if (!_validCricketSegments.contains(segmentNum)) {
+    if (!_validCricketSegments(newState).contains(segmentNum)) {
       // Dart counts as thrown but has no game effect
       return (_checkTurnEnd(newState), LegOutcome.none, null);
     }
@@ -144,15 +157,15 @@ class StatelessCricketEngine implements GameEngine {
 
   GameState _applyOverflowScoring(GameState state, String cricketKey,
       int segmentNum, int multiplier, int overflow) {
-    final variant = state.cricketVariant;
+    final scoring = state.cricketScoring;
     // Scoring value is always 25 per mark for Bull, else the segment number
     final numberValue = segmentNum == 25 ? 25 : segmentNum;
 
-    if (variant == 'no-score') return state;
+    if (scoring == 'no-score') return state;
 
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
 
-    if (variant == 'standard') {
+    if (scoring == 'standard') {
       // E1: overflow scores for the current player if at least one opponent hasn't closed
       final atLeastOneOpponentOpen = updatedCompetitors.any((c) {
         if (c.competitorId ==
@@ -167,7 +180,7 @@ class StatelessCricketEngine implements GameEngine {
         updatedCompetitors[state.currentTurnIndex] =
             current.copyWith(score: current.score + numberValue * overflow);
       }
-    } else if (variant == 'cut-throat') {
+    } else if (scoring == 'cut-throat') {
       // E2: overflow scores for each opponent who hasn't closed
       final currentCompetitorId =
           updatedCompetitors[state.currentTurnIndex].competitorId;
@@ -186,13 +199,14 @@ class StatelessCricketEngine implements GameEngine {
 
   GameState _checkAllClosed(GameState state) {
     final updatedCompetitors = List<CompetitorState>.from(state.competitors);
+    final keys = _cricketKeys(state);
     bool changed = false;
 
     for (var i = 0; i < updatedCompetitors.length; i++) {
       final competitor = updatedCompetitors[i];
       if (competitor.closeOrder != null) continue; // Already closed
 
-      if (_isAllClosed(competitor)) {
+      if (_isAllClosed(competitor, keys)) {
         // Calculate close_order as total darts thrown by all competitors
         final totalDarts = updatedCompetitors.fold<int>(
             0, (sum, c) => sum + c.dartThrows.length);
@@ -204,30 +218,31 @@ class StatelessCricketEngine implements GameEngine {
     return changed ? state.copyWith(competitors: updatedCompetitors) : state;
   }
 
-  bool _isAllClosed(CompetitorState competitor) {
-    return _cricketNumbers
+  bool _isAllClosed(CompetitorState competitor, List<String> cricketKeys) {
+    return cricketKeys
         .every((n) => (competitor.marksPerNumber[n] ?? 0) >= 3);
   }
 
   (GameState, LegOutcome, String?) _evaluateWin(GameState state) {
-    final variant = state.cricketVariant;
+    final scoring = state.cricketScoring;
+    final keys = _cricketKeys(state);
     String? winnerId;
 
     // Collect candidates: competitors who have all closed
     final closedCompetitors =
-        state.competitors.where((c) => _isAllClosed(c)).toList();
+        state.competitors.where((c) => _isAllClosed(c, keys)).toList();
 
     if (closedCompetitors.isEmpty) {
       return (state, LegOutcome.none, null);
     }
 
-    if (variant == 'no-score') {
+    if (scoring == 'no-score') {
       // G3: first all-closed player wins
       // Pick lowest closeOrder among those who are all-closed
       closedCompetitors.sort((a, b) =>
           (a.closeOrder ?? 999999).compareTo(b.closeOrder ?? 999999));
       winnerId = closedCompetitors.first.competitorId;
-    } else if (variant == 'standard') {
+    } else if (scoring == 'standard') {
       // G1: all-closed AND score >= all opponents' scores. When multiple
       // candidates qualify with equal scores (both closed, same score, no
       // strict score winner) the comment used to claim a closeOrder
@@ -247,7 +262,7 @@ class StatelessCricketEngine implements GameEngine {
           break;
         }
       }
-    } else if (variant == 'cut-throat') {
+    } else if (scoring == 'cut-throat') {
       // G2: all-closed + score <= all opponents' scores
       // Tie-break: earliest closeOrder
       final candidates = closedCompetitors.where((candidate) {
@@ -387,18 +402,19 @@ class StatelessCricketEngine implements GameEngine {
   /// null is earlier than null → unresolvable tie returns null for manual pick.
   String? _selectCricketCapWinner(GameState state) {
     if (state.competitors.length < 2) return null;
-    final variant = state.cricketVariant;
+    final scoring = state.cricketScoring;
+    final keys = _cricketKeys(state);
 
     int Function(CompetitorState) metric;
     bool higherWins;
-    switch (variant) {
+    switch (scoring) {
       case 'cut-throat':
         metric = (c) => c.score;
         higherWins = false;
         break;
       case 'no-score':
         metric = (c) =>
-            _cricketNumbers.fold<int>(0, (s, n) => s + (c.marksPerNumber[n] ?? 0));
+            keys.fold<int>(0, (s, n) => s + (c.marksPerNumber[n] ?? 0));
         higherWins = true;
         break;
       case 'standard':

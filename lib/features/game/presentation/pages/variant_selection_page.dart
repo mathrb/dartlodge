@@ -164,7 +164,7 @@ class VariantSelectionPage extends ConsumerWidget {
           label: 'Standard',
           rulesSlug: 'cricket-standard',
           config: GameConfig.cricket(
-            variant: 'standard',
+            scoring: 'standard',
             numbers: GameConfigurationConstants.cricketNumbers,
             legsToWin: 1,
           ),
@@ -173,7 +173,7 @@ class VariantSelectionPage extends ConsumerWidget {
           label: 'No Score',
           rulesSlug: 'cricket-no-score',
           config: GameConfig.cricket(
-            variant: 'no-score',
+            scoring: 'no-score',
             numbers: GameConfigurationConstants.cricketNumbers,
             legsToWin: 1,
           ),
@@ -182,7 +182,7 @@ class VariantSelectionPage extends ConsumerWidget {
           label: 'Cut Throat',
           rulesSlug: 'cricket-cut-throat',
           config: GameConfig.cricket(
-            variant: 'cut-throat',
+            scoring: 'cut-throat',
             numbers: GameConfigurationConstants.cricketNumbers,
             legsToWin: 1,
           ),
@@ -361,7 +361,7 @@ class _LastPlayedCard extends StatelessWidget {
 
   String get _displayTitle => config.maybeMap(
         x01: (c) => '${c.startingScore}',
-        cricket: (c) => switch (c.variant) {
+        cricket: (c) => switch (c.scoring) {
           'cut-throat' => 'Cut Throat',
           'no-score' => 'No Score',
           _ => 'Standard',

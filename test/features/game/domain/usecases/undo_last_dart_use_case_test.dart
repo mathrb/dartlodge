@@ -556,7 +556,7 @@ void main() {
         turnActive: true,
         legsToWin: 1,
         startingScore: 0,
-        cricketVariant: 'no-score',
+        cricketScoring: 'no-score',
       );
     }
 

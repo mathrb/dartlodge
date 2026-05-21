@@ -272,7 +272,7 @@ class GameSetupNotifier extends _$GameSetupNotifier {
             legsToWin: 1,
           ),
         GameType.cricket => GameConfig.cricket(
-            variant: 'standard',
+            scoring: 'standard',
             numbers: GameConfigurationConstants.cricketNumbers,
             legsToWin: 1,
           ),

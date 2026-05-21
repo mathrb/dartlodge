@@ -34,21 +34,24 @@ Map<String, dynamic> _$X01GameConfigToJson(X01GameConfig instance) =>
       'runtimeType': instance.$type,
     };
 
-CricketGameConfig _$CricketGameConfigFromJson(Map<String, dynamic> json) =>
-    CricketGameConfig(
-      variant: json['variant'] as String,
-      numbers: (json['numbers'] as List<dynamic>)
-          .map((e) => e as String)
-          .toList(),
-      legsToWin: (json['legsToWin'] as num?)?.toInt() ?? 1,
-      totalRounds: (json['totalRounds'] as num?)?.toInt() ?? null,
-      startingPlayerId: json['startingPlayerId'] as String? ?? null,
-      $type: json['runtimeType'] as String?,
-    );
+CricketGameConfig _$CricketGameConfigFromJson(
+  Map<String, dynamic> json,
+) => CricketGameConfig(
+  scoring: _readCricketScoring(json, 'scoring') as String? ?? 'standard',
+  targetMode: _readCricketTargetMode(json, 'targetMode') as String? ?? 'fixed',
+  numbers:
+      (json['numbers'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+      const <String>['15', '16', '17', '18', '19', '20', 'bull'],
+  legsToWin: (json['legsToWin'] as num?)?.toInt() ?? 1,
+  totalRounds: (json['totalRounds'] as num?)?.toInt() ?? null,
+  startingPlayerId: json['startingPlayerId'] as String? ?? null,
+  $type: json['runtimeType'] as String?,
+);
 
 Map<String, dynamic> _$CricketGameConfigToJson(CricketGameConfig instance) =>
     <String, dynamic>{
-      'variant': instance.variant,
+      'scoring': instance.scoring,
+      'targetMode': instance.targetMode,
       'numbers': instance.numbers,
       'legsToWin': instance.legsToWin,
       'totalRounds': instance.totalRounds,

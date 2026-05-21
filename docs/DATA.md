@@ -154,13 +154,24 @@ Every variant supports an optional `startingPlayerId` (UUID, nullable). Only the
 
 ```json
 {
-  "variant": "standard" | "cut-throat" | "no-score",
+  "scoring": "standard" | "cut-throat" | "no-score",
+  "targetMode": "fixed" | "random" | "crazy",
   "numbers": ["15", "16", "17", "18", "19", "20", "bull"],
   "legsToWin": 1,
   "totalRounds": integer | null,
   "startingPlayerId": "<uuid>" | null
 }
 ```
+
+* `scoring` is **how points work**; `targetMode` is **which numbers are
+  targets**. The two axes are orthogonal — any combination is legal. See
+  `docs/plans/2026-05-19-cricket-target-modes-design.md` and
+  `docs/games/cricket.transitions.md`.
+* **Backward compatibility:** legacy payloads carrying a single `variant`
+  string deserialise to `{scoring: <that>, targetMode: "fixed"}` at read
+  time. No event migration; historical replay is unaffected.
+* Today only `targetMode: "fixed"` ships end-to-end (this PR is the
+  foundation refactor); `random` and `crazy` land in PRs #237 / #238.
 
 ### Around the Clock (`game_type = "aroundTheClock"`)
 
@@ -240,7 +251,7 @@ The persisted blob is a `GameStateSnapshot` (`lib/features/game/domain/models/ga
 * `legsToWin`, `currentLegIndex`, `currentRoundInLeg` — leg/round bookkeeping.
 * `x01TotalRounds`, `cricketTotalRounds` — per-leg round caps when applicable.
 * `inStrategy`, `outStrategy`, `startingScore` — X01 configuration carried into runtime state.
-* `cricketVariant`, `aroundTheClockVariant`, `shanghaiTotalRounds`, `catch40TargetRemaining`, `catch40DartsOnTarget`, `checkoutTargetSuccesses` — game-type-specific runtime fields.
+* `cricketScoring`, `cricketTargetMode`, `cricketTargets`, `cricketLockedTargets`, `aroundTheClockVariant`, `shanghaiTotalRounds`, `catch40TargetRemaining`, `catch40DartsOnTarget`, `checkoutTargetSuccesses` — game-type-specific runtime fields. `cricketTargets` carries the 6 active number-slots (Bull implicit); `cricketLockedTargets` is the globally-locked set for Crazy Cricket (empty under `fixed`/`random`).
 
 ### Rules
 

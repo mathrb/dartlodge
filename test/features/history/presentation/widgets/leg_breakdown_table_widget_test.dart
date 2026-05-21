@@ -9,7 +9,7 @@ import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdo
 Game _game(GameType type) {
   final config = type == GameType.cricket
       ? const GameConfig.cricket(
-          variant: 'standard',
+          scoring: 'standard',
           numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
         )
       : const GameConfig.x01(
