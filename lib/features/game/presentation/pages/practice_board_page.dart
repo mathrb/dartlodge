@@ -224,7 +224,13 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 totalRounds: _totalRounds(gs),
                 score: competitor.score,
                 practiceAttempts: isCheckout
-                    ? competitor.dartThrows.length
+                    // Exclude the engine's empty-slot sentinel pads —
+                    // showing the user "9 darts thrown" when they really
+                    // only threw 7 (with 2 sentinels from a 1-dart bust)
+                    // was the off-by-one called out in #261.
+                    ? competitor.dartThrows
+                        .where((d) => d.isNotEmpty)
+                        .length
                     : competitor.practiceAttempts,
                 practiceSuccesses: competitor.practiceSuccesses,
                 roundScore: roundScore,

@@ -233,23 +233,24 @@ void main() {
     });
 
     test(
-        'bust dart IS recorded in dartThrows + MISS padding (regression for #186)',
+        'bust dart IS recorded in dartThrows + empty-slot padding (regression for #186)',
         () {
       // Bust on dart 1 (turn was empty going in). After:
       //   dartsThrownInTurn = 3
-      //   dartThrows = [T20, MISS, MISS] — 3-aligned for the dropped turn
-      // Pre-fix this assertion was reversed (dartThrows empty), which silently
-      // lost the bust dart from replay history and any consumer of
-      // CompetitorState.dartThrows.
+      //   dartThrows = [T20, '', ''] — 3-aligned for the dropped turn.
+      // The empty-slot sentinel was 'MISS' until #261 (it leaked into
+      // the status bar as a phantom MISS chip the user never threw);
+      // it's now the empty string and display widgets render a
+      // "dart not thrown" placeholder.
       final state = _makeState(score: 20, turnActive: true, turnStartScore: 20);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3));
-      expect(result.state.competitors[0].dartThrows, ['T20', 'MISS', 'MISS']);
+      expect(result.state.competitors[0].dartThrows, ['T20', '', '']);
     });
 
-    test('bust on dart 2 records [prev, bust, MISS]', () {
+    test('bust on dart 2 records [prev, bust, sentinel]', () {
       // Pre-state: dart 1 already in dartThrows, dart 2 busts.
-      // After: dartThrows length 3, padded with one MISS.
+      // After: dartThrows length 3, padded with one empty-slot sentinel.
       const state = GameState(
         gameId: 'g',
         gameType: GameType.checkoutPractice,
@@ -274,7 +275,7 @@ void main() {
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3));
       expect(result.isBust, isTrue);
-      expect(result.state.competitors[0].dartThrows, ['20', 'T20', 'MISS']);
+      expect(result.state.competitors[0].dartThrows, ['20', 'T20', '']);
     });
 
     test('bust on dart 3 records all three darts, no padding', () {
@@ -356,11 +357,13 @@ void main() {
     });
 
     test('checkout pads dartThrows to length 3 and sets dartsThrownInTurn=3', () {
-      // Dart 1 checkout on score=40: D20 → score=0. dartThrows = [D20, MISS, MISS].
+      // Dart 1 checkout on score=40: D20 → score=0. dartThrows is padded to
+      // length 3 with empty-slot sentinels — display widgets render those as
+      // "dart not thrown" placeholders (was 'MISS' until #261).
       final state = _makeState(score: 40, turnActive: true);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 2));
-      expect(result.state.competitors[0].dartThrows, ['D20', 'MISS', 'MISS']);
+      expect(result.state.competitors[0].dartThrows, ['D20', '', '']);
       expect(result.state.dartsThrownInTurn, 3);
     });
 

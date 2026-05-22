@@ -18,8 +18,13 @@ abstract final class AppTheme {
   // Names map to DESIGN_SYSTEM.md semantic roles; values may coincide but
   // represent independent design decisions that can diverge.
 
-  // Disabled state — WCAG AA / Material Design default (DESIGN_SYSTEM §10.3)
+  // Disabled state — WCAG AA / Material Design default (DESIGN_SYSTEM §10.3).
+  // `opacityDisabled` (0.38) is the foreground/text alpha; the matching
+  // container alpha (Material 3 disabled state layer) is 0.12 — used on
+  // disabled FilledButton backgrounds where a faded primary tint would
+  // otherwise still read as a "GO" affordance (#261).
   static const double opacityDisabled = 0.38;
+  static const double opacityDisabledContainer = 0.12;
 
   // Ghost borders — "No-Line Rule" boundary markers (DESIGN_SYSTEM §2.4–2.5)
   static const double opacityGhostBorderLight  = 0.10; // subtle card/panel boundary
