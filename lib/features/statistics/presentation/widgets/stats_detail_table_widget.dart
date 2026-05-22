@@ -29,7 +29,9 @@ class StatsDetailTableWidget extends StatelessWidget {
       ),
       StatsTableDataRow('Win %', StatFormatter.fmtPct(stats.winRate), '—'),
       StatsTableHeader('TOTAL', col2: 'PER LEG'),
-      StatsTableDataRow('60+', stats.sixtyPlusTurns.toString(),
+      // 60–99 bucket — 100+ / 140+ / 180 rows cover the rest. Was "60+"
+      // (ambiguous since the higher buckets are excluded) before #261.
+      StatsTableDataRow('60–99', stats.sixtyPlusTurns.toString(),
           StatFormatter.fmtPerLeg(stats.sixtyPlusTurns, stats.legsPlayed)),
       StatsTableDataRow('100+', stats.oneHundredPlusTurns.toString(),
           StatFormatter.fmtPerLeg(stats.oneHundredPlusTurns, stats.legsPlayed)),

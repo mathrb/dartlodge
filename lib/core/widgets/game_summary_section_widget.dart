@@ -37,6 +37,16 @@ class GameSummarySectionWidget extends StatelessWidget {
         : gameStats.byCompetitor
             .where((c) => c.competitorId != winner.competitorId)
             .toList();
+    // Count-Up's runner-ups all get "OPPONENT" today — but they're really
+    // 2nd, 3rd, … by total score. Every competitor throws the same number
+    // of darts (the configured round count × 3), so `threeDartAverage`
+    // (PPR = totalScore / totalDarts × 3) is a faithful proxy for total
+    // score and sorts the same way. Drives the per-card ordinal label
+    // below (#261).
+    if (isCountUp) {
+      opponents.sort(
+          (a, b) => b.threeDartAverage.compareTo(a.threeDartAverage));
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -68,21 +78,49 @@ class GameSummarySectionWidget extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         if (opponents.isNotEmpty) ...[
-          ...opponents.map((c) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _OpponentCard(stats: c, isCricket: isCricket),
-              )),
+          ...opponents.asMap().entries.map((entry) {
+            final rank = entry.key;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _OpponentCard(
+                stats: entry.value,
+                isCricket: isCricket,
+                // Count-Up: opponents are sorted by score above, so index 0
+                // is 2nd place, index 1 is 3rd, etc. Other modes keep the
+                // generic "OPPONENT" subtitle.
+                label: isCountUp ? _ordinalLabel(rank + 2) : 'OPPONENT',
+              ),
+            );
+          }),
           const SizedBox(height: 16),
         ],
         PostGameStatsBreakdown(
-          columns: gameStats.byCompetitor.map((c) {
-            final isWinner = c.competitorId == winner?.competitorId;
-            return PostGameBreakdownColumn(
-              name: NameFormatter.shortName(c.competitorName),
-              subtitle: isWinner ? 'WINNER' : 'OPPONENT',
-              emphasize: isWinner,
-            );
-          }).toList(),
+          columns: () {
+            // Count-Up: order competitors by score (PPR proxy) descending
+            // so columns appear left → right in the same order as the
+            // ordinal-labelled cards above. Other modes keep the original
+            // order with a binary WINNER / OPPONENT subtitle.
+            final ordered = isCountUp
+                ? ([...gameStats.byCompetitor]
+                  ..sort((a, b) =>
+                      b.threeDartAverage.compareTo(a.threeDartAverage)))
+                : gameStats.byCompetitor;
+            return ordered.asMap().entries.map((entry) {
+              final c = entry.value;
+              final isWinner = c.competitorId == winner?.competitorId;
+              final String subtitle;
+              if (isCountUp) {
+                subtitle = isWinner ? 'WINNER' : _ordinalLabel(entry.key + 1);
+              } else {
+                subtitle = isWinner ? 'WINNER' : 'OPPONENT';
+              }
+              return PostGameBreakdownColumn(
+                name: NameFormatter.shortName(c.competitorName),
+                subtitle: subtitle,
+                emphasize: isWinner,
+              );
+            }).toList();
+          }(),
           rows: _buildRows(
             allCompetitors: gameStats.byCompetitor,
             winnerId: winner?.competitorId,
@@ -134,7 +172,10 @@ class GameSummarySectionWidget extends StatelessWidget {
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '60+',
+          // "60+" was the historical label but actually counts the 60–99
+          // bucket only — the 100+ / 140+ / 180s rows cover the rest.
+          // Rename for clarity (#261).
+          category: '60–99',
           values:
               allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
           highlights: noHighlight,
@@ -252,13 +293,51 @@ class GameSummarySectionWidget extends StatelessWidget {
   }
 }
 
+// ── Ordinal labels ────────────────────────────────────────────────────────────
+
+/// Renders English ordinals for ranks 1–10 (covers every realistic
+/// competitor count for a single game) and falls back to plain "Nth" for
+/// anything larger. Used to label runner-up cards on count-up post-game
+/// (#261).
+String _ordinalLabel(int n) {
+  switch (n) {
+    case 1:
+      return '1ST';
+    case 2:
+      return '2ND';
+    case 3:
+      return '3RD';
+    case 4:
+      return '4TH';
+    case 5:
+      return '5TH';
+    case 6:
+      return '6TH';
+    case 7:
+      return '7TH';
+    case 8:
+      return '8TH';
+    case 9:
+      return '9TH';
+    case 10:
+      return '10TH';
+    default:
+      return '${n}TH';
+  }
+}
+
 // ── Opponent Card ─────────────────────────────────────────────────────────────
 
 class _OpponentCard extends StatelessWidget {
-  const _OpponentCard({required this.stats, required this.isCricket});
+  const _OpponentCard({
+    required this.stats,
+    required this.isCricket,
+    this.label = 'OPPONENT',
+  });
 
   final CompetitorStats stats;
   final bool isCricket;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
@@ -293,7 +372,7 @@ class _OpponentCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'OPPONENT',
+                  label,
                   style: tt.labelSmall?.copyWith(
                     color: cs.onSurfaceVariant,
                     letterSpacing: 1.5,
