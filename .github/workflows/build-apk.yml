@@ -64,6 +64,12 @@ jobs:
       - name: Override applicationId to app.dartlodge
         run: bash tools/post-create-android.sh
 
+      # android/ is scaffolded fresh each run, so launcher icons must be
+      # regenerated into android/app/src/main/res/mipmap-*/ — otherwise the
+      # built APK ships with the default Flutter icon.
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+
       # PRs only need to verify the Android build compiles. No artifact upload.
       - name: Build debug APK (PR)
         if: github.event_name == 'pull_request'

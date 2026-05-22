@@ -51,6 +51,12 @@ jobs:
       - name: Scaffold web platform
         run: flutter create --platforms=web .
 
+      # web/ is scaffolded fresh each run, so launcher icons + manifest icons
+      # must be regenerated into web/icons/ — otherwise the deployed PWA ships
+      # with the default Flutter icon.
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons
+
       - name: Write Drift web worker entrypoint
         run: |
           cat > web/drift_worker.dart <<'EOF'
