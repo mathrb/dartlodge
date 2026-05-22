@@ -1500,12 +1500,19 @@ class PlayerStatsAssembler {
           if (!inPlayerTurn || epid != playerId) break;
           final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
           final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-          if (mult == 2) {
-            doubleAttempts++;
-            if (seg == currentRound) {
-              doubleHits++;
-              turnDoubleHits++;
-            }
+          // "Doubles Hit Rate" = darts that landed on the round's target
+          // double / total darts thrown at the target. The original code
+          // gated `doubleAttempts++` on `mult == 2`, so the denominator
+          // was "darts that landed on any double" (often a small fraction
+          // of total throws), making the rate read implausibly high.
+          // Counting every dart as an attempt matches the user-facing
+          // expectation (#261): if you throw 60 darts at Bob's 27 and
+          // land 19 on the round's double, the rate should be 31.7%, not
+          // 19/something-smaller.
+          doubleAttempts++;
+          if (mult == 2 && seg == currentRound) {
+            doubleHits++;
+            turnDoubleHits++;
           }
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;

@@ -779,6 +779,75 @@ void main() {
     expect(find.text('ROUND 1 / 20'), findsOneWidget);
   });
 
+  // ── 23c. Checkout Practice: ROUND counter increments per attempt (#261) ──
+
+  Future<void> _pumpCheckoutPractice(
+    WidgetTester tester, {
+    required int dartsThrownInTurn,
+    required List<String> dartThrows,
+  }) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final gs = _practiceState(
+      gameType: GameType.checkoutPractice,
+      dartsThrownInTurn: dartsThrownInTurn,
+      competitor: _practiceCompetitor(dartThrows: dartThrows),
+    );
+    final notifier =
+        _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          activePracticeProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+      'Checkout Practice: ROUND counter derives from darts thrown',
+      (tester) async {
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 0,
+      dartThrows: const [],
+    );
+    expect(find.text('ROUND 1'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Checkout Practice: ROUND stays on attempt 1 while mid-turn',
+      (tester) async {
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 1,
+      dartThrows: const ['T20'],
+    );
+    expect(find.text('ROUND 1'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Checkout Practice: ROUND advances to 2 after NEXT ROUND (#261)',
+      (tester) async {
+    // 3 darts logged from attempt 1, dartsThrownInTurn reset by TurnEnded.
+    // Should display attempt 2.
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 0,
+      dartThrows: const ['T20', 'T20', 'DB'],
+    );
+    expect(find.text('ROUND 2'), findsOneWidget);
+    expect(find.text('ROUND 1'), findsNothing);
+  });
+
   testWidgets(
       "23b. Bob's 27: post-3rd-dart shows just-played round, not the next one",
       (tester) async {
