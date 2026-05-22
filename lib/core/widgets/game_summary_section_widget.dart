@@ -94,18 +94,22 @@ class GameSummarySectionWidget extends StatelessWidget {
           }),
           const SizedBox(height: 16),
         ],
-        PostGameStatsBreakdown(
-          columns: () {
-            // Count-Up: order competitors by score (PPR proxy) descending
-            // so columns appear left → right in the same order as the
-            // ordinal-labelled cards above. Other modes keep the original
-            // order with a binary WINNER / OPPONENT subtitle.
-            final ordered = isCountUp
-                ? ([...gameStats.byCompetitor]
-                  ..sort((a, b) =>
-                      b.threeDartAverage.compareTo(a.threeDartAverage)))
-                : gameStats.byCompetitor;
-            return ordered.asMap().entries.map((entry) {
+        Builder(builder: (_) {
+          // Count-Up: order competitors by score (PPR proxy) descending so
+          // columns appear left → right in the same order as the ordinal-
+          // labelled cards above. CRITICAL: the same ordering must drive
+          // BOTH columns and rows — `PostGameBreakdownRow.values` is
+          // index-aligned to `columns`, so passing the unsorted list to
+          // `_buildRows` would put each competitor's stats in the wrong
+          // column header. Other modes keep the original order with a
+          // binary WINNER / OPPONENT subtitle.
+          final ordered = isCountUp
+              ? ([...gameStats.byCompetitor]
+                ..sort((a, b) =>
+                    b.threeDartAverage.compareTo(a.threeDartAverage)))
+              : gameStats.byCompetitor;
+          return PostGameStatsBreakdown(
+            columns: ordered.asMap().entries.map((entry) {
               final c = entry.value;
               final isWinner = c.competitorId == winner?.competitorId;
               final String subtitle;
@@ -119,15 +123,15 @@ class GameSummarySectionWidget extends StatelessWidget {
                 subtitle: subtitle,
                 emphasize: isWinner,
               );
-            }).toList();
-          }(),
-          rows: _buildRows(
-            allCompetitors: gameStats.byCompetitor,
-            winnerId: winner?.competitorId,
-            isCricket: isCricket,
-            isCountUp: isCountUp,
-          ),
-        ),
+            }).toList(),
+            rows: _buildRows(
+              allCompetitors: ordered,
+              winnerId: winner?.competitorId,
+              isCricket: isCricket,
+              isCountUp: isCountUp,
+            ),
+          );
+        }),
       ],
     );
   }
@@ -270,7 +274,10 @@ class GameSummarySectionWidget extends StatelessWidget {
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '60+',
+        // 60–99 bucket (100+ / 140+ / 180s rows cover the rest). Was "60+"
+        // before #261; the higher buckets exclude this label so "60+"
+        // misleadingly read as "at least 60".
+        category: '60–99',
         values:
             allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
         highlights: noHighlight,
