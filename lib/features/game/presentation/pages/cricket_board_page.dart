@@ -234,25 +234,25 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
     );
   }
 
-  void _confirmBack(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => EndGameDialogWidget(
-        onConfirm: () {
-          Navigator.of(dialogContext).pop();
-          context.go(GameRoutes.home);
-        },
-        onCancel: () => Navigator.of(dialogContext).pop(),
-      ),
-    );
-  }
+  void _confirmBack(BuildContext context) => _showEndConfirm(context);
 
-  void _showEndGameDialog(BuildContext context) {
+  void _showEndGameDialog(BuildContext context) => _showEndConfirm(context);
+
+  void _showEndConfirm(BuildContext context) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => EndGameDialogWidget(
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.of(dialogContext).pop();
+          // Mark the game as abandoned (winner=null) so it appears in
+          // history. Without this, the game stays `is_complete=0` until
+          // the next game starts and the lazy abandonment in
+          // GameSetupNotifier.startGame fires — leaving a discoverability
+          // gap if the user just exits (issue #252).
+          await ref
+              .read(activeCricketGameProvider(widget.gameId).notifier)
+              .endGame();
+          if (!context.mounted) return;
           context.go(GameRoutes.home);
         },
         onCancel: () => Navigator.of(dialogContext).pop(),

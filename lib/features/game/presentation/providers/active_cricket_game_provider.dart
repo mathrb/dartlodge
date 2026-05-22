@@ -9,6 +9,7 @@ import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_cricket_game_state.dart';
+import '../../../../core/error/repository_exception.dart';
 import '../../../../core/persistence/database_provider.dart';
 import 'action_serializer.dart';
 import 'game_replay_provider.dart';
@@ -103,6 +104,29 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
 
   void dismissGameModal() {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
+  }
+
+  /// Abandons the current game: marks it complete with `winner = null` so it
+  /// appears in history (issue #252). No-op if the game has already finished
+  /// naturally through play (engine-driven completion already ran the proper
+  /// `appendEventsAndCompleteGame` path).
+  Future<void> endGame() => _serializer.run(_endGameImpl);
+
+  Future<void> _endGameImpl() async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+    try {
+      await ref.read(gameRepositoryProvider).completeGame(
+            gameId: gs.gameId,
+            winnerCompetitorId: null,
+            endTime: DateTime.now(),
+          );
+    } on GameAlreadyCompleteException {
+      // Idempotent — another path (e.g. concurrent navigation) already
+      // abandoned the game.
+    }
   }
 
   Future<void> nextPlayer() => _serializer.run(_nextPlayerImpl);
