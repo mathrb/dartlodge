@@ -347,8 +347,13 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       _FieldSection(
         label: 'ROUNDS',
         child: _RoundsDropdown(
+          // `7` is the default on `ShanghaiGameConfig.totalRounds` (the
+          // classic Shanghai rule plays the 20→bull set in 7 rounds), so
+          // it must be selectable in the dropdown — otherwise the config
+          // chip badge ("Shanghai · 7 Rounds") and the picker disagree
+          // (#259).
           value: c.totalRounds,
-          items: const [10, 15, 20, 25, 50],
+          items: const [7, 10, 15, 20, 25, 50],
           onChanged: (v) {
             if (v == null) return;
             setState(() => _draftConfig = c.copyWith(totalRounds: v));
