@@ -93,6 +93,37 @@ void main() {
     )).called(1);
   });
 
+  test(
+      'setCricketTargetMode clears selectedCricketVariant so a stale '
+      'scoring filter does not silently narrow the cohort query', () async {
+    final notifier =
+        container.read(playerStatsPageProvider('p1').notifier);
+    // Start on fixed mode with a scoring variant selected.
+    notifier.setCricketVariant('standard');
+    expect(
+      container.read(playerStatsPageProvider('p1')).selectedCricketVariant,
+      'standard',
+    );
+
+    // Switching cohort must reset the variant filter — the variant chip
+    // row is fixed-only, so a persisted 'standard' selection on Random
+    // would invisibly drop all results to zero.
+    notifier.setCricketTargetMode('random');
+
+    final s = container.read(playerStatsPageProvider('p1'));
+    expect(s.selectedCricketTargetMode, 'random');
+    expect(s.selectedCricketVariant, isNull);
+
+    await container.read(filteredCricketStatsProvider('p1').future);
+    verify(repo.getPlayerStats(
+      'p1',
+      gameType: GameType.cricket,
+      variant: null,
+      legLimit: anyNamed('legLimit'),
+      cricketTargetMode: 'random',
+    )).called(1);
+  });
+
   test('setCricketTargetMode("crazy") flows through to leg history',
       () async {
     container

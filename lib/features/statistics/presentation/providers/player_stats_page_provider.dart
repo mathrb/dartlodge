@@ -27,8 +27,16 @@ class PlayerStatsPage extends _$PlayerStatsPage {
       state = state.copyWith(selectedStartingScore: score);
   void setCricketVariant(String? variant) =>
       state = state.copyWith(selectedCricketVariant: variant);
-  void setCricketTargetMode(String mode) =>
-      state = state.copyWith(selectedCricketTargetMode: mode);
+  // Switching target-mode cohort also clears the scoring-variant filter:
+  // `getPlayerCricketVariants` only surfaces variants for fixed-mode games
+  // (the variant chip row hides itself for random/crazy), so any
+  // previously-selected variant becomes invisible state that silently
+  // narrows the query to zero results. Resetting `selectedCricketVariant`
+  // here keeps the visible filter set consistent with what's queryable.
+  void setCricketTargetMode(String mode) => state = state.copyWith(
+        selectedCricketTargetMode: mode,
+        selectedCricketVariant: null,
+      );
   void setTimeRange(StatsTimeRange range) =>
       state = state.copyWith(timeRange: range);
   void setPracticeGameType(GameType gameType) =>
