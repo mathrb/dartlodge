@@ -350,7 +350,9 @@ class _LegStatsTable extends StatelessWidget {
             competitors.map((c) => c.oneEightyTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '60+',
+        // Counts turns scoring 60–99; 100+ / 140+ / 180s rows cover the
+        // rest. Renamed from "60+" for clarity (#261).
+        category: '60–99',
         values: competitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
       ),
       _StatRow(

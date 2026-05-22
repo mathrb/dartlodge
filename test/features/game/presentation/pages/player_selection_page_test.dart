@@ -211,6 +211,37 @@ void main() {
     expect(find.text('GAME CONFIG'), findsOneWidget);
   });
 
+  // ── 4b. Config chip hidden when there's nothing to configure (#261) ──────
+
+  testWidgets("4b. Config chip is hidden for Catch 40 (no editable fields)",
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.catch40(),
+        gameType: GameType.catch40,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // The chip's edit icon is the visible affordance — it should not
+    // render when the underlying bottom-sheet would be empty.
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.text('Catch 40'), findsNothing);
+  });
+
+  testWidgets("4c. Config chip is hidden for Bob's 27 (no editable fields)",
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.bobs27(),
+        gameType: GameType.bobs27,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+  });
+
   // ── 5. Empty selected area ────────────────────────────────────────────────
 
   testWidgets('5. Empty selected area shows "Select players below"',

@@ -52,6 +52,20 @@ String _configSummaryFor(GameConfig config) {
 }
 
 
+/// True when [config]'s game type has user-editable fields in
+/// `GameConfigPanel`. Catch 40 and Bob's 27 currently expose nothing
+/// configurable, so the chip is hidden for them to avoid opening a
+/// bottom sheet that's empty save for a disabled APPLY (#261). Keep
+/// this in sync with the `_buildConfigFields` switch in
+/// `lib/features/game/presentation/pages/game_config_page.dart`.
+bool _configHasEditableFields(GameConfig config) {
+  return config.maybeMap(
+    catch40: (_) => false,
+    bobs27: (_) => false,
+    orElse: () => true,
+  );
+}
+
 String _initials(String name) {
   final words = name.trim().split(RegExp(r'\s+'))
       .where((w) => w.isNotEmpty)
@@ -156,8 +170,11 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               ),
             ),
 
-            // Config summary chip (centered pill)
-            if (config != null)
+            // Config summary chip (centered pill). Hidden when the config
+            // has no user-editable fields (Catch 40, Bob's 27) — otherwise
+            // tapping the chip opens an empty bottom sheet with a disabled
+            // APPLY, which looks broken (#261).
+            if (config != null && _configHasEditableFields(config))
               Center(
                 child: _ConfigSummaryChip(
                   config: config,
