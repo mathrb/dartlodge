@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
+import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
@@ -495,5 +496,90 @@ void main() {
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
       endTime: anyNamed('endTime'),
     ));
+  });
+
+  // ── endGame (issue #252) ─────────────────────────────────────────────────
+
+  test(
+      'endGame appends GameCompleted + completes the game atomically so it '
+      'appears in history and the event log stays consistent (#188)',
+      () async {
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeCricketGameProvider('g1').future);
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
+
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .endGame();
+
+    final captured = verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: captureAnyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: null,
+      endTime: anyNamed('endTime'),
+    )).captured.single as List<GameEvent>;
+    expect(captured, hasLength(1));
+    expect(captured.first.eventType, 'GameCompleted');
+    expect(captured.first.payload['winner_competitor_id'], isNull);
+    // No bare completeGame call — atomicity goes through appendEventsAndCompleteGame.
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
+
+  test('endGame is a no-op when the game already completed naturally',
+      () async {
+    // After processing the winning dart, the game is is_complete=true and
+    // appendEventsAndCompleteGame already ran. endGame() must NOT issue a
+    // second completion call.
+    stubBuild(events: makeNearCompleteEvents());
+    await container.read(activeCricketGameProvider('g1').future);
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .processDart('SB');
+    clearInteractions(mockGameRepo);
+
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .endGame();
+
+    verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
+
+  test('endGame swallows GameAlreadyCompleteException (idempotent)',
+      () async {
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenThrow(const GameAlreadyCompleteException('g1'));
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeCricketGameProvider('g1').future);
+
+    // Must not propagate as an AsyncError on the provider.
+    await container
+        .read(activeCricketGameProvider('g1').notifier)
+        .endGame();
+
+    final s = container.read(activeCricketGameProvider('g1'));
+    expect(s.hasError, isFalse);
   });
 }

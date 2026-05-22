@@ -21,6 +21,7 @@ class _FakeActiveCricketGameNotifier extends ActiveCricketGameNotifier {
   final List<String> processedDarts = [];
   int nextPlayerCalls = 0;
   int undoCalls = 0;
+  int endGameCalls = 0;
 
   @override
   Future<ActiveCricketGameState?> build(String gameId) async => _state;
@@ -33,6 +34,9 @@ class _FakeActiveCricketGameNotifier extends ActiveCricketGameNotifier {
 
   @override
   Future<void> undoDart() async => undoCalls++;
+
+  @override
+  Future<void> endGame() async => endGameCalls++;
 }
 
 /// Notifier whose [build] hangs forever → provider stays in loading state.
@@ -667,5 +671,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Cut Throat'), findsOneWidget);
+  });
+
+  // ── 23. Back → End Game calls endGame() then navigates home (#252) ────────
+
+  testWidgets(
+      '23. Back → End Game calls endGame() so the game appears in history',
+      (tester) async {
+    final fakeNotifier =
+        _FakeActiveCricketGameNotifier(_activeState());
+    final container = ProviderContainer(
+      overrides: [
+        activeCricketGameProvider.overrideWith(() => fakeNotifier),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(find.text('End Game?'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'End Game'));
+    await tester.pumpAndSettle();
+
+    final notifier =
+        container.read(activeCricketGameProvider('game-1').notifier)
+            as _FakeActiveCricketGameNotifier;
+    expect(notifier.endGameCalls, 1,
+        reason: 'Abandoning the game must mark it complete so it lands '
+            'in history immediately (issue #252)');
+    expect(find.text('home'), findsOneWidget);
   });
 }

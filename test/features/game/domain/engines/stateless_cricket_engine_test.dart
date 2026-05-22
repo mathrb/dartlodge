@@ -1827,5 +1827,68 @@ void main() {
           reason: 'Per design §4: Table L leg reset clears the global '
               'locked set, so the next leg rolls all 6 slots fresh');
     });
+
+    // Regression for #252: when every player closes the SAME single target
+    // ("dead-number"), the engine must NOT silently complete the game or
+    // emit a stray LegOutcome — there are still 5 numbers + Bull open per
+    // player.
+    test('dead-number on a single target keeps the game in-flight and '
+        'emits no LegOutcome', () {
+      // Round-2 state: all 3 players already have marks{11=3} from earlier
+      // turns; 11 is globally locked. New CrazyTargetsRolled rotated in
+      // [11, 3, 7, 14, 18, 20]. c1 is up next, dartsThrownInTurn=0.
+      final base = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [11, 3, 7, 14, 18, 20],
+        cricketLockedTargets: const {11},
+        turnActive: true,
+        currentTurnIndex: 0,
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'11': 3},
+          ),
+          const CompetitorState(
+            competitorId: 'c2',
+            name: 'Bob',
+            playerIds: ['p2'],
+            score: 0,
+            marksPerNumber: {'11': 3},
+          ),
+          const CompetitorState(
+            competitorId: 'c3',
+            name: 'Carol',
+            playerIds: ['p3'],
+            score: 0,
+            marksPerNumber: {'11': 3},
+          ),
+        ],
+      );
+      final state = base.copyWith(currentRoundInLeg: 2);
+
+      // c1 throws S11 — re-hitting the dead number. Marks stay clamped at 3,
+      // no overflow (all opponents already closed), no win.
+      final result = engine.apply(state, _dartThrown(
+        competitorId: 'c1', segment: 11, multiplier: 1,
+      ));
+
+      expect(result.outcome, LegOutcome.none,
+          reason: 'No legitimate win candidate — c1 still has 5 open '
+              'numbers + Bull. Dead-number must not flip the leg.');
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.state.isComplete, isFalse);
+      expect(result.state.competitors[0].closeOrder, isNull);
+      expect(result.state.competitors[1].closeOrder, isNull);
+      expect(result.state.competitors[2].closeOrder, isNull);
+      expect(result.state.cricketLockedTargets, {11},
+          reason: 'Lock set unchanged — re-closing an already-locked '
+              'number is a no-op for the locked set.');
+      expect(result.state.competitors[0].score, 0,
+          reason: 'Standard scoring: zero overflow points when every '
+              'opponent has also closed the number.');
+    });
   });
 }
