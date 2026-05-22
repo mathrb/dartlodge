@@ -99,6 +99,26 @@ void main() {
       );
     });
 
+    testWidgets('Shanghai rounds dropdown includes 7 (the default)',
+        (tester) async {
+      // Regression for #259: the chip says "7 Rounds" because that's
+      // the `ShanghaiGameConfig.totalRounds` default, but the dropdown
+      // only listed [10, 15, 20, 25, 50] — leaving the user unable to
+      // re-select 7 after editing.
+      await _openPanel(tester, initial: const GameConfig.shanghai());
+
+      expect(find.text('ROUNDS'), findsOneWidget);
+      // Open the dropdown. `_RoundsDropdown` wraps `DropdownButton<int?>`.
+      await tester.tap(find.byType(DropdownButton<int?>));
+      await tester.pumpAndSettle();
+
+      // 7 must appear in the menu (regression: it was missing from the
+      // hardcoded items list before #259).
+      expect(find.text('7'), findsWidgets);
+      expect(find.text('10'), findsWidgets);
+      expect(find.text('15'), findsWidgets);
+    });
+
     testWidgets('DOUBLES ONLY selection persists', (tester) async {
       GameConfig? applied;
       await tester.binding.setSurfaceSize(const Size(800, 1200));
