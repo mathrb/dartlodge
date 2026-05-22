@@ -117,6 +117,12 @@ class TurnBreakdownBuilder {
     var turns = <TurnRow>[];
     var atc = _AtcTracker();
     _OpenTurn? openTurn;
+    // Per-competitor 1-based round counter, derived from the order of
+    // TurnStarted events in this leg. Production providers stamp
+    // `turn_index` with `currentTurnIndex` (the *competitor index*, 0..N-1),
+    // so we cannot use it as a round number directly — see #256. Resets on
+    // every LegCompleted.
+    final perCompetitorTurnCount = <String, int>{};
 
     GameState pre = state;
 
@@ -126,12 +132,13 @@ class TurnBreakdownBuilder {
       switch (event.eventType) {
         case 'TurnStarted':
           final compId = event.payload['competitor_id'] as String? ?? '';
-          final turnIndex =
-              (event.payload['turn_index'] as num?)?.toInt() ?? 0;
+          final round =
+              (perCompetitorTurnCount[compId] ?? 0) + 1;
+          perCompetitorTurnCount[compId] = round;
           openTurn = _OpenTurn(
             preState: pre,
             competitorId: compId,
-            turnIndex: turnIndex,
+            turnIndex: round,
           );
           state = engine.apply(state, event).state;
           continue;
@@ -197,6 +204,7 @@ class TurnBreakdownBuilder {
             turns = <TurnRow>[];
           }
           legNumber++;
+          perCompetitorTurnCount.clear();
           continue;
 
         default:
