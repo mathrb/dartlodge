@@ -52,6 +52,13 @@ void main() {
         startTime: DateTime(2025),
       );
 
+  Game makeCatch40Game() => Game(
+        gameId: 'g1',
+        gameType: GameType.catch40,
+        config: const GameConfig.catch40(),
+        startTime: DateTime(2025),
+      );
+
   List<Competitor> makeCompetitors() => [
         Competitor(
           competitorId: 'c1',
@@ -329,5 +336,142 @@ void main() {
       winnerCompetitorId: null,
       endTime: anyNamed('endTime'),
     )).called(1);
+  });
+
+  // ── 11. Catch 40: sub-3-dart checkout via NEXT TARGET scores points ───────
+  //
+  // Regression for #253. Before the fix, `_fillTurnWithMisses` ran for
+  // catch40 too — and the MISS dart, processed through the engine after a
+  // checkout (catch40TargetRemaining == 0), was treated as a bust that
+  // reset the target back to non-zero. The subsequent TurnEnded then saw
+  // `checkedOut = false` and awarded 0 points. After the fix, MISS-fill is
+  // skipped for catch40 and TurnEnded directly observes the zeroed target,
+  // awarding +3 for the 2-dart checkout.
+
+  test('Catch 40: 2-dart checkout via NEXT TARGET awards +3 points', () async {
+    // Seed events to put the engine at: target=40 (remaining), turnActive=true,
+    // dartsThrownInTurn=0. We do this with a vanilla TurnStarted; the engine's
+    // initial state starts at catch40TargetRemaining=61 (target 1). To reach
+    // remaining=40 from 61 quickly, we'd need to track engine state via real
+    // throws — easier: just throw D20 (=40) twice on the natural target 61.
+    // 61 - 40 = 21 (not bust, not 0). 21 - 40 = -19 → bust, reset to 61.
+    // That doesn't model a checkout. Use D20 (40) + 21? But 21 isn't a single
+    // dart. Better: just throw 1 (single 1) to bring 61 → 60, then D30 (=60)
+    // to checkout. D30 doesn't exist either.
+    //
+    // Realistic checkout on 61: 1 (S1) → 60 → D30 invalid. Try 11 (S11) →
+    // 50 → D25 invalid. Try 9 (S9) → 52 → D26 invalid. Try 11 (S11) → 50
+    // → D25 invalid. Doubles only go up to D20=40 or D-Bull=50.
+    //
+    // Try 21 over 1 dart: not possible. Realistic 2-dart checkout on 61
+    // = T7 (21) + D20 (40) → 21+40=61. Use that.
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // Dart 1: T7 (21). Remaining: 61 - 21 = 40.
+    await notifier.processDart('T7');
+    // Dart 2: D20 (40). Remaining: 40 - 40 = 0 (double) → checkout.
+    await notifier.processDart('D20');
+
+    final afterCheckout = container.read(activePracticeProvider('g1')).value!;
+    expect(afterCheckout.gameState.catch40TargetRemaining, 0,
+        reason: 'Engine should record the checkout (remaining = 0).');
+    expect(afterCheckout.gameState.catch40DartsOnTarget, 2);
+    expect(afterCheckout.gameState.turnActive, false,
+        reason: 'Engine ends the turn on checkout.');
+
+    // User taps NEXT TARGET — this drives _fillTurnWithMisses + _advanceTurn.
+    // Before the fix the MISS-fill would bust the target and award 0 points.
+    await notifier.startNextTurn();
+
+    final afterAdvance = container.read(activePracticeProvider('g1')).value!;
+    final comp = afterAdvance.gameState.competitors[0];
+    expect(comp.score, 3,
+        reason: '2-dart checkout on target 61 awards +3 points.');
+    expect(comp.practiceSuccesses, 1);
+    expect(comp.practiceAttempts, 1);
+    expect(comp.practiceRound, 2,
+        reason: 'Target should advance from 1 (=61) to 2 (=62).');
+    expect(afterAdvance.gameState.catch40TargetRemaining, 62,
+        reason: 'Next target is 62 (practiceRound=2).');
+    expect(afterAdvance.gameState.catch40DartsOnTarget, 0);
+  });
+
+  // ── 12. Catch 40: TurnEnded payload carries reason + darts_on_target ──────
+  //
+  // The stats projection in `_computeCatch40Stats` reads `reason` to bucket
+  // checkouts vs failed targets and `darts_on_target` to classify the
+  // checkout (2-dart / 3-dart / 4–6 dart). Before #253 the producer emitted
+  // only `{competitor_id}` and the projection silently zeroed out.
+
+  test('Catch 40: TurnEnded after checkout includes reason + darts_on_target',
+      () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T7'); // 21 remaining = 40
+    await notifier.processDart('D20'); // 40 remaining = 0 → checkout
+    await notifier.startNextTurn();
+
+    // Capture every appended event batch and find the TurnEnded that
+    // straddled the checkout → target-advance boundary.
+    final captures = verify(mockEventRepo.appendEvents(captureAny)).captured;
+    final allEvents = captures.expand((c) => c as List<GameEvent>).toList();
+    final checkoutTurnEnded = allEvents.firstWhere(
+      (e) =>
+          e.eventType == 'TurnEnded' &&
+          e.payload['reason'] == 'checkout',
+      orElse: () =>
+          throw StateError('No TurnEnded with reason=checkout emitted'),
+    );
+    expect(checkoutTurnEnded.payload['player_id'], 'p1');
+    expect(checkoutTurnEnded.payload['darts_on_target'], 2);
+  });
+
+  // ── 13. Catch 40: failed target via 6 darts records reason='failed' ──────
+
+  test('Catch 40: 6-dart failed target emits TurnEnded with reason=failed',
+      () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // Visit 1: 3 MISSes (auto-advance fires after dart 3).
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    // Visit 2: 3 more MISSes — target unhit at 6 darts → 'failed' on NEXT.
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.startNextTurn();
+
+    final captures = verify(mockEventRepo.appendEvents(captureAny)).captured;
+    final allEvents = captures.expand((c) => c as List<GameEvent>).toList();
+
+    final failedTurnEnded = allEvents.firstWhere(
+      (e) =>
+          e.eventType == 'TurnEnded' && e.payload['reason'] == 'failed',
+      orElse: () =>
+          throw StateError('No TurnEnded with reason=failed emitted'),
+    );
+    expect(failedTurnEnded.payload['player_id'], 'p1');
+    expect(failedTurnEnded.payload['darts_on_target'], 6);
+
+    final afterAdvance = container.read(activePracticeProvider('g1')).value!;
+    expect(afterAdvance.gameState.competitors[0].practiceRound, 2);
+    expect(afterAdvance.gameState.competitors[0].score, 0);
   });
 }

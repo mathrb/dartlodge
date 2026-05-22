@@ -1638,7 +1638,35 @@ class PlayerStatsAssembler {
     int turnDarts = 0;
     bool inPlayerTurn = false;
 
+    // Catch 40 in production emits GameCompleted on natural drill completion
+    // and skips LegCompleted (solo, 1-leg drill). The original projection
+    // only counted gamesCompleted on LegCompleted and would silently report
+    // `Drills Played: 0` for real drills (#253). Handle both event types so
+    // the synthetic-event tests using LegCompleted still pass, while the
+    // real flow's GameCompleted also accumulates. `gameCounted` prevents
+    // double-counting if a stream ever emits both for the same game; resets
+    // per game.
+    String? currentGameId;
+    bool gameCounted = false;
+    void closeGame() {
+      if (gameCounted) return;
+      gameCounted = true;
+      gamesCompleted++;
+      totalScore += gameScore;
+      final prev = bestScore;
+      if (prev == null || gameScore > prev) bestScore = gameScore;
+      gameScore = 0;
+      inPlayerTurn = false;
+    }
+
     for (final event in events) {
+      if (event.gameId != currentGameId) {
+        currentGameId = event.gameId;
+        gameCounted = false;
+        gameScore = 0;
+        inPlayerTurn = false;
+        turnDarts = 0;
+      }
       final epid = event.payload['player_id'] as String?;
       switch (event.eventType) {
         case 'TurnStarted':
@@ -1654,26 +1682,27 @@ class PlayerStatsAssembler {
           if (!inPlayerTurn || epid != playerId) break;
           inPlayerTurn = false;
           final reason = event.payload['reason'] as String?;
+          // `darts_on_target` covers checkouts that straddle visit 1 → visit 2
+          // (e.g. 3 darts in turn 1, 1 dart in turn 2 → 4-dart checkout). The
+          // per-turn `turnDarts` would under-count to 1 in that case. Falls
+          // back to `turnDarts` for legacy events that didn't emit the field.
+          final dartsOnTarget =
+              (event.payload['darts_on_target'] as num?)?.toInt() ?? turnDarts;
           if (reason == 'checkout') {
-            if (turnDarts == 2) {
+            if (dartsOnTarget <= 2) {
               twoDart++;
-            } else if (turnDarts == 3) {
+            } else if (dartsOnTarget == 3) {
               threeDart++;
-            } else if (turnDarts >= 4 && turnDarts <= 6) {
+            } else if (dartsOnTarget >= 4 && dartsOnTarget <= 6) {
               fourSixDart++;
             }
           } else if (reason == 'failed') {
             failed++;
           }
         case 'LegCompleted':
-          gamesCompleted++;
-          totalScore += gameScore;
-          if (bestScore == null || gameScore > bestScore) bestScore = gameScore;
-          gameScore = 0;
-          inPlayerTurn = false;
+          closeGame();
         case 'GameCompleted':
-          gameScore = 0;
-          inPlayerTurn = false;
+          closeGame();
       }
     }
 

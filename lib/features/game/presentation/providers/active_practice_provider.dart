@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/dart_throw.dart';
+import '../../domain/entities/game_event.dart';
 import '../../domain/engines/base_game_engine.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
@@ -129,6 +130,15 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
 
   /// Apply TurnEnded + TurnStarted events and persist them. Used for
   /// same-target auto-advance in Catch-40 and for the NEXT ROUND/TARGET button.
+  ///
+  /// TurnEnded carries `player_id` and a `reason` field (and, for Catch 40,
+  /// `darts_on_target`) so the stats projection can attribute the turn to
+  /// the right player and classify checkouts vs failed targets (#253). If
+  /// applying TurnEnded triggers natural game completion (the Catch 40
+  /// engine marks `isComplete` only on TurnEnded after target 40), this also
+  /// emits GameCompleted and calls `appendEventsAndCompleteGame` atomically
+  /// — otherwise the game record would stay `is_complete = 0` and History
+  /// would never show the drill.
   Future<GameState> _advanceTurn(GameState gs) async {
     final engine = _engineFor(gs.gameType);
     int nextSeq =
@@ -138,19 +148,67 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     final actorId = currentCompetitor.playerIds.isNotEmpty
         ? currentCompetitor.playerIds.first
         : 'system';
+    final currentPlayerId = currentCompetitor.playerIds.isNotEmpty
+        ? currentCompetitor.playerIds.first
+        : 'system';
+
+    final reason = _turnEndedReason(gs);
+    final turnEndedPayload = <String, dynamic>{
+      'competitor_id': currentCompetitor.competitorId,
+      'player_id': currentPlayerId,
+      'reason': reason,
+    };
+    if (gs.gameType == GameType.catch40) {
+      // Total darts spent on the just-finished target — projection uses this
+      // to bucket checkouts (2-dart / 3-dart / 4-6 dart) when a checkout
+      // straddles two turns and `turnDarts` alone would under-count.
+      turnEndedPayload['darts_on_target'] = gs.catch40DartsOnTarget;
+    }
 
     final turnEndedEvent = buildGameEvent(
       gameId: gs.gameId,
       eventType: 'TurnEnded',
       localSequence: nextSeq++,
       actorId: actorId,
-      payload: {'competitor_id': currentCompetitor.competitorId},
+      payload: turnEndedPayload,
     );
 
-    var newGs = engine.apply(gs, turnEndedEvent).state;
+    final turnEndedResult = engine.apply(gs, turnEndedEvent);
+    var newGs = turnEndedResult.state;
+    final eventsToStore = <GameEvent>[turnEndedEvent];
+
+    // Catch 40 (and any other practice engine that signals completion via
+    // TurnEnded) drives game-over from this code path — the DartThrown
+    // handler in ProcessPracticeDartUseCase only catches engines that
+    // complete on a dart. Without this branch, completing all 40 targets
+    // would leave the game stuck `is_complete = 0` in storage (#253).
+    if (turnEndedResult.outcome == LegOutcome.gameCompleted) {
+      final winnerCompetitorId = turnEndedResult.winnerCompetitorId;
+      final gameCompletedEvent = buildGameCompletedEvent(
+        gameId: gs.gameId,
+        winnerCompetitorId: winnerCompetitorId,
+        localSequence: nextSeq++,
+        winnerPlayerId:
+            getPlayerIdForCompetitor(newGs, winnerCompetitorId),
+      );
+      eventsToStore.add(gameCompletedEvent);
+      newGs = engine.apply(newGs, gameCompletedEvent).state;
+
+      await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
+            events: eventsToStore,
+            gameId: gs.gameId,
+            winnerCompetitorId: winnerCompetitorId,
+            endTime: DateTime.now(),
+          );
+
+      return newGs;
+    }
 
     final nextCompetitor = newGs.competitors[newGs.currentTurnIndex];
     final nextActorId = nextCompetitor.playerIds.isNotEmpty
+        ? nextCompetitor.playerIds.first
+        : 'system';
+    final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
         ? nextCompetitor.playerIds.first
         : 'system';
 
@@ -159,16 +217,28 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       eventType: 'TurnStarted',
       localSequence: nextSeq++,
       actorId: nextActorId,
-      payload: {'competitor_id': nextCompetitor.competitorId},
+      payload: {
+        'competitor_id': nextCompetitor.competitorId,
+        'player_id': nextPlayerId,
+      },
     );
 
     newGs = engine.apply(newGs, turnStartedEvent).state;
+    eventsToStore.add(turnStartedEvent);
 
-    await ref
-        .read(gameEventRepositoryProvider)
-        .appendEvents([turnEndedEvent, turnStartedEvent]);
+    await ref.read(gameEventRepositoryProvider).appendEvents(eventsToStore);
 
     return newGs;
+  }
+
+  /// Reason tag used by stats projections — for Catch 40, distinguishes
+  /// target-completion turns ('checkout' / 'failed') from intra-target
+  /// auto-advance ('normal'). Other practice modes always tag 'normal'.
+  String _turnEndedReason(GameState gs) {
+    if (gs.gameType != GameType.catch40) return 'normal';
+    if (gs.catch40TargetRemaining == 0) return 'checkout';
+    if (gs.catch40DartsOnTarget >= 6) return 'failed';
+    return 'normal';
   }
 
   GameEngine _engineFor(GameType type) => switch (type) {
@@ -182,7 +252,17 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
 
   /// Fills any unfilled dart slots in the current turn with MISS darts,
   /// persisting them as events. Stops early if the game completes.
+  ///
+  /// Skipped for Catch 40: feeding MISS through `ProcessPracticeDartUseCase`
+  /// would route through `_applyDartThrownWithOutcome`, which treats
+  /// `newRemaining == 0 && !isDouble` as a bust and silently resets the
+  /// target. After a sub-3-dart checkout that flips `catch40TargetRemaining`
+  /// to non-zero, so `_applyTurnEnded` sees `checkedOut = false` and awards
+  /// 0 points — exactly the symptom in #253. The engine advances the target
+  /// purely from `catch40DartsOnTarget >= 6 || catch40TargetRemaining == 0`
+  /// at TurnEnded time, so the fill is unnecessary anyway.
   Future<GameState> _fillTurnWithMisses(GameState gs) async {
+    if (gs.gameType == GameType.catch40) return gs;
     var current = gs;
     while (current.dartsThrownInTurn < 3 && !current.isComplete) {
       final competitor = current.competitors[current.currentTurnIndex];

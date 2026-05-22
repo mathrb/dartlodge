@@ -153,5 +153,62 @@ void main() {
       expect(stats.catch40FailedCheckouts, 1);
       expect(stats.catch40TwoDartCheckouts, 0);
     });
+
+    // Regression for #253: production catch40 emits GameCompleted on natural
+    // completion (and on End Drill via EndPracticeUseCase) but never
+    // LegCompleted — it's a 1-leg solo drill. The original projection only
+    // closed games on LegCompleted, so real drills silently reported
+    // `Drills Played: 0` and never accumulated avg/best score.
+    test('accumulates totals on GameCompleted (no LegCompleted)', () async {
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 2, 'score': 40},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 2, 'score': 40},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout', 'darts_on_target': 2},
+        {'__type': 'GameCompleted', 'winner_competitor_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.catch40,
+      );
+
+      expect(stats.totalGames, 1);
+      expect(stats.catch40BestScore, 80);
+      expect(stats.catch40AvgScore, closeTo(80.0, 0.01));
+      expect(stats.catch40TwoDartCheckouts, 1);
+    });
+
+    // The 4-dart checkout (3 darts in turn 1, 1 dart in turn 2) was the
+    // hidden killer: `turnDarts` reset on TurnStarted between visits, so the
+    // projection only saw 1 dart on the closing TurnEnded and never
+    // classified the checkout. `darts_on_target` (emitted by the producer
+    // from the engine's `catch40DartsOnTarget` counter) fixes this.
+    test('classifies 4-dart checkout via darts_on_target (turn-straddling)',
+        () async {
+      await _setupGame([
+        // Visit 1: 3 misses (no checkout, auto-advance)
+        {'__type': 'TurnStarted', 'player_id': playerId},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal', 'darts_on_target': 3},
+        // Visit 2: 1 dart checkout (turn-local dart count = 1, but darts on target = 4)
+        {'__type': 'TurnStarted', 'player_id': playerId},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 2, 'score': 40},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout', 'darts_on_target': 4},
+        {'__type': 'GameCompleted', 'winner_competitor_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.catch40,
+      );
+
+      expect(stats.catch40FourSixDartCheckouts, 1,
+          reason: '4 darts on target falls in the 4–6 bucket.');
+      expect(stats.catch40TwoDartCheckouts, 0);
+      expect(stats.catch40ThreeDartCheckouts, 0);
+    });
   });
 }
