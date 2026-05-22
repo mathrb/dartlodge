@@ -30,6 +30,11 @@ if [[ "$BUMP" -eq 1 ]]; then
   echo "versionCode: ${current} -> ${next}"
 fi
 
+# Regenerate launcher icons into android/app/src/main/res/mipmap-*/.
+# Idempotent; guards against a fresh android/ scaffold shipping the default
+# Flutter icon.
+dart run flutter_launcher_icons
+
 flutter build apk --debug
 
 version_full=$(grep -E "^version: " pubspec.yaml | sed -E 's/version: //')
