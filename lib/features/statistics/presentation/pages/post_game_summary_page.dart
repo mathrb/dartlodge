@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import '../../../../core/widgets/game_summary_section_widget.dart';
 import '../../../game/domain/models/game_result.dart';
+import '../utils/post_game_routing.dart';
 import '../widgets/practice_summary_widget.dart';
 import '../widgets/shanghai_summary_widget.dart';
 
@@ -31,15 +32,6 @@ String categoryForGameType(String gameTypeName) {
   }
   return 'practice';
 }
-
-/// Game types whose post-game summary still consumes `gameStatsProvider`
-/// (x01-shaped chrome via [GameSummarySectionWidget]). All other types go
-/// through `gameResultProvider` to render their per-type summary.
-final _gameStatsBackedTypes = <String>{
-  GameType.x01.name,
-  GameType.cricket.name,
-  GameType.countUp.name,
-};
 
 class PostGameSummaryPage extends ConsumerWidget {
   const PostGameSummaryPage({required this.gameId, super.key});
@@ -61,8 +53,7 @@ class PostGameSummaryPage extends ConsumerWidget {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, _) => Center(child: Text('Error: $err')),
             data: (gameStats) {
-              final usesGameStats =
-                  _gameStatsBackedTypes.contains(gameStats.gameType);
+              final usesGameStats = isGameStatsBacked(gameStats.gameType);
               return Stack(
                 children: [
                   SingleChildScrollView(
