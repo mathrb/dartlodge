@@ -157,5 +157,33 @@ void main() {
       expect(stats.checkoutSuccesses, 2);
       expect(stats.checkoutSuccessRate, closeTo(1.0, 0.001));
     });
+
+    // Regression for #254: production checkout practice ends a drill with
+    // `GameCompleted` (no `LegCompleted` — solo, 1-leg drill). The closing
+    // TurnEnded MUST be tagged `reason: 'checkout'` for the success to
+    // count. Before the fix the producer stamped `reason: 'normal'` for
+    // every checkout-practice TurnEnded → successes stuck at 0.
+    test(
+        'real-flow events: TurnEnded(reason=checkout) + GameCompleted',
+        () async {
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 3, 'score': 60},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 3, 'score': 60},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 25, 'multiplier': 2, 'score': 50},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
+        {'__type': 'GameCompleted', 'winner_competitor_id': competitorId},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.checkoutPractice,
+      );
+
+      expect(stats.totalGames, 1);
+      expect(stats.checkoutAttempts, 1);
+      expect(stats.checkoutSuccesses, 1);
+      expect(stats.checkoutSuccessRate, closeTo(1.0, 0.001));
+    });
   });
 }

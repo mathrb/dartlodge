@@ -77,6 +77,25 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         newGs = await _advanceTurn(newGs);
       }
 
+      // Checkout Practice: the engine no longer ends the drill on the first
+      // checkout — it leaves `score = 0` and bumps `practiceSuccesses`, then
+      // decides completion at TurnEnded time against `checkoutTargetSuccesses`
+      // (#254). When the user JUST hit the quota-completing checkout, the
+      // post-game screen should still land immediately — auto-advance so the
+      // closing TurnEnded fires the gameCompleted outcome inside
+      // `_advanceTurn` (which then emits GameCompleted atomically). For a
+      // mid-drill checkout in finite mode or any checkout in ∞ mode, the
+      // user taps NEXT ROUND like usual.
+      final newComp = newGs.competitors[newGs.currentTurnIndex];
+      final target = newGs.checkoutTargetSuccesses;
+      if (gs.gameType == GameType.checkoutPractice &&
+          !newGs.isComplete &&
+          newComp.score == 0 &&
+          target != null &&
+          newComp.practiceSuccesses >= target) {
+        newGs = await _advanceTurn(newGs);
+      }
+
       final pendingGameWinnerId =
           newGs.isComplete ? newGs.winnerCompetitorId : null;
 
@@ -231,13 +250,28 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     return newGs;
   }
 
-  /// Reason tag used by stats projections — for Catch 40, distinguishes
-  /// target-completion turns ('checkout' / 'failed') from intra-target
-  /// auto-advance ('normal'). Other practice modes always tag 'normal'.
+  /// Reason tag used by stats projections.
+  ///
+  /// - Catch 40: distinguishes target-completion turns ('checkout' / 'failed')
+  ///   from intra-target auto-advance ('normal').
+  /// - Checkout Practice: 'checkout' iff the player's score is 0 — the
+  ///   engine resets to `startingScore` only on the *next* TurnStarted, so
+  ///   `score == 0` at TurnEnded time is the canonical post-checkout
+  ///   signature. Busts revert score to `turnStartScore` (≠ 0) and partial
+  ///   attempts leave score somewhere between 0 and startingScore; both fall
+  ///   through to 'normal'. This drives `_computeCheckoutStats` (#254).
+  /// - Other practice modes: always 'normal'.
   String _turnEndedReason(GameState gs) {
-    if (gs.gameType != GameType.catch40) return 'normal';
-    if (gs.catch40TargetRemaining == 0) return 'checkout';
-    if (gs.catch40DartsOnTarget >= 6) return 'failed';
+    if (gs.gameType == GameType.catch40) {
+      if (gs.catch40TargetRemaining == 0) return 'checkout';
+      if (gs.catch40DartsOnTarget >= 6) return 'failed';
+      return 'normal';
+    }
+    if (gs.gameType == GameType.checkoutPractice) {
+      final comp = gs.competitors[gs.currentTurnIndex];
+      if (comp.score == 0) return 'checkout';
+      return 'normal';
+    }
     return 'normal';
   }
 

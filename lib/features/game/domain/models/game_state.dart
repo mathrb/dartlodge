@@ -84,7 +84,10 @@ abstract class GameState with _$GameState {
         catch40TargetRemaining: 61, // First target is 61
       ),
       bobs27: (c) => const _GameStateInit(startingScore: 27),
-      checkoutPractice: (c) => const _GameStateInit(startingScore: 170),
+      checkoutPractice: (c) => _GameStateInit(
+        startingScore: 170,
+        checkoutTargetSuccesses: c.targetSuccesses,
+      ),
       countUp: (c) => _GameStateInit(
         startingScore: 0,
         handicaps: c.handicaps,
@@ -142,7 +145,7 @@ abstract class GameState with _$GameState {
       shanghaiTotalRounds: init.shanghaiTotalRounds,
       catch40TargetRemaining: init.catch40TargetRemaining,
       catch40DartsOnTarget: 0,
-      checkoutTargetSuccesses: null,
+      checkoutTargetSuccesses: init.checkoutTargetSuccesses,
       countUpTotalRounds: init.countUpTotalRounds,
     );
   }
@@ -163,6 +166,7 @@ class _GameStateInit {
   final String aroundTheClockVariant;
   final int shanghaiTotalRounds;
   final int catch40TargetRemaining;
+  final int? checkoutTargetSuccesses;
   final int? countUpTotalRounds;
   final int? initialTarget;
   final Map<String, int> handicaps;
@@ -179,6 +183,7 @@ class _GameStateInit {
     this.aroundTheClockVariant = 'standard',
     this.shanghaiTotalRounds = 7,
     this.catch40TargetRemaining = 0,
+    this.checkoutTargetSuccesses,
     this.countUpTotalRounds,
     this.initialTarget,
     this.handicaps = const {},
