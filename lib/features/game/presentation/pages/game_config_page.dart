@@ -135,7 +135,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     return _draftConfig.map(
       x01: _buildX01Fields,
       cricket: _buildCricketFields,
-      aroundTheClock: (_) => [],
+      aroundTheClock: _buildAroundTheClockFields,
       shanghai: _buildShanghaiFields,
       catch40: (_) => [],
       bobs27: (_) => [],
@@ -308,6 +308,21 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
             ),
           ),
         ],
+      ),
+    ];
+  }
+
+  List<Widget> _buildAroundTheClockFields(AroundTheClockGameConfig c) {
+    return [
+      _FieldSection(
+        label: 'VARIANT',
+        child: _SegmentedOptionGroup<String>(
+          values: const ['standard', 'reverse', 'doublesOnly'],
+          labels: const ['STANDARD', 'REVERSE', 'DOUBLES ONLY'],
+          selected: c.variant,
+          onSelected: (v) =>
+              setState(() => _draftConfig = c.copyWith(variant: v)),
+        ),
       ),
     ];
   }
