@@ -88,10 +88,15 @@ class _PulsingNextButtonWidgetState extends State<PulsingNextButtonWidget>
       style: FilledButton.styleFrom(
         backgroundColor: cs.primaryFixed,
         foregroundColor: AppColors.onPrimaryFixed,
+        // Material 3 disabled state — neutral tint on `onSurface` rather
+        // than a faded primary. Faded primary (0.38 alpha) still read as
+        // a slightly muted "GO" green at glance, so users tapped the
+        // disabled NEXT TARGET / NEXT ROUND button expecting it to fire
+        // (#261). Neutral tint clearly communicates "not actionable yet".
         disabledBackgroundColor:
-            cs.primaryFixed.withValues(alpha: AppTheme.opacityDisabled),
+            cs.onSurface.withValues(alpha: 0.12),
         disabledForegroundColor:
-            AppColors.onPrimaryFixed.withValues(alpha: AppTheme.opacityDisabled),
+            cs.onSurface.withValues(alpha: AppTheme.opacityDisabled),
         minimumSize: const Size.fromHeight(56),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),

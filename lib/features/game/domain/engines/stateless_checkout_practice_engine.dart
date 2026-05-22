@@ -14,6 +14,15 @@ import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
 
+/// Slot value the engine writes into `dartThrows` when a turn ends
+/// with fewer than 3 real darts thrown (bust / checkout). Display
+/// widgets filter on this to render a "dart not thrown" placeholder
+/// instead of a phantom MISS chip (#261). Public so consumers can
+/// reference it by name rather than re-typing the literal.
+const String emptyDartSlotSentinel = '';
+
+const String _emptySlotSentinel = emptyDartSlotSentinel;
+
 class StatelessCheckoutPracticeEngine implements GameEngine {
   @override
   EngineResult apply(GameState state, GameEvent event) {
@@ -88,15 +97,18 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     if (newScore == 0 && _isDouble(segmentNum, multiplier)) {
       final canonical =
           Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
-      // Pad with MISS up to 3 darts (mirrors the bust path below): keeps
-      // `dartThrows.length` aligned with `dartsThrownInTurn = 3` so the
-      // current-turn-dart slice in `PracticeBoardPage` doesn't desync.
+      // Pad up to 3 darts with the empty-slot sentinel so
+      // `dartThrows.length == dartsThrownInTurn (3)` — many downstream
+      // consumers (round counter formula, leg snapshots) depend on that
+      // invariant. The empty string is a sentinel: status badges and
+      // dart-count displays filter it out so the user doesn't see
+      // phantom MISSes that they never threw (#261).
       final dartsActuallyThrown = state.dartsThrownInTurn + 1;
-      final missesToPad = 3 - dartsActuallyThrown;
+      final padsToAdd = 3 - dartsActuallyThrown;
       final paddedDartThrows = [
         ...competitor.dartThrows,
         canonical,
-        for (var i = 0; i < missesToPad; i++) 'MISS',
+        for (var i = 0; i < padsToAdd; i++) _emptySlotSentinel,
       ];
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         dartThrows: paddedDartThrows,
@@ -119,21 +131,21 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     }
 
     // Bust: score < 0, lands on 1, or reaches 0 on non-double.
-    // dartsThrownInTurn is set to 3 so the provider treats the turn as full
-    // and the NEXT ROUND button becomes available immediately. Record the
-    // bust dart in dartThrows (X01 does the same — without this, replay and
-    // any other consumer of CompetitorState.dartThrows would silently lose
-    // the dart that caused the bust). Pad remaining slots with 'MISS' so
-    // dartThrows.length stays aligned with dartsThrownInTurn = 3.
+    // dartsThrownInTurn is set to 3 so the provider treats the turn as
+    // full and the NEXT ROUND button becomes available immediately.
+    // Record the bust dart (X01 does the same — without it replay would
+    // silently lose the throw that caused the bust). Pad remaining
+    // slots with the empty-slot sentinel so display widgets render
+    // them as "dart not thrown" instead of phantom MISSes (#261).
     if (newScore < 2) {
       final canonical =
           Segment.fromBoardHit(segmentNum, multiplier).toCanonicalString();
       final dartsActuallyThrown = state.dartsThrownInTurn + 1;
-      final missesToPad = 3 - dartsActuallyThrown;
+      final padsToAdd = 3 - dartsActuallyThrown;
       final paddedDartThrows = [
         ...competitor.dartThrows,
         canonical,
-        for (var i = 0; i < missesToPad; i++) 'MISS',
+        for (var i = 0; i < padsToAdd; i++) _emptySlotSentinel,
       ];
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         score: competitor.turnStartScore ?? competitor.score,

@@ -34,6 +34,11 @@ class GameStatusBarWidget extends StatelessWidget {
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
       : currentTurnDarts
+          // Empty-slot sentinels (engine padding for bust/checkout turns
+          // with fewer than 3 real darts) must not contribute to the
+          // turn score (#261). `Segment.parse('')` would throw / score 0
+          // anyway, but filter explicitly to keep the intent obvious.
+          .where((s) => s.isNotEmpty)
           .map((s) => Segment.parse(s).scoreValue)
           .fold(0, (a, b) => a + b);
 
@@ -107,7 +112,13 @@ class GameStatusBarWidget extends StatelessWidget {
             SizedBox(
               height: 20,
               child: Center(
-                child: currentTurnDarts.length > i
+                // Checkout-practice engine pads bust/checkout turns with an
+                // empty-slot sentinel so `dartThrows.length` stays at 3 for
+                // its round counter invariants — render those as the
+                // "dart not thrown" placeholder, not as a phantom MISS
+                // (#261).
+                child: currentTurnDarts.length > i &&
+                        currentTurnDarts[i].isNotEmpty
                     ? _DartBadge(segment: currentTurnDarts[i])
                     : Icon(
                         Icons.navigation,
