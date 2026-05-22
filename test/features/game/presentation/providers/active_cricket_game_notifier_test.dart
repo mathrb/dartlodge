@@ -500,27 +500,45 @@ void main() {
 
   // ── endGame (issue #252) ─────────────────────────────────────────────────
 
-  test('endGame marks game complete with null winner so it appears in history',
+  test(
+      'endGame appends GameCompleted + completes the game atomically so it '
+      'appears in history and the event log stays consistent (#188)',
       () async {
     stubBuild(events: [turnStartedEvent()]);
     await container.read(activeCricketGameProvider('g1').future);
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
 
     await container
         .read(activeCricketGameProvider('g1').notifier)
         .endGame();
 
-    verify(mockGameRepo.completeGame(
+    final captured = verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: captureAnyNamed('events'),
       gameId: 'g1',
       winnerCompetitorId: null,
       endTime: anyNamed('endTime'),
-    )).called(1);
+    )).captured.single as List<GameEvent>;
+    expect(captured, hasLength(1));
+    expect(captured.first.eventType, 'GameCompleted');
+    expect(captured.first.payload['winner_competitor_id'], isNull);
+    // No bare completeGame call — atomicity goes through appendEventsAndCompleteGame.
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
   });
 
   test('endGame is a no-op when the game already completed naturally',
       () async {
     // After processing the winning dart, the game is is_complete=true and
     // appendEventsAndCompleteGame already ran. endGame() must NOT issue a
-    // second completeGame call.
+    // second completion call.
     stubBuild(events: makeNearCompleteEvents());
     await container.read(activeCricketGameProvider('g1').future);
     await container
@@ -532,6 +550,12 @@ void main() {
         .read(activeCricketGameProvider('g1').notifier)
         .endGame();
 
+    verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
     verifyNever(mockGameRepo.completeGame(
       gameId: anyNamed('gameId'),
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
@@ -541,7 +565,8 @@ void main() {
 
   test('endGame swallows GameAlreadyCompleteException (idempotent)',
       () async {
-    when(mockGameRepo.completeGame(
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
       gameId: anyNamed('gameId'),
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
       endTime: anyNamed('endTime'),

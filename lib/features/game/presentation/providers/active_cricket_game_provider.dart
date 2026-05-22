@@ -106,10 +106,15 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
   }
 
-  /// Abandons the current game: marks it complete with `winner = null` so it
-  /// appears in history (issue #252). No-op if the game has already finished
-  /// naturally through play (engine-driven completion already ran the proper
+  /// Abandons the current game: emits a `GameCompleted(winner=null)` event
+  /// AND atomically marks the game complete so it appears in history
+  /// (issue #252). No-op if the game has already finished naturally through
+  /// play (engine-driven completion already ran the proper
   /// `appendEventsAndCompleteGame` path).
+  ///
+  /// Goes through `appendEventsAndCompleteGame` — not bare `completeGame` —
+  /// to honour the #188 invariant: events + `games.is_complete` must never
+  /// diverge. Mirrors `EndPracticeUseCase.execute`.
   Future<void> endGame() => _serializer.run(_endGameImpl);
 
   Future<void> _endGameImpl() async {
@@ -118,7 +123,16 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     final gs = current.gameState;
     if (gs.isComplete) return;
     try {
-      await ref.read(gameRepositoryProvider).completeGame(
+      final nextSeq =
+          await ref.read(gameEventRepositoryProvider).getLatestSequence(gs.gameId) +
+              1;
+      final gameCompleted = buildGameCompletedEvent(
+        gameId: gs.gameId,
+        winnerCompetitorId: null,
+        localSequence: nextSeq,
+      );
+      await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
+            events: [gameCompleted],
             gameId: gs.gameId,
             winnerCompetitorId: null,
             endTime: DateTime.now(),
