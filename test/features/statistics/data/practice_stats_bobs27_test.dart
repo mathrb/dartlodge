@@ -81,14 +81,21 @@ void main() {
       expect(stats.bobs27BestScore, isNull);
     });
 
-    test('counts double attempts and hits', () async {
+    test('Doubles Hit Rate denominator is total darts thrown (#261)', () async {
+      // Round 1 (target D1). Player throws 3 darts: D1 hit, D1 hit, D2 miss
+      // (lands on wrong double). Two darts hit the target double, one
+      // missed the target altogether.
+      //
+      // The old projection treated the denominator as "darts that landed
+      // on ANY double" (here: 3), which silently inflates the rate when
+      // the player misses everything except the wrong double. The new
+      // projection uses "total darts thrown" — matches the user-facing
+      // expectation "of all darts you threw at D{round}, how many landed
+      // on target".
       await _setupGame([
         {'__type': 'TurnStarted', 'player_id': playerId},
-        // D1 hit (round 1)
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
-        // D1 again (still counts as attempt, round already advanced? No — round advances in TurnEnded)
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
-        // D2 miss (wrong target)
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 2, 'multiplier': 2, 'score': 4},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
         {'__type': 'LegCompleted', 'winner_player_id': playerId},
@@ -99,8 +106,33 @@ void main() {
         gameType: GameType.bobs27,
       );
 
-      // 3 double attempts total, 2 hits (both D1 targeted round 1)
+      // 3 darts thrown, 2 hits on D1 (round 1's target) → 2 / 3.
       expect(stats.bobs27DoubleHitRate, closeTo(2 / 3, 0.001));
+    });
+
+    test(
+        'Doubles Hit Rate counts every dart in the denominator, '
+        'including misses (#261)',
+        () async {
+      // Round 1: 1 D1 hit (target) + 2 plain misses (mult=1). The new
+      // formula gives 1/3 ≈ 33.3%. The old formula would have given 1/1
+      // = 100% (because misses don't have mult==2, so they weren't in
+      // the denominator).
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 1, 'score': 20},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
+        {'__type': 'LegCompleted', 'winner_player_id': playerId},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.bobs27,
+      );
+
+      expect(stats.bobs27DoubleHitRate, closeTo(1 / 3, 0.001));
     });
 
     test("applies Bob's 27 scoring: hits add, misses subtract", () async {

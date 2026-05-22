@@ -134,12 +134,35 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         // *next* round's target / counter against a locked grid, making the
         // user think their input was silently swallowed (#258). Decrement
         // the displayed round during that gap so the UI stays on the
-        // just-played round until the user explicitly advances. (Shanghai,
-        // Catch 40, and Checkout Practice advance round state inside
-        // `_applyTurnEnded`, so they don't need this adjustment.)
-        final displayedRound = (isBobs27 && gs.dartsThrownInTurn >= 3)
-            ? competitor.practiceRound - 1
-            : competitor.practiceRound;
+        // just-played round until the user explicitly advances.
+        //
+        // Checkout Practice doesn't track attempts in `practiceRound` (the
+        // engine never bumps it — undo replays skip TurnEnded and would
+        // de-sync the counter), so we derive the attempt number purely
+        // from `dartThrows.length` + `dartsThrownInTurn`: every completed
+        // attempt fills 3 slots (the engine pads bust/checkout dart sets
+        // to 3), and we step to the next attempt only after the user taps
+        // NEXT ROUND (`dartsThrownInTurn == 0` with `len > 0`) (#261).
+        // Shanghai and Catch 40 advance round state inside
+        // `_applyTurnEnded` and don't need this adjustment.
+        final int displayedRound;
+        if (isBobs27 && gs.dartsThrownInTurn >= 3) {
+          displayedRound = competitor.practiceRound - 1;
+        } else if (isCheckout) {
+          final dartsCount = competitor.dartThrows.length;
+          if (dartsCount == 0) {
+            displayedRound = 1;
+          } else {
+            final completedAttempts = (dartsCount / 3).ceil();
+            // Bump only when the previous attempt has been formally ended
+            // via NEXT ROUND (dartsThrownInTurn back to 0 with darts on
+            // record); otherwise we're still mid-attempt.
+            displayedRound = completedAttempts +
+                (gs.dartsThrownInTurn == 0 ? 1 : 0);
+          }
+        } else {
+          displayedRound = competitor.practiceRound;
+        }
         final effectiveTarget = (isBobs27 || isShanghai)
             ? displayedRound
             : isCheckout

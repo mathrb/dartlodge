@@ -433,8 +433,9 @@ void main() {
     test('one drill with one D1 hit then LegCompleted updates score and rates',
         () {
       // Round 1: hit D1 once (mult=2 on segment 1), miss twice with singles.
-      //   doubleAttempts = 1 (only the D1 throw is a double)
+      //   doubleAttempts = 3 (every dart at the target counts — #261)
       //   doubleHits     = 1 (D1 = double of round 1)
+      //   doubleHitRate  = 1/3 ≈ 0.333
       //   currentScore   = 27 + 1 * 1 * 2 = 29
       // LegCompleted: drill counted as a completed, successful drill.
       final events = [
@@ -457,7 +458,7 @@ void main() {
       expect(stats.bobs27AvgScore, 29.0);
       expect(stats.bobs27BestScore, 29);
       expect(stats.bobs27CompletionRate, 1.0);
-      expect(stats.bobs27DoubleHitRate, 1.0);
+      expect(stats.bobs27DoubleHitRate, closeTo(1 / 3, 0.001));
     });
   });
 
