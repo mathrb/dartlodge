@@ -14,6 +14,13 @@ abstract class PlayerStatsPageState with _$PlayerStatsPageState {
     @Default(StatsTabIndex.x01) StatsTabIndex activeTab,
     @Default(null) int? selectedStartingScore,
     @Default(null) String? selectedCricketVariant,
+    // Cricket target-mode cohort filter. Defaults to `'fixed'` so existing
+    // career stats continue to render the canonical 15..20+Bull board.
+    // Random/Crazy cohorts are kept separate at the loader level (see
+    // `StatisticsRepository.getPlayerStats(cricketTargetMode: ...)`); the
+    // Cricket tab now exposes a segmented selector so the user can switch
+    // between cohorts (#260).
+    @Default('fixed') String selectedCricketTargetMode,
     @Default(GameType.aroundTheClock) GameType selectedPracticeGameType,
     @Default(StatsTimeRange.all) StatsTimeRange timeRange,
   }) = _PlayerStatsPageState;
