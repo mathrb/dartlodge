@@ -16,6 +16,7 @@ import '../state/player_stats_page_state.dart';
 import '../widgets/atc_annotated_dartboard_widget.dart';
 import '../widgets/atc_summary_column_widget.dart';
 import '../widgets/cricket_stats_detail_table_widget.dart';
+import '../widgets/cricket_target_mode_chip_selector_widget.dart';
 import '../widgets/cricket_variant_chip_selector_widget.dart';
 import '../widgets/mpt_trend_chart_widget.dart';
 import '../widgets/practice_game_type_chip_selector_widget.dart';
@@ -206,6 +207,7 @@ class _CricketTabContent extends ConsumerWidget {
               data: (stats) => SummaryCardsRowWidget(stats: stats),
             ),
           ),
+          CricketTargetModeChipSelectorWidget(playerId: playerId),
           CricketVariantChipSelectorWidget(playerId: playerId),
           TimeRangeSelectorWidget(playerId: playerId),
           const SizedBox(height: AppSpacing.space2),

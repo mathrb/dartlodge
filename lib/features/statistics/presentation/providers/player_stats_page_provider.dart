@@ -27,6 +27,8 @@ class PlayerStatsPage extends _$PlayerStatsPage {
       state = state.copyWith(selectedStartingScore: score);
   void setCricketVariant(String? variant) =>
       state = state.copyWith(selectedCricketVariant: variant);
+  void setCricketTargetMode(String mode) =>
+      state = state.copyWith(selectedCricketTargetMode: mode);
   void setTimeRange(StatsTimeRange range) =>
       state = state.copyWith(timeRange: range);
   void setPracticeGameType(GameType gameType) =>
@@ -85,6 +87,7 @@ Future<PlayerStats> filteredCricketStats(Ref ref, String playerId) {
     playerId,
     gameType: GameType.cricket,
     variant: s.selectedCricketVariant,
+    cricketTargetMode: s.selectedCricketTargetMode,
     legLimit: limit,
   );
 }
@@ -101,6 +104,7 @@ Future<List<PlayerLegSnapshot>> cricketLegHistory(Ref ref, String playerId) {
     playerId,
     gameType: GameType.cricket,
     variant: s.selectedCricketVariant,
+    cricketTargetMode: s.selectedCricketTargetMode,
     limit: limit,
   );
 }

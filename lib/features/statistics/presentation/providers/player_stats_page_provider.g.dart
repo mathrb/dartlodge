@@ -58,7 +58,7 @@ final class PlayerStatsPageProvider
   }
 }
 
-String _$playerStatsPageHash() => r'b143e7801151614d59630ec5a4c986894208d6f6';
+String _$playerStatsPageHash() => r'c916220955495e5f6d5e8b97ef82df90d2642f66';
 
 final class PlayerStatsPageFamily extends $Family
     with
@@ -467,7 +467,7 @@ final class FilteredCricketStatsProvider
 }
 
 String _$filteredCricketStatsHash() =>
-    r'ac10f2ddddfc2e444295f6c6760c887840944d48';
+    r'd83e6f17d0429c5b5ec55e89ba28e1c3228e215d';
 
 final class FilteredCricketStatsFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<PlayerStats>, String> {
@@ -544,7 +544,7 @@ final class CricketLegHistoryProvider
   }
 }
 
-String _$cricketLegHistoryHash() => r'09ef26f91e121a93cbaea1d999bef47d4f14fe03';
+String _$cricketLegHistoryHash() => r'00b89137334ea19c6746a4e29d14aa434991863b';
 
 final class CricketLegHistoryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<List<PlayerLegSnapshot>>, String> {
