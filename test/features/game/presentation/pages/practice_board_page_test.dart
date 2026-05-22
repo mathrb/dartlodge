@@ -738,4 +738,85 @@ void main() {
 
     expect(find.text('post-game:game-1'), findsOneWidget);
   });
+
+  // ── 23. Bob's 27 displayedRound stays on just-played round (#258) ────────
+  //
+  // Regression for #258. The Bob's 27 engine bumps `competitor.practiceRound`
+  // on the 3rd dart of a turn, BUT the input grid stays disabled
+  // (`dartsThrownInTurn == 3`) until the user taps NEXT ROUND. Without the
+  // UI compensation, the user sees the next round's target paired with a
+  // locked grid — looks like input was silently swallowed. The page now
+  // shows the just-played round during that gap.
+
+  testWidgets("23. Bob's 27: shows just-played round while turn is locked",
+      (tester) async {
+    // Mid-round state: 2 darts thrown, practiceRound still 1, turn active.
+    // Expect target label "D1" and round indicator "1 / 20".
+    final gsMidTurn = _practiceState(
+      gameType: GameType.bobs27,
+      dartsThrownInTurn: 2,
+      competitor: _practiceCompetitor(practiceRound: 1),
+    );
+    final notifierMid = _FakeActivePracticeNotifier(
+      _activeState(gameState: gsMidTurn),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          activePracticeProvider.overrideWith(() => notifierMid),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('D1'), findsOneWidget);
+    expect(find.text('ROUND 1 / 20'), findsOneWidget);
+  });
+
+  testWidgets(
+      "23b. Bob's 27: post-3rd-dart shows just-played round, not the next one",
+      (tester) async {
+    // Engine state right after the 3rd dart of round 1 (miss path):
+    // engine has bumped practiceRound to 2, dartsThrownInTurn = 3, score
+    // adjusted. The page must keep the UI on round 1 / D1 until NEXT ROUND
+    // fires TurnStarted.
+    final gsTurnEnded = _practiceState(
+      gameType: GameType.bobs27,
+      dartsThrownInTurn: 3,
+      competitor: _practiceCompetitor(
+        practiceRound: 2,
+        dartThrows: const ['MISS', 'MISS', 'MISS'],
+      ),
+    );
+    final notifierEnded = _FakeActivePracticeNotifier(
+      _activeState(gameState: gsTurnEnded),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          activePracticeProvider.overrideWith(() => notifierEnded),
+        ],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('D1'), findsOneWidget,
+        reason: 'Target stays on just-played D1, not the engine-bumped D2.');
+    expect(find.text('ROUND 1 / 20'), findsOneWidget,
+        reason: 'Round indicator stays at 1/20 until NEXT ROUND.');
+    expect(find.text('D2'), findsNothing);
+  });
 }

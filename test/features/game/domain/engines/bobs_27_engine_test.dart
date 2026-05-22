@@ -109,16 +109,6 @@ GameState _applyTurn(StatelessBobs27Engine engine, GameState state, List<String>
   return s;
 }
 
-/// Apply TurnStarted + darts + TurnEnded. Use when the test asserts on
-/// `practiceRound` since the round advance now happens at TurnEnded time
-/// (#258).
-GameState _applyTurnAndEnd(
-    StatelessBobs27Engine engine, GameState state, List<String> darts) {
-  final after = _applyTurn(engine, state, darts);
-  if (after.isComplete) return after;
-  return engine.apply(after, _turnEnded('c1')).state;
-}
-
 void main() {
   late StatelessBobs27Engine engine;
 
@@ -253,7 +243,7 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Turn flow — round counter advances at TurnEnded (#258)
+  // Turn flow — round counter advances
   // -------------------------------------------------------------------------
   group('Turn flow — round counter', () {
     test('practiceRound starts at 1', () {
@@ -261,55 +251,24 @@ void main() {
       expect(state.competitors[0].practiceRound, 1);
     });
 
-    test('after 3rd dart, practiceRound stays on the just-played round', () {
-      // Score lands on the 3rd dart, but the displayed round must NOT
-      // advance until TurnEnded — otherwise the locked input grid (darts
-      // = 3) is paired with the next round's target display (#258).
+    test('after full turn for R1, practiceRound advances to 2', () {
       final state = _makeState(score: 27, practiceRound: 1);
       final after = _applyTurn(engine, state, ['MISS', 'MISS', 'MISS']);
-      expect(after.competitors[0].practiceRound, 1);
-      expect(after.competitors[0].score, 25); // 27 - 1*2 = 25
-      expect(after.turnActive, isFalse);
-    });
-
-    test('after full turn for R1 + TurnEnded, practiceRound advances to 2',
-        () {
-      final state = _makeState(score: 27, practiceRound: 1);
-      final after = _applyTurnAndEnd(engine, state, ['MISS', 'MISS', 'MISS']);
       expect(after.competitors[0].practiceRound, 2);
     });
 
-    test(
-        'after full turn for R19 + TurnEnded, practiceRound advances to 20',
-        () {
+    test('after full turn for R19, practiceRound advances to 20', () {
       final state = _makeState(score: 100, practiceRound: 19);
-      final after = _applyTurnAndEnd(engine, state, ['MISS', 'MISS', 'MISS']);
+      final after = _applyTurn(engine, state, ['MISS', 'MISS', 'MISS']);
       expect(after.competitors[0].practiceRound, 20);
       expect(after.isComplete, isFalse);
     });
 
-    test(
-        'after full turn for R20 (miss), game ends and practiceRound bumps to 21',
-        () {
+    test('after full turn for R20 (miss), practiceRound = 21 and game ends', () {
       final state = _makeState(score: 100, practiceRound: 20);
-      final after = _applyTurnAndEnd(engine, state, ['MISS', 'MISS', 'MISS']);
-      // R20 completion happens on the 3rd dart and bypasses TurnEnded,
-      // so the engine bumps practiceRound to 21 itself — the GameResult
-      // formula `practiceRound - 1` (= 20) clamps correctly.
+      final after = _applyTurn(engine, state, ['MISS', 'MISS', 'MISS']);
+      // round was 20, after increment it's 21; game ends
       expect(after.isComplete, isTrue);
-      expect(after.competitors[0].practiceRound, 21);
-    });
-
-    test(
-        'natural completion via score≤0 also bumps practiceRound',
-        () {
-      // Score 2 at R1, full miss → score = 0 → game ends. Engine bumps
-      // practiceRound to 2 so GameResult.roundReached resolves to 1 (the
-      // last round actually played).
-      final state = _makeState(score: 2, practiceRound: 1);
-      final after = _applyTurnAndEnd(engine, state, ['MISS', 'MISS', 'MISS']);
-      expect(after.isComplete, isTrue);
-      expect(after.competitors[0].practiceRound, 2);
     });
   });
 

@@ -107,30 +107,20 @@ class StatelessBobs27Engine implements GameEngine {
       newScore -= roundNum * 2;
     }
 
-    // Score lands here; `practiceRound` advances at TurnEnded time so the
-    // target display, header round counter, and engine state all stay on
-    // the just-played round until the user taps NEXT ROUND. Previously the
-    // round advanced on the 3rd dart, so the UI showed round N+1 while the
-    // input grid was disabled (dartsThrownInTurn == 3) — confusing on
-    // every round transition (#258).
-    final isComplete = newScore <= 0 || roundNum >= 20;
+    // Advance practice round
+    final newRound = roundNum + 1;
+
     final updatedCompetitors2 = List<CompetitorState>.from(newState.competitors);
-    updatedCompetitors2[newState.currentTurnIndex] = competitor.copyWith(
-      score: newScore,
-      // Natural completion (score≤0 or round-20 finished) bypasses TurnEnded,
-      // so finalise the round advance here. Without this, the post-game
-      // `roundReached` formula (`practiceRound - 1`) would under-report by
-      // one for completed drills.
-      practiceRound:
-          isComplete ? competitor.practiceRound + 1 : competitor.practiceRound,
-    );
+    updatedCompetitors2[newState.currentTurnIndex] =
+        competitor.copyWith(score: newScore, practiceRound: newRound);
 
     newState = newState.copyWith(
       competitors: updatedCompetitors2,
       turnActive: false,
     );
 
-    if (isComplete) {
+    // End condition check (priority order)
+    if (newScore <= 0 || roundNum >= 20) {
       newState = newState.copyWith(
         isComplete: true,
         status: GameEngineStatus.completed,
@@ -143,24 +133,10 @@ class StatelessBobs27Engine implements GameEngine {
     return (newState, LegOutcome.none, null);
   }
 
-  // TurnEnded: advance the practice round for the current competitor and
-  // rotate to the next competitor. The round advance is deferred here
-  // (rather than running on the 3rd-dart score-evaluation path) so the
-  // displayed target stays in sync with the still-locked input grid until
-  // the user explicitly advances (#258). On natural game completion the
-  // 3rd-dart handler already bumped `practiceRound` (no NEXT ROUND tap
-  // follows it), so a trailing TurnEnded must NOT bump again — otherwise
-  // the post-game `roundReached` formula double-counts.
+  // TurnEnded: advance to next competitor
   GameState _applyTurnEnded(GameState state, GameEvent event) {
-    final updatedCompetitors = List<CompetitorState>.from(state.competitors);
-    if (!state.isComplete) {
-      final cur = updatedCompetitors[state.currentTurnIndex];
-      updatedCompetitors[state.currentTurnIndex] =
-          cur.copyWith(practiceRound: cur.practiceRound + 1);
-    }
     final nextIndex = (state.currentTurnIndex + 1) % state.competitors.length;
     return state.copyWith(
-      competitors: updatedCompetitors,
       dartsThrownInTurn: 0,
       turnActive: false,
       currentTurnIndex: nextIndex,

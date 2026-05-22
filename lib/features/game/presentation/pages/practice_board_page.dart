@@ -126,8 +126,22 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         final isShanghai = gs.gameType == GameType.shanghai;
         final isCheckout = gs.gameType == GameType.checkoutPractice;
         final doublesOnly = isAtc && gs.aroundTheClockVariant == 'doublesOnly';
+        // Bob's 27 bumps `practiceRound` on the 3rd-dart scoring path inside
+        // the engine, but the next TurnStarted (which resets the input grid)
+        // only fires when the user taps NEXT ROUND. Between those two
+        // moments the input grid is disabled (`dartsThrownInTurn == 3`) yet
+        // the engine state already shows round N+1 — so we'd display the
+        // *next* round's target / counter against a locked grid, making the
+        // user think their input was silently swallowed (#258). Decrement
+        // the displayed round during that gap so the UI stays on the
+        // just-played round until the user explicitly advances. (Shanghai,
+        // Catch 40, and Checkout Practice advance round state inside
+        // `_applyTurnEnded`, so they don't need this adjustment.)
+        final displayedRound = (isBobs27 && gs.dartsThrownInTurn >= 3)
+            ? competitor.practiceRound - 1
+            : competitor.practiceRound;
         final effectiveTarget = (isBobs27 || isShanghai)
-            ? competitor.practiceRound
+            ? displayedRound
             : isCheckout
                 ? competitor.score
                 : competitor.currentTarget;
@@ -168,7 +182,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               ),
               GameStatusBarWidget(
                 configLabel: _modeName(gs.gameType),
-                roundInLeg: competitor.practiceRound,
+                roundInLeg: displayedRound,
                 totalRounds: _totalRounds(gs),
                 currentTurnDarts: currentTurnDarts,
               ),
@@ -183,7 +197,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               PracticeTargetDisplayWidget(
                 gameType: gs.gameType,
                 currentTarget: effectiveTarget,
-                practiceRound: competitor.practiceRound,
+                practiceRound: displayedRound,
                 totalRounds: _totalRounds(gs),
                 score: competitor.score,
                 practiceAttempts: isCheckout
