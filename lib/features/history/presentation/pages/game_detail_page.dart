@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/models/game_result.dart';
 import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
 import 'package:dart_lodge/features/history/presentation/providers/game_detail_provider.dart';
 import 'package:dart_lodge/features/history/presentation/state/game_detail_state.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
+import 'package:dart_lodge/features/statistics/presentation/utils/post_game_routing.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/practice_summary_widget.dart';
+import 'package:dart_lodge/features/statistics/presentation/widgets/shanghai_summary_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
@@ -36,13 +42,14 @@ class GameDetailPage extends ConsumerWidget {
           if (detail == null) {
             return const Center(child: Text('Game not found'));
           }
-          return _buildBody(context, detail);
+          return _buildBody(context, ref, detail);
         },
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, GameDetailState detail) {
+  Widget _buildBody(
+      BuildContext context, WidgetRef ref, GameDetailState detail) {
     final game = detail.game!;
     final theme = Theme.of(context);
     final winner = game.winnerCompetitorId;
@@ -59,10 +66,8 @@ class GameDetailPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildMatchHeader(context, game, sortedCompetitors, winner, theme),
-          if (detail.gameStats != null) ...[
-            const SizedBox(height: 16),
-            GameSummarySectionWidget(gameStats: detail.gameStats!),
-          ],
+          const SizedBox(height: 16),
+          _StatsSection(gameId: gameId, gameStats: detail.gameStats, game: game),
           const SizedBox(height: 16),
           Text(
             'Leg Breakdown',
@@ -165,4 +170,50 @@ class GameDetailPage extends ConsumerWidget {
     );
   }
 
+}
+
+/// Picks the right summary surface for [game]'s type — mirrors the
+/// post-game summary's routing (#255). X01/cricket/count-up render the
+/// shared `GameSummarySectionWidget` (PPR/checkout/180s for X01, MPR for
+/// cricket, count-up panel for count-up); shanghai renders its dedicated
+/// hero card; the four practice drills render `PracticeSummaryWidget`.
+/// Without this branch, every game type rendered the X01-shaped chrome
+/// (empty `—` / `0` rows, sometimes misleading PPR for drills).
+class _StatsSection extends ConsumerWidget {
+  const _StatsSection({
+    required this.gameId,
+    required this.gameStats,
+    required this.game,
+  });
+
+  final String gameId;
+  final GameStats? gameStats;
+  final Game game;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (isGameStatsBacked(game.gameType.name)) {
+      final stats = gameStats;
+      if (stats == null) return const SizedBox.shrink();
+      return GameSummarySectionWidget(gameStats: stats);
+    }
+    final asyncResult = ref.watch(gameResultProvider(gameId));
+    return asyncResult.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, _) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Text('Error loading summary: $err'),
+      ),
+      data: (result) {
+        if (result == null) return const SizedBox.shrink();
+        return switch (result) {
+          ShanghaiResult() => ShanghaiSummaryWidget(result: result),
+          _ => PracticeSummaryWidget(result: result),
+        };
+      },
+    );
+  }
 }
