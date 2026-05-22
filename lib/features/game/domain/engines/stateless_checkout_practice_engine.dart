@@ -21,8 +21,6 @@ import 'base_game_engine.dart';
 /// reference it by name rather than re-typing the literal.
 const String emptyDartSlotSentinel = '';
 
-const String _emptySlotSentinel = emptyDartSlotSentinel;
-
 class StatelessCheckoutPracticeEngine implements GameEngine {
   @override
   EngineResult apply(GameState state, GameEvent event) {
@@ -108,7 +106,7 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
       final paddedDartThrows = [
         ...competitor.dartThrows,
         canonical,
-        for (var i = 0; i < padsToAdd; i++) _emptySlotSentinel,
+        for (var i = 0; i < padsToAdd; i++) emptyDartSlotSentinel,
       ];
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         dartThrows: paddedDartThrows,
@@ -145,7 +143,7 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
       final paddedDartThrows = [
         ...competitor.dartThrows,
         canonical,
-        for (var i = 0; i < padsToAdd; i++) _emptySlotSentinel,
+        for (var i = 0; i < padsToAdd; i++) emptyDartSlotSentinel,
       ];
       updatedCompetitors[state.currentTurnIndex] = competitor.copyWith(
         score: competitor.turnStartScore ?? competitor.score,

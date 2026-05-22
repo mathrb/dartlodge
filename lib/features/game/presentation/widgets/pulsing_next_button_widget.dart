@@ -94,7 +94,7 @@ class _PulsingNextButtonWidgetState extends State<PulsingNextButtonWidget>
         // disabled NEXT TARGET / NEXT ROUND button expecting it to fire
         // (#261). Neutral tint clearly communicates "not actionable yet".
         disabledBackgroundColor:
-            cs.onSurface.withValues(alpha: 0.12),
+            cs.onSurface.withValues(alpha: AppTheme.opacityDisabledContainer),
         disabledForegroundColor:
             cs.onSurface.withValues(alpha: AppTheme.opacityDisabled),
         minimumSize: const Size.fromHeight(56),
