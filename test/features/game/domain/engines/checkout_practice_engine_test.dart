@@ -57,12 +57,15 @@ GameEvent _turnEnded(String competitorId) => _event(
 /// Build a minimal CheckoutPractice game state.
 GameState _makeState({
   int score = 170,
+  int startingScore = 170,
+  int practiceSuccesses = 0,
   int? turnStartScore,
   List<String> dartThrows = const [],
   int dartsThrownInTurn = 0,
   bool turnActive = false,
   bool isComplete = false,
   String? winnerCompetitorId,
+  int? checkoutTargetSuccesses,
 }) {
   return GameState(
     gameId: 'game-1',
@@ -73,8 +76,10 @@ GameState _makeState({
         name: 'Player 1',
         playerIds: ['p1'],
         score: score,
+        startingScore: startingScore,
         dartThrows: dartThrows,
         turnStartScore: turnStartScore,
+        practiceSuccesses: practiceSuccesses,
       ),
     ],
     currentTurnIndex: 0,
@@ -83,6 +88,7 @@ GameState _makeState({
     winnerCompetitorId: winnerCompetitorId,
     status: isComplete ? GameEngineStatus.completed : GameEngineStatus.inProgress,
     turnActive: turnActive,
+    checkoutTargetSuccesses: checkoutTargetSuccesses,
   );
 }
 
@@ -338,27 +344,24 @@ void main() {
   // Checkout detection
   // -------------------------------------------------------------------------
   group('Checkout detection', () {
-    test('score reaching 0 on D20 is a checkout', () {
-      // Score 40, throw D20 (40) → newScore = 0, double → checkout
+    test('score reaching 0 on D20 sets score=0 and bumps practiceSuccesses', () {
+      // Score 40, throw D20 (40) → newScore = 0, double → checkout.
+      // Completion is decided at TurnEnded — not on this dart.
       final state = _makeState(score: 40, turnActive: true);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 2));
-      expect(result.outcome, LegOutcome.gameCompleted);
-      expect(result.winnerCompetitorId, 'c1');
-    });
-
-    test('checkout sets score to 0', () {
-      final state = _makeState(score: 40, turnActive: true);
-      final result = engine.apply(
-          state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 2));
+      expect(result.outcome, isNot(LegOutcome.gameCompleted));
       expect(result.state.competitors[0].score, 0);
+      expect(result.state.competitors[0].practiceSuccesses, 1);
     });
 
-    test('checkout dart is added to dartThrows', () {
+    test('checkout pads dartThrows to length 3 and sets dartsThrownInTurn=3', () {
+      // Dart 1 checkout on score=40: D20 → score=0. dartThrows = [D20, MISS, MISS].
       final state = _makeState(score: 40, turnActive: true);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 2));
-      expect(result.state.competitors[0].dartThrows, contains('D20'));
+      expect(result.state.competitors[0].dartThrows, ['D20', 'MISS', 'MISS']);
+      expect(result.state.dartsThrownInTurn, 3);
     });
 
     test('DB checkout is recognized', () {
@@ -366,7 +369,8 @@ void main() {
       final state = _makeState(score: 50, turnActive: true);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2));
-      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.state.competitors[0].score, 0);
+      expect(result.state.competitors[0].practiceSuccesses, 1);
     });
 
     test('checkout from 170: T20, T20, DB', () {
@@ -377,9 +381,10 @@ void main() {
       expect(state.competitors[0].score, 50);
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2));
-      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.outcome, isNot(LegOutcome.gameCompleted));
       expect(result.state.competitors[0].score, 0);
       expect(result.state.competitors[0].dartThrows, ['T20', 'T20', 'DB']);
+      expect(result.state.competitors[0].practiceSuccesses, 1);
     });
 
     test('isBust is false on checkout', () {
@@ -387,6 +392,92 @@ void main() {
       final result = engine.apply(
           state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 2));
       expect(result.isBust, isFalse);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Multi-success drill (∞ and finite targetSuccesses) — #254
+  // -------------------------------------------------------------------------
+  group('Multi-success drill', () {
+    test('∞ mode: TurnEnded after checkout does NOT complete the drill', () {
+      // Simulate one full checkout turn ending in a perfect 3-dart out.
+      final state = _makeState(
+        score: 170,
+        practiceSuccesses: 0,
+        turnActive: true,
+        checkoutTargetSuccesses: null, // ∞
+      );
+      var s = engine.apply(state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2)).state;
+      expect(s.competitors[0].score, 0);
+      expect(s.competitors[0].practiceSuccesses, 1);
+
+      final ended = engine.apply(s, _turnEnded('c1'));
+      expect(ended.outcome, isNot(LegOutcome.gameCompleted));
+      expect(ended.state.isComplete, isFalse);
+    });
+
+    test('finite mode: TurnEnded after first checkout completes when target=1', () {
+      final state = _makeState(
+        score: 170,
+        practiceSuccesses: 0,
+        turnActive: true,
+        checkoutTargetSuccesses: 1,
+      );
+      var s = engine.apply(state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2)).state;
+
+      final ended = engine.apply(s, _turnEnded('c1'));
+      expect(ended.outcome, LegOutcome.gameCompleted);
+      expect(ended.state.isComplete, isTrue);
+      expect(ended.state.status, GameEngineStatus.completed);
+      expect(ended.state.winnerCompetitorId, 'c1');
+    });
+
+    test('finite mode (target=3): drill completes only on the 3rd checkout', () {
+      final state = _makeState(
+        score: 170,
+        practiceSuccesses: 2, // already 2 successful checkouts
+        turnActive: true,
+        checkoutTargetSuccesses: 3,
+      );
+      var s = engine.apply(state, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 20, multiplier: 3)).state;
+      s = engine.apply(s, _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2)).state;
+      expect(s.competitors[0].practiceSuccesses, 3);
+
+      final ended = engine.apply(s, _turnEnded('c1'));
+      expect(ended.outcome, LegOutcome.gameCompleted);
+    });
+
+    test(
+        'TurnStarted after a checkout (score=0) resets score to startingScore',
+        () {
+      // After a multi-success checkout: score=0. Engine must reset on
+      // TurnStarted so the next attempt begins from 170 and busts revert
+      // to 170, not 0.
+      final state = _makeState(
+        score: 0,
+        startingScore: 170,
+        practiceSuccesses: 1,
+        checkoutTargetSuccesses: null,
+      );
+      final result = engine.apply(state, _turnStarted('c1'));
+      expect(result.state.competitors[0].score, 170);
+      expect(result.state.competitors[0].turnStartScore, 170);
+      expect(result.state.dartsThrownInTurn, 0);
+      expect(result.state.turnActive, isTrue);
+    });
+
+    test(
+        'TurnStarted with non-zero score (fresh game) leaves it untouched',
+        () {
+      final state = _makeState(score: 170, startingScore: 170);
+      final result = engine.apply(state, _turnStarted('c1'));
+      expect(result.state.competitors[0].score, 170);
+      expect(result.state.competitors[0].turnStartScore, 170);
     });
   });
 

@@ -24,10 +24,10 @@ void main() {
 
   // ── helpers ──────────────────────────────────────────────────────────────
 
-  Game makeCheckoutPracticeGame() => Game(
+  Game makeCheckoutPracticeGame({int? targetSuccesses}) => Game(
         gameId: 'g1',
         gameType: GameType.checkoutPractice,
-        config: const GameConfig.checkoutPractice(),
+        config: GameConfig.checkoutPractice(targetSuccesses: targetSuccesses),
         startTime: DateTime(2025),
       );
 
@@ -435,6 +435,104 @@ void main() {
     );
     expect(checkoutTurnEnded.payload['player_id'], 'p1');
     expect(checkoutTurnEnded.payload['darts_on_target'], 2);
+  });
+
+  // ── 13a. Checkout Practice: ∞ checkout does NOT end the drill (#254) ─────
+  //
+  // Before the fix, the engine returned `gameCompleted` on every checkout,
+  // so even a `targetSuccesses: null` (∞) drill ended after the very first
+  // T20+T20+DB. After the fix the engine only completes via TurnEnded when
+  // the configured quota is hit; ∞ mode never completes via TurnEnded.
+
+  test('Checkout Practice: ∞ checkout does not end the drill', () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(targetSuccesses: null),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // 170 → T20=60 (110) → T20=60 (50) → DB=50 (0) = perfect 3-dart checkout.
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+    await notifier.processDart('DB');
+
+    final s = container.read(activePracticeProvider('g1')).value!;
+    expect(s.gameState.isComplete, isFalse,
+        reason: '∞ mode must keep the drill open after a checkout.');
+    expect(s.pendingGameWinnerId, isNull);
+    expect(s.gameState.competitors[0].practiceSuccesses, 1);
+    expect(s.gameState.competitors[0].score, 0,
+        reason:
+            'Engine leaves score=0; the next TurnStarted resets it to 170.');
+    expect(s.gameState.dartsThrownInTurn, 3,
+        reason: 'Turn ends on checkout (dartsThrownInTurn forced to 3).');
+  });
+
+  // ── 13b. Checkout Practice: finite quota ends drill on Nth checkout ──────
+
+  test('Checkout Practice: targetSuccesses=1 completes drill on first checkout',
+      () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(targetSuccesses: 1),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+    await notifier.processDart('DB');
+
+    final s = container.read(activePracticeProvider('g1')).value!;
+    expect(s.gameState.isComplete, isTrue);
+    expect(s.pendingGameWinnerId, 'c1');
+    expect(s.gameState.competitors[0].practiceSuccesses, 1);
+    verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: 'c1',
+      endTime: anyNamed('endTime'),
+    )).called(1);
+  });
+
+  // ── 13c. Checkout Practice: TurnEnded carries reason='checkout' ─────────
+  //
+  // The stats projection (`_computeCheckoutStats`) counts attempts on every
+  // TurnEnded and successes on those with `reason == 'checkout'`. Before
+  // #254 the producer stamped `reason: 'normal'` everywhere for non-catch40,
+  // so `successes` stayed at 0 even with completed checkouts.
+
+  test('Checkout Practice: drill-ending TurnEnded includes reason=checkout',
+      () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(targetSuccesses: 1),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+    await notifier.processDart('DB');
+
+    // The drill-ending TurnEnded is persisted atomically via
+    // appendEventsAndCompleteGame.
+    final captures = verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: captureAnyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).captured;
+    final committedEvents =
+        captures.expand((c) => c as List<GameEvent>).toList();
+    final turnEnded = committedEvents.firstWhere(
+      (e) => e.eventType == 'TurnEnded',
+      orElse: () =>
+          throw StateError('Drill-ending TurnEnded was not persisted'),
+    );
+    expect(turnEnded.payload['reason'], 'checkout');
+    expect(turnEnded.payload['player_id'], 'p1');
   });
 
   // ── 13. Catch 40: failed target via 6 darts records reason='failed' ──────
