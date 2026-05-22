@@ -40,30 +40,32 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
     final cs = Theme.of(context).colorScheme;
     final selected = pageState.selectedCricketTargetMode;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    // Wrap (multi-line) so the chip row stays visible at narrow widths
+    // (412px and below) — same pattern as `FilterChipRowWidget` (#261).
+    // Only 3 modes today so it usually fits on one line; Wrap is a
+    // safety net for future modes / very small displays.
+    return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.space4,
         vertical: AppSpacing.space2,
       ),
-      child: Row(
+      child: Wrap(
+        spacing: AppSpacing.space2,
+        runSpacing: AppSpacing.space2,
         children: [
           for (final (mode, label) in _modes)
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.space2),
-              child: FilterChip(
-                label: Text(label),
-                selected: selected == mode,
-                selectedColor: cs.primaryContainer,
-                checkmarkColor: cs.onPrimaryContainer,
-                backgroundColor: cs.surfaceContainerHighest,
-                labelStyle: TextStyle(
-                  color: selected == mode
-                      ? cs.onPrimaryContainer
-                      : cs.onSurfaceVariant,
-                ),
-                onSelected: (_) => notifier.setCricketTargetMode(mode),
+            FilterChip(
+              label: Text(label),
+              selected: selected == mode,
+              selectedColor: cs.primaryContainer,
+              checkmarkColor: cs.onPrimaryContainer,
+              backgroundColor: cs.surfaceContainerHighest,
+              labelStyle: TextStyle(
+                color: selected == mode
+                    ? cs.onPrimaryContainer
+                    : cs.onSurfaceVariant,
               ),
+              onSelected: (_) => notifier.setCricketTargetMode(mode),
             ),
         ],
       ),

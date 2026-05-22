@@ -39,30 +39,32 @@ class FilterChipRowWidget<T> extends StatelessWidget {
           onSelected: (_) => onTap(),
         );
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    // Wrap (multi-line) rather than a horizontal SingleChildScrollView
+    // (single-line, possibly off-screen). At 412px the practice-tab chip
+    // row (5 game types) would silently extend past the right edge with
+    // no scroll affordance, hiding "Checkout" entirely (#261). Wrap
+    // auto-flows to a second row when needed — short rows render the
+    // same as before.
+    return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.space4,
         vertical: AppSpacing.space2,
       ),
-      child: Row(
+      child: Wrap(
+        spacing: AppSpacing.space2,
+        runSpacing: AppSpacing.space2,
         children: [
-          if (allLabel != null) ...[
+          if (allLabel != null)
             chip(
               label: allLabel!,
               isSelected: selected == null,
               onTap: () => onSelected(null),
             ),
-            const SizedBox(width: AppSpacing.space2),
-          ],
           ...items.map(
-            (item) => Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.space2),
-              child: chip(
-                label: labelBuilder(item),
-                isSelected: selected == item,
-                onTap: () => onSelected(selected == item ? null : item),
-              ),
+            (item) => chip(
+              label: labelBuilder(item),
+              isSelected: selected == item,
+              onTap: () => onSelected(selected == item ? null : item),
             ),
           ),
         ],

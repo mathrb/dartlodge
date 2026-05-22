@@ -95,17 +95,29 @@ class AtcSummaryColumnWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             sectionHeader('OVERALL'),
-            overall != null
-                ? Text(
-                    fmtRate(overall),
-                    style: AppTextStyles.scoreSmall
-                        .copyWith(color: colorScheme.primary),
-                  )
-                : Text(
-                    '—',
-                    style: AppTextStyles.scoreSmall
-                        .copyWith(color: colorScheme.onSurfaceVariant),
-                  ),
+            // The OVERALL value uses scoreSmall (36pt). On a 412px-wide
+            // screen this column gets ~82px (Row flex 4:1 split), and
+            // "100%" overflows — it wraps into "10\n0\n%" across three
+            // lines. FittedBox(scaleDown) keeps the headline value on
+            // one line by shrinking to fit; smaller values render at
+            // the natural size (#261).
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: overall != null
+                  ? Text(
+                      fmtRate(overall),
+                      maxLines: 1,
+                      style: AppTextStyles.scoreSmall
+                          .copyWith(color: colorScheme.primary),
+                    )
+                  : Text(
+                      '—',
+                      maxLines: 1,
+                      style: AppTextStyles.scoreSmall
+                          .copyWith(color: colorScheme.onSurfaceVariant),
+                    ),
+            ),
             Divider(color: colorScheme.outline, height: 16),
             sectionHeader('BEST'),
             if (best3.isEmpty)
