@@ -28,7 +28,7 @@ class StatelessCatch40Engine implements GameEngine {
           state: state.copyWith(status: GameEngineStatus.inProgress)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
-      'TurnEnded' => EngineResult(state: _applyTurnEnded(state, event)),
+      'TurnEnded' => _applyTurnEndedWithOutcome(state, event),
       'GameCompleted' => EngineResult(
           state: _applyGameCompleted(state, event),
           outcome: LegOutcome.gameCompleted),
@@ -108,6 +108,23 @@ class StatelessCatch40Engine implements GameEngine {
     );
 
     return EngineResult(state: newState, isBust: bust);
+  }
+
+  /// Wraps [_applyTurnEnded] and surfaces a `gameCompleted` outcome when the
+  /// final (40th) target advances. The producer relies on this signal to emit
+  /// `GameCompleted` and atomically mark the game record complete — without
+  /// it, drills that play out all 40 targets would leave `is_complete = 0`
+  /// and never show up in History (#253).
+  EngineResult _applyTurnEndedWithOutcome(GameState state, GameEvent event) {
+    final newState = _applyTurnEnded(state, event);
+    if (!state.isComplete && newState.isComplete) {
+      return EngineResult(
+        state: newState,
+        outcome: LegOutcome.gameCompleted,
+        winnerCompetitorId: newState.winnerCompetitorId,
+      );
+    }
+    return EngineResult(state: newState);
   }
 
   GameState _applyTurnEnded(GameState state, GameEvent event) {

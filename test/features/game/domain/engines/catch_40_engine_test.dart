@@ -427,6 +427,31 @@ void main() {
       expect(s.winnerCompetitorId, isNull);
     });
 
+    // The provider relies on the engine surfacing `LegOutcome.gameCompleted`
+    // from the TurnEnded that finalises target 40 so it can emit
+    // GameCompleted + appendEventsAndCompleteGame atomically. Without this
+    // signal, drills that play out all 40 targets would leave is_complete=0
+    // and never show up in History (#253).
+    test('TurnEnded that completes drill returns gameCompleted outcome', () {
+      final state = _makeState(practiceRound: 40, catch40TargetRemaining: 100);
+      var s = _applyDarts(engine, state, ['MISS', 'MISS', 'MISS']);
+      s = engine.apply(s, _turnEnded('c1')).state; // 3 darts — no advance
+      s = _applyDarts(engine, s, ['MISS', 'MISS', 'MISS']);
+      final result = engine.apply(s, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.state.isComplete, isTrue);
+    });
+
+    test('mid-drill TurnEnded does NOT report gameCompleted outcome', () {
+      final state = _makeState(practiceRound: 1);
+      var s = _applyDarts(engine, state, ['MISS', 'MISS', 'MISS']);
+      s = engine.apply(s, _turnEnded('c1')).state;
+      s = _applyDarts(engine, s, ['MISS', 'MISS', 'MISS']);
+      final result = engine.apply(s, _turnEnded('c1')); // advance to round 2
+      expect(result.outcome, isNot(LegOutcome.gameCompleted));
+      expect(result.state.isComplete, isFalse);
+    });
+
     test('completing target 39 does NOT end game', () {
       final state = _makeState(practiceRound: 39, catch40TargetRemaining: 99);
       var s = _applyDarts(engine, state, ['MISS', 'MISS', 'MISS']);
