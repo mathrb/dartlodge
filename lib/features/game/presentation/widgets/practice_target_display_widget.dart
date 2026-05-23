@@ -12,6 +12,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     required this.practiceAttempts,
     required this.practiceSuccesses,
     this.roundScore = 0,
+    this.currentPlayerName,
     super.key,
   });
 
@@ -23,6 +24,11 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   final int practiceAttempts;
   final int practiceSuccesses;
   final int roundScore;
+
+  /// When non-null, renders a "<NAME>'S TURN" header above the target —
+  /// surfaces whose turn it is in multi-player ATC/Shanghai games. Solo
+  /// drills pass null and keep the previous target-only chrome (#276).
+  final String? currentPlayerName;
 
   String get _targetLabel {
     if (gameType == GameType.catch40) return '${60 + practiceRound}';
@@ -63,6 +69,18 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        if (currentPlayerName != null) ...[
+          Text(
+            "${currentPlayerName!.toUpperCase()}'S TURN",
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: colorScheme.primary,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w900,
+                ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+        ],
         Text(
           _targetLabel,
           style: AppTextStyles.scoreMedium.copyWith(
