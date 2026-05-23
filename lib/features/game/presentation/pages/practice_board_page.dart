@@ -195,10 +195,14 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                         if (context.mounted) context.go(GameRoutes.home);
                     }
                   },
-                  itemBuilder: (_) => const [
+                  itemBuilder: (_) => [
                     PopupMenuItem(
                       value: _DrillAction.endDrill,
-                      child: Text('End Drill'),
+                      // Multi-player ATC / Shanghai is a competitive game,
+                      // not a solo drill — match the label to the context.
+                      child: Text(
+                        gs.competitors.length > 1 ? 'End Game' : 'End Drill',
+                      ),
                     ),
                   ],
                 ),
@@ -223,6 +227,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 practiceRound: displayedRound,
                 totalRounds: _totalRounds(gs),
                 score: competitor.score,
+                // Multi-player ATC / Shanghai: surface whose turn it is
+                // (#276). Solo drills pass null and keep the previous
+                // target-only chrome.
+                currentPlayerName:
+                    gs.competitors.length > 1 ? competitor.name : null,
                 practiceAttempts: isCheckout
                     // Exclude the engine's empty-slot sentinel pads —
                     // showing the user "9 darts thrown" when they really

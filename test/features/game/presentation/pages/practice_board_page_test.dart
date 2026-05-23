@@ -279,7 +279,7 @@ void main() {
 
   // ── 6. AppBar overflow menu shows End Drill ───────────────────────────────
 
-  testWidgets('6. Overflow menu shows End Drill', (tester) async {
+  testWidgets('6. Overflow menu shows End Drill (solo)', (tester) async {
     final notifier = _FakeActivePracticeNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
@@ -288,9 +288,71 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('End Drill'), findsOneWidget);
+    expect(find.text('End Game'), findsNothing);
     // Reset Drill was removed in #195 hygiene sweep — it was a no-op
     // (invalidateSelf replays the same event log → same state).
     expect(find.text('Reset Drill'), findsNothing);
+  });
+
+  testWidgets(
+      '6b. Overflow menu shows End Game for multi-player ATC (#276)',
+      (tester) async {
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.aroundTheClock,
+      competitors: [
+        _practiceCompetitor(id: 'c1', name: 'Alice'),
+        _practiceCompetitor(id: 'c2', name: 'Bob'),
+        _practiceCompetitor(id: 'c3', name: 'Carol'),
+      ],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 0,
+      isComplete: false,
+      aroundTheClockVariant: 'standard',
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    expect(find.text('End Game'), findsOneWidget);
+    expect(find.text('End Drill'), findsNothing);
+  });
+
+  testWidgets(
+      '6c. Multi-player ATC surfaces the current player name above the target (#276)',
+      (tester) async {
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.aroundTheClock,
+      competitors: [
+        _practiceCompetitor(id: 'c1', name: 'Alice'),
+        _practiceCompetitor(id: 'c2', name: 'Bob'),
+        _practiceCompetitor(id: 'c3', name: 'Carol'),
+      ],
+      currentTurnIndex: 1, // Bob's turn
+      dartsThrownInTurn: 0,
+      isComplete: false,
+      aroundTheClockVariant: 'standard',
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text("BOB'S TURN"), findsOneWidget);
+    expect(find.text("ALICE'S TURN"), findsNothing);
+  });
+
+  testWidgets(
+      '6d. Solo ATC does NOT render the per-turn name banner (regression for #276 narrow scope)',
+      (tester) async {
+    final notifier = _FakeActivePracticeNotifier(_activeState());
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining("'S TURN"), findsNothing);
   });
 
   // ── 7. DartboardHighlightWidget present with Expanded ancestor ────────────
