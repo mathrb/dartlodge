@@ -75,9 +75,10 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       // Turn 0: 1+3+2 = 6 marks; Turn 1: 3+3+3 = 9 marks → MPR = 15/2 = 7.5
       expect(c.marksPerRound, isNotNull);
       expect(c.marksPerRound!, closeTo(7.5, 0.01));
-      // 15 marks across 1 leg of first 9 darts → 15 / (1*3) = 5.0
-      expect(c.firstNineMarksPerRound, isNotNull);
-      expect(c.firstNineMarksPerRound!, closeTo(5.0, 0.01));
+      // Only 2 turns (6 darts) — first-9 MPR is undefined until the
+      // player has at least 3 turns (9 darts) on record. Mirrors the
+      // gate added in #290 for X01's first-9 PPR.
+      expect(c.firstNineMarksPerRound, isNull);
       // Mark buckets are exact-count: turn 0 = exactly 6, turn 1 = exactly 9.
       expect(c.sixMarkTurns, 1);
       expect(c.nineMarkTurns, 1);
