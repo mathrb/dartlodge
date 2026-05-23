@@ -1523,19 +1523,23 @@ class PlayerStatsAssembler {
             currentScore -= currentRound * 2;
           }
           currentRound++;
-        case 'LegCompleted':
+        case 'GameCompleted':
+          // Bob's 27 ends on either bust (score ≤ 0) or finishing round
+          // 20 — both paths emit GameCompleted directly with no preceding
+          // LegCompleted (see `StatelessBobs27Engine._applyDartThrown`).
+          // Gate score accumulation on GameCompleted, not LegCompleted,
+          // and include busted final scores in Best/Avg so the stats
+          // don't read as blank ("—") next to a non-zero Drills Played
+          // (#292). Completion Rate stays gated on `currentScore > 0`
+          // (a successful drill is one that didn't bust).
           completedGames++;
+          totalScore += currentScore;
+          if (bestScore == null || currentScore > bestScore) {
+            bestScore = currentScore;
+          }
           if (currentScore > 0) {
             successfulCompletions++;
-            totalScore += currentScore;
-            if (bestScore == null || currentScore > bestScore) {
-              bestScore = currentScore;
-            }
           }
-          currentRound = 1;
-          currentScore = 27;
-          inPlayerTurn = false;
-        case 'GameCompleted':
           currentRound = 1;
           currentScore = 27;
           inPlayerTurn = false;
@@ -1543,7 +1547,7 @@ class PlayerStatsAssembler {
     }
 
     final avgScore =
-        successfulCompletions > 0 ? totalScore / successfulCompletions : null;
+        completedGames > 0 ? totalScore / completedGames : null;
     final completionRate =
         completedGames > 0 ? successfulCompletions / completedGames : null;
     final doubleHitRate =

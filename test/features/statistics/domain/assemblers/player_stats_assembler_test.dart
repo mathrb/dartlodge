@@ -531,21 +531,23 @@ void main() {
   });
 
   group("practice — Bob's 27", () {
-    test('one drill with one D1 hit then LegCompleted updates score and rates',
+    test(
+        'one drill with one D1 hit then GameCompleted updates score and rates',
         () {
       // Round 1: hit D1 once (mult=2 on segment 1), miss twice with singles.
       //   doubleAttempts = 3 (every dart at the target counts — #261)
       //   doubleHits     = 1 (D1 = double of round 1)
       //   doubleHitRate  = 1/3 ≈ 0.333
       //   currentScore   = 27 + 1 * 1 * 2 = 29
-      // LegCompleted: drill counted as a completed, successful drill.
+      // GameCompleted: drill counted as a completed, successful drill. The
+      // engine emits GameCompleted directly (no LegCompleted) for Bob's 27.
       final events = [
         turnStarted(turnNumber: 1),
         dart(1, 2),
         dart(20, 1),
         dart(20, 1),
         turnEnded(),
-        legCompleted(winnerPlayerId: playerId),
+        gameCompleted(winnerPlayerId: playerId),
       ];
 
       final stats = assembler.fromEvents(
@@ -560,6 +562,44 @@ void main() {
       expect(stats.bobs27BestScore, 29);
       expect(stats.bobs27CompletionRate, 1.0);
       expect(stats.bobs27DoubleHitRate, closeTo(1 / 3, 0.001));
+    });
+
+    test('busted drill is reflected in Best / Avg / Completion Rate (#292)',
+        () {
+      // All-miss rounds: penalty per round = round * 2. Score progression:
+      //   r1: 27 - 2  = 25
+      //   r2: 25 - 4  = 21
+      //   r3: 21 - 6  = 15
+      //   r4: 15 - 8  = 7
+      //   r5: 7  - 10 = -3  ← engine emits GameCompleted here (bust).
+      final events = <GameEvent>[];
+      for (int r = 1; r <= 5; r++) {
+        events.addAll([
+          turnStarted(turnNumber: r),
+          dart(20, 1),
+          dart(20, 1),
+          dart(20, 1),
+          turnEnded(),
+        ]);
+      }
+      events.add(gameCompleted());
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.bobs27,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 15,
+      );
+
+      // Final busted score is -3; the projection now folds it into
+      // Best/Avg instead of returning null.
+      expect(stats.bobs27AvgScore, -3.0,
+          reason: 'busted final score is the lone data point');
+      expect(stats.bobs27BestScore, -3,
+          reason: 'best across drills is the only drill — busted but real');
+      expect(stats.bobs27CompletionRate, 0.0,
+          reason: 'no drill ended above zero, so completion rate is 0%');
     });
   });
 
