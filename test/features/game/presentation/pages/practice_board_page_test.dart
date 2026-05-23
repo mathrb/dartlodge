@@ -357,6 +357,42 @@ void main() {
     expect(find.textContaining("'S TURN"), findsNothing);
   });
 
+  testWidgets(
+      '6e. Catch 40 NEXT TARGET enables after a 2-dart checkout (#291)',
+      (tester) async {
+    // After a 2-dart Catch 40 checkout the engine leaves
+    // `catch40TargetRemaining: 0`, `turnActive: false`, `dartsThrownInTurn: 2`.
+    // The bottom bar must enable NEXT TARGET so the player can advance —
+    // they shouldn't have to throw a phantom MISS first (#291 bug A).
+    // PR #264 fixed the engine half (no more MISS-fill bust on checkout);
+    // this test locks in the widget half.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.catch40,
+      competitors: [
+        _practiceCompetitor(dartThrows: const ['T7', 'D20']),
+      ],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 2,
+      isComplete: false,
+      turnActive: false,
+      catch40TargetRemaining: 0,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'NEXT TARGET'),
+    );
+    expect(btn.onPressed, isNotNull,
+        reason: 'NEXT TARGET must be enabled after a 2-dart checkout');
+  });
+
   // ── 7. DartboardHighlightWidget present with Expanded ancestor ────────────
 
   testWidgets('7. DartboardHighlightWidget is present with Expanded ancestor',
