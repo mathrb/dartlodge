@@ -72,16 +72,41 @@ class GetGameResultUseCase {
     final finalState =
         replayEvents(initial: initial, events: events, engine: engine);
 
-    final subject = _subjectCompetitor(finalState);
-    if (subject == null) return null;
+    if (finalState.competitors.isEmpty) return null;
 
     return switch (game.gameType) {
       GameType.aroundTheClock => GameResult.aroundTheClock(
-          competitorName: subject.name,
-          turnsToComplete: subject.practiceRound,
-          totalDarts: _countDarts(events, subject.competitorId),
+          competitors: _buildAtcCompetitors(finalState, events),
+          winnerCompetitorId: finalState.winnerCompetitorId,
           doublesOnly: finalState.aroundTheClockVariant == 'doublesOnly',
         ),
+      GameType.shanghai => GameResult.shanghai(
+          competitors: _buildShanghaiCompetitors(
+            initial: initial,
+            finalState: finalState,
+            events: events,
+            engine: engine,
+          ),
+          winnerCompetitorId: finalState.winnerCompetitorId,
+          totalRounds: finalState.shanghaiTotalRounds,
+        ),
+      // Solo drills (maxPlayers == 1): keep the single-subject result shape.
+      GameType.catch40 ||
+      GameType.bobs27 ||
+      GameType.checkoutPractice =>
+        _buildSoloResult(game.gameType, finalState, events),
+      _ => null,
+    };
+  }
+
+  GameResult? _buildSoloResult(
+    GameType gameType,
+    GameState finalState,
+    List<GameEvent> events,
+  ) {
+    final subject = _subjectCompetitor(finalState);
+    if (subject == null) return null;
+    return switch (gameType) {
       GameType.catch40 => GameResult.catch40(
           competitorName: subject.name,
           score: subject.score,
@@ -103,23 +128,114 @@ class GetGameResultUseCase {
           fromScore: subject.startingScore,
           remainingScore: subject.score,
         ),
-      GameType.shanghai => GameResult.shanghai(
-          competitorName: subject.name,
-          totalScore: subject.score,
-          shanghaiBonuses: subject.practiceSuccesses,
-          bestRound: _bestRoundScore(
-            initial: initial,
-            events: events,
-            engine: engine,
-            competitorId: subject.competitorId,
-          ),
-          // practiceRound stops incrementing once the cap is hit; clamp
-          // for the Shanghai-instant-win case where the game ends mid-round.
-          roundsPlayed:
-              math.min(subject.practiceRound, finalState.shanghaiTotalRounds),
-        ),
       _ => null,
     };
+  }
+
+  /// ATC per-competitor results, ordered for the podium: finishers first
+  /// (fewer turns wins ties), then non-finishers ranked by closeness to
+  /// the variant's goal.
+  ///
+  /// The ATC engine flips `CompetitorState.isComplete = true` when a player
+  /// hits the final target but does NOT advance `currentTarget` past the
+  /// end of the range — so the per-competitor `isComplete` flag is the
+  /// authoritative "finished" signal. `lastTargetHit` is derived from the
+  /// next target and the variant direction.
+  List<AtcCompetitorResult> _buildAtcCompetitors(
+    GameState finalState,
+    List<GameEvent> events,
+  ) {
+    final isReverse = finalState.aroundTheClockVariant == 'reverse';
+    final results = finalState.competitors.map((c) {
+      final finished = c.isComplete;
+      final nextTarget = c.currentTarget;
+      final int lastHit;
+      if (finished) {
+        // Engine doesn't push `currentTarget` past the final value; the
+        // final target IS the last hit.
+        lastHit = isReverse ? 1 : 20;
+      } else if (nextTarget == null) {
+        // No ATC state set yet (defensive — should never happen for ATC).
+        // Use 0 in both directions so the UI shows "nothing hit" rather
+        // than a sentinel like 21.
+        lastHit = 0;
+      } else {
+        // Standard: lastHit = next - 1 (0 if no hits yet).
+        // Reverse: lastHit = next + 1, except when nothing has been hit
+        // (nextTarget == 20, the starting target) — clamp to 0 so the UI
+        // shows "nothing hit" rather than 21, which isn't a valid ATC
+        // target.
+        if (isReverse) {
+          lastHit = nextTarget == 20 ? 0 : nextTarget + 1;
+        } else {
+          lastHit = nextTarget - 1;
+        }
+      }
+      return AtcCompetitorResult(
+        competitorId: c.competitorId,
+        competitorName: c.name,
+        turnsCompleted: c.practiceRound,
+        totalDarts: _countDarts(events, c.competitorId),
+        lastTargetHit: lastHit,
+        finished: finished,
+      );
+    }).toList();
+
+    // Order: finished above unfinished; ties broken by fewer turns / fewer
+    // darts (finished group). Non-finishers ranked by hit count — derive
+    // it from lastTargetHit (standard: count == lastHit; reverse: count
+    // == 21 - lastHit when > 0). 0 always means "no hits" and sorts last.
+    int hitCount(AtcCompetitorResult r) {
+      if (r.lastTargetHit == 0) return 0;
+      return isReverse ? 21 - r.lastTargetHit : r.lastTargetHit;
+    }
+    results.sort((a, b) {
+      if (a.finished != b.finished) return a.finished ? -1 : 1;
+      if (a.finished) {
+        final byTurns = a.turnsCompleted.compareTo(b.turnsCompleted);
+        if (byTurns != 0) return byTurns;
+        return a.totalDarts.compareTo(b.totalDarts);
+      }
+      return hitCount(b).compareTo(hitCount(a));
+    });
+    return results;
+  }
+
+  /// Shanghai per-competitor results, ordered for the podium by
+  /// `(totalScore desc, shanghaiBonuses desc, bestRound desc)`.
+  List<ShanghaiCompetitorResult> _buildShanghaiCompetitors({
+    required GameState initial,
+    required GameState finalState,
+    required List<GameEvent> events,
+    required GameEngine engine,
+  }) {
+    final results = finalState.competitors.map((c) {
+      return ShanghaiCompetitorResult(
+        competitorId: c.competitorId,
+        competitorName: c.name,
+        totalScore: c.score,
+        shanghaiBonuses: c.practiceSuccesses,
+        bestRound: _bestRoundScore(
+          initial: initial,
+          events: events,
+          engine: engine,
+          competitorId: c.competitorId,
+        ),
+        // practiceRound stops incrementing once the cap is hit; clamp for
+        // the Shanghai-instant-win case where the game ends mid-round.
+        roundsPlayed:
+            math.min(c.practiceRound, finalState.shanghaiTotalRounds),
+      );
+    }).toList();
+
+    results.sort((a, b) {
+      final byScore = b.totalScore.compareTo(a.totalScore);
+      if (byScore != 0) return byScore;
+      final byShanghais = b.shanghaiBonuses.compareTo(a.shanghaiBonuses);
+      if (byShanghais != 0) return byShanghais;
+      return b.bestRound.compareTo(a.bestRound);
+    });
+    return results;
   }
 
   GameEngine? _engineFor(GameType type) => switch (type) {

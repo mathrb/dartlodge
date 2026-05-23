@@ -13,15 +13,22 @@ Widget _wrap(Widget child) => MaterialApp(
     );
 
 void main() {
-  testWidgets('ShanghaiSummaryWidget shows hero score + all four rows',
+  testWidgets('ShanghaiSummaryWidget (solo) shows hero score + all four rows',
       (tester) async {
     await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
       result: ShanghaiResult(
-        competitorName: 'Alice',
-        totalScore: 248,
-        shanghaiBonuses: 2,
-        bestRound: 80,
-        roundsPlayed: 7,
+        competitors: [
+          ShanghaiCompetitorResult(
+            competitorId: 'c1',
+            competitorName: 'Alice',
+            totalScore: 248,
+            shanghaiBonuses: 2,
+            bestRound: 80,
+            roundsPlayed: 7,
+          ),
+        ],
+        winnerCompetitorId: null,
+        totalRounds: 7,
       ),
     )));
 
@@ -45,16 +52,60 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
       result: ShanghaiResult(
-        competitorName: 'Bob',
-        totalScore: 50,
-        shanghaiBonuses: 0,
-        bestRound: 20,
-        roundsPlayed: 7,
+        competitors: [
+          ShanghaiCompetitorResult(
+            competitorId: 'c1',
+            competitorName: 'Bob',
+            totalScore: 50,
+            shanghaiBonuses: 0,
+            bestRound: 20,
+            roundsPlayed: 7,
+          ),
+        ],
+        winnerCompetitorId: null,
+        totalRounds: 7,
       ),
     )));
 
     expect(find.text('BOB'), findsOneWidget);
     expect(find.text('SHANGHAIS'), findsOneWidget);
     expect(find.text('0'), findsWidgets);
+  });
+
+  testWidgets(
+      'ShanghaiSummaryWidget multi-player shows winner hero + per-player breakdown',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
+      result: ShanghaiResult(
+        competitors: [
+          ShanghaiCompetitorResult(
+            competitorId: 'c1',
+            competitorName: 'Alice',
+            totalScore: 110,
+            shanghaiBonuses: 1,
+            bestRound: 60,
+            roundsPlayed: 7,
+          ),
+          ShanghaiCompetitorResult(
+            competitorId: 'c2',
+            competitorName: 'Bob',
+            totalScore: 65,
+            shanghaiBonuses: 0,
+            bestRound: 30,
+            roundsPlayed: 7,
+          ),
+        ],
+        winnerCompetitorId: 'c1',
+        totalRounds: 7,
+      ),
+    )));
+
+    // Hero shows the winner.
+    expect(find.text('ALICE'), findsOneWidget);
+    expect(find.text('WINNER'), findsOneWidget);
+    // Bob is surfaced as a column too — not hidden because he didn't win.
+    expect(find.text('Bob'), findsOneWidget);
+    // Per-player score row visible.
+    expect(find.text('30'), findsOneWidget);
   });
 }
