@@ -184,6 +184,65 @@ void main() {
     expect(engine.snapshot()['bestLegPpr'], bestBefore);
   });
 
+  // ── Regression: issue #280 ───────────────────────────────────────────────
+  // Abandoned X01 games terminate with GameCompleted (winner=null) and NO
+  // LegCompleted. ProjectionRunner fires reset(match) on GameCompleted, so
+  // the projection must clear its per-leg accumulators on match scope too —
+  // otherwise the abandoned game's darts bleed into the next won game and
+  // bestLegPpr ends up reporting a multi-game weighted average instead of
+  // the actual best leg PPR.
+  test('R280 — reset(match) clears per-leg counters so abandoned darts '
+      "don't bleed into the next won leg's bestLegPpr", () {
+    engine.init(_makeContext());
+
+    // Game 1 — abandoned: 6 misses (PPR 0 across 6 darts), no LegCompleted.
+    // ProjectionRunner fires reset(match) when GameCompleted arrives.
+    int seq = 1;
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p1', 'starting_score': 301},
+        seq: seq++));
+    for (int i = 0; i < 3; i++) {
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'segment': 0, 'multiplier': 0},
+          seq: seq++));
+    }
+    engine.apply(_makeEvent(
+        'TurnEnded', {'player_id': 'p1', 'reason': 'normal'},
+        seq: seq++));
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p1', 'starting_score': 301},
+        seq: seq++));
+    for (int i = 0; i < 3; i++) {
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'segment': 0, 'multiplier': 0},
+          seq: seq++));
+    }
+    engine.apply(_makeEvent(
+        'TurnEnded', {'player_id': 'p1', 'reason': 'normal'},
+        seq: seq++));
+    engine.reset(ProjectionScope.match);
+
+    // Game 2 — won in 3 darts of T20 (180 scored) → leg PPR = 180/3*3 = 180.0.
+    // Pre-fix (no reset on match): _legScore=180 over _legDartsCount=9 →
+    // legPpr=60.0 (the bleeding bug). Post-fix: 180.0.
+    seq = 1; // local sequence restarts per game
+    engine.apply(_makeEvent('TurnStarted',
+        {'player_id': 'p1', 'starting_score': 180},
+        seq: seq++, gameId: 'game-2'));
+    for (int i = 0; i < 3; i++) {
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'segment': 20, 'multiplier': 3},
+          seq: seq++, gameId: 'game-2'));
+    }
+    engine.apply(_makeEvent(
+        'TurnEnded', {'player_id': 'p1', 'reason': 'normal'},
+        seq: seq++, gameId: 'game-2'));
+    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'},
+        seq: seq++, gameId: 'game-2'));
+
+    expect(engine.snapshot()['bestLegPpr'], closeTo(180.0, 0.001));
+  });
+
   // ── Category E ─────────────────────────────────────────────────────────────
 
   test('E1 — replay from zero yields same result', () {

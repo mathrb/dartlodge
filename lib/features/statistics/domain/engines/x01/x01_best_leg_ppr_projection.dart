@@ -105,7 +105,13 @@ class X01BestLegPprProjection extends ProjectionEngine {
 
   @override
   void reset(ProjectionScope scope) {
-    if (scope == ProjectionScope.leg) {
+    // Reset on both leg and match boundaries: abandoned X01 games end with
+    // GameCompleted (match scope) but no LegCompleted (leg scope). Without
+    // the match-scope reset, an abandoned game's per-turn dart scores stay
+    // accumulated in _legScore/_legDartsCount and bleed into the next game's
+    // legPpr — yielding a "best leg PPR" that's actually a multi-game
+    // weighted average. See #280.
+    if (scope == ProjectionScope.leg || scope == ProjectionScope.match) {
       _resetLeg();
     }
   }

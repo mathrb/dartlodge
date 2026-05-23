@@ -6,6 +6,7 @@ import '../../domain/entities/game_event.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_game_state.dart';
+import '../../../../core/error/repository_exception.dart';
 import '../../../../core/persistence/database_provider.dart';
 import 'action_serializer.dart';
 import 'game_replay_provider.dart';
@@ -342,5 +343,43 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
 
   void dismissGameModal() {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
+  }
+
+  /// Abandons the active X01 game from the End Game dialog.
+  ///
+  /// Emits `GameCompleted(winner=null)` and atomically marks the game complete
+  /// via `appendEventsAndCompleteGame` — mirrors the cricket equivalent added
+  /// for #252 / PR #262. Without this, abandoned X01 games persisted their
+  /// per-leg events with no terminating LegCompleted/GameCompleted, so the
+  /// stats projection runner never fired a leg or match reset at the game
+  /// boundary and the next won game's bestLegPpr accumulated darts from the
+  /// abandoned game (#280).
+  Future<void> endGame() => _serializer.run(_endGameImpl);
+
+  Future<void> _endGameImpl() async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+    try {
+      final nextSeq = await ref
+              .read(gameEventRepositoryProvider)
+              .getLatestSequence(gs.gameId) +
+          1;
+      final gameCompleted = buildGameCompletedEvent(
+        gameId: gs.gameId,
+        winnerCompetitorId: null,
+        localSequence: nextSeq,
+      );
+      await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
+            events: [gameCompleted],
+            gameId: gs.gameId,
+            winnerCompetitorId: null,
+            endTime: DateTime.now(),
+          );
+    } on GameAlreadyCompleteException {
+      // Idempotent — another path (e.g. concurrent navigation) already
+      // abandoned the game.
+    }
   }
 }
