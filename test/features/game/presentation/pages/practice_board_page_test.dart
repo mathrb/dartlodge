@@ -358,6 +358,65 @@ void main() {
   });
 
   testWidgets(
+      '6f. Shanghai NEXT ROUND is disabled when 0 darts have been thrown (#289)',
+      (tester) async {
+    // Tapping NEXT ROUND with no darts in the turn silently skipped a
+    // Shanghai round (the round number = the target for that round).
+    // Guard the button until ≥1 dart is registered.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.shanghai,
+      competitors: [_practiceCompetitor()],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 0,
+      isComplete: false,
+      turnActive: true,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'NEXT ROUND'),
+    );
+    expect(btn.onPressed, isNull,
+        reason: '0-dart NEXT ROUND tap would silently skip the round');
+  });
+
+  testWidgets(
+      '6g. Shanghai NEXT ROUND enables once a dart is thrown',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.shanghai,
+      competitors: [
+        _practiceCompetitor(dartThrows: const ['T1']),
+      ],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 1,
+      isComplete: false,
+      turnActive: true,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'NEXT ROUND'),
+    );
+    expect(btn.onPressed, isNotNull,
+        reason: 'NEXT ROUND must enable once the player has committed a dart');
+  });
+
+  testWidgets(
       '6e. Catch 40 NEXT TARGET enables after a 2-dart checkout (#291)',
       (tester) async {
     // After a 2-dart Catch 40 checkout the engine leaves

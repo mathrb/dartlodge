@@ -283,7 +283,13 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 canUndo: !gs.isComplete &&
                     (gs.dartsThrownInTurn > 0 ||
                         gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
-                showNextRound: !gs.isComplete,
+                // Shanghai rounds are tied to the round-number target —
+                // tapping NEXT ROUND with 0 darts thrown silently skips
+                // that round, which reads as a mis-tap rather than an
+                // intentional pass. Require at least one dart before
+                // advancing (#289).
+                showNextRound: !gs.isComplete &&
+                    !(isShanghai && gs.dartsThrownInTurn == 0),
                 showNextTarget: isCatch40 &&
                     (gs.catch40TargetRemaining == 0 ||
                         gs.catch40DartsOnTarget >= 6) &&
