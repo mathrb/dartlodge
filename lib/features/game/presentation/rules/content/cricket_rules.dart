@@ -138,7 +138,7 @@ const cricketCrazyRules = GameRules(
         'Each turn, every still-open slot shows a fresh number from 1 to 20, drawn at random when your turn starts. The Bull is always one of the seven targets and never re-rolls.',
         'You throw three darts per turn. A single is one hit, a double is two, a triple is three. The outer bull counts as one hit, the inner bull as two.',
         'Hit a number three times to close it — and the moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.',
-        'If a number you partially hit (one or two marks) rotates away on the next turn, your partial marks on it are wiped. A reappearing number starts fresh at 0.',
+        'Partial hits (one or two marks) reset every roll. Only closed numbers (and the Bull) keep their marks across turns — even if the same number happens to roll again, you start fresh at 0 marks on it next turn.',
         'Once you close every active number plus Bull and you are ahead on points (per the scoring rules), you win the leg.',
       ],
     ),
@@ -152,7 +152,7 @@ const cricketCrazyRules = GameRules(
       heading: 'Tips',
       bullets: [
         'Locking a number is doubly valuable: it sticks on the board AND opponents still have to close it. Focus high-mark darts on numbers you can close quickly.',
-        'Spreading hits across multiple open numbers is risky — partial marks are wiped on rotate. Better to commit to closing one number before moving on.',
+        'Spreading hits across multiple open numbers is risky — partial marks are wiped on every roll. Better to commit to closing one number in the same turn before moving on.',
       ],
     ),
   ],

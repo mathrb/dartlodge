@@ -99,13 +99,20 @@ Fixed at 6 + Bull (mirrors cricket). Configurable count is out of scope (YAGNI).
 - **Per-turn roll:** every turn, each *non-locked* slot shows a fresh
   uniformly-random number from 1–20 (distinct within the board, excluding locked
   numbers). Bull is a fixed door, never rolled.
-- **Marks accrue per number** (not per slot).
+- **Marks accrue per slot** within a turn. Each turn's roll refreshes every
+  non-locked slot, so partial marks (1–2) are wiped on every roll regardless
+  of whether the same value happens to come up again.
 - **Global lock on close:** the instant *any* player reaches 3 marks on a number,
   that number is permanently locked onto the board (never re-randomized again).
-  Other players still must close it individually to win.
-- **Discard on rotate:** when a non-locked number leaves the active set at the next
-  turn's roll, all players' partial marks (1–2) on it are wiped. A number that
-  reappears later starts fresh at 0.
+  Other players still must close it individually to win. Locked numbers (and Bull)
+  are the **only** carriers of marks across turn boundaries.
+- **Wipe on every roll:** every `CrazyTargetsRolled` event wipes all non-locked,
+  non-Bull marks across all competitors. Whether the number stayed in the new
+  active set is irrelevant — a fresh roll means a fresh slot. A reappearing
+  number always starts at 0. (Earlier drafts of this spec used a narrower
+  "discard on rotate" rule that only wiped numbers that left the active set;
+  that was the "marks accrue per number" interpretation and is no longer the
+  intended behaviour — see the engine comment on `_applyCrazyTargetsRolled`.)
 - **Win condition:** identical to cricket — a competitor closes all 6 active
   numbers + Bull and satisfies the scoring condition for `cricketScoring`. The win
   evaluation logic is unchanged; it just runs over a dynamic number set.
@@ -137,7 +144,9 @@ Bull). Every site that used them (`_isAllClosed`, `_checkAllClosed`,
 state instead. New `apply()` branches:
 - `CricketTargetsAssigned` → set `cricketTargets` from payload.
 - `CrazyTargetsRolled` → for each non-locked slot, set its number from payload;
-  **discard** marks on any number that just left the active set and isn't locked.
+  **wipe** marks on every non-locked, non-Bull number across all competitors.
+  The new active set is irrelevant to the wipe — only `cricketLockedTargets`
+  (+ Bull) carry marks across turn boundaries.
 - On any `DartThrown` in `crazy` that brings a number to 3 marks → add it to
   `cricketLockedTargets`.
 
@@ -159,7 +168,7 @@ player's Standard Cricket career numbers.
 - **Per-game summary.** `GameStats.gameType` stays load-bearing (MPR vs PPR
   branch). Add a target-mode label so the post-game summary reads "Random Cricket"
   / "Crazy Cricket" vs "Cricket"; rows/labels otherwise unchanged.
-- **Crazy projection caveat (important).** With discard-on-rotate, a competitor's
+- **Crazy projection caveat (important).** With wipe-on-every-roll, a competitor's
   cumulative marks can *decrease* between turns. Crazy-mode mark/MPR projections
   must count marks from the `DartThrown` events *within* each turn (turn-scoped,
   additive), never from cross-turn board-state diffs. Added to the projection test
@@ -184,8 +193,8 @@ Largest UI change; called out as its own scope in Issue 3.
 
 **Spec docs to update (spec-first — source of truth):**
 - `docs/games/cricket.transitions.md` — target modes; `CricketTargetsAssigned`;
-  `CrazyTargetsRolled`; global lock-on-close; discard-on-rotate; leg-scope rules;
-  Table N metric over the dynamic target+locked set.
+  `CrazyTargetsRolled`; global lock-on-close; wipe-on-every-roll; leg-scope
+  rules; Table N metric over the dynamic target+locked set.
 - `docs/GAME-EVENT-SPECIFICATIONS.md` — the two new events + payload keys.
 - `docs/STATE_MANAGEMENT.md` — new `GameState` fields.
 - `docs/DATA.md` — config `scoring`/`targetMode` + legacy `variant` mapping.
@@ -221,10 +230,10 @@ set; `random` stats cohort + post-game label; tests + projection matrix cases.
 ### Issue 3 — Crazy Cricket (`targetMode: crazy`)
 
 `CrazyTargetsRolled` per-turn event; turn-start RNG for open slots; engine: apply
-roll, discard-on-rotate, global lock-on-close, leg-reset of the locked set; Table N
-metric over the dynamic+locked set; dynamic board UI + locked affordance; `crazy`
-stats cohort + turn-scoped-marks caveat; tests (discard / lock / replay / undo) +
-projection matrix. *Largest, riskiest, last.*
+roll, wipe-on-every-roll, global lock-on-close, leg-reset of the locked set;
+Table N metric over the dynamic+locked set; dynamic board UI + locked affordance;
+`crazy` stats cohort + turn-scoped-marks caveat; tests (wipe / lock / replay /
+undo) + projection matrix. *Largest, riskiest, last.*
 
 **Labeling.** These are features (`enhancement`), not bugs — tracked under the
 epic without forcing P0/P1/P2 (those are bug/hygiene-oriented in this repo).
@@ -239,7 +248,7 @@ epic without forcing P0/P1/P2 (those are bug/hygiene-oriented in this repo).
 | Variant 2 name | Crazy Cricket (house variant; no canonical source) |
 | Scoring × targets relationship | Orthogonal axes |
 | Crazy lock trigger | First player to close a number → global permanent lock |
-| Crazy partial marks on rotate | Discarded |
+| Crazy partial marks on roll | Wiped on every roll (only locked numbers + Bull keep marks across turns) |
 | Crazy roll cadence | Every turn (not every round) |
 | Crazy target pool | Spans all 1–20 (not a pre-picked set of 6) |
 | Crazy structure | Fixed 6 slots + Bull; random faces each turn |
