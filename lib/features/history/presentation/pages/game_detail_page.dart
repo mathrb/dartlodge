@@ -60,6 +60,13 @@ class GameDetailPage extends ConsumerWidget {
         return 0;
       });
 
+    // Leg Breakdown is only meaningful for the game-stats-backed types
+    // (X01, Cricket, Count-Up) that play in legs. Practice drills and
+    // Shanghai are scored across one continuous session — rendering an
+    // empty "Leg Breakdown / No legs completed" section under the per-type
+    // chrome is dead weight (#294).
+    final showLegBreakdown = isGameStatsBacked(game.gameType.name);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -68,20 +75,22 @@ class GameDetailPage extends ConsumerWidget {
           _buildMatchHeader(context, game, sortedCompetitors, winner, theme),
           const SizedBox(height: 16),
           _StatsSection(gameId: gameId, gameStats: detail.gameStats, game: game),
-          const SizedBox(height: 16),
-          Text(
-            'Leg Breakdown',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+          if (showLegBreakdown) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Leg Breakdown',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          LegBreakdownTableWidget(
-            legs: detail.legStats,
-            game: game,
-            competitors: detail.competitors,
-            events: detail.events,
-          ),
+            const SizedBox(height: 8),
+            LegBreakdownTableWidget(
+              legs: detail.legStats,
+              game: game,
+              competitors: detail.competitors,
+              events: detail.events,
+            ),
+          ],
         ],
       ),
     );
