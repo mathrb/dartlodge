@@ -1631,9 +1631,14 @@ void main() {
       expect(result.state.cricketTargets, [2, 7, 11, 14, 18, 20]);
     });
 
-    test('discards marks on numbers that rotated out (and are not locked)',
+    test(
+        'wipes ALL non-locked, non-Bull marks on every roll — even when '
+        'the same number happens to roll again into the new set',
         () {
-      // Before: targets = [2,7,11,14,18,20], c1 has 1 mark on 7 (partial).
+      // Before: targets = [2,7,11,14,18,20]. c1 has 1 mark on 7 and 2 on
+      // 14 (both partial, both non-locked). The new roll keeps 14 in the
+      // active set but drops 7. Both marks are wiped because the roll
+      // refreshes every non-locked slot (#crazy-wipe-on-roll).
       final state = _makeState(
         cricketTargetMode: 'crazy',
         cricketTargets: const [2, 7, 11, 14, 18, 20],
@@ -1654,7 +1659,6 @@ void main() {
           ),
         ],
       );
-      // New roll keeps 14 but drops 7.
       final event = _event(
         type: 'CrazyTargetsRolled',
         payload: {
@@ -1666,11 +1670,47 @@ void main() {
 
       final result = engine.apply(state, event);
 
-      // 7 rotated out → marks wiped for everyone
+      // 7 rotated out → wiped for everyone.
       expect(result.state.competitors[0].marksPerNumber['7'], isNull);
       expect(result.state.competitors[1].marksPerNumber['7'], isNull);
-      // 14 stayed → marks preserved
-      expect(result.state.competitors[0].marksPerNumber['14'], 2);
+      // 14 stayed in the active set BUT was not locked → marks wiped too.
+      expect(result.state.competitors[0].marksPerNumber['14'], isNull,
+          reason:
+              'Non-locked slot is fresh each turn even if the same number rolls');
+    });
+
+    test(
+        'never wipes Bull marks even when Bull is partial (Bull is a '
+        'permanent door, not a rolled slot)',
+        () {
+      final state = _makeState(
+        cricketTargetMode: 'crazy',
+        cricketTargets: const [2, 7, 11, 14, 18, 20],
+        competitors: [
+          const CompetitorState(
+            competitorId: 'c1',
+            name: 'Alice',
+            playerIds: ['p1'],
+            score: 0,
+            marksPerNumber: {'Bull': 2, '7': 1},
+          ),
+        ],
+      );
+      final event = _event(
+        type: 'CrazyTargetsRolled',
+        payload: {
+          'competitor_id': 'c1',
+          'round': 2,
+          'open_targets': [3, 5, 8, 11, 14, 18],
+        },
+      );
+
+      final result = engine.apply(state, event);
+
+      expect(result.state.competitors[0].marksPerNumber['Bull'], 2,
+          reason: 'Bull marks survive every roll, even partial.');
+      expect(result.state.competitors[0].marksPerNumber['7'], isNull,
+          reason: 'Non-locked, non-Bull marks always wipe on roll.');
     });
 
     test('does NOT discard marks on locked numbers when they rotate', () {

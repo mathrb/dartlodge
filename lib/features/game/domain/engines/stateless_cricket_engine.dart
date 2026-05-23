@@ -60,37 +60,41 @@ class StatelessCricketEngine implements GameEngine {
 
   /// Apply `CrazyTargetsRolled` — emitted right after every `TurnStarted` for
   /// `targetMode: crazy`. Payload carries the active number set for the new
-  /// turn (locked numbers included, Bull implicit). Numbers that just left
-  /// the active set and aren't locked have their per-competitor marks wiped
-  /// ("discard on rotate", design §4): cumulative marks can therefore
-  /// *decrease* across turns, which is why mark/MPR projections must count
-  /// marks from `DartThrown` payloads within the turn rather than from
-  /// cross-turn state diffs (statistics architecture §7.3).
+  /// turn (locked numbers included, Bull implicit).
+  ///
+  /// Wipe-on-every-roll: every non-locked number's per-competitor marks are
+  /// wiped at the roll, regardless of whether the same value happens to roll
+  /// again into the new active set. The slot is "fresh" each turn — only a
+  /// number that's been closed (and is in `cricketLockedTargets`) carries
+  /// its 3 marks forward. A non-closed number that happens to re-roll into
+  /// the new set starts the next turn at 0.
+  ///
+  /// Bull (`'Bull'` key in `marksPerNumber`) is never wiped — Bull is a
+  /// permanent door that's never randomised.
+  ///
+  /// Cumulative marks can therefore *decrease* across turns, which is why
+  /// mark/MPR projections count marks from `DartThrown` payloads within the
+  /// turn rather than from cross-turn state diffs (statistics architecture
+  /// §7.3).
   GameState _applyCrazyTargetsRolled(GameState state, GameEvent event) {
     final rawTargets = event.payload['open_targets'] as List<dynamic>;
     final newTargets = rawTargets.map((t) => (t as num).toInt()).toList();
-    final newSet = newTargets.toSet();
 
-    // Discard on rotate: any number that was active last turn but is not
-    // in the new set and not globally locked has its per-competitor marks
-    // wiped (a fresh appearance later starts at 0).
-    final discarded = <int>{};
-    for (final n in state.cricketTargets) {
-      if (!newSet.contains(n) && !state.cricketLockedTargets.contains(n)) {
-        discarded.add(n);
-      }
-    }
-
-    List<CompetitorState> updatedCompetitors = state.competitors;
-    if (discarded.isNotEmpty) {
-      updatedCompetitors = state.competitors.map((c) {
-        final next = Map<String, int>.from(c.marksPerNumber);
-        for (final n in discarded) {
-          next.remove(n.toString());
-        }
-        return c.copyWith(marksPerNumber: next);
-      }).toList();
-    }
+    // Wipe everything that isn't (a) globally locked or (b) Bull. The new
+    // active set is irrelevant here — fresh roll means fresh slot.
+    final lockedKeys = <String>{
+      for (final n in state.cricketLockedTargets) n.toString(),
+      'Bull',
+    };
+    final updatedCompetitors = state.competitors.map((c) {
+      final next = <String, int>{
+        for (final entry in c.marksPerNumber.entries)
+          if (lockedKeys.contains(entry.key)) entry.key: entry.value,
+      };
+      return next.length == c.marksPerNumber.length
+          ? c
+          : c.copyWith(marksPerNumber: next);
+    }).toList();
 
     return state.copyWith(
       cricketTargets: newTargets,
