@@ -52,9 +52,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   @override
   Widget build(BuildContext context) {
     // Listen for natural completion transitions and navigate to the post-game
-    // summary — mirroring x01/cricket boards. Manual "End Drill" sets
-    // `wasEndedManually: true` on the practice state; the menu handler then
-    // routes home directly, and this listener no-ops for that case.
+    // summary — mirroring x01/cricket boards. Manual "End Drill" also routes
+    // to the post-game summary (#289/#291), but it does so explicitly from
+    // the menu handler below: `endDrill()` sets `wasEndedManually: true` and
+    // this listener no-ops for that case so the two navigations don't race.
     //
     // Shanghai-on-final-dart: when the inline `_ShanghaiBonus` banner is
     // still animating, delay the nav by 1.3s so the user sees the banner
@@ -192,7 +193,17 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     switch (action) {
                       case _DrillAction.endDrill:
                         await notifier.endDrill();
-                        if (context.mounted) context.go(GameRoutes.home);
+                        // After endDrill() the game is is_complete=true,
+                        // so route to the post-game summary the same way
+                        // a natural completion does — gives the user the
+                        // hero card + per-player breakdown (and, for
+                        // multi-player ATC/Shanghai, the podium added in
+                        // #279/#296). Previously navigated to home, which
+                        // dropped the drill on the floor with no feedback
+                        // (#289, #291).
+                        if (context.mounted) {
+                          context.go(GameRoutes.postGame(widget.gameId));
+                        }
                     }
                   },
                   itemBuilder: (_) => [

@@ -624,15 +624,17 @@ void main() {
     expect(gridInInputButtons, findsOneWidget);
   });
 
-  // ── 20. Manual "End Drill" navigates home, NOT post-game ─────────────────
+  // ── 20. Manual "End Drill" navigates to the post-game summary ────────────
   //
-  // Distinguishing natural completion (→ post-game) from manual End Drill
-  // (→ home) is the central invariant of the navigation rework (#230). The
-  // notifier's `endDrill()` sets `wasEndedManually: true`; the completion
-  // listener no-ops for that case, and the menu handler does the
-  // `context.go(home)` directly.
+  // Earlier behaviour (#230) routed manual End Drill to home so the
+  // post-game summary was reserved for natural completions; the user
+  // feedback in #289 / #291 reverses that — the drill is over either way,
+  // so the player gets the hero card + per-player breakdown either way.
+  // The completion listener still no-ops on `wasEndedManually: true` so
+  // the menu handler's `context.go(postGame)` doesn't race with the
+  // listener.
 
-  testWidgets('20. End Drill menu navigates home and skips post-game',
+  testWidgets('20. End Drill menu navigates to post-game summary (#289, #291)',
       (tester) async {
     final container = ProviderContainer(
       overrides: [
@@ -663,9 +665,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(notifier.endDrillCalls, 1);
-    expect(find.text('home'), findsOneWidget);
-    expect(find.text('post-game:game-1'), findsNothing,
-        reason: 'manual end-drill must not route to post-game');
+    expect(find.text('post-game:game-1'), findsOneWidget,
+        reason: 'manual end-drill now routes to the post-game summary');
+    expect(find.text('home'), findsNothing,
+        reason: 'no longer dropping the drill on the floor at home');
   });
 
   // ── 21. Manual completion with wasEndedManually skips post-game nav ──────
