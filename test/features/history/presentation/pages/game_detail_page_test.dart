@@ -215,6 +215,77 @@ void main() {
       expect(find.byType(GameSummarySectionWidget), findsNothing);
       expect(find.text('SCORE'), findsOneWidget);
       expect(find.text('TARGETS'), findsOneWidget);
+      // Practice drills don't play in legs — the "Leg Breakdown / No legs
+      // completed" section must be hidden (#294).
+      expect(find.text('Leg Breakdown'), findsNothing);
+    });
+
+    testWidgets(
+        "Practice drills don't render the empty 'Leg Breakdown' footer (#294)",
+        (tester) async {
+      for (final type in const [
+        GameType.aroundTheClock,
+        GameType.bobs27,
+        GameType.catch40,
+        GameType.checkoutPractice,
+        GameType.shanghai,
+      ]) {
+        final result = switch (type) {
+          GameType.aroundTheClock => const GameResult.aroundTheClock(
+              competitors: [
+                AtcCompetitorResult(
+                  competitorId: 'c1',
+                  competitorName: 'Alice',
+                  turnsCompleted: 12,
+                  totalDarts: 35,
+                  lastTargetHit: 20,
+                  finished: true,
+                ),
+              ],
+              winnerCompetitorId: null,
+              doublesOnly: false,
+            ),
+          GameType.bobs27 => const GameResult.bobs27(
+              competitorName: 'Alice',
+              finalScore: 87,
+              roundReached: 20,
+              bustedToZero: false,
+            ),
+          GameType.catch40 => const GameResult.catch40(
+              competitorName: 'Alice',
+              score: 80,
+              targetsCleared: 30,
+            ),
+          GameType.checkoutPractice => const GameResult.checkoutPractice(
+              competitorName: 'Alice',
+              checkedOut: true,
+              dartsThrown: 9,
+              fromScore: 170,
+              remainingScore: 0,
+            ),
+          GameType.shanghai => const GameResult.shanghai(
+              competitors: [
+                ShanghaiCompetitorResult(
+                  competitorId: 'c1',
+                  competitorName: 'Alice',
+                  totalScore: 120,
+                  shanghaiBonuses: 2,
+                  bestRound: 60,
+                  roundsPlayed: 7,
+                ),
+              ],
+              winnerCompetitorId: null,
+              totalRounds: 7,
+            ),
+          _ => throw StateError('unreachable: $type'),
+        };
+
+        await tester.pumpWidget(_pump(type: type, gameResult: result));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Leg Breakdown'), findsNothing,
+            reason: '$type should not show Leg Breakdown section');
+      }
     });
 
     testWidgets('Checkout Practice renders PracticeSummaryWidget',
