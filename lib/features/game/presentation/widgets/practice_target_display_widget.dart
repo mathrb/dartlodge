@@ -43,7 +43,11 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   String get _secondaryMetric {
     return switch (gameType) {
       GameType.aroundTheClock =>
-        'Number $practiceRound',
+        // The big number above already IS the target — labelling this
+        // counter "Number" looked like a stale duplicate of the target.
+        // It's actually the round (full rotation of all competitors), so
+        // say that (#288).
+        'Round $practiceRound',
       GameType.bobs27 =>
         'Score: $score',
       GameType.shanghai =>

@@ -274,7 +274,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Around the Clock'), findsOneWidget);
-    expect(find.text('Number 3'), findsOneWidget);
+    // ATC subtitle is now "Round N" — "Number" read as a duplicate of
+    // the target number above (#288).
+    expect(find.text('Round 3'), findsOneWidget);
   });
 
   // ── 6. AppBar overflow menu shows End Drill ───────────────────────────────
