@@ -161,24 +161,24 @@ class GameSummarySectionWidget extends StatelessWidget {
               allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
           highlights: noHighlight,
         ),
+        // High-score buckets are mutually exclusive; labels match the
+        // actual range so they don't read as cumulative "100+" / "140+"
+        // (#290 finishes the rename started in #261 for the 60+ bucket).
         PostGameBreakdownRow(
-          category: '140+',
+          category: '140–179',
           values: allCompetitors
               .map((c) => c.oneFortyPlusTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '100+',
+          category: '100–139',
           values: allCompetitors
               .map((c) => c.oneHundredPlusTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          // "60+" was the historical label but actually counts the 60–99
-          // bucket only — the 100+ / 140+ / 180s rows cover the rest.
-          // Rename for clarity (#261).
           category: '60–99',
           values:
               allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
@@ -273,24 +273,24 @@ class GameSummarySectionWidget extends StatelessWidget {
             allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
         highlights: noHighlight,
       ),
+      // High-score buckets are mutually exclusive; labels match the
+      // actual range so they don't read as cumulative "100+" / "140+"
+      // (#290 finishes the rename started in #261 for the 60+ bucket).
       PostGameBreakdownRow(
-        // 60–99 bucket (100+ / 140+ / 180s rows cover the rest). Was "60+"
-        // before #261; the higher buckets exclude this label so "60+"
-        // misleadingly read as "at least 60".
         category: '60–99',
         values:
             allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '100+',
+        category: '100–139',
         values: allCompetitors
             .map((c) => c.oneHundredPlusTurns.toString())
             .toList(),
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '140+',
+        category: '140–179',
         values: allCompetitors
             .map((c) => c.oneFortyPlusTurns.toString())
             .toList(),

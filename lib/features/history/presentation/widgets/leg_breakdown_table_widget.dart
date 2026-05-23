@@ -349,20 +349,21 @@ class _LegStatsTable extends StatelessWidget {
         values:
             competitors.map((c) => c.oneEightyTurns.toString()).toList(),
       ),
+      // High-score buckets are mutually exclusive (see
+      // `X01HighScoreBucketsProjection`); labels must match the actual
+      // range so they don't read as cumulative "100+" / "140+" (#290).
       _StatRow(
-        // Counts turns scoring 60–99; 100+ / 140+ / 180s rows cover the
-        // rest. Renamed from "60+" for clarity (#261).
         category: '60–99',
         values: competitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '100+',
+        category: '100–139',
         values: competitors
             .map((c) => c.oneHundredPlusTurns.toString())
             .toList(),
       ),
       _StatRow(
-        category: '140+',
+        category: '140–179',
         values: competitors
             .map((c) => c.oneFortyPlusTurns.toString())
             .toList(),

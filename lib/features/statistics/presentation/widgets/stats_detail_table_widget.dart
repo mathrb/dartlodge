@@ -29,13 +29,17 @@ class StatsDetailTableWidget extends StatelessWidget {
       ),
       StatsTableDataRow('Win %', StatFormatter.fmtPct(stats.winRate), '—'),
       StatsTableHeader('TOTAL', col2: 'PER LEG'),
-      // 60–99 bucket — 100+ / 140+ / 180 rows cover the rest. Was "60+"
-      // (ambiguous since the higher buckets are excluded) before #261.
+      // High-score buckets are mutually exclusive (see
+      // `X01HighScoreBucketsProjection`): 180 → oneEightyTurns,
+      // 140–179 → oneFortyPlus, 100–139 → oneHundredPlus, 60–99 →
+      // sixtyPlus. Labels match the actual range so users don't read
+      // them as cumulative "100+" / "140+" (#261 fixed the 60+ → 60–99
+      // ambiguity; #290 finishes the job for the higher buckets).
       StatsTableDataRow('60–99', stats.sixtyPlusTurns.toString(),
           StatFormatter.fmtPerLeg(stats.sixtyPlusTurns, stats.legsPlayed)),
-      StatsTableDataRow('100+', stats.oneHundredPlusTurns.toString(),
+      StatsTableDataRow('100–139', stats.oneHundredPlusTurns.toString(),
           StatFormatter.fmtPerLeg(stats.oneHundredPlusTurns, stats.legsPlayed)),
-      StatsTableDataRow('140+', stats.oneFortyPlusTurns.toString(),
+      StatsTableDataRow('140–179', stats.oneFortyPlusTurns.toString(),
           StatFormatter.fmtPerLeg(stats.oneFortyPlusTurns, stats.legsPlayed)),
       StatsTableDataRow('180', stats.oneEightyTurns.toString(),
           StatFormatter.fmtPerLeg(stats.oneEightyTurns, stats.legsPlayed)),

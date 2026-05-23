@@ -58,7 +58,14 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         _totalFirstNinePoints += _currentTurnScore;
         _currentTurnScore = 0;
       case 'LegCompleted':
-        if (_turnIndexInLeg >= 1) {
+        // First-9 PPR divides total first-nine points by `legs × 9`. Only
+        // count a leg when at least 3 turns were started — otherwise the
+        // denominator credits the player with darts they never had a
+        // chance to throw (e.g. a 6-dart 170 checkout ends after 2 turns
+        // and would otherwise read as `points / 9`, inflating PPR). The
+        // same `_turnIndex >= 3` gate is already used by
+        // `X01BestLegPprProjection` for its first-9 best (#290).
+        if (_turnIndexInLeg >= 3) {
           _totalFirstNineLegs++;
         }
         _turnIndexInLeg = 0;

@@ -166,6 +166,40 @@ void main() {
       expect(stats.oneFortyPlusTurns, 0);
       expect(stats.oneEightyTurns, 0);
     });
+
+    test(
+        'firstNinePpr is null when the leg ended before 3 turns were thrown (#290)',
+        () {
+      // 6-dart win (2 full turns): 180 + 121 setup then 121 checkout. The
+      // legacy projection incremented `_totalFirstNineLegs` for any leg
+      // with ≥1 turn, so `points / 9` inflated PPR for sub-9-dart legs.
+      // After the gate, the leg doesn't count → firstNinePpr is null.
+      final events = [
+        turnStarted(turnNumber: 1, startingScore: 301),
+        dart(20, 3),
+        dart(20, 3),
+        dart(20, 3),
+        turnEnded(),
+        turnStarted(turnNumber: 2, startingScore: 121),
+        dart(19, 3),
+        dart(8, 2),
+        dart(20, 2),
+        turnEnded(),
+        legCompleted(winnerPlayerId: playerId),
+        gameCompleted(winnerPlayerId: playerId),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.x01,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 6,
+      );
+
+      expect(stats.firstNinePpr, isNull,
+          reason: 'leg ended at 6 darts (2 turns) — first-9 PPR undefined');
+    });
   });
 
   group('cricket', () {
