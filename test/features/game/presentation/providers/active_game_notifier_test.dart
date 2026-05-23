@@ -557,6 +557,89 @@ void main() {
   //    (game_id, local_sequence) unique constraint — without serialization,
   //    two concurrent calls both read getLatestSequence=N and both try to
   //    write N+1, raising SequenceConflictException.
+  // ── endGame (#280, mirroring cricket #252) ─────────────────────────────
+
+  test(
+      'endGame appends GameCompleted(winner=null) and completes the game '
+      'atomically so the abandoned game appears in history and the projection '
+      'runner gets a clean reset at the game boundary (#280)', () async {
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeGameProvider('g1').future);
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
+
+    await container.read(activeGameProvider('g1').notifier).endGame();
+
+    final captured = verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: captureAnyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: null,
+      endTime: anyNamed('endTime'),
+    )).captured.single as List<GameEvent>;
+    expect(captured, hasLength(1));
+    expect(captured.first.eventType, 'GameCompleted');
+    expect(captured.first.payload['winner_competitor_id'], isNull);
+    // Atomicity goes through appendEventsAndCompleteGame, not bare completeGame.
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
+
+  test('endGame is a no-op when the game already completed naturally',
+      () async {
+    // After D20 = 40 = exact checkout, ProcessDartUseCase has already run
+    // appendEventsAndCompleteGame via the natural-completion path. endGame()
+    // must NOT issue a second completion call.
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
+    stubBuild(legsToWin: 1, events: [turnStartedEvent()]);
+    await container.read(activeGameProvider('g1').future);
+    await container.read(activeGameProvider('g1').notifier).processDart('D20');
+    clearInteractions(mockGameRepo);
+
+    await container.read(activeGameProvider('g1').notifier).endGame();
+
+    verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+    verifyNever(mockGameRepo.completeGame(
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
+  });
+
+  test('endGame swallows GameAlreadyCompleteException (idempotent)',
+      () async {
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenThrow(const GameAlreadyCompleteException('g1'));
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeGameProvider('g1').future);
+
+    // Must not propagate as an AsyncError on the provider.
+    await container.read(activeGameProvider('g1').notifier).endGame();
+
+    final s = container.read(activeGameProvider('g1'));
+    expect(s.hasError, isFalse);
+  });
+
   test('concurrent processDart calls do not collide on local_sequence',
       () async {
     final accepted = <int>{1}; // TurnStarted at seq=1 from build

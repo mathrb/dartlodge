@@ -264,8 +264,17 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
     showDialog<void>(
       context: context,
       builder: (dialogContext) => EndGameDialogWidget(
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.of(dialogContext).pop();
+          // Mark the game abandoned (winner=null) so it appears in history
+          // AND the stats projection runner gets a clean reset at the game
+          // boundary. Without this, the next won game's bestLegPpr would
+          // accumulate darts from this abandoned game (#280). Mirrors the
+          // cricket equivalent introduced for #252 / PR #262.
+          await ref
+              .read(activeGameProvider(widget.gameId).notifier)
+              .endGame();
+          if (!context.mounted) return;
           context.go(GameRoutes.home);
         },
         onCancel: () => Navigator.of(dialogContext).pop(),
@@ -277,8 +286,12 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
     showDialog<void>(
       context: context,
       builder: (dialogContext) => EndGameDialogWidget(
-        onConfirm: () {
+        onConfirm: () async {
           Navigator.of(dialogContext).pop();
+          await ref
+              .read(activeGameProvider(widget.gameId).notifier)
+              .endGame();
+          if (!context.mounted) return;
           context.go(GameRoutes.home);
         },
         onCancel: () => Navigator.of(dialogContext).pop(),

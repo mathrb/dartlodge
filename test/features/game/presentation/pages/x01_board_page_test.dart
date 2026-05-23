@@ -21,6 +21,7 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
   final List<String> processedDarts = [];
   int undoCalls = 0;
   int buildCount = 0;
+  int endGameCalls = 0;
 
   @override
   Future<ActiveGameState?> build(String gameId) async {
@@ -33,6 +34,9 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
 
   @override
   Future<void> undoDart() async => undoCalls++;
+
+  @override
+  Future<void> endGame() async => endGameCalls++;
 
   @override
   void dismissBust() =>
