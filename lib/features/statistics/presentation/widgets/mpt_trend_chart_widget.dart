@@ -51,7 +51,10 @@ class MptTrendChartWidget extends ConsumerWidget {
     if (mptSpots.length < 2) {
       return Center(
         child: Text(
-          'Not enough data yet',
+          // Match the wording in `TrendChartShellWidget` — chart needs
+          // ≥2 games to draw a line, so the previous "Not enough data
+          // yet" misread as contradicting populated stats below (#287).
+          'Need ≥2 games for a trend',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

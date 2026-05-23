@@ -87,7 +87,7 @@ void main() {
     ]));
     await tester.pumpAndSettle();
 
-    expect(find.text('Not enough data yet'), findsOneWidget);
+    expect(find.text('Need ≥2 games for a trend'), findsOneWidget);
     expect(find.byType(LineChart), findsNothing);
     // Legend is hidden too when chart is hidden.
     expect(find.text('PPR'), findsNothing);

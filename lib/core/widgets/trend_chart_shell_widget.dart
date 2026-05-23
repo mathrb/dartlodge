@@ -34,7 +34,11 @@ class TrendChartShellWidget extends StatelessWidget {
             )
           : Center(
               child: Text(
-                'Not enough data yet',
+                // Needs ≥2 games to draw a trend line. Earlier copy was
+                // "Not enough data yet" which read as contradicting the
+                // populated stat values below the chart (#287); be
+                // specific about what's missing instead.
+                'Need ≥2 games for a trend',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
