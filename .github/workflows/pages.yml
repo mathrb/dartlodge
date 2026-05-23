@@ -46,10 +46,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # web/ is gitignored (see CLAUDE.md "Web — one-time asset setup").
-      # Scaffold it fresh on every CI run, the same way each dev does locally.
-      - name: Scaffold web platform
-        run: flutter create --platforms=web .
+      # web/ and android/ are gitignored (see CLAUDE.md "Web — one-time asset
+      # setup" and "Building Android APKs"). Scaffold both fresh on every CI
+      # run. android/ isn't deployed to Pages but flutter_launcher_icons reads
+      # `android: true` from pubspec.yaml and needs android/AndroidManifest.xml
+      # to exist — without it the generator aborts and the whole job fails.
+      # --org app matches release.yml / build-apk.yml so the scaffolded layout
+      # is identical across workflows.
+      - name: Scaffold web and android platforms
+        run: flutter create --platforms=web,android --org app .
 
       # web/ is scaffolded fresh each run, so launcher icons + manifest icons
       # must be regenerated into web/icons/ — otherwise the deployed PWA ships
