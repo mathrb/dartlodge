@@ -98,7 +98,7 @@ void main() {
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 2, 'multiplier': 2, 'score': 4},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
-        {'__type': 'LegCompleted', 'winner_player_id': playerId},
+        {'__type': 'GameCompleted', 'winner_player_id': playerId},
       ]);
 
       final stats = await statsRepo.getPlayerStats(
@@ -124,7 +124,7 @@ void main() {
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 1, 'score': 20},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
-        {'__type': 'LegCompleted', 'winner_player_id': playerId},
+        {'__type': 'GameCompleted', 'winner_player_id': playerId},
       ]);
 
       final stats = await statsRepo.getPlayerStats(
@@ -146,7 +146,7 @@ void main() {
         // No D2 hits — single is not counted
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 2, 'multiplier': 1, 'score': 2},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
-        {'__type': 'LegCompleted', 'winner_player_id': playerId},
+        {'__type': 'GameCompleted', 'winner_player_id': playerId},
       ]);
 
       final stats = await statsRepo.getPlayerStats(
@@ -174,7 +174,7 @@ void main() {
         {'__type': 'TurnStarted', 'player_id': playerId},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
         {'__type': 'TurnEnded', 'player_id': playerId},
-        {'__type': 'LegCompleted', 'winner_player_id': playerId},
+        {'__type': 'GameCompleted', 'winner_player_id': playerId},
       ]);
 
       final stats = await statsRepo.getPlayerStats(
