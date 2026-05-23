@@ -38,14 +38,21 @@ abstract class PlayerStats with _$PlayerStats {
     // when no attempts recorded). Values are percentages (0–100).
     double? doubleOutSuccessRate,
     double? firstDartInSuccessRate,
-    // Cricket-specific fields (null for non-cricket games)
+    // Cricket-specific fields (null for non-cricket games). Mark-turn
+    // counters in this career bundle are ≥-N counts (5+, 6+, 7+, 8+, 9
+    // exact). For exact-N per-game counts, see `getGameStats`.
     double? marksPerTurn,
     double? hitRate,
+    @Default(0) int fiveMarkTurns,
     @Default(0) int sixMarkTurns,
+    @Default(0) int sevenMarkTurns,
+    @Default(0) int eightMarkTurns,
     @Default(0) int nineMarkTurns,
     // Cricket best-of metrics (null when no data)
     double? bestLegMpt,
     double? bestGameHitRate,
+    // Average marks in the first 9 darts (first 3 turns) per leg (#286).
+    double? firstNineMpr,
     // ATC practice fields
     @Default(0) int atcCompletions,
     double? atcHitRate,

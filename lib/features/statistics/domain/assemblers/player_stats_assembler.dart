@@ -173,6 +173,7 @@ class PlayerStatsAssembler {
             CricketMarksPerTurnProjection(),
             CricketHitRateProjection(),
             CricketMarkBucketsProjection(),
+            CricketFirstNineMprProjection(),
             CricketLegsProjection(),
             CricketWinRateProjection(),
             CricketBestLegMptProjection(),
@@ -250,6 +251,7 @@ class PlayerStatsAssembler {
       final mptSnap = snap['cricket.mpt'] ?? {};
       final hitRateSnap = snap['cricket.hitRate'] ?? {};
       final bucketsSnap = snap['cricket.markBuckets'] ?? {};
+      final firstNineSnap = snap['cricket.firstNineMpr'] ?? {};
       final legsSnap = snap['cricket.legs'] ?? {};
       final winSnap = snap['cricket.winRate'] ?? {};
       final bestLegMptSnap = snap['cricket.bestLegMpt'] ?? {};
@@ -270,11 +272,15 @@ class PlayerStatsAssembler {
         legsWon: legsSnap['legsWon'] as int? ?? 0,
         marksPerTurn: (mptSnap['marksPerTurn'] as num?)?.toDouble(),
         hitRate: (hitRateSnap['hitRate'] as num?)?.toDouble(),
+        fiveMarkTurns: bucketsSnap['fiveMarkTurns'] as int? ?? 0,
         sixMarkTurns: bucketsSnap['sixMarkTurns'] as int? ?? 0,
+        sevenMarkTurns: bucketsSnap['sevenMarkTurns'] as int? ?? 0,
+        eightMarkTurns: bucketsSnap['eightMarkTurns'] as int? ?? 0,
         nineMarkTurns: bucketsSnap['nineMarkTurns'] as int? ?? 0,
         bestLegMpt: (bestLegMptSnap['bestLegMpt'] as num?)?.toDouble(),
         bestGameHitRate:
             (bestGameHitRateSnap['bestGameHitRate'] as num?)?.toDouble(),
+        firstNineMpr: (firstNineSnap['firstNineMpr'] as num?)?.toDouble(),
       );
     }
 

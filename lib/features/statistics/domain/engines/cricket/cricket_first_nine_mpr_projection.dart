@@ -68,7 +68,12 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         _totalFirstNineMarks += _currentTurnMarks;
         _currentTurnMarks = 0;
       case 'LegCompleted':
-        if (_turnIndexInLeg >= 1) {
+        // First-9 MPR divides total first-nine marks by `legs × 3`. Only
+        // count a leg when at least 3 turns were started — otherwise the
+        // denominator credits the player with darts they never had a
+        // chance to throw, inflating the MPR. Mirrors the
+        // `X01FirstNinePprProjection` gate from #290.
+        if (_turnIndexInLeg >= 3) {
           _totalFirstNineLegs++;
         }
         _turnIndexInLeg = 0;

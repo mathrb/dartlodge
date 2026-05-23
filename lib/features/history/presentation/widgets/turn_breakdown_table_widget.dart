@@ -350,6 +350,14 @@ class _DartChip extends StatelessWidget {
       ),
       child: Text(
         canonical,
+        // Never wrap or ellipsize the chip text — at 412px the parent
+        // DataCell can squeeze the column and Flutter would otherwise
+        // render "MISS" as "MI…". The DataTable already wraps in a
+        // horizontal SingleChildScrollView, so letting the chip overflow
+        // its column lets the user scroll to it rather than seeing it
+        // chopped (#285).
+        softWrap: false,
+        overflow: TextOverflow.visible,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: _fg(cs),
               fontWeight: FontWeight.w700,
