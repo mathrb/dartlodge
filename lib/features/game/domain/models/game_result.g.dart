@@ -9,9 +9,10 @@ part of 'game_result.dart';
 AroundTheClockResult _$AroundTheClockResultFromJson(
   Map<String, dynamic> json,
 ) => AroundTheClockResult(
-  competitorName: json['competitorName'] as String,
-  turnsToComplete: (json['turnsToComplete'] as num).toInt(),
-  totalDarts: (json['totalDarts'] as num).toInt(),
+  competitors: (json['competitors'] as List<dynamic>)
+      .map((e) => AtcCompetitorResult.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  winnerCompetitorId: json['winnerCompetitorId'] as String?,
   doublesOnly: json['doublesOnly'] as bool,
   $type: json['runtimeType'] as String?,
 );
@@ -19,9 +20,8 @@ AroundTheClockResult _$AroundTheClockResultFromJson(
 Map<String, dynamic> _$AroundTheClockResultToJson(
   AroundTheClockResult instance,
 ) => <String, dynamic>{
-  'competitorName': instance.competitorName,
-  'turnsToComplete': instance.turnsToComplete,
-  'totalDarts': instance.totalDarts,
+  'competitors': instance.competitors,
+  'winnerCompetitorId': instance.winnerCompetitorId,
   'doublesOnly': instance.doublesOnly,
   'runtimeType': instance.$type,
 };
@@ -83,20 +83,63 @@ Map<String, dynamic> _$CheckoutPracticeResultToJson(
 
 ShanghaiResult _$ShanghaiResultFromJson(Map<String, dynamic> json) =>
     ShanghaiResult(
-      competitorName: json['competitorName'] as String,
-      totalScore: (json['totalScore'] as num).toInt(),
-      shanghaiBonuses: (json['shanghaiBonuses'] as num).toInt(),
-      bestRound: (json['bestRound'] as num).toInt(),
-      roundsPlayed: (json['roundsPlayed'] as num).toInt(),
+      competitors: (json['competitors'] as List<dynamic>)
+          .map(
+            (e) => ShanghaiCompetitorResult.fromJson(e as Map<String, dynamic>),
+          )
+          .toList(),
+      winnerCompetitorId: json['winnerCompetitorId'] as String?,
+      totalRounds: (json['totalRounds'] as num).toInt(),
       $type: json['runtimeType'] as String?,
     );
 
 Map<String, dynamic> _$ShanghaiResultToJson(ShanghaiResult instance) =>
     <String, dynamic>{
-      'competitorName': instance.competitorName,
-      'totalScore': instance.totalScore,
-      'shanghaiBonuses': instance.shanghaiBonuses,
-      'bestRound': instance.bestRound,
-      'roundsPlayed': instance.roundsPlayed,
+      'competitors': instance.competitors,
+      'winnerCompetitorId': instance.winnerCompetitorId,
+      'totalRounds': instance.totalRounds,
       'runtimeType': instance.$type,
     };
+
+_AtcCompetitorResult _$AtcCompetitorResultFromJson(Map<String, dynamic> json) =>
+    _AtcCompetitorResult(
+      competitorId: json['competitorId'] as String,
+      competitorName: json['competitorName'] as String,
+      turnsCompleted: (json['turnsCompleted'] as num).toInt(),
+      totalDarts: (json['totalDarts'] as num).toInt(),
+      lastTargetHit: (json['lastTargetHit'] as num).toInt(),
+      finished: json['finished'] as bool,
+    );
+
+Map<String, dynamic> _$AtcCompetitorResultToJson(
+  _AtcCompetitorResult instance,
+) => <String, dynamic>{
+  'competitorId': instance.competitorId,
+  'competitorName': instance.competitorName,
+  'turnsCompleted': instance.turnsCompleted,
+  'totalDarts': instance.totalDarts,
+  'lastTargetHit': instance.lastTargetHit,
+  'finished': instance.finished,
+};
+
+_ShanghaiCompetitorResult _$ShanghaiCompetitorResultFromJson(
+  Map<String, dynamic> json,
+) => _ShanghaiCompetitorResult(
+  competitorId: json['competitorId'] as String,
+  competitorName: json['competitorName'] as String,
+  totalScore: (json['totalScore'] as num).toInt(),
+  shanghaiBonuses: (json['shanghaiBonuses'] as num).toInt(),
+  bestRound: (json['bestRound'] as num).toInt(),
+  roundsPlayed: (json['roundsPlayed'] as num).toInt(),
+);
+
+Map<String, dynamic> _$ShanghaiCompetitorResultToJson(
+  _ShanghaiCompetitorResult instance,
+) => <String, dynamic>{
+  'competitorId': instance.competitorId,
+  'competitorName': instance.competitorName,
+  'totalScore': instance.totalScore,
+  'shanghaiBonuses': instance.shanghaiBonuses,
+  'bestRound': instance.bestRound,
+  'roundsPlayed': instance.roundsPlayed,
+};

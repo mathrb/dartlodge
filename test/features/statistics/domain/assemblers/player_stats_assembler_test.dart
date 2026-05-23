@@ -427,6 +427,73 @@ void main() {
       expect(stats.atcSegmentAttempts, {1: 1},
           reason: 'p2\'s attempts at targets 2-4 must not leak in');
     });
+
+    test(
+        'computes the non-winner side of a multi-player drill (#279)',
+        () {
+      // Multi-player ATC: p1 (queried) hits target 1 in turn 1 and finishes
+      // (assume only 1 dart needed for this contrived test). p2 (Bob in #279)
+      // hits targets 1, 2, 3 across three of his own turns. Each ATC
+      // competitor progresses through 1→20 independently, so when the
+      // assembler is asked for p2's stats it must drive p2's currentTarget
+      // from p2's own events only — even though p1's events are interleaved
+      // in the same game stream.
+      const otherPlayer = 'p2';
+      final events = <GameEvent>[
+        event('TurnStarted',
+            {'player_id': playerId, 'turn_number': 1}),
+        event('DartThrown', {
+          'player_id': playerId,
+          'segment': 1,
+          'multiplier': 1,
+          'score': 1,
+        }),
+        event('TurnEnded', {'player_id': playerId}),
+        event('TurnStarted',
+            {'player_id': otherPlayer, 'turn_number': 1}),
+        event('DartThrown', {
+          'player_id': otherPlayer,
+          'segment': 1,
+          'multiplier': 1,
+          'score': 1,
+        }),
+        event('TurnEnded', {'player_id': otherPlayer}),
+        event('TurnStarted',
+            {'player_id': otherPlayer, 'turn_number': 2}),
+        event('DartThrown', {
+          'player_id': otherPlayer,
+          'segment': 2,
+          'multiplier': 1,
+          'score': 2,
+        }),
+        event('TurnEnded', {'player_id': otherPlayer}),
+        event('TurnStarted',
+            {'player_id': otherPlayer, 'turn_number': 3}),
+        event('DartThrown', {
+          'player_id': otherPlayer,
+          'segment': 3,
+          'multiplier': 1,
+          'score': 3,
+        }),
+        event('TurnEnded', {'player_id': otherPlayer}),
+        gameCompleted(),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: otherPlayer,
+        gameType: GameType.aroundTheClock,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      expect(stats.atcSegmentHits, {1: 1, 2: 1, 3: 1},
+          reason: "non-winner's hits at 1/2/3 must populate the heatmap");
+      expect(stats.atcHitRate, 1.0,
+          reason: 'non-winner threw 3 darts, all hits — hit rate 1.0');
+      expect(stats.atcCompletions, 0,
+          reason: "non-winner didn't reach 20 — no completion");
+    });
   });
 
   group("practice — Bob's 27", () {

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/widgets/post_game_hero_card_widget.dart';
+import '../../../../core/widgets/post_game_stats_breakdown_widget.dart';
 import '../../../game/domain/models/game_result.dart';
 
 /// Post-game summary for the four practice drills — Around the Clock,
 /// Catch 40, Bob's 27, 170 Checkout — switching per variant. Solo drills
-/// have no winner/PPR/checkout% semantics, so this widget intentionally
-/// renders only the per-variant hero card (no forced common stats /
-/// breakdown table; see #230).
+/// render only the per-variant hero card (no forced common stats /
+/// breakdown table; see #230). Around the Clock allows multiple
+/// competitors (`maxPlayers == null`) — it renders the winner up top and
+/// a per-player breakdown below so non-winners aren't hidden (#279).
 class PracticeSummaryWidget extends StatelessWidget {
   const PracticeSummaryWidget({super.key, required this.result});
 
@@ -16,21 +18,7 @@ class PracticeSummaryWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (result) {
-      AroundTheClockResult(:final competitorName, :final turnsToComplete,
-          :final totalDarts, :final doublesOnly) =>
-        PostGameHeroCard(
-          badge: doublesOnly ? 'DOUBLES ONLY' : null,
-          headline: competitorName,
-          subline: 'Around the Clock',
-          sideStats: [
-            PostGameHeroStat(
-              label: 'TURNS',
-              value: '$turnsToComplete',
-              emphasize: true,
-            ),
-            PostGameHeroStat(label: 'DARTS', value: '$totalDarts'),
-          ],
-        ),
+      AroundTheClockResult() => _AtcSummary(result: result as AroundTheClockResult),
       Catch40Result(:final competitorName, :final score, :final targetsCleared) =>
         PostGameHeroCard(
           headline: competitorName,
@@ -94,5 +82,80 @@ class PracticeSummaryWidget extends StatelessWidget {
         ),
       ShanghaiResult() => const SizedBox.shrink(),
     };
+  }
+}
+
+class _AtcSummary extends StatelessWidget {
+  const _AtcSummary({required this.result});
+
+  final AroundTheClockResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final competitors = result.competitors;
+    final winnerId = result.winnerCompetitorId;
+    final winner = winnerId == null
+        ? null
+        : competitors
+            .where((c) => c.competitorId == winnerId)
+            .firstOrNull;
+    // Solo drills keep the original hero-only chrome so single-player ATC
+    // looks the same as before #279. A completed solo drill has
+    // `winnerCompetitorId` set to that lone competitor's id, so checking
+    // `winnerId == null` here would render a 1-column breakdown instead of
+    // the hero — `competitors.length == 1` is the correct discriminant.
+    final isSolo = competitors.length == 1;
+    final lead = winner ?? (competitors.isNotEmpty ? competitors.first : null);
+
+    if (lead == null) return const SizedBox.shrink();
+
+    final hero = PostGameHeroCard(
+      badge: result.doublesOnly ? 'DOUBLES ONLY' : null,
+      headline: lead.competitorName,
+      subline: 'Around the Clock',
+      sideStats: [
+        PostGameHeroStat(
+          label: 'TURNS',
+          value: '${lead.turnsCompleted}',
+          emphasize: true,
+        ),
+        PostGameHeroStat(label: 'DARTS', value: '${lead.totalDarts}'),
+      ],
+    );
+
+    if (isSolo) return hero;
+
+    final columns = [
+      for (final c in competitors)
+        PostGameBreakdownColumn(
+          name: c.competitorName,
+          subtitle: c.competitorId == winnerId ? 'WINNER' : null,
+          emphasize: c.competitorId == winnerId,
+        ),
+    ];
+    PostGameBreakdownRow row(String category, String Function(AtcCompetitorResult) cell) {
+      return PostGameBreakdownRow(
+        category: category,
+        values: [for (final c in competitors) cell(c)],
+        highlights: [for (final c in competitors) c.competitorId == winnerId],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        hero,
+        const SizedBox(height: 16),
+        PostGameStatsBreakdown(
+          columns: columns,
+          rows: [
+            row('Turns', (c) => '${c.turnsCompleted}'),
+            row('Darts', (c) => '${c.totalDarts}'),
+            row('Last target hit', (c) => '${c.lastTargetHit}'),
+            row('Finished', (c) => c.finished ? 'Yes' : '—'),
+          ],
+        ),
+      ],
+    );
   }
 }

@@ -198,13 +198,202 @@ void main() {
       final result = await useCase.execute(gameId);
       expect(result, isA<AroundTheClockResult>());
       final atc = result as AroundTheClockResult;
-      expect(atc.competitorName, 'Alice');
+      expect(atc.competitors, hasLength(1));
+      final alice = atc.competitors.single;
+      expect(alice.competitorName, 'Alice');
       // 7 turns scripted, win happens on turn 7 (no TurnEnded after) →
       // practiceRound = 7.
-      expect(atc.turnsToComplete, 7);
+      expect(alice.turnsCompleted, 7);
       // 6 prior turns × 3 darts + 2 winning darts in turn 7 = 20.
-      expect(atc.totalDarts, 20);
+      expect(alice.totalDarts, 20);
+      expect(alice.finished, isTrue);
+      expect(atc.winnerCompetitorId, competitorId);
       expect(atc.doublesOnly, isFalse);
+    }));
+
+    test(
+        'aroundTheClock: multi-player result lists ALL competitors with the '
+        'winner ordered first (#279)',
+        (() async {
+      // 3 competitors. Alice finishes the sequence (1..20); Bob and Carol
+      // start playing but don't finish before Alice wins. Pre-#279 the
+      // result discarded Bob/Carol; post-fix `competitors` carries all 3,
+      // and `winnerCompetitorId` identifies Alice.
+      const gameId = 'g-atc-multi';
+      final playerRepo = await base.createPlayerRepository();
+      final gameRepo = await base.createGameRepository();
+      for (final p in [
+        ('p1', 'Alice'),
+        ('p2', 'Bob'),
+        ('p3', 'Carol'),
+      ]) {
+        await playerRepo.createPlayer(Player(
+          playerId: p.$1,
+          name: p.$2,
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        ));
+      }
+      await gameRepo.createGame(
+        Game(
+          gameId: gameId,
+          gameType: GameType.aroundTheClock,
+          config: const GameConfig.aroundTheClock(),
+          startTime: DateTime.now(),
+          isComplete: false,
+        ),
+        const [
+          Competitor(
+            competitorId: 'c1',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Alice',
+            players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+          ),
+          Competitor(
+            competitorId: 'c2',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Bob',
+            players: [CompetitorPlayer(playerId: 'p2', rotationPosition: 0)],
+          ),
+          Competitor(
+            competitorId: 'c3',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Carol',
+            players: [CompetitorPlayer(playerId: 'p3', rotationPosition: 0)],
+          ),
+        ],
+      );
+
+      // Build a deterministic event log that has Alice finishing first.
+      // Each "turn" is TurnStarted + 3 DartThrown + TurnEnded for one player
+      // and rotates Alice → Bob → Carol. Alice hits her target every dart
+      // (so she finishes the sequence after exactly 20 darts ≈ 7 turns);
+      // Bob hits the first 5 targets then misses; Carol misses every dart.
+      int seq = 1;
+      final events = <GameEvent>[];
+      final rotation = [
+        ('c1', 'p1'),
+        ('c2', 'p2'),
+        ('c3', 'p3'),
+      ];
+      int aliceTarget = 1;
+      int bobTarget = 1;
+      // Run up to 10 rounds; Alice should finish before that with 20 hits
+      // across 7 turns of 3 darts.
+      for (int round = 0; round < 10; round++) {
+        for (final (compId, playerId) in rotation) {
+          events.add(buildTurnStartedEvent(
+            gameId: gameId,
+            competitorId: compId,
+            playerId: playerId,
+            localSequence: seq++,
+            turnIndex: round,
+            legIndex: 0,
+          ));
+          for (int d = 0; d < 3; d++) {
+            int segment;
+            if (compId == 'c1' && aliceTarget <= 20) {
+              segment = aliceTarget;
+              aliceTarget++;
+            } else if (compId == 'c2' && bobTarget <= 5) {
+              segment = bobTarget;
+              bobTarget++;
+            } else {
+              segment = 0; // miss
+            }
+            events.add(dart(gameId, compId, playerId, seq++, segment, 1));
+            if (compId == 'c1' && aliceTarget > 20) {
+              // Alice has finished — engine ends the game on this dart.
+              break;
+            }
+          }
+          if (aliceTarget > 20) break;
+          events.add(buildTurnEndedEvent(
+            gameId: gameId,
+            competitorId: compId,
+            playerId: playerId,
+            localSequence: seq++,
+          ));
+        }
+        if (aliceTarget > 20) break;
+      }
+      events.add(buildGameCompletedEvent(
+        gameId: gameId,
+        winnerCompetitorId: 'c1',
+        localSequence: seq++,
+      ));
+
+      await completeWithEvents(gameId, 'c1', events);
+
+      final result = await useCase.execute(gameId);
+      expect(result, isA<AroundTheClockResult>());
+      final atc = result as AroundTheClockResult;
+      expect(atc.winnerCompetitorId, 'c1');
+      expect(atc.competitors, hasLength(3),
+          reason: 'all 3 competitors must appear in the result, not just Alice');
+      // Ranking: winner first (Alice), then non-finishers ordered by
+      // highest target reached descending — Bob (5) above Carol (0).
+      expect(atc.competitors.first.competitorName, 'Alice');
+      expect(atc.competitors.first.finished, isTrue);
+      expect(atc.competitors[1].competitorName, 'Bob');
+      expect(atc.competitors[1].finished, isFalse);
+      expect(atc.competitors[1].lastTargetHit, 5);
+      expect(atc.competitors[2].competitorName, 'Carol');
+      expect(atc.competitors[2].lastTargetHit, 0);
+    }));
+
+    test(
+        'aroundTheClock: reverse variant with no hits yields lastTargetHit=0 '
+        '(not the 21 sentinel)',
+        (() async {
+      const gameId = 'g-atc-rev';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.aroundTheClock,
+        config: const GameConfig.aroundTheClock(variant: 'reverse'),
+        playerId: playerId,
+        playerName: 'Alice',
+        competitorId: competitorId,
+      );
+      // One turn of 3 misses, then End Game (engine doesn't emit
+      // LegCompleted for a 1-leg practice game).
+      final events = <GameEvent>[
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: 1,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, competitorId, playerId, 2, 0, 1),
+        dart(gameId, competitorId, playerId, 3, 0, 1),
+        dart(gameId, competitorId, playerId, 4, 0, 1),
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: 5,
+        ),
+        buildGameCompletedEvent(
+          gameId: gameId,
+          winnerCompetitorId: null,
+          localSequence: 6,
+        ),
+      ];
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as AroundTheClockResult;
+      final alice = result.competitors.single;
+      expect(alice.finished, isFalse);
+      // Reverse variant starts at target 20 with no hits → lastTargetHit
+      // must be 0 (display as "no hits"), NOT 21 (invalid ATC target).
+      expect(alice.lastTargetHit, 0);
     }));
 
     test('aroundTheClock: doublesOnly variant flag reaches the result',
@@ -487,11 +676,13 @@ void main() {
       final result = await useCase.execute(gameId);
       expect(result, isA<ShanghaiResult>());
       final sh = result as ShanghaiResult;
-      expect(sh.competitorName, 'Faye');
-      expect(sh.totalScore, 7);
-      expect(sh.bestRound, 6);
-      expect(sh.shanghaiBonuses, 0);
-      expect(sh.roundsPlayed, 7);
+      expect(sh.competitors, hasLength(1));
+      final faye = sh.competitors.single;
+      expect(faye.competitorName, 'Faye');
+      expect(faye.totalScore, 7);
+      expect(faye.bestRound, 6);
+      expect(faye.shanghaiBonuses, 0);
+      expect(faye.roundsPlayed, 7);
     }));
 
     test('shanghai: instant-win counts the shanghai bonus and ends early',
@@ -526,12 +717,13 @@ void main() {
       await completeWithEvents(gameId, null, events);
 
       final result = await useCase.execute(gameId) as ShanghaiResult;
-      expect(result.totalScore, 6);
-      expect(result.shanghaiBonuses, 1);
+      final gus = result.competitors.single;
+      expect(gus.totalScore, 6);
+      expect(gus.shanghaiBonuses, 1);
       // Instant-win on round 1 means the round never ends; practiceRound = 1.
-      expect(result.roundsPlayed, 1);
+      expect(gus.roundsPlayed, 1);
       // bestRound captures the entire round-1 score: 1+2+3 = 6.
-      expect(result.bestRound, 6);
+      expect(gus.bestRound, 6);
     }));
   });
 }

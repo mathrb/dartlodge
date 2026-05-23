@@ -137,11 +137,18 @@ void main() {
       await tester.pumpWidget(_pump(
         type: GameType.shanghai,
         gameResult: const GameResult.shanghai(
-          competitorName: 'Alice',
-          totalScore: 120,
-          shanghaiBonuses: 2,
-          bestRound: 60,
-          roundsPlayed: 7,
+          competitors: [
+            ShanghaiCompetitorResult(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              totalScore: 120,
+              shanghaiBonuses: 2,
+              bestRound: 60,
+              roundsPlayed: 7,
+            ),
+          ],
+          winnerCompetitorId: null,
+          totalRounds: 7,
         ),
       ));
       await tester.pumpAndSettle();
@@ -155,9 +162,17 @@ void main() {
       await tester.pumpWidget(_pump(
         type: GameType.aroundTheClock,
         gameResult: const GameResult.aroundTheClock(
-          competitorName: 'Alice',
-          turnsToComplete: 12,
-          totalDarts: 35,
+          competitors: [
+            AtcCompetitorResult(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              turnsCompleted: 12,
+              totalDarts: 35,
+              lastTargetHit: 20,
+              finished: true,
+            ),
+          ],
+          winnerCompetitorId: null,
           doublesOnly: false,
         ),
       ));
