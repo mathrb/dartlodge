@@ -2,8 +2,9 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 
-/// Counts of turns scoring 60+, 100+, 140+, and 180 (exact) for count-up.
-/// Mirrors `X01HighScoreBucketsProjection`. Count-up has no bust, so the
+/// Counts of turns scoring 60–99, 100–139, 140–179, and 180 (exact) for
+/// count-up. Mirrors `X01HighScoreBucketsProjection` — buckets are
+/// mutually exclusive (#290). Count-up has no bust, so the
 /// `reason != 'bust'` gate is a no-op but is kept for symmetry.
 class CountUpHighScoreBucketsProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
