@@ -12,6 +12,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     required this.practiceAttempts,
     required this.practiceSuccesses,
     this.roundScore = 0,
+    this.catch40DartsOnTarget = 0,
     this.currentPlayerName,
     super.key,
   });
@@ -24,6 +25,13 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   final int practiceAttempts;
   final int practiceSuccesses;
   final int roundScore;
+
+  /// Number of darts already thrown at the current Catch 40 target across
+  /// both visits (0–6). Drives the "Visit 1/2" / "Visit 2/2" caption so the
+  /// player knows whether they're still on their first 3 darts or their
+  /// final 3 (#324). Engine resets this to 0 when the target advances; the
+  /// provider's `_advanceTurn` between visits preserves it.
+  final int catch40DartsOnTarget;
 
   /// When non-null, renders a "<NAME>'S TURN" header above the target —
   /// surfaces whose turn it is in multi-player ATC/Shanghai games. Solo
@@ -52,8 +60,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
         'Score: $score',
       GameType.shanghai =>
         'Score: $score | Round $practiceRound/$totalRounds',
-      GameType.catch40 =>
-        'Score: $score | Max: 120',
+      GameType.catch40 => 'Score: $score | Visit ${_catch40Visit()}/2',
       GameType.checkoutPractice => _checkoutDartsThrown(),
       _ => '',
     };
@@ -62,6 +69,12 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   String _checkoutDartsThrown() {
     return '$practiceAttempts darts thrown';
   }
+
+  /// Catch 40 visit number (1 or 2). `catch40DartsOnTarget` runs 0..6 across
+  /// a target; the second visit begins at dart 4 (index 3). After the 3rd
+  /// dart of visit 1, the provider auto-advances to visit 2 keeping
+  /// `dartsOnTarget` at 3 — so 3 is the first index of visit 2.
+  int _catch40Visit() => catch40DartsOnTarget >= 3 ? 2 : 1;
 
   @override
   Widget build(BuildContext context) {
