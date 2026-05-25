@@ -13,6 +13,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     required this.practiceSuccesses,
     this.roundScore = 0,
     this.catch40DartsOnTarget = 0,
+    this.catch40TargetRemaining = 0,
     this.currentPlayerName,
     super.key,
   });
@@ -33,13 +34,24 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   /// provider's `_advanceTurn` between visits preserves it.
   final int catch40DartsOnTarget;
 
+  /// Remaining score needed to finish the current Catch 40 target. Shown
+  /// as the large central number so the player sees exactly how much is
+  /// left without mental arithmetic (#326). Equals the round's starting
+  /// target at the beginning of the round and after a bust reset.
+  final int catch40TargetRemaining;
+
   /// When non-null, renders a "<NAME>'S TURN" header above the target —
   /// surfaces whose turn it is in multi-player ATC/Shanghai games. Solo
   /// drills pass null and keep the previous target-only chrome (#276).
   final String? currentPlayerName;
 
   String get _targetLabel {
-    if (gameType == GameType.catch40) return '${60 + practiceRound}';
+    // Catch 40: show how much is LEFT to finish the current target. This
+    // updates as darts reduce remaining, so players see exactly what they
+    // need to check out — no mental arithmetic (#326). After a bust the
+    // engine resets remaining to the round's starting target, so the
+    // display naturally reflects the reset too.
+    if (gameType == GameType.catch40) return '$catch40TargetRemaining';
     final n = currentTarget;
     if (n == null) return '—';
     return switch (gameType) {
@@ -60,7 +72,8 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
         'Score: $score',
       GameType.shanghai =>
         'Score: $score | Round $practiceRound/$totalRounds',
-      GameType.catch40 => 'Score: $score | Visit ${_catch40Visit()}/2',
+      GameType.catch40 =>
+        'Target ${60 + practiceRound} | Visit ${_catch40Visit()}/2 | Score $score',
       GameType.checkoutPractice => _checkoutDartsThrown(),
       _ => '',
     };

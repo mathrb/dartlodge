@@ -287,6 +287,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 practiceSuccesses: competitor.practiceSuccesses,
                 roundScore: roundScore,
                 catch40DartsOnTarget: gs.catch40DartsOnTarget,
+                catch40TargetRemaining: gs.catch40TargetRemaining,
               ),
               if (isShanghai)
                 _ShanghaiBonus(show: practiceState.showShanghaiBonus),
