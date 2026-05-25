@@ -83,12 +83,31 @@ class ProcessDartUseCase {
       // buckets (60+/100+/140+/180s) can exclude busted turns — without
       // it the bucket projection's `reason != 'bust'` guard never fires
       // and busted turns are counted as if scored (#317).
+      //
+      // Carry `turn_score` (turn_start_score - turn_end_score per spec
+      // §5.2) so the PPR projection counts not-in and bust turns as 0
+      // points without having to peek at engine state from the projection
+      // (#318). For a leg-completing checkout the engine resets `score`
+      // to `startingScore` for the next leg, so use the pre-dart
+      // `turnStartScore` as the deduction in that case — the player
+      // necessarily scored the entire remainder to finish.
+      final currentIdx = currentState.currentTurnIndex;
+      final preComp = currentState.competitors[currentIdx];
+      final preTurnScore = preComp.turnStartScore ?? preComp.score;
+      final isLegCompleting =
+          result.outcome == LegOutcome.legCompleted ||
+              result.outcome == LegOutcome.gameCompleted;
+      final postScore = finalState.competitors[currentIdx].score;
+      final turnScore = isLegCompleting
+          ? preTurnScore
+          : preTurnScore - postScore;
       eventsToStore.add(buildTurnEndedEvent(
         gameId: currentState.gameId,
         competitorId: dartThrow.competitorId,
         playerId: currentPlayerId,
         localSequence: nextSeq++,
         reason: result.isBust ? 'bust' : 'normal',
+        turnScore: turnScore,
       ));
 
       if (result.outcome == LegOutcome.gameCompleted) {

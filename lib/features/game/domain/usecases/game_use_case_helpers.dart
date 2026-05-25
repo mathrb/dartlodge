@@ -65,6 +65,7 @@ GameEvent buildTurnEndedEvent({
   required int localSequence,
   String actorId = 'system',
   String reason = 'normal',
+  int? turnScore,
 }) {
   return GameEvent(
     eventId: const Uuid().v4(),
@@ -76,6 +77,11 @@ GameEvent buildTurnEndedEvent({
       'competitor_id': competitorId,
       'player_id': playerId,
       'reason': reason,
+      // X01 only — the score-delta for this turn (turn_start_score -
+      // turn_end_score per spec §5.2). Used by the average projection so
+      // bust and not-in (Double-In) turns contribute 0 to PPR (#318).
+      // Other game types omit it.
+      if (turnScore != null) 'turn_score': turnScore,
     },
     synced: false,
     actorId: actorId,

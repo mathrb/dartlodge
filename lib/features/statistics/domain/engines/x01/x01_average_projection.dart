@@ -42,10 +42,17 @@ class X01AverageProjection extends ProjectionEngine {
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        // 3-dart average counts every dart's score, busts included — that's
-        // the convention darts is conventionally scored by. The bust outcome
-        // affects the leg's checkout, not your throwing accuracy.
-        _totalScoredPoints += _turnScore;
+        // Per docs/statistics/x01.projections.md §5.2:
+        //   turn_score = turn_start_score - turn_end_score
+        // Bust turns score 0; not-in (Double-In) turns also score 0
+        // because the engine doesn't deduct the dart values when isIn is
+        // false. The producer (ProcessDartUseCase) writes this delta as
+        // `turn_score` on the TurnEnded payload (#318). Legacy events
+        // that lack the field fall back to the dart-sum the projection
+        // has historically accumulated — keeping old-game numbers as
+        // they were before the fix.
+        final delta = (event.payload['turn_score'] as num?)?.toInt();
+        _totalScoredPoints += delta ?? _turnScore;
         _turnScore = 0;
     }
   }
