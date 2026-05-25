@@ -199,6 +199,25 @@ void main() {
       expect(find.text("Bob's 27 — drill ended"), findsOneWidget);
     });
 
+    testWidgets("Bob's 27 negative final score renders in error colour (#339)",
+        (tester) async {
+      const lightTheme = AppTheme.light;
+      final errorColor = lightTheme().colorScheme.error;
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.bobs27(
+          competitorName: 'Alice',
+          finalScore: -3,
+          roundReached: 5,
+          bustedToZero: true,
+        ),
+      )));
+
+      // The final-score Text renders the literal "-3"; its colour should
+      // be the theme's error colour, not the standard accent.
+      final scoreText = tester.widget<Text>(find.text('-3'));
+      expect(scoreText.style?.color, errorColor);
+    });
+
     testWidgets('170 Checkout single attempt success shows "Checked out!"',
         (tester) async {
       await tester.pumpWidget(_wrap(const PracticeSummaryWidget(

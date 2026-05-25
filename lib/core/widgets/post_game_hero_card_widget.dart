@@ -9,6 +9,7 @@ class PostGameHeroStat {
     required this.label,
     required this.value,
     this.emphasize = false,
+    this.danger = false,
   });
 
   final String label;
@@ -18,6 +19,12 @@ class PostGameHeroStat {
   /// neutral on muted cards). Off by default — additional stats below the
   /// emphasized one are rendered in onSurface.
   final bool emphasize;
+
+  /// Renders the value in `colorScheme.error`. Used by Bob's 27 to flag a
+  /// negative final score so the post-game card matches the in-game error
+  /// styling instead of falsely celebrating it in the accent colour (#339).
+  /// Takes precedence over [emphasize] when both are set.
+  final bool danger;
 }
 
 /// Reusable post-game result card — rounded container with an accent left
@@ -228,7 +235,9 @@ class _SideStat extends StatelessWidget {
         Text(
           stat.value,
           style: AppTextStyles.scoreMedium.copyWith(
-            color: stat.emphasize ? accent : cs.onSurface,
+            color: stat.danger
+                ? cs.error
+                : (stat.emphasize ? accent : cs.onSurface),
           ),
         ),
       ],
