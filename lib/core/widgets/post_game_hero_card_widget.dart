@@ -132,21 +132,20 @@ class PostGameHeroCard extends StatelessWidget {
                             const SizedBox(height: 12),
                           ],
                           // Long headlines like "Not checked out" used to
-                          // mid-word break on narrow column widths and ellipse
-                          // ("NOT CH / ECKE…") (#341). FittedBox scales the
-                          // text down to fit instead.
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Text(
-                              headline.toUpperCase(),
-                              style: AppTextStyles.headlineSmall.copyWith(
-                                color: cs.onSurface,
-                                fontWeight: FontWeight.w900,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                          // mid-word break on narrow column widths and
+                          // ellipse ("NOT CH / ECKE…"). Allow a third line
+                          // so word-boundary wrapping has room, drop
+                          // `softWrap` to the default true, and keep the
+                          // ellipsis only as a true overflow guard for
+                          // headlines that exceed three lines (#341).
+                          Text(
+                            headline.toUpperCase(),
+                            style: AppTextStyles.headlineSmall.copyWith(
+                              color: cs.onSurface,
+                              fontWeight: FontWeight.w900,
                             ),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
                           ),
                           if (subline != null) ...[
                             const SizedBox(height: 4),
