@@ -226,10 +226,10 @@ void main() {
         gameStats: _statsForGameType(GameType.checkoutPractice),
         gameResult: const GameResult.checkoutPractice(
           competitorName: 'Alice',
-          checkedOut: true,
+          attempts: 1,
+          successes: 1,
           dartsThrown: 9,
           fromScore: 170,
-          remainingScore: 0,
         ),
       ));
       await tester.pumpAndSettle();
