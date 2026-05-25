@@ -818,5 +818,95 @@ void main() {
       // bestRound captures the entire round-1 score: 1+2+3 = 6.
       expect(gus.bestRound, 6);
     }));
+
+    test(
+        'shanghai: multi-player instant-win — roundsPlayed matches TurnStarted '
+        'count, not the practiceRound bump (#323)',
+        (() async {
+      // 2 players. Alice finishes turn (TurnEnded → practiceRound 1→2). Bob
+      // hits a Shanghai in his turn → GameCompleted with no TurnEnded for
+      // Bob's winning turn. Pre-fix: Alice=2, Bob=1. Post-fix both = 1.
+      const gameId = 'g-sh-multi';
+      final playerRepo = await base.createPlayerRepository();
+      final gameRepo = await base.createGameRepository();
+      for (final p in [('p1', 'Alice'), ('p2', 'Bob')]) {
+        await playerRepo.createPlayer(Player(
+          playerId: p.$1,
+          name: p.$2,
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        ));
+      }
+      await gameRepo.createGame(
+        Game(
+          gameId: gameId,
+          gameType: GameType.shanghai,
+          config: const GameConfig.shanghai(),
+          startTime: DateTime.now(),
+          isComplete: false,
+        ),
+        const [
+          Competitor(
+            competitorId: 'c1',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Alice',
+            players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+          ),
+          Competitor(
+            competitorId: 'c2',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Bob',
+            players: [CompetitorPlayer(playerId: 'p2', rotationPosition: 0)],
+          ),
+        ],
+      );
+
+      var seq = 1;
+      final events = <GameEvent>[
+        // Alice round 1: S-1, MISS, T-1 → 4 points, TurnEnded
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: 'c1',
+          playerId: 'p1',
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, 'c1', 'p1', seq++, 1, 1),
+        dart(gameId, 'c1', 'p1', seq++, 0, 1),
+        dart(gameId, 'c1', 'p1', seq++, 1, 3),
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: 'c1',
+          playerId: 'p1',
+          localSequence: seq++,
+        ),
+        // Bob round 1: S-1, D-1, T-1 → Shanghai, instant win, no TurnEnded
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: 'c2',
+          playerId: 'p2',
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, 'c2', 'p2', seq++, 1, 1),
+        dart(gameId, 'c2', 'p2', seq++, 1, 2),
+        dart(gameId, 'c2', 'p2', seq++, 1, 3),
+      ];
+
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as ShanghaiResult;
+      final alice = result.competitors.firstWhere((c) => c.competitorId == 'c1');
+      final bob = result.competitors.firstWhere((c) => c.competitorId == 'c2');
+      expect(alice.roundsPlayed, 1,
+          reason: 'Alice played round 1 only — her TurnEnded bumped '
+              'practiceRound to 2 but she did not start a second round');
+      expect(bob.roundsPlayed, 1,
+          reason: 'Bob played one round, winning via Shanghai');
+    }));
   });
 }

@@ -225,10 +225,15 @@ class GetGameResultUseCase {
           engine: engine,
           competitorId: c.competitorId,
         ),
-        // practiceRound stops incrementing once the cap is hit; clamp for
-        // the Shanghai-instant-win case where the game ends mid-round.
-        roundsPlayed:
-            math.min(c.practiceRound, finalState.shanghaiTotalRounds),
+        // Count TurnStarted events for this competitor (one per round
+        // they participated in). `practiceRound` is bumped at TurnEnded
+        // time, which inflates the count by 1 for the player whose turn
+        // finished just before another player ended the game via Shanghai
+        // (#323). Clamp at the configured cap for completeness.
+        roundsPlayed: math.min(
+          _countTurnStarted(events, c.competitorId),
+          finalState.shanghaiTotalRounds,
+        ),
       );
     }).toList();
 
