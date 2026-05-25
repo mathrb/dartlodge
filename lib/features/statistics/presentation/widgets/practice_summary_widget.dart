@@ -57,31 +57,71 @@ class PracticeSummaryWidget extends StatelessWidget {
         ),
       CheckoutPracticeResult(
         :final competitorName,
-        :final checkedOut,
+        :final attempts,
+        :final successes,
         :final dartsThrown,
         :final fromScore,
-        :final remainingScore,
       ) =>
-        PostGameHeroCard(
-          badge: checkedOut ? 'CHECKED OUT' : null,
-          headline:
-              checkedOut ? 'Checked out!' : 'Not checked out',
-          subline: competitorName,
-          muted: !checkedOut,
-          sideStats: [
-            PostGameHeroStat(
-              label: 'DARTS',
-              value: '$dartsThrown',
-              emphasize: checkedOut,
-            ),
-            PostGameHeroStat(
-              label: 'FROM → REMAINING',
-              value: '$fromScore → $remainingScore',
-            ),
-          ],
+        _buildCheckoutHero(
+          competitorName: competitorName,
+          attempts: attempts,
+          successes: successes,
+          dartsThrown: dartsThrown,
+          fromScore: fromScore,
         ),
       ShanghaiResult() => const SizedBox.shrink(),
     };
+  }
+
+  /// Multi-attempt aware checkout-practice hero.
+  ///
+  /// Single-attempt session (`attempts == 1`) keeps the original chrome —
+  /// "Checked out!" / "Not checked out" — so the ∞-mode one-and-done flow
+  /// reads the same as before.
+  ///
+  /// Multi-attempt session shows a success-rate fraction and percentage so
+  /// users see all of their attempts, not just the last one (#316).
+  Widget _buildCheckoutHero({
+    required String competitorName,
+    required int attempts,
+    required int successes,
+    required int dartsThrown,
+    required int fromScore,
+  }) {
+    final isSingleAttempt = attempts <= 1;
+    final allCheckedOut = successes > 0 && successes == attempts;
+    final anySuccess = successes > 0;
+
+    final headline = isSingleAttempt
+        ? (anySuccess ? 'Checked out!' : 'Not checked out')
+        : '$successes of $attempts checkouts';
+    final badge = allCheckedOut ? 'CHECKED OUT' : null;
+    final rate = attempts == 0 ? 0 : (successes * 100 / attempts).round();
+
+    return PostGameHeroCard(
+      badge: badge,
+      headline: headline,
+      subline: competitorName,
+      muted: !anySuccess,
+      sideStats: [
+        PostGameHeroStat(
+          label: 'DARTS',
+          value: '$dartsThrown',
+          emphasize: anySuccess,
+        ),
+        if (isSingleAttempt)
+          PostGameHeroStat(
+            label: 'FROM',
+            value: '$fromScore',
+          )
+        else
+          PostGameHeroStat(
+            label: 'SUCCESS RATE',
+            value: '$rate%',
+            emphasize: anySuccess,
+          ),
+      ],
+    );
   }
 }
 

@@ -63,10 +63,10 @@ CheckoutPracticeResult _$CheckoutPracticeResultFromJson(
   Map<String, dynamic> json,
 ) => CheckoutPracticeResult(
   competitorName: json['competitorName'] as String,
-  checkedOut: json['checkedOut'] as bool,
+  attempts: (json['attempts'] as num).toInt(),
+  successes: (json['successes'] as num).toInt(),
   dartsThrown: (json['dartsThrown'] as num).toInt(),
   fromScore: (json['fromScore'] as num).toInt(),
-  remainingScore: (json['remainingScore'] as num).toInt(),
   $type: json['runtimeType'] as String?,
 );
 
@@ -74,10 +74,10 @@ Map<String, dynamic> _$CheckoutPracticeResultToJson(
   CheckoutPracticeResult instance,
 ) => <String, dynamic>{
   'competitorName': instance.competitorName,
-  'checkedOut': instance.checkedOut,
+  'attempts': instance.attempts,
+  'successes': instance.successes,
   'dartsThrown': instance.dartsThrown,
   'fromScore': instance.fromScore,
-  'remainingScore': instance.remainingScore,
   'runtimeType': instance.$type,
 };
 

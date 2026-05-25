@@ -199,14 +199,15 @@ void main() {
       expect(find.text("Bob's 27 — drill ended"), findsOneWidget);
     });
 
-    testWidgets('170 Checkout success shows "Checked out!"', (tester) async {
+    testWidgets('170 Checkout single attempt success shows "Checked out!"',
+        (tester) async {
       await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
         result: GameResult.checkoutPractice(
           competitorName: 'Alice',
-          checkedOut: true,
+          attempts: 1,
+          successes: 1,
           dartsThrown: 9,
           fromScore: 170,
-          remainingScore: 0,
         ),
       )));
 
@@ -214,24 +215,62 @@ void main() {
       expect(find.text('Alice'), findsOneWidget);
       expect(find.text('DARTS'), findsOneWidget);
       expect(find.text('9'), findsOneWidget);
-      expect(find.text('FROM → REMAINING'), findsOneWidget);
-      expect(find.text('170 → 0'), findsOneWidget);
+      expect(find.text('FROM'), findsOneWidget);
+      expect(find.text('170'), findsOneWidget);
     });
 
-    testWidgets('170 Checkout failure shows "Not checked out"', (tester) async {
+    testWidgets('170 Checkout single attempt failure shows "Not checked out"',
+        (tester) async {
       await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
         result: GameResult.checkoutPractice(
           competitorName: 'Alice',
-          checkedOut: false,
+          attempts: 1,
+          successes: 0,
           dartsThrown: 9,
           fromScore: 170,
-          remainingScore: 32,
         ),
       )));
 
       expect(find.text('NOT CHECKED OUT'), findsOneWidget);
-      expect(find.text('170 → 32'), findsOneWidget);
+      expect(find.text('170'), findsOneWidget);
       expect(find.text('CHECKED OUT'), findsNothing);
+    });
+
+    testWidgets('170 Checkout multi-attempt mixed shows success ratio',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.checkoutPractice(
+          competitorName: 'Alice',
+          attempts: 3,
+          successes: 1,
+          dartsThrown: 9,
+          fromScore: 170,
+        ),
+      )));
+
+      expect(find.text('1 OF 3 CHECKOUTS'), findsOneWidget);
+      expect(find.text('SUCCESS RATE'), findsOneWidget);
+      expect(find.text('33%'), findsOneWidget);
+      expect(find.text('DARTS'), findsOneWidget);
+      expect(find.text('9'), findsOneWidget);
+      expect(find.text('CHECKED OUT'), findsNothing);
+    });
+
+    testWidgets('170 Checkout multi-attempt all succeed shows badge',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.checkoutPractice(
+          competitorName: 'Alice',
+          attempts: 3,
+          successes: 3,
+          dartsThrown: 9,
+          fromScore: 170,
+        ),
+      )));
+
+      expect(find.text('CHECKED OUT'), findsOneWidget);
+      expect(find.text('3 OF 3 CHECKOUTS'), findsOneWidget);
+      expect(find.text('100%'), findsOneWidget);
     });
   });
 }

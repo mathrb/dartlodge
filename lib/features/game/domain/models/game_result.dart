@@ -46,10 +46,10 @@ sealed class GameResult with _$GameResult {
 
   const factory GameResult.checkoutPractice({
     required String competitorName,
-    required bool checkedOut,
+    required int attempts,
+    required int successes,
     required int dartsThrown,
     required int fromScore,
-    required int remainingScore,
   }) = CheckoutPracticeResult;
 
   const factory GameResult.shanghai({

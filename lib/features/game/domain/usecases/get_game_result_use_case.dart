@@ -5,11 +5,15 @@
 // the shared `gameStatsProvider` (x01-shaped chrome fits it).
 //
 // No new scoring math: every field comes from the final `CompetitorState` /
-// `GameState` that the engine produces, with two exceptions that observe
+// `GameState` that the engine produces, with three exceptions that observe
 // engine output rather than recompute it —
 //   - `CheckoutPracticeResult.dartsThrown` counts surviving `DartThrown`
 //     events directly (the checkout engine pads bust turns with phantom
 //     `MISS` darts, so `dartThrows.length` over-counts).
+//   - `CheckoutPracticeResult.attempts` counts surviving `TurnStarted`
+//     events for the subject (each turn is one attempt at the checkout).
+//     `practiceSuccesses` on the final state already tracks successes;
+//     attempts has no engine-maintained counterpart.
 //   - `ShanghaiResult.bestRound` walks events a second time and accumulates
 //     per-round score deltas off the engine's score field between
 //     `TurnEnded` boundaries.
@@ -123,10 +127,10 @@ class GetGameResultUseCase {
         ),
       GameType.checkoutPractice => GameResult.checkoutPractice(
           competitorName: subject.name,
-          checkedOut: subject.score == 0,
+          attempts: _countTurnStarted(events, subject.competitorId),
+          successes: subject.practiceSuccesses,
           dartsThrown: _countDarts(events, subject.competitorId),
           fromScore: subject.startingScore,
-          remainingScore: subject.score,
         ),
       _ => null,
     };
@@ -274,6 +278,22 @@ class GetGameResultUseCase {
     for (final e in events) {
       if (e.eventType != 'DartThrown') continue;
       if (skip.correctedDartIds.contains(e.eventId)) continue;
+      if (skip.supersededEventIds.contains(e.eventId)) continue;
+      if (e.payload['competitor_id'] != competitorId) continue;
+      count++;
+    }
+    return count;
+  }
+
+  /// Counts the surviving `TurnStarted` events for [competitorId]. Each
+  /// turn is one checkout attempt — TurnStarted is more reliable than
+  /// TurnEnded because End Drill mid-attempt skips the closing TurnEnded
+  /// while TurnStarted was already recorded when the attempt began.
+  int _countTurnStarted(List<GameEvent> events, String competitorId) {
+    final skip = _buildSkipSets(events);
+    var count = 0;
+    for (final e in events) {
+      if (e.eventType != 'TurnStarted') continue;
       if (skip.supersededEventIds.contains(e.eventId)) continue;
       if (e.payload['competitor_id'] != competitorId) continue;
       count++;

@@ -573,13 +573,13 @@ void main() {
       expect(result, isA<CheckoutPracticeResult>());
       final co = result as CheckoutPracticeResult;
       expect(co.competitorName, 'Dave');
-      expect(co.checkedOut, isTrue);
+      expect(co.attempts, 1);
+      expect(co.successes, 1);
       expect(co.dartsThrown, 3);
       expect(co.fromScore, 170);
-      expect(co.remainingScore, 0);
     }));
 
-    test('checkoutPractice: failed end (manual end) reports remainingScore > 0',
+    test('checkoutPractice: manual end before checkout reports 1 attempt / 0 successes',
         (() async {
       const gameId = 'g-co-fail';
       const competitorId = 'c1';
@@ -613,10 +613,103 @@ void main() {
       await completeWithEvents(gameId, null, events);
 
       final result = await useCase.execute(gameId) as CheckoutPracticeResult;
-      expect(result.checkedOut, isFalse);
+      expect(result.attempts, 1);
+      expect(result.successes, 0);
       expect(result.dartsThrown, 1);
       expect(result.fromScore, 170);
-      expect(result.remainingScore, 150);
+    }));
+
+    test(
+        'checkoutPractice: multi-attempt session reports aggregate attempts / successes (#316)',
+        (() async {
+      // The P0 repro from #316:
+      //   round 1: T20+T20+DB → successful 170 checkout
+      //   round 2: T20+T20+T20 → bust
+      //   round 3: MISS+MISS+MISS → no checkout
+      //   user taps End Drill (no TurnEnded for round 3 → GameCompleted only)
+      // Pre-fix the result reported only the last round's state
+      // ('NOT CHECKED OUT, 170 → 170'), ignoring round 1's success.
+      const gameId = 'g-co-multi';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.checkoutPractice,
+        config: const GameConfig.checkoutPractice(),
+        playerId: playerId,
+        playerName: 'Frank',
+        competitorId: competitorId,
+      );
+
+      var seq = 1;
+      final events = <GameEvent>[
+        // Round 1: T20 + T20 + DB → checkout
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, competitorId, playerId, seq++, 20, 3),
+        dart(gameId, competitorId, playerId, seq++, 20, 3),
+        dart(gameId, competitorId, playerId, seq++, 25, 2),
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          reason: 'checkout',
+        ),
+        // Round 2: T20 + T20 + T20 → bust (180 > 170)
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, competitorId, playerId, seq++, 20, 3),
+        dart(gameId, competitorId, playerId, seq++, 20, 3),
+        dart(gameId, competitorId, playerId, seq++, 20, 3),
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+        ),
+        // Round 3: MISS + MISS + MISS, then user ends drill (no TurnEnded)
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, competitorId, playerId, seq++, 0, 1),
+        dart(gameId, competitorId, playerId, seq++, 0, 1),
+        dart(gameId, competitorId, playerId, seq++, 0, 1),
+        buildGameCompletedEvent(
+          gameId: gameId,
+          winnerCompetitorId: null,
+          localSequence: seq++,
+        ),
+      ];
+
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as CheckoutPracticeResult;
+      expect(result.competitorName, 'Frank');
+      expect(result.attempts, 3,
+          reason: 'three TurnStarted events → three attempts at checkout');
+      expect(result.successes, 1,
+          reason: 'round 1 checked out; rounds 2 and 3 did not');
+      expect(result.dartsThrown, 9,
+          reason: 'three darts thrown per round, all three rounds');
+      expect(result.fromScore, 170);
     }));
 
     test('shanghai: bestRound observes max single-round score', (() async {
