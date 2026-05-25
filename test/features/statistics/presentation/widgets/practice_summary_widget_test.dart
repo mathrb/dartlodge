@@ -199,6 +199,46 @@ void main() {
       expect(find.text("Bob's 27 — drill ended"), findsOneWidget);
     });
 
+    testWidgets(
+        'Around the Clock abandoned (no winner, no darts) shows ENDED EARLY (#335)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.aroundTheClock(
+          competitors: [
+            AtcCompetitorResult(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              turnsCompleted: 0,
+              totalDarts: 0,
+              lastTargetHit: 0,
+              finished: false,
+            ),
+            AtcCompetitorResult(
+              competitorId: 'c2',
+              competitorName: 'Bob',
+              turnsCompleted: 0,
+              totalDarts: 0,
+              lastTargetHit: 0,
+              finished: false,
+            ),
+          ],
+          winnerCompetitorId: null,
+          doublesOnly: false,
+        ),
+      )));
+
+      // Pre-fix: Alice rendered as the hero "winner" with 0/0 stats.
+      // Post-fix: a generic "no winner" hero with the ENDED EARLY badge.
+      expect(find.text('ENDED EARLY'), findsOneWidget);
+      expect(find.text('NO WINNER'), findsOneWidget,
+          reason: 'PostGameHeroCard uppercases the headline');
+      expect(find.text('ALICE'), findsNothing,
+          reason: 'Alice must not appear as the hero headline');
+      // The hero's WINNER subtitle column should not appear when no winner
+      // (the breakdown table below still shows zeroed stats per player).
+      expect(find.text('WINNER'), findsNothing);
+    });
+
     testWidgets("Bob's 27 negative final score renders in error colour (#339)",
         (tester) async {
       const lightTheme = AppTheme.light;
