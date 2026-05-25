@@ -326,11 +326,17 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 // Shanghai rounds are tied to the round-number target —
                 // tapping NEXT ROUND with 0 darts thrown silently skips
                 // that round, which reads as a mis-tap rather than an
-                // intentional pass (#289). ATC has the same exposure (a
-                // 0-dart NEXT ROUND just hands the turn over without
-                // scoring) and shipped inconsistently — now also gated on
-                // ≥1 dart for symmetry with Shanghai (#336). A MISS is
-                // still available for an explicit pass.
+                // intentional pass (#289 / #303).
+                //
+                // #303 left ATC ungated because its strategic-skip was
+                // judged intentional at the time. The audit (#336) later
+                // flagged the resulting asymmetry, and we're choosing the
+                // mis-tap protection over strategic-skip: a deliberate
+                // pass remains available by throwing a MISS, while the
+                // accidental 0-dart NEXT ROUND tap that hands the turn
+                // over silently is now blocked. Other practice modes
+                // (Bob's 27 / Catch 40 / Checkout) keep their existing
+                // behaviour.
                 showNextRound: !gs.isComplete &&
                     !((isShanghai || isAtc) && gs.dartsThrownInTurn == 0),
                 showNextTarget: isCatch40 &&
