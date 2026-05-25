@@ -86,13 +86,35 @@ class PostGameStatsBreakdown extends StatelessWidget {
                   .withValues(alpha: AppTheme.opacityGhostBorderLight),
             ),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _BreakdownTable(
-              columns: columns,
-              rows: rows,
-              categoryHeader: categoryHeader,
-            ),
+          // On wide viewports (≥ 600px, ~desktop) the intrinsic-width
+          // table rendered at ~250px with a large empty area to its right
+          // (#334). Flex-column-widths over a SizedBox sized to the
+          // available width make the table fill the container on desktop.
+          // Narrow viewports keep the horizontal scroll fallback so the
+          // table never overflows on mobile.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 600) {
+                return SizedBox(
+                  width: constraints.maxWidth,
+                  child: _BreakdownTable(
+                    columns: columns,
+                    rows: rows,
+                    categoryHeader: categoryHeader,
+                    flexColumns: true,
+                  ),
+                );
+              }
+              return SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: _BreakdownTable(
+                  columns: columns,
+                  rows: rows,
+                  categoryHeader: categoryHeader,
+                  flexColumns: false,
+                ),
+              );
+            },
           ),
         ),
       ],
@@ -105,11 +127,17 @@ class _BreakdownTable extends StatelessWidget {
     required this.columns,
     required this.rows,
     required this.categoryHeader,
+    required this.flexColumns,
   });
 
   final List<PostGameBreakdownColumn> columns;
   final List<PostGameBreakdownRow> rows;
   final String categoryHeader;
+
+  /// When true, columns flex to fill the parent width (desktop). When
+  /// false, columns size to their content (mobile, with the horizontal
+  /// scroll fallback in the parent handling overflow).
+  final bool flexColumns;
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +157,9 @@ class _BreakdownTable extends StatelessWidget {
     const cellPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
 
     return Table(
-      defaultColumnWidth: const IntrinsicColumnWidth(),
+      defaultColumnWidth: flexColumns
+          ? const FlexColumnWidth()
+          : const IntrinsicColumnWidth(),
       border: TableBorder(
         horizontalInside: BorderSide(
           color: cs.outlineVariant.withValues(alpha: 0.08),
