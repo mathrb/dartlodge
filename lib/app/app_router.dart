@@ -1,12 +1,20 @@
 // App Router Configuration
 // Handles navigation between different screens using GoRouter
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dart_lodge/features/game/presentation/pages/home_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/player_selection_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/variant_selection_page.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
+import 'package:dart_lodge/features/game/presentation/providers/active_game_provider.dart';
+import 'package:dart_lodge/features/game/presentation/providers/active_practice_provider.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
 import 'package:dart_lodge/features/history/presentation/pages/history_page.dart';
 import 'package:dart_lodge/features/players/presentation/pages/create_player_page.dart';
 import 'package:dart_lodge/features/players/presentation/pages/edit_player_page.dart';
@@ -117,6 +125,95 @@ Widget _errorPage(BuildContext _, GoRouterState s) => Scaffold(
     appBar: AppBar(title: const Text('Error')),
     body: Center(child: Text('Page not found: ${s.uri}')));
 
+// ── onExit handlers (browser-back / route-exit confirmation, #319) ───────────
+//
+// `GoRoute.onExit` runs for ALL exit paths — in-app `context.go`, browser
+// back/forward, and OS gesture — so it catches the case `PopScope` couldn't
+// on Flutter Web (browser back didn't reach `onPopInvokedWithResult` because
+// the URL had already changed). Each handler:
+//   1. Short-circuits when the game is already complete. The check goes
+//      against the DB (`GameRepository.getGame`), not the active-game
+//      notifier's in-memory state: `endGame()` / `endDrill()` write
+//      `is_complete = true` via `appendEventsAndCompleteGame` but
+//      deliberately do not mutate the notifier state (the post-game-
+//      navigation listener watches that flag, mutating it would route
+//      every menu-driven exit through post-game instead of home). The DB
+//      read is the authoritative single source of truth.
+//   2. Otherwise shows the End Game dialog. If the user confirms, marks
+//      the game abandoned via the matching notifier so stats projections
+//      see the clean game-boundary reset (#280 / #252) and returns true.
+//   3. On cancel, returns false to keep the user on the active board.
+
+Future<bool> _confirmActiveExit({
+  required BuildContext context,
+  required Future<bool> Function() isComplete,
+  required Future<void> Function() endGame,
+}) async {
+  if (await isComplete()) return true;
+  final completer = Completer<bool>();
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => EndGameDialogWidget(
+      onConfirm: () async {
+        Navigator.of(dialogContext).pop();
+        try {
+          await endGame();
+        } finally {
+          if (!completer.isCompleted) completer.complete(true);
+        }
+      },
+      onCancel: () {
+        Navigator.of(dialogContext).pop();
+        if (!completer.isCompleted) completer.complete(false);
+      },
+    ),
+  );
+  // `showDialog` resolves on dialog pop. If the user dismisses the dialog by
+  // some other means (e.g. tap-outside on a future change), treat it as
+  // cancel so the player stays on the board.
+  if (!completer.isCompleted) completer.complete(false);
+  return completer.future;
+}
+
+Future<bool> _gameIsComplete(
+    ProviderContainer container, String gameId) async {
+  final game = await container.read(gameRepositoryProvider).getGame(gameId);
+  return game?.isComplete ?? false;
+}
+
+FutureOr<bool> _activeX01Exit(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final gameId = state.pathParameters['gameId']!;
+  return _confirmActiveExit(
+    context: context,
+    isComplete: () => _gameIsComplete(container, gameId),
+    endGame: () =>
+        container.read(activeGameProvider(gameId).notifier).endGame(),
+  );
+}
+
+FutureOr<bool> _activeCricketExit(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final gameId = state.pathParameters['gameId']!;
+  return _confirmActiveExit(
+    context: context,
+    isComplete: () => _gameIsComplete(container, gameId),
+    endGame: () =>
+        container.read(activeCricketGameProvider(gameId).notifier).endGame(),
+  );
+}
+
+FutureOr<bool> _activePracticeExit(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final gameId = state.pathParameters['gameId']!;
+  return _confirmActiveExit(
+    context: context,
+    isComplete: () => _gameIsComplete(container, gameId),
+    endGame: () =>
+        container.read(activePracticeProvider(gameId).notifier).endDrill(),
+  );
+}
+
 // ── Route tree ────────────────────────────────────────────────────────────────
 
 List<RouteBase> _buildRoutes() => [
@@ -143,15 +240,25 @@ List<RouteBase> _buildRoutes() => [
           path: '${GameRoutes.variantSelection}/:category',
           builder: _variantSelectionPage),
       GoRoute(path: GameRoutes.playerSelection, builder: _playerSelectionPage),
-      // Active game board routes
+      // Active game board routes. `onExit` confirms before leaving an
+      // in-progress game so browser back / OS gesture can't silently abandon
+      // it (#319). For exits triggered by the in-app End Game flow,
+      // `endGame()` runs first and flips `games.is_complete = true` in the
+      // DB — the onExit handler checks the DB rather than the notifier's
+      // in-memory state, so it correctly short-circuits and does not raise
+      // a second confirmation dialog.
       GoRoute(
-          path: '${GameRoutes.activeX01}/:gameId', builder: _x01BoardPage),
+          path: '${GameRoutes.activeX01}/:gameId',
+          builder: _x01BoardPage,
+          onExit: _activeX01Exit),
       GoRoute(
           path: '${GameRoutes.activeCricket}/:gameId',
-          builder: _cricketBoardPage),
+          builder: _cricketBoardPage,
+          onExit: _activeCricketExit),
       GoRoute(
           path: '${GameRoutes.activePractice}/:gameId',
-          builder: _practiceBoardPage),
+          builder: _practiceBoardPage,
+          onExit: _activePracticeExit),
       GoRoute(
           path: '${GameRoutes.activeCountUp}/:gameId',
           builder: _countUpBoardPage),
