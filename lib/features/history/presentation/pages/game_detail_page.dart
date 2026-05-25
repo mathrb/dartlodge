@@ -16,7 +16,11 @@ import 'package:dart_lodge/features/statistics/presentation/widgets/practice_sum
 import 'package:dart_lodge/features/statistics/presentation/widgets/shanghai_summary_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
+import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/core/widgets/game_summary_section_widget.dart';
 
 class GameDetailPage extends ConsumerWidget {
@@ -67,6 +71,12 @@ class GameDetailPage extends ConsumerWidget {
     // chrome is dead weight (#294).
     final showLegBreakdown = isGameStatsBacked(game.gameType.name);
 
+    // Checkout Practice has no legs but does have meaningful per-attempt
+    // rows (Round / Darts / Score → Remaining). Render the turn breakdown
+    // directly as "Round Breakdown" so users can see what each attempt did
+    // (#343).
+    final showCheckoutRounds = game.gameType == GameType.checkoutPractice;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -86,6 +96,21 @@ class GameDetailPage extends ConsumerWidget {
             const SizedBox(height: 8),
             LegBreakdownTableWidget(
               legs: detail.legStats,
+              game: game,
+              competitors: detail.competitors,
+              events: detail.events,
+            ),
+          ],
+          if (showCheckoutRounds) ...[
+            const SizedBox(height: 16),
+            Text(
+              'Round Breakdown',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            _CheckoutRoundsBreakdown(
               game: game,
               competitors: detail.competitors,
               events: detail.events,
@@ -223,6 +248,44 @@ class _StatsSection extends ConsumerWidget {
           _ => PracticeSummaryWidget(result: result),
         };
       },
+    );
+  }
+}
+
+/// Per-attempt breakdown for Checkout Practice. Builds the same
+/// `LegTurnBreakdown` the X01/Cricket leg breakdown uses and feeds it
+/// straight to [TurnBreakdownTableWidget], since the engine never emits
+/// `LegCompleted` for checkout practice and the per-leg widget would
+/// otherwise render "No legs completed" (#343).
+class _CheckoutRoundsBreakdown extends StatelessWidget {
+  const _CheckoutRoundsBreakdown({
+    required this.game,
+    required this.competitors,
+    required this.events,
+  });
+
+  final Game game;
+  final List<Competitor> competitors;
+  final List<GameEvent> events;
+
+  @override
+  Widget build(BuildContext context) {
+    final breakdown = const TurnBreakdownBuilder().build(
+      game: game,
+      competitors: competitors,
+      events: events,
+    );
+    final leg = breakdown[1];
+    if (leg == null || leg.turns.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Text('No attempts recorded'),
+      );
+    }
+    return TurnBreakdownTableWidget(
+      gameType: game.gameType,
+      breakdown: leg,
+      singleCompetitor: competitors.length == 1,
     );
   }
 }
