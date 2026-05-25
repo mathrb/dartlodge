@@ -14,7 +14,12 @@ Widget _wrap(Widget child) =>
 
 void main() {
   group('PracticeTargetDisplayWidget — Catch 40 visit indicator (#324)', () {
-    Widget makeWidget({required int dartsOnTarget, int round = 1, int score = 0}) {
+    Widget makeWidget({
+      required int dartsOnTarget,
+      int round = 1,
+      int score = 0,
+      int? remaining,
+    }) {
       return _wrap(PracticeTargetDisplayWidget(
         gameType: GameType.catch40,
         currentTarget: 60 + round,
@@ -24,29 +29,56 @@ void main() {
         practiceAttempts: 0,
         practiceSuccesses: 0,
         catch40DartsOnTarget: dartsOnTarget,
+        catch40TargetRemaining: remaining ?? (60 + round),
       ));
     }
 
     testWidgets('shows "Visit 1/2" at start of round (0 darts)',
         (tester) async {
       await tester.pumpWidget(makeWidget(dartsOnTarget: 0));
-      expect(find.text('Score: 0 | Visit 1/2'), findsOneWidget);
+      expect(find.text('Target 61 | Visit 1/2 | Score 0'), findsOneWidget);
     });
 
     testWidgets('shows "Visit 1/2" mid-visit-1 (2 darts)', (tester) async {
       await tester.pumpWidget(makeWidget(dartsOnTarget: 2));
-      expect(find.text('Score: 0 | Visit 1/2'), findsOneWidget);
+      expect(find.text('Target 61 | Visit 1/2 | Score 0'), findsOneWidget);
     });
 
     testWidgets('shows "Visit 2/2" at start of visit 2 (3 darts after auto-advance)',
         (tester) async {
       await tester.pumpWidget(makeWidget(dartsOnTarget: 3));
-      expect(find.text('Score: 0 | Visit 2/2'), findsOneWidget);
+      expect(find.text('Target 61 | Visit 2/2 | Score 0'), findsOneWidget);
     });
 
     testWidgets('shows "Visit 2/2" mid-visit-2 (5 darts)', (tester) async {
       await tester.pumpWidget(makeWidget(dartsOnTarget: 5));
-      expect(find.text('Score: 0 | Visit 2/2'), findsOneWidget);
+      expect(find.text('Target 61 | Visit 2/2 | Score 0'), findsOneWidget);
+    });
+
+    testWidgets('central display shows current remaining, not original target',
+        (tester) async {
+      // Round 1 (target 61), player has thrown enough to bring remaining to 16.
+      await tester.pumpWidget(makeWidget(
+        dartsOnTarget: 1,
+        round: 1,
+        remaining: 16,
+      ));
+      // The big central text reflects what's LEFT, not the static target.
+      expect(find.text('16'), findsOneWidget);
+      expect(find.text('61'), findsNothing,
+          reason: 'big number should NOT show the original target (#326)');
+      // The secondary line still surfaces the round's target for context.
+      expect(find.text('Target 61 | Visit 1/2 | Score 0'), findsOneWidget);
+    });
+
+    testWidgets('central display shows reset value after bust', (tester) async {
+      // After a bust the engine resets remaining to currentTarget.
+      await tester.pumpWidget(makeWidget(
+        dartsOnTarget: 1,
+        round: 1,
+        remaining: 61,
+      ));
+      expect(find.text('61'), findsOneWidget);
     });
 
     testWidgets('non-Catch-40 game types do not show a visit indicator',
