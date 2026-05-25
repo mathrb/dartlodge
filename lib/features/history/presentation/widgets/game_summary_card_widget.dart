@@ -57,10 +57,18 @@ class GameSummaryCardWidget extends StatelessWidget {
   String _variantLabel(GameConfig config) {
     return config.maybeMap(
       x01: (c) => '${c.startingScore}',
-      cricket: (c) => switch (c.targetMode) {
-        'random' => 'random ${c.scoring}',
-        'crazy' => 'crazy ${c.scoring}',
-        _ => c.scoring,
+      // Mirror the variant-picker / in-game header convention so the
+      // history list, game start, and in-game chrome all agree on each
+      // configuration's name (#333):
+      //   - fixed + scoring → scoring alone (`standard`, `cut-throat`, …)
+      //   - random/crazy + standard scoring → just the mode (`random`, `crazy`)
+      //   - random/crazy + non-standard scoring → "mode · scoring"
+      cricket: (c) {
+        if (c.targetMode != 'random' && c.targetMode != 'crazy') {
+          return c.scoring;
+        }
+        if (c.scoring == 'standard') return c.targetMode;
+        return '${c.targetMode} · ${c.scoring}';
       },
       aroundTheClock: (c) => c.variant,
       orElse: () => '',
