@@ -56,6 +56,13 @@ class PostGameSummaryPage extends ConsumerWidget {
               final usesGameStats = isGameStatsBacked(gameStats.gameType);
               return Stack(
                 children: [
+                  // Game-stats-backed types (X01 / Cricket / Count-Up) have
+                  // rich content that already fills the viewport. Practice
+                  // / Shanghai results are typically a single hero card —
+                  // before #338 they were top-anchored with a large gap
+                  // down to the sticky footer. Add vertical breathing room
+                  // above the hero so the empty area below reads as
+                  // intentional layout rather than a missing section.
                   SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                     child: Column(
@@ -74,7 +81,10 @@ class PostGameSummaryPage extends ConsumerWidget {
                         if (usesGameStats)
                           GameSummarySectionWidget(gameStats: gameStats)
                         else
-                          _GameResultBody(gameId: gameId),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 64),
+                            child: _GameResultBody(gameId: gameId),
+                          ),
                       ],
                     ),
                   ),
