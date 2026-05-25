@@ -336,6 +336,11 @@ class _CheckoutBanner extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 14, vertical: 8),
+                  // At 412px (Pixel 6A) the long suggestion-hint text used
+                  // to butt up against the CHECKOUT label with no visible
+                  // gap ("CHECKOUTSuggestions appear..."). Add a 12px gap
+                  // and let the suggestion text ellipsise so the two labels
+                  // never collide (#330).
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -348,12 +353,18 @@ class _CheckoutBanner extends StatelessWidget {
                           letterSpacing: 1.2,
                         ),
                       ),
-                      Text(
-                        suggestion ?? 'Suggestions appear in checkout range',
-                        style: AppTextStyles.labelLarge.copyWith(
-                          color: inRange
-                              ? cs.primaryFixed
-                              : cs.onSurfaceVariant.withValues(alpha: 0.25),
+                      const SizedBox(width: 12),
+                      Flexible(
+                        child: Text(
+                          suggestion ?? 'Suggestions appear in checkout range',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: inRange
+                                ? cs.primaryFixed
+                                : cs.onSurfaceVariant.withValues(alpha: 0.25),
+                          ),
+                          textAlign: TextAlign.end,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
