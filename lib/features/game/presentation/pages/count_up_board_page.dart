@@ -15,6 +15,11 @@ import '../widgets/game_status_bar_widget.dart';
 import '../widgets/player_score_section_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
+/// Trailing-menu actions on the active count-up board (#331). Mirrors the
+/// X01/Cricket boards so users can reach Settings without abandoning
+/// their game.
+enum _BoardMenuAction { endGame, settings }
+
 /// Active board page for count-up.
 ///
 /// Mirrors [X01BoardPage] minus the X01-only chrome:
@@ -111,20 +116,32 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                 AppHeader(
                   showBack: true,
                   onBack: () => _confirmBack(context),
-                  trailing: InkWell(
-                    onTap: () => _showEndGameDialog(context),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                    splashColor: AppTheme.kineticSplashColor,
-                    highlightColor: AppTheme.kineticSplashColor,
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: Icon(
-                        Icons.settings_outlined,
-                        color: cs.onSurface,
-                        semanticLabel: 'Game options',
-                      ),
+                  // Three-dot menu — see #331 (gear icon misleadingly
+                  // implied Settings while the action was End Game).
+                  trailing: PopupMenuButton<_BoardMenuAction>(
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: cs.onSurface,
+                      semanticLabel: 'Game options',
                     ),
+                    onSelected: (action) {
+                      switch (action) {
+                        case _BoardMenuAction.endGame:
+                          _showEndGameDialog(context);
+                        case _BoardMenuAction.settings:
+                          context.push(GameRoutes.settings);
+                      }
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: _BoardMenuAction.endGame,
+                        child: Text('End Game'),
+                      ),
+                      PopupMenuItem(
+                        value: _BoardMenuAction.settings,
+                        child: Text('Settings'),
+                      ),
+                    ],
                   ),
                 ),
                 GameStatusBarWidget(
