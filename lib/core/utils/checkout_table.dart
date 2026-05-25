@@ -548,3 +548,10 @@ int maxCheckoutScore(String outStrategy) => _configFor(outStrategy).max;
 
 /// Minimum checkout score for the given [outStrategy].
 int minCheckoutScore(String outStrategy) => _configFor(outStrategy).min;
+
+/// Number of darts required to throw the given checkout [suggestion].
+///
+/// Suggestions are emitted as ` · `-separated segments
+/// (e.g. `'T20 · D20'` is 2 darts; `'D20'` is 1; `'T20 · T20 · DB'` is 3).
+int dartsRequiredForCheckout(String suggestion) =>
+    suggestion.split(' · ').length;

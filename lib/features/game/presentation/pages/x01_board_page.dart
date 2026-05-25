@@ -250,7 +250,11 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     gameState: gameState,
                     bustFlashAnim: _bustFlashAnim,
                   ),
-                  _CheckoutBanner(score: currentScore, outStrategy: gameState.outStrategy),
+                  _CheckoutBanner(
+                    score: currentScore,
+                    outStrategy: gameState.outStrategy,
+                    dartsThrownInTurn: dartsThrownInTurn,
+                  ),
                   Expanded(
                     child: DartInputGridWidget(
                       onSegmentTapped: (segment) => ref
@@ -323,18 +327,31 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 // ── Private widgets ────────────────────────────────────────────────────────────
 
 class _CheckoutBanner extends StatelessWidget {
-  const _CheckoutBanner({required this.score, required this.outStrategy});
+  const _CheckoutBanner({
+    required this.score,
+    required this.outStrategy,
+    required this.dartsThrownInTurn,
+  });
 
   final int score;
   final String outStrategy;
+  final int dartsThrownInTurn;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final inRange = score >= minCheckoutScore(outStrategy) &&
         score <= maxCheckoutScore(outStrategy);
-    final suggestion =
+    final rawSuggestion =
         inRange ? checkoutSuggestionForStrategy(score, outStrategy) : null;
+    // Only surface suggestions reachable with the darts left in this turn —
+    // a 3-dart route is misleading on the 3rd dart of a turn (#367).
+    final remainingDarts = 3 - dartsThrownInTurn;
+    final suggestion = (rawSuggestion != null &&
+            dartsRequiredForCheckout(rawSuggestion) <= remainingDarts)
+        ? rawSuggestion
+        : null;
+    final highlight = suggestion != null;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -349,7 +366,7 @@ class _CheckoutBanner extends StatelessWidget {
             children: [
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: inRange ? 2 : 0,
+                width: highlight ? 2 : 0,
                 color: cs.primaryFixed,
               ),
               Expanded(
@@ -367,7 +384,7 @@ class _CheckoutBanner extends StatelessWidget {
                       Text(
                         'CHECKOUT',
                         style: AppTextStyles.labelSmall.copyWith(
-                          color: inRange
+                          color: highlight
                               ? cs.onSurfaceVariant
                               : cs.onSurfaceVariant.withValues(alpha: 0.35),
                           letterSpacing: 1.2,
@@ -378,7 +395,7 @@ class _CheckoutBanner extends StatelessWidget {
                         child: Text(
                           suggestion ?? 'Suggestions appear in checkout range',
                           style: AppTextStyles.labelLarge.copyWith(
-                            color: inRange
+                            color: highlight
                                 ? cs.primaryFixed
                                 : cs.onSurfaceVariant.withValues(alpha: 0.25),
                           ),
