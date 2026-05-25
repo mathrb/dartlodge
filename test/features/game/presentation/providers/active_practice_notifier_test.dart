@@ -572,4 +572,80 @@ void main() {
     expect(afterAdvance.gameState.competitors[0].practiceRound, 2);
     expect(afterAdvance.gameState.competitors[0].score, 0);
   });
+
+  // ── 13. Catch 40 bust feedback (#325) ────────────────────────────────────
+  //
+  // Bust signature in Catch 40: a non-zero dart was applied but
+  // `catch40TargetRemaining` did NOT decrease (engine resets to currentTarget
+  // on bust). MISS darts must NOT trigger the flag — they score 0 and leave
+  // remaining unchanged at the start-of-round value.
+
+  test('Catch 40: showBust true after overshoot on the first dart', () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // Target 1 → remaining 61. T20 (60) → newRem = 1 → bust → remaining
+    // reset to 61. dartValue > 0, dartsOnTarget incremented (0→1),
+    // remaining stayed at 61. Detection fires.
+    await notifier.processDart('T20');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isTrue,
+        reason: 'T20 over 1 remaining must flag showBust');
+    expect(after.gameState.catch40TargetRemaining, 61,
+        reason: 'engine resets remaining to currentTarget on bust');
+  });
+
+  test('Catch 40: showBust false on MISS (start of round)', () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // MISS at start of round: dartValue=0, remaining stays at 61, NOT a bust.
+    await notifier.processDart('MISS');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isFalse,
+        reason: 'a zero-value MISS dart is not a bust');
+  });
+
+  test('Catch 40: showBust false on partial scoring throw', () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // T15 (45): remaining 61 → 16. Score progresses, not a bust.
+    await notifier.processDart('T15');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isFalse);
+    expect(after.gameState.catch40TargetRemaining, 16);
+  });
+
+  test('Catch 40: dismissBust clears the transient flag', () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T20');
+    expect(
+        container.read(activePracticeProvider('g1')).value!.showBust, isTrue);
+
+    notifier.dismissBust();
+    expect(
+        container.read(activePracticeProvider('g1')).value!.showBust, isFalse);
+  });
 }

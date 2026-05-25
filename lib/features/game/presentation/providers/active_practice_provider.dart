@@ -49,7 +49,11 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     );
 
     final isShanghai = gs.gameType == GameType.shanghai;
+    final isCatch40 = gs.gameType == GameType.catch40;
     final prevSuccesses = gs.competitors[gs.currentTurnIndex].practiceSuccesses;
+    final prevCatch40Remaining = gs.catch40TargetRemaining;
+    final prevCatch40DartsOnTarget = gs.catch40DartsOnTarget;
+    final dartValue = Segment.parse(segment).scoreValue;
 
     state = await AsyncValue.guard(() async {
       var newGs = await switch (gs.gameType) {
@@ -103,12 +107,33 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
           newGs.competitors[gs.currentTurnIndex].practiceSuccesses >
               prevSuccesses;
 
+      // Catch 40 bust signature: a non-zero dart was applied
+      // (catch40DartsOnTarget incremented) but remaining did NOT decrease.
+      // The engine resets remaining to currentTarget on bust, so the
+      // post-throw value is >= prevRemaining (equal for first-dart-of-round
+      // busts where remaining was already at currentTarget, greater
+      // otherwise). MISS darts (dartValue == 0) never bust — checked
+      // explicitly so a 0-progress miss on a fresh round doesn't flash BUST.
+      final showBust = isCatch40 &&
+          dartValue > 0 &&
+          newGs.catch40DartsOnTarget > prevCatch40DartsOnTarget &&
+          newGs.catch40TargetRemaining >= prevCatch40Remaining;
+
       return ActivePracticeState(
         gameState: newGs,
         pendingGameWinnerId: pendingGameWinnerId,
         showShanghaiBonus: shanghaiBonus,
+        showBust: showBust,
       );
     });
+  }
+
+  /// Clear the transient `showBust` flag. Called by the board page after
+  /// the BUST snackbar fades.
+  void dismissBust() {
+    final current = state.value;
+    if (current == null || !current.showBust) return;
+    state = AsyncValue.data(current.copyWith(showBust: false));
   }
 
   bool get canUndo {
