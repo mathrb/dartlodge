@@ -82,6 +82,10 @@ class _CricketHeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // Active cricket targets + implicit Bull 25; passed to each header cell so
+    // MPR counts marks on the game's actual target set (Random/Crazy as well
+    // as Fixed).
+    final activeTargets = {...gameState.cricketTargets, 25};
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -99,6 +103,7 @@ class _CricketHeaderRow extends StatelessWidget {
                   competitor: gameState.competitors[i],
                   isActive: i == gameState.currentTurnIndex,
                   currentRoundInLeg: gameState.currentRoundInLeg,
+                  activeTargets: activeTargets,
                 ),
               ),
             Expanded(
@@ -117,18 +122,30 @@ class _PlayerHeaderCell extends StatelessWidget {
     required this.competitor,
     required this.isActive,
     required this.currentRoundInLeg,
+    required this.activeTargets,
   });
 
   final CompetitorState competitor;
   final bool isActive;
   final int currentRoundInLeg;
 
+  /// Cricket targets active for THIS game (Fixed = 15–20+25, Random/Crazy =
+  /// the assigned set + Bull 25). Drives `cricketMarksForSegment` so the
+  /// MPR calculation matches the game's variant (#320).
+  final Set<int> activeTargets;
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    final totalMarks = competitor.dartThrows
-        .fold(0, (sum, s) => sum + cricketMarksForSegment(s));
+    // `activeTargets` is the game's actual target set (+ Bull 25). Without
+    // this override, `cricketMarksForSegment` falls back to the fixed 15–20
+    // set, so Random and Crazy Cricket hits on assigned targets count as
+    // zero marks and MPR collapses (#320).
+    final totalMarks = competitor.dartThrows.fold(
+        0,
+        (sum, s) =>
+            sum + cricketMarksForSegment(s, targets: activeTargets));
     final rounds = competitor.dartThrows.length ~/ 3;
     final mpr = rounds > 0 ? totalMarks / rounds : 0.0;
 
