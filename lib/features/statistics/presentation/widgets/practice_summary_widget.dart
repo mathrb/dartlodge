@@ -52,6 +52,11 @@ class PracticeSummaryWidget extends StatelessWidget {
               label: 'FINAL SCORE',
               value: '$finalScore',
               emphasize: !bustedToZero,
+              // Negative finals (drill ended on a missed double in the
+              // late rounds) flagged in error colour to match the
+              // in-game red treatment instead of green-celebrating
+              // a negative score (#339).
+              danger: finalScore < 0,
             ),
             PostGameHeroStat(label: 'ROUND', value: '$roundReached / 20'),
           ],
