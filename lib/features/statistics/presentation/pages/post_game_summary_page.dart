@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
-import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -155,25 +154,18 @@ class _StickyFooter extends ConsumerWidget {
   final String playAgainCategory;
 
   /// Re-launches the same drill/game type without making the player walk
-  /// back through variant selection. Loads the just-finished game's
-  /// `GameConfig`, seeds the setup state with `selectVariant`, then
-  /// navigates directly to player-selection. Variant-selection re-entry
-  /// remains the fallback when the config can't be loaded (e.g. DB read
-  /// throws, or game has been deleted).
+  /// back through variant selection. Delegates to
+  /// `GameSetupNotifier.replayGame` (which owns the repository read and
+  /// the state seed); navigates directly to player-selection on success,
+  /// falls back to variant-selection by category if the load failed.
   Future<void> _playAgain(BuildContext context, WidgetRef ref) async {
-    try {
-      final game =
-          await ref.read(gameRepositoryProvider).getGame(gameId);
-      if (!context.mounted) return;
-      if (game == null) {
-        context.go('${GameRoutes.variantSelection}/$playAgainCategory');
-        return;
-      }
-      ref.read(gameSetupProvider.notifier).selectVariant(game.config);
-      if (!context.mounted) return;
+    final ok = await ref
+        .read(gameSetupProvider.notifier)
+        .replayGame(gameId);
+    if (!context.mounted) return;
+    if (ok) {
       context.go(GameRoutes.playerSelection);
-    } catch (_) {
-      if (!context.mounted) return;
+    } else {
       context.go('${GameRoutes.variantSelection}/$playAgainCategory');
     }
   }
