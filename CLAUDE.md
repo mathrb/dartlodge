@@ -283,6 +283,12 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin `^9.16.1`). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
 
+**`endGame()` / `endDrill()` write `is_complete=true` to the DB but do NOT mutate `state.value.gameState.isComplete`** — the post-game-navigation listener (`practice_board_page` / `x01_board_page` etc.) watches that flag and would otherwise route every menu-driven exit through post-game instead of home. When you need an authoritative "is this game complete?" signal outside the active-game provider (e.g. from the router's `onExit`), read it from `GameRepository.getGame(id)`, not the notifier state. See `app_router.dart`'s `_gameIsComplete` helper for the pattern.
+
+**Cricket variant labels live in three places and must stay aligned:** `variant_selection_page.dart` (picker — Title Case), `cricket_board_page.dart` (in-game header — Title Case), `game_summary_card_widget.dart` (history list — lowercase by design). When you change one site's `scoring × targetMode` label formula, audit the other two. The shared rule: fixed → `scoring` alone; random/crazy + standard → just the mode; random/crazy + non-standard → `mode · scoring`.
+
+**X01 `TurnEnded` payload carries `turn_score` (`turn_start_score - turn_end_score` per `docs/statistics/x01.projections.md` §5.2).** `ProcessDartUseCase` computes it; `buildTurnEndedEvent` accepts an optional `turnScore` int. `X01AverageProjection` prefers this delta over per-dart sum (so bust + Double-In not-in turns contribute 0 to PPR), and falls back to dart-sum when absent for backward compatibility with pre-#318 events. Any new X01 dart-emission path MUST pass `turnScore` or new games will use the legacy convention.
+
 ---
 
 ## Issue tracker conventions
