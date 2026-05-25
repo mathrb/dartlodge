@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/post_game_hero_card_widget.dart';
 import '../../../../core/widgets/post_game_stats_breakdown_widget.dart';
 import '../../../game/domain/models/game_result.dart';
@@ -96,7 +97,9 @@ class PracticeSummaryWidget extends StatelessWidget {
         ? (anySuccess ? 'Checked out!' : 'Not checked out')
         : '$successes of $attempts checkouts';
     final badge = allCheckedOut ? 'CHECKED OUT' : null;
-    final rate = attempts == 0 ? 0 : (successes * 100 / attempts).round();
+    final rate = attempts == 0
+        ? null
+        : StatFormatter.fmtPct(successes / attempts, decimals: 0);
 
     return PostGameHeroCard(
       badge: badge,
@@ -117,7 +120,7 @@ class PracticeSummaryWidget extends StatelessWidget {
         else
           PostGameHeroStat(
             label: 'SUCCESS RATE',
-            value: '$rate%',
+            value: rate ?? '—',
             emphasize: anySuccess,
           ),
       ],
