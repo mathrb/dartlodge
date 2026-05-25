@@ -212,6 +212,15 @@ class TurnBreakdownBuilder {
       }
     }
 
+    // Games that never fire `LegCompleted` (Checkout Practice — the engine
+    // tracks attempts via `practiceSuccesses` and ends the drill with a
+    // bare `GameCompleted`) still want their turn rows surfaced as
+    // "leg 1". Without this flush, the per-attempt breakdown was invisible
+    // on the History → game detail page (#343).
+    if (game.gameType == GameType.checkoutPractice && turns.isNotEmpty) {
+      result[legNumber] = LegTurnBreakdown(turns: List.unmodifiable(turns));
+    }
+
     return result;
   }
 
