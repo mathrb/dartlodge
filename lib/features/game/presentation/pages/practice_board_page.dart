@@ -276,13 +276,14 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 currentPlayerName:
                     gs.competitors.length > 1 ? competitor.name : null,
                 practiceAttempts: isCheckout
-                    // Exclude the engine's empty-slot sentinel pads —
-                    // showing the user "9 darts thrown" when they really
-                    // only threw 7 (with 2 sentinels from a 1-dart bust)
-                    // was the off-by-one called out in #261.
-                    ? competitor.dartThrows
-                        .where((d) => d.isNotEmpty)
-                        .length
+                    // Per-round count, not session-cumulative (#328).
+                    // `dartsThrownInTurn` jumps to 3 on bust/checkout
+                    // because the engine pads the slots, so count the
+                    // non-empty entries in the trailing `dartsThrownInTurn`
+                    // slots of `dartThrows` to exclude sentinel pads
+                    // (consistent with the X01 board's per-turn dart-chip
+                    // logic).
+                    ? _checkoutDartsThisRound(competitor, gs)
                     : competitor.practiceAttempts,
                 practiceSuccesses: competitor.practiceSuccesses,
                 roundScore: roundScore,
@@ -386,6 +387,28 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         GameType.checkoutPractice => gs.checkoutTargetSuccesses,
         _ => null,
       };
+
+  /// Darts thrown in the CURRENT checkout-practice round, excluding the
+  /// engine's empty-slot sentinel pads that fire on bust or checkout. The
+  /// engine sets `dartsThrownInTurn = 3` whenever it pads, so we use that
+  /// as a slice into the trailing `dartThrows` entries and count only the
+  /// non-empty ones (#328).
+  static int _checkoutDartsThisRound(
+      CompetitorState competitor, GameState gs) {
+    final n = gs.dartsThrownInTurn;
+    if (n == 0) return 0;
+    final darts = competitor.dartThrows;
+    if (darts.length < n) {
+      // Defensive: alignment between dartsThrownInTurn and dartThrows.length
+      // is an engine invariant. If it ever drifts, fall back to the
+      // whole-list non-empty count rather than throwing.
+      return darts.where((d) => d.isNotEmpty).length;
+    }
+    return darts
+        .skip(darts.length - n)
+        .where((d) => d.isNotEmpty)
+        .length;
+  }
 }
 
 class _BottomBar extends StatelessWidget {
