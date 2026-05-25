@@ -257,6 +257,11 @@ class _AtcInputCell extends StatelessWidget {
   final Color bgColor;
   final Color fgColor;
   final int dotCount;
+
+  /// When true the cell renders at 0.38 opacity AND rejects taps. ATC's
+  /// Doubles Only variant uses this for the S and T cells: they're visually
+  /// dimmed to signal "wrong throw type" and tap-disabled so a misclick
+  /// doesn't silently waste a dart (#322).
   final bool dimForeground;
   final bool enabled;
   final VoidCallback onTap;
@@ -266,7 +271,7 @@ class _AtcInputCell extends StatelessWidget {
     return Material(
       color: bgColor,
       child: InkWell(
-        onTap: enabled ? onTap : null,
+        onTap: (enabled && !dimForeground) ? onTap : null,
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 56),
           child: Padding(
