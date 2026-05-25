@@ -124,25 +124,27 @@ Hybrid approach — `pubspec.yaml` holds the intended version name, CI overrides
 
 ### Cutting a release — step by step
 
+Pre-releases are produced automatically by `auto-rc.yml`. You only act for version bumps and stable releases.
+
+**Bump the version (start a new `vX.Y` series):**
+
 ```bash
-# 1. Bump pubspec for a new minor/major version (skip for pre-release iterations).
-#    Open and merge a chore: PR with this change.
+# Open and merge a chore: PR with this change.
 sed -i -E 's/^(version: )[0-9.]+\+[0-9]+/\10.2.0+0/' pubspec.yaml
 git checkout -b chore/bump-version-0.2.0
 git commit -am "chore: bump version to 0.2.0"
 gh pr create --fill && gh pr merge --squash
-
-# 2. After merge, tag the merge commit on main.
-git checkout main && git pull
-git tag v0.2.0-rc1            # pre-release
-git push origin v0.2.0-rc1
-
-# 3. Release workflow runs automatically (~5 min). Output:
-#    https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc1
-#    with attached: dartlodge-0.2.0-rc1.apk + dartlodge-0.2.0-rc1.apk.sha256
 ```
 
-Once an RC is validated, ship stable:
+After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK ~5 min later at:
+
+```
+https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc<N>
+```
+
+Every subsequent PR merge produces the next RC in sequence (`-rc<N+1>`, `-rc<N+2>`, …). No manual tagging required.
+
+**Cut a stable release (once an RC is validated):**
 
 ```bash
 git tag v0.2.0
@@ -231,8 +233,7 @@ git checkout -b feat/my-thing
 # ...work, commit, push...
 gh pr create --fill
 
-# Cut a pre-release
-git tag v0.2.0-rc1 && git push origin v0.2.0-rc1
+# RC pre-releases are created automatically on every merge to main (see auto-rc.yml).
 
 # Cut a stable release
 git tag v0.2.0 && git push origin v0.2.0
