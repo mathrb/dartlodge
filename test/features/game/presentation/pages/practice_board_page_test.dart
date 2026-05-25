@@ -1010,6 +1010,53 @@ void main() {
     expect(find.text('ROUND 1'), findsNothing);
   });
 
+  // ── 23d. Checkout Practice: "N darts thrown" is per-round (#328) ─────────
+
+  testWidgets(
+      'Checkout Practice: "darts thrown" counts only the CURRENT round',
+      (tester) async {
+    // After round 1 (3 darts thrown, NEXT ROUND tapped → dartsThrownInTurn=0),
+    // round 2 starts with 1 dart thrown so far. Pre-#328 the secondary line
+    // would show "4 darts thrown" (session-cumulative); post-fix it shows
+    // "1 darts thrown" (current attempt only).
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 1,
+      dartThrows: const ['T20', 'T20', 'DB', 'T20'],
+    );
+    expect(find.text('1 darts thrown'), findsOneWidget);
+    expect(find.text('4 darts thrown'), findsNothing,
+        reason: 'must NOT show session-cumulative count');
+  });
+
+  testWidgets(
+      'Checkout Practice: "darts thrown" resets to 0 at start of new round',
+      (tester) async {
+    // Right after NEXT ROUND fires TurnEnded: dartsThrownInTurn=0, dartThrows
+    // still contains round 1's 3 darts.
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 0,
+      dartThrows: const ['T20', 'T20', 'DB'],
+    );
+    expect(find.text('0 darts thrown'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Checkout Practice: bust pad sentinels are excluded from per-round count',
+      (tester) async {
+    // 1-dart bust: engine appends ['T20', '', ''] and sets dartsThrownInTurn=3.
+    // User threw 1 real dart; display must show "1 darts thrown" not "3".
+    await _pumpCheckoutPractice(
+      tester,
+      dartsThrownInTurn: 3,
+      dartThrows: const ['T20', '', ''],
+    );
+    expect(find.text('1 darts thrown'), findsOneWidget);
+    expect(find.text('3 darts thrown'), findsNothing,
+        reason: 'sentinel pads must not inflate the per-round count (#261)');
+  });
+
   testWidgets(
       "23b. Bob's 27: post-3rd-dart shows just-played round, not the next one",
       (tester) async {
