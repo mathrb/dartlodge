@@ -157,18 +157,31 @@ class _AtcSummary extends StatelessWidget {
 
     if (lead == null) return const SizedBox.shrink();
 
+    // Abandoned drill (no winner, no darts thrown by any competitor)
+    // used to render the first player as "winner" with 0/0 stats (#335).
+    // Show a neutral "no winner" hero instead — the competitor breakdown
+    // below (multi-player path) still surfaces the zeroed stats.
+    final totalDartsAllCompetitors =
+        competitors.fold<int>(0, (sum, c) => sum + c.totalDarts);
+    final isAbandoned = winnerId == null && totalDartsAllCompetitors == 0;
+
     final hero = PostGameHeroCard(
-      badge: result.doublesOnly ? 'DOUBLES ONLY' : null,
-      headline: lead.competitorName,
+      badge: isAbandoned
+          ? 'ENDED EARLY'
+          : (result.doublesOnly ? 'DOUBLES ONLY' : null),
+      headline: isAbandoned ? 'No winner' : lead.competitorName,
       subline: 'Around the Clock',
-      sideStats: [
-        PostGameHeroStat(
-          label: 'TURNS',
-          value: '${lead.turnsCompleted}',
-          emphasize: true,
-        ),
-        PostGameHeroStat(label: 'DARTS', value: '${lead.totalDarts}'),
-      ],
+      muted: isAbandoned,
+      sideStats: isAbandoned
+          ? const <PostGameHeroStat>[]
+          : [
+              PostGameHeroStat(
+                label: 'TURNS',
+                value: '${lead.turnsCompleted}',
+                emphasize: true,
+              ),
+              PostGameHeroStat(label: 'DARTS', value: '${lead.totalDarts}'),
+            ],
     );
 
     if (isSolo) return hero;
