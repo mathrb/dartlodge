@@ -253,7 +253,12 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               GameStatusBarWidget(
                 configLabel: _modeName(gs.gameType),
                 roundInLeg: displayedRound,
-                totalRounds: _totalRounds(gs),
+                // Checkout Practice's `_totalRounds` is the success target,
+                // not an attempt cap — pairing it with the attempt-count
+                // numerator produced misleading "ROUND 4 / 3" output (#327).
+                // Drop the denominator here; success progress moves into
+                // the target display's secondary metric instead.
+                totalRounds: isCheckout ? null : _totalRounds(gs),
                 currentTurnDarts: currentTurnDarts,
               ),
               Expanded(

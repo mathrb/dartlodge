@@ -78,6 +78,7 @@ GameState _practiceState({
   bool isComplete = false,
   String aroundTheClockVariant = 'standard',
   CompetitorState? competitor,
+  int? checkoutTargetSuccesses,
 }) =>
     GameState(
       gameId: gameId,
@@ -87,6 +88,7 @@ GameState _practiceState({
       dartsThrownInTurn: dartsThrownInTurn,
       isComplete: isComplete,
       aroundTheClockVariant: aroundTheClockVariant,
+      checkoutTargetSuccesses: checkoutTargetSuccesses,
     );
 
 ActivePracticeState _activeState({
@@ -1008,6 +1010,110 @@ void main() {
     );
     expect(find.text('ROUND 2'), findsOneWidget);
     expect(find.text('ROUND 1'), findsNothing);
+  });
+
+  // ── 23e. Checkout Practice ROUND label semantics (#327) ─────────────────
+
+  testWidgets(
+      'Checkout Practice: status bar shows "ROUND N" without misleading "/ M" denominator',
+      (tester) async {
+    // Even with a target-successes quota set, the status bar must NOT pair
+    // attempt count with success target — they're different units.
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final gs = _practiceState(
+      gameType: GameType.checkoutPractice,
+      checkoutTargetSuccesses: 3,
+      dartsThrownInTurn: 0,
+      competitor: _practiceCompetitor(
+        dartThrows: const ['T20', 'T20', 'DB', 'T20', 'T20', 'DB'],
+      ),
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [activePracticeProvider.overrideWith(() => notifier)],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 6 darts of round 1 + round 2 (3 each); after the 2nd TurnEnded
+    // dartsThrownInTurn=0 with 6 darts → displayedRound=3.
+    expect(find.text('ROUND 3'), findsOneWidget);
+    expect(find.text('ROUND 3 / 3'), findsNothing,
+        reason: 'success target must NOT appear as round denominator');
+    expect(find.text('ROUND 4 / 3'), findsNothing);
+  });
+
+  testWidgets(
+      'Checkout Practice: secondary metric surfaces Success X/M when quota set',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final gs = _practiceState(
+      gameType: GameType.checkoutPractice,
+      checkoutTargetSuccesses: 3,
+      dartsThrownInTurn: 1,
+      competitor: _practiceCompetitor(
+        dartThrows: const ['T20', 'T20', 'DB', 'T20'],
+        practiceSuccesses: 1,
+      ),
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [activePracticeProvider.overrideWith(() => notifier)],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Success 1/3 · 1 darts thrown'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Checkout Practice: secondary metric omits Success line in infinite mode',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(800, 1200));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final gs = _practiceState(
+      gameType: GameType.checkoutPractice,
+      // checkoutTargetSuccesses left null → ∞ mode
+      dartsThrownInTurn: 2,
+      competitor: _practiceCompetitor(
+        dartThrows: const ['T20', 'T20'],
+      ),
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [activePracticeProvider.overrideWith(() => notifier)],
+        child: MaterialApp.router(
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('2 darts thrown'), findsOneWidget);
+    expect(find.textContaining('Success'), findsNothing);
   });
 
   // ── 23d. Checkout Practice: "N darts thrown" is per-round (#328) ─────────

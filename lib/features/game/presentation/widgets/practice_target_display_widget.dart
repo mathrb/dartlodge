@@ -80,7 +80,16 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   }
 
   String _checkoutDartsThrown() {
-    return '$practiceAttempts darts thrown';
+    // `practiceAttempts` here is the per-round dart count (#328). When a
+    // target-successes quota is configured, surface success progress
+    // alongside it ("Success 1/3 · 2 darts thrown") so the player can see
+    // how close they are to completing the drill (#327). In ∞ mode
+    // (totalRounds == null) just show the dart count, matching the
+    // unbounded-attempts UX.
+    final dartsLine = '$practiceAttempts darts thrown';
+    final target = totalRounds;
+    if (target == null) return dartsLine;
+    return 'Success $practiceSuccesses/$target · $dartsLine';
   }
 
   /// Catch 40 visit number (1 or 2). `catch40DartsOnTarget` runs 0..6 across
