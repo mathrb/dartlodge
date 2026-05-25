@@ -224,6 +224,9 @@ void main() {
       expect(events[0].eventType, 'DartThrown');
       expect(events[0].payload['bust'], true);
       expect(events[1].eventType, 'TurnEnded');
+      // The TurnEnded payload must tag the turn as 'bust' so the high-score
+      // bucket projection's `reason != 'bust'` guard skips it (#317).
+      expect(events[1].payload['reason'], 'bust');
     });
   });
 
