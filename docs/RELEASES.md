@@ -58,12 +58,13 @@ Set in GitHub repo settings → Branches → Add rule for `main`:
 
 ## CI gating
 
-Three workflows in `.github/workflows/`:
+Four workflows in `.github/workflows/`:
 
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `test.yml` | PR + push to `main` | `flutter analyze` + `flutter test --coverage`. Matrix is ubuntu-only on PRs; ubuntu + macos on push to main. Codecov upload on push only. |
 | `build-apk.yml` | PR + push to `main` + manual | PRs build a debug APK as a compile check (no upload). Push to main builds a release APK and uploads it as a 7-day artifact for internal testing. |
+| `auto-rc.yml` | Push to `main` | Creates tag `v<pubspec-version>-rc<run_number>` on the merge commit and dispatches `release.yml` to publish a pre-release. |
 | `release.yml` | Tag push `v*` + manual | Builds a signed release APK from the tag and publishes it to GitHub Releases with auto-generated notes. |
 
 **Required checks for merge:** `Test (ubuntu-latest)` and `Build APK`. macos tests run post-merge but don't block PRs.
@@ -83,6 +84,18 @@ If you change a `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, run `da
 ## Releases
 
 Releases are tag-driven. There is no manual upload step — pushing a tag cuts a release.
+
+### Automatic RC pre-releases on every merge
+
+Every push to `main` (i.e. every squash-merged PR) triggers `auto-rc.yml`, which:
+
+1. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
+2. Creates the tag `v<version>-rc<run_number>` (e.g. `v0.1.0-rc42`) on the merge commit.
+3. Dispatches `release.yml` against the new tag, producing a signed pre-release APK + checksum.
+
+GitHub blocks token-triggered workflow chains, so `auto-rc.yml` uses `workflow_dispatch` instead of relying on `push: tags:` to fire `release.yml`. The "tag is reachable from main" guard still passes because the tag points at the main merge commit.
+
+You don't need to do anything to get an RC build — merge a PR, wait ~5 minutes, the pre-release appears under `Releases`. Stable releases (`vX.Y.Z` without a hyphen) remain a manual tag-push step.
 
 ### Versioning scheme
 
