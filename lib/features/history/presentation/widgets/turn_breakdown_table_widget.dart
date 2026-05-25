@@ -44,7 +44,7 @@ class TurnBreakdownTableWidget extends StatelessWidget {
   }
 }
 
-class _TurnTable extends StatelessWidget {
+class _TurnTable extends StatefulWidget {
   const _TurnTable({
     required this.gameType,
     required this.turns,
@@ -55,10 +55,29 @@ class _TurnTable extends StatelessWidget {
   final List<TurnRow> turns;
   final bool singleCompetitor;
 
+  @override
+  State<_TurnTable> createState() => _TurnTableState();
+}
+
+class _TurnTableState extends State<_TurnTable> {
+  late final ScrollController _hController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _hController.dispose();
+    super.dispose();
+  }
+
   List<String> _columns() {
-    switch (gameType) {
+    switch (widget.gameType) {
       case GameType.x01:
-        return ['Round', 'Start', 'Darts', 'Turn', 'Remaining'];
+        return ['Round', 'Start', 'Darts', 'Turn', 'Left'];
       case GameType.cricket:
         return ['Round', 'Marks', 'Darts'];
       case GameType.bobs27:
@@ -96,7 +115,7 @@ class _TurnTable extends StatelessWidget {
       );
     }
 
-    switch (gameType) {
+    switch (widget.gameType) {
       case GameType.x01:
         final flags = <String>[];
         if (row.bust) flags.add('BUST');
@@ -209,7 +228,7 @@ class _TurnTable extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final columns = _columns();
-    final showCompetitor = !singleCompetitor;
+    final showCompetitor = !widget.singleCompetitor;
     final headers = [
       if (showCompetitor) 'Player',
       ...columns,
@@ -223,52 +242,78 @@ class _TurnTable extends StatelessWidget {
           color: cs.outlineVariant.withValues(alpha: 0.18),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columnSpacing: 16,
-          horizontalMargin: 12,
-          headingRowHeight: 36,
-          dataRowMinHeight: 36,
-          dataRowMaxHeight: 64,
-          headingTextStyle: theme.textTheme.labelSmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
+      // Scrollbar with thumbVisibility: true gives users a visible affordance
+      // that the table can scroll horizontally — needed at narrow widths
+      // (≤412px) where columns like X01's "Left" are cut off (#309).
+      child: Scrollbar(
+        controller: _hController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _hController,
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 12,
+            horizontalMargin: 12,
+            headingRowHeight: 36,
+            dataRowMinHeight: 36,
+            dataRowMaxHeight: 64,
+            headingTextStyle: theme.textTheme.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+            ),
+            columns: [
+              for (final h in headers) DataColumn(label: Text(h.toUpperCase())),
+            ],
+            rows: [
+              for (final row in widget.turns)
+                DataRow(
+                  cells: [
+                    if (showCompetitor)
+                      DataCell(Text(
+                        NameFormatter.shortName(row.competitorName),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      )),
+                    for (final cell in _cellsFor(row, theme)) DataCell(cell),
+                  ],
+                ),
+            ],
           ),
-          columns: [
-            for (final h in headers) DataColumn(label: Text(h.toUpperCase())),
-          ],
-          rows: [
-            for (final row in turns)
-              DataRow(
-                cells: [
-                  if (showCompetitor)
-                    DataCell(Text(
-                      NameFormatter.shortName(row.competitorName),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    )),
-                  for (final cell in _cellsFor(row, theme)) DataCell(cell),
-                ],
-              ),
-          ],
         ),
       ),
     );
   }
-
 }
 
-class _AtcSegmentTable extends StatelessWidget {
+class _AtcSegmentTable extends StatefulWidget {
   const _AtcSegmentTable({required this.segments});
 
   final List<SegmentHitRate> segments;
 
   @override
+  State<_AtcSegmentTable> createState() => _AtcSegmentTableState();
+}
+
+class _AtcSegmentTableState extends State<_AtcSegmentTable> {
+  late final ScrollController _hController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _hController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (segments.isEmpty) return const SizedBox.shrink();
+    if (widget.segments.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -280,38 +325,43 @@ class _AtcSegmentTable extends StatelessWidget {
           color: cs.outlineVariant.withValues(alpha: 0.18),
         ),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columnSpacing: 24,
-          horizontalMargin: 12,
-          headingRowHeight: 36,
-          headingTextStyle: theme.textTheme.labelSmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
+      child: Scrollbar(
+        controller: _hController,
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          controller: _hController,
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            columnSpacing: 24,
+            horizontalMargin: 12,
+            headingRowHeight: 36,
+            headingTextStyle: theme.textTheme.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+            ),
+            columns: const [
+              DataColumn(label: Text('SEGMENT')),
+              DataColumn(label: Text('HITS')),
+              DataColumn(label: Text('ATTEMPTS')),
+              DataColumn(label: Text('RATE')),
+            ],
+            rows: [
+              for (final s in widget.segments)
+                DataRow(
+                  cells: [
+                    DataCell(Text(s.segmentLabel)),
+                    DataCell(Text('${s.hits}')),
+                    DataCell(Text('${s.attempts}')),
+                    DataCell(Text(
+                      s.attempts == 0
+                          ? '—'
+                          : StatFormatter.fmtPct(s.hitRate, isRatio: true),
+                    )),
+                  ],
+                ),
+            ],
           ),
-          columns: const [
-            DataColumn(label: Text('SEGMENT')),
-            DataColumn(label: Text('HITS')),
-            DataColumn(label: Text('ATTEMPTS')),
-            DataColumn(label: Text('RATE')),
-          ],
-          rows: [
-            for (final s in segments)
-              DataRow(
-                cells: [
-                  DataCell(Text(s.segmentLabel)),
-                  DataCell(Text('${s.hits}')),
-                  DataCell(Text('${s.attempts}')),
-                  DataCell(Text(
-                    s.attempts == 0
-                        ? '—'
-                        : StatFormatter.fmtPct(s.hitRate, isRatio: true),
-                  )),
-                ],
-              ),
-          ],
         ),
       ),
     );
