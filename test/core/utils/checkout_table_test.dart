@@ -118,4 +118,37 @@ void main() {
       expect(minCheckoutScore('master'), 2);
     });
   });
+
+  group('dartsRequiredForCheckout', () {
+    test('single-segment suggestion is 1 dart', () {
+      expect(dartsRequiredForCheckout('D20'), 1);
+      expect(dartsRequiredForCheckout('DB'), 1);
+      expect(dartsRequiredForCheckout('S20'), 1);
+    });
+
+    test('two-segment suggestion is 2 darts', () {
+      expect(dartsRequiredForCheckout('T20 · D20'), 2);
+      expect(dartsRequiredForCheckout('T20 · DB'), 2);
+    });
+
+    test('three-segment suggestion is 3 darts', () {
+      expect(dartsRequiredForCheckout('T20 · T20 · DB'), 3);
+      expect(dartsRequiredForCheckout('T20 · T20 · D20'), 3);
+    });
+
+    test('matches every emitted suggestion in all three tables', () {
+      // Sanity check: no suggestion in our tables requires more than 3 darts.
+      for (final strategy in const ['double', 'straight', 'master']) {
+        for (var score = minCheckoutScore(strategy);
+            score <= maxCheckoutScore(strategy);
+            score++) {
+          final suggestion = checkoutSuggestionForStrategy(score, strategy);
+          if (suggestion == null) continue;
+          final darts = dartsRequiredForCheckout(suggestion);
+          expect(darts, inInclusiveRange(1, 3),
+              reason: 'strategy=$strategy score=$score suggestion="$suggestion"');
+        }
+      }
+    });
+  });
 }

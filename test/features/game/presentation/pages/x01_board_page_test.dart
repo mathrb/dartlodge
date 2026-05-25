@@ -442,6 +442,64 @@ void main() {
     expect(color?.alpha, lessThan(255)); // Check that it's dimmed (alpha < 1.0)
   });
 
+  // ── 13a. Checkout suggestion filtered by remaining darts in turn (#367) ─────
+
+  testWidgets(
+      '13a. Score 170 with 1 dart thrown hides T20·T20·DB suggestion',
+      (tester) async {
+    _setPhoneViewport(tester);
+    // 170 needs 3 darts (T20 · T20 · DB) but only 2 remain in the turn.
+    final gs = _gameState(
+      competitors: [_competitor(score: 170)],
+      dartsThrownInTurn: 1,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    // Suggestion text must not appear; placeholder hint is shown instead.
+    expect(find.text('T20 · T20 · DB'), findsNothing);
+    expect(find.text('Suggestions appear in checkout range'), findsOneWidget);
+    // CHECKOUT label is dimmed (no reachable suggestion).
+    final checkoutText = tester.widget<Text>(find.text('CHECKOUT'));
+    expect(checkoutText.style?.color?.alpha, lessThan(255));
+  });
+
+  testWidgets(
+      '13b. Score 100 with 2 darts thrown hides T20·D20 suggestion',
+      (tester) async {
+    _setPhoneViewport(tester);
+    // 100 needs 2 darts (T20 · D20) but only 1 remains in the turn.
+    final gs = _gameState(
+      competitors: [_competitor(score: 100)],
+      dartsThrownInTurn: 2,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('T20 · D20'), findsNothing);
+    expect(find.text('Suggestions appear in checkout range'), findsOneWidget);
+  });
+
+  testWidgets(
+      '13c. Score 50 with 2 darts thrown still shows DB (1-dart suggestion)',
+      (tester) async {
+    _setPhoneViewport(tester);
+    // 50 = DB (1 dart) — still reachable with 1 remaining dart.
+    final gs = _gameState(
+      competitors: [_competitor(score: 50)],
+      dartsThrownInTurn: 2,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DB'), findsWidgets);
+    expect(
+        find.text('Suggestions appear in checkout range'), findsNothing);
+  });
+
   // ── 14. Grid row 0: MISS, SB, DB ──────────────────────────────────────────
 
   testWidgets('14. Segment grid row 0 has MISS, SB, DB', (tester) async {
