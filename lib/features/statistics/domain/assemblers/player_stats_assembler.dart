@@ -101,27 +101,49 @@ class PlayerStatsAssembler {
     return sawAnyTurn ? score : null;
   }
 
-  /// Strips DartThrown events whose IDs appear in any DartCorrected
-  /// payload's `original_event_id`. Replay-aware code must skip the
-  /// original (pre-correction) darts so the snapshot reflects post-undo
-  /// state — mirrors UndoLastDartUseCase.
+  /// Strips events superseded by any DartCorrected payload. Two flavours
+  /// of skip:
+  ///
+  ///   * `original_event_id` — the corrected `DartThrown` event; remove
+  ///     the original dart from the stream so projections see only the
+  ///     replacement (#187).
+  ///   * `superseded_event_ids` — turn-boundary events (TurnEnded /
+  ///     TurnStarted) that bracketed a cross-turn undo. Without removing
+  ///     these, a per-turn projection like Cricket's
+  ///     `CricketMarksPerTurnProjection` double-counts the closing
+  ///     TurnEnded of the undone turn and inflates the turn denominator,
+  ///     dragging AVG MPR below the true value (#321). `event_replay.dart`
+  ///     already honours both sets on cold-load; this brings the
+  ///     assembler in line so subsequent projection passes agree.
   ///
   /// Applied at every public method entry that consumes raw events, not
-  /// just the career path. Without this, per-game / per-leg / leg-history
-  /// projections double-counted the corrected dart AND its replacement
-  /// after any undo (#187).
+  /// just the career path.
   static List<GameEvent> _stripCorrectedDarts(List<GameEvent> events) {
     final correctedDartIds = <String>{};
+    final supersededEventIds = <String>{};
     for (final e in events) {
       if (e.eventType != 'DartCorrected') continue;
       final origId = e.payload['original_event_id'];
       if (origId is String) correctedDartIds.add(origId);
+      final superseded = e.payload['superseded_event_ids'];
+      if (superseded is List) {
+        for (final id in superseded) {
+          if (id is String) supersededEventIds.add(id);
+        }
+      }
     }
-    if (correctedDartIds.isEmpty) return events;
+    if (correctedDartIds.isEmpty && supersededEventIds.isEmpty) return events;
     return events
-        .where((e) =>
-            e.eventType != 'DartThrown' ||
-            !correctedDartIds.contains(e.eventId))
+        .where((e) {
+          if (e.eventType == 'DartThrown' &&
+              correctedDartIds.contains(e.eventId)) {
+            return false;
+          }
+          if (supersededEventIds.contains(e.eventId)) {
+            return false;
+          }
+          return true;
+        })
         .toList();
   }
 
