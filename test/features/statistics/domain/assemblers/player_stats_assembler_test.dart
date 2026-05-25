@@ -203,6 +203,61 @@ void main() {
   });
 
   group('cricket', () {
+    test(
+        'cross-turn undo strips superseded TurnEnded so MPR not undercounted (#321)',
+        () {
+      // Scenario from #321: Alice throws a clean 9-mark turn (T20+T19+T18),
+      // Bob's TurnStarted fires, then a cross-turn undo cancels the boundary
+      // events. The DartCorrected supersedes Alice's TurnEnded and Bob's
+      // TurnStarted. After replay, Alice's events are a single 9-mark
+      // turn ended only by the (uncorrected) game completion.
+      //
+      // Pre-fix: assembler kept the superseded TurnEnded → 2 turns counted
+      // for Alice (9 marks across 2 turns → MPR 4.5).
+      // Post-fix: assembler honours superseded_event_ids → 1 turn → MPR 9.
+      final alice1 = turnStarted();
+      final aliceDart1 = dart(20, 3);
+      final aliceDart2 = dart(19, 3);
+      final aliceDart3 = dart(18, 3);
+      final aliceEnd = turnEnded();
+      final bobStart = event('TurnStarted', {
+        'player_id': 'p2', // different player
+        'turn_number': 1,
+      });
+      final correction = event('DartCorrected', {
+        'original_event_id': 'phantom-dart-id',
+        'superseded_event_ids': [aliceEnd.eventId, bobStart.eventId],
+      });
+      // After undo Alice would re-throw — for the projection we just need
+      // the (replayed) turn-end. Use a fresh TurnEnded here as the closing
+      // event of the re-thrown turn (which post-fix is now the ONLY
+      // TurnEnded the projection sees).
+      final aliceEndAgain = turnEnded();
+      final completed = legCompleted(winnerPlayerId: playerId);
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.cricket,
+        events: [
+          alice1,
+          aliceDart1,
+          aliceDart2,
+          aliceDart3,
+          aliceEnd,
+          bobStart,
+          correction,
+          aliceEndAgain,
+          completed,
+        ],
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      expect(stats.marksPerTurn, 9.0,
+          reason:
+              'one full 9-mark turn — superseded TurnEnded must not inflate denominator');
+    });
+
     test('happy path produces marksPerTurn and hitRate', () {
       // One turn: T20 (3 marks), T19 (3 marks), T18 (3 marks) = 9 marks / 3 darts.
       final events = [
