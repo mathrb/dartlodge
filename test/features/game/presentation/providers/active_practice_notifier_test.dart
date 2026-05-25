@@ -648,4 +648,67 @@ void main() {
     expect(
         container.read(activePracticeProvider('g1')).value!.showBust, isFalse);
   });
+
+  // ── 14. Checkout Practice bust feedback (#340) ─────────────────────────
+  //
+  // Same mechanism as Catch 40 (#325). The engine reverts `score` to
+  // turnStartScore on bust; the provider detects this by comparing
+  // pre/post score and flips `showBust`. The board page listens for the
+  // false→true transition and flashes a snackbar.
+
+  test('Checkout Practice: showBust true after overshoot on third dart',
+      () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // Throw T20+T20+T20 from 170 → 170-60-60-60 = -10 → bust → score reverts.
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isTrue,
+        reason: 'T20×3 from 170 must flash BUST');
+    expect(after.gameState.competitors[0].score, 170,
+        reason: 'engine reverts to turnStartScore on bust');
+  });
+
+  test('Checkout Practice: showBust false on a successful checkout',
+      () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // T20+T20+DB = 170 → score 0 → successful checkout, not bust.
+    await notifier.processDart('T20');
+    await notifier.processDart('T20');
+    await notifier.processDart('DB');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isFalse,
+        reason: 'a checkout sets score to 0; not a bust');
+  });
+
+  test('Checkout Practice: showBust false on MISS at start of turn',
+      () async {
+    stubBuild(
+      game: makeCheckoutPracticeGame(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('MISS');
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isFalse,
+        reason: 'a zero-value MISS dart is not a bust');
+  });
 }

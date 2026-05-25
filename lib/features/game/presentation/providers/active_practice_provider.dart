@@ -50,9 +50,12 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
 
     final isShanghai = gs.gameType == GameType.shanghai;
     final isCatch40 = gs.gameType == GameType.catch40;
-    final prevSuccesses = gs.competitors[gs.currentTurnIndex].practiceSuccesses;
+    final isCheckout = gs.gameType == GameType.checkoutPractice;
+    final prevCompetitor = gs.competitors[gs.currentTurnIndex];
+    final prevSuccesses = prevCompetitor.practiceSuccesses;
     final prevCatch40Remaining = gs.catch40TargetRemaining;
     final prevCatch40DartsOnTarget = gs.catch40DartsOnTarget;
+    final prevCheckoutScore = prevCompetitor.score;
     final dartValue = Segment.parse(segment).scoreValue;
 
     state = await AsyncValue.guard(() async {
@@ -114,10 +117,21 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       // busts where remaining was already at currentTarget, greater
       // otherwise). MISS darts (dartValue == 0) never bust — checked
       // explicitly so a 0-progress miss on a fresh round doesn't flash BUST.
-      final showBust = isCatch40 &&
-          dartValue > 0 &&
-          newGs.catch40DartsOnTarget > prevCatch40DartsOnTarget &&
-          newGs.catch40TargetRemaining >= prevCatch40Remaining;
+      //
+      // Checkout Practice bust signature: a non-zero dart was applied
+      // (dartValue > 0) and the post-throw score is strictly greater than
+      // the pre-throw score — only possible on bust, because the engine
+      // reverts to turnStartScore. A successful checkout brings the score
+      // to 0 (decrease), and a normal hit also decreases the score, so the
+      // ">" inequality cleanly isolates the bust case (#340).
+      final newCompetitor = newGs.competitors[gs.currentTurnIndex];
+      final showBust = (isCatch40 &&
+              dartValue > 0 &&
+              newGs.catch40DartsOnTarget > prevCatch40DartsOnTarget &&
+              newGs.catch40TargetRemaining >= prevCatch40Remaining) ||
+          (isCheckout &&
+              dartValue > 0 &&
+              newCompetitor.score > prevCheckoutScore);
 
       return ActivePracticeState(
         gameState: newGs,
