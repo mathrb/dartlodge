@@ -72,9 +72,10 @@ class GameDetailPage extends ConsumerWidget {
     final showLegBreakdown = isGameStatsBacked(game.gameType.name);
 
     // Checkout Practice has no legs but does have meaningful per-attempt
-    // rows (Round / Darts / Score → Remaining). Render the turn breakdown
-    // directly as "Round Breakdown" so users can see what each attempt did
-    // (#343).
+    // rows (Turn / Start / Darts / Total / End — see
+    // `turn_breakdown_table_widget.dart`'s `checkoutPractice` column list).
+    // Render the turn breakdown directly as "Round Breakdown" so users
+    // can see what each attempt did (#343).
     final showCheckoutRounds = game.gameType == GameType.checkoutPractice;
 
     return SingleChildScrollView(
