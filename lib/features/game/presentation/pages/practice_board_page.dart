@@ -85,6 +85,38 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
       },
     );
 
+    // Catch 40 bust feedback (#325): flash a BUST snackbar when the
+    // showBust flag transitions false→true, then clear the flag so it
+    // doesn't fire again on unrelated rebuilds. Mirrors the x01 board's
+    // bust handling.
+    ref.listen<AsyncValue<ActivePracticeState?>>(
+      activePracticeProvider(widget.gameId),
+      (prev, next) {
+        final prevShowBust = prev?.value?.showBust ?? false;
+        final nextShowBust = next.value?.showBust ?? false;
+        if (prevShowBust || !nextShowBust) return;
+
+        final cs = Theme.of(context).colorScheme;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: cs.errorContainer,
+            duration: const Duration(seconds: 2),
+            content: Text(
+              'BUST',
+              style: AppTextStyles.headlineSmall
+                  .copyWith(color: cs.onErrorContainer),
+            ),
+          ),
+        );
+        Future.delayed(const Duration(seconds: 2), () {
+          if (!context.mounted) return;
+          ref
+              .read(activePracticeProvider(widget.gameId).notifier)
+              .dismissBust();
+        });
+      },
+    );
+
     final asyncState = ref.watch(activePracticeProvider(widget.gameId));
 
     return asyncState.when(

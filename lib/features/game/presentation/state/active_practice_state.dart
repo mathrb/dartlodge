@@ -10,6 +10,14 @@ abstract class ActivePracticeState with _$ActivePracticeState {
     String? pendingGameWinnerId,
     @Default(false) bool showShanghaiBonus,
 
+    /// Transient flag set true on the dart that busted in Catch 40 (#325).
+    /// The board page listens for the false→true transition to flash a
+    /// BUST snackbar; the next dart (or `dismissBust`) clears it. Only
+    /// Catch 40 currently emits this — other practice modes either
+    /// can't bust (ATC) or already handle their own busts (X01 in
+    /// `ActiveGameState`).
+    @Default(false) bool showBust,
+
     /// Set to `true` when `EndPracticeUseCase` was invoked via the
     /// "End Drill" menu (i.e. the user manually ended the drill). Both
     /// natural completion and manual end now route to the post-game
