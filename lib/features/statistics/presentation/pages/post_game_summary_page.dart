@@ -12,6 +12,7 @@ import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import '../../../../core/widgets/game_summary_section_widget.dart';
 import '../../../game/domain/models/game_result.dart';
+import '../../../game/presentation/providers/game_setup_provider.dart';
 import '../utils/post_game_routing.dart';
 import '../widgets/practice_summary_widget.dart';
 import '../widgets/shanghai_summary_widget.dart';
@@ -93,6 +94,7 @@ class PostGameSummaryPage extends ConsumerWidget {
                     right: 0,
                     bottom: 0,
                     child: _StickyFooter(
+                      gameId: gameId,
                       playAgainCategory:
                           categoryForGameType(gameStats.gameType),
                     ),
@@ -142,13 +144,34 @@ class _GameResultBody extends ConsumerWidget {
 
 // ── Sticky Footer ─────────────────────────────────────────────────────────────
 
-class _StickyFooter extends StatelessWidget {
-  const _StickyFooter({required this.playAgainCategory});
+class _StickyFooter extends ConsumerWidget {
+  const _StickyFooter({
+    required this.gameId,
+    required this.playAgainCategory,
+  });
 
+  final String gameId;
   final String playAgainCategory;
 
+  /// Re-launches the same drill/game type without making the player walk
+  /// back through variant selection. Delegates to
+  /// `GameSetupNotifier.replayGame` (which owns the repository read and
+  /// the state seed); navigates directly to player-selection on success,
+  /// falls back to variant-selection by category if the load failed.
+  Future<void> _playAgain(BuildContext context, WidgetRef ref) async {
+    final ok = await ref
+        .read(gameSetupProvider.notifier)
+        .replayGame(gameId);
+    if (!context.mounted) return;
+    if (ok) {
+      context.go(GameRoutes.playerSelection);
+    } else {
+      context.go('${GameRoutes.variantSelection}/$playAgainCategory');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
 
     return ClipRect(
@@ -181,9 +204,7 @@ class _StickyFooter extends StatelessWidget {
                   label: 'PLAY AGAIN',
                   icon: Icons.refresh,
                   isPrimary: true,
-                  onTap: () => context.go(
-                    '${GameRoutes.variantSelection}/$playAgainCategory',
-                  ),
+                  onTap: () => _playAgain(context, ref),
                 ),
               ),
             ],

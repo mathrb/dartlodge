@@ -65,6 +65,22 @@ class GameSetupNotifier extends _$GameSetupNotifier {
 
   // ── Public methods ───────────────────────────────────────────────────────────
 
+  /// Re-launches a previously played game's configuration. Loads the
+  /// game from the repository, then seeds setup state via
+  /// [selectVariant] so the player-selection screen opens pre-configured
+  /// with the same drill (#337). Returns true on success; false (and
+  /// state untouched) when the game can't be found or the load throws.
+  Future<bool> replayGame(String gameId) async {
+    try {
+      final game = await ref.read(gameRepositoryProvider).getGame(gameId);
+      if (game == null) return false;
+      selectVariant(game.config);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// selectingType → configuringGame (with default config for type)
   void selectGameType(GameType type) {
     state = GameSetupState.configuringGame(
