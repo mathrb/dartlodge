@@ -78,11 +78,17 @@ class ProcessDartUseCase {
       // Turn ended (normal 3-dart end, bust, or leg/game-completing dart) —
       // always append TurnEnded eagerly so the event log is coherent without
       // waiting for the UI to tap NEXT ROUND. Mirrors cricket's structure.
+      //
+      // Carry `reason: 'bust'` through to the projection so high-score
+      // buckets (60+/100+/140+/180s) can exclude busted turns — without
+      // it the bucket projection's `reason != 'bust'` guard never fires
+      // and busted turns are counted as if scored (#317).
       eventsToStore.add(buildTurnEndedEvent(
         gameId: currentState.gameId,
         competitorId: dartThrow.competitorId,
         playerId: currentPlayerId,
         localSequence: nextSeq++,
+        reason: result.isBust ? 'bust' : 'normal',
       ));
 
       if (result.outcome == LegOutcome.gameCompleted) {
