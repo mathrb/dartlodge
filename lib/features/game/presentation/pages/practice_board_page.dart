@@ -20,7 +20,7 @@ import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
-enum _DrillAction { endDrill }
+enum _DrillAction { endDrill, settings }
 
 /// Defer used by the Shanghai-on-final-dart path so the inline `_ShanghaiBonus`
 /// banner (1300ms animation) finishes before we navigate away. All other
@@ -236,6 +236,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                         if (context.mounted) {
                           context.go(GameRoutes.postGame(widget.gameId));
                         }
+                      case _DrillAction.settings:
+                        if (context.mounted) {
+                          context.push(GameRoutes.settings);
+                        }
                     }
                   },
                   itemBuilder: (_) => [
@@ -246,6 +250,14 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       child: Text(
                         gs.competitors.length > 1 ? 'End Game' : 'End Drill',
                       ),
+                    ),
+                    // Settings entry so users don't have to abandon the
+                    // drill to reach theme/preferences (#342). `push`
+                    // (not `go`) preserves the active-game route so
+                    // the back arrow returns to the board.
+                    const PopupMenuItem(
+                      value: _DrillAction.settings,
+                      child: Text('Settings'),
                     ),
                   ],
                 ),
