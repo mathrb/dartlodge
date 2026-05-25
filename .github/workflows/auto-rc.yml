@@ -1,0 +1,53 @@
+name: Auto RC
+
+# Tags every push to main as `v<pubspec-version>-rc<run_number>` and triggers
+# release.yml to build a pre-release APK. Manual `vX.Y.Z` tags continue to
+# work unchanged via release.yml's own `push: tags: ['v*']` trigger.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write   # push the new tag
+  actions: write    # workflow_dispatch release.yml
+
+jobs:
+  tag-and-release:
+    name: Tag main as RC and dispatch release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Derive RC tag
+        id: tag
+        run: |
+          VERSION_RAW=$(grep -E '^version:' pubspec.yaml | awk '{print $2}')
+          # Strip the +N build metadata suffix (e.g. 0.1.0+0 -> 0.1.0).
+          VERSION=${VERSION_RAW%%+*}
+          TAG="v${VERSION}-rc${GITHUB_RUN_NUMBER}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Tagging $GITHUB_SHA as $TAG"
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.tag.outputs.tag }}"
+          git push origin "${{ steps.tag.outputs.tag }}"
+
+      - name: Dispatch release workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Tags pushed by GITHUB_TOKEN do NOT fire workflows gated on
+          # `push: tags:` (GitHub blocks token-triggered workflow chains
+          # to prevent recursion). workflow_dispatch is the documented
+          # exception, so we trigger release.yml explicitly with the tag
+          # as its ref — that makes release.yml check out the tagged
+          # commit and pass its "tag is reachable from main" guard.
+          gh workflow run release.yml \
+            --ref "${{ steps.tag.outputs.tag }}" \
+            -F tag="${{ steps.tag.outputs.tag }}"
