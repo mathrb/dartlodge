@@ -131,14 +131,22 @@ class PostGameHeroCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 12),
                           ],
-                          Text(
-                            headline.toUpperCase(),
-                            style: AppTextStyles.headlineSmall.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w900,
+                          // Long headlines like "Not checked out" used to
+                          // mid-word break on narrow column widths and ellipse
+                          // ("NOT CH / ECKE…") (#341). FittedBox scales the
+                          // text down to fit instead.
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text(
+                              headline.toUpperCase(),
+                              style: AppTextStyles.headlineSmall.copyWith(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w900,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           if (subline != null) ...[
                             const SizedBox(height: 4),
