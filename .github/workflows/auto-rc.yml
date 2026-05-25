@@ -1,6 +1,6 @@
 name: Auto RC
 
-# Tags every push to main as `v<pubspec-version>-rc<run_number>` and triggers
+# Tags every push to main as `v<pubspec-version>-rc<N>` and triggers
 # release.yml to build a pre-release APK. Manual `vX.Y.Z` tags continue to
 # work unchanged via release.yml's own `push: tags: ['v*']` trigger.
 
@@ -12,6 +12,12 @@ permissions:
   contents: write   # push the new tag
   actions: write    # workflow_dispatch release.yml
 
+# Serialize runs so two quick merges can't both compute the same NEXT rc number
+# before either has pushed a tag.
+concurrency:
+  group: auto-rc
+  cancel-in-progress: false
+
 jobs:
   tag-and-release:
     name: Tag main as RC and dispatch release
@@ -20,6 +26,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          # Need existing rc tags locally to compute the next-available N.
+          fetch-tags: true
 
       - name: Derive RC tag
         id: tag
@@ -27,9 +36,18 @@ jobs:
           VERSION_RAW=$(grep -E '^version:' pubspec.yaml | awk '{print $2}')
           # Strip the +N build metadata suffix (e.g. 0.1.0+0 -> 0.1.0).
           VERSION=${VERSION_RAW%%+*}
-          TAG="v${VERSION}-rc${GITHUB_RUN_NUMBER}"
+          # Compute next-available rcN by scanning existing tags. GITHUB_RUN_NUMBER
+          # is unsafe because it's per-workflow and starts at 1 — it collides with
+          # any rc tags that existed before this workflow shipped (rc1..rc8 in
+          # this repo's history, from manual releases).
+          HIGHEST=$(git tag -l "v${VERSION}-rc*" \
+            | sed -E "s/^v${VERSION}-rc//" \
+            | grep -E '^[0-9]+$' \
+            | sort -n | tail -1)
+          NEXT=$(( ${HIGHEST:-0} + 1 ))
+          TAG="v${VERSION}-rc${NEXT}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Tagging $GITHUB_SHA as $TAG"
+          echo "Tagging $GITHUB_SHA as $TAG (highest existing: ${HIGHEST:-none})"
 
       - name: Create and push tag
         run: |
