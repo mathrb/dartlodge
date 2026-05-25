@@ -158,6 +158,46 @@ void main() {
     expect(find.text('501 · Double Out · ∞ Rounds'), findsOneWidget);
   });
 
+  // ── 1b. Config chip surfaces non-default in-strategy (#329) ───────────────
+
+  testWidgets(
+      '1b. Config chip includes Double In when in-strategy is double (#329)',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'double',
+          outStrategy: 'double',
+          legsToWin: 1,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('501 · Double In · Double Out · ∞ Rounds'),
+        findsOneWidget);
+  });
+
+  testWidgets(
+      '1c. Config chip includes Master In when in-strategy is master (#329)',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'master',
+          outStrategy: 'double',
+          legsToWin: 1,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('501 · Master In · Double Out · ∞ Rounds'),
+        findsOneWidget);
+  });
+
   // ── 2. Config chip Cricket ────────────────────────────────────────────────
 
   testWidgets('2. Config chip shows "standard · 0 pts" for Cricket',

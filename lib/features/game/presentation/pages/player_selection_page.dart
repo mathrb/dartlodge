@@ -22,7 +22,7 @@ import 'package:dart_lodge/core/persistence/database_provider.dart';
 
 // ── Top-level pure helpers ────────────────────────────────────────────────────
 
-String _outStrategyLabel(String strategy) => switch (strategy) {
+String _strategyLabel(String strategy) => switch (strategy) {
   'straight' => 'Straight',
   'double' => 'Double',
   'master' => 'Master',
@@ -34,7 +34,14 @@ String _configSummaryFor(GameConfig config) {
     x01: (c) {
       final rounds = c.totalRounds;
       final roundsLabel = rounds == null ? '∞ Rounds' : (rounds == 1 ? '1 Round' : '$rounds Rounds');
-      return '${c.startingScore} · ${_outStrategyLabel(c.outStrategy)} Out · $roundsLabel';
+      // Surface the in-strategy when the user picked something other than
+      // the straight default — Double-In / Master-In materially change
+      // the leg's opening and shouldn't get hidden from the setup chip
+      // (#329).
+      final inLabel = c.inStrategy == 'straight'
+          ? ''
+          : '${_strategyLabel(c.inStrategy)} In · ';
+      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · $roundsLabel';
     },
     cricket: (c) {
       final rounds = c.totalRounds;
