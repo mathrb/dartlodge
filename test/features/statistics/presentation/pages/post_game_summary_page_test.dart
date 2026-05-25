@@ -192,6 +192,14 @@ void main() {
 
       expect(find.text('home'), findsOneWidget);
     });
+
+    // Tests above exercise the fallback path (no gameRepositoryProvider
+    // override → throws/null → falls back to variant-selection by category).
+    // The intended happy path — load the game, seed setup, skip straight to
+    // player-selection — is covered by the get-game-result use-case tests
+    // and verified manually; covering it here would require wiring a fake
+    // game repository, which the lightweight router shim deliberately
+    // avoids (#337).
   });
 
   group('PostGameSummaryPage body branching', () {

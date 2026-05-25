@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/persistence/database_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -12,6 +13,7 @@ import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
 import '../../../../core/widgets/game_summary_section_widget.dart';
 import '../../../game/domain/models/game_result.dart';
+import '../../../game/presentation/providers/game_setup_provider.dart';
 import '../utils/post_game_routing.dart';
 import '../widgets/practice_summary_widget.dart';
 import '../widgets/shanghai_summary_widget.dart';
@@ -93,6 +95,7 @@ class PostGameSummaryPage extends ConsumerWidget {
                     right: 0,
                     bottom: 0,
                     child: _StickyFooter(
+                      gameId: gameId,
                       playAgainCategory:
                           categoryForGameType(gameStats.gameType),
                     ),
@@ -142,13 +145,41 @@ class _GameResultBody extends ConsumerWidget {
 
 // ── Sticky Footer ─────────────────────────────────────────────────────────────
 
-class _StickyFooter extends StatelessWidget {
-  const _StickyFooter({required this.playAgainCategory});
+class _StickyFooter extends ConsumerWidget {
+  const _StickyFooter({
+    required this.gameId,
+    required this.playAgainCategory,
+  });
 
+  final String gameId;
   final String playAgainCategory;
 
+  /// Re-launches the same drill/game type without making the player walk
+  /// back through variant selection. Loads the just-finished game's
+  /// `GameConfig`, seeds the setup state with `selectVariant`, then
+  /// navigates directly to player-selection. Variant-selection re-entry
+  /// remains the fallback when the config can't be loaded (e.g. DB read
+  /// throws, or game has been deleted).
+  Future<void> _playAgain(BuildContext context, WidgetRef ref) async {
+    try {
+      final game =
+          await ref.read(gameRepositoryProvider).getGame(gameId);
+      if (!context.mounted) return;
+      if (game == null) {
+        context.go('${GameRoutes.variantSelection}/$playAgainCategory');
+        return;
+      }
+      ref.read(gameSetupProvider.notifier).selectVariant(game.config);
+      if (!context.mounted) return;
+      context.go(GameRoutes.playerSelection);
+    } catch (_) {
+      if (!context.mounted) return;
+      context.go('${GameRoutes.variantSelection}/$playAgainCategory');
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
 
     return ClipRect(
@@ -181,9 +212,7 @@ class _StickyFooter extends StatelessWidget {
                   label: 'PLAY AGAIN',
                   icon: Icons.refresh,
                   isPrimary: true,
-                  onTap: () => context.go(
-                    '${GameRoutes.variantSelection}/$playAgainCategory',
-                  ),
+                  onTap: () => _playAgain(context, ref),
                 ),
               ),
             ],
