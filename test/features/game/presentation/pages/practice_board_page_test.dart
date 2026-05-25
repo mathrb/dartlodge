@@ -390,6 +390,37 @@ void main() {
   });
 
   testWidgets(
+      '6f-atc. ATC NEXT ROUND also gated on ≥1 dart, matching Shanghai (#336)',
+      (tester) async {
+    // ATC previously enabled NEXT ROUND with 0 darts, which is inconsistent
+    // with Shanghai and lets a mis-tap silently hand the turn over without
+    // scoring. Now both games require at least one dart before the button
+    // becomes active.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.aroundTheClock,
+      competitors: [_practiceCompetitor()],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 0,
+      isComplete: false,
+      turnActive: true,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'NEXT ROUND'),
+    );
+    expect(btn.onPressed, isNull,
+        reason: 'ATC 0-dart NEXT ROUND now gated alongside Shanghai (#336)');
+  });
+
+  testWidgets(
       '6g. Shanghai NEXT ROUND enables once a dart is thrown',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1600);
