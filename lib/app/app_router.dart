@@ -10,6 +10,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:dart_lodge/features/game/presentation/pages/home_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/player_selection_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/variant_selection_page.dart';
+import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_practice_provider.dart';
@@ -130,28 +131,36 @@ Widget _errorPage(BuildContext _, GoRouterState s) => Scaffold(
 // back/forward, and OS gesture — so it catches the case `PopScope` couldn't
 // on Flutter Web (browser back didn't reach `onPopInvokedWithResult` because
 // the URL had already changed). Each handler:
-//   1. Short-circuits when the game is already complete (natural finish or
-//      explicit "End Game" already ran the endGame use case), so post-game
-//      navigation isn't gated behind a confirmation dialog.
-//   2. Otherwise shows the End Game dialog. If the user confirms, marks the
-//      game abandoned via the matching notifier so stats projections see
-//      the clean game-boundary reset (#280 / #252) and returns true.
+//   1. Short-circuits when the game is already complete. The check goes
+//      against the DB (`GameRepository.getGame`), not the active-game
+//      notifier's in-memory state: `endGame()` / `endDrill()` write
+//      `is_complete = true` via `appendEventsAndCompleteGame` but
+//      deliberately do not mutate the notifier state (the post-game-
+//      navigation listener watches that flag, mutating it would route
+//      every menu-driven exit through post-game instead of home). The DB
+//      read is the authoritative single source of truth.
+//   2. Otherwise shows the End Game dialog. If the user confirms, marks
+//      the game abandoned via the matching notifier so stats projections
+//      see the clean game-boundary reset (#280 / #252) and returns true.
 //   3. On cancel, returns false to keep the user on the active board.
 
 Future<bool> _confirmActiveExit({
   required BuildContext context,
-  required bool isComplete,
+  required Future<bool> Function() isComplete,
   required Future<void> Function() endGame,
 }) async {
-  if (isComplete) return true;
+  if (await isComplete()) return true;
   final completer = Completer<bool>();
   await showDialog<void>(
     context: context,
     builder: (dialogContext) => EndGameDialogWidget(
       onConfirm: () async {
         Navigator.of(dialogContext).pop();
-        await endGame();
-        if (!completer.isCompleted) completer.complete(true);
+        try {
+          await endGame();
+        } finally {
+          if (!completer.isCompleted) completer.complete(true);
+        }
       },
       onCancel: () {
         Navigator.of(dialogContext).pop();
@@ -166,14 +175,18 @@ Future<bool> _confirmActiveExit({
   return completer.future;
 }
 
+Future<bool> _gameIsComplete(
+    ProviderContainer container, String gameId) async {
+  final game = await container.read(gameRepositoryProvider).getGame(gameId);
+  return game?.isComplete ?? false;
+}
+
 FutureOr<bool> _activeX01Exit(BuildContext context, GoRouterState state) {
   final container = ProviderScope.containerOf(context, listen: false);
   final gameId = state.pathParameters['gameId']!;
-  final s = container.read(activeGameProvider(gameId));
-  final isComplete = s.value?.gameState.isComplete ?? false;
   return _confirmActiveExit(
     context: context,
-    isComplete: isComplete,
+    isComplete: () => _gameIsComplete(container, gameId),
     endGame: () =>
         container.read(activeGameProvider(gameId).notifier).endGame(),
   );
@@ -182,11 +195,9 @@ FutureOr<bool> _activeX01Exit(BuildContext context, GoRouterState state) {
 FutureOr<bool> _activeCricketExit(BuildContext context, GoRouterState state) {
   final container = ProviderScope.containerOf(context, listen: false);
   final gameId = state.pathParameters['gameId']!;
-  final s = container.read(activeCricketGameProvider(gameId));
-  final isComplete = s.value?.gameState.isComplete ?? false;
   return _confirmActiveExit(
     context: context,
-    isComplete: isComplete,
+    isComplete: () => _gameIsComplete(container, gameId),
     endGame: () =>
         container.read(activeCricketGameProvider(gameId).notifier).endGame(),
   );
@@ -195,11 +206,9 @@ FutureOr<bool> _activeCricketExit(BuildContext context, GoRouterState state) {
 FutureOr<bool> _activePracticeExit(BuildContext context, GoRouterState state) {
   final container = ProviderScope.containerOf(context, listen: false);
   final gameId = state.pathParameters['gameId']!;
-  final s = container.read(activePracticeProvider(gameId));
-  final isComplete = s.value?.gameState.isComplete ?? false;
   return _confirmActiveExit(
     context: context,
-    isComplete: isComplete,
+    isComplete: () => _gameIsComplete(container, gameId),
     endGame: () =>
         container.read(activePracticeProvider(gameId).notifier).endDrill(),
   );
@@ -233,11 +242,11 @@ List<RouteBase> _buildRoutes() => [
       GoRoute(path: GameRoutes.playerSelection, builder: _playerSelectionPage),
       // Active game board routes. `onExit` confirms before leaving an
       // in-progress game so browser back / OS gesture can't silently abandon
-      // it (#319). PopScope on the page itself handles the in-app back arrow
-      // and the legacy Android system gesture; onExit also catches both, so
-      // some boards now show the dialog twice — todo: collapse the two paths
-      // in a follow-up. For now the second dialog short-circuits via
-      // isComplete because the first confirmation already ran endGame().
+      // it (#319). For exits triggered by the in-app End Game flow,
+      // `endGame()` runs first and flips `games.is_complete = true` in the
+      // DB — the onExit handler checks the DB rather than the notifier's
+      // in-memory state, so it correctly short-circuits and does not raise
+      // a second confirmation dialog.
       GoRoute(
           path: '${GameRoutes.activeX01}/:gameId',
           builder: _x01BoardPage,
