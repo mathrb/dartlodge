@@ -19,6 +19,11 @@ import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/player_score_section_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
+/// Trailing-menu actions on the active-game board (#331). End Game keeps
+/// the original gear-icon behaviour; Settings is a new sibling so users
+/// can reach Settings without abandoning their game.
+enum _BoardMenuAction { endGame, settings }
+
 class X01BoardPage extends ConsumerStatefulWidget {
   const X01BoardPage({required this.gameId, super.key});
 
@@ -202,20 +207,35 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   AppHeader(
                     showBack: true,
                     onBack: () => _confirmBack(context),
-                    trailing: InkWell(
-                      onTap: () => _showEndGameDialog(context),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                      splashColor: AppTheme.kineticSplashColor,
-                      highlightColor: AppTheme.kineticSplashColor,
-                      child: SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: Icon(
-                          Icons.settings_outlined,
-                          color: cs.onSurface,
-                          semanticLabel: 'Game options',
-                        ),
+                    // Three-dot menu (was a settings cog) because the icon
+                    // convention strongly implied Settings while the action
+                    // opened the End Game dialog (#331). Menu now exposes
+                    // both End Game and Settings entries so users can reach
+                    // either without abandoning their current state.
+                    trailing: PopupMenuButton<_BoardMenuAction>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: cs.onSurface,
+                        semanticLabel: 'Game options',
                       ),
+                      onSelected: (action) {
+                        switch (action) {
+                          case _BoardMenuAction.endGame:
+                            _showEndGameDialog(context);
+                          case _BoardMenuAction.settings:
+                            context.push(GameRoutes.settings);
+                        }
+                      },
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
+                          value: _BoardMenuAction.endGame,
+                          child: Text('End Game'),
+                        ),
+                        PopupMenuItem(
+                          value: _BoardMenuAction.settings,
+                          child: Text('Settings'),
+                        ),
+                      ],
                     ),
                   ),
                   GameStatusBarWidget(

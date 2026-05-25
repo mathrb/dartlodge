@@ -728,18 +728,23 @@ void main() {
     expect(find.text('post-game'), findsOneWidget);
   });
 
-  // ── 28. Settings icon is present in custom header ────────────────────────────
+  // ── 28. Three-dot menu is present in custom header (#331) ─────────────────────
 
-  testWidgets('28. Settings icon is present in custom header', (tester) async {
+  testWidgets('28. Menu icon (three-dot) is present in custom header',
+      (tester) async {
     _setPhoneViewport(tester);
     final notifier = _FakeActiveGameNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.settings_outlined), findsOneWidget);
+    // Was Icons.settings_outlined before #331 — the gear icon misleadingly
+    // implied Settings while the action opened End Game. Now a 3-dot menu
+    // with End Game + Settings entries.
+    expect(find.byIcon(Icons.more_vert), findsOneWidget);
+    expect(find.byIcon(Icons.settings_outlined), findsNothing);
   });
 
-  // ── 29. Tapping settings shows End Game confirmation dialog ──────────────────
+  // ── 29. Selecting End Game shows confirmation dialog ──────────────────────────
 
   testWidgets('29. Selecting End Game shows confirmation dialog',
       (tester) async {
@@ -748,7 +753,9 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('End Game'));
     await tester.pumpAndSettle();
 
     expect(find.text('End Game?'), findsOneWidget);
@@ -764,7 +771,9 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('End Game'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Cancel'));
@@ -782,7 +791,9 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.settings_outlined));
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('End Game'));
     await tester.pumpAndSettle();
 
     // Tap "End Game" button inside the dialog
