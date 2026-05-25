@@ -118,11 +118,29 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
         final gameState = activeGameState.gameState;
 
-        final variantLabel = switch (gameState.cricketScoring) {
+        // Header label composes scoring + target mode so players can tell
+        // at a glance whether they're on Random / Crazy / Fixed targets in
+        // addition to the scoring variant (#332). Match the format the
+        // variant picker uses (`variant_selection_page.dart`):
+        //   - Fixed scoring=cut-throat/no-score → "Cut Throat" / "No Score"
+        //   - Fixed scoring=standard            → "Standard"
+        //   - Random/Crazy + standard scoring   → "Random" / "Crazy"
+        //   - Random/Crazy + non-standard      → "Random · Cut Throat", …
+        final scoringLabel = switch (gameState.cricketScoring) {
           'cut-throat' => 'Cut Throat',
           'no-score' => 'No Score',
           _ => 'Standard',
         };
+        final targetModeLabel = switch (gameState.cricketTargetMode) {
+          'random' => 'Random',
+          'crazy' => 'Crazy',
+          _ => null,
+        };
+        final variantLabel = targetModeLabel == null
+            ? scoringLabel
+            : (gameState.cricketScoring == 'standard'
+                ? targetModeLabel
+                : '$targetModeLabel · $scoringLabel');
 
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];
