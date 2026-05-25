@@ -263,7 +263,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **PR reviews:** every PR — including small or "obvious" ones — gets reviewed via the `code-review:code-review` skill before merge. Self-review via `gh pr diff` is not sufficient. The skill runs an 8-step pipeline (eligibility → CLAUDE.md fetch → summary → 5 parallel Sonnet reviews covering CLAUDE.md compliance / bugs / git history / prior PR comments / in-code comments → confidence scoring at 0/25/50/75/100 → filter ≥80 → post). Issues that score below 80 should still be fixed by the author if real (just not posted as inline comments). CI must be green before merging.
 
-**Releases are tag-driven:** Pushing a tag `vX.Y.Z` (or `vX.Y.Z-rcN` for pre-release) triggers `release.yml`, which builds and publishes the signed APK to GitHub Releases. Never manually upload an APK to a release. Tags must point to a commit that's reachable from `main` (`release.yml` enforces this). Full process in `docs/RELEASES.md`.
+**Releases are tag-driven:** Pushing a tag `vX.Y.Z` (or `vX.Y.Z-rcN` for pre-release) triggers `release.yml`, which builds and publishes the signed APK to GitHub Releases. Every merge to `main` also auto-tags `v<pubspec-version>-rc<run_number>` via `auto-rc.yml` and publishes a pre-release — devs do not push RC tags manually. Never manually upload an APK to a release. Tags must point to a commit that's reachable from `main` (`release.yml` enforces this). Full process in `docs/RELEASES.md`.
 
 **Version bumps:** When asked to bump the version, edit only `pubspec.yaml`'s `version:` field (e.g. `1.0.0+0` → `1.1.0+0`) in a `chore: bump version to X.Y.Z` PR. The `+N` suffix is a placeholder; CI overrides `versionCode` from `github.run_number` on tag builds.
 
@@ -281,7 +281,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **`.flutter-plugins-dependencies` and `pubspec.lock`** regenerate on every `flutter pub get` / `flutter run` / `build_runner build`; never commit either unless the dep set actually changed. Both commonly show `M` in `git status` — `git checkout pubspec.lock .flutter-plugins-dependencies` before staging to keep PR diffs clean.
 
-**Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin 9.19.0). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
+**Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin `^9.16.1`). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
 
 ---
 
