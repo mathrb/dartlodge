@@ -199,6 +199,11 @@ void main() {
       expect(events.length, 2);
       expect(events[0].eventType, 'DartThrown');
       expect(events[1].eventType, 'TurnEnded');
+      // Normal scoring turn must carry turn_score = score-delta per spec
+      // §5.2 so the PPR projection counts the right amount (#318). 3-dart
+      // turn starting at 501 with last dart scoring 20 → final score 481,
+      // dartsThrownInTurn pre-throw = 2 means turnStartScore = 501.
+      expect(events[1].payload['turn_score'], 20);
     });
   });
 
@@ -255,6 +260,11 @@ void main() {
       expect(events[0].eventType, 'DartThrown');
       expect(events[1].eventType, 'TurnEnded');
       expect(events[1].payload['reason'], 'normal');
+      // Leg-completing dart: the engine resets `score` to startingScore
+      // for the new leg before the use case computes turn_score. Use the
+      // pre-dart score as the full deduction (#318). Player scored 32 to
+      // checkout.
+      expect(events[1].payload['turn_score'], 32);
       expect(events[2].eventType, 'LegCompleted');
       expect(events[2].payload['winner_competitor_id'], 'c1');
       expect(events[3].eventType, 'TurnStarted');

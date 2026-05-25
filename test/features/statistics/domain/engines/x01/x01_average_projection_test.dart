@@ -159,11 +159,64 @@ void main() {
     expect(s['totalScoredPoints'], 0); // not committed yet
   });
 
-  test('F2 — bust turn still adds to scored points (busts counted in AVG)', () {
+  test(
+      'F2 — legacy TurnEnded without turn_score falls back to dart-sum (backward compat)',
+      () {
+    // Pre-#318 events do not carry `turn_score` in the payload. The
+    // projection falls back to summing per-dart scores, preserving the
+    // numbers historical games already had. This means a busted turn from
+    // an old game STILL counts its dart sum — accepted because rewriting
+    // old games' stats is out of scope for the fix.
     engine.init(_makeContext());
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 1));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'bust'}, seq: 2));
     expect(engine.snapshot()['totalScoredPoints'], 60);
+  });
+
+  test(
+      'F3 — TurnEnded with turn_score=0 (bust) contributes 0 to numerator (#318)',
+      () {
+    // New events carry the spec-correct turn_score: bust → turn_start_score
+    // - turn_end_score = 0 (engine reverts on bust).
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 1));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 2));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'bust', 'turn_score': 0}, seq: 3));
+    final s = engine.snapshot();
+    expect(s['totalScoredPoints'], 0,
+        reason: 'spec §5.2: bust turn contributes 0 points');
+    expect(s['totalDartsThrown'], 2,
+        reason: 'partial turns still count their darts in the denominator');
+  });
+
+  test(
+      'F4 — TurnEnded with turn_score=0 (Double-In not-in) contributes 0 (#318)',
+      () {
+    // Double-In: player throws three singles without hitting a double →
+    // engine leaves score unchanged → turn_score = 0. Without this fix
+    // the projection summed the dart scores (57) and reported PPR 57.
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 20}, seq: 1));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 19}, seq: 2));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 18}, seq: 3));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'normal', 'turn_score': 0}, seq: 4));
+    expect(engine.snapshot()['totalScoredPoints'], 0);
+  });
+
+  test(
+      'F5 — TurnEnded with turn_score > 0 contributes that exact amount (#318)',
+      () {
+    // Normal scoring turn: engine reports turn_score; projection uses it
+    // verbatim regardless of the per-dart sum (which equals it anyway).
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 1));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 2));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 3));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'normal', 'turn_score': 180}, seq: 4));
+    expect(engine.snapshot()['totalScoredPoints'], 180);
   });
 
   // ── Category G: Isolation ─────────────────────────────────────────────────
