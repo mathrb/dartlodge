@@ -40,4 +40,4 @@ class _UnsupportedCaptureStore implements CaptureStore {
 Future<CaptureStore> openDefaultCaptureStore() async =>
     const _UnsupportedCaptureStore();
 
-Future<void> shareCaptureZip(Uint8List zipBytes, String fileName) async {}
+Future<void> shareCaptureZip(Uint8List zipBytes) async {}

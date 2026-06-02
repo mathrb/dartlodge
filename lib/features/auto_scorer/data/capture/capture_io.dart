@@ -104,7 +104,10 @@ class FileCaptureStore implements CaptureStore {
         }
       }
     }
-    final encoded = ZipEncoder().encode(archive) ?? const <int>[];
+    final encoded = ZipEncoder().encode(archive);
+    if (encoded == null) {
+      throw StateError('Failed to encode the capture export zip.');
+    }
     return Uint8List.fromList(encoded);
   }
 
@@ -131,9 +134,12 @@ Future<CaptureStore> openDefaultCaptureStore() async {
 }
 
 /// Hand an export zip to the OS share sheet (#381 §6) — no photo-library
-/// permission needed. Writes [zipBytes] to a temp file named [fileName] and
-/// shares it.
-Future<void> shareCaptureZip(Uint8List zipBytes, String fileName) async {
+/// permission needed. The file is named `dartlodge-export-<ts>.zip` (matching
+/// the probe's ingest glob); the name is constructed here so call sites can't
+/// deviate from the contract.
+Future<void> shareCaptureZip(Uint8List zipBytes) async {
+  final fileName =
+      'dartlodge-export-${DateTime.now().toUtc().millisecondsSinceEpoch}.zip';
   final tmp = await getTemporaryDirectory();
   final file = File(p.join(tmp.path, fileName));
   await file.writeAsBytes(zipBytes, flush: true);

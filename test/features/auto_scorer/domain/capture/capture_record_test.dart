@@ -23,7 +23,9 @@ void main() {
 
   test('sidecar JSON has exactly the probe-contract keys', () {
     final json = sample().toJson();
-    expect(json.keys, containsAll(<String>{
+    // unorderedEquals (not containsAll) so an added/renamed key fails the test —
+    // the sidecar shape is the probe ingest contract.
+    expect(json.keys, unorderedEquals(<String>{
       'predicted_darts',
       'cal_points',
       'corrected_darts',
