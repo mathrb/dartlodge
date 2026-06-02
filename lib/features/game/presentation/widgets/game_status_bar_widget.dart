@@ -21,6 +21,7 @@ class GameStatusBarWidget extends StatelessWidget {
     this.currentLegIndex,
     this.legsToWin,
     this.totalRounds,
+    this.onDartTapped,
     super.key,
   });
 
@@ -30,6 +31,12 @@ class GameStatusBarWidget extends StatelessWidget {
   final int roundInLeg;
   final int? totalRounds;
   final List<String> currentTurnDarts;
+
+  /// When non-null, each thrown dart badge becomes tappable, invoking this
+  /// with the dart's 0-based index in the turn — the entry point for per-dart
+  /// correction (#376). Empty (not-yet-thrown) slots stay non-interactive.
+  /// Pass null on completed/inactive turns to disable correction.
+  final void Function(int index)? onDartTapped;
 
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
@@ -119,7 +126,12 @@ class GameStatusBarWidget extends StatelessWidget {
                 // (#261).
                 child: currentTurnDarts.length > i &&
                         currentTurnDarts[i].isNotEmpty
-                    ? _DartBadge(segment: currentTurnDarts[i])
+                    ? _DartBadge(
+                        segment: currentTurnDarts[i],
+                        onTap: onDartTapped == null
+                            ? null
+                            : () => onDartTapped!(i),
+                      )
                     : Icon(
                         Icons.navigation,
                         size: 14,
@@ -136,14 +148,15 @@ class GameStatusBarWidget extends StatelessWidget {
 }
 
 class _DartBadge extends StatelessWidget {
-  const _DartBadge({required this.segment});
+  const _DartBadge({required this.segment, this.onTap});
 
   final String segment;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    final badge = Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: cs.primaryFixed.withValues(alpha: AppTheme.opacityGhostBorderLight),
@@ -158,6 +171,12 @@ class _DartBadge extends StatelessWidget {
           color: cs.primaryFixed,
         ),
       ),
+    );
+    if (onTap == null) return badge;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+      child: badge,
     );
   }
 }
