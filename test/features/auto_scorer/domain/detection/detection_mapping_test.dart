@@ -5,28 +5,42 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('parseYoloDetections', () {
-    Map<String, dynamic> box(int cls, double conf, double l, double t, double r, double b) =>
+    // Mirrors the plugin's real result['boxes'] entry shape: class NAME +
+    // normalised corner keys (x1_norm..y2_norm).
+    Map<String, dynamic> box(String name, double conf, double l, double t, double r, double b) =>
         {
-          'classIndex': cls,
+          'class': name,
           'confidence': conf,
-          'normalizedBox': {'left': l, 'top': t, 'right': r, 'bottom': b},
+          'x1_norm': l,
+          'y1_norm': t,
+          'x2_norm': r,
+          'y2_norm': b,
         };
 
-    test('reads class, confidence, and box centre', () {
+    test('maps class name → index and reads the box centre', () {
       final dets = parseYoloDetections({
-        'boxes': [box(0, 0.9, 0.4, 0.4, 0.6, 0.6)]
+        'boxes': [box('dart', 0.9, 0.4, 0.4, 0.6, 0.6), box('cal1', 0.8, 0.0, 0.0, 0.2, 0.2)]
       });
-      expect(dets, hasLength(1));
-      expect(dets.single.classIndex, 0);
-      expect(dets.single.conf, 0.9);
-      expect(dets.single.x, closeTo(0.5, 1e-9));
-      expect(dets.single.y, closeTo(0.5, 1e-9));
+      expect(dets, hasLength(2));
+      expect(dets[0].classIndex, 0); // 'dart'
+      expect(dets[0].conf, 0.9);
+      expect(dets[0].x, closeTo(0.5, 1e-9));
+      expect(dets[0].y, closeTo(0.5, 1e-9));
+      expect(dets[1].classIndex, 1); // 'cal1'
+      expect(dets[1].x, closeTo(0.1, 1e-9));
+    });
+
+    test('skips unknown class names', () {
+      final dets = parseYoloDetections({
+        'boxes': [box('person', 0.99, 0.1, 0.1, 0.2, 0.2)]
+      });
+      expect(dets, isEmpty);
     });
 
     test('tolerates missing / malformed entries', () {
       expect(parseYoloDetections(const {}), isEmpty);
       expect(parseYoloDetections({'boxes': 'nope'}), isEmpty);
-      expect(parseYoloDetections({'boxes': [42, {}, {'classIndex': 1}]}), isEmpty);
+      expect(parseYoloDetections({'boxes': [42, {}, {'class': 'dart'}]}), isEmpty);
     });
   });
 
