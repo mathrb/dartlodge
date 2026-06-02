@@ -1,7 +1,8 @@
 /// Tunable knobs for the [DartTracker]. Defaults are reasonable starting
 /// points; the real values are tuned on captured data (#377 §11), not designed
-/// here. All distance thresholds are in **canonical** units where the board's
-/// double-ring radius is 1.0 (so they read as fractions of the board radius).
+/// here. [matchTolerance] is in **canonical** units where the board's
+/// double-ring radius is 1.0 (a fraction of the board radius); [calShiftThreshold]
+/// is in **image** space (normalised 0–1) — see each field's doc.
 class DartTrackerConfig {
   /// Max canonical distance between a detection and a known dart for them to be
   /// considered the *same* dart. Too tight → one dart emitted twice; too loose

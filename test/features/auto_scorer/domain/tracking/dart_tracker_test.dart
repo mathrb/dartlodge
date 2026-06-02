@@ -134,6 +134,24 @@ void main() {
       expect(tracker.confirmedDarts.last.emitted, isFalse);
     });
 
+    test('turnFull persists while the over-cap dart stays on the board', () {
+      final tracker = DartTracker();
+      tracker.processFrame(frame([d1, d2, d3]));
+      tracker.processFrame(frame([d1, d2, d3]));
+      tracker.processFrame(frame([d1, d2, d3, d4]));
+      tracker.processFrame(frame([d1, d2, d3, d4])); // 4th confirms → capped
+
+      // A later steady frame with nothing new to confirm must STILL report
+      // turnFull (the prompt is the point of the cap), not revert to tracking.
+      final steady = tracker.processFrame(frame([d1, d2, d3, d4]));
+      expect(steady.newDarts, isEmpty);
+      expect(steady.status.phase, TrackerPhase.turnFull);
+
+      // It clears once the board is re-baselined.
+      final cleared = tracker.removeDarts();
+      expect(cleared.status.phase, TrackerPhase.rebaselined);
+    });
+
     test('onTurnAdvanced resets the cap and lets the next turn emit', () {
       final tracker = DartTracker();
       tracker.processFrame(frame([d1, d2, d3]));
@@ -186,12 +204,14 @@ void main() {
       expect(tracker.dartsThisTurn, 1, reason: 're-baseline is not a turn advance');
     });
 
-    test('manual removeDarts clears the board', () {
+    test('manual removeDarts clears the board but not the turn counter', () {
       final tracker = DartTracker();
       confirmOne(tracker);
+      expect(tracker.dartsThisTurn, 1);
       final cleared = tracker.removeDarts();
       expect(cleared.status.phase, TrackerPhase.rebaselined);
       expect(tracker.confirmedDarts, isEmpty);
+      expect(tracker.dartsThisTurn, 1, reason: 'removeDarts is not a turn advance');
     });
 
     test('a large cal shift is treated as a phone bump', () {

@@ -137,7 +137,6 @@ class DartTracker {
 
     // Confirm pendings that have persisted long enough.
     final newDarts = <TrackedDart>[];
-    var hitCap = false;
     for (final p in _pending.where((p) => p.seenCount >= _config.confirmFrames)) {
       final score = scoreDartAt(p.position.x, p.position.y, 1.0);
       final canEmit = _dartsThisTurn < _config.maxDartsPerTurn;
@@ -151,16 +150,11 @@ class DartTracker {
       if (canEmit) {
         _dartsThisTurn++;
         newDarts.add(dart);
-      } else {
-        hitCap = true;
       }
     }
     _pending.removeWhere((p) => p.seenCount >= _config.confirmFrames);
 
-    final phase = hitCap
-        ? TrackerPhase.turnFull
-        : (_confirmed.isEmpty ? TrackerPhase.idle : TrackerPhase.tracking);
-    return TrackerUpdate(newDarts: newDarts, status: _status(phase));
+    return TrackerUpdate(newDarts: newDarts, status: _status(_occupiedPhase()));
   }
 
   /// Manual "remove darts" button: clear the baseline and re-derive the
@@ -184,6 +178,15 @@ class DartTracker {
 
   TrackerUpdate _statusOnly(TrackerPhase phase) =>
       TrackerUpdate(newDarts: const [], status: _status(phase));
+
+  /// Phase for an occupied board: `turnFull` for as long as an over-cap dart is
+  /// physically present (a confirmed dart held back by the 3-dart cap), so the
+  /// "turn full — advance?" prompt persists until the board is re-baselined —
+  /// not just the single frame the 4th dart confirmed (#377 §3.6).
+  TrackerPhase _occupiedPhase() {
+    if (_confirmed.any((d) => !d.emitted)) return TrackerPhase.turnFull;
+    return _confirmed.isEmpty ? TrackerPhase.idle : TrackerPhase.tracking;
+  }
 
   TrackerStatus _status(TrackerPhase phase) => TrackerStatus(
         phase: phase,
