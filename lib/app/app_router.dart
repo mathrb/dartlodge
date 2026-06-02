@@ -31,6 +31,8 @@ import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dar
 import 'package:dart_lodge/features/history/presentation/pages/game_detail_page.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/player_stats_page.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/post_game_summary_page.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_settings_page.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_capture_page.dart';
 
 part 'app_router.g.dart';
 
@@ -49,9 +51,12 @@ abstract final class GameRoutes {
   static const activePractice   = '/practice-board';
   static const activeCountUp    = '/game/active/count-up';
 
+  static const autoScorerSettings = '/settings/auto-scoring';
+
   static String gameDetail(String id) => '/game/history/$id';
   static String playerStats(String id) => '/stats/player/$id';
   static String postGame(String id) => '/post-game/$id';
+  static String autoScorerCapture(String gameId) => '/game/auto-scoring/$gameId';
 }
 
 // ── RouterNotifier ────────────────────────────────────────────────────────────
@@ -121,6 +126,10 @@ Widget _postGameSummaryPage(BuildContext _, GoRouterState s) =>
     PostGameSummaryPage(gameId: s.pathParameters['gameId']!);
 Widget _gameDetailPage(BuildContext _, GoRouterState s) =>
     GameDetailPage(gameId: s.pathParameters['gameId']!);
+Widget _autoScorerSettingsPage(BuildContext _, GoRouterState __) =>
+    const AutoScorerSettingsPage();
+Widget _autoScorerCapturePage(BuildContext _, GoRouterState s) =>
+    AutoScorerCapturePage(gameId: s.pathParameters['gameId']!);
 Widget _errorPage(BuildContext _, GoRouterState s) => Scaffold(
     appBar: AppBar(title: const Text('Error')),
     body: Center(child: Text('Page not found: ${s.uri}')));
@@ -222,6 +231,12 @@ List<RouteBase> _buildRoutes() => [
       GoRoute(path: GameRoutes.history,  builder: _historyPage),
       GoRoute(path: GameRoutes.stats,    builder: _statsPage),
       GoRoute(path: GameRoutes.settings, builder: _settingsPage),
+      GoRoute(
+          path: GameRoutes.autoScorerSettings,
+          builder: _autoScorerSettingsPage),
+      GoRoute(
+          path: '/game/auto-scoring/:gameId',
+          builder: _autoScorerCapturePage),
       // EPIC-002 player routes
       GoRoute(
         path: GameRoutes.players,
