@@ -4,6 +4,7 @@ import '../../domain/engines/base_game_engine.dart';
 import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
 import '../../domain/models/game_config.dart';
+import '../../domain/models/game_state.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_game_state.dart';
 import '../../../../core/error/repository_exception.dart';
@@ -318,6 +319,104 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
           .execute(current.gameState);
       return ActiveGameState(gameState: newGs);
     });
+  }
+
+  /// Per-dart correction (#376): replaces dart [turnDartIndex] of the active
+  /// turn (0-based, throw order) with [newSegment]. Resolves the dart's
+  /// `DartThrown` event id on demand from the log, then delegates to
+  /// `CorrectDartUseCase`. No-op on a completed game or an out-of-range index.
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) =>
+      _serializer.run(() => _correctTurnDartImpl(turnDartIndex, newSegment));
+
+  Future<void> _correctTurnDartImpl(
+      int turnDartIndex, String newSegment) async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+
+    final eventId = await _resolveTurnDartEventId(gs, turnDartIndex);
+    if (eventId == null) return;
+
+    final parsed = Segment.parse(newSegment);
+    final oldIdx = gs.currentTurnIndex;
+    final oldComp = gs.competitors[oldIdx];
+    final oldLegIndex = gs.currentLegIndex;
+
+    state = await AsyncValue.guard(() async {
+      final newGs = await ref.read(correctDartUseCaseProvider).execute(
+            gs,
+            originalEventId: eventId,
+            segment: parsed.baseNumber,
+            multiplier: parsed.multiplier,
+          );
+
+      final legCompleted =
+          newGs.currentLegIndex > oldLegIndex && !newGs.isComplete;
+      final pendingLegWinnerId = legCompleted ? oldComp.competitorId : null;
+      final pendingGameWinnerId =
+          newGs.isComplete ? newGs.winnerCompetitorId : null;
+
+      // Bust banner: an X01 bust voids the turn and restores the competitor's
+      // score to its turn-start value, so detect it by comparing the post-turn
+      // score to `turnStartScore` — NOT to the pre-correction score. A plain
+      // downward correction in a finished turn also raises the post-turn score
+      // relative to the (lower-scoring) original darts without being a bust, so
+      // the old `> oldComp.score` check flashed a false bust banner.
+      final oldTurnStartScore = oldComp.turnStartScore;
+      final showBust = !newGs.turnActive &&
+          !newGs.isComplete &&
+          !legCompleted &&
+          oldIdx == newGs.currentTurnIndex &&
+          oldTurnStartScore != null &&
+          newGs.competitors[oldIdx].score == oldTurnStartScore;
+
+      return ActiveGameState(
+        gameState: newGs,
+        showBust: showBust,
+        pendingLegWinnerId: pendingLegWinnerId,
+        pendingGameWinnerId: pendingGameWinnerId,
+      );
+    });
+  }
+
+  /// Resolves the `DartThrown` event id for dart [turnDartIndex] (0-based,
+  /// throw order) of the active competitor's current turn. The current turn is
+  /// the last `dartsThrownInTurn` live (non-corrected, non-superseded) darts
+  /// for that competitor in the log. Returns null if out of range.
+  Future<String?> _resolveTurnDartEventId(
+      GameState gs, int turnDartIndex) async {
+    final n = gs.dartsThrownInTurn;
+    if (turnDartIndex < 0 || turnDartIndex >= n) return null;
+    final activeCompId = gs.competitors[gs.currentTurnIndex].competitorId;
+    final events = await ref
+        .read(gameEventRepositoryProvider)
+        .getEventsForGame(gs.gameId);
+
+    final correctedIds = <String>{};
+    final supersededIds = <String>{};
+    for (final e in events) {
+      if (e.eventType != 'DartCorrected') continue;
+      final origId = e.payload['original_event_id'];
+      if (origId is String) correctedIds.add(origId);
+      final superseded = e.payload['superseded_event_ids'];
+      if (superseded is List) {
+        for (final id in superseded) {
+          if (id is String) supersededIds.add(id);
+        }
+      }
+    }
+
+    final liveForComp = [
+      for (final e in events)
+        if (e.eventType == 'DartThrown' &&
+            e.payload['competitor_id'] == activeCompId &&
+            !correctedIds.contains(e.eventId) &&
+            !supersededIds.contains(e.eventId))
+          e,
+    ];
+    if (liveForComp.length < n) return null;
+    return liveForComp.sublist(liveForComp.length - n)[turnDartIndex].eventId;
   }
 
   void dismissBust() {

@@ -112,6 +112,18 @@ final class NoDartsToUndoException extends RepositoryException {
       : super('No darts to undo in current turn for game: $gameId');
 }
 
+/// Thrown by [CorrectDartUseCase] when the targeted dart cannot be corrected:
+/// the [eventId] does not reference a live (non-corrected, non-superseded)
+/// `DartThrown` event in [gameId]. Distinct from [NoDartsToUndoException],
+/// which is the "nothing to undo at all" signal.
+final class DartNotCorrectableException extends RepositoryException {
+  final String gameId;
+  final String eventId;
+  const DartNotCorrectableException(this.gameId, this.eventId)
+      : super('Dart not correctable (no live DartThrown $eventId) '
+            'in game: $gameId');
+}
+
 // Infrastructure Exceptions
 final class DatabaseException extends RepositoryException {
   final Object? cause;

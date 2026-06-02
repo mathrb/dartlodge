@@ -33,6 +33,7 @@ import '../../features/game/domain/usecases/process_practice_dart_use_case.dart'
 import '../../features/game/domain/usecases/end_practice_use_case.dart';
 import '../../features/game/domain/usecases/get_game_result_use_case.dart';
 import '../../features/game/domain/usecases/undo_last_dart_use_case.dart';
+import '../../features/game/domain/usecases/correct_dart_use_case.dart';
 import '../../features/game/domain/usecases/create_game_use_case.dart';
 import '../../features/game/domain/models/game_config.dart';
 
@@ -125,6 +126,23 @@ UndoLastDartUseCase undoCricketLastDartUseCase(Ref ref) =>
       ref.watch(gameEventRepositoryProvider),
       ref.watch(dartThrowRepositoryProvider),
       ref.watch(cricketEngineProvider),
+    );
+
+// Per-dart correction (issue #376). Reuses the per-engine undo + ProcessDart
+// mutators; the process step is injected as a function so X01's
+// ProcessDartUseCase and Cricket's ProcessCricketDartUseCase share one class.
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctDartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoLastDartUseCaseProvider),
+      ref.watch(processDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctCricketDartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoCricketLastDartUseCaseProvider),
+      ref.watch(processCricketDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
     );
 
 @Riverpod(keepAlive: true)
