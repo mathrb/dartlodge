@@ -357,14 +357,19 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
       final pendingGameWinnerId =
           newGs.isComplete ? newGs.winnerCompetitorId : null;
 
-      // Bust banner: the corrected turn ended (no leg/game completion) with the
-      // active competitor's score restored — mirror of _processDartImpl's
-      // heuristic, comparing against the pre-correction score.
+      // Bust banner: an X01 bust voids the turn and restores the competitor's
+      // score to its turn-start value, so detect it by comparing the post-turn
+      // score to `turnStartScore` — NOT to the pre-correction score. A plain
+      // downward correction in a finished turn also raises the post-turn score
+      // relative to the (lower-scoring) original darts without being a bust, so
+      // the old `> oldComp.score` check flashed a false bust banner.
+      final oldTurnStartScore = oldComp.turnStartScore;
       final showBust = !newGs.turnActive &&
           !newGs.isComplete &&
           !legCompleted &&
           oldIdx == newGs.currentTurnIndex &&
-          newGs.competitors[oldIdx].score > oldComp.score;
+          oldTurnStartScore != null &&
+          newGs.competitors[oldIdx].score == oldTurnStartScore;
 
       return ActiveGameState(
         gameState: newGs,

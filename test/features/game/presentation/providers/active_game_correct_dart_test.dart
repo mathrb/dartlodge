@@ -1,7 +1,7 @@
 // Notifier-level coverage for per-dart correction (#376): drives the real
 // ActiveGameNotifier.correctTurnDart against in-memory drift repos (overriding
-// the repository providers), exercising the on-demand index→eventId resolver
-// and the full wired use-case path.
+// the repository providers), exercising the on-demand index→eventId resolver,
+// the full wired use-case path, and the bust-banner recomputation.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
@@ -24,7 +24,17 @@ void main() {
   setUp(() async {
     base = DriftTestBase();
     await base.setUp();
+  });
 
+  tearDown(() async {
+    container.dispose();
+    await base.tearDown();
+  });
+
+  // Seeds a solo X01 game with [startingScore] + an opening TurnStarted, builds
+  // a container that routes the notifier through in-memory drift, and returns
+  // the loaded notifier.
+  Future<ActiveGameNotifier> seedAndLoad({int startingScore = 501}) async {
     final playerRepo = await base.createPlayerRepository();
     final gameRepo = await base.createGameRepository();
     final dartRepo = await base.createDartThrowRepository();
@@ -40,8 +50,10 @@ void main() {
       Game(
         gameId: 'g1',
         gameType: GameType.x01,
-        config: const GameConfig.x01(
-            startingScore: 501, inStrategy: 'straight', outStrategy: 'double'),
+        config: GameConfig.x01(
+            startingScore: startingScore,
+            inStrategy: 'straight',
+            outStrategy: 'double'),
         startTime: DateTime.now(),
         isComplete: false,
       ),
@@ -61,10 +73,10 @@ void main() {
       eventType: 'TurnStarted',
       localSequence: 1,
       occurredAt: DateTime.now(),
-      payload: const {
+      payload: {
         'competitor_id': 'c1',
         'player_id': 'p1',
-        'starting_score': 501,
+        'starting_score': startingScore,
         'turn_index': 0,
         'leg_index': 0,
       },
@@ -78,26 +90,20 @@ void main() {
       gameEventRepositoryProvider.overrideWithValue(eventRepo),
       dartThrowRepositoryProvider.overrideWithValue(dartRepo),
     ]);
-  });
-
-  tearDown(() async {
-    container.dispose();
-    await base.tearDown();
-  });
+    await container.read(activeGameProvider('g1').future);
+    return container.read(activeGameProvider('g1').notifier);
+  }
 
   test('correctTurnDart replaces the resolved dart and recomputes the score',
       () async {
-    await container.read(activeGameProvider('g1').future);
-    final notifier = container.read(activeGameProvider('g1').notifier);
+    final notifier = await seedAndLoad();
 
     await notifier.processDart('20'); // dart 1
     await notifier.processDart('20'); // dart 2 → score 461
-
     expect(container.read(activeGameProvider('g1')).value!.gameState
         .competitors[0].score, 461);
 
-    // Correct the first dart of the turn: 20 → 5.
-    await notifier.correctTurnDart(0, '5');
+    await notifier.correctTurnDart(0, '5'); // 20 → 5
 
     final gs = container.read(activeGameProvider('g1')).value!.gameState;
     expect(gs.competitors[0].score, 501 - 5 - 20); // 476
@@ -107,15 +113,44 @@ void main() {
   });
 
   test('correctTurnDart is a no-op for an out-of-range dart index', () async {
-    await container.read(activeGameProvider('g1').future);
-    final notifier = container.read(activeGameProvider('g1').notifier);
+    final notifier = await seedAndLoad();
 
     await notifier.processDart('20'); // only 1 dart this turn
-
     await notifier.correctTurnDart(2, '5'); // index 2 doesn't exist
 
     final gs = container.read(activeGameProvider('g1')).value!.gameState;
     expect(gs.competitors[0].score, 481); // unchanged
     expect(gs.dartsThrownInTurn, 1);
+  });
+
+  test('a downward correction in a completed turn does NOT flash a bust banner',
+      () async {
+    final notifier = await seedAndLoad();
+
+    await notifier.processDart('T20'); // 441
+    await notifier.processDart('T20'); // 381
+    await notifier.processDart('T15'); // 336 — normal 3-dart turn, no bust
+
+    await notifier.correctTurnDart(0, '1'); // T20 → single 1
+
+    final state = container.read(activeGameProvider('g1')).value!;
+    expect(state.gameState.competitors[0].score, 501 - 1 - 60 - 45); // 395
+    expect(state.showBust, isFalse); // regression guard: was true before #383 fix
+  });
+
+  test('a correction that introduces a bust flashes the bust banner', () async {
+    final notifier = await seedAndLoad(startingScore: 100);
+
+    await notifier.processDart('20'); // 80
+    await notifier.processDart('20'); // 60
+    await notifier.processDart('20'); // 40 — no bust
+
+    // Correct dart 1 to T20: 100-60-20-20 = 0 reached on a single → bust,
+    // score restored to 100.
+    await notifier.correctTurnDart(0, 'T20');
+
+    final state = container.read(activeGameProvider('g1')).value!;
+    expect(state.gameState.competitors[0].score, 100);
+    expect(state.showBust, isTrue);
   });
 }
