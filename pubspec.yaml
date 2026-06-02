@@ -40,6 +40,14 @@ dependencies:
   # Screen wakelock
   wakelock_plus: ^1.6.0
 
+  # Auto-scorer training-data export (#381): zip the captured frames + sidecars
+  # and hand them to the OS share sheet (no photo-library permission needed).
+  # No existing dep covers zip archiving or the share sheet.
+  archive: ^3.6.1
+  # ^13.x: 10.x pins win32 ^5.5.3, conflicting with package_info_plus ^10.1.0's
+  # win32 ^6.0.1 (transitive via wakelock_plus).
+  share_plus: ^13.1.0
+
   # Settings / preferences
   shared_preferences: ^2.3.4
   # Pinned via caret to match wakelock_plus ^1.6.0's transitive requirement
