@@ -146,6 +146,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             onChanged: notifier.setThemeMode,
           ),
           const Divider(height: 1),
+          _SectionHeader(label: 'Auto-scoring', cs: cs, tt: tt),
+          ListTile(
+            leading: const Icon(Icons.center_focus_strong),
+            title: const Text('Camera auto-scoring'),
+            subtitle: const Text('Detection, data collection, and export'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(GameRoutes.autoScorerSettings),
+          ),
+          const Divider(height: 1),
           _SectionHeader(label: 'About', cs: cs, tt: tt),
           _InfoRow(
             title: 'Version',

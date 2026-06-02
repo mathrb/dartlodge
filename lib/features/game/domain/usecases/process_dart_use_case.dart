@@ -25,7 +25,8 @@ class ProcessDartUseCase {
     this._engine,
   );
 
-  Future<GameState> execute(GameState currentState, DartThrow dartThrow) async {
+  Future<GameState> execute(GameState currentState, DartThrow dartThrow,
+      {String inputMethod = 'manual'}) async {
     // 1. Guard: game already complete
     if (currentState.isComplete) {
       throw GameAlreadyCompleteException(currentState.gameId);
@@ -52,6 +53,7 @@ class ProcessDartUseCase {
       multiplier: multiplier,
       score: parsedSegment.scoreValue,
       playerId: currentPlayerId,
+      inputMethod: inputMethod,
     );
 
     // 5. Validate

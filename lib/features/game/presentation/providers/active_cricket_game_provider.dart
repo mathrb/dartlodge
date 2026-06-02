@@ -31,10 +31,11 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     return ActiveCricketGameState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) =>
-      _serializer.run(() => _processDartImpl(segment));
+  Future<void> processDart(String segment, {String inputMethod = 'manual'}) =>
+      _serializer.run(() => _processDartImpl(segment, inputMethod: inputMethod));
 
-  Future<void> _processDartImpl(String segment) async {
+  Future<void> _processDartImpl(String segment,
+      {String inputMethod = 'manual'}) async {
     final current = state.value;
     if (current == null) return;
 
@@ -56,8 +57,9 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     );
 
     state = await AsyncValue.guard(() async {
-      final newGs =
-          await ref.read(processCricketDartUseCaseProvider).execute(gs, dart);
+      final newGs = await ref
+          .read(processCricketDartUseCaseProvider)
+          .execute(gs, dart, inputMethod: inputMethod);
 
       final legCompleted =
           newGs.currentLegIndex > oldLegIndex && !newGs.isComplete;

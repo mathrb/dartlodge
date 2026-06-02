@@ -4,6 +4,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/game/dart_input_sink.dart';
+import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/checkout_table.dart';
@@ -22,7 +24,25 @@ import '../widgets/pulsing_next_button_widget.dart';
 /// Trailing-menu actions on the active-game board (#331). End Game keeps
 /// the original gear-icon behaviour; Settings is a new sibling so users
 /// can reach Settings without abandoning their game.
-enum _BoardMenuAction { endGame, settings }
+enum _BoardMenuAction { endGame, settings, autoScoring }
+
+/// Routes camera-detected darts into the active X01 game (#382). Registered in
+/// the core [activeDartInputSinkProvider] while the capture page is open, so the
+/// auto_scorer feature emits without importing the game feature.
+class _X01DartInputSink implements DartInputSink {
+  _X01DartInputSink(this._ref, this._gameId);
+  final WidgetRef _ref;
+  final String _gameId;
+
+  @override
+  void submitDart(String segment) => _ref
+      .read(activeGameProvider(_gameId).notifier)
+      .processDart(segment, inputMethod: 'camera');
+
+  @override
+  void advanceTurn() =>
+      _ref.read(activeGameProvider(_gameId).notifier).advanceTurn();
+}
 
 class X01BoardPage extends ConsumerStatefulWidget {
   const X01BoardPage({required this.gameId, super.key});
@@ -158,6 +178,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
     });
 
     final asyncState = ref.watch(activeGameProvider(widget.gameId));
+    final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
 
     return asyncState.when(
       loading: () => Scaffold(
@@ -224,14 +245,21 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                             _showEndGameDialog(context);
                           case _BoardMenuAction.settings:
                             context.push(GameRoutes.settings);
+                          case _BoardMenuAction.autoScoring:
+                            _openAutoScoring(context);
                         }
                       },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(
+                      itemBuilder: (_) => [
+                        const PopupMenuItem(
                           value: _BoardMenuAction.endGame,
                           child: Text('End Game'),
                         ),
-                        PopupMenuItem(
+                        if (autoScoringOn)
+                          const PopupMenuItem(
+                            value: _BoardMenuAction.autoScoring,
+                            child: Text('Auto-scoring'),
+                          ),
+                        const PopupMenuItem(
                           value: _BoardMenuAction.settings,
                           child: Text('Settings'),
                         ),
@@ -344,6 +372,16 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         ),
       ),
     );
+  }
+
+  /// Open the camera capture page, binding this game as the dart sink for its
+  /// lifetime so detected darts flow into `processDart` (#382). Unbinds on
+  /// return.
+  Future<void> _openAutoScoring(BuildContext context) async {
+    final holder = ref.read(activeDartInputSinkProvider.notifier);
+    holder.bind(_X01DartInputSink(ref, widget.gameId));
+    await context.push(GameRoutes.autoScorerCapture(widget.gameId));
+    holder.bind(null);
   }
 
   void _showEndGameDialog(BuildContext context) {
