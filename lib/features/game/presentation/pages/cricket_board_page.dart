@@ -36,7 +36,7 @@ class _CricketDartInputSink implements DartInputSink {
   @override
   void submitDart(String segment) => _ref
       .read(activeCricketGameProvider(_gameId).notifier)
-      .processDart(segment);
+      .processDart(segment, inputMethod: 'camera');
 
   @override
   void advanceTurn() =>

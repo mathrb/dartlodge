@@ -8,6 +8,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -104,12 +105,13 @@ void main() {
     expect(store.saved, isEmpty);
   });
 
-  test('removeDarts re-baselines (clears the board)', () async {
+  test('removeDarts re-baselines (clears the board) and reports status', () async {
     final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g'); // dart on board
-    expect(session.status.dartsOnBoard, 1);
-    session.removeDarts();
-    expect(session.status.dartsOnBoard, 0);
+    expect(session.dartsOnBoard, 1);
+    final status = session.removeDarts();
+    expect(status.phase, TrackerPhase.rebaselined);
+    expect(session.dartsOnBoard, 0);
   });
 }

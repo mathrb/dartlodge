@@ -30,7 +30,8 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
   }
 
   @override
-  Future<void> processDart(String segment) async => processedDarts.add(segment);
+  Future<void> processDart(String segment, {String inputMethod = 'manual'}) async =>
+      processedDarts.add(segment);
 
   @override
   Future<void> undoDart() async => undoCalls++;

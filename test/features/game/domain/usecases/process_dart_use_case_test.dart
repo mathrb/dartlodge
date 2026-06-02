@@ -175,6 +175,22 @@ void main() {
       expect(events.length, 1);
       expect(events[0].eventType, 'DartThrown');
     });
+
+    test('input_method defaults to manual', () async {
+      await useCase.execute(
+          _makeState(score1: 501, dartsThrownInTurn: 0),
+          _makeDart(segment: '20', score: 20));
+      expect(_captureEvents()[0].payload['input_method'], 'manual');
+    });
+
+    test('input_method is "camera" when threaded from the auto-scorer (#382)',
+        () async {
+      await useCase.execute(
+          _makeState(score1: 501, dartsThrownInTurn: 0),
+          _makeDart(segment: '20', score: 20),
+          inputMethod: 'camera');
+      expect(_captureEvents()[0].payload['input_method'], 'camera');
+    });
   });
 
   group('3rd dart — turn ends normally', () {

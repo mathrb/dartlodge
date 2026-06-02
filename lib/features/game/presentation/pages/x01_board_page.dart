@@ -35,8 +35,9 @@ class _X01DartInputSink implements DartInputSink {
   final String _gameId;
 
   @override
-  void submitDart(String segment) =>
-      _ref.read(activeGameProvider(_gameId).notifier).processDart(segment);
+  void submitDart(String segment) => _ref
+      .read(activeGameProvider(_gameId).notifier)
+      .processDart(segment, inputMethod: 'camera');
 
   @override
   void advanceTurn() =>

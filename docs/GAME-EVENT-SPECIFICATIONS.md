@@ -198,7 +198,7 @@ competitor_id    UUID
 segment          Enum {0, 1–20, bull}
                  0 = miss (dart did not hit a scoring segment)
 multiplier       Integer {1, 2, 3}
-input_method     Enum {manual, vision}
+input_method     Enum {manual, camera}   # 'camera' = on-device auto-scorer (#377)
 ```
 
 **Critical Invariants**

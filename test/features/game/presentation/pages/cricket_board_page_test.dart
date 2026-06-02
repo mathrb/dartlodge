@@ -27,7 +27,8 @@ class _FakeActiveCricketGameNotifier extends ActiveCricketGameNotifier {
   Future<ActiveCricketGameState?> build(String gameId) async => _state;
 
   @override
-  Future<void> processDart(String s) async => processedDarts.add(s);
+  Future<void> processDart(String s, {String inputMethod = 'manual'}) async =>
+      processedDarts.add(s);
 
   @override
   Future<void> nextPlayer() async => nextPlayerCalls++;

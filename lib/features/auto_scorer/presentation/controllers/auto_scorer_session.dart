@@ -43,13 +43,8 @@ class AutoScorerSession {
   final CaptureStore? _captureStore;
   final String _modelVersion;
 
-  TrackerStatus get status => TrackerStatus(
-        phase: _tracker.confirmedDarts.isEmpty
-            ? TrackerPhase.idle
-            : TrackerPhase.tracking,
-        dartsOnBoard: _tracker.confirmedDarts.length,
-        dartsThisTurn: _tracker.dartsThisTurn,
-      );
+  /// Physical darts currently tracked on the board.
+  int get dartsOnBoard => _tracker.confirmedDarts.length;
 
   /// Load the model. Returns true on success (false on the web stub).
   Future<bool> start() => _detector.load();
@@ -91,8 +86,9 @@ class AutoScorerSession {
   /// Manual next-turn pressed: reset the per-turn cap counter.
   void onTurnAdvanced() => _tracker.onTurnAdvanced();
 
-  /// Manual "remove darts": re-baseline the tracker.
-  void removeDarts() => _tracker.removeDarts();
+  /// Manual "remove darts": re-baseline the tracker; returns the resulting
+  /// status (phase `rebaselined`) so the caller can refresh the chip.
+  TrackerStatus removeDarts() => _tracker.removeDarts().status;
 
   Future<void> dispose() => _detector.dispose();
 

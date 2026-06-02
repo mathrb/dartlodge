@@ -47,6 +47,7 @@ class _AutoScorerCapturePageState extends ConsumerState<AutoScorerCapturePage> {
   Future<void> _setup() async {
     try {
       final detector = await ref.read(dartDetectorProvider.future);
+      if (!mounted) return;
       if (!detector.isSupported) {
         setState(() => _error = 'Auto-scoring is not available on this device.');
         return;
@@ -54,12 +55,14 @@ class _AutoScorerCapturePageState extends ConsumerState<AutoScorerCapturePage> {
       final store = await ref.read(captureStoreProvider.future);
       final session = AutoScorerSession(detector: detector, captureStore: store);
       final loaded = await session.start();
+      if (!mounted) return;
       if (!loaded) {
         setState(() => _error =
             'Detection model not found. Bundle the model first (see assets/models).');
         return;
       }
       final cameras = await availableCameras();
+      if (!mounted) return;
       if (cameras.isEmpty) {
         setState(() => _error = 'No camera found.');
         return;
@@ -79,7 +82,7 @@ class _AutoScorerCapturePageState extends ConsumerState<AutoScorerCapturePage> {
       // starved before the user pulls (#377 §3); inference itself runs per call.
       _timer = Timer.periodic(const Duration(milliseconds: 700), (_) => _tick());
     } catch (e) {
-      setState(() => _error = 'Camera setup failed: $e');
+      if (mounted) setState(() => _error = 'Camera setup failed: $e');
     }
   }
 
@@ -91,19 +94,22 @@ class _AutoScorerCapturePageState extends ConsumerState<AutoScorerCapturePage> {
     try {
       final shot = await camera.takePicture();
       final bytes = await shot.readAsBytes();
-      final collect =
-          ref.read(dataCollectionEnabledProvider).value ?? false;
+      // An in-flight tick can resume after dispose() (timer.cancel only stops
+      // future fires); bail before touching ref/state on a dead widget.
+      if (!mounted) return;
+      final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
       final result = await session.onFrame(
         bytes,
         turnOrdinal: _turnOrdinal,
         gameId: widget.gameId,
         collectData: collect,
       );
+      if (!mounted) return;
       final sink = ref.read(activeDartInputSinkProvider);
       for (final dart in result.emittedDarts) {
         sink?.submitDart(dart.segment);
       }
-      if (mounted) setState(() => _status = result.status);
+      setState(() => _status = result.status);
     } catch (_) {
       // Drop this frame; the next tick retries.
     } finally {
@@ -117,13 +123,20 @@ class _AutoScorerCapturePageState extends ConsumerState<AutoScorerCapturePage> {
     setState(() => _turnOrdinal += 1);
   }
 
-  void _removeDarts() => _session?.removeDarts();
+  void _removeDarts() {
+    final status = _session?.removeDarts();
+    if (status != null) setState(() => _status = status);
+  }
 
   @override
   void dispose() {
     _timer?.cancel();
     _camera?.dispose();
     _session?.dispose();
+    // Clear the sink here (not just on the board's push-return) so it can't
+    // leak if the game completes while this page is open and the stack is
+    // replaced via go() — that path never returns to the board's unbind.
+    ref.read(activeDartInputSinkProvider.notifier).bind(null);
     super.dispose();
   }
 

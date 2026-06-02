@@ -25,10 +25,11 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
     return ActiveGameState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) =>
-      _serializer.run(() => _processDartImpl(segment));
+  Future<void> processDart(String segment, {String inputMethod = 'manual'}) =>
+      _serializer.run(() => _processDartImpl(segment, inputMethod: inputMethod));
 
-  Future<void> _processDartImpl(String segment) async {
+  Future<void> _processDartImpl(String segment,
+      {String inputMethod = 'manual'}) async {
     final current = state.value;
     if (current == null) return;
 
@@ -52,8 +53,9 @@ class ActiveGameNotifier extends _$ActiveGameNotifier {
     );
 
     state = await AsyncValue.guard(() async {
-      final newGs =
-          await ref.read(processDartUseCaseProvider).execute(gs, dart);
+      final newGs = await ref
+          .read(processDartUseCaseProvider)
+          .execute(gs, dart, inputMethod: inputMethod);
 
         // Bust: dartsThrownInTurn jumped to 3 before 3 darts were thrown, or
       // score was restored (bust on 3rd dart).
