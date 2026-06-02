@@ -37,6 +37,7 @@ GameEvent buildDartThrownEvent({
   required int multiplier,
   int? score,
   String? playerId,
+  String inputMethod = 'manual',
 }) {
   return GameEvent(
     eventId: dartId,
@@ -50,7 +51,7 @@ GameEvent buildDartThrownEvent({
       'segment': segment,
       'multiplier': multiplier,
       if (score != null) 'score': score,
-      'input_method': 'manual',
+      'input_method': inputMethod,
     },
     synced: false,
     actorId: actorId,

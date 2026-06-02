@@ -55,18 +55,26 @@ class Homography {
   }
 }
 
-/// Warp [all] into a face-on canonical frame aligned with the cardinal axes,
-/// using the four calibration points [cals] (DeepDarts order: cal1=5/20 wire,
-/// cal2=3/17, cal3=8/11, cal4=13/6).
+/// The image→canonical transform derived from four calibration points, plus
+/// the centre and double-ring radius of the rectified board (in canonical
+/// units). Holding this fixed while the board is occupied is what keeps dart
+/// positions stable frame-to-frame (the tracker's homography stabilisation).
+typedef CanonicalTransform = ({
+  Homography homography,
+  BoardPoint centre,
+  double radius,
+});
+
+/// Derive the face-on rectification transform from the four calibration points
+/// [cals] (DeepDarts order: cal1=5/20 wire, cal2=3/17, cal3=8/11, cal4=13/6).
 ///
-/// Mirrors `dartboard.transform_to_canonical`: the cal centroid `c` and mean
-/// radius `r` define a target square (cal1→top, cal2→bottom, cal3→left,
-/// cal4→right); the homography that maps the (possibly skewed) cal quad onto
-/// that square is applied to every point in [all].
-List<BoardPoint> transformToCanonical(
-    List<BoardPoint> cals, List<BoardPoint> all) {
+/// The cal centroid `c` and mean radius `r` define a target square (cal1→top,
+/// cal2→bottom, cal3→left, cal4→right); the returned [Homography] maps the
+/// (possibly skewed) cal quad onto that square. [centre] is `c` and [radius]
+/// is `r` — the board's double-ring radius in the canonical frame.
+CanonicalTransform canonicalTransform(List<BoardPoint> cals) {
   if (cals.length != 4) {
-    throw ArgumentError('transformToCanonical needs exactly 4 cal points.');
+    throw ArgumentError('canonicalTransform needs exactly 4 cal points.');
   }
   final cx = cals.map((p) => p.x).reduce((a, b) => a + b) / 4;
   final cy = cals.map((p) => p.y).reduce((a, b) => a + b) / 4;
@@ -80,8 +88,23 @@ List<BoardPoint> transformToCanonical(
     (x: cx - r, y: cy), // cal3 → left
     (x: cx + r, y: cy), // cal4 → right
   ];
-  final h = Homography.fromCorrespondences(cals, dst);
-  return all.map(h.apply).toList();
+  return (
+    homography: Homography.fromCorrespondences(cals, dst),
+    centre: (x: cx, y: cy),
+    radius: r,
+  );
+}
+
+/// Warp [all] into a face-on canonical frame aligned with the cardinal axes,
+/// using the four calibration points [cals].
+///
+/// Mirrors `dartboard.transform_to_canonical`: the homography that maps the
+/// (possibly skewed) cal quad onto the target square is applied to every point
+/// in [all]. See [canonicalTransform] for the underlying transform.
+List<BoardPoint> transformToCanonical(
+    List<BoardPoint> cals, List<BoardPoint> all) {
+  final t = canonicalTransform(cals);
+  return all.map(t.homography.apply).toList();
 }
 
 double _sq(double v) => v * v;
