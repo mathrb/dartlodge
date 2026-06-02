@@ -98,6 +98,82 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     });
   }
 
+  /// Per-dart correction (#376): replaces dart [turnDartIndex] of the active
+  /// turn (0-based, throw order) with [newSegment]. Resolves the dart's
+  /// `DartThrown` event id on demand from the log, then delegates to
+  /// `CorrectDartUseCase`. No-op on a completed game or an out-of-range index.
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) =>
+      _serializer.run(() => _correctTurnDartImpl(turnDartIndex, newSegment));
+
+  Future<void> _correctTurnDartImpl(
+      int turnDartIndex, String newSegment) async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+
+    final eventId = await _resolveTurnDartEventId(gs, turnDartIndex);
+    if (eventId == null) return;
+
+    final parsed = Segment.parse(newSegment);
+    final pendingGameWinnerId = gs.winnerCompetitorId;
+
+    state = await AsyncValue.guard(() async {
+      final newGs = await ref.read(correctCricketDartUseCaseProvider).execute(
+            gs,
+            originalEventId: eventId,
+            segment: parsed.baseNumber,
+            multiplier: parsed.multiplier,
+          );
+      // Cricket: legsToWin == 1, so a leg win coincides with the game win;
+      // there is no separate pending-leg modal to surface here.
+      return ActiveCricketGameState(
+        gameState: newGs,
+        pendingGameWinnerId:
+            newGs.isComplete ? newGs.winnerCompetitorId : pendingGameWinnerId,
+      );
+    });
+  }
+
+  /// Resolves the `DartThrown` event id for dart [turnDartIndex] (0-based,
+  /// throw order) of the active competitor's current turn — the last
+  /// `dartsThrownInTurn` live (non-corrected, non-superseded) darts for that
+  /// competitor in the log. Returns null if out of range.
+  Future<String?> _resolveTurnDartEventId(
+      GameState gs, int turnDartIndex) async {
+    final n = gs.dartsThrownInTurn;
+    if (turnDartIndex < 0 || turnDartIndex >= n) return null;
+    final activeCompId = gs.competitors[gs.currentTurnIndex].competitorId;
+    final events = await ref
+        .read(gameEventRepositoryProvider)
+        .getEventsForGame(gs.gameId);
+
+    final correctedIds = <String>{};
+    final supersededIds = <String>{};
+    for (final e in events) {
+      if (e.eventType != 'DartCorrected') continue;
+      final origId = e.payload['original_event_id'];
+      if (origId is String) correctedIds.add(origId);
+      final superseded = e.payload['superseded_event_ids'];
+      if (superseded is List) {
+        for (final id in superseded) {
+          if (id is String) supersededIds.add(id);
+        }
+      }
+    }
+
+    final liveForComp = [
+      for (final e in events)
+        if (e.eventType == 'DartThrown' &&
+            e.payload['competitor_id'] == activeCompId &&
+            !correctedIds.contains(e.eventId) &&
+            !supersededIds.contains(e.eventId))
+          e,
+    ];
+    if (liveForComp.length < n) return null;
+    return liveForComp.sublist(liveForComp.length - n)[turnDartIndex].eventId;
+  }
+
   void dismissLegModal() {
     state = state.whenData((s) => s?.copyWith(pendingLegWinnerId: null));
   }

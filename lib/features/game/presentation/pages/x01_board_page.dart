@@ -245,6 +245,11 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     roundInLeg: roundInLeg,
                     totalRounds: gameState.x01TotalRounds,
                     currentTurnDarts: currentTurnDarts,
+                    // Tap a thrown dart to correct it (#376). Disabled once the
+                    // game is complete (completed games are read-only).
+                    onDartTapped: gameState.isComplete
+                        ? null
+                        : (index) => _showCorrectionSheet(context, index),
                   ),
                   PlayerScoreSectionWidget(
                     gameState: gameState,
@@ -302,6 +307,41 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           context.go(GameRoutes.home);
         },
         onCancel: () => Navigator.of(dialogContext).pop(),
+      ),
+    );
+  }
+
+  /// Per-dart correction (#376): tapping dart [dartIndex] of the current turn
+  /// opens the input grid; picking a segment replaces that dart and closes the
+  /// sheet. The notifier resolves the dart's event id and recomputes state.
+  void _showCorrectionSheet(BuildContext context, int dartIndex) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Correct dart ${dartIndex + 1}',
+                style: AppTextStyles.titleMedium,
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.55,
+              child: DartInputGridWidget(
+                onSegmentTapped: (segment) {
+                  ref
+                      .read(activeGameProvider(widget.gameId).notifier)
+                      .correctTurnDart(dartIndex, segment);
+                  Navigator.of(sheetContext).pop();
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

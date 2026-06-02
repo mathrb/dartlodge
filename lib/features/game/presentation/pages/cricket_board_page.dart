@@ -4,8 +4,10 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../domain/models/game_state.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
@@ -210,6 +212,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 roundInLeg: gameState.currentRoundInLeg,
                 totalRounds: gameState.cricketTotalRounds,
                 currentTurnDarts: currentTurnDarts,
+                // Tap a thrown dart to correct it (#376). Disabled once the
+                // game is complete (completed games are read-only).
+                onDartTapped: gameState.isComplete
+                    ? null
+                    : (index) =>
+                        _showCorrectionSheet(context, gameState, index),
               ),
               Expanded(
                 child: Padding(
@@ -271,6 +279,48 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   }
 
   void _confirmBack(BuildContext context) => _showEndConfirm(context);
+
+  /// Per-dart correction (#376): tapping dart [dartIndex] of the current turn
+  /// opens the cricket scoring grid; picking a number (or MISS) replaces that
+  /// dart and closes the sheet. The notifier resolves the dart's event id and
+  /// recomputes state.
+  void _showCorrectionSheet(
+      BuildContext context, GameState gameState, int dartIndex) {
+    final notifier =
+        ref.read(activeCricketGameProvider(widget.gameId).notifier);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                'Correct dart ${dartIndex + 1}',
+                style: AppTextStyles.titleMedium,
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.6,
+              child: CricketUnifiedTableWidget(
+                gameState: gameState,
+                onSegmentTapped: (segment) {
+                  notifier.correctTurnDart(dartIndex, segment);
+                  Navigator.of(sheetContext).pop();
+                },
+                onMiss: () {
+                  notifier.correctTurnDart(dartIndex, 'MISS');
+                  Navigator.of(sheetContext).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   void _showEndGameDialog(BuildContext context) => _showEndConfirm(context);
 
