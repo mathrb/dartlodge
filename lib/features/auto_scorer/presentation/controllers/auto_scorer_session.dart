@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:dart_lodge/features/auto_scorer/data/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
@@ -32,15 +33,18 @@ class AutoScorerSession {
     required DartDetector detector,
     DartTracker? tracker,
     CaptureStore? captureStore,
+    FramePreprocessor preprocessor = const FramePreprocessor(),
     String modelVersion = 'unknown',
   })  : _detector = detector,
         _tracker = tracker ?? DartTracker(),
         _captureStore = captureStore,
+        _preprocessor = preprocessor,
         _modelVersion = modelVersion;
 
   final DartDetector _detector;
   final DartTracker _tracker;
   final CaptureStore? _captureStore;
+  final FramePreprocessor _preprocessor;
   final String _modelVersion;
 
   /// Physical darts currently tracked on the board.
@@ -62,6 +66,11 @@ class AutoScorerSession {
     final update = _tracker.processFrame(frame);
 
     if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
+      // Store the SAME 800×800 frame the detector saw — the sidecar coords are
+      // normalised in that frame, so a raw camera frame would misalign them
+      // (#381 stores "the 800×800 frame"). Falls back to raw if the frame can't
+      // be re-encoded.
+      final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
       // The dart-in-turn ordinal of the first new dart this frame (1-based).
       final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
       for (var i = 0; i < update.newDarts.length; i++) {
@@ -72,7 +81,7 @@ class AutoScorerSession {
             CaptureHandle(
                 turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
           ),
-          frameBytes,
+          stored,
         );
       }
     }
