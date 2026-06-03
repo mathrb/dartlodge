@@ -107,7 +107,7 @@ lib/features/<feature>/
 ```
 
 - `domain/` has zero imports of `package:flutter`, `package:drift`, or `package:dio`.
-- No feature imports another feature directly. Cross-feature communication via `core/` providers or shared domain entities only.
+- No feature imports another feature directly. Cross-feature communication via `core/` providers or shared domain entities only. Concrete runtime-wiring seam: a port/holder provider in `core/` (the producer feature `bind`s/`bump`s it; the consumer `watch`/`listen`s it); register the implementation at the composition root (`main.dart` `ProviderScope` override or `app_router`), which alone may import feature widgets. (Examples: `DartInputSink`, `boardOverlayBuilder`, `ActiveTurnSignal`.)
 - `core/` contains no domain logic — only infrastructure (database wiring, error types, shared utilities).
 
 ### 2. Dependency Direction
@@ -150,6 +150,8 @@ All state classes use `freezed`. Never mutate state in place. Always use `copyWi
 
 Platform selection (native SQLite vs WASM) happens once in the Drift factory. Everywhere else sees only the repository interface.
 
+**Platform-only plugins (camera, ultralytics_yolo, etc.):** put the impl behind a `domain` interface and conditionally import it — `import 'x_stub.dart' if (dart.library.io) 'x_io.dart';` — with a web no-op stub. Verify no `lib/` file imports the `_io` impl unconditionally (`grep`) or `flutter run -d chrome` breaks. Native Android/iOS permissions a plugin needs are merged from the plugin's own manifest (no edit to the gitignored `android/`); iOS `Info.plist` strings are added per-machine.
+
 ---
 
 ## Riverpod Conventions
@@ -158,6 +160,7 @@ Follow `docs/STATE_MANAGEMENT.md` exactly. Rules that are easiest to violate:
 - Provider names strip the `Notifier` suffix: `FooNotifier` → `fooProvider`; family variant `FooNotifier.build(String id)` → `fooProvider('id')`.
 - The same suffix stripping applies to **function-style** providers: `@riverpod Foo fooNotifier(Ref ref)` generates `fooProvider`, not `fooNotifierProvider`. Don't reach for `xxxNotifierProvider` — grep the `.g.dart` if unsure.
 - Use `ref.watch()` inside `build()`. Use `ref.read()` only in event handlers and notifier methods.
+- Never touch `ref` in `State.dispose()` (unsafe once deactivated) — capture the notifier in a field during `initState` if you need it later. Never *mutate* a provider during `build` / the `initState` body / `dispose` (→ "modified during build" / "ref unsafe" errors); do binds/bumps from an `addPostFrameCallback` or an event handler. `ref.listen()` belongs in `build()`.
 - Handle all three `AsyncValue` states in every widget: `data`, `loading`, `error`. Never use `.value!` without fallbacks.
 - Use `AsyncValue.value` (returns `T?`) — not `valueOrNull` — in Riverpod 3.x.
 
