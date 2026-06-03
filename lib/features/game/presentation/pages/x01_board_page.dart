@@ -39,10 +39,6 @@ class _X01DartInputSink implements DartInputSink {
   void submitDart(String segment) => _ref
       .read(activeGameProvider(_gameId).notifier)
       .processDart(segment, inputMethod: 'camera');
-
-  @override
-  void advanceTurn() =>
-      _ref.read(activeGameProvider(_gameId).notifier).advanceTurn();
 }
 
 class X01BoardPage extends ConsumerStatefulWidget {

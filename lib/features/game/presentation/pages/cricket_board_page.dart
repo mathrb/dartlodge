@@ -38,10 +38,6 @@ class _CricketDartInputSink implements DartInputSink {
   void submitDart(String segment) => _ref
       .read(activeCricketGameProvider(_gameId).notifier)
       .processDart(segment, inputMethod: 'camera');
-
-  @override
-  void advanceTurn() =>
-      _ref.read(activeCricketGameProvider(_gameId).notifier).nextPlayer();
 }
 
 class CricketBoardPage extends ConsumerStatefulWidget {
