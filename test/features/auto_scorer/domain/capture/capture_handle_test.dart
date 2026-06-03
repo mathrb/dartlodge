@@ -18,6 +18,22 @@ void main() {
     expect(() => CaptureHandle.parse('t3'), throwsFormatException);
   });
 
+  test('manual handle formats as t<turn>-m<seq> and round-trips', () {
+    const h = CaptureHandle.manual(turnOrdinal: 3, sequence: 1);
+    expect(h.key, 't3-m1');
+    final parsed = CaptureHandle.parse('t3-m1');
+    expect(parsed.turnOrdinal, 3);
+    expect(parsed.manualSequence, 1);
+    expect(parsed, h);
+  });
+
+  test('a dart handle and a manual handle are not equal', () {
+    expect(
+      const CaptureHandle.manual(turnOrdinal: 3, sequence: 2),
+      isNot(const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2)),
+    );
+  });
+
   test('equality is by (turn, dart)', () {
     expect(
       const CaptureHandle(turnOrdinal: 1, dartInTurnOrdinal: 1),

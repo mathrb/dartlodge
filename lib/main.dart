@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app/app.dart';
+import 'core/providers/board_overlay_provider.dart';
+import 'features/auto_scorer/presentation/widgets/auto_scorer_board_overlay.dart';
 
 Future<void> main() async {
   await SentryFlutter.init(
@@ -23,8 +25,16 @@ Future<void> main() async {
       );
     },
     appRunner: () => runApp(
-      const ProviderScope(
-        child: DartsApp(),
+      ProviderScope(
+        overrides: [
+          // Composition root wires the auto-scorer's board overlay into the
+          // core seam, so the game feature renders it without importing
+          // auto_scorer (CLAUDE.md cross-feature rule).
+          boardOverlayBuilderProvider.overrideWithValue(
+            (context, gameId) => AutoScorerBoardOverlay(gameId: gameId),
+          ),
+        ],
+        child: const DartsApp(),
       ),
     ),
   );

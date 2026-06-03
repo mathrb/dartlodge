@@ -124,6 +124,29 @@ void main() {
     expect(store.saved, isEmpty);
   });
 
+  test('captureCurrentFrame stores a manual-handle 800×800 frame (missed dart)', () async {
+    final raw = img.encodePng(img.Image(width: 1200, height: 800));
+    final store = _FakeCaptureStore();
+    final session =
+        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+
+    final saved = await session.captureCurrentFrame(raw, turnOrdinal: 2, gameId: 'g');
+    expect(saved, isTrue);
+    expect(store.saved, hasLength(1));
+    expect(store.saved.single.handle,
+        const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
+    final stored = img.decodeImage(store.savedBytes.single)!;
+    expect(stored.width, 800);
+    expect(stored.height, 800);
+  });
+
+  test('captureCurrentFrame is a no-op without a capture store', () async {
+    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    expect(
+        await session.captureCurrentFrame(bytes, turnOrdinal: 1, gameId: 'g'),
+        isFalse);
+  });
+
   test('removeDarts re-baselines (clears the board) and reports status', () async {
     final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
