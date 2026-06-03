@@ -29,6 +29,12 @@ class UltralyticsDartDetector implements DartDetector {
   /// Lower bound on the confidence we ask the plugin to return, so a cal point
   /// sitting just below the user's threshold is still surfaced to the HUD for
   /// tuning. Per-class acceptance is applied in [buildDetectionFrame].
+  ///
+  /// Safe only because the standard NMS detect path keeps the top
+  /// `numItemsThreshold` (30) detections **by confidence**, so a 0.05 floor's
+  /// noise can't crowd out the high-confidence cals. A future NMS-free /
+  /// end-to-end model export would cap in emission order instead and could drop
+  /// a real cal — raise this floor (or keep NMS in the export) if that changes.
   static const double _hudFloor = 0.05;
 
   @override
