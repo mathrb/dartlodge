@@ -231,9 +231,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: Stack(
-            children: [
-              SafeArea(
+          body: SafeArea(
             bottom: false,
             child: Column(
             children: [
@@ -271,6 +269,12 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       ],
                     ),
                   ),
+                  // Auto-scoring control bar (#382): a slim row under the
+                  // header so the scoreboard below stays fully visible. Rendered
+                  // via the core boardOverlayBuilder seam (no game→auto_scorer
+                  // import); null/absent when the feature is off.
+                  if (autoScoringOn && overlay != null)
+                    overlay(context, widget.gameId),
                   GameStatusBarWidget(
                     configLabel: '${gameState.startingScore}',
                     currentLegIndex: gameState.currentLegIndex,
@@ -321,12 +325,6 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   ),
                 ],
           ),
-              ),
-              if (autoScoringOn && overlay != null)
-                Positioned.fill(
-                  child: overlay(context, widget.gameId),
-                ),
-            ],
           ),
           ),
         );

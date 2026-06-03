@@ -199,9 +199,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: Stack(
-            children: [
-              SafeArea(
+          body: SafeArea(
             bottom: false,
             child: Column(
             children: [
@@ -237,6 +235,11 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   ],
                 ),
               ),
+              // Auto-scoring control bar (#382): a slim row under the header so
+              // the scoreboard below stays fully visible. Via the core
+              // boardOverlayBuilder seam; null/absent when the feature is off.
+              if (autoScoringOn && overlay != null)
+                overlay(context, widget.gameId),
               GameStatusBarWidget(
                 configLabel: variantLabel,
                 currentLegIndex: gameState.currentLegIndex,
@@ -307,12 +310,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               ),
             ],
           ),
-              ),
-              if (autoScoringOn && overlay != null)
-                Positioned.fill(
-                  child: overlay(context, widget.gameId),
-                ),
-            ],
           ),
           ),
         );

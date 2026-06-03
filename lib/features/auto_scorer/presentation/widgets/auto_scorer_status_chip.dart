@@ -16,6 +16,11 @@ class AutoScorerStatusChip extends StatelessWidget {
     switch (status.phase) {
       case TrackerPhase.noCalibration:
         return (label: 'Aim at the board', icon: Icons.visibility_off);
+      case TrackerPhase.needsCalibration:
+        return (
+          label: 'Camera needs calibration',
+          icon: Icons.crop_free
+        );
       case TrackerPhase.idle:
         return (label: 'Ready', icon: Icons.center_focus_weak);
       case TrackerPhase.tracking:
@@ -35,7 +40,8 @@ class AutoScorerStatusChip extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final info = describe(status);
     final isAlert = status.phase == TrackerPhase.turnFull ||
-        status.phase == TrackerPhase.cameraMoved;
+        status.phase == TrackerPhase.cameraMoved ||
+        status.phase == TrackerPhase.needsCalibration;
     final fg = isAlert ? scheme.onErrorContainer : scheme.onSecondaryContainer;
     final bg = isAlert ? scheme.errorContainer : scheme.secondaryContainer;
     return Chip(

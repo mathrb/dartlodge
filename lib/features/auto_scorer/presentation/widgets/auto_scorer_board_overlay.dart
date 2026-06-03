@@ -13,10 +13,12 @@ import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Scoreboard-primary assist-mode overlay (#377 §5.2, #382 rework). Rendered by
-/// the X01/Cricket board (via the core `boardOverlayBuilder` seam) **over** the
-/// normal scoreboard, which stays primary. Detection runs **headless** (no
-/// fullscreen preview) once started; only the one-time aim step shows a preview.
+/// Scoreboard-primary assist-mode control bar (#377 §5.2, #382 rework). The
+/// X01/Cricket board renders this (via the core `boardOverlayBuilder` seam) as a
+/// **slim row directly under the header**, so the scoreboard — including the
+/// three-dart indicator — stays fully visible (it is laid out in flow, not
+/// floated over the board). Detection runs **headless** once started; the
+/// one-time aim step is a transient fullscreen route, not this bar.
 ///
 /// Emits detected darts through the core `DartInputSink` (bound by the board),
 /// so it never imports the game feature. Camera/device-only: shows nothing
@@ -31,11 +33,12 @@ class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
       _AutoScorerBoardOverlayState();
 }
 
-enum _Mode { idle, aiming, running }
+enum _Mode { idle, running }
 
 class _AutoScorerBoardOverlayState
     extends ConsumerState<AutoScorerBoardOverlay> {
   _Mode _mode = _Mode.idle;
+  bool _starting = false;
   CameraController? _camera;
   AutoScorerSession? _session;
   Timer? _timer;
@@ -50,21 +53,20 @@ class _AutoScorerBoardOverlayState
   static const int _maxTimingSamples = 30;
   final List<PipelineTimings> _timings = [];
 
-  /// idle → aiming: load the model + open the camera (preview shown to aim).
+  /// idle → aiming → running: load the model + open the camera, push a one-time
+  /// fullscreen aim preview, then (on "Done") start headless detection. The aim
+  /// step is a transient route so this bar never grows to cover the scoreboard.
   Future<void> _start() async {
     setState(() {
       _error = null;
-      _mode = _Mode.aiming;
+      _starting = true;
     });
     CameraController? controller;
     try {
       final detector = await ref.read(dartDetectorProvider.future);
       if (!mounted) return;
       if (!detector.isSupported) {
-        setState(() {
-          _error = 'Auto-scoring is not available on this device.';
-          _mode = _Mode.idle;
-        });
+        _fail('Auto-scoring is not available on this device.');
         return;
       }
       final store = await ref.read(captureStoreProvider.future);
@@ -72,19 +74,13 @@ class _AutoScorerBoardOverlayState
       final loaded = await session.start();
       if (!mounted) return;
       if (!loaded) {
-        setState(() {
-          _error = 'Detection model not found (see assets/models).';
-          _mode = _Mode.idle;
-        });
+        _fail('Detection model not found (see assets/models).');
         return;
       }
       final cameras = await availableCameras();
       if (!mounted) return;
       if (cameras.isEmpty) {
-        setState(() {
-          _error = 'No camera found.';
-          _mode = _Mode.idle;
-        });
+        _fail('No camera found.');
         return;
       }
       controller = CameraController(cameras.first, ResolutionPreset.high,
@@ -94,27 +90,53 @@ class _AutoScorerBoardOverlayState
         await controller.dispose();
         return;
       }
-      setState(() {
-        _session = session;
-        _camera = controller;
-      });
+      _session = session;
+      _camera = controller;
+      // One-time aim: a transient fullscreen modal to position the phone — an
+      // ephemeral overlay carrying a live CameraController, not an app screen,
+      // so it uses Navigator.push (a routed go_router screen can't take a
+      // runtime object). Returns true on "Done", false/null on cancel or back.
+      // _starting stays true so the bar shows a spinner behind the modal rather
+      // than re-exposing "Start camera".
+      final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => _AutoScorerAimView(controller: controller!),
+      ));
+      if (!mounted) return;
+      if (done == true) {
+        _beginRunning();
+      } else {
+        _stop();
+      }
     } catch (e) {
       // Release the controller if it was created before the failure (e.g.
       // initialize() threw), so the native camera isn't leaked.
       await controller?.dispose();
-      if (mounted) {
-        setState(() {
-          _error = 'Camera setup failed: $e';
-          _mode = _Mode.idle;
-        });
-      }
+      _fail('Camera setup failed: $e');
     }
   }
 
-  /// aiming → running: hide the preview, start headless detection.
+  void _fail(String message) {
+    if (!mounted) return;
+    // The local controller (if any) is already disposed by the caller; clear
+    // the fields so dispose()/_stop() don't double-dispose or leave a dangling
+    // reference. The shared detector (via the session) is left intact.
+    _camera = null;
+    _session = null;
+    setState(() {
+      _error = message;
+      _starting = false;
+      _mode = _Mode.idle;
+    });
+  }
+
+  /// aiming → running: start headless detection (no preview).
   void _beginRunning() {
     if (_camera == null) return;
-    setState(() => _mode = _Mode.running);
+    setState(() {
+      _mode = _Mode.running;
+      _starting = false;
+    });
     // Capture faster than ~1 Hz inference so a fast third dart isn't starved
     // before the user pulls (#377 §3); inference runs per call.
     _timer = Timer.periodic(const Duration(milliseconds: 700), (_) => _tick());
@@ -129,7 +151,11 @@ class _AutoScorerBoardOverlayState
     cam?.dispose();
     _session?.dispose();
     _session = null;
-    setState(() => _mode = _Mode.idle);
+    _timings.clear();
+    setState(() {
+      _mode = _Mode.idle;
+      _starting = false;
+    });
   }
 
   Future<void> _tick() async {
@@ -217,135 +243,148 @@ class _AutoScorerBoardOverlayState
       _session?.onTurnAdvanced();
       _turnOrdinal += 1;
     });
-    switch (_mode) {
-      case _Mode.aiming:
-        return _aimView();
-      case _Mode.idle:
-      case _Mode.running:
-        // A compact, corner cluster — the rest of the board stays touchable
-        // (no widget there ⇒ taps fall through to the scoreboard beneath).
-        final hudOn =
-            ref.watch(autoScorerTimingHudEnabledProvider).value ?? false;
-        return SafeArea(
-          child: Stack(
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child:
-                      _mode == _Mode.running ? _runningControls() : _idleChip(),
-                ),
-              ),
-              if (_mode == _Mode.running && hudOn && _timings.isNotEmpty)
-                Align(
-                  alignment: Alignment.bottomLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AutoScorerTimingHud(
-                      last: _timings.last,
-                      samples: _timings,
-                      skipPreprocess:
-                          ref.watch(autoScorerSkipPreprocessProvider).value ??
-                              false,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-    }
-  }
-
-  Widget _idleChip() {
     final scheme = Theme.of(context).colorScheme;
-    return ActionChip(
-      avatar: const Icon(Icons.videocam_outlined, size: 18),
-      label: Text(_error ?? 'Auto-score'),
-      backgroundColor: scheme.secondaryContainer,
-      onPressed: _start,
-    );
-  }
-
-  Widget _runningControls() {
-    return Card(
-      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.92),
+    final hudOn = ref.watch(autoScorerTimingHudEnabledProvider).value ?? false;
+    // A full-width strip in the board's layout flow (under the header), so it
+    // never overlaps the scoreboard / dart indicator (#377 §5.2).
+    return Material(
+      color: scheme.surfaceContainerHigh,
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            AutoScorerStatusChip(status: _status),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: 'Capture frame',
-                  icon: const Icon(Icons.add_a_photo_outlined),
-                  onPressed: _forceCapture,
+            _barRow(),
+            if (_mode == _Mode.running && hudOn && _timings.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4, bottom: 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AutoScorerTimingHud(
+                    last: _timings.last,
+                    samples: _timings,
+                    skipPreprocess:
+                        ref.watch(autoScorerSkipPreprocessProvider).value ??
+                            false,
+                  ),
                 ),
-                IconButton(
-                  tooltip: 'Remove darts',
-                  icon: const Icon(Icons.cleaning_services),
-                  onPressed: _removeDarts,
-                ),
-                IconButton(
-                  tooltip: 'Stop auto-scoring',
-                  icon: const Icon(Icons.stop_circle_outlined),
-                  onPressed: _stop,
-                ),
-              ],
-            ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _aimView() {
-    final camera = _camera;
-    return ColoredBox(
-      color: Colors.black,
-      child: camera == null
-          ? const Center(child: CircularProgressIndicator())
-          : Stack(
-              fit: StackFit.expand,
-              children: [
-                CameraPreview(camera),
-                SafeArea(
-                  child: Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          FilledButton.tonal(
-                              onPressed: _stop, child: const Text('Cancel')),
-                          FilledButton.icon(
-                            onPressed: _beginRunning,
-                            icon: const Icon(Icons.check),
-                            label: const Text('Done aiming'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                const Align(
-                  alignment: Alignment.topCenter,
-                  child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Text('Aim at the board, then Done',
-                          style: TextStyle(color: Colors.white)),
-                    ),
-                  ),
-                ),
-              ],
+  Widget _barRow() {
+    if (_mode == _Mode.running) {
+      return Row(
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: AutoScorerStatusChip(status: _status),
             ),
+          ),
+          IconButton(
+            tooltip: 'Capture frame',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.add_a_photo_outlined),
+            onPressed: _forceCapture,
+          ),
+          IconButton(
+            tooltip: 'Remove darts',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.cleaning_services),
+            onPressed: _removeDarts,
+          ),
+          IconButton(
+            tooltip: 'Stop auto-scoring',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.stop_circle_outlined),
+            onPressed: _stop,
+          ),
+        ],
+      );
+    }
+    // Idle: a single Start action (plus the last error, if any).
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            _error ?? 'Auto-scoring ready',
+            style: TextStyle(
+                color: _error != null ? scheme.error : scheme.onSurfaceVariant),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (_starting)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+                width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+          )
+        else
+          FilledButton.tonalIcon(
+            onPressed: _start,
+            icon: const Icon(Icons.videocam_outlined, size: 18),
+            label: const Text('Start camera'),
+          ),
+      ],
+    );
+  }
+}
+
+/// One-time fullscreen aim preview (#377 §5.2), pushed as a transient route by
+/// the control bar so the persistent UI never covers the scoreboard. Returns
+/// `true` on "Done aiming", `false` on cancel.
+class _AutoScorerAimView extends StatelessWidget {
+  const _AutoScorerAimView({required this.controller});
+
+  final CameraController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          CameraPreview(controller),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FilledButton.tonal(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('Cancel')),
+                    FilledButton.icon(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Done aiming'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const Align(
+            alignment: Alignment.topCenter,
+            child: SafeArea(
+              child: Padding(
+                padding: EdgeInsets.all(12),
+                child: Text('Aim at the board, then Done',
+                    style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
