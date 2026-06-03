@@ -15,14 +15,10 @@ class AutoScorerTimingHud extends StatelessWidget {
   /// Rolling window of recent frames (oldest→newest) for the average/FPS.
   final List<PipelineTimings> samples;
 
-  /// Whether the preprocess A/B skip is active (raw bytes to the model).
-  final bool skipPreprocess;
-
   const AutoScorerTimingHud({
     super.key,
     required this.last,
     required this.samples,
-    required this.skipPreprocess,
   });
 
   Duration get _avgTotal {
@@ -66,7 +62,6 @@ class AutoScorerTimingHud extends StatelessWidget {
                   'trk ${ms(last.track)}ms'),
               Text('avg ${ms(avg)}ms  ${StatFormatter.fmtDouble(fps)} fps'
                   '  (n=${samples.length})'),
-              Text('preprocess: ${skipPreprocess ? 'SKIPPED (A/B)' : 'on'}'),
             ],
           ),
         ),
