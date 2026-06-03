@@ -48,6 +48,7 @@ class _AutoScorerBoardOverlayState
       _error = null;
       _mode = _Mode.aiming;
     });
+    CameraController? controller;
     try {
       final detector = await ref.read(dartDetectorProvider.future);
       if (!mounted) return;
@@ -78,7 +79,7 @@ class _AutoScorerBoardOverlayState
         });
         return;
       }
-      final controller = CameraController(cameras.first, ResolutionPreset.high,
+      controller = CameraController(cameras.first, ResolutionPreset.high,
           enableAudio: false);
       await controller.initialize();
       if (!mounted) {
@@ -90,6 +91,9 @@ class _AutoScorerBoardOverlayState
         _camera = controller;
       });
     } catch (e) {
+      // Release the controller if it was created before the failure (e.g.
+      // initialize() threw), so the native camera isn't leaked.
+      await controller?.dispose();
       if (mounted) {
         setState(() {
           _error = 'Camera setup failed: $e';
