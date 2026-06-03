@@ -24,7 +24,9 @@ uv run \
   python dart-train/export_mobile.py models/dart_round<N>_withcal.pt
 ```
 
-This writes `models/dart_round<N>_withcal_float32.tflite` (Android). The TF /
+This writes
+`models/dart_round<N>_withcal_saved_model/dart_round<N>_withcal_float32.tflite`
+(Android). The TF /
 `onnx2tf` / `tf_keras` toolchain is version-fragile and needs ~10 GB free disk;
 the pins above are the known-good combo. (Add `--coreml` + `--with coremltools`
 for the iOS `.mlpackage`.)
@@ -35,7 +37,7 @@ The model classes are `{0: dart, 1: cal1, 2: cal2, 3: cal3, 4: cal4}` at
 ## 2. Bundle it
 
 ```bash
-cp ~/git/deep-darts-probe/models/dart_round<N>_withcal_float32.tflite \
+cp ~/git/deep-darts-probe/models/dart_round<N>_withcal_saved_model/dart_round<N>_withcal_float32.tflite \
    assets/models/dart_auto_scorer.tflite
 ```
 
