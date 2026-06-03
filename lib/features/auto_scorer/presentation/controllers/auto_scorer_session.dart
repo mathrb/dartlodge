@@ -94,6 +94,31 @@ class AutoScorerSession {
     );
   }
 
+  /// Force-capture the current frame for training data (#382) — for darts the
+  /// model **missed** (no emission), the highest-value samples. Stores the same
+  /// 800×800 frame + whatever the detector found this frame (often empty),
+  /// under a manual handle. Out-of-band: does not touch the tracker or emit.
+  /// No-op without a capture store. Returns true if a frame was stored.
+  Future<bool> captureCurrentFrame(
+    Uint8List frameBytes, {
+    required int turnOrdinal,
+    required String gameId,
+  }) async {
+    final store = _captureStore;
+    if (store == null) return false;
+    final frame = await _detector.detect(frameBytes);
+    final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
+    _manualSequence += 1;
+    await store.save(
+      _recordFor(frame, gameId,
+          CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence)),
+      stored,
+    );
+    return true;
+  }
+
+  int _manualSequence = 0;
+
   /// Manual next-turn pressed: reset the per-turn cap counter.
   void onTurnAdvanced() => _tracker.onTurnAdvanced();
 

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
+import '../../../../core/providers/board_overlay_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/checkout_table.dart';
@@ -24,7 +25,7 @@ import '../widgets/pulsing_next_button_widget.dart';
 /// Trailing-menu actions on the active-game board (#331). End Game keeps
 /// the original gear-icon behaviour; Settings is a new sibling so users
 /// can reach Settings without abandoning their game.
-enum _BoardMenuAction { endGame, settings, autoScoring }
+enum _BoardMenuAction { endGame, settings }
 
 /// Routes camera-detected darts into the active X01 game (#382). Registered in
 /// the core [activeDartInputSinkProvider] while the capture page is open, so the
@@ -62,6 +63,18 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
   void initState() {
     super.initState();
     WakelockPlus.enable();
+    // Bind this game as the dart sink so the auto-scorer overlay (when active)
+    // emits detected darts into it (#382). No unbind on dispose: the sink's
+    // only consumer is the overlay, which lives on this board, so a stale sink
+    // is never invoked — and mutating a provider during dispose is illegal. The
+    // next board rebinds.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(activeDartInputSinkProvider.notifier)
+            .bind(_X01DartInputSink(ref, widget.gameId));
+      }
+    });
     _bustFlashController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
@@ -179,6 +192,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 
     final asyncState = ref.watch(activeGameProvider(widget.gameId));
     final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
+    final overlay = ref.watch(boardOverlayBuilderProvider);
 
     return asyncState.when(
       loading: () => Scaffold(
@@ -221,7 +235,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: SafeArea(
+          body: Stack(
+            children: [
+              SafeArea(
             bottom: false,
             child: Column(
             children: [
@@ -245,21 +261,14 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                             _showEndGameDialog(context);
                           case _BoardMenuAction.settings:
                             context.push(GameRoutes.settings);
-                          case _BoardMenuAction.autoScoring:
-                            _openAutoScoring(context);
                         }
                       },
-                      itemBuilder: (_) => [
-                        const PopupMenuItem(
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(
                           value: _BoardMenuAction.endGame,
                           child: Text('End Game'),
                         ),
-                        if (autoScoringOn)
-                          const PopupMenuItem(
-                            value: _BoardMenuAction.autoScoring,
-                            child: Text('Auto-scoring'),
-                          ),
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: _BoardMenuAction.settings,
                           child: Text('Settings'),
                         ),
@@ -310,6 +319,12 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   ),
                 ],
           ),
+              ),
+              if (autoScoringOn && overlay != null)
+                Positioned.fill(
+                  child: overlay(context, widget.gameId),
+                ),
+            ],
           ),
           ),
         );
@@ -372,16 +387,6 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         ),
       ),
     );
-  }
-
-  /// Open the camera capture page, binding this game as the dart sink for its
-  /// lifetime so detected darts flow into `processDart` (#382). Unbinds on
-  /// return.
-  Future<void> _openAutoScoring(BuildContext context) async {
-    final holder = ref.read(activeDartInputSinkProvider.notifier);
-    holder.bind(_X01DartInputSink(ref, widget.gameId));
-    await context.push(GameRoutes.autoScorerCapture(widget.gameId));
-    holder.bind(null);
   }
 
   void _showEndGameDialog(BuildContext context) {

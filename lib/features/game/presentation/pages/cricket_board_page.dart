@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
+import '../../../../core/providers/board_overlay_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
@@ -23,7 +24,7 @@ import '../widgets/pulsing_next_button_widget.dart';
 /// Trailing-menu actions on the active-game board (#331). Mirrors the
 /// X01 board's enum; kept local to each board so the menu shape can
 /// diverge per-game without coupling.
-enum _BoardMenuAction { endGame, settings, autoScoring }
+enum _BoardMenuAction { endGame, settings }
 
 /// Routes camera-detected darts into the active Cricket game (#382). Bound in
 /// the core [activeDartInputSinkProvider] while the capture page is open, so the
@@ -57,6 +58,17 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   void initState() {
     super.initState();
     WakelockPlus.enable();
+    // Bind this game as the dart sink so the auto-scorer overlay (when active)
+    // emits detected darts into it (#382). No unbind on dispose — the sink's
+    // only consumer is the overlay on this board, so a stale sink is never
+    // invoked; the next board rebinds.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(activeDartInputSinkProvider.notifier)
+            .bind(_CricketDartInputSink(ref, widget.gameId));
+      }
+    });
   }
 
   @override
@@ -124,6 +136,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
     final asyncState = ref.watch(activeCricketGameProvider(widget.gameId));
     final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
+    final overlay = ref.watch(boardOverlayBuilderProvider);
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -190,7 +203,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: SafeArea(
+          body: Stack(
+            children: [
+              SafeArea(
             bottom: false,
             child: Column(
             children: [
@@ -212,21 +227,14 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                         _showEndGameDialog(context);
                       case _BoardMenuAction.settings:
                         context.push(GameRoutes.settings);
-                      case _BoardMenuAction.autoScoring:
-                        _openAutoScoring(context);
                     }
                   },
-                  itemBuilder: (_) => [
-                    const PopupMenuItem(
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(
                       value: _BoardMenuAction.endGame,
                       child: Text('End Game'),
                     ),
-                    if (autoScoringOn)
-                      const PopupMenuItem(
-                        value: _BoardMenuAction.autoScoring,
-                        child: Text('Auto-scoring'),
-                      ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: _BoardMenuAction.settings,
                       child: Text('Settings'),
                     ),
@@ -299,6 +307,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               ),
             ],
           ),
+              ),
+              if (autoScoringOn && overlay != null)
+                Positioned.fill(
+                  child: overlay(context, widget.gameId),
+                ),
+            ],
           ),
           ),
         );
@@ -348,16 +362,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         ),
       ),
     );
-  }
-
-  /// Open the camera capture page, binding this game as the dart sink for its
-  /// lifetime so detected darts flow into `processDart` (#382). Unbinds on
-  /// return.
-  Future<void> _openAutoScoring(BuildContext context) async {
-    final holder = ref.read(activeDartInputSinkProvider.notifier);
-    holder.bind(_CricketDartInputSink(ref, widget.gameId));
-    await context.push(GameRoutes.autoScorerCapture(widget.gameId));
-    holder.bind(null);
   }
 
   void _showEndGameDialog(BuildContext context) => _showEndConfirm(context);
