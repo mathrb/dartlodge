@@ -11,6 +11,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 
 /// Fake detector that returns a fixed [DetectionFrame] regardless of the bytes,
 /// so the session can be driven deterministically without a model/camera.
@@ -34,11 +35,14 @@ class _FakeDetector implements DartDetector {
 
 class _FakeCaptureStore implements CaptureStore {
   final List<CaptureRecord> saved = [];
+  final List<Uint8List> savedBytes = [];
   @override
   bool get isSupported => true;
   @override
-  Future<void> save(CaptureRecord record, Uint8List frameBytes) async =>
-      saved.add(record);
+  Future<void> save(CaptureRecord record, Uint8List frameBytes) async {
+    saved.add(record);
+    savedBytes.add(frameBytes);
+  }
   @override
   Future<void> applyCorrection(
       String gameId, CaptureHandle handle, List<CorrectedDart> c) async {}
@@ -94,6 +98,21 @@ void main() {
     expect(store.saved.single.gameId, 'g');
     expect(store.saved.single.handle, const CaptureHandle(turnOrdinal: 4, dartInTurnOrdinal: 1));
     expect(store.saved.single.modelVersion, 'test-v1');
+  });
+
+  test('stores the 800×800 preprocessed frame, not the raw camera bytes', () async {
+    // A real (non-square) camera frame so we can see it gets cropped+resized.
+    final raw = img.encodePng(img.Image(width: 1200, height: 800));
+    final store = _FakeCaptureStore();
+    final session =
+        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+
+    expect(store.savedBytes, hasLength(1));
+    final stored = img.decodeImage(store.savedBytes.single)!;
+    expect(stored.width, 800);
+    expect(stored.height, 800); // aligns with the 800×800-normalised sidecar coords
   });
 
   test('does not capture when data collection is off', () async {
