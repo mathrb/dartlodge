@@ -15,28 +15,38 @@ void main() {
     }
   });
 
-  test('center crop keeps the centre content (longer axis trimmed)', () {
-    // 1200×800: paint the centre square red, the cropped-away side strips blue.
+  test('letterbox preserves edge content and pads with grey (no crop)', () {
+    // 1200×800: centre 800-wide square red, the side strips blue. Letterbox
+    // scales the whole frame to fit 800 wide (→ 800×533) and pads top/bottom —
+    // so the blue side strips SURVIVE (a crop would have discarded them).
     final src = img.Image(width: 1200, height: 800);
     img.fill(src, color: img.ColorRgb8(0, 0, 255)); // all blue
-    // centre 800-wide square is x in [200,1000)
     img.fillRect(src,
         x1: 200, y1: 0, x2: 999, y2: 799, color: img.ColorRgb8(255, 0, 0));
     final out = pre.preprocess(src);
-    // After cropping the centre square and resizing, the whole image is red.
-    final c = out.getPixel(400, 400);
-    expect(c.r, greaterThan(200));
-    expect(c.b, lessThan(60));
+    // Centre maps to the red square.
+    final centre = out.getPixel(400, 400);
+    expect(centre.r, greaterThan(200));
+    // A left-edge column maps to the BLUE side strip — preserved, not cropped.
+    final edge = out.getPixel(40, 400);
+    expect(edge.b, greaterThan(200));
+    expect(edge.r, lessThan(60));
+    // Top rows are the grey (114) letterbox padding.
+    final pad = out.getPixel(400, 10);
+    expect(pad.r, closeTo(114, 8));
+    expect(pad.g, closeTo(114, 8));
+    expect(pad.b, closeTo(114, 8));
   });
 
-  test('a uniform image stays uniform through crop+resize', () {
+  test('a uniform image stays uniform inside the scaled region', () {
     final src = img.Image(width: 1000, height: 600);
     img.fill(src, color: img.ColorRgb8(10, 200, 30));
     final out = pre.preprocess(src);
-    final p = out.getPixel(0, 0);
-    expect(p.r, closeTo(10, 2));
-    expect(p.g, closeTo(200, 2));
-    expect(p.b, closeTo(30, 2));
+    // Centre is inside the scaled image (not the letterbox padding).
+    final p = out.getPixel(400, 400);
+    expect(p.r, closeTo(10, 3));
+    expect(p.g, closeTo(200, 3));
+    expect(p.b, closeTo(30, 3));
   });
 
   test('preprocessEncoded decodes, processes, and re-encodes to PNG', () {
