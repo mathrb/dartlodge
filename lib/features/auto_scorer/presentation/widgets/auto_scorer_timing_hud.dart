@@ -1,4 +1,5 @@
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:flutter/material.dart';
 
@@ -63,7 +64,7 @@ class AutoScorerTimingHud extends StatelessWidget {
             children: [
               Text('cap ${ms(last.capture)}  det ${ms(last.detect)}  '
                   'trk ${ms(last.track)}ms'),
-              Text('avg ${ms(avg)}ms  ${fps.toStringAsFixed(1)} fps'
+              Text('avg ${ms(avg)}ms  ${StatFormatter.fmtDouble(fps)} fps'
                   '  (n=${samples.length})'),
               Text('preprocess: ${skipPreprocess ? 'SKIPPED (A/B)' : 'on'}'),
             ],
