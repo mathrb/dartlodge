@@ -92,9 +92,12 @@ class _AutoScorerBoardOverlayState
       }
       _session = session;
       _camera = controller;
-      setState(() => _starting = false);
-      // One-time aim: fullscreen preview to position the phone. Returns true on
-      // "Done", false/null on cancel or back.
+      // One-time aim: a transient fullscreen modal to position the phone — an
+      // ephemeral overlay carrying a live CameraController, not an app screen,
+      // so it uses Navigator.push (a routed go_router screen can't take a
+      // runtime object). Returns true on "Done", false/null on cancel or back.
+      // _starting stays true so the bar shows a spinner behind the modal rather
+      // than re-exposing "Start camera".
       final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _AutoScorerAimView(controller: controller!),
@@ -115,6 +118,11 @@ class _AutoScorerBoardOverlayState
 
   void _fail(String message) {
     if (!mounted) return;
+    // The local controller (if any) is already disposed by the caller; clear
+    // the fields so dispose()/_stop() don't double-dispose or leave a dangling
+    // reference. The shared detector (via the session) is left intact.
+    _camera = null;
+    _session = null;
     setState(() {
       _error = message;
       _starting = false;
@@ -125,7 +133,10 @@ class _AutoScorerBoardOverlayState
   /// aiming → running: start headless detection (no preview).
   void _beginRunning() {
     if (_camera == null) return;
-    setState(() => _mode = _Mode.running);
+    setState(() {
+      _mode = _Mode.running;
+      _starting = false;
+    });
     // Capture faster than ~1 Hz inference so a fast third dart isn't starved
     // before the user pulls (#377 §3); inference runs per call.
     _timer = Timer.periodic(const Duration(milliseconds: 700), (_) => _tick());
