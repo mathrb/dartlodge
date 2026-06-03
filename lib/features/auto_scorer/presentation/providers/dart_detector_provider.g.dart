@@ -11,9 +11,10 @@ part of 'dart_detector_provider.dart';
 /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
 /// Consumers gate on [DartDetector.isSupported] before starting detection.
 ///
-/// Watches the [autoScorerSkipPreprocessProvider] diagnostics A/B (#377 §3):
-/// toggling it rebuilds the detector so the next session runs raw-bytes
-/// inference. The flag is off in normal use, so this is a no-op rebuild.
+/// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+/// [DartDetector.detect] (threaded from the session), NOT a property of the
+/// detector — so toggling it never rebuilds this provider or churns the native
+/// model; it takes effect on the next frame.
 
 @ProviderFor(dartDetector)
 final dartDetectorProvider = DartDetectorProvider._();
@@ -21,9 +22,10 @@ final dartDetectorProvider = DartDetectorProvider._();
 /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
 /// Consumers gate on [DartDetector.isSupported] before starting detection.
 ///
-/// Watches the [autoScorerSkipPreprocessProvider] diagnostics A/B (#377 §3):
-/// toggling it rebuilds the detector so the next session runs raw-bytes
-/// inference. The flag is off in normal use, so this is a no-op rebuild.
+/// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+/// [DartDetector.detect] (threaded from the session), NOT a property of the
+/// detector — so toggling it never rebuilds this provider or churns the native
+/// model; it takes effect on the next frame.
 
 final class DartDetectorProvider
     extends
@@ -36,9 +38,10 @@ final class DartDetectorProvider
   /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
   /// Consumers gate on [DartDetector.isSupported] before starting detection.
   ///
-  /// Watches the [autoScorerSkipPreprocessProvider] diagnostics A/B (#377 §3):
-  /// toggling it rebuilds the detector so the next session runs raw-bytes
-  /// inference. The flag is off in normal use, so this is a no-op rebuild.
+  /// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+  /// [DartDetector.detect] (threaded from the session), NOT a property of the
+  /// detector — so toggling it never rebuilds this provider or churns the native
+  /// model; it takes effect on the next frame.
   DartDetectorProvider._()
     : super(
         from: null,
@@ -65,4 +68,4 @@ final class DartDetectorProvider
   }
 }
 
-String _$dartDetectorHash() => r'a93fe84b8bcf085dc58114b6c5cba6ce17b43f89';
+String _$dartDetectorHash() => r'20a5323be3bb3dd03da12ac48bf6bb1d30471661';

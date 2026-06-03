@@ -83,8 +83,8 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             title: const Text('Skip preprocessing (A/B)'),
             subtitle: const Text(
                 'Send raw frames to the model instead of our 800×800 resize, to '
-                'measure preprocess cost. Restart the camera after changing. '
-                'Perf test only — keep data collection off.'),
+                'measure preprocess cost. Perf test only — training capture is '
+                'paused while this is on.'),
             value: skipPreprocess.value ?? false,
             onChanged: skipPreprocess.isLoading
                 ? null

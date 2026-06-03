@@ -144,19 +144,23 @@ class _AutoScorerBoardOverlayState
       captureWatch.stop();
       if (!mounted) return;
       final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
       final result = await session.onFrame(
         bytes,
         turnOrdinal: _turnOrdinal,
         gameId: widget.gameId,
         collectData: collect,
+        skipPreprocess: skip,
       );
       if (!mounted) return;
       final sink = ref.read(activeDartInputSinkProvider);
       for (final dart in result.emittedDarts) {
         sink?.submitDart(dart.segment);
       }
-      _recordTimings(result.timings.copyWith(capture: captureWatch.elapsed));
-      setState(() => _status = result.status);
+      setState(() {
+        _recordTimings(result.timings.copyWith(capture: captureWatch.elapsed));
+        _status = result.status;
+      });
     } catch (_) {
       // Drop this frame; the next tick retries.
     } finally {

@@ -1,3 +1,4 @@
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:flutter/material.dart';
 
@@ -33,6 +34,7 @@ class AutoScorerTimingHud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final avg = _avgTotal;
     final fps = avg.inMicroseconds == 0
         ? 0.0
@@ -40,14 +42,17 @@ class AutoScorerTimingHud extends StatelessWidget {
     String ms(Duration d) => '${d.inMilliseconds}';
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(6),
+        // High-contrast overlay token pair (dark-on-light themes get a dark
+        // chip, light-on-dark a light one) so the debug HUD stays legible over
+        // the board without hardcoding raw colours.
+        color: scheme.inverseSurface.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: DefaultTextStyle(
-          style: const TextStyle(
-            color: Colors.greenAccent,
+          style: TextStyle(
+            color: scheme.onInverseSurface,
             fontSize: 11,
             fontFamily: 'monospace',
             height: 1.3,

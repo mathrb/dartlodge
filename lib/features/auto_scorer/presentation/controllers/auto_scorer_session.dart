@@ -85,15 +85,22 @@ class AutoScorerSession {
     required int turnOrdinal,
     required String gameId,
     bool collectData = false,
+    bool skipPreprocess = false,
   }) async {
     final detectWatch = Stopwatch()..start();
-    final frame = await _detector.detect(frameBytes);
+    final frame = await _detector.detect(frameBytes, skipPreprocess: skipPreprocess);
     detectWatch.stop();
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
     trackWatch.stop();
 
-    if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
+    // Capture is suppressed under the skip-preprocess A/B: detections then map
+    // to the raw frame, so storing the 800×800 image would misalign the sidecar
+    // coords (the exact bug #390 fixed). Perf measurement only (#377 §3).
+    if (collectData &&
+        !skipPreprocess &&
+        _captureStore != null &&
+        update.newDarts.isNotEmpty) {
       // Store the SAME 800×800 frame the detector saw — the sidecar coords are
       // normalised in that frame, so a raw camera frame would misalign them
       // (#381 stores "the 800×800 frame"). Falls back to raw if the frame can't

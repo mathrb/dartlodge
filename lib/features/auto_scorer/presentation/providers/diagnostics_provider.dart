@@ -28,10 +28,11 @@ class AutoScorerTimingHudEnabled extends _$AutoScorerTimingHudEnabled {
 }
 
 /// A/B: pass raw camera bytes to the plugin instead of our 800×800 preprocess,
-/// so the HUD's `detect` time reveals the preprocess cost. The detector
-/// provider watches this, so toggling it rebuilds the detector; restart the
-/// camera (Stop → Start) for a clean comparison. See the caveat in
-/// [UltralyticsDartDetector] — perf measurement only, not data collection.
+/// so the HUD's `detect` time reveals the preprocess cost. Threaded into
+/// `DartDetector.detect` per frame by the session, so it takes effect on the
+/// next tick (no camera restart). The session suppresses training capture while
+/// this is on, because raw-frame coords don't align with a stored 800×800
+/// image — perf measurement only.
 @Riverpod(keepAlive: true)
 class AutoScorerSkipPreprocess extends _$AutoScorerSkipPreprocess {
   @override

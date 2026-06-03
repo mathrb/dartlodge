@@ -22,7 +22,13 @@ abstract class DartDetector {
   Future<bool> load();
 
   /// Detect from a raw camera frame (any size, encoded image bytes).
-  Future<DetectionFrame> detect(Uint8List frameBytes);
+  ///
+  /// [skipPreprocess] is a diagnostics A/B (#377 §3): when true the
+  /// implementation passes the raw bytes to the model instead of our 800×800
+  /// preprocess, so the caller can measure our preprocess cost. Detections then
+  /// map to the raw frame, so captures must be suppressed while it is set.
+  Future<DetectionFrame> detect(Uint8List frameBytes,
+      {bool skipPreprocess = false});
 
   /// Release native resources.
   Future<void> dispose();

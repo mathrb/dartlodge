@@ -17,13 +17,12 @@ class _UnsupportedDartDetector implements DartDetector {
   Future<bool> load() async => false;
 
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes) async =>
+  Future<DetectionFrame> detect(Uint8List frameBytes,
+          {bool skipPreprocess = false}) async =>
       const DetectionFrame(calPoints: [], dartCandidates: []);
 
   @override
   Future<void> dispose() async {}
 }
 
-// `skipPreprocess` is a mobile-only diagnostics A/B (#377 §3); ignored on web.
-Future<DartDetector> openDartDetector({bool skipPreprocess = false}) async =>
-    const _UnsupportedDartDetector();
+Future<DartDetector> openDartDetector() async => const _UnsupportedDartDetector();
