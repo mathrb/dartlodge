@@ -112,6 +112,34 @@ class AutoScorerSettingsPage extends ConsumerWidget {
           const SnackBar(content: Text('No captured frames to export yet.')));
       return;
     }
+    final count = captures.length;
     await shareCaptureZip(await store.buildExportZip());
+    // The export zips every stored capture, so re-exporting re-includes ones
+    // already shared. Offer to clear them after the share sheet closes so they
+    // don't pile up / re-export. Prompt (not auto-clear) because the share
+    // result isn't reliable on Android — a cancelled share shouldn't wipe data.
+    if (!context.mounted) return;
+    final clear = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear exported frames?'),
+        content: Text(
+            'Exported $count frame${count == 1 ? '' : 's'}. Clear all captured '
+            'frames from this device so they are not exported again?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Keep')),
+          FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Clear')),
+        ],
+      ),
+    );
+    if (clear == true) {
+      await store.clear();
+      messenger.showSnackBar(SnackBar(
+          content: Text('Cleared $count exported frame${count == 1 ? '' : 's'}')));
+    }
   }
 }
