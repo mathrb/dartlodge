@@ -39,10 +39,6 @@ class _X01DartInputSink implements DartInputSink {
   void submitDart(String segment) => _ref
       .read(activeGameProvider(_gameId).notifier)
       .processDart(segment, inputMethod: 'camera');
-
-  @override
-  void advanceTurn() =>
-      _ref.read(activeGameProvider(_gameId).notifier).advanceTurn();
 }
 
 class X01BoardPage extends ConsumerStatefulWidget {
@@ -313,9 +309,15 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     onUndo: () => ref
                         .read(activeGameProvider(widget.gameId).notifier)
                         .undoDart(),
-                    onNextRound: () => ref
-                        .read(activeGameProvider(widget.gameId).notifier)
-                        .advanceTurn(),
+                    onNextRound: () {
+                      ref
+                          .read(activeGameProvider(widget.gameId).notifier)
+                          .advanceTurn();
+                      // Tell the auto-scorer overlay (if active) to reset its
+                      // per-turn cap, so emission isn't wedged for the next
+                      // player (#380).
+                      ref.read(activeTurnSignalProvider.notifier).bump();
+                    },
                   ),
                 ],
           ),

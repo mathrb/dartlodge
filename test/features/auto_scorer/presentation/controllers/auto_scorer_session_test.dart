@@ -48,8 +48,10 @@ class _FakeCaptureStore implements CaptureStore {
       String gameId, CaptureHandle handle, List<CorrectedDart> c) async {}
   @override
   Future<List<CaptureRecord>> list() async => saved;
+  int retentionCalls = 0;
   @override
-  Future<void> enforceRetention(RetentionPolicy policy) async {}
+  Future<void> enforceRetention(RetentionPolicy policy) async =>
+      retentionCalls++;
   @override
   Future<Uint8List> buildExportZip() async => Uint8List(0);
   @override
@@ -76,6 +78,14 @@ void main() {
     final session = AutoScorerSession(detector: detector);
     expect(await session.start(), isTrue);
     expect(detector.loaded, isTrue);
+  });
+
+  test('start enforces the retention cap (bounds storage growth, #381)', () async {
+    final store = _FakeCaptureStore();
+    final session =
+        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+    await session.start();
+    expect(store.retentionCalls, 1);
   });
 
   test('emits a dart after confirm-before-emit (2 frames)', () async {

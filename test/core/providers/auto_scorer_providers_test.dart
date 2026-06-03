@@ -6,11 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _RecordingSink implements DartInputSink {
   final List<String> darts = [];
-  int advances = 0;
   @override
   void submitDart(String segment) => darts.add(segment);
-  @override
-  void advanceTurn() => advances++;
 }
 
 void main() {
@@ -35,6 +32,17 @@ void main() {
       final reborn = ProviderContainer();
       addTearDown(reborn.dispose);
       expect(await reborn.read(autoScoringEnabledProvider.future), isTrue);
+    });
+  });
+
+  group('ActiveTurnSignal', () {
+    test('starts at 0 and bumps monotonically', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(activeTurnSignalProvider), 0);
+      container.read(activeTurnSignalProvider.notifier).bump();
+      container.read(activeTurnSignalProvider.notifier).bump();
+      expect(container.read(activeTurnSignalProvider), 2);
     });
   });
 

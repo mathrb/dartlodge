@@ -6,8 +6,8 @@
 abstract interface class DartInputSink {
   /// Emit one detected dart, as a canonical segment string ('20','D20','T20',
   /// 'SB','DB','MISS') — routed to the active game's manual dart-entry path.
+  ///
+  /// Turn advance is intentionally NOT here: it's driven by the board's own
+  /// next-turn button, which signals the auto-scorer via `activeTurnSignal`.
   void submitDart(String segment);
-
-  /// Advance to the next turn (the manual next-turn action of the active game).
-  void advanceTurn();
 }

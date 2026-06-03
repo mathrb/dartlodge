@@ -175,15 +175,6 @@ class _AutoScorerBoardOverlayState
     }
   }
 
-  void _nextTurn() {
-    // Advance the game AND reset the tracker's per-turn cap in lock-step. During
-    // auto-scoring, use this rather than the board's own next-turn button so the
-    // tracker doesn't keep the 3-dart cap into the next player's visit.
-    ref.read(activeDartInputSinkProvider)?.advanceTurn();
-    _session?.onTurnAdvanced();
-    setState(() => _turnOrdinal += 1);
-  }
-
   void _removeDarts() {
     final status = _session?.removeDarts();
     if (status != null) setState(() => _status = status);
@@ -199,6 +190,13 @@ class _AutoScorerBoardOverlayState
 
   @override
   Widget build(BuildContext context) {
+    // The board bumps this whenever the turn advances (via its own next-turn
+    // button); reset the tracker's per-turn cap in lock-step so the next
+    // player's darts keep emitting (#380).
+    ref.listen<int>(activeTurnSignalProvider, (_, __) {
+      _session?.onTurnAdvanced();
+      _turnOrdinal += 1;
+    });
     switch (_mode) {
       case _Mode.aiming:
         return _aimView();
@@ -251,11 +249,6 @@ class _AutoScorerBoardOverlayState
                   tooltip: 'Remove darts',
                   icon: const Icon(Icons.cleaning_services),
                   onPressed: _removeDarts,
-                ),
-                IconButton(
-                  tooltip: 'Next turn',
-                  icon: const Icon(Icons.skip_next),
-                  onPressed: _nextTurn,
                 ),
                 IconButton(
                   tooltip: 'Stop auto-scoring',

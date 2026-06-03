@@ -35,3 +35,17 @@ class ActiveDartInputSink extends _$ActiveDartInputSink {
 
   void bind(DartInputSink? sink) => state = sink;
 }
+
+/// A monotonically increasing counter bumped by the game board whenever the
+/// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
+/// the per-turn 3-dart cap in lock-step — without this, advancing via the
+/// board's own next button (which can't reach the tracker) would wedge the cap
+/// and silently block the next player's darts (#380 / #382 rework). Cross-feature
+/// via `core/`, mirroring the sink bridge.
+@Riverpod(keepAlive: true)
+class ActiveTurnSignal extends _$ActiveTurnSignal {
+  @override
+  int build() => 0;
+
+  void bump() => state = state + 1;
+}

@@ -5,6 +5,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
@@ -52,8 +53,20 @@ class AutoScorerSession {
   /// Physical darts currently tracked on the board.
   int get dartsOnBoard => _tracker.confirmedDarts.length;
 
-  /// Load the model. Returns true on success (false on the web stub).
-  Future<bool> start() => _detector.load();
+  /// Default storage cap for captured frames (#381 §6): keep the data set
+  /// bounded; corrected/emitted frames are pruned last (see [RetentionPolicy]).
+  static const int _retentionBytes = 250 * 1024 * 1024; // 250 MB
+
+  /// Load the model and prune old captures to stay within the storage cap.
+  /// Returns true on success (false on the web stub).
+  Future<bool> start() async {
+    final loaded = await _detector.load();
+    if (loaded) {
+      await _captureStore
+          ?.enforceRetention(const RetentionPolicy(maxBytes: _retentionBytes));
+    }
+    return loaded;
+  }
 
   /// Feed one raw camera frame. [turnOrdinal] is the current 1-based turn; when
   /// [collectData] is set and a capture store is present, each emitted dart's
