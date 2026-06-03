@@ -16,13 +16,13 @@ cp ~/git/deep-darts-probe/models/dart_round<N>_withcal_saved_model/dart_round<N>
 ```
 
 The current bundle is `dart_round7_withcal` (float32) — single net, classes
-`{0:dart, 1:cal1, 2:cal2, 3:cal3, 4:cal4}`, imgsz 800. Metrics (test split, 398
-train / 50 val / 50 test): mAP50 0.95; **cal recall 0.94–1.00** (strong board
-location); **dart recall 0.747** — below the ~0.95 ship bar, and marginally under
-round6 (0.795); recall isn't monotonic across rounds. So there is **no
-code-enforced emission gate**: treat auto-scoring as assist / data-collection
-(#381) until a later round clears the bar. The CoreML `.mlpackage` (iOS) goes to
-`ios/Runner/` (gitignored).
+`{0:dart, 1:cal1, 2:cal2, 3:cal3, 4:cal4}`, imgsz 800. Metrics: mAP50 0.95, cal
+recall 0.94–1.00, **dart recall 0.747** — below the §2 ship bar (~0.95), so there
+is **no code-enforced emission gate**: treat auto-scoring as assist /
+data-collection (#381) until a later round clears the bar. The CoreML
+`.mlpackage` (iOS) goes to `ios/Runner/` (gitignored).
 
-Inference feeds the **raw camera frame** to the plugin (native letterbox), not a
-pure-Dart 800×800 crop — see the preprocessing note in `AUTO_SCORER_ENABLEMENT.md`.
+Frames are preprocessed to 800×800 (center-crop) before inference, matching the
+training parity (#377 §2). A "Skip preprocessing" toggle in settings can bypass
+that to feed raw frames to the plugin's native resize (faster, but a different
+input distribution than the model trained on).

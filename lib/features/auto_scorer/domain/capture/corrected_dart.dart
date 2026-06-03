@@ -1,5 +1,5 @@
 /// A user-confirmed dart tip after per-dart correction (#376): its position
-/// (normalised 0–1 in the detection frame) and the canonical [segment] the user
+/// (normalised 0–1 in the 800×800 frame) and the canonical [segment] the user
 /// settled on. The probe loads these as pre-confirmed annotations (#381 §6).
 class CorrectedDart {
   final double x;

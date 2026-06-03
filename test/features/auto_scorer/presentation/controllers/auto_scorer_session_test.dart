@@ -27,8 +27,14 @@ class _FakeDetector implements DartDetector {
     return true;
   }
 
+  /// Records the most recent skipPreprocess flag so tests can assert threading.
+  bool lastSkipPreprocess = false;
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes) async => frame;
+  Future<DetectionFrame> detect(Uint8List frameBytes,
+      {bool skipPreprocess = false}) async {
+    lastSkipPreprocess = skipPreprocess;
+    return frame;
+  }
 
   @override
   Future<void> dispose() async {}
@@ -106,6 +112,25 @@ void main() {
     expect(result.timings.track, greaterThanOrEqualTo(Duration.zero));
   });
 
+  test('skipPreprocess threads to the detector', () async {
+    final detector = _FakeDetector(oneDartFrame);
+    final session = AutoScorerSession(detector: detector);
+    await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', skipPreprocess: true);
+    expect(detector.lastSkipPreprocess, isTrue);
+  });
+
+  test('skipPreprocess suppresses capture (raw-frame coords would misalign)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session =
+        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+    // Two frames confirm+emit a dart, which would normally be captured.
+    await session.onFrame(bytes,
+        turnOrdinal: 1, gameId: 'g', collectData: true, skipPreprocess: true);
+    await session.onFrame(bytes,
+        turnOrdinal: 1, gameId: 'g', collectData: true, skipPreprocess: true);
+    expect(store.saved, isEmpty);
+  });
 
   test('captures the frame when data collection is on', () async {
     final store = _FakeCaptureStore();
@@ -121,10 +146,8 @@ void main() {
     expect(store.saved.single.modelVersion, 'test-v1');
   });
 
-  test('stores the raw frame unchanged (detections are normalised to it)', () async {
-    // Inference runs on the raw frame, so coords are normalised to it — the
-    // stored image must be that same raw frame, not a cropped/resized one
-    // (#377 §3; the alignment invariant of #390, now on the raw frame).
+  test('stores the 800×800 preprocessed frame, not the raw camera bytes', () async {
+    // A real (non-square) camera frame so we can see it gets cropped+resized.
     final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
     final session =
@@ -133,7 +156,9 @@ void main() {
     await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
 
     expect(store.savedBytes, hasLength(1));
-    expect(store.savedBytes.single, same(raw)); // stored verbatim, no resize
+    final stored = img.decodeImage(store.savedBytes.single)!;
+    expect(stored.width, 800);
+    expect(stored.height, 800); // aligns with the 800×800-normalised sidecar coords
   });
 
   test('does not capture when data collection is off', () async {
@@ -145,8 +170,7 @@ void main() {
     expect(store.saved, isEmpty);
   });
 
-  test('captureCurrentFrame stores the raw frame under a manual handle (missed dart)',
-      () async {
+  test('captureCurrentFrame stores a manual-handle 800×800 frame (missed dart)', () async {
     final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
     final session =
@@ -157,7 +181,9 @@ void main() {
     expect(store.saved, hasLength(1));
     expect(store.saved.single.handle,
         const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
-    expect(store.savedBytes.single, same(raw)); // raw frame stored verbatim
+    final stored = img.decodeImage(store.savedBytes.single)!;
+    expect(stored.width, 800);
+    expect(stored.height, 800);
   });
 
   test('captureCurrentFrame is a no-op without a capture store', () async {

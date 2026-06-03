@@ -3,7 +3,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart
 /// One inference result handed to the [DartTracker]: the four calibration
 /// points and the candidate dart-tip positions the model found in this frame.
 ///
-/// Coordinates are image-space, normalised 0–1 in the detection frame
+/// Coordinates are image-space, normalised 0–1 in the 800×800 detection frame
 /// (#377 §6). [calPoints], when present, must be in DeepDarts order
 /// (cal1=5/20 wire, cal2=3/17, cal3=8/11, cal4=13/6); an incomplete set (the
 /// board is occluded or out of view) is reported via [hasCalibration].

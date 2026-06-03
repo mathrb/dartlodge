@@ -10,7 +10,10 @@ part 'dart_detector_provider.g.dart';
 
 /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
 /// Consumers gate on [DartDetector.isSupported] before starting detection.
-/// Inference runs on the raw camera frame (the plugin letterboxes natively),
-/// so there is no per-frame preprocessing to configure here (#377 §3).
+///
+/// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+/// [DartDetector.detect] (threaded from the session), NOT a property of the
+/// detector — so toggling it never rebuilds this provider or churns the native
+/// model; it takes effect on the next frame.
 @Riverpod(keepAlive: true)
 Future<DartDetector> dartDetector(Ref ref) => openDartDetector();

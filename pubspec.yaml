@@ -48,13 +48,15 @@ dependencies:
   # win32 ^6.0.1 (transitive via wakelock_plus).
   share_plus: ^13.1.0
 
-  # Auto-scorer on-device detection (#378): the first-party YOLO Flutter plugin
-  # (mobile only — the detector impl is web-stubbed behind a conditional import).
-  # Inference runs on the raw camera frame; the plugin letterboxes to the model
-  # input natively (#377 §3), so no in-app preprocessing dependency is needed.
+  # Auto-scorer on-device detection (#378). image: 800×800 center-crop/resize
+  # preprocessing parity (already transitive via archive; pinned direct here).
+  # ultralytics_yolo: the first-party YOLO Flutter plugin (mobile only — the
+  # detector impl is web-stubbed behind a conditional import).
+  image: ^4.3.0
   ultralytics_yolo: ^0.4.3
-  # Assist-mode camera capture (#382). Mobile only; gated behind the default-off
-  # "use auto-scoring" toggle and platform checks.
+  # Assist-mode camera capture (#382). Raw frames → FramePreprocessor (800×800
+  # center-crop, training parity §2) → detector. Mobile only; the capture UI is
+  # gated behind the default-off "use auto-scoring" toggle and platform checks.
   camera: ^0.11.0
 
   # Settings / preferences
@@ -71,12 +73,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # Test-only: builds frame fixtures for the auto-scorer session tests. Was a
-  # direct dependency for in-app 800×800 preprocessing until #397 moved inference
-  # to the plugin's native resize; demoted here as it no longer ships in lib/.
-  image: ^4.3.0
-
+  
   # Code generation
   build_runner: ^2.11.1
   riverpod_generator: ^4.0.3

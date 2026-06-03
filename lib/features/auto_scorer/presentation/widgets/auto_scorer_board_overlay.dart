@@ -170,11 +170,13 @@ class _AutoScorerBoardOverlayState
       captureWatch.stop();
       if (!mounted) return;
       final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
       final result = await session.onFrame(
         bytes,
         turnOrdinal: _turnOrdinal,
         gameId: widget.gameId,
         collectData: collect,
+        skipPreprocess: skip,
       );
       if (!mounted) return;
       final sink = ref.read(activeDartInputSinkProvider);
@@ -261,6 +263,9 @@ class _AutoScorerBoardOverlayState
                   child: AutoScorerTimingHud(
                     last: _timings.last,
                     samples: _timings,
+                    skipPreprocess:
+                        ref.watch(autoScorerSkipPreprocessProvider).value ??
+                            false,
                   ),
                 ),
               ),
