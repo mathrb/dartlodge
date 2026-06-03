@@ -1,4 +1,4 @@
-/// A model-predicted dart tip: position (normalised 0–1 in the 800×800 frame)
+/// A model-predicted dart tip: position (normalised 0–1 in the detection frame)
 /// and detector confidence. Stored verbatim in the capture sidecar so the
 /// probe can re-ingest the raw prediction alongside any correction (#381).
 class PredictedDart {

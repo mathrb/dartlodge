@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 /// Debug timing overlay for the lag investigation (#377 §3). Shows the last
 /// frame's stage split plus a rolling average and effective FPS, so we can read
-/// off whether capture, detect (preprocess + inference), or the tracker
+/// off whether capture, detect (native inference), or the tracker
 /// dominates. Pure presentation over the supplied samples; rendered only when
 /// the diagnostics toggle is on. The phase→text mapping is intentionally terse.
 class AutoScorerTimingHud extends StatelessWidget {

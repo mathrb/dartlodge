@@ -9,8 +9,9 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.
 const String kAutoScorerModelAsset = 'assets/models/dart_auto_scorer.tflite';
 
 /// Runs the on-device detector and returns a [DetectionFrame] (cal points +
-/// dart candidates) for the tracker. Implementations preprocess the raw frame
-/// to 800×800 exactly as the training data (#377 §2) before inference.
+/// dart candidates) for the tracker. Implementations feed the raw camera frame
+/// to the model, which resizes/letterboxes to its input natively (#377 §3);
+/// detections come back normalised to that raw frame.
 ///
 /// Platform-backed (ultralytics_yolo) on mobile; stubbed on web behind a
 /// `kIsWeb`/conditional-import guard so `flutter run -d chrome` still builds.

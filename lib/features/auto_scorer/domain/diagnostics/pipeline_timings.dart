@@ -4,9 +4,9 @@
 /// (still capture, on-device inference, or the tracker) rather than guess.
 ///
 /// Pure data — surfaced only when the diagnostics HUD is enabled. `detect`
-/// covers everything inside [DartDetector.detect] (our 800×800 preprocess +
-/// the native inference round-trip); the "skip preprocessing" A/B toggle is how
-/// we split those two without timing inside the platform plugin.
+/// covers the native inference round-trip inside [DartDetector.detect] (the
+/// pure-Dart 800×800 preprocess that once dominated this stage was removed —
+/// see #377 §3 / `AUTO_SCORER_ENABLEMENT.md`).
 class PipelineTimings {
   /// `takePicture()` + reading the bytes back (the still-capture cost).
   final Duration capture;
