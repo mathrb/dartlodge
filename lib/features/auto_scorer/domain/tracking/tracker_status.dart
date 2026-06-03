@@ -2,8 +2,14 @@
 /// which renders it as a status chip ("2 darts detected", "camera moved",
 /// "turn full"). The tracker emits no UI strings — only this typed state.
 enum TrackerPhase {
-  /// No calibration this frame — the board is occluded or out of view.
+  /// No calibration this frame — the board is occluded or out of view. A
+  /// transient single-frame loss; escalates to [needsCalibration] if sustained.
   noCalibration,
+
+  /// Calibration has been absent (with no darts visible) for several
+  /// consecutive frames — the camera can't see the board. Surfaced as an alert
+  /// prompting the user to re-aim / recalibrate (#377 §5.2).
+  needsCalibration,
 
   /// Board is empty / no darts tracked yet.
   idle,

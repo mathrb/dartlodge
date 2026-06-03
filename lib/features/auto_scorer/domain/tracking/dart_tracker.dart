@@ -48,6 +48,7 @@ class DartTracker {
   final List<_Pending> _pending = [];
 
   int _emptyFrames = 0;
+  int _noCalFrames = 0;
   int _dartsThisTurn = 0;
   int _nextHandle = 0;
   List<BoardPoint>? _lastCals;
@@ -62,9 +63,21 @@ class DartTracker {
   /// Process one inference result; returns the darts to emit and the status.
   TrackerUpdate processFrame(DetectionFrame frame) {
     if (!frame.hasCalibration) {
-      // Board out of view / occluded: can't map. Keep state untouched.
-      return _statusOnly(TrackerPhase.noCalibration);
+      // Board out of view / occluded: can't map. Keep state untouched. Only a
+      // sustained loss with no darts visible (an arm holding a single dart
+      // would still surface tips) escalates to the sticky needsCalibration
+      // alert; a frame that drops a cal dot but still sees darts is treated as
+      // transient occlusion and resets the counter (#377 §5.2).
+      if (frame.isEmpty) {
+        _noCalFrames++;
+      } else {
+        _noCalFrames = 0;
+      }
+      return _statusOnly(_noCalFrames >= _config.noCalibrationFramesToWarn
+          ? TrackerPhase.needsCalibration
+          : TrackerPhase.noCalibration);
     }
+    _noCalFrames = 0;
 
     // Phone-bump recovery: a large cal-point shift ⇒ desync → re-baseline.
     if (_lastCals != null &&

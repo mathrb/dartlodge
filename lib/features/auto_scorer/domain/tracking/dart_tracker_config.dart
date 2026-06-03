@@ -28,6 +28,12 @@ class DartTrackerConfig {
   /// Darts a single turn may hold before the cap blocks emission (#377 §3.6).
   final int maxDartsPerTurn;
 
+  /// Consecutive frames with **no calibration and no darts** before the status
+  /// escalates from the transient `noCalibration` to a sticky `needsCalibration`
+  /// alert ("camera can't see the board"). Debounced so a single dropped frame
+  /// (an arm briefly occluding a cal dot mid-throw) doesn't flash the warning.
+  final int noCalibrationFramesToWarn;
+
   const DartTrackerConfig({
     this.matchTolerance = 0.06,
     this.confirmFrames = 2,
@@ -35,5 +41,6 @@ class DartTrackerConfig {
     this.emptyFramesToRebaseline = 3,
     this.calShiftThreshold = 0.08,
     this.maxDartsPerTurn = 3,
+    this.noCalibrationFramesToWarn = 3,
   });
 }

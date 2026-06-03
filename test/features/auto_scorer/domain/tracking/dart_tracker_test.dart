@@ -251,4 +251,46 @@ void main() {
       expect(update.newDarts.single.score.segment, 'T20');
     });
   });
+
+  group('calibration loss (#377 §5.2)', () {
+    const noCalEmpty =
+        DetectionFrame(calPoints: [], dartCandidates: []);
+
+    test('sustained no-cal-and-no-darts escalates to needsCalibration', () {
+      final tracker =
+          DartTracker(config: const DartTrackerConfig(noCalibrationFramesToWarn: 3));
+      expect(tracker.processFrame(noCalEmpty).status.phase,
+          TrackerPhase.noCalibration);
+      expect(tracker.processFrame(noCalEmpty).status.phase,
+          TrackerPhase.noCalibration);
+      expect(tracker.processFrame(noCalEmpty).status.phase,
+          TrackerPhase.needsCalibration);
+    });
+
+    test('a no-cal frame that still sees darts resets the warning counter', () {
+      final tracker =
+          DartTracker(config: const DartTrackerConfig(noCalibrationFramesToWarn: 3));
+      final noCalWithDart =
+          DetectionFrame(calPoints: const [], dartCandidates: [seg(20, rTreble)]);
+      tracker.processFrame(noCalEmpty); // 1
+      tracker.processFrame(noCalEmpty); // 2
+      // Darts visible but board not located → transient occlusion, not "blind".
+      expect(tracker.processFrame(noCalWithDart).status.phase,
+          TrackerPhase.noCalibration);
+      // Counter reset, so the next empty frame is back to 1 (still transient).
+      expect(tracker.processFrame(noCalEmpty).status.phase,
+          TrackerPhase.noCalibration);
+    });
+
+    test('regaining calibration clears the warning', () {
+      final tracker =
+          DartTracker(config: const DartTrackerConfig(noCalibrationFramesToWarn: 2));
+      tracker.processFrame(noCalEmpty);
+      expect(tracker.processFrame(noCalEmpty).status.phase,
+          TrackerPhase.needsCalibration);
+      // A calibrated (empty board) frame resets and reports idle again.
+      expect(tracker.processFrame(frame(const [])).status.phase,
+          TrackerPhase.idle);
+    });
+  });
 }

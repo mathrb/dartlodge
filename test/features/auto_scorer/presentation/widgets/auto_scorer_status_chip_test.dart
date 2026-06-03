@@ -10,6 +10,8 @@ void main() {
 
   test('maps each phase to a label', () {
     expect(describe(TrackerPhase.noCalibration).label, 'Aim at the board');
+    expect(describe(TrackerPhase.needsCalibration).label,
+        'Camera needs calibration');
     expect(describe(TrackerPhase.idle).label, 'Ready');
     expect(describe(TrackerPhase.turnFull).label, 'Turn full — advance');
     expect(describe(TrackerPhase.cameraMoved).label, 'Camera moved');
