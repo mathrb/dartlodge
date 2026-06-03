@@ -28,12 +28,20 @@ class _FakeDetector implements DartDetector {
     return true;
   }
 
-  /// Records the most recent skipPreprocess flag so tests can assert threading.
+  /// Records the most recent args so tests can assert threading.
   bool lastSkipPreprocess = false;
+  double lastCalConfidence = -1;
+  double lastDartConfidence = -1;
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes,
-      {bool skipPreprocess = false}) async {
+  Future<DetectionFrame> detect(
+    Uint8List frameBytes, {
+    bool skipPreprocess = false,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
+  }) async {
     lastSkipPreprocess = skipPreprocess;
+    lastCalConfidence = calConfidence;
+    lastDartConfidence = dartConfidence;
     return frame;
   }
 
@@ -118,6 +126,29 @@ void main() {
     final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: detector);
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', skipPreprocess: true);
     expect(detector.lastSkipPreprocess, isTrue);
+  });
+
+  test('confidence thresholds thread to the detector', () async {
+    final detector = _FakeDetector(oneDartFrame);
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(), detector: detector);
+    await session.onFrame(bytes,
+        turnOrdinal: 1, gameId: 'g', calConfidence: 0.12, dartConfidence: 0.4);
+    expect(detector.lastCalConfidence, 0.12);
+    expect(detector.lastDartConfidence, 0.4);
+  });
+
+  test('onFrame surfaces the detector cal confidences', () async {
+    final frame = DetectionFrame(
+      calPoints: const [],
+      dartCandidates: const [],
+      calConfidences: const [0.9, null, 0.3, 0.8],
+    );
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(frame));
+    final result = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
+    expect(result.calConfidences, const [0.9, null, 0.3, 0.8]);
   });
 
   test('skipPreprocess suppresses capture (raw-frame coords would misalign)',

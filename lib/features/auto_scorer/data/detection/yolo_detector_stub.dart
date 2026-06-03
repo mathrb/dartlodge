@@ -17,8 +17,12 @@ class _UnsupportedDartDetector implements DartDetector {
   Future<bool> load() async => false;
 
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes,
-          {bool skipPreprocess = false}) async =>
+  Future<DetectionFrame> detect(
+    Uint8List frameBytes, {
+    bool skipPreprocess = false,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
+  }) async =>
       const DetectionFrame(calPoints: [], dartCandidates: []);
 
   @override

@@ -26,34 +26,50 @@ class DetectorClassMap {
 ///
 /// Each calibration point is the highest-confidence detection of its class
 /// (the detector should emit one of each, but duplicates are resolved by
-/// confidence). Calibration is reported only when **all four** cal points are
-/// present — a missing cal point yields an empty `calPoints`, which the tracker
-/// reads as "no calibration this frame" (occlusion-tolerant, #380). Every
-/// dart-class detection at or above [minConfidence] becomes a candidate; the
-/// confirm-before-emit logic downstream rejects transient false positives.
+/// confidence). A cal point counts only at or above [calMinConfidence], and
+/// calibration is reported only when **all four** are present — a missing cal
+/// yields an empty `calPoints`, which the tracker reads as "no calibration this
+/// frame" (occlusion-tolerant, #380). Every dart-class detection at or above
+/// [dartMinConfidence] becomes a candidate; confirm-before-emit downstream
+/// rejects transient false positives.
+///
+/// [DetectionFrame.calConfidences] records the best confidence per cal class
+/// regardless of [calMinConfidence] (so the HUD can show a cal that's present
+/// but below the threshold, for tuning).
 DetectionFrame buildDetectionFrame(
   List<RawDetection> detections, {
   DetectorClassMap classes = const DetectorClassMap(),
-  double minConfidence = 0.0,
+  double calMinConfidence = 0.0,
+  double dartMinConfidence = 0.0,
 }) {
-  BoardPoint? bestOf(int classIndex) {
+  RawDetection? bestOf(int classIndex) {
     RawDetection? best;
     for (final d in detections) {
-      if (d.classIndex != classIndex || d.conf < minConfidence) continue;
+      if (d.classIndex != classIndex) continue;
       if (best == null || d.conf > best.conf) best = d;
     }
-    return best == null ? null : (x: best.x, y: best.y);
+    return best;
   }
 
-  final cals = [for (final c in classes.calClasses) bestOf(c)];
-  final calPoints =
-      cals.any((c) => c == null) ? const <BoardPoint>[] : [for (final c in cals) c!];
+  final calBest = [for (final c in classes.calClasses) bestOf(c)];
+  // Diagnostic: best conf per cal class (or null), independent of the threshold.
+  final calConfidences = [for (final b in calBest) b?.conf];
+  // Calibration uses only cals at/above the threshold; all-or-nothing.
+  final accepted =
+      [for (final b in calBest) (b != null && b.conf >= calMinConfidence) ? b : null];
+  final calPoints = accepted.any((b) => b == null)
+      ? const <BoardPoint>[]
+      : [for (final b in accepted) (x: b!.x, y: b.y)];
 
   final darts = <BoardPoint>[
     for (final d in detections)
-      if (d.classIndex == classes.dart && d.conf >= minConfidence)
+      if (d.classIndex == classes.dart && d.conf >= dartMinConfidence)
         (x: d.x, y: d.y),
   ];
 
-  return DetectionFrame(calPoints: calPoints, dartCandidates: darts);
+  return DetectionFrame(
+    calPoints: calPoints,
+    dartCandidates: darts,
+    calConfidences: calConfidences,
+  );
 }

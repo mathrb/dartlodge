@@ -23,10 +23,15 @@ class SessionFrameResult {
   /// filled in by the camera caller). Surfaced only by the diagnostics HUD.
   final PipelineTimings timings;
 
+  /// Best confidence per cal class `[cal1..cal4]` this frame (null = absent),
+  /// for the diagnostics HUD's calibration readout.
+  final List<double?> calConfidences;
+
   const SessionFrameResult({
     required this.emittedDarts,
     required this.status,
     this.timings = const PipelineTimings(),
+    this.calConfidences = const [null, null, null, null],
   });
 }
 
@@ -84,9 +89,16 @@ class AutoScorerSession {
     required String gameId,
     bool collectData = false,
     bool skipPreprocess = false,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
   }) async {
     final detectWatch = Stopwatch()..start();
-    final frame = await _detector.detect(frameBytes, skipPreprocess: skipPreprocess);
+    final frame = await _detector.detect(
+      frameBytes,
+      skipPreprocess: skipPreprocess,
+      calConfidence: calConfidence,
+      dartConfidence: dartConfidence,
+    );
     detectWatch.stop();
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
@@ -126,6 +138,7 @@ class AutoScorerSession {
         detect: detectWatch.elapsed,
         track: trackWatch.elapsed,
       ),
+      calConfidences: frame.calConfidences,
     );
   }
 
@@ -138,10 +151,16 @@ class AutoScorerSession {
     Uint8List frameBytes, {
     required int turnOrdinal,
     required String gameId,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
   }) async {
     final store = _captureStore;
     if (store == null) return false;
-    final frame = await _detector.detect(frameBytes);
+    final frame = await _detector.detect(
+      frameBytes,
+      calConfidence: calConfidence,
+      dartConfidence: dartConfidence,
+    );
     final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
     _manualSequence += 1;
     await store.save(

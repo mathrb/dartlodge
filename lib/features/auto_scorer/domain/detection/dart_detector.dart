@@ -25,10 +25,19 @@ abstract class DartDetector {
   ///
   /// [skipPreprocess] is a diagnostics A/B (#377 §3): when true the
   /// implementation passes the raw bytes to the model instead of our 800×800
-  /// preprocess, so the caller can measure our preprocess cost. Detections then
-  /// map to the raw frame, so captures must be suppressed while it is set.
-  Future<DetectionFrame> detect(Uint8List frameBytes,
-      {bool skipPreprocess = false});
+  /// preprocess. Detections then map to the raw frame, so captures must be
+  /// suppressed while it is set.
+  ///
+  /// [calConfidence] / [dartConfidence] are the per-class acceptance thresholds
+  /// (user-configurable): a cal point / dart counts only at or above its value.
+  /// Inference still runs at a low floor so the HUD can show sub-threshold cal
+  /// confidences for tuning.
+  Future<DetectionFrame> detect(
+    Uint8List frameBytes, {
+    bool skipPreprocess = false,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
+  });
 
   /// Release native resources.
   Future<void> dispose();
