@@ -33,6 +33,8 @@ class AutoScorerSession {
     required DartDetector detector,
     DartTracker? tracker,
     CaptureStore? captureStore,
+    // Must match the preprocessor the [detector] uses (both default to the same
+    // const), or the stored frame won't align with the detector's coords.
     FramePreprocessor preprocessor = const FramePreprocessor(),
     String modelVersion = 'unknown',
   })  : _detector = detector,
