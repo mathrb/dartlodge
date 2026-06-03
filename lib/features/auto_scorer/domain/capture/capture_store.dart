@@ -15,8 +15,7 @@ abstract class CaptureStore {
   /// False on the web stub — callers must not offer capture/export when so.
   bool get isSupported;
 
-  /// Store [frameBytes] (the raw frame the detector saw) and its [record]
-  /// sidecar, keyed by
+  /// Store [frameBytes] (the 800×800 frame) and its [record] sidecar, keyed by
   /// `(record.gameId, record.handle)`. Overwrites any existing capture for the
   /// same key (re-detection of the same dart slot).
   Future<void> save(CaptureRecord record, Uint8List frameBytes);

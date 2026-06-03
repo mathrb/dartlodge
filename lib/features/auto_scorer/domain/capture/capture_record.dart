@@ -3,7 +3,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart';
 
-/// The sidecar record stored alongside each captured frame (#381 §6).
+/// The sidecar record stored alongside each captured 800×800 frame (#381 §6).
 ///
 /// Every detection — and especially every correction — is a labelled training
 /// example. The JSON shape is the probe's ingest contract; do not add or rename

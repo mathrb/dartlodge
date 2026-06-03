@@ -75,3 +75,82 @@ abstract class _$AutoScorerTimingHudEnabled extends $AsyncNotifier<bool> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Preprocess toggle (#377 §3): when on, pass raw camera bytes to the plugin
+/// (native resize) instead of our 800×800 center-crop. Default **off** — the
+/// model trained on 800×800, so preprocessing is the accurate path; skipping is
+/// the much-faster option for users who accept the input-distribution shift.
+/// Threaded into `DartDetector.detect` per frame by the session, so it takes
+/// effect on the next tick (no camera restart). The session suppresses training
+/// capture while it is on, because raw-frame coords don't align with a stored
+/// 800×800 image.
+
+@ProviderFor(AutoScorerSkipPreprocess)
+final autoScorerSkipPreprocessProvider = AutoScorerSkipPreprocessProvider._();
+
+/// Preprocess toggle (#377 §3): when on, pass raw camera bytes to the plugin
+/// (native resize) instead of our 800×800 center-crop. Default **off** — the
+/// model trained on 800×800, so preprocessing is the accurate path; skipping is
+/// the much-faster option for users who accept the input-distribution shift.
+/// Threaded into `DartDetector.detect` per frame by the session, so it takes
+/// effect on the next tick (no camera restart). The session suppresses training
+/// capture while it is on, because raw-frame coords don't align with a stored
+/// 800×800 image.
+final class AutoScorerSkipPreprocessProvider
+    extends $AsyncNotifierProvider<AutoScorerSkipPreprocess, bool> {
+  /// Preprocess toggle (#377 §3): when on, pass raw camera bytes to the plugin
+  /// (native resize) instead of our 800×800 center-crop. Default **off** — the
+  /// model trained on 800×800, so preprocessing is the accurate path; skipping is
+  /// the much-faster option for users who accept the input-distribution shift.
+  /// Threaded into `DartDetector.detect` per frame by the session, so it takes
+  /// effect on the next tick (no camera restart). The session suppresses training
+  /// capture while it is on, because raw-frame coords don't align with a stored
+  /// 800×800 image.
+  AutoScorerSkipPreprocessProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'autoScorerSkipPreprocessProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$autoScorerSkipPreprocessHash();
+
+  @$internal
+  @override
+  AutoScorerSkipPreprocess create() => AutoScorerSkipPreprocess();
+}
+
+String _$autoScorerSkipPreprocessHash() =>
+    r'f46c8f5937d9b32e1c855c43cb4cc0ac5822049a';
+
+/// Preprocess toggle (#377 §3): when on, pass raw camera bytes to the plugin
+/// (native resize) instead of our 800×800 center-crop. Default **off** — the
+/// model trained on 800×800, so preprocessing is the accurate path; skipping is
+/// the much-faster option for users who accept the input-distribution shift.
+/// Threaded into `DartDetector.detect` per frame by the session, so it takes
+/// effect on the next tick (no camera restart). The session suppresses training
+/// capture while it is on, because raw-frame coords don't align with a stored
+/// 800×800 image.
+
+abstract class _$AutoScorerSkipPreprocess extends $AsyncNotifier<bool> {
+  FutureOr<bool> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<bool>, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<bool>, bool>,
+              AsyncValue<bool>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
