@@ -32,7 +32,18 @@ the pins above are the known-good combo. (Add `--coreml` + `--with coremltools`
 for the iOS `.mlpackage`.)
 
 The model classes are `{0: dart, 1: cal1, 2: cal2, 3: cal3, 4: cal4}` at
-`imgsz 800` — matching the in-app preprocessing parity (`#377` §2).
+`imgsz 800`.
+
+> **Preprocessing (updated 2026-06-03):** the app no longer does a pure-Dart
+> 800×800 center-crop before inference — on-device profiling showed it cost
+> ~1.1 s per frame (`det` 1253 ms → 155 ms once removed; the model/phone were
+> never the bottleneck). Inference now feeds the **raw camera frame** to the
+> plugin, which letterboxes to the model input natively; detections are
+> normalised to the raw frame, and training captures store that raw frame so
+> image + sidecar coords stay aligned. The original `#377` §2 center-crop parity
+> no longer applies. **Training implication (tracked in #393):** future rounds
+> should preprocess to match the plugin's letterbox (ultralytics default), not a
+> center-crop, so the training distribution matches inference.
 
 ## 2. Bundle it
 
@@ -77,8 +88,8 @@ Detected darts are emitted into the game with `input_method: 'camera'`.
 **There is no code-enforced recall gate.** When the toggle is on and a model is
 loaded, every detected dart is emitted. Per `#377` §2 the ship signal is model
 recall (~0.95 dart recall on your real board), not "the code works". The current
-`dart_round6_withcal` is ~0.795, so treat it as **assist / data-collection
-only** — don't trust the emitted scores yet.
+`dart_round7_withcal` has dart recall ~0.747 (cal recall 0.94–1.00), so treat it
+as **assist / data-collection only** — don't trust the emitted scores yet.
 
 ## Known gaps (deferred)
 

@@ -15,7 +15,7 @@ import 'package:share_plus/share_plus.dart';
 /// File-backed [CaptureStore] for mobile/desktop (#381). Conditionally imported
 /// in place of the web stub; only ever loaded where `dart:io` exists.
 ///
-/// Each capture is two files in [baseDir]: `<gameId>_<handle>.jpg` (the 800×800
+/// Each capture is two files in [baseDir]: `<gameId>_<handle>.jpg` (the raw
 /// frame) and `<gameId>_<handle>.json` (the sidecar). [baseDir] is injectable
 /// so tests run against a temp directory; production resolves it via
 /// [openDefaultCaptureStore].

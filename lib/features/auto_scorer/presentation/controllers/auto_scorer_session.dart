@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:dart_lodge/features/auto_scorer/data/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
@@ -43,20 +42,15 @@ class AutoScorerSession {
     required DartDetector detector,
     DartTracker? tracker,
     CaptureStore? captureStore,
-    // Must match the preprocessor the [detector] uses (both default to the same
-    // const), or the stored frame won't align with the detector's coords.
-    FramePreprocessor preprocessor = const FramePreprocessor(),
     String modelVersion = 'unknown',
   })  : _detector = detector,
         _tracker = tracker ?? DartTracker(),
         _captureStore = captureStore,
-        _preprocessor = preprocessor,
         _modelVersion = modelVersion;
 
   final DartDetector _detector;
   final DartTracker _tracker;
   final CaptureStore? _captureStore;
-  final FramePreprocessor _preprocessor;
   final String _modelVersion;
 
   /// Physical darts currently tracked on the board.
@@ -85,27 +79,20 @@ class AutoScorerSession {
     required int turnOrdinal,
     required String gameId,
     bool collectData = false,
-    bool skipPreprocess = false,
   }) async {
     final detectWatch = Stopwatch()..start();
-    final frame = await _detector.detect(frameBytes, skipPreprocess: skipPreprocess);
+    final frame = await _detector.detect(frameBytes);
     detectWatch.stop();
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
     trackWatch.stop();
 
-    // Capture is suppressed under the skip-preprocess A/B: detections then map
-    // to the raw frame, so storing the 800×800 image would misalign the sidecar
-    // coords (the exact bug #390 fixed). Perf measurement only (#377 §3).
-    if (collectData &&
-        !skipPreprocess &&
-        _captureStore != null &&
-        update.newDarts.isNotEmpty) {
-      // Store the SAME 800×800 frame the detector saw — the sidecar coords are
-      // normalised in that frame, so a raw camera frame would misalign them
-      // (#381 stores "the 800×800 frame"). Falls back to raw if the frame can't
-      // be re-encoded.
-      final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
+    if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
+      // Store the raw frame the detector saw: detections are normalised to it,
+      // so image + sidecar coords share one frame (the alignment invariant of
+      // #390 — only now the shared frame is the raw one, since inference no
+      // longer crops to 800×800). The training pipeline resizes; normalised
+      // coords are resolution-independent.
       // The dart-in-turn ordinal of the first new dart this frame (1-based).
       final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
       for (var i = 0; i < update.newDarts.length; i++) {
@@ -116,7 +103,7 @@ class AutoScorerSession {
             CaptureHandle(
                 turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
           ),
-          stored,
+          frameBytes,
         );
       }
     }
@@ -132,10 +119,10 @@ class AutoScorerSession {
   }
 
   /// Force-capture the current frame for training data (#382) — for darts the
-  /// model **missed** (no emission), the highest-value samples. Stores the same
-  /// 800×800 frame + whatever the detector found this frame (often empty),
-  /// under a manual handle. Out-of-band: does not touch the tracker or emit.
-  /// No-op without a capture store. Returns true if a frame was stored.
+  /// model **missed** (no emission), the highest-value samples. Stores the raw
+  /// frame + whatever the detector found this frame (often empty), under a
+  /// manual handle. Out-of-band: does not touch the tracker or emit. No-op
+  /// without a capture store. Returns true if a frame was stored.
   Future<bool> captureCurrentFrame(
     Uint8List frameBytes, {
     required int turnOrdinal,
@@ -144,12 +131,11 @@ class AutoScorerSession {
     final store = _captureStore;
     if (store == null) return false;
     final frame = await _detector.detect(frameBytes);
-    final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
     _manualSequence += 1;
     await store.save(
       _recordFor(frame, gameId,
           CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence)),
-      stored,
+      frameBytes,
     );
     return true;
   }

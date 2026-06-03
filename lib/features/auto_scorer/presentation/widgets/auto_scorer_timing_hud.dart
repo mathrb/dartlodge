@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 /// Debug timing overlay for the lag investigation (#377 §3). Shows the last
 /// frame's stage split plus a rolling average and effective FPS, so we can read
-/// off whether capture, detect (preprocess + inference), or the tracker
+/// off whether capture, detect (native inference), or the tracker
 /// dominates. Pure presentation over the supplied samples; rendered only when
 /// the diagnostics toggle is on. The phase→text mapping is intentionally terse.
 class AutoScorerTimingHud extends StatelessWidget {
@@ -15,14 +15,10 @@ class AutoScorerTimingHud extends StatelessWidget {
   /// Rolling window of recent frames (oldest→newest) for the average/FPS.
   final List<PipelineTimings> samples;
 
-  /// Whether the preprocess A/B skip is active (raw bytes to the model).
-  final bool skipPreprocess;
-
   const AutoScorerTimingHud({
     super.key,
     required this.last,
     required this.samples,
-    required this.skipPreprocess,
   });
 
   Duration get _avgTotal {
@@ -66,7 +62,6 @@ class AutoScorerTimingHud extends StatelessWidget {
                   'trk ${ms(last.track)}ms'),
               Text('avg ${ms(avg)}ms  ${StatFormatter.fmtDouble(fps)} fps'
                   '  (n=${samples.length})'),
-              Text('preprocess: ${skipPreprocess ? 'SKIPPED (A/B)' : 'on'}'),
             ],
           ),
         ),

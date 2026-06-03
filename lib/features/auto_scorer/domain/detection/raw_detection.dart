@@ -1,5 +1,5 @@
 /// One raw model detection: its class index and the **normalised** (0–1) centre
-/// of its bounding box in the 800×800 frame, plus confidence. The platform
+/// of its bounding box in the detection frame, plus confidence. The platform
 /// detector produces these; [buildDetectionFrame] turns them into the tracker's
 /// [DetectionFrame].
 class RawDetection {

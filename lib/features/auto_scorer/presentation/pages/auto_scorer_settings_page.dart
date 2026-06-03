@@ -20,7 +20,6 @@ class AutoScorerSettingsPage extends ConsumerWidget {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
     final timingHud = ref.watch(autoScorerTimingHudEnabledProvider);
-    final skipPreprocess = ref.watch(autoScorerSkipPreprocessProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Auto-scoring')),
@@ -76,20 +75,6 @@ class AutoScorerSettingsPage extends ConsumerWidget {
                 ? null
                 : (v) => ref
                     .read(autoScorerTimingHudEnabledProvider.notifier)
-                    .setEnabled(v),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.compare_arrows),
-            title: const Text('Skip preprocessing (A/B)'),
-            subtitle: const Text(
-                'Send raw frames to the model instead of our 800×800 resize, to '
-                'measure preprocess cost. Perf test only — training capture is '
-                'paused while this is on.'),
-            value: skipPreprocess.value ?? false,
-            onChanged: skipPreprocess.isLoading
-                ? null
-                : (v) => ref
-                    .read(autoScorerSkipPreprocessProvider.notifier)
                     .setEnabled(v),
           ),
         ],
