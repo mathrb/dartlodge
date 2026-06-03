@@ -96,6 +96,15 @@ void main() {
     expect(second.emittedDarts, hasLength(1));
   });
 
+  test('onFrame reports detect + track timings (#377 §3 diagnostics)', () async {
+    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final result = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
+    // Capture is filled in by the camera caller, not the session.
+    expect(result.timings.capture, Duration.zero);
+    expect(result.timings.detect, greaterThanOrEqualTo(Duration.zero));
+    expect(result.timings.track, greaterThanOrEqualTo(Duration.zero));
+  });
+
   test('captures the frame when data collection is on', () async {
     final store = _FakeCaptureStore();
     final session = AutoScorerSession(

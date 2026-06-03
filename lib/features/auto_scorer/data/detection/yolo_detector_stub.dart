@@ -24,4 +24,6 @@ class _UnsupportedDartDetector implements DartDetector {
   Future<void> dispose() async {}
 }
 
-Future<DartDetector> openDartDetector() async => const _UnsupportedDartDetector();
+// `skipPreprocess` is a mobile-only diagnostics A/B (#377 §3); ignored on web.
+Future<DartDetector> openDartDetector({bool skipPreprocess = false}) async =>
+    const _UnsupportedDartDetector();

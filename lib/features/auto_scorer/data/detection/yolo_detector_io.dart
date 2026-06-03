@@ -19,13 +19,24 @@ class UltralyticsDartDetector implements DartDetector {
     String modelPath = kAutoScorerModelAsset,
     FramePreprocessor preprocessor = const FramePreprocessor(),
     double minConfidence = 0.25,
+    bool skipPreprocess = false,
   })  : _yolo = YOLO(modelPath: modelPath, task: YOLOTask.detect),
         _preprocessor = preprocessor,
-        _minConfidence = minConfidence;
+        _minConfidence = minConfidence,
+        _skipPreprocess = skipPreprocess;
 
   final YOLO _yolo;
   final FramePreprocessor _preprocessor;
   final double _minConfidence;
+
+  /// Diagnostics A/B (#377 §3 lag investigation): when set, pass the raw camera
+  /// bytes straight to the plugin (which letterboxes to the model input itself)
+  /// instead of our pure-Dart 800×800 preprocess. Flipping this and watching the
+  /// `detect` timing in the HUD isolates our preprocess cost from native
+  /// inference. NOTE: detections then map to the *raw* frame, so captured
+  /// sidecar coords won't align with the stored 800×800 image — for perf
+  /// measurement only; keep "Collect training data" off while comparing.
+  final bool _skipPreprocess;
 
   @override
   bool get isSupported => true;
@@ -35,11 +46,17 @@ class UltralyticsDartDetector implements DartDetector {
 
   @override
   Future<DetectionFrame> detect(Uint8List frameBytes) async {
-    final square = _preprocessor.preprocessEncoded(frameBytes);
-    if (square == null) {
-      return const DetectionFrame(calPoints: [], dartCandidates: []);
+    final Uint8List input;
+    if (_skipPreprocess) {
+      input = frameBytes;
+    } else {
+      final square = _preprocessor.preprocessEncoded(frameBytes);
+      if (square == null) {
+        return const DetectionFrame(calPoints: [], dartCandidates: []);
+      }
+      input = square;
     }
-    final result = await _yolo.predict(square);
+    final result = await _yolo.predict(input);
     return buildDetectionFrame(
       parseYoloDetections(result),
       minConfidence: _minConfidence,
@@ -50,4 +67,5 @@ class UltralyticsDartDetector implements DartDetector {
   Future<void> dispose() => _yolo.dispose();
 }
 
-Future<DartDetector> openDartDetector() async => UltralyticsDartDetector();
+Future<DartDetector> openDartDetector({bool skipPreprocess = false}) async =>
+    UltralyticsDartDetector(skipPreprocess: skipPreprocess);

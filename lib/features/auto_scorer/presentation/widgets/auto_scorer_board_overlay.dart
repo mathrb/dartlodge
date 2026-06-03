@@ -2,11 +2,14 @@ import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_timing_hud.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -41,6 +44,11 @@ class _AutoScorerBoardOverlayState
   String? _error;
   TrackerStatus _status = const TrackerStatus(
       phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0);
+
+  /// Rolling per-frame timings for the diagnostics HUD (#377 §3); newest last,
+  /// capped so the average tracks recent frames rather than the whole session.
+  static const int _maxTimingSamples = 30;
+  final List<PipelineTimings> _timings = [];
 
   /// idle → aiming: load the model + open the camera (preview shown to aim).
   Future<void> _start() async {
@@ -130,8 +138,10 @@ class _AutoScorerBoardOverlayState
     if (_busy || camera == null || session == null) return;
     _busy = true;
     try {
+      final captureWatch = Stopwatch()..start();
       final shot = await camera.takePicture();
       final bytes = await shot.readAsBytes();
+      captureWatch.stop();
       if (!mounted) return;
       final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
       final result = await session.onFrame(
@@ -145,6 +155,7 @@ class _AutoScorerBoardOverlayState
       for (final dart in result.emittedDarts) {
         sink?.submitDart(dart.segment);
       }
+      _recordTimings(result.timings.copyWith(capture: captureWatch.elapsed));
       setState(() => _status = result.status);
     } catch (_) {
       // Drop this frame; the next tick retries.
@@ -180,6 +191,11 @@ class _AutoScorerBoardOverlayState
     if (status != null) setState(() => _status = status);
   }
 
+  void _recordTimings(PipelineTimings t) {
+    _timings.add(t);
+    if (_timings.length > _maxTimingSamples) _timings.removeAt(0);
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -204,13 +220,34 @@ class _AutoScorerBoardOverlayState
       case _Mode.running:
         // A compact, corner cluster — the rest of the board stays touchable
         // (no widget there ⇒ taps fall through to the scoreboard beneath).
+        final hudOn =
+            ref.watch(autoScorerTimingHudEnabledProvider).value ?? false;
         return SafeArea(
-          child: Align(
-            alignment: Alignment.topRight,
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: _mode == _Mode.running ? _runningControls() : _idleChip(),
-            ),
+          child: Stack(
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child:
+                      _mode == _Mode.running ? _runningControls() : _idleChip(),
+                ),
+              ),
+              if (_mode == _Mode.running && hudOn && _timings.isNotEmpty)
+                Align(
+                  alignment: Alignment.bottomLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: AutoScorerTimingHud(
+                      last: _timings.last,
+                      samples: _timings,
+                      skipPreprocess:
+                          ref.watch(autoScorerSkipPreprocessProvider).value ??
+                              false,
+                    ),
+                  ),
+                ),
+            ],
           ),
         );
     }
