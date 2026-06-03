@@ -1,5 +1,6 @@
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,6 +19,8 @@ class AutoScorerSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
+    final timingHud = ref.watch(autoScorerTimingHudEnabledProvider);
+    final skipPreprocess = ref.watch(autoScorerSkipPreprocessProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Auto-scoring')),
@@ -53,6 +56,41 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             title: const Text('Export training data'),
             subtitle: const Text('Share a zip of captured frames.'),
             onTap: () => _export(context, ref),
+          ),
+          const Divider(),
+          // Developer diagnostics for the lag investigation (#377 §3). Both off
+          // by default; they only affect an active auto-scoring session.
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text('Diagnostics',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.speed),
+            title: const Text('Show timing HUD'),
+            subtitle: const Text(
+                'Overlay per-frame capture / detect / track timings while '
+                'auto-scoring runs.'),
+            value: timingHud.value ?? false,
+            onChanged: timingHud.isLoading
+                ? null
+                : (v) => ref
+                    .read(autoScorerTimingHudEnabledProvider.notifier)
+                    .setEnabled(v),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.compare_arrows),
+            title: const Text('Skip preprocessing (A/B)'),
+            subtitle: const Text(
+                'Send raw frames to the model instead of our 800×800 resize, to '
+                'measure preprocess cost. Perf test only — training capture is '
+                'paused while this is on.'),
+            value: skipPreprocess.value ?? false,
+            onChanged: skipPreprocess.isLoading
+                ? null
+                : (v) => ref
+                    .read(autoScorerSkipPreprocessProvider.notifier)
+                    .setEnabled(v),
           ),
         ],
       ),

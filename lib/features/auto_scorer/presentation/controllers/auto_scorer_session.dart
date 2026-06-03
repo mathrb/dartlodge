@@ -7,6 +7,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dar
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -18,7 +19,15 @@ class SessionFrameResult {
   final List<ScoredDart> emittedDarts;
   final TrackerStatus status;
 
-  const SessionFrameResult({required this.emittedDarts, required this.status});
+  /// Stage timings for this frame (detect + track measured here; capture is
+  /// filled in by the camera caller). Surfaced only by the diagnostics HUD.
+  final PipelineTimings timings;
+
+  const SessionFrameResult({
+    required this.emittedDarts,
+    required this.status,
+    this.timings = const PipelineTimings(),
+  });
 }
 
 /// Orchestrates the assist-mode pipeline (#382): a camera frame → [DartDetector]
@@ -76,11 +85,22 @@ class AutoScorerSession {
     required int turnOrdinal,
     required String gameId,
     bool collectData = false,
+    bool skipPreprocess = false,
   }) async {
-    final frame = await _detector.detect(frameBytes);
+    final detectWatch = Stopwatch()..start();
+    final frame = await _detector.detect(frameBytes, skipPreprocess: skipPreprocess);
+    detectWatch.stop();
+    final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
+    trackWatch.stop();
 
-    if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
+    // Capture is suppressed under the skip-preprocess A/B: detections then map
+    // to the raw frame, so storing the 800×800 image would misalign the sidecar
+    // coords (the exact bug #390 fixed). Perf measurement only (#377 §3).
+    if (collectData &&
+        !skipPreprocess &&
+        _captureStore != null &&
+        update.newDarts.isNotEmpty) {
       // Store the SAME 800×800 frame the detector saw — the sidecar coords are
       // normalised in that frame, so a raw camera frame would misalign them
       // (#381 stores "the 800×800 frame"). Falls back to raw if the frame can't
@@ -104,6 +124,10 @@ class AutoScorerSession {
     return SessionFrameResult(
       emittedDarts: [for (final d in update.newDarts) d.score],
       status: update.status,
+      timings: PipelineTimings(
+        detect: detectWatch.elapsed,
+        track: trackWatch.elapsed,
+      ),
     );
   }
 

@@ -27,8 +27,15 @@ class _FakeDetector implements DartDetector {
     return true;
   }
 
+  /// Records the most recent skipPreprocess flag so tests can assert threading.
+  bool lastSkipPreprocess = false;
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes) async => frame;
+  Future<DetectionFrame> detect(Uint8List frameBytes,
+      {bool skipPreprocess = false}) async {
+    lastSkipPreprocess = skipPreprocess;
+    return frame;
+  }
+
   @override
   Future<void> dispose() async {}
 }
@@ -94,6 +101,35 @@ void main() {
     expect(first.emittedDarts, isEmpty);
     final second = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     expect(second.emittedDarts, hasLength(1));
+  });
+
+  test('onFrame reports detect + track timings (#377 §3 diagnostics)', () async {
+    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final result = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
+    // Capture is filled in by the camera caller, not the session.
+    expect(result.timings.capture, Duration.zero);
+    expect(result.timings.detect, greaterThanOrEqualTo(Duration.zero));
+    expect(result.timings.track, greaterThanOrEqualTo(Duration.zero));
+  });
+
+  test('skipPreprocess threads to the detector', () async {
+    final detector = _FakeDetector(oneDartFrame);
+    final session = AutoScorerSession(detector: detector);
+    await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', skipPreprocess: true);
+    expect(detector.lastSkipPreprocess, isTrue);
+  });
+
+  test('skipPreprocess suppresses capture (raw-frame coords would misalign)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session =
+        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+    // Two frames confirm+emit a dart, which would normally be captured.
+    await session.onFrame(bytes,
+        turnOrdinal: 1, gameId: 'g', collectData: true, skipPreprocess: true);
+    await session.onFrame(bytes,
+        turnOrdinal: 1, gameId: 'g', collectData: true, skipPreprocess: true);
+    expect(store.saved, isEmpty);
   });
 
   test('captures the frame when data collection is on', () async {

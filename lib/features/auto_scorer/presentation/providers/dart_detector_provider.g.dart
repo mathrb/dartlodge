@@ -9,15 +9,23 @@ part of 'dart_detector_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
-/// Consumers gate on [DartDetector.isSupported] before starting detection. The
-/// camera capture loop that drives it lands with the assist-mode UX in #382.
+/// Consumers gate on [DartDetector.isSupported] before starting detection.
+///
+/// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+/// [DartDetector.detect] (threaded from the session), NOT a property of the
+/// detector — so toggling it never rebuilds this provider or churns the native
+/// model; it takes effect on the next frame.
 
 @ProviderFor(dartDetector)
 final dartDetectorProvider = DartDetectorProvider._();
 
 /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
-/// Consumers gate on [DartDetector.isSupported] before starting detection. The
-/// camera capture loop that drives it lands with the assist-mode UX in #382.
+/// Consumers gate on [DartDetector.isSupported] before starting detection.
+///
+/// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+/// [DartDetector.detect] (threaded from the session), NOT a property of the
+/// detector — so toggling it never rebuilds this provider or churns the native
+/// model; it takes effect on the next frame.
 
 final class DartDetectorProvider
     extends
@@ -28,8 +36,12 @@ final class DartDetectorProvider
         >
     with $FutureModifier<DartDetector>, $FutureProvider<DartDetector> {
   /// The on-device dart detector (ultralytics_yolo on mobile, no-op on web).
-  /// Consumers gate on [DartDetector.isSupported] before starting detection. The
-  /// camera capture loop that drives it lands with the assist-mode UX in #382.
+  /// Consumers gate on [DartDetector.isSupported] before starting detection.
+  ///
+  /// The diagnostics "skip preprocessing" A/B (#377 §3) is a per-call argument to
+  /// [DartDetector.detect] (threaded from the session), NOT a property of the
+  /// detector — so toggling it never rebuilds this provider or churns the native
+  /// model; it takes effect on the next frame.
   DartDetectorProvider._()
     : super(
         from: null,

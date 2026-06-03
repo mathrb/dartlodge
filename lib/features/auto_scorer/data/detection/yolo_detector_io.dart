@@ -34,12 +34,24 @@ class UltralyticsDartDetector implements DartDetector {
   Future<bool> load() => _yolo.loadModel();
 
   @override
-  Future<DetectionFrame> detect(Uint8List frameBytes) async {
-    final square = _preprocessor.preprocessEncoded(frameBytes);
-    if (square == null) {
-      return const DetectionFrame(calPoints: [], dartCandidates: []);
+  Future<DetectionFrame> detect(Uint8List frameBytes,
+      {bool skipPreprocess = false}) async {
+    final Uint8List input;
+    if (skipPreprocess) {
+      // Diagnostics A/B (#377 §3): hand the raw bytes to the plugin, which
+      // letterboxes to the model input itself, skipping our pure-Dart 800×800
+      // resize. Detections then map to the raw frame — coordinate-consistent
+      // for the tracker (cals + tips share that frame) but NOT aligned with a
+      // stored 800×800 capture, so the caller suppresses capture while skipping.
+      input = frameBytes;
+    } else {
+      final square = _preprocessor.preprocessEncoded(frameBytes);
+      if (square == null) {
+        return const DetectionFrame(calPoints: [], dartCandidates: []);
+      }
+      input = square;
     }
-    final result = await _yolo.predict(square);
+    final result = await _yolo.predict(input);
     return buildDetectionFrame(
       parseYoloDetections(result),
       minConfidence: _minConfidence,
