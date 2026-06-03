@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:dart_lodge/features/auto_scorer/data/preprocessing/frame_preprocessor.dart';
+import 'package:dart_lodge/features/auto_scorer/data/preprocessing/image_frame_preprocessor.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
 
 void main() {
-  const pre = FramePreprocessor();
+  const pre = ImageFramePreprocessor();
 
   test('output is always 800×800', () {
     for (final dims in const [[1200, 800], [720, 1280], [800, 800], [1001, 777]]) {

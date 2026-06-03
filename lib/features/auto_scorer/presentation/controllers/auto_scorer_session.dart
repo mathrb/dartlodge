@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:dart_lodge/features/auto_scorer/data/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
@@ -8,6 +7,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -41,11 +41,9 @@ class SessionFrameResult {
 class AutoScorerSession {
   AutoScorerSession({
     required DartDetector detector,
+    required FramePreprocessor preprocessor,
     DartTracker? tracker,
     CaptureStore? captureStore,
-    // Must match the preprocessor the [detector] uses (both default to the same
-    // const), or the stored frame won't align with the detector's coords.
-    FramePreprocessor preprocessor = const FramePreprocessor(),
     String modelVersion = 'unknown',
   })  : _detector = detector,
         _tracker = tracker ?? DartTracker(),

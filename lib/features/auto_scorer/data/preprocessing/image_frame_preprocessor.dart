@@ -1,11 +1,12 @@
 import 'dart:typed_data';
 
+import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/square_crop.dart';
 import 'package:image/image.dart' as img;
 
-/// Preprocesses a camera frame to the model's input the way the probe's
-/// training pipeline did (#377 §2 — the single most important correctness
-/// item): center-crop the longer axis to a square, resize to 800×800 with area
+/// `image`-codec implementation of [FramePreprocessor], matching the probe's
+/// training pipeline (#377 §2 — the single most important correctness item):
+/// center-crop the longer axis to a square, resize to 800×800 with area
 /// resampling, and **no EXIF rotation**.
 ///
 /// Parity scope: the **crop geometry** is byte-for-byte exact (pure [SquareCrop]
@@ -14,10 +15,10 @@ import 'package:image/image.dart' as img;
 /// bit-identical to — OpenCV's `cv2.INTER_AREA`; the two differ by sub-DN
 /// rounding. Functional equivalence is validated by the on-device recall gate
 /// (§2), not pixel equality. Lives in `data/` for the `image` codec dependency.
-class FramePreprocessor {
+class ImageFramePreprocessor implements FramePreprocessor {
   static const int targetSize = 800;
 
-  const FramePreprocessor();
+  const ImageFramePreprocessor();
 
   /// Center-crop + resize an already-decoded image to 800×800.
   img.Image preprocess(img.Image source) {
@@ -43,6 +44,7 @@ class FramePreprocessor {
   /// `decodeImage` does **not** bake EXIF orientation (we never call
   /// `bakeOrientation`), matching the probe's `cv2.imread`, which ignores EXIF.
   /// Returns null when the bytes can't be decoded.
+  @override
   Uint8List? preprocessEncoded(Uint8List bytes) {
     // decodeImage can throw (not just return null) on malformed input; a corrupt
     // frame must degrade to "no detection", never crash the capture loop.
