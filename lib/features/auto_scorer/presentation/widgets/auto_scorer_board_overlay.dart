@@ -7,6 +7,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.d
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_timing_hud.dart';
@@ -70,7 +71,9 @@ class _AutoScorerBoardOverlayState
         return;
       }
       final store = await ref.read(captureStoreProvider.future);
-      final session = AutoScorerSession(detector: detector, captureStore: store);
+      final preprocessor = ref.read(framePreprocessorProvider);
+      final session = AutoScorerSession(
+          detector: detector, preprocessor: preprocessor, captureStore: store);
       final loaded = await session.start();
       if (!mounted) return;
       if (!loaded) {

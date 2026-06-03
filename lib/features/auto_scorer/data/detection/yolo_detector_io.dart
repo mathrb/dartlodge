@@ -1,7 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:dart_lodge/features/auto_scorer/data/preprocessing/frame_preprocessor.dart';
+import 'package:dart_lodge/features/auto_scorer/data/preprocessing/image_frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/detection_mapping.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/yolo_result_parser.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -17,7 +18,7 @@ import 'package:ultralytics_yolo/ultralytics_yolo.dart';
 class UltralyticsDartDetector implements DartDetector {
   UltralyticsDartDetector({
     String modelPath = kAutoScorerModelAsset,
-    FramePreprocessor preprocessor = const FramePreprocessor(),
+    FramePreprocessor preprocessor = const ImageFramePreprocessor(),
     double minConfidence = 0.25,
   })  : _yolo = YOLO(modelPath: modelPath, task: YOLOTask.detect),
         _preprocessor = preprocessor,

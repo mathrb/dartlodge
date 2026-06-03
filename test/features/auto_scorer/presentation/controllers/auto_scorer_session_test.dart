@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:dart_lodge/features/auto_scorer/data/preprocessing/image_frame_preprocessor.dart';
 
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
@@ -82,7 +83,7 @@ void main() {
 
   test('start loads the detector', () async {
     final detector = _FakeDetector(oneDartFrame);
-    final session = AutoScorerSession(detector: detector);
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: detector);
     expect(await session.start(), isTrue);
     expect(detector.loaded, isTrue);
   });
@@ -90,13 +91,13 @@ void main() {
   test('start enforces the retention cap (bounds storage growth, #381)', () async {
     final store = _FakeCaptureStore();
     final session =
-        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+        AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame), captureStore: store);
     await session.start();
     expect(store.retentionCalls, 1);
   });
 
   test('emits a dart after confirm-before-emit (2 frames)', () async {
-    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame));
     final first = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     expect(first.emittedDarts, isEmpty);
     final second = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
@@ -104,7 +105,7 @@ void main() {
   });
 
   test('onFrame reports detect + track timings (#377 §3 diagnostics)', () async {
-    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame));
     final result = await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     // Capture is filled in by the camera caller, not the session.
     expect(result.timings.capture, Duration.zero);
@@ -114,7 +115,7 @@ void main() {
 
   test('skipPreprocess threads to the detector', () async {
     final detector = _FakeDetector(oneDartFrame);
-    final session = AutoScorerSession(detector: detector);
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: detector);
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', skipPreprocess: true);
     expect(detector.lastSkipPreprocess, isTrue);
   });
@@ -123,7 +124,7 @@ void main() {
       () async {
     final store = _FakeCaptureStore();
     final session =
-        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+        AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame), captureStore: store);
     // Two frames confirm+emit a dart, which would normally be captured.
     await session.onFrame(bytes,
         turnOrdinal: 1, gameId: 'g', collectData: true, skipPreprocess: true);
@@ -134,7 +135,7 @@ void main() {
 
   test('captures the frame when data collection is on', () async {
     final store = _FakeCaptureStore();
-    final session = AutoScorerSession(
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), 
         detector: _FakeDetector(oneDartFrame),
         captureStore: store,
         modelVersion: 'test-v1');
@@ -151,7 +152,7 @@ void main() {
     final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
     final session =
-        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+        AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame), captureStore: store);
     await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
     await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
 
@@ -164,7 +165,7 @@ void main() {
   test('does not capture when data collection is off', () async {
     final store = _FakeCaptureStore();
     final session =
-        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+        AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame), captureStore: store);
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     expect(store.saved, isEmpty);
@@ -174,7 +175,7 @@ void main() {
     final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
     final session =
-        AutoScorerSession(detector: _FakeDetector(oneDartFrame), captureStore: store);
+        AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame), captureStore: store);
 
     final saved = await session.captureCurrentFrame(raw, turnOrdinal: 2, gameId: 'g');
     expect(saved, isTrue);
@@ -187,14 +188,14 @@ void main() {
   });
 
   test('captureCurrentFrame is a no-op without a capture store', () async {
-    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame));
     expect(
         await session.captureCurrentFrame(bytes, turnOrdinal: 1, gameId: 'g'),
         isFalse);
   });
 
   test('removeDarts re-baselines (clears the board) and reports status', () async {
-    final session = AutoScorerSession(detector: _FakeDetector(oneDartFrame));
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), detector: _FakeDetector(oneDartFrame));
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g');
     await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g'); // dart on board
     expect(session.dartsOnBoard, 1);
