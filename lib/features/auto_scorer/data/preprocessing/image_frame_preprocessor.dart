@@ -1,42 +1,52 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/square_crop.dart';
 import 'package:image/image.dart' as img;
 
-/// `image`-codec implementation of [FramePreprocessor], matching the probe's
-/// training pipeline (#377 §2 — the single most important correctness item):
-/// center-crop the longer axis to a square, resize to 800×800 with area
-/// resampling, and **no EXIF rotation**.
+/// `image`-codec implementation of [FramePreprocessor] that **letterboxes** a
+/// camera frame into the model's [targetSize]×[targetSize] input (#377 §2):
+/// scale the whole frame to fit (preserving aspect ratio) and pad the remainder
+/// with neutral grey — nothing is cropped.
 ///
-/// Parity scope: the **crop geometry** is byte-for-byte exact (pure [SquareCrop]
-/// from `domain/` — the same integer math as the probe). The **resize** uses
-/// the `image` package's area interpolation, which approximates — but is not
-/// bit-identical to — OpenCV's `cv2.INTER_AREA`; the two differ by sub-DN
-/// rounding. Functional equivalence is validated by the on-device recall gate
-/// (§2), not pixel equality. Lives in `data/` for the `image` codec dependency.
+/// Switched from a center-crop (which clipped the board's outer calibration
+/// points when the board filled the frame, so the model never saw them and the
+/// tracker kept reporting "needs calibration"). Letterbox keeps every cal point
+/// in the model input. Grey **114** matches the YOLO/ultralytics letterbox
+/// convention and the plugin's own native resize, so the input distribution is
+/// consistent across our preprocess and the "skip preprocessing" path. (The
+/// probe trained at `imgsz 800`; training should letterbox to match — #393.)
+/// Lives in `data/` for the `image` codec dependency.
 class ImageFramePreprocessor implements FramePreprocessor {
   static const int targetSize = 800;
 
+  /// Neutral grey padding (ultralytics letterbox default).
+  static const int _pad = 114;
+
   const ImageFramePreprocessor();
 
-  /// Center-crop + resize an already-decoded image to 800×800.
+  /// Letterbox an already-decoded image into a [targetSize]×[targetSize] square.
   img.Image preprocess(img.Image source) {
-    final crop = SquareCrop.center(source.width, source.height);
-    final square = img.copyCrop(
+    final scale =
+        math.min(targetSize / source.width, targetSize / source.height);
+    final scaledW = math.max(1, (source.width * scale).round());
+    final scaledH = math.max(1, (source.height * scale).round());
+    final scaled = img.copyResize(
       source,
-      x: crop.x0,
-      y: crop.y0,
-      width: crop.size,
-      height: crop.size,
-    );
-    return img.copyResize(
-      square,
-      width: targetSize,
-      height: targetSize,
-      // INTER_AREA equivalent for the downscale the camera frame always needs.
+      width: scaledW,
+      height: scaledH,
+      // INTER_AREA-equivalent for the downscale a camera frame always needs.
       interpolation: img.Interpolation.average,
     );
+    final canvas = img.Image(width: targetSize, height: targetSize);
+    img.fill(canvas, color: img.ColorRgb8(_pad, _pad, _pad));
+    img.compositeImage(
+      canvas,
+      scaled,
+      dstX: (targetSize - scaledW) ~/ 2,
+      dstY: (targetSize - scaledH) ~/ 2,
+    );
+    return canvas;
   }
 
   /// Decode raw [bytes], preprocess, and re-encode as PNG for the detector.

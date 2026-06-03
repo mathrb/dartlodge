@@ -22,7 +22,10 @@ is **no code-enforced emission gate**: treat auto-scoring as assist /
 data-collection (#381) until a later round clears the bar. The CoreML
 `.mlpackage` (iOS) goes to `ios/Runner/` (gitignored).
 
-Frames are preprocessed to 800×800 (center-crop) before inference, matching the
-training parity (#377 §2). A "Skip preprocessing" toggle in settings can bypass
-that to feed raw frames to the plugin's native resize (faster, but a different
-input distribution than the model trained on).
+Frames are preprocessed to 800×800 (**letterbox**: scale-to-fit + grey 114
+padding) before inference, so the board's outer calibration points are never
+cropped out. (Was a center-crop, which clipped edge cal points when the board
+filled the frame — see #377 §3.) The probe trained at `imgsz 800`; for best
+results training should letterbox to match (#393). A "Skip preprocessing" toggle
+in settings bypasses our step to feed raw frames to the plugin's own native
+letterbox (faster, near-equivalent input).

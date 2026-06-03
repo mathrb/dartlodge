@@ -32,7 +32,10 @@ the pins above are the known-good combo. (Add `--coreml` + `--with coremltools`
 for the iOS `.mlpackage`.)
 
 The model classes are `{0: dart, 1: cal1, 2: cal2, 3: cal3, 4: cal4}` at
-`imgsz 800` — matching the in-app preprocessing parity (`#377` §2).
+`imgsz 800`. The app **letterboxes** frames to 800×800 (scale-to-fit + grey 114
+pad) so edge calibration points aren't cropped (was a center-crop; see `#377`
+§3). The probe trained at `imgsz 800` — to match inference, training should
+letterbox too (tracked in `#393`).
 
 ## 2. Bundle it
 
