@@ -11,9 +11,17 @@ class DetectionFrame {
   final List<BoardPoint> calPoints;
   final List<BoardPoint> dartCandidates;
 
+  /// Best confidence the model gave for each cal class `[cal1, cal2, cal3,
+  /// cal4]`, or null where that class wasn't detected this frame. **Diagnostic
+  /// only** (surfaced in the HUD to tune the calibration threshold) — the
+  /// tracker reads [calPoints]/[hasCalibration], not this. Defaults to all-null
+  /// so non-detector constructors (tests) need not supply it.
+  final List<double?> calConfidences;
+
   const DetectionFrame({
     required this.calPoints,
     required this.dartCandidates,
+    this.calConfidences = const [null, null, null, null],
   });
 
   /// True when all four calibration points were detected this frame — required

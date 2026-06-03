@@ -1,5 +1,7 @@
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +23,8 @@ class AutoScorerSettingsPage extends ConsumerWidget {
     final collect = ref.watch(dataCollectionEnabledProvider);
     final timingHud = ref.watch(autoScorerTimingHudEnabledProvider);
     final skipPreprocess = ref.watch(autoScorerSkipPreprocessProvider);
+    final calConf = ref.watch(autoScorerCalConfidenceProvider);
+    final dartConf = ref.watch(autoScorerDartConfidenceProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Auto-scoring')),
@@ -58,6 +62,32 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             onTap: () => _export(context, ref),
           ),
           const Divider(),
+          // Detection thresholds (#377 §3). The model's recall is measured at a
+          // near-zero eval threshold, so a lower operating threshold recovers
+          // borderline cal points / darts; expose both so they can be tuned
+          // against the HUD's per-cal confidence readout.
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text('Detection thresholds',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          _ConfidenceSlider(
+            icon: Icons.crop_free,
+            label: 'Calibration confidence',
+            value: calConf.value ?? kDefaultConfidence,
+            enabled: !calConf.isLoading,
+            onChanged: (v) =>
+                ref.read(autoScorerCalConfidenceProvider.notifier).set(v),
+          ),
+          _ConfidenceSlider(
+            icon: Icons.my_location,
+            label: 'Dart confidence',
+            value: dartConf.value ?? kDefaultConfidence,
+            enabled: !dartConf.isLoading,
+            onChanged: (v) =>
+                ref.read(autoScorerDartConfidenceProvider.notifier).set(v),
+          ),
+          const Divider(),
           // Developer diagnostics for the lag investigation (#377 §3). Both off
           // by default; they only affect an active auto-scoring session.
           const Padding(
@@ -83,7 +113,7 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             title: const Text('Skip preprocessing'),
             subtitle: const Text(
                 'Send raw frames straight to the model (native resize) instead '
-                'of the 800×800 center-crop. Much faster, but a different input '
+                'of our 800×800 letterbox. Much faster, but a different input '
                 'than the model trained on. Automatic training capture pauses '
                 'while on (the manual capture button still works).'),
             value: skipPreprocess.value ?? false,
@@ -141,5 +171,56 @@ class AutoScorerSettingsPage extends ConsumerWidget {
       messenger.showSnackBar(SnackBar(
           content: Text('Cleared $count exported frame${count == 1 ? '' : 's'}')));
     }
+  }
+}
+
+/// A 0.05–0.90 confidence slider that keeps the thumb responsive during a drag
+/// (local state) and persists only on release (`onChangeEnd`), so we don't write
+/// SharedPreferences on every pixel of movement.
+class _ConfidenceSlider extends StatefulWidget {
+  const _ConfidenceSlider({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String label;
+  final double value;
+  final bool enabled;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_ConfidenceSlider> createState() => _ConfidenceSliderState();
+}
+
+class _ConfidenceSliderState extends State<_ConfidenceSlider> {
+  double? _dragValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final value = _dragValue ?? widget.value;
+    return ListTile(
+      leading: Icon(widget.icon),
+      title: Text('${widget.label}: ${StatFormatter.fmtDouble(value, decimals: 2)}'),
+      subtitle: Slider(
+        value: value.clamp(0.05, 0.9),
+        min: 0.05,
+        max: 0.9,
+        divisions: 17, // 0.05 steps
+        label: StatFormatter.fmtDouble(value, decimals: 2),
+        onChanged: widget.enabled
+            ? (v) => setState(() => _dragValue = v)
+            : null,
+        onChangeEnd: widget.enabled
+            ? (v) {
+                setState(() => _dragValue = null);
+                widget.onChanged(v);
+              }
+            : null,
+      ),
+    );
   }
 }

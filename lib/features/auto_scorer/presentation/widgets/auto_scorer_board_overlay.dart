@@ -7,6 +7,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.d
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
@@ -53,6 +54,10 @@ class _AutoScorerBoardOverlayState
   /// capped so the average tracks recent frames rather than the whole session.
   static const int _maxTimingSamples = 30;
   final List<PipelineTimings> _timings = [];
+
+  /// Latest per-cal-class confidences `[cal1..cal4]` (null = absent), shown in
+  /// the diagnostics HUD so the user can tune the calibration threshold.
+  List<double?> _calConfidences = const [null, null, null, null];
 
   /// idle → aiming → running: load the model + open the camera, push a one-time
   /// fullscreen aim preview, then (on "Done") start headless detection. The aim
@@ -174,12 +179,18 @@ class _AutoScorerBoardOverlayState
       if (!mounted) return;
       final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
       final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
+      final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
+          kDefaultConfidence;
+      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
+          kDefaultConfidence;
       final result = await session.onFrame(
         bytes,
         turnOrdinal: _turnOrdinal,
         gameId: widget.gameId,
         collectData: collect,
         skipPreprocess: skip,
+        calConfidence: calConf,
+        dartConfidence: dartConf,
       );
       if (!mounted) return;
       final sink = ref.read(activeDartInputSinkProvider);
@@ -189,6 +200,7 @@ class _AutoScorerBoardOverlayState
       setState(() {
         _recordTimings(result.timings.copyWith(capture: captureWatch.elapsed));
         _status = result.status;
+        _calConfidences = result.calConfidences;
       });
     } catch (_) {
       // Drop this frame; the next tick retries.
@@ -207,8 +219,15 @@ class _AutoScorerBoardOverlayState
       final shot = await camera.takePicture();
       final bytes = await shot.readAsBytes();
       if (!mounted) return;
+      final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
+          kDefaultConfidence;
+      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
+          kDefaultConfidence;
       final saved = await session.captureCurrentFrame(bytes,
-          turnOrdinal: _turnOrdinal, gameId: widget.gameId);
+          turnOrdinal: _turnOrdinal,
+          gameId: widget.gameId,
+          calConfidence: calConf,
+          dartConfidence: dartConf);
       messenger.showSnackBar(SnackBar(
           content: Text(saved
               ? 'Frame saved for training'
@@ -269,6 +288,7 @@ class _AutoScorerBoardOverlayState
                     skipPreprocess:
                         ref.watch(autoScorerSkipPreprocessProvider).value ??
                             false,
+                    calConfidences: _calConfidences,
                   ),
                 ),
               ),

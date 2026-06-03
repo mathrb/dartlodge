@@ -87,7 +87,7 @@ void main() {
       expect(frame.calPoints.first, (x: 0.50, y: 0.20));
     });
 
-    test('minConfidence filters weak darts and cals', () {
+    test('dartMinConfidence filters weak darts', () {
       final frame = buildDetectionFrame([
         det(1, 0.5, 0.2, 0.9),
         det(2, 0.5, 0.8, 0.9),
@@ -95,9 +95,37 @@ void main() {
         det(4, 0.8, 0.5, 0.9),
         det(0, 0.5, 0.5, 0.10), // below threshold → dropped
         det(0, 0.6, 0.6, 0.40),
-      ], minConfidence: 0.25);
+      ], dartMinConfidence: 0.25);
       expect(frame.dartCandidates, hasLength(1));
       expect(frame.dartCandidates.single, (x: 0.6, y: 0.6));
+    });
+
+    test('calMinConfidence gates a weak cal independently of darts', () {
+      // cal3 at 0.18: below 0.25 ⇒ no calibration; below 0.15 would pass.
+      List<RawDetection> dets() => [
+            det(1, 0.5, 0.2, 0.9),
+            det(2, 0.5, 0.8, 0.9),
+            det(3, 0.2, 0.5, 0.18),
+            det(4, 0.8, 0.5, 0.9),
+          ];
+      expect(buildDetectionFrame(dets(), calMinConfidence: 0.25).hasCalibration,
+          isFalse);
+      expect(buildDetectionFrame(dets(), calMinConfidence: 0.15).hasCalibration,
+          isTrue);
+    });
+
+    test('calConfidences reports best per cal (regardless of threshold)', () {
+      final frame = buildDetectionFrame([
+        det(1, 0.5, 0.2, 0.91),
+        det(2, 0.5, 0.8, 0.10), // present but below a 0.25 threshold
+        // cal3 absent
+        det(4, 0.8, 0.5, 0.80),
+      ], calMinConfidence: 0.25);
+      expect(frame.hasCalibration, isFalse); // cal2 weak + cal3 missing
+      expect(frame.calConfidences[0], closeTo(0.91, 1e-9));
+      expect(frame.calConfidences[1], closeTo(0.10, 1e-9)); // surfaced for tuning
+      expect(frame.calConfidences[2], isNull); // cal3 not detected
+      expect(frame.calConfidences[3], closeTo(0.80, 1e-9));
     });
   });
 }

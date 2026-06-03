@@ -18,12 +18,29 @@ class AutoScorerTimingHud extends StatelessWidget {
   /// Whether the preprocess A/B skip is active (raw bytes to the model).
   final bool skipPreprocess;
 
+  /// Best confidence per cal class `[cal1..cal4]` last frame (null = absent),
+  /// so the calibration threshold can be tuned against what the model sees.
+  final List<double?> calConfidences;
+
   const AutoScorerTimingHud({
     super.key,
     required this.last,
     required this.samples,
     required this.skipPreprocess,
+    this.calConfidences = const [null, null, null, null],
   });
+
+  /// "1:0.92 2:0.88 3:– 4:0.95" — per-cal confidence, en-dash where not found.
+  String get _calLine {
+    String fmt(double? c) =>
+        c == null ? '–' : StatFormatter.fmtDouble(c, decimals: 2);
+    return [
+      for (var i = 0; i < calConfidences.length; i++)
+        '${i + 1}:${fmt(calConfidences[i])}'
+    ].join(' ');
+  }
+
+  int get _calsFound => calConfidences.where((c) => c != null).length;
 
   Duration get _avgTotal {
     if (samples.isEmpty) return Duration.zero;
@@ -67,6 +84,7 @@ class AutoScorerTimingHud extends StatelessWidget {
               Text('avg ${ms(avg)}ms  ${StatFormatter.fmtDouble(fps)} fps'
                   '  (n=${samples.length})'),
               Text('preprocess: ${skipPreprocess ? 'SKIPPED (A/B)' : 'on'}'),
+              Text('cals $_calsFound/4  $_calLine'),
             ],
           ),
         ),
