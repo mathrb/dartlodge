@@ -84,7 +84,8 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             subtitle: const Text(
                 'Send raw frames straight to the model (native resize) instead '
                 'of the 800×800 center-crop. Much faster, but a different input '
-                'than the model trained on — training capture is paused while on.'),
+                'than the model trained on. Automatic training capture pauses '
+                'while on (the manual capture button still works).'),
             value: skipPreprocess.value ?? false,
             onChanged: skipPreprocess.isLoading
                 ? null
