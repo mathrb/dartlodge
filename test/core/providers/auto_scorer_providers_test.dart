@@ -38,6 +38,17 @@ void main() {
     });
   });
 
+  group('ActiveTurnSignal', () {
+    test('starts at 0 and bumps monotonically', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(activeTurnSignalProvider), 0);
+      container.read(activeTurnSignalProvider.notifier).bump();
+      container.read(activeTurnSignalProvider.notifier).bump();
+      expect(container.read(activeTurnSignalProvider), 2);
+    });
+  });
+
   group('ActiveDartInputSink', () {
     test('starts null and binds/unbinds', () {
       final container = ProviderContainer();

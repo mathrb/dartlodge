@@ -137,3 +137,81 @@ abstract class _$ActiveDartInputSink extends $Notifier<DartInputSink?> {
     element.handleCreate(ref, build);
   }
 }
+
+/// A monotonically increasing counter bumped by the game board whenever the
+/// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
+/// the per-turn 3-dart cap in lock-step — without this, advancing via the
+/// board's own next button (which can't reach the tracker) would wedge the cap
+/// and silently block the next player's darts (#380 / #382 rework). Cross-feature
+/// via `core/`, mirroring the sink bridge.
+
+@ProviderFor(ActiveTurnSignal)
+final activeTurnSignalProvider = ActiveTurnSignalProvider._();
+
+/// A monotonically increasing counter bumped by the game board whenever the
+/// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
+/// the per-turn 3-dart cap in lock-step — without this, advancing via the
+/// board's own next button (which can't reach the tracker) would wedge the cap
+/// and silently block the next player's darts (#380 / #382 rework). Cross-feature
+/// via `core/`, mirroring the sink bridge.
+final class ActiveTurnSignalProvider
+    extends $NotifierProvider<ActiveTurnSignal, int> {
+  /// A monotonically increasing counter bumped by the game board whenever the
+  /// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
+  /// the per-turn 3-dart cap in lock-step — without this, advancing via the
+  /// board's own next button (which can't reach the tracker) would wedge the cap
+  /// and silently block the next player's darts (#380 / #382 rework). Cross-feature
+  /// via `core/`, mirroring the sink bridge.
+  ActiveTurnSignalProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activeTurnSignalProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeTurnSignalHash();
+
+  @$internal
+  @override
+  ActiveTurnSignal create() => ActiveTurnSignal();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$activeTurnSignalHash() => r'f4f8746322e0e62b2ed8b960da05781be3a5d49d';
+
+/// A monotonically increasing counter bumped by the game board whenever the
+/// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
+/// the per-turn 3-dart cap in lock-step — without this, advancing via the
+/// board's own next button (which can't reach the tracker) would wedge the cap
+/// and silently block the next player's darts (#380 / #382 rework). Cross-feature
+/// via `core/`, mirroring the sink bridge.
+
+abstract class _$ActiveTurnSignal extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

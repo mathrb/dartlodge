@@ -303,7 +303,11 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 dartsThrownInTurn: dartsThrownInTurn,
                 pulseNext: canNext && !gameState.turnActive,
                 onUndo: () => notifier.undoDart(),
-                onNextRound: () => notifier.nextPlayer(),
+                onNextRound: () {
+                  notifier.nextPlayer();
+                  // Reset the auto-scorer's per-turn cap in lock-step (#380).
+                  ref.read(activeTurnSignalProvider.notifier).bump();
+                },
               ),
             ],
           ),
