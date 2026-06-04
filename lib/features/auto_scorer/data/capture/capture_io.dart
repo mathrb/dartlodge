@@ -135,11 +135,13 @@ Future<CaptureStore> openDefaultCaptureStore() async {
 
 /// Hand an export zip to the OS share sheet (#381 §6) — no photo-library
 /// permission needed. The file is named `dartlodge-export-<ts>.zip` (matching
-/// the probe's ingest glob); the name is constructed here so call sites can't
-/// deviate from the contract.
+/// the probe's ingest glob `dartlodge-export-*.zip`); the name is constructed
+/// here so call sites can't deviate from the contract. `<ts>` is a
+/// filename-safe UTC stamp (`yyyyMMdd-HHmmssZ`) so collected exports read as a
+/// date/time and sort chronologically — no colons/spaces (safe on all
+/// filesystems and the glob).
 Future<void> shareCaptureZip(Uint8List zipBytes) async {
-  final fileName =
-      'dartlodge-export-${DateTime.now().toUtc().millisecondsSinceEpoch}.zip';
+  final fileName = 'dartlodge-export-${_exportStamp()}.zip';
   final tmp = await getTemporaryDirectory();
   final file = File(p.join(tmp.path, fileName));
   await file.writeAsBytes(zipBytes, flush: true);
@@ -147,4 +149,12 @@ Future<void> shareCaptureZip(Uint8List zipBytes) async {
     files: [XFile(file.path, mimeType: 'application/zip')],
     subject: 'DartLodge training data',
   ));
+}
+
+/// Filename-safe UTC timestamp (`yyyyMMdd-HHmmssZ`) for the export zip name.
+String _exportStamp() {
+  final now = DateTime.now().toUtc();
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${now.year.toString().padLeft(4, '0')}${two(now.month)}${two(now.day)}'
+      '-${two(now.hour)}${two(now.minute)}${two(now.second)}Z';
 }
