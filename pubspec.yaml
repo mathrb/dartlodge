@@ -43,7 +43,7 @@ dependencies:
   # Auto-scorer training-data export (#381): zip the captured frames + sidecars
   # and hand them to the OS share sheet (no photo-library permission needed).
   # No existing dep covers zip archiving or the share sheet.
-  archive: ^3.6.1
+  archive: ">=3.6.1 <5.0.0"
   # ^13.x: 10.x pins win32 ^5.5.3, conflicting with package_info_plus ^10.1.0's
   # win32 ^6.0.1 (transitive via wakelock_plus).
   share_plus: ^13.1.0
