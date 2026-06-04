@@ -34,6 +34,9 @@ void main() {
       'capture_handle',
       'timestamp',
       'was_corrected',
+      'frame_space',
+      'frame_width',
+      'frame_height',
     }));
     expect(json['capture_handle'], 't3-d2');
     expect(json['was_corrected'], isFalse);
@@ -57,11 +60,66 @@ void main() {
     expect(restored.wasCorrected, isFalse);
   });
 
+  test('round-trips frame space + dims (raw capture)', () {
+    final original = CaptureRecord(
+      predictedDarts: const [],
+      calPoints: const [],
+      modelVersion: 'm',
+      gameId: 'g',
+      handle: const CaptureHandle(turnOrdinal: 1, dartInTurnOrdinal: 1),
+      timestamp: DateTime.utc(2026, 6, 4),
+      frameSpace: FrameSpace.raw,
+      frameWidth: 1280,
+      frameHeight: 720,
+    );
+    final json = original.toJson();
+    expect(json['frame_space'], 'raw');
+    expect(json['frame_width'], 1280);
+    expect(json['frame_height'], 720);
+    final restored = CaptureRecord.fromJson(json);
+    expect(restored.frameSpace, FrameSpace.raw);
+    expect(restored.frameWidth, 1280);
+    expect(restored.frameHeight, 720);
+  });
+
+  test('pre-brief sidecars default to 800×800 letterbox', () {
+    // An old sidecar written before the frame_space/dims keys existed.
+    final legacy = <String, dynamic>{
+      'predicted_darts': const [],
+      'cal_points': const [],
+      'corrected_darts': const [],
+      'model_version': 'old',
+      'game_id': 'g',
+      'capture_handle': 't1-d1',
+      'timestamp': DateTime.utc(2026, 5, 1).toIso8601String(),
+      'was_corrected': false,
+    };
+    final restored = CaptureRecord.fromJson(legacy);
+    expect(restored.frameSpace, FrameSpace.letterbox800);
+    expect(restored.frameWidth, 800);
+    expect(restored.frameHeight, 800);
+  });
+
   test('withCorrection sets corrected darts and flips was_corrected', () {
-    final corrected = sample().withCorrection(const [
+    final raw = CaptureRecord(
+      predictedDarts: const [],
+      calPoints: const [],
+      modelVersion: 'm',
+      gameId: 'g',
+      handle: const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2),
+      timestamp: DateTime.utc(2026, 6, 4),
+      frameSpace: FrameSpace.raw,
+      frameWidth: 1280,
+      frameHeight: 720,
+    );
+    final corrected = raw.withCorrection(const [
       CorrectedDart(x: 0.55, y: 0.45, segment: 'T20'),
     ]);
     expect(corrected.wasCorrected, isTrue);
+    // Frame space + dims survive a correction (re-attached by handle).
+    expect(corrected.frameSpace, FrameSpace.raw);
+    expect(corrected.frameWidth, 1280);
+    expect(corrected.frameHeight, 720);
     expect(corrected.correctedDarts.single.segment, 'T20');
     // The handle is unchanged — corrections re-attach by handle, not event id.
     expect(corrected.handle, const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));

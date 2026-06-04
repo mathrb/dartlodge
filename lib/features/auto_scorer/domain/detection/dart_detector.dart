@@ -23,10 +23,11 @@ abstract class DartDetector {
 
   /// Detect from a raw camera frame (any size, encoded image bytes).
   ///
-  /// [skipPreprocess] is a diagnostics A/B (#377 §3): when true the
-  /// implementation passes the raw bytes to the model instead of our 800×800
-  /// preprocess. Detections then map to the raw frame, so captures must be
-  /// suppressed while it is set.
+  /// [skipPreprocess] is the default serve path (raw-capture brief; also a
+  /// diagnostics A/B, #377 §3): when true the implementation passes the raw
+  /// bytes to the model instead of our 800×800 preprocess. Detections then map
+  /// to the raw frame, so the session stores the raw frame (not the 800×800
+  /// image) with raw-space coords when capturing under this flag.
   ///
   /// [calConfidence] / [dartConfidence] are the per-class acceptance thresholds
   /// (user-configurable): a cal point / dart counts only at or above its value.

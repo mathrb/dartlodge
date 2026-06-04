@@ -104,30 +104,28 @@ class AutoScorerSession {
     final update = _tracker.processFrame(frame);
     trackWatch.stop();
 
-    // Capture is suppressed under the skip-preprocess A/B: detections then map
-    // to the raw frame, so storing the 800×800 image would misalign the sidecar
-    // coords (the exact bug #390 fixed). Perf measurement only (#377 §3).
-    if (collectData &&
-        !skipPreprocess &&
-        _captureStore != null &&
-        update.newDarts.isNotEmpty) {
-      // Store the SAME 800×800 frame the detector saw — the sidecar coords are
-      // normalised in that frame, so a raw camera frame would misalign them
-      // (#381 stores "the 800×800 frame"). Falls back to raw if the frame can't
-      // be re-encoded.
-      final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
-      // The dart-in-turn ordinal of the first new dart this frame (1-based).
-      final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
-      for (var i = 0; i < update.newDarts.length; i++) {
-        await _captureStore.save(
-          _recordFor(
-            frame,
-            gameId,
-            CaptureHandle(
-                turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
-          ),
-          stored,
-        );
+    if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
+      // Store the image in the SAME space the detector's coords are normalised
+      // to (raw-capture brief): in skip mode the plugin maps detections to the
+      // raw frame, so store `frameBytes` verbatim (no re-encode); otherwise
+      // store our 800×800 letterbox. The sidecar's frameSpace/dims record which.
+      // Null when no aligned capture is possible (see [_captureFor]).
+      final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
+      if (capture != null) {
+        // The dart-in-turn ordinal of the first new dart this frame (1-based).
+        final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
+        for (var i = 0; i < update.newDarts.length; i++) {
+          await _captureStore.save(
+            _recordFor(
+              frame,
+              gameId,
+              CaptureHandle(
+                  turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
+              capture,
+            ),
+            capture.bytes,
+          );
+        }
       }
     }
 
@@ -143,14 +141,16 @@ class AutoScorerSession {
   }
 
   /// Force-capture the current frame for training data (#382) — for darts the
-  /// model **missed** (no emission), the highest-value samples. Stores the same
-  /// 800×800 frame + whatever the detector found this frame (often empty),
-  /// under a manual handle. Out-of-band: does not touch the tracker or emit.
-  /// No-op without a capture store. Returns true if a frame was stored.
+  /// model **missed** (no emission), the highest-value samples. Stores the frame
+  /// in the detector's coordinate space (raw in skip mode, 800×800 letterbox
+  /// otherwise — see [onFrame]) + whatever the detector found this frame (often
+  /// empty), under a manual handle. Out-of-band: does not touch the tracker or
+  /// emit. No-op without a capture store. Returns true if a frame was stored.
   Future<bool> captureCurrentFrame(
     Uint8List frameBytes, {
     required int turnOrdinal,
     required String gameId,
+    bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
   }) async {
@@ -158,15 +158,21 @@ class AutoScorerSession {
     if (store == null) return false;
     final frame = await _detector.detect(
       frameBytes,
+      skipPreprocess: skipPreprocess,
       calConfidence: calConfidence,
       dartConfidence: dartConfidence,
     );
-    final stored = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
+    final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
+    if (capture == null) return false;
     _manualSequence += 1;
     await store.save(
-      _recordFor(frame, gameId,
-          CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence)),
-      stored,
+      _recordFor(
+        frame,
+        gameId,
+        CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence),
+        capture,
+      ),
+      capture.bytes,
     );
     return true;
   }
@@ -182,8 +188,37 @@ class AutoScorerSession {
 
   Future<void> dispose() => _detector.dispose();
 
+  /// Resolve the bytes to store + their coordinate space/dims for the sidecar,
+  /// or null when no capture can be stored with coords that align to the image.
+  /// skip → raw frame verbatim (`raw`); otherwise our 800×800 letterbox
+  /// (`letterbox800`). In non-skip mode the detector's coords are normalised to
+  /// the 800 letterbox, so if the frame can't be re-encoded we return null
+  /// rather than store the raw bytes under a `letterbox800` label (the coords
+  /// would misalign — the very corruption this path avoids). Dims come from the
+  /// codec via the [FramePreprocessor] contract.
+  _Capture? _captureFor(Uint8List frameBytes, {required bool skipPreprocess}) {
+    if (skipPreprocess) {
+      final dims = _preprocessor.dimensionsOf(frameBytes);
+      return _Capture(
+        bytes: frameBytes,
+        space: FrameSpace.raw,
+        width: dims?.width ?? 0,
+        height: dims?.height ?? 0,
+      );
+    }
+    final letterboxed = _preprocessor.preprocessEncoded(frameBytes);
+    if (letterboxed == null) return null;
+    final dims = _preprocessor.dimensionsOf(letterboxed);
+    return _Capture(
+      bytes: letterboxed,
+      space: FrameSpace.letterbox800,
+      width: dims?.width ?? 800,
+      height: dims?.height ?? 800,
+    );
+  }
+
   CaptureRecord _recordFor(DetectionFrame frame, String gameId,
-          CaptureHandle handle) =>
+          CaptureHandle handle, _Capture capture) =>
       CaptureRecord(
         // Per-detection confidence isn't propagated through the tracker path,
         // so captures record candidate positions with conf 1.0 (a known
@@ -197,5 +232,23 @@ class AutoScorerSession {
         gameId: gameId,
         handle: handle,
         timestamp: DateTime.now(),
+        frameSpace: capture.space,
+        frameWidth: capture.width,
+        frameHeight: capture.height,
       );
+}
+
+/// The bytes to persist for a capture plus the sidecar metadata describing
+/// their coordinate space and pixel dims.
+class _Capture {
+  final Uint8List bytes;
+  final FrameSpace space;
+  final int width;
+  final int height;
+  const _Capture({
+    required this.bytes,
+    required this.space,
+    required this.width,
+    required this.height,
+  });
 }
