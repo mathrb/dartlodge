@@ -109,20 +109,23 @@ class AutoScorerSession {
       // to (raw-capture brief): in skip mode the plugin maps detections to the
       // raw frame, so store `frameBytes` verbatim (no re-encode); otherwise
       // store our 800×800 letterbox. The sidecar's frameSpace/dims record which.
+      // Null when no aligned capture is possible (see [_captureFor]).
       final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
-      // The dart-in-turn ordinal of the first new dart this frame (1-based).
-      final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
-      for (var i = 0; i < update.newDarts.length; i++) {
-        await _captureStore.save(
-          _recordFor(
-            frame,
-            gameId,
-            CaptureHandle(
-                turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
-            capture,
-          ),
-          capture.bytes,
-        );
+      if (capture != null) {
+        // The dart-in-turn ordinal of the first new dart this frame (1-based).
+        final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
+        for (var i = 0; i < update.newDarts.length; i++) {
+          await _captureStore.save(
+            _recordFor(
+              frame,
+              gameId,
+              CaptureHandle(
+                  turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
+              capture,
+            ),
+            capture.bytes,
+          );
+        }
       }
     }
 
@@ -160,6 +163,7 @@ class AutoScorerSession {
       dartConfidence: dartConfidence,
     );
     final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
+    if (capture == null) return false;
     _manualSequence += 1;
     await store.save(
       _recordFor(
@@ -184,26 +188,32 @@ class AutoScorerSession {
 
   Future<void> dispose() => _detector.dispose();
 
-  /// Resolve the bytes to store + their coordinate space/dims for the sidecar.
+  /// Resolve the bytes to store + their coordinate space/dims for the sidecar,
+  /// or null when no capture can be stored with coords that align to the image.
   /// skip → raw frame verbatim (`raw`); otherwise our 800×800 letterbox
-  /// (`letterbox800`, falling back to raw if the frame can't be re-encoded).
-  /// Dims come from the codec via the [FramePreprocessor] contract.
-  _Capture _captureFor(Uint8List frameBytes, {required bool skipPreprocess}) {
-    final Uint8List bytes;
-    final FrameSpace space;
+  /// (`letterbox800`). In non-skip mode the detector's coords are normalised to
+  /// the 800 letterbox, so if the frame can't be re-encoded we return null
+  /// rather than store the raw bytes under a `letterbox800` label (the coords
+  /// would misalign — the very corruption this path avoids). Dims come from the
+  /// codec via the [FramePreprocessor] contract.
+  _Capture? _captureFor(Uint8List frameBytes, {required bool skipPreprocess}) {
     if (skipPreprocess) {
-      bytes = frameBytes;
-      space = FrameSpace.raw;
-    } else {
-      bytes = _preprocessor.preprocessEncoded(frameBytes) ?? frameBytes;
-      space = FrameSpace.letterbox800;
+      final dims = _preprocessor.dimensionsOf(frameBytes);
+      return _Capture(
+        bytes: frameBytes,
+        space: FrameSpace.raw,
+        width: dims?.width ?? 0,
+        height: dims?.height ?? 0,
+      );
     }
-    final dims = _preprocessor.dimensionsOf(bytes);
+    final letterboxed = _preprocessor.preprocessEncoded(frameBytes);
+    if (letterboxed == null) return null;
+    final dims = _preprocessor.dimensionsOf(letterboxed);
     return _Capture(
-      bytes: bytes,
-      space: space,
-      width: dims?.width ?? (space == FrameSpace.letterbox800 ? 800 : 0),
-      height: dims?.height ?? (space == FrameSpace.letterbox800 ? 800 : 0),
+      bytes: letterboxed,
+      space: FrameSpace.letterbox800,
+      width: dims?.width ?? 800,
+      height: dims?.height ?? 800,
     );
   }
 

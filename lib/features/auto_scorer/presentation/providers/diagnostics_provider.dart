@@ -6,9 +6,10 @@ part 'diagnostics_provider.g.dart';
 const _kTimingHudKey = 'auto_scorer_timing_hud';
 const _kSkipPreprocessKey = 'auto_scorer_skip_preprocess';
 
-/// Developer diagnostics for the lag investigation (#377 §3). Both default
-/// **off** and are surfaced only under a "Diagnostics" section of the
-/// auto-scoring settings — they never affect a normal scoring session.
+/// Developer diagnostics for the lag investigation (#377 §3), surfaced under a
+/// "Diagnostics" section of the auto-scoring settings. The timing HUD defaults
+/// **off**; the skip-preprocess toggle now defaults **on** (the native serve
+/// path — see its own doc below).
 
 /// Shows the per-frame timing HUD (capture / detect / track) over the board so
 /// we can attribute perceived slowness to a stage rather than guess.

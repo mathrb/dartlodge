@@ -178,7 +178,9 @@ class _AutoScorerBoardOverlayState
       captureWatch.stop();
       if (!mounted) return;
       final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
-      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
+      // Match the provider's persisted default (#raw-capture brief: native on)
+      // so a frame taken before prefs resolve is captured in the right space.
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
       final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
           kDefaultConfidence;
       final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
@@ -219,7 +221,7 @@ class _AutoScorerBoardOverlayState
       final shot = await camera.takePicture();
       final bytes = await shot.readAsBytes();
       if (!mounted) return;
-      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
       final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
           kDefaultConfidence;
       final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??

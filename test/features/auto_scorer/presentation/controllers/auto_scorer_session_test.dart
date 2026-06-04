@@ -177,13 +177,16 @@ void main() {
   });
 
   test('captures the frame when data collection is on', () async {
+    // A decodable frame: the non-skip path letterboxes it (an undecodable
+    // frame can't be aligned and is intentionally not captured).
+    final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
-    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(), 
+    final session = AutoScorerSession(preprocessor: const ImageFramePreprocessor(),
         detector: _FakeDetector(oneDartFrame),
         captureStore: store,
         modelVersion: 'test-v1');
-    await session.onFrame(bytes, turnOrdinal: 4, gameId: 'g', collectData: true);
-    await session.onFrame(bytes, turnOrdinal: 4, gameId: 'g', collectData: true);
+    await session.onFrame(raw, turnOrdinal: 4, gameId: 'g', collectData: true);
+    await session.onFrame(raw, turnOrdinal: 4, gameId: 'g', collectData: true);
     expect(store.saved, hasLength(1));
     expect(store.saved.single.gameId, 'g');
     expect(store.saved.single.handle, const CaptureHandle(turnOrdinal: 4, dartInTurnOrdinal: 1));
@@ -207,6 +210,23 @@ void main() {
     expect(record.frameSpace, FrameSpace.letterbox800);
     expect(record.frameWidth, 800);
     expect(record.frameHeight, 800);
+  });
+
+  test('non-skip mode skips capture when the frame cannot be letterboxed', () async {
+    // Undecodable bytes: the detector's coords would be 800-space but there is
+    // no 800 image to align them to, so nothing is stored (no mislabeled raw).
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(oneDartFrame),
+        captureStore: store);
+    await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', collectData: true);
+    await session.onFrame(bytes, turnOrdinal: 1, gameId: 'g', collectData: true);
+    expect(store.saved, isEmpty);
+    // Manual capture likewise reports "not saved".
+    expect(
+        await session.captureCurrentFrame(bytes, turnOrdinal: 1, gameId: 'g'),
+        isFalse);
   });
 
   test('does not capture when data collection is off', () async {
