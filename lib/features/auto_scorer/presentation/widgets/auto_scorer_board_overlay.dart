@@ -219,6 +219,7 @@ class _AutoScorerBoardOverlayState
       final shot = await camera.takePicture();
       final bytes = await shot.readAsBytes();
       if (!mounted) return;
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? false;
       final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
           kDefaultConfidence;
       final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
@@ -226,6 +227,7 @@ class _AutoScorerBoardOverlayState
       final saved = await session.captureCurrentFrame(bytes,
           turnOrdinal: _turnOrdinal,
           gameId: widget.gameId,
+          skipPreprocess: skip,
           calConfidence: calConf,
           dartConfidence: dartConf);
       messenger.showSnackBar(SnackBar(

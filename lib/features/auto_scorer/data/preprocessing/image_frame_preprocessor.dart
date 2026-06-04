@@ -67,4 +67,18 @@ class ImageFramePreprocessor implements FramePreprocessor {
     if (decoded == null) return null;
     return img.encodePng(preprocess(decoded));
   }
+
+  @override
+  ({int width, int height})? dimensionsOf(Uint8List bytes) {
+    // Decode can throw on malformed input; degrade to null like
+    // [preprocessEncoded] rather than crash the (rare) capture path.
+    img.Image? decoded;
+    try {
+      decoded = img.decodeImage(bytes);
+    } catch (_) {
+      return null;
+    }
+    if (decoded == null) return null;
+    return (width: decoded.width, height: decoded.height);
+  }
 }

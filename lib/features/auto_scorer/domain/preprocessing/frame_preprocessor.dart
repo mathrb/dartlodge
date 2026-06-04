@@ -10,4 +10,11 @@ abstract interface class FramePreprocessor {
   /// and re-encode. Returns null when the bytes can't be decoded (a corrupt
   /// frame must degrade to "no detection", never crash the capture loop).
   Uint8List? preprocessEncoded(Uint8List bytes);
+
+  /// Pixel dimensions of an encoded frame, or null when the bytes can't be
+  /// decoded. Used by the capture path to stamp the sidecar's `frame_width` /
+  /// `frame_height` so the probe knows the stored image's source dims. The
+  /// codec lives in `data/`, so the orchestrator reads dims through this
+  /// contract rather than importing the `image` package.
+  ({int width, int height})? dimensionsOf(Uint8List bytes);
 }

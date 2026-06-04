@@ -28,19 +28,20 @@ class AutoScorerTimingHudEnabled extends _$AutoScorerTimingHudEnabled {
 }
 
 /// Preprocess toggle (#377 §3): when on, pass raw camera bytes to the plugin
-/// (native resize) instead of our 800×800 center-crop. Default **off** — the
-/// model trained on 800×800, so preprocessing is the accurate path; skipping is
-/// the much-faster option for users who accept the input-distribution shift.
-/// Threaded into `DartDetector.detect` per frame by the session, so it takes
-/// effect on the next tick (no camera restart). The session suppresses training
-/// capture while it is on, because raw-frame coords don't align with a stored
-/// 800×800 image.
+/// (native letterbox resize) instead of our Dart-side 800×800 letterbox.
+/// Default **on** (raw-capture brief) — the plugin's native path detected
+/// better *and* faster on-device than our double-resample/PNG-round-trip, and
+/// it lets training capture store the raw frame with raw-space coords. The
+/// Dart preprocess remains the A/B alternative behind this toggle + the timing
+/// HUD. Threaded into `DartDetector.detect` per frame by the session, so it
+/// takes effect on the next tick (no camera restart); the session captures the
+/// frame in whichever space matches the detector's coords.
 @Riverpod(keepAlive: true)
 class AutoScorerSkipPreprocess extends _$AutoScorerSkipPreprocess {
   @override
   Future<bool> build() async {
     final prefs = await ref.watch(sharedPreferencesProvider.future);
-    return prefs.getBool(_kSkipPreprocessKey) ?? false;
+    return prefs.getBool(_kSkipPreprocessKey) ?? true;
   }
 
   Future<void> setEnabled(bool enabled) async {
