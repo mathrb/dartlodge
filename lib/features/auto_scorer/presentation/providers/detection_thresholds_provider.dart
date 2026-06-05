@@ -7,7 +7,7 @@ const _kCalConfidenceKey = 'auto_scorer_cal_confidence';
 const _kDartConfidenceKey = 'auto_scorer_dart_confidence';
 
 /// Default acceptance threshold (matches the plugin's historical predict
-/// default). The point of making it configurable (#377 §3) is that the round7
+/// default). The point of making it configurable (#377 §3) is that the bundled
 /// model's recall numbers are measured at a near-zero eval threshold, so a
 /// lower operating threshold recovers borderline cal points / darts.
 const double kDefaultConfidence = 0.25;
