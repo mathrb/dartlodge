@@ -5,6 +5,7 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
@@ -78,7 +79,10 @@ class _AutoScorerBoardOverlayState
       final store = await ref.read(captureStoreProvider.future);
       final preprocessor = ref.read(framePreprocessorProvider);
       final session = AutoScorerSession(
-          detector: detector, preprocessor: preprocessor, captureStore: store);
+          detector: detector,
+          preprocessor: preprocessor,
+          captureStore: store,
+          modelVersion: kAutoScorerModelVersion);
       final loaded = await session.start();
       if (!mounted) return;
       if (!loaded) {

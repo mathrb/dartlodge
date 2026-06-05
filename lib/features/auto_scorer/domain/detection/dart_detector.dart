@@ -8,6 +8,12 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.
 /// `docs/AUTO_SCORER_ENABLEMENT.md`).
 const String kAutoScorerModelAsset = 'assets/models/dart_auto_scorer.tflite';
 
+/// Stem of the bundled model's source `.pt`, recorded as `model_version` on
+/// every training capture so the probe can attribute each sample to the model
+/// that produced its predictions. Matches the probe's `pre_annotate` stem
+/// convention — bump this in lock-step with [kAutoScorerModelAsset].
+const String kAutoScorerModelVersion = 'dart_round11b_withcal';
+
 /// Runs the on-device detector and returns a [DetectionFrame] (cal points +
 /// dart candidates) for the tracker. Implementations preprocess the raw frame
 /// to 800×800 exactly as the training data (#377 §2) before inference.

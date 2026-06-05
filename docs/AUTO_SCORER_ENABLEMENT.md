@@ -77,11 +77,13 @@ Settings → **Camera auto-scoring** → turn on **Use auto-scoring** (and
 3-dot menu then shows **Auto-scoring**, which opens the camera capture page.
 Detected darts are emitted into the game with `input_method: 'camera'`.
 
-**There is no code-enforced recall gate.** When the toggle is on and a model is
-loaded, every detected dart is emitted. Per `#377` §2 the ship signal is model
-recall (~0.95 dart recall on your real board), not "the code works". The current
-`dart_round7_withcal` has dart recall ~0.747 (cal recall 0.94–1.00), so treat it
-as **assist / data-collection only** — don't trust the emitted scores yet.
+**There is no code-enforced accuracy gate.** When the toggle is on and a model
+is loaded, every detected dart is emitted. Per `#377` §2 the ship signal is the
+model's real-board accuracy, not "the code works". The probe ranks rounds by
+per-dart segment accuracy on the raw serve golden; the current
+`dart_round11b_withcal` scores ~86.5% (R7-independent subset) vs the 88.9% ship
+bar at 720p, so treat it as **assist / data-collection only** — don't trust the
+emitted scores yet.
 
 ## Known gaps (deferred)
 
