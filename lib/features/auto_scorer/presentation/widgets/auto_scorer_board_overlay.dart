@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -444,6 +445,16 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     }
   }
 
+  /// Stop detecting, then return [result]. Cancelling the timer on commit means
+  /// no aim-view `takePicture()` fires during the route transition — otherwise
+  /// it could race the parent's headless `_tick` (started by `_beginRunning`)
+  /// for the same camera.
+  void _finish(bool result) {
+    _timer?.cancel();
+    _timer = null;
+    Navigator.of(context).pop(result);
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -483,7 +494,8 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                       skipPreprocess: widget.skipPreprocess,
                       calConfidence: widget.calConfidence,
                       rawFrameSize: controller.value.previewSize,
-                      scheme: Theme.of(context).colorScheme,
+                      acceptedColor: Theme.of(context).colorScheme.primary,
+                      subColor: AppTheme.award(context),
                     ),
                   ),
                 ],
@@ -499,10 +511,10 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     FilledButton.tonal(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () => _finish(false),
                         child: const Text('Cancel')),
                     FilledButton.icon(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () => _finish(true),
                       icon: const Icon(Icons.check),
                       label: const Text('Done aiming'),
                     ),

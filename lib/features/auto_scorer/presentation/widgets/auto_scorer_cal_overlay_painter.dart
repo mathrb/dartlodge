@@ -54,14 +54,20 @@ class CalOverlayPainter extends CustomPainter {
     required this.frame,
     required this.skipPreprocess,
     required this.calConfidence,
-    required this.scheme,
+    required this.acceptedColor,
+    required this.subColor,
     this.rawFrameSize,
   });
 
   final DetectionFrame? frame;
   final bool skipPreprocess;
   final double calConfidence;
-  final ColorScheme scheme;
+
+  /// Marker color for a cal at/above [calConfidence] (themed, e.g. primary).
+  final Color acceptedColor;
+
+  /// Marker color for a detected-but-sub-threshold cal (themed warning/amber).
+  final Color subColor;
   final Size? rawFrameSize;
 
   static const double _dotRadius = 9;
@@ -71,8 +77,8 @@ class CalOverlayPainter extends CustomPainter {
     final f = frame;
     if (f == null) return;
 
-    final accepted = scheme.primary;
-    const sub = Color(0xFFFFB300); // amber — detected but below threshold
+    final accepted = acceptedColor;
+    final sub = subColor;
     final outline = Paint()
       ..color = Colors.black.withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
@@ -105,7 +111,7 @@ class CalOverlayPainter extends CustomPainter {
 
   void _header(Canvas canvas, Size size, int found, bool calibrated) {
     final text = calibrated ? '✓ calibrated' : '$found/4 cals — reframe';
-    final color = calibrated ? scheme.primary : const Color(0xFFFFB300);
+    final color = calibrated ? acceptedColor : subColor;
     final tp = _painter(text, color, 14);
     const pad = 6.0;
     final origin = const Offset(8, 8);
@@ -146,5 +152,6 @@ class CalOverlayPainter extends CustomPainter {
       old.skipPreprocess != skipPreprocess ||
       old.calConfidence != calConfidence ||
       old.rawFrameSize != rawFrameSize ||
-      old.scheme != scheme;
+      old.acceptedColor != acceptedColor ||
+      old.subColor != subColor;
 }
