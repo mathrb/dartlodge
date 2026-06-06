@@ -54,6 +54,12 @@ DetectionFrame buildDetectionFrame(
   final calBest = [for (final c in classes.calClasses) bestOf(c)];
   // Diagnostic: best conf per cal class (or null), independent of the threshold.
   final calConfidences = [for (final b in calBest) b?.conf];
+  // Diagnostic: best position per cal class (or null) — index-aligned with
+  // calConfidences. Exposes partial cals (the aim overlay shows which the model
+  // sees) even though calPoints stays all-or-nothing for the tracker.
+  final calBestPoints = [
+    for (final b in calBest) b == null ? null : (x: b.x, y: b.y)
+  ];
   // Calibration uses only cals at/above the threshold; all-or-nothing.
   final accepted =
       [for (final b in calBest) (b != null && b.conf >= calMinConfidence) ? b : null];
@@ -71,5 +77,6 @@ DetectionFrame buildDetectionFrame(
     calPoints: calPoints,
     dartCandidates: darts,
     calConfidences: calConfidences,
+    calBestPoints: calBestPoints,
   );
 }

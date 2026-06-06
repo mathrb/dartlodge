@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -11,6 +12,8 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_coll
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_cal_overlay_painter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_timing_hud.dart';
 import 'package:flutter/material.dart';
@@ -110,9 +113,22 @@ class _AutoScorerBoardOverlayState
       // runtime object). Returns true on "Done", false/null on cancel or back.
       // _starting stays true so the bar shows a spinner behind the modal rather
       // than re-exposing "Start camera".
+      // Resolve detection settings once for the aim overlay (this state has
+      // `ref`; the aim view stays riverpod-free). Defaults match the providers.
+      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
+      final calConf =
+          ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
+      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
+          kDefaultConfidence;
       final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _AutoScorerAimView(controller: controller!),
+        builder: (_) => _AutoScorerAimView(
+          controller: controller!,
+          session: session,
+          skipPreprocess: skip,
+          calConfidence: calConf,
+          dartConfidence: dartConf,
+        ),
       ));
       if (!mounted) return;
       if (done == true) {
@@ -370,19 +386,122 @@ class _AutoScorerBoardOverlayState
 /// One-time fullscreen aim preview (#377 §5.2), pushed as a transient route by
 /// the control bar so the persistent UI never covers the scoreboard. Returns
 /// `true` on "Done aiming", `false` on cancel.
-class _AutoScorerAimView extends StatelessWidget {
-  const _AutoScorerAimView({required this.controller});
+///
+/// Runs detection-only inference on a timer while aiming and overlays the
+/// model's per-cal predictions on the live preview, so the user can reframe
+/// until all four cals are found. It is handed the already-open [controller] and
+/// [session] (owned by the parent) and must NOT dispose either.
+class _AutoScorerAimView extends StatefulWidget {
+  const _AutoScorerAimView({
+    required this.controller,
+    required this.session,
+    required this.skipPreprocess,
+    required this.calConfidence,
+    required this.dartConfidence,
+  });
 
   final CameraController controller;
+  final AutoScorerSession session;
+  final bool skipPreprocess;
+  final double calConfidence;
+  final double dartConfidence;
+
+  @override
+  State<_AutoScorerAimView> createState() => _AutoScorerAimViewState();
+}
+
+class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
+  Timer? _timer;
+  bool _busy = false;
+  DetectionFrame? _latest;
+
+  @override
+  void initState() {
+    super.initState();
+    // Same cadence + _busy guard as the headless _tick loop.
+    _timer = Timer.periodic(
+        const Duration(milliseconds: 700), (_) => _detectTick());
+  }
+
+  Future<void> _detectTick() async {
+    if (_busy) return;
+    _busy = true;
+    try {
+      final shot = await widget.controller.takePicture();
+      final bytes = await shot.readAsBytes();
+      if (!mounted) return;
+      final frame = await widget.session.detectOnly(
+        bytes,
+        skipPreprocess: widget.skipPreprocess,
+        calConfidence: widget.calConfidence,
+        dartConfidence: widget.dartConfidence,
+      );
+      if (!mounted) return;
+      setState(() => _latest = frame);
+    } catch (_) {
+      // Drop this frame; the next tick retries (mirrors _tick).
+    } finally {
+      _busy = false;
+    }
+  }
+
+  /// Stop detecting, then return [result]. Cancelling the timer on commit means
+  /// no aim-view `takePicture()` fires during the route transition — otherwise
+  /// it could race the parent's headless `_tick` (started by `_beginRunning`)
+  /// for the same camera.
+  void _finish(bool result) {
+    _timer?.cancel();
+    _timer = null;
+    Navigator.of(context).pop(result);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    // Do NOT dispose controller/session — owned by the parent overlay; the
+    // headless run after "Done" reuses them.
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
+    final calibrated = _latest?.hasCalibration ?? false;
+    final found =
+        _latest?.calBestPoints.where((p) => p != null).length ?? 0;
+    final hint = _latest == null
+        ? 'Aim at the board…'
+        : calibrated
+            ? 'All 4 cals detected — Done aiming'
+            : '$found/4 cals — reframe so all 4 show';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          CameraPreview(controller),
+          // Preview + overlay share one AspectRatio rect, so normalised cal
+          // coords map by a plain multiply against the painter's canvas size.
+          Center(
+            child: AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CameraPreview(controller),
+                  CustomPaint(
+                    painter: CalOverlayPainter(
+                      frame: _latest,
+                      skipPreprocess: widget.skipPreprocess,
+                      calConfidence: widget.calConfidence,
+                      rawFrameSize: controller.value.previewSize,
+                      acceptedColor: Theme.of(context).colorScheme.primary,
+                      subColor: AppTheme.award(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
             child: Align(
               alignment: Alignment.bottomCenter,
@@ -392,10 +511,10 @@ class _AutoScorerAimView extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     FilledButton.tonal(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () => _finish(false),
                         child: const Text('Cancel')),
                     FilledButton.icon(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () => _finish(true),
                       icon: const Icon(Icons.check),
                       label: const Text('Done aiming'),
                     ),
@@ -404,13 +523,13 @@ class _AutoScorerAimView extends StatelessWidget {
               ),
             ),
           ),
-          const Align(
+          Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Text('Aim at the board, then Done',
-                    style: TextStyle(color: Colors.white)),
+                padding: const EdgeInsets.all(12),
+                child: Text(hint,
+                    style: const TextStyle(color: Colors.white)),
               ),
             ),
           ),

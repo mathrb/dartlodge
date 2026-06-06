@@ -138,6 +138,32 @@ void main() {
     expect(detector.lastDartConfidence, 0.4);
   });
 
+  test('detectOnly returns the detector frame and threads its args', () async {
+    final detector = _FakeDetector(oneDartFrame);
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(), detector: detector);
+    final frame = await session.detectOnly(bytes,
+        skipPreprocess: true, calConfidence: 0.1, dartConfidence: 0.4);
+    expect(identical(frame, oneDartFrame), isTrue);
+    expect(detector.lastSkipPreprocess, isTrue);
+    expect(detector.lastCalConfidence, 0.1);
+    expect(detector.lastDartConfidence, 0.4);
+  });
+
+  test('detectOnly runs neither the tracker nor capture', () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(oneDartFrame),
+        captureStore: store);
+    // Two onFrame calls would confirm+emit a dart and capture it; detectOnly
+    // must do neither, no matter how many times it's called.
+    await session.detectOnly(bytes);
+    await session.detectOnly(bytes);
+    expect(session.dartsOnBoard, 0);
+    expect(store.saved, isEmpty);
+  });
+
   test('onFrame surfaces the detector cal confidences', () async {
     final frame = DetectionFrame(
       calPoints: const [],

@@ -140,6 +140,26 @@ class AutoScorerSession {
     );
   }
 
+  /// Detection-only pass for the aim/framing overlay: runs the model and returns
+  /// its raw [DetectionFrame] (cal points + per-cal best positions/confidences +
+  /// candidates) WITHOUT touching the tracker, emitting darts, or capturing
+  /// frames. The single detection entry point the aim view uses so the widget
+  /// never imports the detector. [skipPreprocess]/[calConfidence]/
+  /// [dartConfidence] thread through exactly as [onFrame].
+  Future<DetectionFrame> detectOnly(
+    Uint8List frameBytes, {
+    bool skipPreprocess = false,
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
+  }) {
+    return _detector.detect(
+      frameBytes,
+      skipPreprocess: skipPreprocess,
+      calConfidence: calConfidence,
+      dartConfidence: dartConfidence,
+    );
+  }
+
   /// Force-capture the current frame for training data (#382) — for darts the
   /// model **missed** (no emission), the highest-value samples. Stores the frame
   /// in the detector's coordinate space (raw in skip mode, 800×800 letterbox
