@@ -127,5 +127,37 @@ void main() {
       expect(frame.calConfidences[2], isNull); // cal3 not detected
       expect(frame.calConfidences[3], closeTo(0.80, 1e-9));
     });
+
+    test('calBestPoints exposes partial cal positions (aim overlay)', () {
+      // Only cal1 + cal2 found, cal2 even below a 0.25 threshold: calPoints is
+      // empty (all-or-nothing) but calBestPoints still carries both positions.
+      final frame = buildDetectionFrame([
+        det(1, 0.50, 0.20, 0.91),
+        det(2, 0.50, 0.80, 0.10),
+        // cal3, cal4 absent
+      ], calMinConfidence: 0.25);
+      expect(frame.hasCalibration, isFalse);
+      expect(frame.calPoints, isEmpty);
+      expect(frame.calBestPoints, hasLength(4));
+      expect(frame.calBestPoints[0], (x: 0.50, y: 0.20));
+      expect(frame.calBestPoints[1], (x: 0.50, y: 0.80)); // sub-threshold, still shown
+      expect(frame.calBestPoints[2], isNull);
+      expect(frame.calBestPoints[3], isNull);
+    });
+
+    test('calBestPoints is index-aligned with calConfidences when full', () {
+      final frame = buildDetectionFrame([
+        det(1, 0.5, 0.2, 0.9),
+        det(2, 0.5, 0.8, 0.9),
+        det(3, 0.2, 0.5, 0.9),
+        det(4, 0.8, 0.5, 0.9),
+      ]);
+      expect(frame.calBestPoints, hasLength(4));
+      for (var i = 0; i < 4; i++) {
+        expect(frame.calBestPoints[i], isNotNull);
+        expect(frame.calConfidences[i], isNotNull);
+      }
+      expect(frame.calBestPoints[2], (x: 0.2, y: 0.5)); // cal3 position
+    });
   });
 }

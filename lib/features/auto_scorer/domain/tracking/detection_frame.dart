@@ -18,10 +18,19 @@ class DetectionFrame {
   /// so non-detector constructors (tests) need not supply it.
   final List<double?> calConfidences;
 
+  /// Best detected position per cal class `[cal1, cal2, cal3, cal4]`, or null
+  /// where that class wasn't detected this frame — index-aligned with
+  /// [calConfidences]. **Diagnostic only**, like [calConfidences]: unlike
+  /// [calPoints] (all-or-nothing) this exposes a cal's position even when the
+  /// full set is incomplete, so the aim overlay can show *which* cals the model
+  /// sees while the user reframes. The tracker does not read it.
+  final List<BoardPoint?> calBestPoints;
+
   const DetectionFrame({
     required this.calPoints,
     required this.dartCandidates,
     this.calConfidences = const [null, null, null, null],
+    this.calBestPoints = const [null, null, null, null],
   });
 
   /// True when all four calibration points were detected this frame — required
