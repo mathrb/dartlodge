@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -546,7 +547,7 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         const SizedBox(width: 8),
         SizedBox(
           width: 44,
-          child: Text('${clamped.toStringAsFixed(1)}×',
+          child: Text('${StatFormatter.fmtDouble(clamped)}×',
               textAlign: TextAlign.end,
               style: const TextStyle(color: Colors.white)),
         ),
