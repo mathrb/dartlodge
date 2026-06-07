@@ -574,15 +574,19 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     final fill =
         _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final ready = _stability.isReady;
+    // Hint priority mirrors the button state so it always explains why the
+    // button is enabled/disabled: stability (not fill) is the gate, so when not
+    // ready we always say "Hold steady". Fill is advisory — it only surfaces
+    // once ready (button enabled), as a soft "for better accuracy" nudge.
     final hint = _latest == null
         ? 'Aim at the board…'
         : !calibrated
             ? '$found/4 markers — reframe so all 4 show. Any board rotation is fine.'
-            : fill < kGoodFillRatio
-                ? 'All 4 markers found — move closer or zoom in to fill the frame'
-                : ready
-                    ? 'Ready — Done aiming'
-                    : 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}';
+            : !ready
+                ? 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}'
+                : fill < kGoodFillRatio
+                    ? 'Ready — move closer or zoom in for better accuracy, or Done aiming'
+                    : 'Ready — Done aiming';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
