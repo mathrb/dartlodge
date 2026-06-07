@@ -5,6 +5,7 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
@@ -561,11 +562,15 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     final calibrated = _latest?.hasCalibration ?? false;
     final found =
         _latest?.calBestPoints.where((p) => p != null).length ?? 0;
+    final fill =
+        _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final hint = _latest == null
         ? 'Aim at the board…'
         : calibrated
-            ? 'All 4 cals detected — Done aiming'
-            : '$found/4 cals — reframe so all 4 show';
+            ? (fill < kGoodFillRatio
+                ? 'All 4 markers found — move closer or zoom in to fill the frame'
+                : 'All 4 markers found — Done aiming')
+            : '$found/4 markers — reframe so all 4 show. Any board rotation is fine.';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -588,6 +593,7 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                       rawFrameSize: controller.value.previewSize,
                       acceptedColor: Theme.of(context).colorScheme.primary,
                       subColor: AppTheme.award(context),
+                      guideColor: Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
