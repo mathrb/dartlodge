@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/camera_zoom_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
@@ -120,6 +122,27 @@ class _AutoScorerBoardOverlayState
           ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
       final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
           kDefaultConfidence;
+      // Resolve the device's zoom range and apply the persisted level once
+      // before the aim view opens (#393 setup flow: a tighter frame = more board
+      // pixels in the 800 letterbox). A device with no zoom reports
+      // minZoom == maxZoom == 1.0, and the aim view hides the slider.
+      var minZoom = 1.0;
+      var maxZoom = 1.0;
+      try {
+        minZoom = await controller.getMinZoomLevel();
+        maxZoom = await controller.getMaxZoomLevel();
+      } catch (_) {
+        // Zoom unsupported — leave both at 1.0 (slider hidden).
+      }
+      final initialZoom = (ref.read(autoScorerCameraZoomProvider).value ??
+              kDefaultCameraZoom)
+          .clamp(minZoom, maxZoom);
+      try {
+        await controller.setZoomLevel(initialZoom);
+      } catch (_) {
+        // Best-effort; the live preview still works at the default level.
+      }
+      if (!mounted) return;
       final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
         fullscreenDialog: true,
         builder: (_) => _AutoScorerAimView(
@@ -128,6 +151,11 @@ class _AutoScorerBoardOverlayState
           skipPreprocess: skip,
           calConfidence: calConf,
           dartConfidence: dartConf,
+          minZoom: minZoom,
+          maxZoom: maxZoom,
+          initialZoom: initialZoom,
+          onZoomChanged: (z) =>
+              ref.read(autoScorerCameraZoomProvider.notifier).set(z),
         ),
       ));
       if (!mounted) return;
@@ -398,6 +426,10 @@ class _AutoScorerAimView extends StatefulWidget {
     required this.skipPreprocess,
     required this.calConfidence,
     required this.dartConfidence,
+    required this.minZoom,
+    required this.maxZoom,
+    required this.initialZoom,
+    required this.onZoomChanged,
   });
 
   final CameraController controller;
@@ -405,6 +437,16 @@ class _AutoScorerAimView extends StatefulWidget {
   final bool skipPreprocess;
   final double calConfidence;
   final double dartConfidence;
+
+  /// Device zoom range (`minZoom == maxZoom` ⇒ no zoom; slider hidden).
+  final double minZoom;
+  final double maxZoom;
+
+  /// Zoom already applied to [controller] when the view opens.
+  final double initialZoom;
+
+  /// Persist the chosen zoom (wired to the camera-zoom notifier by the parent).
+  final void Function(double zoom) onZoomChanged;
 
   @override
   State<_AutoScorerAimView> createState() => _AutoScorerAimViewState();
@@ -414,6 +456,18 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   Timer? _timer;
   bool _busy = false;
   DetectionFrame? _latest;
+  // Clamp to the slider's own range, not just [minZoom, maxZoom]: if a device
+  // reports maxZoom > the ceiling, the camera was opened at initialZoom but the
+  // slider only goes to _sliderMax, so keep the field in lock-step with what the
+  // slider can display.
+  late double _zoom = widget.initialZoom.clamp(widget.minZoom, _sliderMax);
+
+  /// Cap the slider so a phone reporting a large *digital* zoom (e.g. 8×) can't
+  /// be driven into a mushy, low-detail frame that hurts detection.
+  static const double _zoomCeiling = 5.0;
+
+  bool get _zoomSupported => widget.maxZoom > widget.minZoom;
+  double get _sliderMax => widget.maxZoom.clamp(widget.minZoom, _zoomCeiling);
 
   @override
   void initState() {
@@ -421,6 +475,15 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     // Same cadence + _busy guard as the headless _tick loop.
     _timer = Timer.periodic(
         const Duration(milliseconds: 700), (_) => _detectTick());
+  }
+
+  Future<void> _setZoom(double value) async {
+    setState(() => _zoom = value);
+    try {
+      await widget.controller.setZoomLevel(value);
+    } catch (_) {
+      // Ignore transient failures (e.g. controller mid-transition).
+    }
   }
 
   Future<void> _detectTick() async {
@@ -461,6 +524,35 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     // Do NOT dispose controller/session — owned by the parent overlay; the
     // headless run after "Done" reuses them.
     super.dispose();
+  }
+
+  /// Zoom control over the live preview. White-on-black to stay legible over the
+  /// camera feed (matches the hint text styling in this view). Persists only on
+  /// release (`onChangeEnd`) to avoid SharedPrefs churn while dragging.
+  Widget _zoomSlider() {
+    final clamped = _zoom.clamp(widget.minZoom, _sliderMax);
+    return Row(
+      children: [
+        const Icon(Icons.zoom_out, color: Colors.white, size: 20),
+        Expanded(
+          child: Slider(
+            min: widget.minZoom,
+            max: _sliderMax,
+            value: clamped,
+            onChanged: (v) => _setZoom(v),
+            onChangeEnd: widget.onZoomChanged,
+          ),
+        ),
+        const Icon(Icons.zoom_in, color: Colors.white, size: 20),
+        const SizedBox(width: 8),
+        SizedBox(
+          width: 44,
+          child: Text('${StatFormatter.fmtDouble(clamped)}×',
+              textAlign: TextAlign.end,
+              style: const TextStyle(color: Colors.white)),
+        ),
+      ],
+    );
   }
 
   @override
@@ -507,16 +599,22 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
               alignment: Alignment.bottomCenter,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    FilledButton.tonal(
-                        onPressed: () => _finish(false),
-                        child: const Text('Cancel')),
-                    FilledButton.icon(
-                      onPressed: () => _finish(true),
-                      icon: const Icon(Icons.check),
-                      label: const Text('Done aiming'),
+                    if (_zoomSupported) _zoomSlider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        FilledButton.tonal(
+                            onPressed: () => _finish(false),
+                            child: const Text('Cancel')),
+                        FilledButton.icon(
+                          onPressed: () => _finish(true),
+                          icon: const Icon(Icons.check),
+                          label: const Text('Done aiming'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
