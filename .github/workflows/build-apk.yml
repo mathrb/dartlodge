@@ -70,10 +70,20 @@ jobs:
       - name: Generate launcher icons
         run: dart run flutter_launcher_icons
 
-      # PRs only need to verify the Android build compiles. No artifact upload.
+      # PRs build a debug APK to verify compilation, and upload it as a 7-day
+      # artifact so camera/device-only changes (no CameraPreview in widget tests)
+      # can be sideloaded and verified from the PR without merging to main.
       - name: Build debug APK (PR)
         if: github.event_name == 'pull_request'
         run: flutter build apk --debug
+
+      - name: Upload PR debug APK artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v7
+        with:
+          name: dartlodge-pr-${{ github.event.pull_request.number }}-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
 
       # Push to main produces a release-mode APK as a 7-day artifact for
       # internal testing. Release tagging produces the publishable, signed
