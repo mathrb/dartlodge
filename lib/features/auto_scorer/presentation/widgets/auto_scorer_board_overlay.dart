@@ -18,7 +18,6 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_pre
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_view_geometry.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_cal_overlay_painter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
@@ -642,39 +641,27 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Full-screen (cover) preview: the AspectRatio still lays preview +
-          // overlay out in one shared rect (so the cal-coord mapping stays a
-          // plain multiply against the painter's canvas size), and Transform.
-          // scale — a paint-time transform that does NOT change that layout
-          // size — enlarges preview AND overlay identically to fill the screen,
-          // cropping the overflow (ClipRect bounds it). Detection is unaffected
-          // (it runs on the full captured frame, not this preview).
-          ClipRect(
-            child: Transform.scale(
-              scale: coverScale(MediaQuery.of(context).size.aspectRatio,
-                  controller.value.aspectRatio),
-              alignment: Alignment.center,
-              child: Center(
-                child: AspectRatio(
-                  aspectRatio: controller.value.aspectRatio,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      CameraPreview(controller),
-                      CustomPaint(
-                        painter: CalOverlayPainter(
-                          frame: _latest,
-                          skipPreprocess: widget.skipPreprocess,
-                          calConfidence: widget.calConfidence,
-                          rawFrameSize: controller.value.previewSize,
-                          acceptedColor: Theme.of(context).colorScheme.primary,
-                          subColor: AppTheme.award(context),
-                          guideColor: Colors.white.withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ],
+          // Preview + overlay share one AspectRatio rect, so normalised cal
+          // coords map by a plain multiply against the painter's canvas size.
+          Center(
+            child: AspectRatio(
+              aspectRatio: controller.value.aspectRatio,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CameraPreview(controller),
+                  CustomPaint(
+                    painter: CalOverlayPainter(
+                      frame: _latest,
+                      skipPreprocess: widget.skipPreprocess,
+                      calConfidence: widget.calConfidence,
+                      rawFrameSize: controller.value.previewSize,
+                      acceptedColor: Theme.of(context).colorScheme.primary,
+                      subColor: AppTheme.award(context),
+                      guideColor: Colors.white.withValues(alpha: 0.5),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
