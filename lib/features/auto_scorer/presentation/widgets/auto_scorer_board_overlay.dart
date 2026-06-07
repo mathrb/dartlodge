@@ -69,9 +69,11 @@ class _AutoScorerBoardOverlayState
   /// the diagnostics HUD so the user can tune the calibration threshold.
   List<double?> _calConfidences = const [null, null, null, null];
 
-  /// idle → aiming → running: load the model + open the camera, push a one-time
-  /// fullscreen aim preview, then (on "Done") start headless detection. The aim
-  /// step is a transient route so this bar never grows to cover the scoreboard.
+  /// idle → (one-time setup tips) → aiming → running: show the tips on first run
+  /// (before any heavy load, so cancelling is free), then load the model + open
+  /// the camera, push a one-time fullscreen aim preview, then (on "Done") start
+  /// headless detection. The aim step is a transient route so this bar never
+  /// grows to cover the scoreboard.
   Future<void> _start() async {
     setState(() {
       _error = null;

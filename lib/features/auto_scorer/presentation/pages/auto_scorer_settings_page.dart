@@ -51,12 +51,13 @@ class AutoScorerSettingsPage extends ConsumerWidget {
               final result = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
                       builder: (_) => const AutoScorerSetupTipsView()));
-              // Honour "don't show again" when reviewed here too (null = back,
-              // leaves the pref untouched).
-              if (result != null) {
+              // Only honour "don't show again" (true); never write false here,
+              // or reviewing the tips without re-checking the box would silently
+              // un-dismiss them. Mirrors the board overlay's _start() handling.
+              if (result == true) {
                 ref
                     .read(autoScorerSetupTipsSeenProvider.notifier)
-                    .setSeen(result);
+                    .setSeen(true);
               }
             },
           ),
