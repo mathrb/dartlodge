@@ -11,6 +11,11 @@
 /// Returns `1.0` for non-finite or non-positive inputs (degenerate layout before
 /// the camera/preview sizes are known), so the preview just shows contained
 /// rather than scaling by NaN/Infinity.
+///
+/// Geometry: an `AspectRatio(previewAspect)` laid out contained inside a screen
+/// of aspect [screenAspect] fills the screen's *shorter* relative axis; to also
+/// cover the longer one it must grow by `max(previewAspect/screenAspect,
+/// screenAspect/previewAspect)` — the aspect ratio of the two, NOT their product.
 double coverScale(double screenAspect, double previewAspect) {
   if (!screenAspect.isFinite ||
       !previewAspect.isFinite ||
@@ -18,6 +23,6 @@ double coverScale(double screenAspect, double previewAspect) {
       previewAspect <= 0) {
     return 1.0;
   }
-  final scale = screenAspect * previewAspect;
-  return scale < 1 ? 1 / scale : scale;
+  final ratio = previewAspect / screenAspect;
+  return ratio < 1 ? 1 / ratio : ratio;
 }
