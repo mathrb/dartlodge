@@ -641,27 +641,22 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Preview + overlay share one AspectRatio rect, so normalised cal
-          // coords map by a plain multiply against the painter's canvas size.
-          Center(
-            child: AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CameraPreview(controller),
-                  CustomPaint(
-                    painter: CalOverlayPainter(
-                      frame: _latest,
-                      skipPreprocess: widget.skipPreprocess,
-                      calConfidence: widget.calConfidence,
-                      rawFrameSize: controller.value.previewSize,
-                      acceptedColor: Theme.of(context).colorScheme.primary,
-                      subColor: AppTheme.award(context),
-                      guideColor: Colors.white.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
+          // Full-screen preview, as it was before the cal overlay existed (#408
+          // wrapped it in Center>AspectRatio to anchor the overlay, which shrank
+          // it to a letterboxed band). CameraPreview fills the Stack; the overlay
+          // fills the SAME area, so it maps detection coords (0–1) onto the same
+          // rect the preview fills → aligned, no AspectRatio band, no rotation.
+          CameraPreview(controller),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CalOverlayPainter(
+                frame: _latest,
+                skipPreprocess: widget.skipPreprocess,
+                calConfidence: widget.calConfidence,
+                rawFrameSize: controller.value.previewSize,
+                acceptedColor: Theme.of(context).colorScheme.primary,
+                subColor: AppTheme.award(context),
+                guideColor: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ),
