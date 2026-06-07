@@ -357,6 +357,18 @@ class _AutoScorerBoardOverlayState
           mainAxisSize: MainAxisSize.min,
           children: [
             _barRow(),
+            // Discreet discoverability hint: auto-scored darts land in the
+            // scoreboard's three-dart indicator, which is tappable to fix a
+            // misread (same correction path as manual entry).
+            if (_mode == _Mode.running)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Tap a dart to correct a misread',
+                  style: TextStyle(
+                      fontSize: 11, color: scheme.onSurfaceVariant),
+                ),
+              ),
             if (_mode == _Mode.running && hudOn && _timings.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4, bottom: 2),
