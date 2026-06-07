@@ -6,9 +6,9 @@ part 'camera_zoom_provider.g.dart';
 const _kCameraZoomKey = 'auto_scorer_camera_zoom';
 
 /// Default zoom level — `1.0` is "no zoom" on every device that reports a zoom
-/// range (the camera plugin's minimum). The aim view clamps the persisted value
-/// to the device's `[minZoom, maxZoom]` before applying it, so a value saved on
-/// one device degrades gracefully on another.
+/// range (the camera plugin's minimum). The board overlay clamps the persisted
+/// value to the device's `[minZoom, maxZoom]` before the aim view opens, so a
+/// value saved on one device degrades gracefully on another.
 const double kDefaultCameraZoom = 1.0;
 
 /// Persisted camera zoom for the auto-scorer aim preview (#393 setup flow). A

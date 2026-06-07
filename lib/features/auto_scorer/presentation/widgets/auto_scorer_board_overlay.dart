@@ -455,7 +455,11 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   Timer? _timer;
   bool _busy = false;
   DetectionFrame? _latest;
-  late double _zoom = widget.initialZoom;
+  // Clamp to the slider's own range, not just [minZoom, maxZoom]: if a device
+  // reports maxZoom > the ceiling, the camera was opened at initialZoom but the
+  // slider only goes to _sliderMax, so keep the field in lock-step with what the
+  // slider can display.
+  late double _zoom = widget.initialZoom.clamp(widget.minZoom, _sliderMax);
 
   /// Cap the slider so a phone reporting a large *digital* zoom (e.g. 8×) can't
   /// be driven into a mushy, low-detail frame that hurts detection.
