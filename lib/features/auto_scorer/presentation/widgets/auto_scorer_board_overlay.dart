@@ -16,8 +16,10 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_coll
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_cal_overlay_painter.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_timing_hud.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +79,28 @@ class _AutoScorerBoardOverlayState
     });
     CameraController? controller;
     try {
+      // One-time setup tips before the first aim (#393). Shown before any heavy
+      // load so cancelling is cheap. Pops null (cancel) / false (continue) /
+      // true (continue + remember).
+      final tipsSeen = await ref.read(autoScorerSetupTipsSeenProvider.future);
+      if (!mounted) return;
+      if (!tipsSeen) {
+        final proceed = await Navigator.of(context).push<bool>(MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => const AutoScorerSetupTipsView(),
+        ));
+        if (!mounted) return;
+        if (proceed == null) {
+          setState(() => _starting = false);
+          return;
+        }
+        if (proceed) {
+          await ref
+              .read(autoScorerSetupTipsSeenProvider.notifier)
+              .setSeen(true);
+          if (!mounted) return;
+        }
+      }
       final detector = await ref.read(dartDetectorProvider.future);
       if (!mounted) return;
       if (!detector.isSupported) {
@@ -462,6 +486,11 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   // steady for a few frames, so the user can't commit on a single lucky frame.
   final CalibrationStabilityGate _gate = CalibrationStabilityGate();
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
+  // Consecutive frames showing darts but no calibration → likely the darts are
+  // occluding the markers. Debounced so a single transient frame doesn't flash
+  // the prompt.
+  int _occlusionFrames = 0;
+  static const int _occlusionFramesToWarn = 2;
   // Clamp to the slider's own range, not just [minZoom, maxZoom]: if a device
   // reports maxZoom > the ceiling, the camera was opened at initialZoom but the
   // slider only goes to _sliderMax, so keep the field in lock-step with what the
@@ -507,9 +536,12 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       );
       if (!mounted) return;
       final stability = _gate.update(frame);
+      final occluded =
+          !frame.hasCalibration && frame.dartCandidates.isNotEmpty;
       setState(() {
         _latest = frame;
         _stability = stability;
+        _occlusionFrames = occluded ? _occlusionFrames + 1 : 0;
       });
     } catch (_) {
       // Drop this frame; the next tick retries (mirrors _tick).
@@ -578,10 +610,13 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     // button is enabled/disabled: stability (not fill) is the gate, so when not
     // ready we always say "Hold steady". Fill is advisory — it only surfaces
     // once ready (button enabled), as a soft "for better accuracy" nudge.
+    final occluded = _occlusionFrames >= _occlusionFramesToWarn;
     final hint = _latest == null
         ? 'Aim at the board…'
         : !calibrated
-            ? '$found/4 markers — reframe so all 4 show. Any board rotation is fine.'
+            ? (occluded
+                ? 'Darts may be blocking the markers — pull the darts or adjust the camera'
+                : '$found/4 markers — reframe so all 4 show. Any board rotation is fine.')
             : !ready
                 ? 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}'
                 : fill < kGoodFillRatio
