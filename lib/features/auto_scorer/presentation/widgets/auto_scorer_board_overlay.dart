@@ -5,6 +5,7 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -457,6 +458,10 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   Timer? _timer;
   bool _busy = false;
   DetectionFrame? _latest;
+  // Readiness gate: "Done aiming" only enables once the four cals have held
+  // steady for a few frames, so the user can't commit on a single lucky frame.
+  final CalibrationStabilityGate _gate = CalibrationStabilityGate();
+  CalibrationStability _stability = (stableFrames: 0, isReady: false);
   // Clamp to the slider's own range, not just [minZoom, maxZoom]: if a device
   // reports maxZoom > the ceiling, the camera was opened at initialZoom but the
   // slider only goes to _sliderMax, so keep the field in lock-step with what the
@@ -501,7 +506,11 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         dartConfidence: widget.dartConfidence,
       );
       if (!mounted) return;
-      setState(() => _latest = frame);
+      final stability = _gate.update(frame);
+      setState(() {
+        _latest = frame;
+        _stability = stability;
+      });
     } catch (_) {
       // Drop this frame; the next tick retries (mirrors _tick).
     } finally {
@@ -564,13 +573,16 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         _latest?.calBestPoints.where((p) => p != null).length ?? 0;
     final fill =
         _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
+    final ready = _stability.isReady;
     final hint = _latest == null
         ? 'Aim at the board…'
-        : calibrated
-            ? (fill < kGoodFillRatio
+        : !calibrated
+            ? '$found/4 markers — reframe so all 4 show. Any board rotation is fine.'
+            : fill < kGoodFillRatio
                 ? 'All 4 markers found — move closer or zoom in to fill the frame'
-                : 'All 4 markers found — Done aiming')
-            : '$found/4 markers — reframe so all 4 show. Any board rotation is fine.';
+                : ready
+                    ? 'Ready — Done aiming'
+                    : 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}';
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -616,7 +628,9 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                             onPressed: () => _finish(false),
                             child: const Text('Cancel')),
                         FilledButton.icon(
-                          onPressed: () => _finish(true),
+                          // Enabled only once the cals have held steady — the
+                          // gate is the commit guard (advisory fill never blocks).
+                          onPressed: ready ? () => _finish(true) : null,
                           icon: const Icon(Icons.check),
                           label: const Text('Done aiming'),
                         ),
