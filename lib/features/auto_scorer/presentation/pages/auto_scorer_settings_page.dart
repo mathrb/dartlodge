@@ -3,6 +3,8 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,6 +42,24 @@ class AutoScorerSettingsPage extends ConsumerWidget {
                 ? null
                 : (v) =>
                     ref.read(autoScoringEnabledProvider.notifier).setEnabled(v),
+          ),
+          ListTile(
+            leading: const Icon(Icons.tips_and_updates_outlined),
+            title: const Text('Camera setup tips'),
+            subtitle: const Text('How to frame the board for best results.'),
+            onTap: () async {
+              final result = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                      builder: (_) => const AutoScorerSetupTipsView()));
+              // Only honour "don't show again" (true); never write false here,
+              // or reviewing the tips without re-checking the box would silently
+              // un-dismiss them. Mirrors the board overlay's _start() handling.
+              if (result == true) {
+                ref
+                    .read(autoScorerSetupTipsSeenProvider.notifier)
+                    .setSeen(true);
+              }
+            },
           ),
           const Divider(),
           SwitchListTile(
