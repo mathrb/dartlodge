@@ -56,6 +56,7 @@ class CalOverlayPainter extends CustomPainter {
     required this.calConfidence,
     required this.acceptedColor,
     required this.subColor,
+    required this.guideColor,
     this.rawFrameSize,
   });
 
@@ -68,6 +69,11 @@ class CalOverlayPainter extends CustomPainter {
 
   /// Marker color for a detected-but-sub-threshold cal (themed warning/amber).
   final Color subColor;
+
+  /// Faint color for the framing guide (the board outline through the four cals,
+  /// or the centred target when fewer are seen). White-ish over the camera feed,
+  /// matching this view's overlay convention.
+  final Color guideColor;
   final Size? rawFrameSize;
 
   static const double _dotRadius = 9;
@@ -85,6 +91,7 @@ class CalOverlayPainter extends CustomPainter {
       ..strokeWidth = 3;
 
     var found = 0;
+    final dots = <({Offset at, Color color, String label})>[];
     for (var i = 0; i < f.calBestPoints.length; i++) {
       final p = f.calBestPoints[i];
       if (p == null) continue;
@@ -94,23 +101,60 @@ class CalOverlayPainter extends CustomPainter {
       if (at == null) continue;
       final conf = i < f.calConfidences.length ? f.calConfidences[i] : null;
       final isAccepted = conf != null && conf >= calConfidence;
-      final color = isAccepted ? accepted : sub;
+      dots.add((
+        at: at,
+        color: isAccepted ? accepted : sub,
+        label: '${i + 1}  ${StatFormatter.fmtDouble(conf, decimals: 2)}',
+      ));
+    }
 
-      canvas.drawCircle(at, _dotRadius, outline);
-      canvas.drawCircle(at, _dotRadius, Paint()..color = color);
+    // Guide first, so the cal dots paint on top of the outline rather than the
+    // stroke bisecting them.
+    _framingGuide(canvas, size, [for (final d in dots) d.at]);
+    for (final d in dots) {
+      canvas.drawCircle(d.at, _dotRadius, outline);
+      canvas.drawCircle(d.at, _dotRadius, Paint()..color = d.color);
       _label(
         canvas,
-        '${i + 1}  ${StatFormatter.fmtDouble(conf, decimals: 2)}',
-        at + const Offset(_dotRadius + 4, -_dotRadius - 2),
-        color,
+        d.label,
+        d.at + const Offset(_dotRadius + 4, -_dotRadius - 2),
+        d.color,
       );
     }
 
     _header(canvas, size, found, f.hasCalibration);
   }
 
+  /// The framing guide that nudges the user to fill the frame with the board.
+  /// With all four cals mapped, trace the board outline through them (sorted by
+  /// angle around their centroid so it never self-intersects, whatever the board
+  /// rotation). With fewer, draw a faint centred target circle as a "frame the
+  /// board roughly here" hint.
+  void _framingGuide(Canvas canvas, Size size, List<Offset> points) {
+    final stroke = Paint()
+      ..color = guideColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    if (points.length >= 4) {
+      final cx = points.map((p) => p.dx).reduce((a, b) => a + b) / points.length;
+      final cy = points.map((p) => p.dy).reduce((a, b) => a + b) / points.length;
+      final sorted = [...points]..sort((a, b) => math
+          .atan2(a.dy - cy, a.dx - cx)
+          .compareTo(math.atan2(b.dy - cy, b.dx - cx)));
+      final path = Path()..moveTo(sorted.first.dx, sorted.first.dy);
+      for (final p in sorted.skip(1)) {
+        path.lineTo(p.dx, p.dy);
+      }
+      path.close();
+      canvas.drawPath(path, stroke);
+    } else {
+      final radius = math.min(size.width, size.height) * 0.42;
+      canvas.drawCircle(size.center(Offset.zero), radius, stroke);
+    }
+  }
+
   void _header(Canvas canvas, Size size, int found, bool calibrated) {
-    final text = calibrated ? '✓ calibrated' : '$found/4 cals — reframe';
+    final text = calibrated ? '✓ calibrated' : '$found/4 markers — reframe';
     final color = calibrated ? acceptedColor : subColor;
     final tp = _painter(text, color, 14);
     const pad = 6.0;
@@ -153,5 +197,6 @@ class CalOverlayPainter extends CustomPainter {
       old.calConfidence != calConfidence ||
       old.rawFrameSize != rawFrameSize ||
       old.acceptedColor != acceptedColor ||
-      old.subColor != subColor;
+      old.subColor != subColor ||
+      old.guideColor != guideColor;
 }
