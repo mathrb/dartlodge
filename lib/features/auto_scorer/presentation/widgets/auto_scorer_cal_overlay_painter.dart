@@ -91,7 +91,7 @@ class CalOverlayPainter extends CustomPainter {
       ..strokeWidth = 3;
 
     var found = 0;
-    final mapped = <Offset>[];
+    final dots = <({Offset at, Color color, String label})>[];
     for (var i = 0; i < f.calBestPoints.length; i++) {
       final p = f.calBestPoints[i];
       if (p == null) continue;
@@ -99,22 +99,29 @@ class CalOverlayPainter extends CustomPainter {
       final at = mapDetectionToRect(p,
           rect: size, skipPreprocess: skipPreprocess, rawFrameSize: rawFrameSize);
       if (at == null) continue;
-      mapped.add(at);
       final conf = i < f.calConfidences.length ? f.calConfidences[i] : null;
       final isAccepted = conf != null && conf >= calConfidence;
-      final color = isAccepted ? accepted : sub;
+      dots.add((
+        at: at,
+        color: isAccepted ? accepted : sub,
+        label: '${i + 1}  ${StatFormatter.fmtDouble(conf, decimals: 2)}',
+      ));
+    }
 
-      canvas.drawCircle(at, _dotRadius, outline);
-      canvas.drawCircle(at, _dotRadius, Paint()..color = color);
+    // Guide first, so the cal dots paint on top of the outline rather than the
+    // stroke bisecting them.
+    _framingGuide(canvas, size, [for (final d in dots) d.at]);
+    for (final d in dots) {
+      canvas.drawCircle(d.at, _dotRadius, outline);
+      canvas.drawCircle(d.at, _dotRadius, Paint()..color = d.color);
       _label(
         canvas,
-        '${i + 1}  ${StatFormatter.fmtDouble(conf, decimals: 2)}',
-        at + const Offset(_dotRadius + 4, -_dotRadius - 2),
-        color,
+        d.label,
+        d.at + const Offset(_dotRadius + 4, -_dotRadius - 2),
+        d.color,
       );
     }
 
-    _framingGuide(canvas, size, mapped);
     _header(canvas, size, found, f.hasCalibration);
   }
 
@@ -147,7 +154,7 @@ class CalOverlayPainter extends CustomPainter {
   }
 
   void _header(Canvas canvas, Size size, int found, bool calibrated) {
-    final text = calibrated ? '✓ calibrated' : '$found/4 cals — reframe';
+    final text = calibrated ? '✓ calibrated' : '$found/4 markers — reframe';
     final color = calibrated ? acceptedColor : subColor;
     final tp = _painter(text, color, 14);
     const pad = 6.0;

@@ -25,10 +25,15 @@ const double kGoodFillRatio = 0.25;
 /// centroid before the shoelace area, so any board orientation gives the same
 /// ratio. Returns 0 when fewer than three cals are present (no area to measure),
 /// so callers fall back to the "reframe so all markers show" hint.
+///
+/// Assumes the points are in raw-camera-frame-normalised space (skip-preprocess,
+/// the default since #406), where the area is a faithful fraction of the camera
+/// frame. In non-skip/letterbox mode the coords are 800×800-letterbox-normalised,
+/// so for a non-square frame one axis is compressed and the ratio is only an
+/// approximation — fine for the advisory copy it drives, never a hard gate.
 double frameFillRatio(List<BoardPoint?> calBestPoints) {
   final pts = [
-    for (final p in calBestPoints)
-      if (p != null) p,
+    for (final p in calBestPoints) ?p,
   ];
   if (pts.length < 3) return 0.0;
 
