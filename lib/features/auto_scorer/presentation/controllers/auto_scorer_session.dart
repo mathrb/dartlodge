@@ -114,10 +114,11 @@ class AutoScorerSession {
 
     if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
       // Store the image in the SAME space the detector's coords are normalised
-      // to (raw-capture brief): in skip mode the plugin maps detections to the
-      // raw frame, so store `frameBytes` verbatim (no re-encode); otherwise
-      // store our 800×800 letterbox. The sidecar's frameSpace/dims record which.
-      // Null when no aligned capture is possible (see [_captureFor]).
+      // to (raw-capture brief): skip mode with no rotation stores `frameBytes`
+      // verbatim (the plugin maps detections to the raw frame); a non-zero
+      // servedQuarterTurns (or non-skip) stores the rotated/letterboxed 800×800
+      // instead, matching what the detector served. The sidecar's frameSpace/dims
+      // record which. Null when no aligned capture is possible (see [_captureFor]).
       final capture = _captureFor(frameBytes,
           skipPreprocess: skipPreprocess, quarterTurns: servedQuarterTurns);
       if (capture != null) {

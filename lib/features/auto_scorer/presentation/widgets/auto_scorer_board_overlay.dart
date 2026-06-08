@@ -597,6 +597,7 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         final counts = <int, int>{};
         DetectionFrame? best;
         var bestCals = -1;
+        var bestQ = 0;
         for (final q in const [0, 1, 2, 3]) {
           final f = await widget.session.detectOnly(
             bytes,
@@ -610,14 +611,16 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
           if (cals > bestCals) {
             bestCals = cals;
             best = f;
+            bestQ = q;
           }
         }
         if (!mounted) return;
         final locked = _rotation.update(counts);
-        if (locked != null) {
-          _lockedRotation = locked;
-          widget.session.servedQuarterTurns = locked;
-        }
+        if (locked != null) _lockedRotation = locked;
+        // Apply the best rotation so far (frozen to the locked one once locked):
+        // a training photo captured before the lock is then stored in the
+        // most-upright orientation found, not sideways.
+        widget.session.servedQuarterTurns = locked ?? bestQ;
         setState(() => _latest = best);
         return;
       }

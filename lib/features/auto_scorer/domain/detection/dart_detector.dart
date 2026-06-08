@@ -43,7 +43,8 @@ abstract class DartDetector {
   /// [quarterTurns] rotates the frame clockwise by N×90° so the board is upright
   /// for the model (the model needs an upright board). When non-zero the
   /// implementation MUST go through the Dart preprocess path (rotate + letterbox)
-  /// — [skipPreprocess] can't rotate — so detections map to the rotated frame.
+  /// — [skipPreprocess] can't rotate — so detections are normalised to the
+  /// rotated 800×800 letterbox (and a capture stores that same rotated letterbox).
   Future<DetectionFrame> detect(
     Uint8List frameBytes, {
     bool skipPreprocess = false,
