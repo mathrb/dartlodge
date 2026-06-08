@@ -250,6 +250,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Auto-scorer camera preview:** `CameraPreview` handles device orientation itself (its own internal `AspectRatio` + `RotatedBox`; `controller.value.aspectRatio` is ALWAYS the landscape sensor ratio). Do NOT wrap it in your own `Center > AspectRatio(controller.value.aspectRatio)` — on a portrait screen that shrinks the preview to a letterboxed band (this is what #408 did). Detection runs on `takePicture()`'s raw sensor frame (landscape buffer), **served as-is — the app does not rotate it**. The model needs the board roughly upright, so a portrait-held phone (board sideways in the landscape buffer) detects poorly until the model is trained for that orientation (#393); the app-side fix is **not** rotation (a rotation auto-detect was tried and dropped — it can't tell upright from upside-down). Preview-display orientation and detection-input orientation are independent — don't conflate them.
 
+**Auto-scorer camera is single-flight:** both the aim view (`_detectTick`) and running mode (`_tick`) drive a ~700 ms `takePicture()` loop guarded by a `_busy` flag. Anything else needing a frame (e.g. the training-capture button) must **piggyback** — set a flag the next tick consumes and reuse that tick's frame — NOT call `takePicture()` itself, or it races the loop (camera-busy error) or is silently dropped while `_busy` is held.
+
 **Round semantics:** A "round" is one full rotation where ALL competitors throw. `totalRounds` is the correct field name. Do not use `maxRounds` or count per-competitor turns or individual dart throws as rounds.
 
 **Per-leg round cap:** X01 and Cricket enforce a round cap per leg (see `GameConfigurationConstants` and engine logic). When the cap is hit with no winner, the leg is decided by current standing — do not extend rounds silently. Both engines and any UI showing round progress must respect this.
@@ -287,6 +289,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 **Projection snapshots are two-level:** top level keyed by `engine.descriptor.id` (e.g. `'x01.doubleOut'`), inner map keyed by field name (e.g. `'doubleOutSuccessRate'`). Wiring a new engine into `PlayerStatsAssembler.fromEvents` means reading at both levels — running an engine without reading its snapshot is a silent no-op.
 
 **`.flutter-plugins-dependencies` and `pubspec.lock`** regenerate on every `flutter pub get` / `flutter run` / `build_runner build`; never commit either unless the dep set actually changed. Both commonly show `M` in `git status` — `git checkout pubspec.lock .flutter-plugins-dependencies` before staging to keep PR diffs clean.
+
+**Stage explicit paths — never `git add -A` / `git add .`:** the working tree carries many untracked scratch files (`*.png` / `*.yml` / exported capture `*.jpg` at the repo root, `e2e/node_modules`, `.playwright-*`). A blanket add stages hundreds of junk files — always `git add <specific paths>`.
 
 **Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin `^9.16.1`). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
 
