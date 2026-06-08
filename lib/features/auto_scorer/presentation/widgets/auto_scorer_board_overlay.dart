@@ -594,9 +594,9 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         // pick the one finding the most cals and let the detector lock once it's
         // stable. Don't feed the stability gate yet — frames are in mixed spaces
         // until a rotation is locked.
-        final counts = <int, int>{};
+        final upright = <int, bool>{};
         DetectionFrame? best;
-        var bestCals = -1;
+        var bestScore = -1;
         var bestQ = 0;
         for (final q in const [0, 1, 2, 3]) {
           final f = await widget.session.detectOnly(
@@ -606,16 +606,21 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
             dartConfidence: widget.dartConfidence,
             quarterTurns: q,
           );
+          final isUp = isCalArrangementUpright(f.calBestPoints);
+          upright[q] = isUp;
+          // Prefer an upright frame for the display/provisional rotation; fall
+          // back to the most cals. (Counting cals alone can't tell upright from
+          // upside-down — the arrangement check does, see RotationAutoDetector.)
           final cals = f.calBestPoints.where((p) => p != null).length;
-          counts[q] = cals;
-          if (cals > bestCals) {
-            bestCals = cals;
+          final score = (isUp ? 100 : 0) + cals;
+          if (score > bestScore) {
+            bestScore = score;
             best = f;
             bestQ = q;
           }
         }
         if (!mounted) return;
-        final locked = _rotation.update(counts);
+        final locked = _rotation.update(upright);
         if (locked != null) _lockedRotation = locked;
         // Apply the best rotation so far (frozen to the locked one once locked):
         // a training photo captured before the lock is then stored in the
