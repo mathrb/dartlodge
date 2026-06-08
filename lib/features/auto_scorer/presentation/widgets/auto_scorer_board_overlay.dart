@@ -563,6 +563,7 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         calConfidence: widget.calConfidence,
         dartConfidence: widget.dartConfidence,
       );
+      if (!mounted) return;
       messenger.showSnackBar(SnackBar(
           content: Text(
               saved ? 'Frame saved for training' : 'Capture not available here')));
@@ -603,9 +604,12 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   }
 
   /// Stop detecting, then return [result]. Cancelling the timer on commit means
-  /// no aim-view `takePicture()` fires during the route transition — otherwise
-  /// it could race the parent's headless `_tick` (started by `_beginRunning`)
-  /// for the same camera.
+  /// the periodic `_detectTick` no longer fires during the route transition —
+  /// otherwise it could race the parent's headless `_tick` (started by
+  /// `_beginRunning`) for the same camera. A button-triggered
+  /// `_captureTrainingFrame` already in flight isn't cancelled here, but if its
+  /// `takePicture` overlaps the parent's first `_tick` the camera-busy error is
+  /// swallowed by both callers' catch blocks (one dropped frame, no crash).
   void _finish(bool result) {
     _timer?.cancel();
     _timer = null;
