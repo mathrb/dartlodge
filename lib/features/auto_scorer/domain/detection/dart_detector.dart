@@ -39,11 +39,17 @@ abstract class DartDetector {
   /// (user-configurable): a cal point / dart counts only at or above its value.
   /// Inference still runs at a low floor so the HUD can show sub-threshold cal
   /// confidences for tuning.
+  ///
+  /// [quarterTurns] rotates the frame clockwise by N×90° so the board is upright
+  /// for the model (the model needs an upright board). When non-zero the
+  /// implementation MUST go through the Dart preprocess path (rotate + letterbox)
+  /// — [skipPreprocess] can't rotate — so detections map to the rotated frame.
   Future<DetectionFrame> detect(
     Uint8List frameBytes, {
     bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
+    int quarterTurns = 0,
   });
 
   /// Release native resources.

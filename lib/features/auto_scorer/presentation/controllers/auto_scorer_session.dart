@@ -62,6 +62,13 @@ class AutoScorerSession {
   final FramePreprocessor _preprocessor;
   final String _modelVersion;
 
+  /// Clockwise quarter-turns to rotate every served frame so the board is
+  /// upright for the model. Locked once by the aim view's orientation
+  /// auto-detection (it tries rotations and picks the one that finds the cals),
+  /// then used for both scoring (`onFrame`) and captures. 0 = no rotation
+  /// (landscape-held / native-serve path).
+  int servedQuarterTurns = 0;
+
   /// Physical darts currently tracked on the board.
   int get dartsOnBoard => _tracker.confirmedDarts.length;
 
@@ -98,6 +105,7 @@ class AutoScorerSession {
       skipPreprocess: skipPreprocess,
       calConfidence: calConfidence,
       dartConfidence: dartConfidence,
+      quarterTurns: servedQuarterTurns,
     );
     detectWatch.stop();
     final trackWatch = Stopwatch()..start();
@@ -110,7 +118,8 @@ class AutoScorerSession {
       // raw frame, so store `frameBytes` verbatim (no re-encode); otherwise
       // store our 800×800 letterbox. The sidecar's frameSpace/dims record which.
       // Null when no aligned capture is possible (see [_captureFor]).
-      final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
+      final capture = _captureFor(frameBytes,
+          skipPreprocess: skipPreprocess, quarterTurns: servedQuarterTurns);
       if (capture != null) {
         // The dart-in-turn ordinal of the first new dart this frame (1-based).
         final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
@@ -151,12 +160,14 @@ class AutoScorerSession {
     bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
+    int quarterTurns = 0,
   }) {
     return _detector.detect(
       frameBytes,
       skipPreprocess: skipPreprocess,
       calConfidence: calConfidence,
       dartConfidence: dartConfidence,
+      quarterTurns: quarterTurns,
     );
   }
 
@@ -181,8 +192,10 @@ class AutoScorerSession {
       skipPreprocess: skipPreprocess,
       calConfidence: calConfidence,
       dartConfidence: dartConfidence,
+      quarterTurns: servedQuarterTurns,
     );
-    final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
+    final capture = _captureFor(frameBytes,
+        skipPreprocess: skipPreprocess, quarterTurns: servedQuarterTurns);
     if (capture == null) return false;
     _manualSequence += 1;
     await store.save(
@@ -216,8 +229,12 @@ class AutoScorerSession {
   /// rather than store the raw bytes under a `letterbox800` label (the coords
   /// would misalign — the very corruption this path avoids). Dims come from the
   /// codec via the [FramePreprocessor] contract.
-  _Capture? _captureFor(Uint8List frameBytes, {required bool skipPreprocess}) {
-    if (skipPreprocess) {
+  _Capture? _captureFor(Uint8List frameBytes,
+      {required bool skipPreprocess, int quarterTurns = 0}) {
+    // A rotation forces the preprocess path (the raw frame can't be rotated and
+    // still labelled `raw`), matching what the detector served, so the stored
+    // image and its sidecar coords share the same upright/letterbox space.
+    if (skipPreprocess && quarterTurns == 0) {
       final dims = _preprocessor.dimensionsOf(frameBytes);
       return _Capture(
         bytes: frameBytes,
@@ -226,7 +243,8 @@ class AutoScorerSession {
         height: dims?.height ?? 0,
       );
     }
-    final letterboxed = _preprocessor.preprocessEncoded(frameBytes);
+    final letterboxed =
+        _preprocessor.preprocessEncoded(frameBytes, quarterTurns: quarterTurns);
     if (letterboxed == null) return null;
     final dims = _preprocessor.dimensionsOf(letterboxed);
     return _Capture(

@@ -22,6 +22,7 @@ class _UnsupportedDartDetector implements DartDetector {
     bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
+    int quarterTurns = 0,
   }) async =>
       const DetectionFrame(calPoints: [], dartCandidates: []);
 

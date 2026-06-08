@@ -7,6 +7,7 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/rotation_auto_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
@@ -506,6 +507,12 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   // steady for a few frames, so the user can't commit on a single lucky frame.
   final CalibrationStabilityGate _gate = CalibrationStabilityGate();
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
+  // Orientation auto-detection: the served frame must show the board UPRIGHT for
+  // the model, but the raw sensor buffer is sideways when the phone is held
+  // portrait. Try each rotation until one finds the cals, lock it for the
+  // session (applied to scoring too via session.servedQuarterTurns).
+  final RotationAutoDetector _rotation = RotationAutoDetector();
+  int? _lockedRotation;
   // Consecutive frames showing darts but no calibration → likely the darts are
   // occluding the markers. Debounced so a single transient frame doesn't flash
   // the prompt.
@@ -581,11 +588,46 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       final shot = await widget.controller.takePicture();
       final bytes = await shot.readAsBytes();
       if (!mounted) return;
+
+      if (_lockedRotation == null) {
+        // Orientation search: one capture, inference at each candidate rotation;
+        // pick the one finding the most cals and let the detector lock once it's
+        // stable. Don't feed the stability gate yet — frames are in mixed spaces
+        // until a rotation is locked.
+        final counts = <int, int>{};
+        DetectionFrame? best;
+        var bestCals = -1;
+        for (final q in const [0, 1, 2, 3]) {
+          final f = await widget.session.detectOnly(
+            bytes,
+            skipPreprocess: widget.skipPreprocess,
+            calConfidence: widget.calConfidence,
+            dartConfidence: widget.dartConfidence,
+            quarterTurns: q,
+          );
+          final cals = f.calBestPoints.where((p) => p != null).length;
+          counts[q] = cals;
+          if (cals > bestCals) {
+            bestCals = cals;
+            best = f;
+          }
+        }
+        if (!mounted) return;
+        final locked = _rotation.update(counts);
+        if (locked != null) {
+          _lockedRotation = locked;
+          widget.session.servedQuarterTurns = locked;
+        }
+        setState(() => _latest = best);
+        return;
+      }
+
       final frame = await widget.session.detectOnly(
         bytes,
         skipPreprocess: widget.skipPreprocess,
         calConfidence: widget.calConfidence,
         dartConfidence: widget.dartConfidence,
+        quarterTurns: _lockedRotation!,
       );
       if (!mounted) return;
       final stability = _gate.update(frame);
@@ -667,7 +709,9 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     // ready we always say "Hold steady". Fill is advisory — it only surfaces
     // once ready (button enabled), as a soft "for better accuracy" nudge.
     final occluded = _occlusionFrames >= _occlusionFramesToWarn;
-    final hint = _latest == null
+    final hint = _lockedRotation == null
+        ? 'Finding board orientation…'
+        : _latest == null
         ? 'Aim at the board…'
         : !calibrated
             ? (occluded
