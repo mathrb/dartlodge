@@ -18,15 +18,17 @@ cp ~/git/deep-darts-probe/models/dart_round<N>_withcal_saved_model/dart_round<N>
 Keep `kAutoScorerModelVersion` (in `dart_detector.dart`) in lock-step with the
 bundled stem — it is stamped onto every training capture's `model_version`.
 
-The current bundle is `dart_round11b_withcal` (float32) — single net, classes
-`{0:dart, 1:cal1, 2:cal2, 3:cal3, 4:cal4}`, imgsz 800, YOLO11n, trained on the
-666-frame center-crop arm + 141 raw app set (mosaic ON). The probe now ranks
-rounds by **per-dart segment accuracy (assist-mode) on the raw serve golden**,
-not mAP/recall: R11b scores **86.5%** on the R7-independent subset (87.3% full)
-vs R7's 84.3%/84.9% — a real win, but still below the **88.9%** ship bar at 720p
-(≈92% at 1080p). So there is still **no code-enforced emission gate**: treat
-auto-scoring as assist / data-collection (#381) until a round clears the bar.
-The CoreML `.mlpackage` (iOS) goes to `ios/Runner/` (gitignored).
+The current bundle is `dart_round12a_withcal` (float32) — single net, classes
+`{0:dart, 1:cal1, 2:cal2, 3:cal3, 4:cal4}`, imgsz 800, YOLO11n. It supersedes
+R11b (86.5% assist-mode segment accuracy on the R7-independent golden); see the
+probe for R12a's metrics. The probe ranks rounds by **per-dart segment accuracy
+(assist-mode) on the raw serve golden**, not mAP/recall. Until a round is
+confirmed past the **88.9%** ship bar there is **no code-enforced emission
+gate**: treat auto-scoring as assist / data-collection (#381). The app serves
+the raw sensor frame as-is (no app-side rotation), so portrait-held detection
+depends on the model being trained for that orientation (#393) — collect
+portrait frames via the in-app capture button. The CoreML `.mlpackage` (iOS)
+goes to `ios/Runner/` (gitignored).
 
 Frames are preprocessed to 800×800 (**letterbox**: scale-to-fit + grey 114
 padding) before inference, so the board's outer calibration points are never

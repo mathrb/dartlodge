@@ -176,6 +176,7 @@ class _AutoScorerBoardOverlayState
         builder: (_) => _AutoScorerAimView(
           controller: controller!,
           session: session,
+          gameId: widget.gameId,
           skipPreprocess: skip,
           calConfidence: calConf,
           dartConfidence: dartConf,
@@ -463,6 +464,7 @@ class _AutoScorerAimView extends StatefulWidget {
   const _AutoScorerAimView({
     required this.controller,
     required this.session,
+    required this.gameId,
     required this.skipPreprocess,
     required this.calConfidence,
     required this.dartConfidence,
@@ -474,6 +476,10 @@ class _AutoScorerAimView extends StatefulWidget {
 
   final CameraController controller;
   final AutoScorerSession session;
+
+  /// Game id for tagging manually-captured training frames (same store/path as
+  /// the in-game capture button).
+  final String gameId;
   final bool skipPreprocess;
   final double calConfidence;
   final double dartConfidence;
@@ -495,6 +501,10 @@ class _AutoScorerAimView extends StatefulWidget {
 class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   Timer? _timer;
   bool _busy = false;
+  // "Capture photo" sets this; the next detect tick saves the frame it already
+  // captured (no separate takePicture that would race the tick's _busy guard and
+  // get silently dropped). One pending capture at a time — the tick clears it.
+  bool _captureRequested = false;
   DetectionFrame? _latest;
   // Readiness gate: "Done aiming" only enables once the four cals have held
   // steady for a few frames, so the user can't commit on a single lucky frame.
@@ -535,6 +545,19 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     }
   }
 
+  /// Request a training capture: the next detect tick saves the frame it already
+  /// captured (see [_captureRequested]). We don't take a picture here — doing so
+  /// would race the tick's `_busy` guard and get silently dropped (the cause of
+  /// missing captures). Idempotent: extra taps before the tick collapse to one.
+  /// Acknowledges immediately since the save lands on the next tick (≤700 ms).
+  void _requestCapture() {
+    if (_captureRequested) return;
+    setState(() => _captureRequested = true);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Capturing frame for training…'),
+        duration: Duration(milliseconds: 800)));
+  }
+
   Future<void> _detectTick() async {
     if (_busy) return;
     _busy = true;
@@ -549,6 +572,20 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         dartConfidence: widget.dartConfidence,
       );
       if (!mounted) return;
+      // Honour a pending capture using this tick's frame — no extra takePicture,
+      // no dropped taps. `turnOrdinal: 0` tags these as pre-game manual (`t0-m*`).
+      if (_captureRequested) {
+        _captureRequested = false;
+        await widget.session.captureCurrentFrame(
+          bytes,
+          turnOrdinal: 0,
+          gameId: widget.gameId,
+          skipPreprocess: widget.skipPreprocess,
+          calConfidence: widget.calConfidence,
+          dartConfidence: widget.dartConfidence,
+        );
+        if (!mounted) return;
+      }
       final stability = _gate.update(frame);
       final occluded =
           !frame.hasCalibration && frame.dartCandidates.isNotEmpty;
@@ -565,9 +602,12 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   }
 
   /// Stop detecting, then return [result]. Cancelling the timer on commit means
-  /// no aim-view `takePicture()` fires during the route transition — otherwise
-  /// it could race the parent's headless `_tick` (started by `_beginRunning`)
-  /// for the same camera.
+  /// the periodic `_detectTick` no longer fires during the route transition —
+  /// otherwise it could race the parent's headless `_tick` (started by
+  /// `_beginRunning`) for the same camera. A button-triggered
+  /// `_captureTrainingFrame` already in flight isn't cancelled here, but if its
+  /// `takePicture` overlaps the parent's first `_tick` the camera-busy error is
+  /// swallowed by both callers' catch blocks (one dropped frame, no crash).
   void _finish(bool result) {
     _timer?.cancel();
     _timer = null;
@@ -641,27 +681,22 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Preview + overlay share one AspectRatio rect, so normalised cal
-          // coords map by a plain multiply against the painter's canvas size.
-          Center(
-            child: AspectRatio(
-              aspectRatio: controller.value.aspectRatio,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  CameraPreview(controller),
-                  CustomPaint(
-                    painter: CalOverlayPainter(
-                      frame: _latest,
-                      skipPreprocess: widget.skipPreprocess,
-                      calConfidence: widget.calConfidence,
-                      rawFrameSize: controller.value.previewSize,
-                      acceptedColor: Theme.of(context).colorScheme.primary,
-                      subColor: AppTheme.award(context),
-                      guideColor: Colors.white.withValues(alpha: 0.5),
-                    ),
-                  ),
-                ],
+          // Full-screen preview, as it was before the cal overlay existed (#408
+          // wrapped it in Center>AspectRatio to anchor the overlay, which shrank
+          // it to a letterboxed band). CameraPreview fills the Stack; the overlay
+          // fills the SAME area, so it maps detection coords (0–1) onto the same
+          // rect the preview fills → aligned, no AspectRatio band, no rotation.
+          CameraPreview(controller),
+          Positioned.fill(
+            child: CustomPaint(
+              painter: CalOverlayPainter(
+                frame: _latest,
+                skipPreprocess: widget.skipPreprocess,
+                calConfidence: widget.calConfidence,
+                rawFrameSize: controller.value.previewSize,
+                acceptedColor: Theme.of(context).colorScheme.primary,
+                subColor: AppTheme.award(context),
+                guideColor: Colors.white.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -674,6 +709,15 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_zoomSupported) _zoomSlider(),
+                    // Always available (independent of detection / "ready"): lets
+                    // the user collect training photos in orientations the model
+                    // can't yet calibrate. Same capture path as in-game.
+                    FilledButton.tonalIcon(
+                      onPressed: _requestCapture,
+                      icon: const Icon(Icons.add_a_photo_outlined),
+                      label: const Text('Capture photo'),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
