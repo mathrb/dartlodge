@@ -24,10 +24,11 @@ R11b (86.5% assist-mode segment accuracy on the R7-independent golden); see the
 probe for R12a's metrics. The probe ranks rounds by **per-dart segment accuracy
 (assist-mode) on the raw serve golden**, not mAP/recall. Until a round is
 confirmed past the **88.9%** ship bar there is **no code-enforced emission
-gate**: treat auto-scoring as assist / data-collection (#381). The app
-auto-detects the serve rotation that makes the board upright for the model
-(#393), so the model is fed an upright board regardless of how the phone is
-held. The CoreML `.mlpackage` (iOS) goes to `ios/Runner/` (gitignored).
+gate**: treat auto-scoring as assist / data-collection (#381). The app serves
+the raw sensor frame as-is (no app-side rotation), so portrait-held detection
+depends on the model being trained for that orientation (#393) — collect
+portrait frames via the in-app capture button. The CoreML `.mlpackage` (iOS)
+goes to `ios/Runner/` (gitignored).
 
 Frames are preprocessed to 800×800 (**letterbox**: scale-to-fit + grey 114
 padding) before inference, so the board's outer calibration points are never

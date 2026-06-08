@@ -49,12 +49,9 @@ class UltralyticsDartDetector implements DartDetector {
     bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
-    int quarterTurns = 0,
   }) async {
     final Uint8List input;
-    // A rotation can only be applied via our Dart preprocess path (the native
-    // skip path can't rotate), so any non-zero quarterTurns forces preprocess.
-    if (skipPreprocess && quarterTurns == 0) {
+    if (skipPreprocess) {
       // Diagnostics A/B (#377 §3): hand the raw bytes to the plugin, which
       // letterboxes to the model input itself, skipping our 800×800 step.
       // Detections then map to the raw frame — coordinate-consistent for the
@@ -62,8 +59,7 @@ class UltralyticsDartDetector implements DartDetector {
       // 800×800 capture, so the caller suppresses capture while skipping.
       input = frameBytes;
     } else {
-      final square =
-          _preprocessor.preprocessEncoded(frameBytes, quarterTurns: quarterTurns);
+      final square = _preprocessor.preprocessEncoded(frameBytes);
       if (square == null) {
         return const DetectionFrame(calPoints: [], dartCandidates: []);
       }

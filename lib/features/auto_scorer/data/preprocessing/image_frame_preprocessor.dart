@@ -55,7 +55,7 @@ class ImageFramePreprocessor implements FramePreprocessor {
   /// `bakeOrientation`), matching the probe's `cv2.imread`, which ignores EXIF.
   /// Returns null when the bytes can't be decoded.
   @override
-  Uint8List? preprocessEncoded(Uint8List bytes, {int quarterTurns = 0}) {
+  Uint8List? preprocessEncoded(Uint8List bytes) {
     // decodeImage can throw (not just return null) on malformed input; a corrupt
     // frame must degrade to "no detection", never crash the capture loop.
     img.Image? decoded;
@@ -65,12 +65,6 @@ class ImageFramePreprocessor implements FramePreprocessor {
       return null;
     }
     if (decoded == null) return null;
-    // Rotate (clockwise) so the board is upright before letterboxing. The model
-    // is trained on upright boards; a sideways board (portrait-held phone served
-    // the raw landscape buffer) detects ~nothing. quarterTurns is auto-detected
-    // upstream from which rotation actually yields the cal points.
-    final norm = ((quarterTurns % 4) + 4) % 4;
-    if (norm != 0) decoded = img.copyRotate(decoded, angle: norm * 90);
     return img.encodePng(preprocess(decoded));
   }
 

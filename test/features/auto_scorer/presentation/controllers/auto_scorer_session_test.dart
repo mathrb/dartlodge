@@ -32,19 +32,16 @@ class _FakeDetector implements DartDetector {
   bool lastSkipPreprocess = false;
   double lastCalConfidence = -1;
   double lastDartConfidence = -1;
-  int lastQuarterTurns = -1;
   @override
   Future<DetectionFrame> detect(
     Uint8List frameBytes, {
     bool skipPreprocess = false,
     double calConfidence = 0.25,
     double dartConfidence = 0.25,
-    int quarterTurns = 0,
   }) async {
     lastSkipPreprocess = skipPreprocess;
     lastCalConfidence = calConfidence;
     lastDartConfidence = dartConfidence;
-    lastQuarterTurns = quarterTurns;
     return frame;
   }
 
