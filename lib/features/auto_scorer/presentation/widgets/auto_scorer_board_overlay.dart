@@ -501,6 +501,10 @@ class _AutoScorerAimView extends StatefulWidget {
 class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
   Timer? _timer;
   bool _busy = false;
+  // "Capture photo" sets this; the next detect tick saves the frame it already
+  // captured (no separate takePicture that would race the tick's _busy guard and
+  // get silently dropped). One pending capture at a time — the tick clears it.
+  bool _captureRequested = false;
   DetectionFrame? _latest;
   // Readiness gate: "Done aiming" only enables once the four cals have held
   // steady for a few frames, so the user can't commit on a single lucky frame.
@@ -541,37 +545,17 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
     }
   }
 
-  /// Save the current frame for training, through the SAME path as the in-game
-  /// "Capture frame" button (`captureCurrentFrame`). Works regardless of whether
-  /// calibration is detected — which is the point: it lets the user collect data
-  /// in orientations the current model can't calibrate (so "Done aiming" is
-  /// unreachable). `_busy`-guarded so it doesn't race the detect timer on the
-  /// camera. `turnOrdinal: 0` tags these as pre-game manual captures (`t0-m*`).
-  Future<void> _captureTrainingFrame() async {
-    if (_busy) return;
-    _busy = true;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final shot = await widget.controller.takePicture();
-      final bytes = await shot.readAsBytes();
-      if (!mounted) return;
-      final saved = await widget.session.captureCurrentFrame(
-        bytes,
-        turnOrdinal: 0,
-        gameId: widget.gameId,
-        skipPreprocess: widget.skipPreprocess,
-        calConfidence: widget.calConfidence,
-        dartConfidence: widget.dartConfidence,
-      );
-      if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-          content: Text(
-              saved ? 'Frame saved for training' : 'Capture not available here')));
-    } catch (_) {
-      // Drop this capture; the user can tap again.
-    } finally {
-      _busy = false;
-    }
+  /// Request a training capture: the next detect tick saves the frame it already
+  /// captured (see [_captureRequested]). We don't take a picture here — doing so
+  /// would race the tick's `_busy` guard and get silently dropped (the cause of
+  /// missing captures). Idempotent: extra taps before the tick collapse to one.
+  /// Acknowledges immediately since the save lands on the next tick (≤700 ms).
+  void _requestCapture() {
+    if (_captureRequested) return;
+    setState(() => _captureRequested = true);
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Capturing frame for training…'),
+        duration: Duration(milliseconds: 800)));
   }
 
   Future<void> _detectTick() async {
@@ -588,6 +572,20 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
         dartConfidence: widget.dartConfidence,
       );
       if (!mounted) return;
+      // Honour a pending capture using this tick's frame — no extra takePicture,
+      // no dropped taps. `turnOrdinal: 0` tags these as pre-game manual (`t0-m*`).
+      if (_captureRequested) {
+        _captureRequested = false;
+        await widget.session.captureCurrentFrame(
+          bytes,
+          turnOrdinal: 0,
+          gameId: widget.gameId,
+          skipPreprocess: widget.skipPreprocess,
+          calConfidence: widget.calConfidence,
+          dartConfidence: widget.dartConfidence,
+        );
+        if (!mounted) return;
+      }
       final stability = _gate.update(frame);
       final occluded =
           !frame.hasCalibration && frame.dartCandidates.isNotEmpty;
@@ -715,7 +713,7 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                     // the user collect training photos in orientations the model
                     // can't yet calibrate. Same capture path as in-game.
                     FilledButton.tonalIcon(
-                      onPressed: _captureTrainingFrame,
+                      onPressed: _requestCapture,
                       icon: const Icon(Icons.add_a_photo_outlined),
                       label: const Text('Capture photo'),
                     ),
