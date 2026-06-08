@@ -176,6 +176,7 @@ class _AutoScorerBoardOverlayState
         builder: (_) => _AutoScorerAimView(
           controller: controller!,
           session: session,
+          gameId: widget.gameId,
           skipPreprocess: skip,
           calConfidence: calConf,
           dartConfidence: dartConf,
@@ -463,6 +464,7 @@ class _AutoScorerAimView extends StatefulWidget {
   const _AutoScorerAimView({
     required this.controller,
     required this.session,
+    required this.gameId,
     required this.skipPreprocess,
     required this.calConfidence,
     required this.dartConfidence,
@@ -474,6 +476,10 @@ class _AutoScorerAimView extends StatefulWidget {
 
   final CameraController controller;
   final AutoScorerSession session;
+
+  /// Game id for tagging manually-captured training frames (same store/path as
+  /// the in-game capture button).
+  final String gameId;
   final bool skipPreprocess;
   final double calConfidence;
   final double dartConfidence;
@@ -532,6 +538,38 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
       await widget.controller.setZoomLevel(value);
     } catch (_) {
       // Ignore transient failures (e.g. controller mid-transition).
+    }
+  }
+
+  /// Save the current frame for training, through the SAME path as the in-game
+  /// "Capture frame" button (`captureCurrentFrame`). Works regardless of whether
+  /// calibration is detected — which is the point: it lets the user collect data
+  /// in orientations the current model can't calibrate (so "Done aiming" is
+  /// unreachable). `_busy`-guarded so it doesn't race the detect timer on the
+  /// camera. `turnOrdinal: 0` tags these as pre-game manual captures (`t0-m*`).
+  Future<void> _captureTrainingFrame() async {
+    if (_busy) return;
+    _busy = true;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final shot = await widget.controller.takePicture();
+      final bytes = await shot.readAsBytes();
+      if (!mounted) return;
+      final saved = await widget.session.captureCurrentFrame(
+        bytes,
+        turnOrdinal: 0,
+        gameId: widget.gameId,
+        skipPreprocess: widget.skipPreprocess,
+        calConfidence: widget.calConfidence,
+        dartConfidence: widget.dartConfidence,
+      );
+      messenger.showSnackBar(SnackBar(
+          content: Text(
+              saved ? 'Frame saved for training' : 'Capture not available here')));
+    } catch (_) {
+      // Drop this capture; the user can tap again.
+    } finally {
+      _busy = false;
     }
   }
 
@@ -669,6 +707,15 @@ class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (_zoomSupported) _zoomSlider(),
+                    // Always available (independent of detection / "ready"): lets
+                    // the user collect training photos in orientations the model
+                    // can't yet calibrate. Same capture path as in-game.
+                    FilledButton.tonalIcon(
+                      onPressed: _captureTrainingFrame,
+                      icon: const Icon(Icons.add_a_photo_outlined),
+                      label: const Text('Capture photo'),
+                    ),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
