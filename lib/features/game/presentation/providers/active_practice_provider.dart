@@ -192,6 +192,92 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     });
   }
 
+  /// Per-dart correction (#427 — practice parity with X01/Cricket): replace dart
+  /// [turnDartIndex] of the current turn via the engine-specific
+  /// [CorrectDartUseCase] (rewind + re-throw). No-op on a completed game or an
+  /// out-of-range index. Note: unlike [_processDartImpl] this does not re-run the
+  /// notifier's convenience auto-advance (Catch 40 same-target / Checkout quota)
+  /// — the recomputed engine state is authoritative and the user taps NEXT.
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) =>
+      _serializer.run(() => _correctTurnDartImpl(turnDartIndex, newSegment));
+
+  Future<void> _correctTurnDartImpl(
+      int turnDartIndex, String newSegment) async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+
+    final eventId = await _resolveTurnDartEventId(gs, turnDartIndex);
+    if (eventId == null) return;
+
+    final parsed = Segment.parse(newSegment);
+
+    state = await AsyncValue.guard(() async {
+      final corrector = switch (gs.gameType) {
+        GameType.aroundTheClock =>
+          ref.read(correctAroundTheClockDartUseCaseProvider),
+        GameType.bobs27 => ref.read(correctBobs27DartUseCaseProvider),
+        GameType.shanghai => ref.read(correctShanghaiDartUseCaseProvider),
+        GameType.catch40 => ref.read(correctCatch40DartUseCaseProvider),
+        GameType.checkoutPractice =>
+          ref.read(correctCheckoutPracticeDartUseCaseProvider),
+        _ => throw UnsupportedError(
+            'Unsupported practice game type: ${gs.gameType}'),
+      };
+      final newGs = await corrector.execute(
+        gs,
+        originalEventId: eventId,
+        segment: parsed.baseNumber,
+        multiplier: parsed.multiplier,
+      );
+      return ActivePracticeState(
+        gameState: newGs,
+        pendingGameWinnerId:
+            newGs.isComplete ? newGs.winnerCompetitorId : null,
+      );
+    });
+  }
+
+  /// Resolves the `DartThrown` event id for dart [turnDartIndex] (0-based,
+  /// throw order) of the active competitor's current turn — the last
+  /// `dartsThrownInTurn` live (non-corrected, non-superseded) darts. Returns
+  /// null if out of range. Mirrors the X01/Cricket resolver.
+  Future<String?> _resolveTurnDartEventId(
+      GameState gs, int turnDartIndex) async {
+    final n = gs.dartsThrownInTurn;
+    if (turnDartIndex < 0 || turnDartIndex >= n) return null;
+    final activeCompId = gs.competitors[gs.currentTurnIndex].competitorId;
+    final events = await ref
+        .read(gameEventRepositoryProvider)
+        .getEventsForGame(gs.gameId);
+
+    final correctedIds = <String>{};
+    final supersededIds = <String>{};
+    for (final e in events) {
+      if (e.eventType != 'DartCorrected') continue;
+      final origId = e.payload['original_event_id'];
+      if (origId is String) correctedIds.add(origId);
+      final superseded = e.payload['superseded_event_ids'];
+      if (superseded is List) {
+        for (final id in superseded) {
+          if (id is String) supersededIds.add(id);
+        }
+      }
+    }
+
+    final liveForComp = [
+      for (final e in events)
+        if (e.eventType == 'DartThrown' &&
+            e.payload['competitor_id'] == activeCompId &&
+            !correctedIds.contains(e.eventId) &&
+            !supersededIds.contains(e.eventId))
+          e,
+    ];
+    if (liveForComp.length < n) return null;
+    return liveForComp.sublist(liveForComp.length - n)[turnDartIndex].eventId;
+  }
+
   /// Apply TurnEnded + TurnStarted events and persist them. Used for
   /// same-target auto-advance in Catch-40 and for the NEXT ROUND/TARGET button.
   ///

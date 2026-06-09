@@ -145,6 +145,47 @@ CorrectDartUseCase correctCricketDartUseCase(Ref ref) => CorrectDartUseCase(
       ref.watch(gameEventRepositoryProvider),
     );
 
+// Practice dart correction (#427): CorrectDartUseCase is engine-agnostic (it
+// rewinds via undo and re-throws via the process fn), so each practice game
+// type wires its own undo + process — one corrector per engine, mirroring the
+// process/undo providers.
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctAroundTheClockDartUseCase(Ref ref) =>
+    CorrectDartUseCase(
+      ref.watch(undoPracticeAroundTheClockLastDartUseCaseProvider),
+      ref.watch(processAroundTheClockDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctBobs27DartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoPracticeBobs27LastDartUseCaseProvider),
+      ref.watch(processBobs27DartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctShanghaiDartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoPracticeShanghaiLastDartUseCaseProvider),
+      ref.watch(processShanghaiDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctCatch40DartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoPracticeCatch40LastDartUseCaseProvider),
+      ref.watch(processCatch40DartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctCheckoutPracticeDartUseCase(Ref ref) =>
+    CorrectDartUseCase(
+      ref.watch(undoPracticeCheckoutPracticeLastDartUseCaseProvider),
+      ref.watch(processCheckoutPracticeDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
 @Riverpod(keepAlive: true)
 CreateGameUseCase createGameUseCase(Ref ref) {
   return CreateGameUseCase(

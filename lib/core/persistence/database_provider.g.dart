@@ -799,6 +799,250 @@ final class CorrectCricketDartUseCaseProvider
 String _$correctCricketDartUseCaseHash() =>
     r'05658d5e67f6388c39665f384f1df0162be38bfd';
 
+@ProviderFor(correctAroundTheClockDartUseCase)
+final correctAroundTheClockDartUseCaseProvider =
+    CorrectAroundTheClockDartUseCaseProvider._();
+
+final class CorrectAroundTheClockDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectAroundTheClockDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctAroundTheClockDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$correctAroundTheClockDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctAroundTheClockDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctAroundTheClockDartUseCaseHash() =>
+    r'95f46945b88af6d94e34ff9869ce337f7352f5b1';
+
+@ProviderFor(correctBobs27DartUseCase)
+final correctBobs27DartUseCaseProvider = CorrectBobs27DartUseCaseProvider._();
+
+final class CorrectBobs27DartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectBobs27DartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctBobs27DartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$correctBobs27DartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctBobs27DartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctBobs27DartUseCaseHash() =>
+    r'f1e203d51ba2be6f51a74a84725eb2c9ac297441';
+
+@ProviderFor(correctShanghaiDartUseCase)
+final correctShanghaiDartUseCaseProvider =
+    CorrectShanghaiDartUseCaseProvider._();
+
+final class CorrectShanghaiDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectShanghaiDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctShanghaiDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$correctShanghaiDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctShanghaiDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctShanghaiDartUseCaseHash() =>
+    r'48080e8ee81c215ab977ec444be61514d59e705f';
+
+@ProviderFor(correctCatch40DartUseCase)
+final correctCatch40DartUseCaseProvider = CorrectCatch40DartUseCaseProvider._();
+
+final class CorrectCatch40DartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectCatch40DartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctCatch40DartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$correctCatch40DartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctCatch40DartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctCatch40DartUseCaseHash() =>
+    r'b8ab054a254fb4f0779f2c973ec7f6f39d26847b';
+
+@ProviderFor(correctCheckoutPracticeDartUseCase)
+final correctCheckoutPracticeDartUseCaseProvider =
+    CorrectCheckoutPracticeDartUseCaseProvider._();
+
+final class CorrectCheckoutPracticeDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectCheckoutPracticeDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctCheckoutPracticeDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() =>
+      _$correctCheckoutPracticeDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctCheckoutPracticeDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctCheckoutPracticeDartUseCaseHash() =>
+    r'8b53855a5ae9f45cd0e0cb578699d5cd65088251';
+
 @ProviderFor(createGameUseCase)
 final createGameUseCaseProvider = CreateGameUseCaseProvider._();
 
