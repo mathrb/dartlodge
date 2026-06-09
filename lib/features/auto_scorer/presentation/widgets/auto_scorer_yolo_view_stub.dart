@@ -45,6 +45,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
     required this.dartConfidence,
     required this.initialZoom,
     required this.onStatus,
+    this.expand = false,
   });
 
   final AutoScorerSession session;
@@ -54,6 +55,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<TrackerStatus> onStatus;
+  final bool expand;
 
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();

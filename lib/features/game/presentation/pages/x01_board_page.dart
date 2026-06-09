@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
-import '../../../../core/providers/board_overlay_provider.dart';
+import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/checkout_table.dart';
@@ -206,7 +206,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
 
     final asyncState = ref.watch(activeGameProvider(widget.gameId));
     final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
-    final overlay = ref.watch(boardOverlayBuilderProvider);
+    final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
       loading: () => Scaffold(
@@ -287,12 +287,6 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       ],
                     ),
                   ),
-                  // Auto-scoring control bar (#382): a slim row under the
-                  // header so the scoreboard below stays fully visible. Rendered
-                  // via the core boardOverlayBuilder seam (no game→auto_scorer
-                  // import); null/absent when the feature is off.
-                  if (autoScoringOn && overlay != null)
-                    overlay(context, widget.gameId),
                   GameStatusBarWidget(
                     configLabel: '${gameState.startingScore}',
                     currentLegIndex: gameState.currentLegIndex,
@@ -300,11 +294,21 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     roundInLeg: roundInLeg,
                     totalRounds: gameState.x01TotalRounds,
                     currentTurnDarts: currentTurnDarts,
-                    // Tap a thrown dart to correct it (#376). Disabled once the
-                    // game is complete (completed games are read-only).
+                    // Manual mode: tap a thrown dart to correct it (#376).
+                    // Camera-first mode (#427): every slot is a tap target —
+                    // a thrown dart corrects, an empty slot opens manual entry
+                    // for a dart the camera missed. Disabled once complete.
                     onDartTapped: gameState.isComplete
                         ? null
-                        : (index) => _showCorrectionSheet(context, index),
+                        : (index) => autoScoringOn
+                            ? _onSlotTapped(context, index, dartsThrownInTurn)
+                            : _showCorrectionSheet(context, index),
+                    // Empty-slot manual entry only while the turn is live —
+                    // adding a dart to an inactive turn (bust/checkout/leg-over)
+                    // would throw InvalidGameStateException.
+                    tapEmptySlots: autoScoringOn &&
+                        !gameState.isComplete &&
+                        gameState.turnActive,
                   ),
                   PlayerScoreSectionWidget(
                     gameState: gameState,
@@ -315,13 +319,19 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     outStrategy: gameState.outStrategy,
                     dartsThrownInTurn: dartsThrownInTurn,
                   ),
+                  // Camera-first (#427): the camera preview/controls fill the
+                  // body (no manual grid, no MISS/Bull — manual entry lives in
+                  // the dart-indicator modal). Manual mode keeps the input grid.
                   Expanded(
-                    child: DartInputGridWidget(
-                      onSegmentTapped: (segment) => ref
-                          .read(activeGameProvider(widget.gameId).notifier)
-                          .processDart(segment),
-                      enabled: !gameState.isComplete && gameState.turnActive,
-                    ),
+                    child: autoScoringOn && cameraPreview != null
+                        ? cameraPreview(context, widget.gameId)
+                        : DartInputGridWidget(
+                            onSegmentTapped: (segment) => ref
+                                .read(activeGameProvider(widget.gameId).notifier)
+                                .processDart(segment),
+                            enabled:
+                                !gameState.isComplete && gameState.turnActive,
+                          ),
                   ),
                   _BottomActionBar(
                     canUndo: canUndo,
@@ -398,6 +408,60 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       .read(activeGameProvider(widget.gameId).notifier)
                       .correctTurnDart(dartIndex, segment);
                   Navigator.of(sheetContext).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Camera-first dart-indicator tap (#427): a thrown slot opens correction; an
+  /// empty slot opens manual entry for a dart the camera missed.
+  void _onSlotTapped(BuildContext context, int index, int dartsThrownInTurn) {
+    if (index < dartsThrownInTurn) {
+      _showCorrectionSheet(context, index);
+    } else {
+      _showEntrySheet(context);
+    }
+  }
+
+  /// Manual-entry modal hosting the standard [DartInputGridWidget] — the
+  /// camera-first replacement for the always-visible grid. Submits the picked
+  /// segment as the next dart of the turn.
+  void _showEntrySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('Enter dart', style: AppTextStyles.titleMedium),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.55,
+              // Watch the live turn so the grid disables if the turn ends while
+              // the sheet is open (e.g. the camera fills the 3rd dart) — guards
+              // against submitting to a closed turn.
+              child: Consumer(
+                builder: (ctx, ref, _) {
+                  final s = ref.watch(activeGameProvider(widget.gameId)).value;
+                  final active = s != null &&
+                      !s.gameState.isComplete &&
+                      s.gameState.turnActive;
+                  return DartInputGridWidget(
+                    enabled: active,
+                    onSegmentTapped: (segment) {
+                      ref
+                          .read(activeGameProvider(widget.gameId).notifier)
+                          .processDart(segment);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  );
                 },
               ),
             ),

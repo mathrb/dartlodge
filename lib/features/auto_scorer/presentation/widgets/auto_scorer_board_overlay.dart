@@ -12,12 +12,14 @@ import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Scoreboard-primary assist-mode control bar (#377 §5.2). The X01/Cricket board
-/// renders this (via the core `boardOverlayBuilder` seam) as a slim row directly
-/// under the header. Detection runs on a small live `YOLOView` preview shown
-/// while running (native streaming inference — YOLOView must be mounted to run,
-/// so unlike the old headless path there is now an in-game preview). The
-/// one-time aim step is a transient fullscreen `YOLOView` route.
+/// Scoreboard-primary assist-mode camera widget (#377 §5.2). Two layouts via
+/// [expand]: the band variant (`expand: false`, via the core `boardOverlayBuilder`
+/// seam) is a slim row under the header (Cricket); the camera-first variant
+/// (`expand: true`, via `boardCameraPreviewBuilder`, #427) fills a flexible body
+/// region with a large preview (X01). Detection runs on a live `YOLOView`
+/// preview shown while running (native streaming inference — YOLOView must be
+/// mounted to run, so unlike the old headless path there is now an in-game
+/// preview). The one-time aim step is a transient fullscreen `YOLOView` route.
 ///
 /// Web-safe SHELL: it imports only the conditional `auto_scorer_yolo_view.dart`
 /// seam (stub on web), NEVER `ultralytics_yolo`/`camera` — `main.dart` imports
@@ -28,7 +30,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
   final String gameId;
 
-  const AutoScorerBoardOverlay({super.key, required this.gameId});
+  /// Camera-first layout (#427): when true the running preview fills the
+  /// available height (the board places this in an `Expanded`) instead of the
+  /// slim ~140px band. Idle/aim states are unchanged.
+  final bool expand;
+
+  const AutoScorerBoardOverlay(
+      {super.key, required this.gameId, this.expand = false});
 
   @override
   ConsumerState<AutoScorerBoardOverlay> createState() =>
@@ -170,55 +178,66 @@ class _AutoScorerBoardOverlayState
       _turnOrdinal += 1;
     });
     final scheme = Theme.of(context).colorScheme;
+    final running = _mode == _Mode.running && _session != null;
+    final preview = running
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: AutoScorerYoloPreview(
+              session: _session!,
+              gameId: widget.gameId,
+              expand: widget.expand,
+              currentTurnOrdinal: () => _turnOrdinal,
+              calConfidence:
+                  ref.watch(autoScorerCalConfidenceProvider).value ??
+                      kDefaultConfidence,
+              dartConfidence:
+                  ref.watch(autoScorerDartConfidenceProvider).value ??
+                      kDefaultConfidence,
+              initialZoom:
+                  (ref.watch(autoScorerCameraZoomProvider).value ??
+                          kDefaultCameraZoom)
+                      .clamp(1.0, 5.0),
+              // Guard: an in-flight onResult from the preview's YOLOView
+              // could fire as this shell is disposing; don't write to the
+              // already-disposed notifier.
+              onStatus: (s) {
+                if (mounted) _status.value = s;
+              },
+            ),
+          )
+        : null;
+    final children = <Widget>[
+      if (preview != null)
+        // Camera-first: let the preview fill the flexible region; band mode:
+        // fixed ~140px height (set inside AutoScorerYoloPreview).
+        widget.expand
+            ? Expanded(
+                child: Padding(
+                    padding: const EdgeInsets.only(bottom: 4), child: preview))
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 4), child: preview),
+      // In camera-first idle/aim there is no preview yet; centre the Start
+      // action in the open space instead of pinning it to the top.
+      if (widget.expand && preview == null)
+        Expanded(child: Center(child: _barRow()))
+      else
+        _barRow(),
+      if (running)
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Tap a dart to correct a misread',
+            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+          ),
+        ),
+    ];
     return Material(
       color: scheme.surfaceContainerHigh,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_mode == _Mode.running && _session != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: AutoScorerYoloPreview(
-                    session: _session!,
-                    gameId: widget.gameId,
-                    currentTurnOrdinal: () => _turnOrdinal,
-                    calConfidence: ref
-                            .watch(autoScorerCalConfidenceProvider)
-                            .value ??
-                        kDefaultConfidence,
-                    dartConfidence: ref
-                            .watch(autoScorerDartConfidenceProvider)
-                            .value ??
-                        kDefaultConfidence,
-                    initialZoom: (ref
-                                .watch(autoScorerCameraZoomProvider)
-                                .value ??
-                            kDefaultCameraZoom)
-                        .clamp(1.0, 5.0),
-                    // Guard: an in-flight onResult from the preview's YOLOView
-                    // could fire as this shell is disposing; don't write to the
-                    // already-disposed notifier.
-                    onStatus: (s) {
-                      if (mounted) _status.value = s;
-                    },
-                  ),
-                ),
-              ),
-            _barRow(),
-            if (_mode == _Mode.running)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Tap a dart to correct a misread',
-                  style: TextStyle(
-                      fontSize: 11, color: scheme.onSurfaceVariant),
-                ),
-              ),
-          ],
+          mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+          children: children,
         ),
       ),
     );
