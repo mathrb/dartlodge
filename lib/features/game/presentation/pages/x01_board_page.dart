@@ -303,7 +303,12 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                         : (index) => autoScoringOn
                             ? _onSlotTapped(context, index, dartsThrownInTurn)
                             : _showCorrectionSheet(context, index),
-                    tapEmptySlots: autoScoringOn && !gameState.isComplete,
+                    // Empty-slot manual entry only while the turn is live —
+                    // adding a dart to an inactive turn (bust/checkout/leg-over)
+                    // would throw InvalidGameStateException.
+                    tapEmptySlots: autoScoringOn &&
+                        !gameState.isComplete &&
+                        gameState.turnActive,
                   ),
                   PlayerScoreSectionWidget(
                     gameState: gameState,
@@ -439,12 +444,24 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
-              child: DartInputGridWidget(
-                onSegmentTapped: (segment) {
-                  ref
-                      .read(activeGameProvider(widget.gameId).notifier)
-                      .processDart(segment);
-                  Navigator.of(sheetContext).pop();
+              // Watch the live turn so the grid disables if the turn ends while
+              // the sheet is open (e.g. the camera fills the 3rd dart) — guards
+              // against submitting to a closed turn.
+              child: Consumer(
+                builder: (ctx, ref, _) {
+                  final s = ref.watch(activeGameProvider(widget.gameId)).value;
+                  final active = s != null &&
+                      !s.gameState.isComplete &&
+                      s.gameState.turnActive;
+                  return DartInputGridWidget(
+                    enabled: active,
+                    onSegmentTapped: (segment) {
+                      ref
+                          .read(activeGameProvider(widget.gameId).notifier)
+                          .processDart(segment);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  );
                 },
               ),
             ),

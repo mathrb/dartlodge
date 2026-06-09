@@ -12,12 +12,14 @@ import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Scoreboard-primary assist-mode control bar (#377 §5.2). The X01/Cricket board
-/// renders this (via the core `boardOverlayBuilder` seam) as a slim row directly
-/// under the header. Detection runs on a small live `YOLOView` preview shown
-/// while running (native streaming inference — YOLOView must be mounted to run,
-/// so unlike the old headless path there is now an in-game preview). The
-/// one-time aim step is a transient fullscreen `YOLOView` route.
+/// Scoreboard-primary assist-mode camera widget (#377 §5.2). Two layouts via
+/// [expand]: the band variant (`expand: false`, via the core `boardOverlayBuilder`
+/// seam) is a slim row under the header (Cricket); the camera-first variant
+/// (`expand: true`, via `boardCameraPreviewBuilder`, #427) fills a flexible body
+/// region with a large preview (X01). Detection runs on a live `YOLOView`
+/// preview shown while running (native streaming inference — YOLOView must be
+/// mounted to run, so unlike the old headless path there is now an in-game
+/// preview). The one-time aim step is a transient fullscreen `YOLOView` route.
 ///
 /// Web-safe SHELL: it imports only the conditional `auto_scorer_yolo_view.dart`
 /// seam (stub on web), NEVER `ultralytics_yolo`/`camera` — `main.dart` imports
