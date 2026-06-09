@@ -27,8 +27,9 @@ class UltralyticsDartDetector implements DartDetector {
   final FramePreprocessor _preprocessor;
 
   /// Lower bound on the confidence we ask the plugin to return, so a cal point
-  /// sitting just below the user's threshold is still surfaced to the HUD for
-  /// tuning. Per-class acceptance is applied in [buildDetectionFrame].
+  /// sitting just below the user's threshold is still surfaced to the
+  /// calibration overlay for tuning. Per-class acceptance is applied in
+  /// [buildDetectionFrame].
   ///
   /// Safe only because the standard NMS detect path keeps the top
   /// `numItemsThreshold` (30) detections **by confidence**, so a 0.05 floor's
@@ -52,8 +53,8 @@ class UltralyticsDartDetector implements DartDetector {
   }) async {
     final Uint8List input;
     if (skipPreprocess) {
-      // Diagnostics A/B (#377 §3): hand the raw bytes to the plugin, which
-      // letterboxes to the model input itself, skipping our 800×800 step.
+      // Raw-serve path (raw-capture brief): hand the raw bytes to the plugin,
+      // which letterboxes to the model input itself, skipping our 800×800 step.
       // Detections then map to the raw frame — coordinate-consistent for the
       // tracker (cals + tips share that frame) but NOT aligned with a stored
       // 800×800 capture, so the caller suppresses capture while skipping.
@@ -66,7 +67,8 @@ class UltralyticsDartDetector implements DartDetector {
       input = square;
     }
     // Run NMS at a floor below both thresholds so sub-threshold cals still come
-    // back (the HUD shows them); the per-class thresholds gate actual detection.
+    // back (the calibration overlay shows them); the per-class thresholds gate
+    // actual detection.
     final floor =
         math.min(_hudFloor, math.min(calConfidence, dartConfidence));
     final result = await _yolo.predict(input, confidenceThreshold: floor);

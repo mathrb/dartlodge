@@ -97,7 +97,7 @@ class AutoScorerSettingsPage extends ConsumerWidget {
           // Detection thresholds (#377 §3). The model's recall is measured at a
           // near-zero eval threshold, so a lower operating threshold recovers
           // borderline cal points / darts; expose both so they can be tuned
-          // against the HUD's per-cal confidence readout.
+          // against the calibration overlay's per-cal confidence readout.
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text('Detection thresholds',
