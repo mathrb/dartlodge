@@ -116,6 +116,30 @@ void main() {
       expect(dartThrown.payload['input_method'], 'manual');
     });
 
+    test('threads inputMethod into the payload (camera) (#427)', () async {
+      final captured = <GameEvent>[];
+      when(mockEventRepo.appendEvents(any)).thenAnswer((inv) async {
+        captured.addAll(inv.positionalArguments[0] as List<GameEvent>);
+      });
+
+      final dart = DartThrow(
+        dartId: 'd1',
+        gameId: 'g1',
+        competitorId: 'c1',
+        playerId: 'p1',
+        turnNumber: 1,
+        dartNumber: 1,
+        segment: '1',
+        score: 1,
+      );
+
+      await useCase.execute(atcInitialState(), dart, inputMethod: 'camera');
+
+      final dartThrown =
+          captured.firstWhere((e) => e.eventType == 'DartThrown');
+      expect(dartThrown.payload['input_method'], 'camera');
+    });
+
     test('triple hit reports score = base × multiplier', () async {
       final captured = <GameEvent>[];
       when(mockEventRepo.appendEvents(any)).thenAnswer((inv) async {

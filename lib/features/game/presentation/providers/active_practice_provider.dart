@@ -25,10 +25,11 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     return ActivePracticeState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) =>
-      _serializer.run(() => _processDartImpl(segment));
+  Future<void> processDart(String segment, {String inputMethod = 'manual'}) =>
+      _serializer.run(() => _processDartImpl(segment, inputMethod: inputMethod));
 
-  Future<void> _processDartImpl(String segment) async {
+  Future<void> _processDartImpl(String segment,
+      {String inputMethod = 'manual'}) async {
     final current = state.value;
     if (current == null) return;
 
@@ -60,16 +61,21 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
 
     state = await AsyncValue.guard(() async {
       var newGs = await switch (gs.gameType) {
-        GameType.aroundTheClock =>
-          ref.read(processAroundTheClockDartUseCaseProvider).execute(gs, dart),
-        GameType.bobs27 =>
-          ref.read(processBobs27DartUseCaseProvider).execute(gs, dart),
-        GameType.shanghai =>
-          ref.read(processShanghaiDartUseCaseProvider).execute(gs, dart),
-        GameType.catch40 =>
-          ref.read(processCatch40DartUseCaseProvider).execute(gs, dart),
-        GameType.checkoutPractice =>
-          ref.read(processCheckoutPracticeDartUseCaseProvider).execute(gs, dart),
+        GameType.aroundTheClock => ref
+            .read(processAroundTheClockDartUseCaseProvider)
+            .execute(gs, dart, inputMethod: inputMethod),
+        GameType.bobs27 => ref
+            .read(processBobs27DartUseCaseProvider)
+            .execute(gs, dart, inputMethod: inputMethod),
+        GameType.shanghai => ref
+            .read(processShanghaiDartUseCaseProvider)
+            .execute(gs, dart, inputMethod: inputMethod),
+        GameType.catch40 => ref
+            .read(processCatch40DartUseCaseProvider)
+            .execute(gs, dart, inputMethod: inputMethod),
+        GameType.checkoutPractice => ref
+            .read(processCheckoutPracticeDartUseCaseProvider)
+            .execute(gs, dart, inputMethod: inputMethod),
         _ => throw UnsupportedError(
             'Unsupported practice game type: ${gs.gameType}'),
       };
