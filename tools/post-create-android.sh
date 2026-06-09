@@ -16,6 +16,12 @@ if [[ ! -f $GRADLE ]]; then
 fi
 sed -i 's/app\.dart_lodge/app.dartlodge/g' "$GRADLE"
 
+# ultralytics_yolo 0.6.x runs Android inference on LiteRT 2.x, which declares
+# minSdkVersion 23. `flutter create` defaults the app below that via the
+# `flutter.minSdkVersion` placeholder, so the Gradle manifest merge / APK build
+# fails. Pin the floor to 23 (works for both the Groovy and Kotlin DSL).
+sed -i 's/flutter\.minSdkVersion/23/g' "$GRADLE"
+
 OLD_KOTLIN_DIR="android/app/src/main/kotlin/app/dart_lodge"
 NEW_KOTLIN_DIR="android/app/src/main/kotlin/app/dartlodge"
 if [[ -d $OLD_KOTLIN_DIR ]]; then
@@ -40,4 +46,4 @@ if [[ -f test/widget_test.dart ]] && grep -q "MyApp" test/widget_test.dart; then
   rm -f test/widget_test.dart
 fi
 
-echo "android applicationId set to app.dartlodge, label set to DartLodge"
+echo "android applicationId set to app.dartlodge, label set to DartLodge, minSdk pinned to 23"
