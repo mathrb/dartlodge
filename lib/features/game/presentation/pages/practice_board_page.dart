@@ -4,6 +4,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/game/dart_input_sink.dart';
+import '../../../../core/providers/auto_scorer_providers.dart';
+import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
@@ -21,6 +24,38 @@ import '../widgets/practice_target_display_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
 enum _DrillAction { endDrill, settings }
+
+/// Routes auto-scorer-detected darts into the active practice game (#427).
+/// `advanceTurn` backs the opt-in board-clear auto-advance; it no-ops when the
+/// game is complete and bumps `activeTurnSignal` like the manual NEXT button so
+/// the tracker's per-turn cap resets in lock-step. Practice is single-competitor
+/// with no bust/leg/game-win modal to protect, so `isComplete` is the only guard.
+class _PracticeDartInputSink implements DartInputSink {
+  _PracticeDartInputSink(this._ref, this._gameId);
+  final WidgetRef _ref;
+  final String _gameId;
+
+  @override
+  void submitDart(String segment) => _ref
+      .read(activePracticeProvider(_gameId).notifier)
+      .processDart(segment, inputMethod: 'camera');
+
+  @override
+  void advanceTurn() {
+    final s = _ref.read(activePracticeProvider(_gameId)).value;
+    // No-op when complete, or when the current turn has no darts yet: Catch 40's
+    // internal same-target auto-advance (inside processDart) already starts a
+    // fresh turn without bumping activeTurnSignal, so a board-clear here would
+    // otherwise advance again and emit a spurious 0-dart TurnEnded.
+    if (s == null ||
+        s.gameState.isComplete ||
+        s.gameState.dartsThrownInTurn == 0) {
+      return;
+    }
+    _ref.read(activePracticeProvider(_gameId).notifier).startNextTurn();
+    _ref.read(activeTurnSignalProvider.notifier).bump();
+  }
+}
 
 /// Defer used by the Shanghai-on-final-dart path so the inline `_ShanghaiBonus`
 /// banner (1300ms animation) finishes before we navigate away. All other
@@ -41,6 +76,15 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   void initState() {
     super.initState();
     WakelockPlus.enable();
+    // Register the auto-scorer→game emit sink (#427), post-frame to avoid
+    // mutating a provider during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(activeDartInputSinkProvider.notifier)
+            .bind(_PracticeDartInputSink(ref, widget.gameId));
+      }
+    });
   }
 
   @override
@@ -118,6 +162,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     );
 
     final asyncState = ref.watch(activePracticeProvider(widget.gameId));
+    final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
+    final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -147,6 +193,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
 
         final gs = practiceState.gameState;
         final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
+        final cameraFirst = autoScoringOn && cameraPreview != null;
         final competitor = gs.competitors[gs.currentTurnIndex];
         final allDarts = competitor.dartThrows;
         final currentTurnDarts =
@@ -272,15 +319,24 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 // the target display's secondary metric instead.
                 totalRounds: isCheckout ? null : _totalRounds(gs),
                 currentTurnDarts: currentTurnDarts,
+                // Camera-first (#427): empty dart slots open manual entry for a
+                // dart the camera missed; thrown slots open correction.
+                onDartTapped: !cameraFirst || gs.isComplete
+                    ? null
+                    : (index) => _onSlotTapped(context, gs, index,
+                        effectiveTarget, doublesOnly),
+                tapEmptySlots: cameraFirst && !gs.isComplete && gs.turnActive,
               ),
-              Expanded(
-                child: DartboardHighlightWidget(
-                  currentTarget: effectiveTarget,
-                  doublesOnly: doublesOnly,
-                  bobs27: isBobs27,
-                  noHighlight: isCatch40 || isCheckout,
+              // Camera-first hides the aim dartboard (the camera IS the board).
+              if (!cameraFirst)
+                Expanded(
+                  child: DartboardHighlightWidget(
+                    currentTarget: effectiveTarget,
+                    doublesOnly: doublesOnly,
+                    bobs27: isBobs27,
+                    noHighlight: isCatch40 || isCheckout,
+                  ),
                 ),
-              ),
               PracticeTargetDisplayWidget(
                 gameType: gs.gameType,
                 currentTarget: effectiveTarget,
@@ -309,7 +365,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               ),
               if (isShanghai)
                 _ShanghaiBonus(show: practiceState.showShanghaiBonus),
-              if (isCatch40 || isCheckout)
+              // Camera-first (#427): the camera fills the body in place of the
+              // input buttons; manual entry lives in the dart-indicator modal.
+              if (cameraFirst)
+                Expanded(child: cameraPreview(context, widget.gameId))
+              else if (isCatch40 || isCheckout)
                 Expanded(
                   flex: 2,
                   child: PracticeInputButtonsWidget(
@@ -357,7 +417,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     !gs.isComplete,
                 pulseNext: !gs.isComplete && !gs.turnActive,
                 onUndo: notifier.undoDart,
-                onNextRound: notifier.startNextTurn,
+                onNextRound: () async {
+                  await notifier.startNextTurn();
+                  // Reset the auto-scorer's per-turn cap in lock-step (#380).
+                  ref.read(activeTurnSignalProvider.notifier).bump();
+                },
               ),
             ],
           ),
@@ -365,6 +429,79 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           ),
         );
       },
+    );
+  }
+
+  /// Camera-first dart-indicator tap (#427): a thrown slot opens correction,
+  /// an empty slot opens manual entry for a dart the camera missed. Both host
+  /// the standard practice input buttons in a modal.
+  void _onSlotTapped(BuildContext context, GameState gs, int index,
+      int? effectiveTarget, bool doublesOnly) {
+    final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
+    if (index < gs.dartsThrownInTurn) {
+      _showSegmentSheet(context,
+          title: 'Correct dart ${index + 1}',
+          gameType: gs.gameType,
+          currentTarget: effectiveTarget,
+          doublesOnly: doublesOnly,
+          onSegment: (seg) => notifier.correctTurnDart(index, seg));
+    } else {
+      _showSegmentSheet(context,
+          title: 'Enter dart',
+          gameType: gs.gameType,
+          currentTarget: effectiveTarget,
+          doublesOnly: doublesOnly,
+          onSegment: (seg) => notifier.processDart(seg));
+    }
+  }
+
+  /// Modal hosting the standard [PracticeInputButtonsWidget] — the camera-first
+  /// replacement for the always-visible input. Watches the live turn so the
+  /// buttons disable if the turn ends while the sheet is open.
+  void _showSegmentSheet(
+    BuildContext context, {
+    required String title,
+    required GameType gameType,
+    required int? currentTarget,
+    required bool doublesOnly,
+    required void Function(String segment) onSegment,
+  }) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(title, style: AppTextStyles.titleMedium),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.55,
+              child: Consumer(
+                builder: (ctx, ref, _) {
+                  final s =
+                      ref.watch(activePracticeProvider(widget.gameId)).value;
+                  final active = s != null &&
+                      !s.gameState.isComplete &&
+                      s.gameState.turnActive;
+                  return PracticeInputButtonsWidget(
+                    gameType: gameType,
+                    currentTarget: currentTarget,
+                    doublesOnly: doublesOnly,
+                    enabled: active,
+                    onDartThrown: (seg) {
+                      onSegment(seg);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
