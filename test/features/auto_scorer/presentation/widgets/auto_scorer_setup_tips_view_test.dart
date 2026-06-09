@@ -45,6 +45,19 @@ void main() {
     expect(find.text('Steel-tip boards'), findsOneWidget);
   });
 
+  testWidgets('review mode hides the checkbox + Continue action',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+        home: AutoScorerSetupTipsView(reviewOnly: true)));
+
+    // Tips still render…
+    expect(find.text('Fill the frame'), findsOneWidget);
+    expect(find.text('Any rotation is fine'), findsOneWidget);
+    // …but the game-flow controls are gone (nothing to continue to / remember).
+    expect(find.text("Don't show this again"), findsNothing);
+    expect(find.text('Continue to camera'), findsNothing);
+  });
+
   testWidgets('Continue without checking pops false', (tester) async {
     bool? result;
     await _open(tester, (v) => result = v);
