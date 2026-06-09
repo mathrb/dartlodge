@@ -3,6 +3,7 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/pages/lab/auto_scorer_lab_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:flutter/material.dart';
@@ -142,6 +143,15 @@ class AutoScorerSettingsPage extends ConsumerWidget {
                 : (v) => ref
                     .read(autoScorerSkipPreprocessProvider.notifier)
                     .setEnabled(v),
+          ),
+          ListTile(
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('Labo caméra (expériences)'),
+            subtitle: const Text(
+                'Bancs d\'essai des approches de détection sur device. '
+                'N\'affecte pas le scoring.'),
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AutoScorerLabPage())),
           ),
         ],
       ),
