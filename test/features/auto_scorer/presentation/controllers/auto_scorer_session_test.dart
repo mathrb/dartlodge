@@ -317,4 +317,87 @@ void main() {
     expect(status.phase, TrackerPhase.rebaselined);
     expect(session.dartsOnBoard, 0);
   });
+
+  // --- YOLOView streaming path (no predict detector) ---
+
+  test('processDetectionFrame emits after confirm, with NO detector', () {
+    // Constructed without a detector/preprocessor (the YOLOView path).
+    final session = AutoScorerSession();
+    expect(session.processDetectionFrame(oneDartFrame).emittedDarts, isEmpty);
+    expect(
+        session.processDetectionFrame(oneDartFrame).emittedDarts, hasLength(1));
+  });
+
+  test('processDetectionFrame surfaces status + cal confidences (track-only)',
+      () {
+    final frame = DetectionFrame(
+      calPoints: const [],
+      dartCandidates: const [],
+      calConfidences: const [0.9, null, 0.3, 0.8],
+    );
+    final session = AutoScorerSession();
+    final result = session.processDetectionFrame(frame);
+    expect(result.calConfidences, const [0.9, null, 0.3, 0.8]);
+    expect(result.timings.detect, Duration.zero); // no detector ran
+    expect(result.timings.track, greaterThanOrEqualTo(Duration.zero));
+  });
+
+  test('persistEmittedDarts stores raw-space records with correct handles', () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    // Confirm+emit one dart so dartsThisTurn == 1.
+    session.processDetectionFrame(oneDartFrame);
+    final r = session.processDetectionFrame(oneDartFrame);
+    expect(r.emittedDarts, hasLength(1));
+
+    final raw = Uint8List.fromList(const [9, 9, 9]);
+    await session.persistEmittedDarts(oneDartFrame, raw,
+        turnOrdinal: 3, gameId: 'g', count: r.emittedDarts.length);
+
+    expect(store.savedBytes, hasLength(1));
+    expect(store.savedBytes.single, raw); // verbatim
+    final record = store.saved.single;
+    expect(record.frameSpace, FrameSpace.raw);
+    expect(record.frameWidth, 0);
+    expect(record.frameHeight, 0);
+    expect(record.handle,
+        const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 1));
+  });
+
+  test('persistEmittedDarts is a no-op without a store or with count 0', () async {
+    final store = _FakeCaptureStore();
+    final withStore = AutoScorerSession(captureStore: store);
+    await withStore.persistEmittedDarts(oneDartFrame,
+        Uint8List.fromList(const [1]),
+        turnOrdinal: 1, gameId: 'g', count: 0);
+    expect(store.saved, isEmpty);
+
+    final noStore = AutoScorerSession();
+    // Must not throw without a store.
+    await noStore.persistEmittedDarts(oneDartFrame, Uint8List.fromList(const [1]),
+        turnOrdinal: 1, gameId: 'g', count: 1);
+  });
+
+  test('persistManualCapture stores a raw-space manual-handle record', () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    final raw = Uint8List.fromList(const [7, 7]);
+    final saved = await session.persistManualCapture(oneDartFrame, raw,
+        turnOrdinal: 2, gameId: 'g');
+    expect(saved, isTrue);
+    expect(store.savedBytes.single, raw);
+    final record = store.saved.single;
+    expect(record.frameSpace, FrameSpace.raw);
+    expect(record.handle,
+        const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
+  });
+
+  test('persistManualCapture returns false without a capture store', () async {
+    final session = AutoScorerSession();
+    expect(
+        await session.persistManualCapture(
+            oneDartFrame, Uint8List.fromList(const [1]),
+            turnOrdinal: 1, gameId: 'g'),
+        isFalse);
+  });
 }

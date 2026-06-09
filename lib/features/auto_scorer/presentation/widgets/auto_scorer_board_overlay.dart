@@ -1,40 +1,30 @@
-import 'dart:async';
-
-import 'package:camera/camera.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
-import 'package:dart_lodge/core/utils/app_theme.dart';
-import 'package:dart_lodge/core/utils/stat_formatter.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/providers/dart_detector_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/camera_zoom_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/providers/frame_preprocessor_provider.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_cal_overlay_painter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_timing_hud.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Scoreboard-primary assist-mode control bar (#377 §5.2, #382 rework). The
-/// X01/Cricket board renders this (via the core `boardOverlayBuilder` seam) as a
-/// **slim row directly under the header**, so the scoreboard — including the
-/// three-dart indicator — stays fully visible (it is laid out in flow, not
-/// floated over the board). Detection runs **headless** once started; the
-/// one-time aim step is a transient fullscreen route, not this bar.
+/// Scoreboard-primary assist-mode control bar (#377 §5.2). The X01/Cricket board
+/// renders this (via the core `boardOverlayBuilder` seam) as a slim row directly
+/// under the header. Detection runs on a small live `YOLOView` preview shown
+/// while running (native streaming inference — YOLOView must be mounted to run,
+/// so unlike the old headless path there is now an in-game preview). The
+/// one-time aim step is a transient fullscreen `YOLOView` route.
+///
+/// Web-safe SHELL: it imports only the conditional `auto_scorer_yolo_view.dart`
+/// seam (stub on web), NEVER `ultralytics_yolo`/`camera` — `main.dart` imports
+/// this file directly, so it stays on the web build path.
 ///
 /// Emits detected darts through the core `DartInputSink` (bound by the board),
-/// so it never imports the game feature. Camera/device-only: shows nothing
-/// usable on web / unsupported devices (the detector stub reports unsupported).
+/// so it never imports the game feature.
 class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
   final String gameId;
 
@@ -45,45 +35,38 @@ class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
       _AutoScorerBoardOverlayState();
 }
 
-enum _Mode { idle, running }
+enum _Mode { idle, aim, running }
 
 class _AutoScorerBoardOverlayState
     extends ConsumerState<AutoScorerBoardOverlay> {
   _Mode _mode = _Mode.idle;
   bool _starting = false;
-  CameraController? _camera;
   AutoScorerSession? _session;
-  Timer? _timer;
-  bool _busy = false;
   int _turnOrdinal = 1;
   String? _error;
-  TrackerStatus _status = const TrackerStatus(
-      phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0);
 
-  /// Rolling per-frame timings for the diagnostics HUD (#377 §3); newest last,
-  /// capped so the average tracks recent frames rather than the whole session.
-  static const int _maxTimingSamples = 30;
-  final List<PipelineTimings> _timings = [];
+  /// Tracker status for the chip. A [ValueNotifier] (not setState) so the live
+  /// `onResult` stream (~3 Hz) updates only the chip — never rebuilding the
+  /// `YOLOView` preview (which would churn / risk a native remount).
+  final ValueNotifier<TrackerStatus> _status = ValueNotifier(
+    const TrackerStatus(
+        phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
+  );
 
-  /// Latest per-cal-class confidences `[cal1..cal4]` (null = absent), shown in
-  /// the diagnostics HUD so the user can tune the calibration threshold.
-  List<double?> _calConfidences = const [null, null, null, null];
+  @override
+  void dispose() {
+    _status.dispose();
+    _session?.dispose();
+    super.dispose();
+  }
 
-  /// idle → (one-time setup tips) → aiming → running: show the tips on first run
-  /// (before any heavy load, so cancelling is free), then load the model + open
-  /// the camera, push a one-time fullscreen aim preview, then (on "Done") start
-  /// headless detection. The aim step is a transient route so this bar never
-  /// grows to cover the scoreboard.
+  /// idle → (one-time tips) → aim (fullscreen YOLOView) → running (inline preview).
   Future<void> _start() async {
     setState(() {
       _error = null;
       _starting = true;
     });
-    CameraController? controller;
     try {
-      // One-time setup tips before the first aim (#393). Shown before any heavy
-      // load so cancelling is cheap. Pops null (cancel) / false (continue) /
-      // true (continue + remember).
       final tipsSeen = await ref.read(autoScorerSetupTipsSeenProvider.future);
       if (!mounted) return;
       if (!tipsSeen) {
@@ -103,85 +86,34 @@ class _AutoScorerBoardOverlayState
           if (!mounted) return;
         }
       }
-      final detector = await ref.read(dartDetectorProvider.future);
-      if (!mounted) return;
-      if (!detector.isSupported) {
+      if (!kAutoScorerYoloSupported) {
         _fail('Auto-scoring is not available on this device.');
         return;
       }
       final store = await ref.read(captureStoreProvider.future);
-      final preprocessor = ref.read(framePreprocessorProvider);
+      if (!mounted) return;
+      // No predict detector: YOLOView loads its own model. The session just
+      // wires the tracker + capture; start() prunes captures to the cap.
       final session = AutoScorerSession(
-          detector: detector,
-          preprocessor: preprocessor,
-          captureStore: store,
-          modelVersion: kAutoScorerModelVersion);
-      final loaded = await session.start();
+          captureStore: store, modelVersion: kAutoScorerModelVersion);
+      await session.start();
       if (!mounted) return;
-      if (!loaded) {
-        _fail('Detection model not found (see assets/models).');
-        return;
-      }
-      final cameras = await availableCameras();
-      if (!mounted) return;
-      if (cameras.isEmpty) {
-        _fail('No camera found.');
-        return;
-      }
-      controller = CameraController(cameras.first, ResolutionPreset.high,
-          enableAudio: false);
-      await controller.initialize();
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
       _session = session;
-      _camera = controller;
-      // One-time aim: a transient fullscreen modal to position the phone — an
-      // ephemeral overlay carrying a live CameraController, not an app screen,
-      // so it uses Navigator.push (a routed go_router screen can't take a
-      // runtime object). Returns true on "Done", false/null on cancel or back.
-      // _starting stays true so the bar shows a spinner behind the modal rather
-      // than re-exposing "Start camera".
-      // Resolve detection settings once for the aim overlay (this state has
-      // `ref`; the aim view stays riverpod-free). Defaults match the providers.
-      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
       final calConf =
           ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
       final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
           kDefaultConfidence;
-      // Resolve the device's zoom range and apply the persisted level once
-      // before the aim view opens (#393 setup flow: a tighter frame = more board
-      // pixels in the 800 letterbox). A device with no zoom reports
-      // minZoom == maxZoom == 1.0, and the aim view hides the slider.
-      var minZoom = 1.0;
-      var maxZoom = 1.0;
-      try {
-        minZoom = await controller.getMinZoomLevel();
-        maxZoom = await controller.getMaxZoomLevel();
-      } catch (_) {
-        // Zoom unsupported — leave both at 1.0 (slider hidden).
-      }
-      final initialZoom = (ref.read(autoScorerCameraZoomProvider).value ??
-              kDefaultCameraZoom)
-          .clamp(minZoom, maxZoom);
-      try {
-        await controller.setZoomLevel(initialZoom);
-      } catch (_) {
-        // Best-effort; the live preview still works at the default level.
-      }
-      if (!mounted) return;
+      final initialZoom =
+          (ref.read(autoScorerCameraZoomProvider).value ?? kDefaultCameraZoom)
+              .clamp(1.0, 5.0);
+      setState(() => _mode = _Mode.aim);
       final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => _AutoScorerAimView(
-          controller: controller!,
+        builder: (_) => AutoScorerYoloAimView(
           session: session,
           gameId: widget.gameId,
-          skipPreprocess: skip,
           calConfidence: calConf,
           dartConfidence: dartConf,
-          minZoom: minZoom,
-          maxZoom: maxZoom,
           initialZoom: initialZoom,
           onZoomChanged: (z) =>
               ref.read(autoScorerCameraZoomProvider.notifier).set(z),
@@ -189,24 +121,21 @@ class _AutoScorerBoardOverlayState
       ));
       if (!mounted) return;
       if (done == true) {
-        _beginRunning();
+        setState(() {
+          _mode = _Mode.running;
+          _starting = false;
+        });
       } else {
         _stop();
       }
     } catch (e) {
-      // Release the controller if it was created before the failure (e.g.
-      // initialize() threw), so the native camera isn't leaked.
-      await controller?.dispose();
       _fail('Camera setup failed: $e');
     }
   }
 
   void _fail(String message) {
     if (!mounted) return;
-    // The local controller (if any) is already disposed by the caller; clear
-    // the fields so dispose()/_stop() don't double-dispose or leave a dangling
-    // reference. The shared detector (via the session) is left intact.
-    _camera = null;
+    _session?.dispose();
     _session = null;
     setState(() {
       _error = message;
@@ -215,141 +144,32 @@ class _AutoScorerBoardOverlayState
     });
   }
 
-  /// aiming → running: start headless detection (no preview).
-  void _beginRunning() {
-    if (_camera == null) return;
-    setState(() {
-      _mode = _Mode.running;
-      _starting = false;
-    });
-    // Capture faster than ~1 Hz inference so a fast third dart isn't starved
-    // before the user pulls (#377 §3); inference runs per call.
-    _timer = Timer.periodic(const Duration(milliseconds: 700), (_) => _tick());
-  }
-
-  /// Stop detection and release the camera (back to idle); scoreboard untouched.
+  /// Stop detection and release the camera (back to idle). The inline preview
+  /// unmounts on the mode switch → its YOLOView disposes the native camera.
   void _stop() {
-    _timer?.cancel();
-    _timer = null;
-    final cam = _camera;
-    _camera = null;
-    cam?.dispose();
     _session?.dispose();
     _session = null;
-    _timings.clear();
     setState(() {
       _mode = _Mode.idle;
       _starting = false;
     });
   }
 
-  Future<void> _tick() async {
-    final camera = _camera;
-    final session = _session;
-    if (_busy || camera == null || session == null) return;
-    _busy = true;
-    try {
-      final captureWatch = Stopwatch()..start();
-      final shot = await camera.takePicture();
-      final bytes = await shot.readAsBytes();
-      captureWatch.stop();
-      if (!mounted) return;
-      final collect = ref.read(dataCollectionEnabledProvider).value ?? false;
-      // Match the provider's persisted default (#raw-capture brief: native on)
-      // so a frame taken before prefs resolve is captured in the right space.
-      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
-      final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
-          kDefaultConfidence;
-      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
-          kDefaultConfidence;
-      final result = await session.onFrame(
-        bytes,
-        turnOrdinal: _turnOrdinal,
-        gameId: widget.gameId,
-        collectData: collect,
-        skipPreprocess: skip,
-        calConfidence: calConf,
-        dartConfidence: dartConf,
-      );
-      if (!mounted) return;
-      final sink = ref.read(activeDartInputSinkProvider);
-      for (final dart in result.emittedDarts) {
-        sink?.submitDart(dart.segment);
-      }
-      setState(() {
-        _recordTimings(result.timings.copyWith(capture: captureWatch.elapsed));
-        _status = result.status;
-        _calConfidences = result.calConfidences;
-      });
-    } catch (_) {
-      // Drop this frame; the next tick retries.
-    } finally {
-      _busy = false;
-    }
-  }
-
-  Future<void> _forceCapture() async {
-    final camera = _camera;
-    final session = _session;
-    if (_busy || camera == null || session == null) return;
-    _busy = true;
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final shot = await camera.takePicture();
-      final bytes = await shot.readAsBytes();
-      if (!mounted) return;
-      final skip = ref.read(autoScorerSkipPreprocessProvider).value ?? true;
-      final calConf = ref.read(autoScorerCalConfidenceProvider).value ??
-          kDefaultConfidence;
-      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
-          kDefaultConfidence;
-      final saved = await session.captureCurrentFrame(bytes,
-          turnOrdinal: _turnOrdinal,
-          gameId: widget.gameId,
-          skipPreprocess: skip,
-          calConfidence: calConf,
-          dartConfidence: dartConf);
-      messenger.showSnackBar(SnackBar(
-          content: Text(saved
-              ? 'Frame saved for training'
-              : 'Enable data collection to save frames')));
-    } catch (_) {
-    } finally {
-      _busy = false;
-    }
-  }
-
   void _removeDarts() {
     final status = _session?.removeDarts();
-    if (status != null) setState(() => _status = status);
-  }
-
-  void _recordTimings(PipelineTimings t) {
-    _timings.add(t);
-    if (_timings.length > _maxTimingSamples) _timings.removeAt(0);
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _camera?.dispose();
-    _session?.dispose();
-    super.dispose();
+    if (status != null) _status.value = status;
   }
 
   @override
   Widget build(BuildContext context) {
-    // The board bumps this whenever the turn advances (via its own next-turn
-    // button); reset the tracker's per-turn cap in lock-step so the next
-    // player's darts keep emitting (#380).
+    // The board bumps this whenever the turn advances (its own next-turn button);
+    // reset the tracker's per-turn cap in lock-step (#380). No setState: the
+    // preview reads [_turnOrdinal] live for capture handles.
     ref.listen<int>(activeTurnSignalProvider, (_, __) {
       _session?.onTurnAdvanced();
       _turnOrdinal += 1;
     });
     final scheme = Theme.of(context).colorScheme;
-    final hudOn = ref.watch(autoScorerTimingHudEnabledProvider).value ?? false;
-    // A full-width strip in the board's layout flow (under the header), so it
-    // never overlaps the scoreboard / dart indicator (#377 §5.2).
     return Material(
       color: scheme.surfaceContainerHigh,
       child: Padding(
@@ -357,10 +177,33 @@ class _AutoScorerBoardOverlayState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (_mode == _Mode.running && _session != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: AutoScorerYoloPreview(
+                    session: _session!,
+                    gameId: widget.gameId,
+                    currentTurnOrdinal: () => _turnOrdinal,
+                    calConfidence: ref
+                            .watch(autoScorerCalConfidenceProvider)
+                            .value ??
+                        kDefaultConfidence,
+                    dartConfidence: ref
+                            .watch(autoScorerDartConfidenceProvider)
+                            .value ??
+                        kDefaultConfidence,
+                    initialZoom: (ref
+                                .watch(autoScorerCameraZoomProvider)
+                                .value ??
+                            kDefaultCameraZoom)
+                        .clamp(1.0, 5.0),
+                    onStatus: (s) => _status.value = s,
+                  ),
+                ),
+              ),
             _barRow(),
-            // Discreet discoverability hint: auto-scored darts land in the
-            // scoreboard's three-dart indicator, which is tappable to fix a
-            // misread (same correction path as manual entry).
             if (_mode == _Mode.running)
               Align(
                 alignment: Alignment.centerLeft,
@@ -368,21 +211,6 @@ class _AutoScorerBoardOverlayState
                   'Tap a dart to correct a misread',
                   style: TextStyle(
                       fontSize: 11, color: scheme.onSurfaceVariant),
-                ),
-              ),
-            if (_mode == _Mode.running && hudOn && _timings.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 4, bottom: 2),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AutoScorerTimingHud(
-                    last: _timings.last,
-                    samples: _timings,
-                    skipPreprocess:
-                        ref.watch(autoScorerSkipPreprocessProvider).value ??
-                            false,
-                    calConfidences: _calConfidences,
-                  ),
                 ),
               ),
           ],
@@ -398,14 +226,12 @@ class _AutoScorerBoardOverlayState
           Expanded(
             child: Align(
               alignment: Alignment.centerLeft,
-              child: AutoScorerStatusChip(status: _status),
+              child: ValueListenableBuilder<TrackerStatus>(
+                valueListenable: _status,
+                builder: (_, status, __) =>
+                    AutoScorerStatusChip(status: status),
+              ),
             ),
-          ),
-          IconButton(
-            tooltip: 'Capture frame',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.add_a_photo_outlined),
-            onPressed: _forceCapture,
           ),
           IconButton(
             tooltip: 'Remove darts',
@@ -422,8 +248,10 @@ class _AutoScorerBoardOverlayState
         ],
       );
     }
-    // Idle: a single Start action (plus the last error, if any).
+    // idle / aim: a single Start action (plus the last error, if any). While the
+    // aim modal is up, show a spinner behind it rather than re-exposing "Start".
     final scheme = Theme.of(context).colorScheme;
+    final busy = _starting || _mode == _Mode.aim;
     return Row(
       children: [
         Expanded(
@@ -435,11 +263,13 @@ class _AutoScorerBoardOverlayState
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (_starting)
+        if (busy)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: SizedBox(
-                width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2)),
           )
         else
           FilledButton.tonalIcon(
@@ -448,308 +278,6 @@ class _AutoScorerBoardOverlayState
             label: const Text('Start camera'),
           ),
       ],
-    );
-  }
-}
-
-/// One-time fullscreen aim preview (#377 §5.2), pushed as a transient route by
-/// the control bar so the persistent UI never covers the scoreboard. Returns
-/// `true` on "Done aiming", `false` on cancel.
-///
-/// Runs detection-only inference on a timer while aiming and overlays the
-/// model's per-cal predictions on the live preview, so the user can reframe
-/// until all four cals are found. It is handed the already-open [controller] and
-/// [session] (owned by the parent) and must NOT dispose either.
-class _AutoScorerAimView extends StatefulWidget {
-  const _AutoScorerAimView({
-    required this.controller,
-    required this.session,
-    required this.gameId,
-    required this.skipPreprocess,
-    required this.calConfidence,
-    required this.dartConfidence,
-    required this.minZoom,
-    required this.maxZoom,
-    required this.initialZoom,
-    required this.onZoomChanged,
-  });
-
-  final CameraController controller;
-  final AutoScorerSession session;
-
-  /// Game id for tagging manually-captured training frames (same store/path as
-  /// the in-game capture button).
-  final String gameId;
-  final bool skipPreprocess;
-  final double calConfidence;
-  final double dartConfidence;
-
-  /// Device zoom range (`minZoom == maxZoom` ⇒ no zoom; slider hidden).
-  final double minZoom;
-  final double maxZoom;
-
-  /// Zoom already applied to [controller] when the view opens.
-  final double initialZoom;
-
-  /// Persist the chosen zoom (wired to the camera-zoom notifier by the parent).
-  final void Function(double zoom) onZoomChanged;
-
-  @override
-  State<_AutoScorerAimView> createState() => _AutoScorerAimViewState();
-}
-
-class _AutoScorerAimViewState extends State<_AutoScorerAimView> {
-  Timer? _timer;
-  bool _busy = false;
-  // "Capture photo" sets this; the next detect tick saves the frame it already
-  // captured (no separate takePicture that would race the tick's _busy guard and
-  // get silently dropped). One pending capture at a time — the tick clears it.
-  bool _captureRequested = false;
-  DetectionFrame? _latest;
-  // Readiness gate: "Done aiming" only enables once the four cals have held
-  // steady for a few frames, so the user can't commit on a single lucky frame.
-  final CalibrationStabilityGate _gate = CalibrationStabilityGate();
-  CalibrationStability _stability = (stableFrames: 0, isReady: false);
-  // Consecutive frames showing darts but no calibration → likely the darts are
-  // occluding the markers. Debounced so a single transient frame doesn't flash
-  // the prompt.
-  int _occlusionFrames = 0;
-  static const int _occlusionFramesToWarn = 2;
-  // Clamp to the slider's own range, not just [minZoom, maxZoom]: if a device
-  // reports maxZoom > the ceiling, the camera was opened at initialZoom but the
-  // slider only goes to _sliderMax, so keep the field in lock-step with what the
-  // slider can display.
-  late double _zoom = widget.initialZoom.clamp(widget.minZoom, _sliderMax);
-
-  /// Cap the slider so a phone reporting a large *digital* zoom (e.g. 8×) can't
-  /// be driven into a mushy, low-detail frame that hurts detection.
-  static const double _zoomCeiling = 5.0;
-
-  bool get _zoomSupported => widget.maxZoom > widget.minZoom;
-  double get _sliderMax => widget.maxZoom.clamp(widget.minZoom, _zoomCeiling);
-
-  @override
-  void initState() {
-    super.initState();
-    // Same cadence + _busy guard as the headless _tick loop.
-    _timer = Timer.periodic(
-        const Duration(milliseconds: 700), (_) => _detectTick());
-  }
-
-  Future<void> _setZoom(double value) async {
-    setState(() => _zoom = value);
-    try {
-      await widget.controller.setZoomLevel(value);
-    } catch (_) {
-      // Ignore transient failures (e.g. controller mid-transition).
-    }
-  }
-
-  /// Request a training capture: the next detect tick saves the frame it already
-  /// captured (see [_captureRequested]). We don't take a picture here — doing so
-  /// would race the tick's `_busy` guard and get silently dropped (the cause of
-  /// missing captures). Idempotent: extra taps before the tick collapse to one.
-  /// Acknowledges immediately since the save lands on the next tick (≤700 ms).
-  void _requestCapture() {
-    if (_captureRequested) return;
-    setState(() => _captureRequested = true);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Capturing frame for training…'),
-        duration: Duration(milliseconds: 800)));
-  }
-
-  Future<void> _detectTick() async {
-    if (_busy) return;
-    _busy = true;
-    try {
-      final shot = await widget.controller.takePicture();
-      final bytes = await shot.readAsBytes();
-      if (!mounted) return;
-      final frame = await widget.session.detectOnly(
-        bytes,
-        skipPreprocess: widget.skipPreprocess,
-        calConfidence: widget.calConfidence,
-        dartConfidence: widget.dartConfidence,
-      );
-      if (!mounted) return;
-      // Honour a pending capture using this tick's frame — no extra takePicture,
-      // no dropped taps. `turnOrdinal: 0` tags these as pre-game manual (`t0-m*`).
-      if (_captureRequested) {
-        _captureRequested = false;
-        await widget.session.captureCurrentFrame(
-          bytes,
-          turnOrdinal: 0,
-          gameId: widget.gameId,
-          skipPreprocess: widget.skipPreprocess,
-          calConfidence: widget.calConfidence,
-          dartConfidence: widget.dartConfidence,
-        );
-        if (!mounted) return;
-      }
-      final stability = _gate.update(frame);
-      final occluded =
-          !frame.hasCalibration && frame.dartCandidates.isNotEmpty;
-      setState(() {
-        _latest = frame;
-        _stability = stability;
-        _occlusionFrames = occluded ? _occlusionFrames + 1 : 0;
-      });
-    } catch (_) {
-      // Drop this frame; the next tick retries (mirrors _tick).
-    } finally {
-      _busy = false;
-    }
-  }
-
-  /// Stop detecting, then return [result]. Cancelling the timer on commit means
-  /// the periodic `_detectTick` no longer fires during the route transition —
-  /// otherwise it could race the parent's headless `_tick` (started by
-  /// `_beginRunning`) for the same camera. A button-triggered
-  /// `_captureTrainingFrame` already in flight isn't cancelled here, but if its
-  /// `takePicture` overlaps the parent's first `_tick` the camera-busy error is
-  /// swallowed by both callers' catch blocks (one dropped frame, no crash).
-  void _finish(bool result) {
-    _timer?.cancel();
-    _timer = null;
-    Navigator.of(context).pop(result);
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    // Do NOT dispose controller/session — owned by the parent overlay; the
-    // headless run after "Done" reuses them.
-    super.dispose();
-  }
-
-  /// Zoom control over the live preview. White-on-black to stay legible over the
-  /// camera feed (matches the hint text styling in this view). Persists only on
-  /// release (`onChangeEnd`) to avoid SharedPrefs churn while dragging.
-  Widget _zoomSlider() {
-    final clamped = _zoom.clamp(widget.minZoom, _sliderMax);
-    return Row(
-      children: [
-        const Icon(Icons.zoom_out, color: Colors.white, size: 20),
-        Expanded(
-          child: Slider(
-            min: widget.minZoom,
-            max: _sliderMax,
-            value: clamped,
-            onChanged: (v) => _setZoom(v),
-            onChangeEnd: widget.onZoomChanged,
-          ),
-        ),
-        const Icon(Icons.zoom_in, color: Colors.white, size: 20),
-        const SizedBox(width: 8),
-        SizedBox(
-          width: 44,
-          child: Text('${StatFormatter.fmtDouble(clamped)}×',
-              textAlign: TextAlign.end,
-              style: const TextStyle(color: Colors.white)),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final controller = widget.controller;
-    final calibrated = _latest?.hasCalibration ?? false;
-    final found =
-        _latest?.calBestPoints.where((p) => p != null).length ?? 0;
-    final fill =
-        _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
-    final ready = _stability.isReady;
-    // Hint priority mirrors the button state so it always explains why the
-    // button is enabled/disabled: stability (not fill) is the gate, so when not
-    // ready we always say "Hold steady". Fill is advisory — it only surfaces
-    // once ready (button enabled), as a soft "for better accuracy" nudge.
-    final occluded = _occlusionFrames >= _occlusionFramesToWarn;
-    final hint = _latest == null
-        ? 'Aim at the board…'
-        : !calibrated
-            ? (occluded
-                ? 'Darts may be blocking the markers — pull the darts or adjust the camera'
-                : '$found/4 markers — reframe so all 4 show. Any board rotation is fine.')
-            : !ready
-                ? 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}'
-                : fill < kGoodFillRatio
-                    ? 'Ready — move closer or zoom in for better accuracy, or Done aiming'
-                    : 'Ready — Done aiming';
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Full-screen preview, as it was before the cal overlay existed (#408
-          // wrapped it in Center>AspectRatio to anchor the overlay, which shrank
-          // it to a letterboxed band). CameraPreview fills the Stack; the overlay
-          // fills the SAME area, so it maps detection coords (0–1) onto the same
-          // rect the preview fills → aligned, no AspectRatio band, no rotation.
-          CameraPreview(controller),
-          Positioned.fill(
-            child: CustomPaint(
-              painter: CalOverlayPainter(
-                frame: _latest,
-                skipPreprocess: widget.skipPreprocess,
-                calConfidence: widget.calConfidence,
-                rawFrameSize: controller.value.previewSize,
-                acceptedColor: Theme.of(context).colorScheme.primary,
-                subColor: AppTheme.award(context),
-                guideColor: Colors.white.withValues(alpha: 0.5),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_zoomSupported) _zoomSlider(),
-                    // Always available (independent of detection / "ready"): lets
-                    // the user collect training photos in orientations the model
-                    // can't yet calibrate. Same capture path as in-game.
-                    FilledButton.tonalIcon(
-                      onPressed: _requestCapture,
-                      icon: const Icon(Icons.add_a_photo_outlined),
-                      label: const Text('Capture photo'),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        FilledButton.tonal(
-                            onPressed: () => _finish(false),
-                            child: const Text('Cancel')),
-                        FilledButton.icon(
-                          // Enabled only once the cals have held steady — the
-                          // gate is the commit guard (advisory fill never blocks).
-                          onPressed: ready ? () => _finish(true) : null,
-                          icon: const Icon(Icons.check),
-                          label: const Text('Done aiming'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: Alignment.topCenter,
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(hint,
-                    style: const TextStyle(color: Colors.white)),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
