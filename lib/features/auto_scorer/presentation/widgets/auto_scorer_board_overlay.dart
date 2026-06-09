@@ -199,7 +199,12 @@ class _AutoScorerBoardOverlayState
                                 .value ??
                             kDefaultCameraZoom)
                         .clamp(1.0, 5.0),
-                    onStatus: (s) => _status.value = s,
+                    // Guard: an in-flight onResult from the preview's YOLOView
+                    // could fire as this shell is disposing; don't write to the
+                    // already-disposed notifier.
+                    onStatus: (s) {
+                      if (mounted) _status.value = s;
+                    },
                   ),
                 ),
               ),

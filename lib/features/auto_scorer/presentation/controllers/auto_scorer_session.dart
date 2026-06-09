@@ -27,11 +27,18 @@ class SessionFrameResult {
   /// for the diagnostics HUD's calibration readout.
   final List<double?> calConfidences;
 
+  /// The dart-in-turn ordinal (1-based) of the FIRST dart emitted this frame, or
+  /// null when none emitted. Captured synchronously at emission time so the
+  /// async capture path ([persistEmittedDarts]) labels handles correctly even if
+  /// another frame advances the tracker before its `captureFrame()` resolves.
+  final int? firstEmittedDartOrdinal;
+
   const SessionFrameResult({
     required this.emittedDarts,
     required this.status,
     this.timings = const PipelineTimings(),
     this.calConfidences = const [null, null, null, null],
+    this.firstEmittedDartOrdinal,
   });
 }
 
@@ -54,7 +61,11 @@ class AutoScorerSession {
         _tracker = tracker ?? DartTracker(),
         _captureStore = captureStore,
         _preprocessor = preprocessor,
-        _modelVersion = modelVersion;
+        _modelVersion = modelVersion,
+        // The detector-backed path ([onFrame]/[captureCurrentFrame]) letterboxes
+        // via the preprocessor, so the two must be provided together.
+        assert(detector == null || preprocessor != null,
+            'a detector-backed session also needs a preprocessor');
 
   /// Predict-detector path (takePicture → [DartDetector.detect]). Null for the
   /// YOLOView streaming path, which computes [DetectionFrame]s natively and feeds
@@ -221,11 +232,15 @@ class AutoScorerSession {
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
     trackWatch.stop();
+    final emitted = update.newDarts.length;
     return SessionFrameResult(
       emittedDarts: [for (final d in update.newDarts) d.score],
       status: update.status,
       timings: PipelineTimings(track: trackWatch.elapsed),
       calConfidences: frame.calConfidences,
+      // Snapshot the ordinal NOW (synchronously), before any async capture.
+      firstEmittedDartOrdinal:
+          emitted == 0 ? null : _tracker.dartsThisTurn - emitted + 1,
     );
   }
 
@@ -239,12 +254,15 @@ class AutoScorerSession {
     DetectionFrame frame,
     Uint8List bytes, {
     required int turnOrdinal,
+    required int firstDartOrdinal,
     required String gameId,
     required int count,
   }) async {
     final store = _captureStore;
     if (store == null || count <= 0) return;
-    final firstOrdinal = _tracker.dartsThisTurn - count + 1;
+    // [firstDartOrdinal] is snapshotted at emission time (SessionFrameResult)
+    // rather than re-read from the tracker here, which could have advanced
+    // during the caller's async captureFrame() await.
     final capture =
         _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
     for (var i = 0; i < count; i++) {
@@ -253,7 +271,7 @@ class AutoScorerSession {
           frame,
           gameId,
           CaptureHandle(
-              turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
+              turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstDartOrdinal + i),
           capture,
         ),
         bytes,

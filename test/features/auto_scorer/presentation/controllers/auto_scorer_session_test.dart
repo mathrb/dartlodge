@@ -349,10 +349,14 @@ void main() {
     session.processDetectionFrame(oneDartFrame);
     final r = session.processDetectionFrame(oneDartFrame);
     expect(r.emittedDarts, hasLength(1));
+    expect(r.firstEmittedDartOrdinal, 1); // snapshotted at emission time
 
     final raw = Uint8List.fromList(const [9, 9, 9]);
     await session.persistEmittedDarts(oneDartFrame, raw,
-        turnOrdinal: 3, gameId: 'g', count: r.emittedDarts.length);
+        turnOrdinal: 3,
+        firstDartOrdinal: r.firstEmittedDartOrdinal!,
+        gameId: 'g',
+        count: r.emittedDarts.length);
 
     expect(store.savedBytes, hasLength(1));
     expect(store.savedBytes.single, raw); // verbatim
@@ -369,13 +373,13 @@ void main() {
     final withStore = AutoScorerSession(captureStore: store);
     await withStore.persistEmittedDarts(oneDartFrame,
         Uint8List.fromList(const [1]),
-        turnOrdinal: 1, gameId: 'g', count: 0);
+        turnOrdinal: 1, firstDartOrdinal: 1, gameId: 'g', count: 0);
     expect(store.saved, isEmpty);
 
     final noStore = AutoScorerSession();
     // Must not throw without a store.
     await noStore.persistEmittedDarts(oneDartFrame, Uint8List.fromList(const [1]),
-        turnOrdinal: 1, gameId: 'g', count: 1);
+        turnOrdinal: 1, firstDartOrdinal: 1, gameId: 'g', count: 1);
   });
 
   test('persistManualCapture stores a raw-space manual-handle record', () async {

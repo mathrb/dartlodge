@@ -141,7 +141,18 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
         const SnackBar(content: Text('Frame saved for training')));
   }
 
-  void _finish(bool done) {
+  Future<void> _finish(bool done) async {
+    // Release the aim camera BEFORE the route pops: the in-game preview mounts
+    // its own YOLOView as soon as the modal returns, and two YOLOViews live
+    // during the ~300ms pop animation would contend for the hardware camera
+    // ("camera busy"). Stopping here is the YOLOView equivalent of the old aim
+    // view cancelling its timer before pop (#408).
+    try {
+      await _controller.stop();
+    } catch (_) {
+      // Best-effort; dispose() still tears the controller down.
+    }
+    if (!mounted) return;
     if (Navigator.of(context).canPop()) Navigator.of(context).pop(done);
   }
 
@@ -302,17 +313,20 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     }
     if (result.emittedDarts.isNotEmpty &&
         (ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      unawaited(_captureEmitted(frame, result.emittedDarts.length));
+      unawaited(_captureEmitted(frame, result.firstEmittedDartOrdinal!,
+          result.emittedDarts.length));
     }
     widget.onStatus(result.status);
   }
 
-  Future<void> _captureEmitted(DetectionFrame frame, int count) async {
+  Future<void> _captureEmitted(
+      DetectionFrame frame, int firstOrdinal, int count) async {
     try {
       final bytes = await _controller.captureFrame();
       if (!mounted || bytes == null) return;
       await widget.session.persistEmittedDarts(frame, bytes,
           turnOrdinal: widget.currentTurnOrdinal(),
+          firstDartOrdinal: firstOrdinal,
           gameId: widget.gameId,
           count: count);
     } catch (_) {
