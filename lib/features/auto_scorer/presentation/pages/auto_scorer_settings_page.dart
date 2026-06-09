@@ -3,8 +3,6 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/pages/lab/auto_scorer_lab_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:flutter/material.dart';
@@ -26,8 +24,6 @@ class AutoScorerSettingsPage extends ConsumerWidget {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
-    final timingHud = ref.watch(autoScorerTimingHudEnabledProvider);
-    final skipPreprocess = ref.watch(autoScorerSkipPreprocessProvider);
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
 
@@ -122,51 +118,6 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             enabled: !dartConf.isLoading,
             onChanged: (v) =>
                 ref.read(autoScorerDartConfidenceProvider.notifier).set(v),
-          ),
-          const Divider(),
-          // Developer diagnostics for the lag investigation (#377 §3). Both off
-          // by default; they only affect an active auto-scoring session.
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Text('Diagnostics',
-                style: TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.speed),
-            title: const Text('Show timing HUD'),
-            subtitle: const Text(
-                'Overlay per-frame capture / detect / track timings while '
-                'auto-scoring runs.'),
-            value: timingHud.value ?? false,
-            onChanged: timingHud.isLoading
-                ? null
-                : (v) => ref
-                    .read(autoScorerTimingHudEnabledProvider.notifier)
-                    .setEnabled(v),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.compare_arrows),
-            title: const Text('Skip preprocessing'),
-            subtitle: const Text(
-                'Send raw frames straight to the model (native resize) instead '
-                'of our 800×800 letterbox. Much faster, but a different input '
-                'than the model trained on. Automatic training capture pauses '
-                'while on (the manual capture button still works).'),
-            value: skipPreprocess.value ?? false,
-            onChanged: skipPreprocess.isLoading
-                ? null
-                : (v) => ref
-                    .read(autoScorerSkipPreprocessProvider.notifier)
-                    .setEnabled(v),
-          ),
-          ListTile(
-            leading: const Icon(Icons.science_outlined),
-            title: const Text('Labo caméra (expériences)'),
-            subtitle: const Text(
-                'Bancs d\'essai des approches de détection sur device. '
-                'N\'affecte pas le scoring.'),
-            onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const AutoScorerLabPage())),
           ),
         ],
       ),
