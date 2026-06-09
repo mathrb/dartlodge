@@ -39,6 +39,24 @@ class _X01DartInputSink implements DartInputSink {
   void submitDart(String segment) => _ref
       .read(activeGameProvider(_gameId).notifier)
       .processDart(segment, inputMethod: 'camera');
+
+  @override
+  void advanceTurn() {
+    // No-op when a modal/celebration is pending or the game is over: advanceTurn
+    // dismisses the bust/leg modals, so an auto-advance on board-clear must not
+    // fire past a checkout/leg/game win the player hasn't acknowledged yet.
+    final s = _ref.read(activeGameProvider(_gameId)).value;
+    if (s == null ||
+        s.gameState.isComplete ||
+        s.showBust ||
+        s.pendingLegWinnerId != null ||
+        s.pendingGameWinnerId != null ||
+        s.pendingCapSelection) {
+      return;
+    }
+    _ref.read(activeGameProvider(_gameId).notifier).advanceTurn();
+    _ref.read(activeTurnSignalProvider.notifier).bump();
+  }
 }
 
 class X01BoardPage extends ConsumerStatefulWidget {

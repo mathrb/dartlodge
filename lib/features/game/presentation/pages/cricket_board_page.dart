@@ -38,6 +38,24 @@ class _CricketDartInputSink implements DartInputSink {
   void submitDart(String segment) => _ref
       .read(activeCricketGameProvider(_gameId).notifier)
       .processDart(segment, inputMethod: 'camera');
+
+  @override
+  void advanceTurn() {
+    // No-op when a modal/celebration is pending or the game is over, so an
+    // auto-advance on board-clear never dismisses a leg/game-win modal. The
+    // non-interactive advance intentionally skips Cricket's "<3 darts" confirm
+    // dialog — a detected board clear means the throw is done.
+    final s = _ref.read(activeCricketGameProvider(_gameId)).value;
+    if (s == null ||
+        s.gameState.isComplete ||
+        s.pendingLegWinnerId != null ||
+        s.pendingGameWinnerId != null ||
+        s.pendingCapSelection) {
+      return;
+    }
+    _ref.read(activeCricketGameProvider(_gameId).notifier).nextPlayer();
+    _ref.read(activeTurnSignalProvider.notifier).bump();
+  }
 }
 
 class CricketBoardPage extends ConsumerStatefulWidget {
