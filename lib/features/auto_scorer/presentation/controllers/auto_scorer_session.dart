@@ -229,7 +229,7 @@ class AutoScorerSession {
   /// YOLOView path: feed an already-computed [DetectionFrame] (native streaming
   /// inference) through the tracker — no predict detector. Returns the darts to
   /// emit + status + cal confidences. Capture is separate ([persistEmittedDarts])
-  /// so `capturePhoto()` is only grabbed on emission, off the hot path.
+  /// so a frame is only persisted on emission, off the hot path.
   SessionFrameResult processDetectionFrame(DetectionFrame frame) {
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
@@ -247,12 +247,12 @@ class AutoScorerSession {
   }
 
   /// Store training frames for the [count] darts emitted on the just-processed
-  /// [frame] (YOLOView path): [bytes] is the clean full-resolution still from
-  /// `YOLOViewController.capturePhoto(withOverlays: false)` — no baked-in
-  /// overlay, no preview-crop. Tagged `FrameSpace.raw` with dims 0 — coord-space
-  /// alignment for YOLOView captures is an open question (lab precedent). No-op
-  /// without a capture store or when [count] <= 0. Mirrors the dart-in-turn
-  /// ordinal math in [onFrame].
+  /// [frame] (YOLOView path): [bytes] is the clean original camera frame the
+  /// streaming map carries (`includeOriginalImage`) — full sensor resolution, no
+  /// baked-in overlay, no preview-crop. Tagged `FrameSpace.raw` with dims 0 —
+  /// coord-space alignment for YOLOView captures is an open question (lab
+  /// precedent). No-op without a capture store or when [count] <= 0. Mirrors the
+  /// dart-in-turn ordinal math in [onFrame].
   Future<void> persistEmittedDarts(
     DetectionFrame frame,
     Uint8List bytes, {
@@ -264,8 +264,8 @@ class AutoScorerSession {
     final store = _captureStore;
     if (store == null || count <= 0) return;
     // [firstDartOrdinal] is snapshotted at emission time (SessionFrameResult)
-    // rather than re-read from the tracker here, which could have advanced
-    // during the caller's async capturePhoto() await.
+    // rather than re-read from the tracker here, which could have advanced by
+    // the time this `unawaited` persist runs.
     final capture =
         _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
     for (var i = 0; i < count; i++) {

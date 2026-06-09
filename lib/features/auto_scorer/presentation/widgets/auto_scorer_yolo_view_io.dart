@@ -381,13 +381,16 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     for (final d in result.emittedDarts) {
       sink?.submitDart(d.segment);
     }
+    // Prefer this frame's image; fall back to the last clean frame if the
+    // plugin didn't attach `originalImage` this tick (it's best-effort, not
+    // guaranteed every frame) — at most ~one inference period stale, far better
+    // than silently dropping the training capture.
+    final captureBytes = _rawFrame;
     if (result.emittedDarts.isNotEmpty &&
-        raw != null &&
+        captureBytes != null &&
         (ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      // Persist the exact frame these darts were detected on (captured above),
-      // not a later async grab.
-      unawaited(_captureEmitted(frame, raw, result.firstEmittedDartOrdinal!,
-          result.emittedDarts.length));
+      unawaited(_captureEmitted(frame, captureBytes,
+          result.firstEmittedDartOrdinal!, result.emittedDarts.length));
     }
     // Auto-advance-on-clear (opt-in): when all darts are removed (board-clear →
     // rebaselined) after at least one dart was on the board this turn, advance.
