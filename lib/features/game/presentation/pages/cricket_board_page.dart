@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
-import '../../../../core/providers/board_overlay_provider.dart';
+import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
@@ -150,7 +150,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
     final asyncState = ref.watch(activeCricketGameProvider(widget.gameId));
     final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
-    final overlay = ref.watch(boardOverlayBuilderProvider);
+    final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
       loading: () => const Scaffold(
@@ -253,11 +253,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   ],
                 ),
               ),
-              // Auto-scoring control bar (#382): a slim row under the header so
-              // the scoreboard below stays fully visible. Via the core
-              // boardOverlayBuilder seam; null/absent when the feature is off.
-              if (autoScoringOn && overlay != null)
-                overlay(context, widget.gameId),
               GameStatusBarWidget(
                 configLabel: variantLabel,
                 currentLegIndex: gameState.currentLegIndex,
@@ -265,53 +260,63 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 roundInLeg: gameState.currentRoundInLeg,
                 totalRounds: gameState.cricketTotalRounds,
                 currentTurnDarts: currentTurnDarts,
-                // Tap a thrown dart to correct it (#376). Disabled once the
-                // game is complete (completed games are read-only).
+                // Manual mode: tap a thrown dart to correct it (#376).
+                // Camera-first mode (#427): empty slots also open manual entry
+                // for a dart the camera missed. Disabled once complete.
                 onDartTapped: gameState.isComplete
                     ? null
-                    : (index) =>
-                        _showCorrectionSheet(context, gameState, index),
+                    : (index) => autoScoringOn
+                        ? _onSlotTapped(
+                            context, gameState, index, dartsThrownInTurn)
+                        : _showCorrectionSheet(context, gameState, index),
+                tapEmptySlots: autoScoringOn &&
+                    !gameState.isComplete &&
+                    gameState.turnActive,
               ),
+              // Camera-first (#427): the camera preview/controls fill the body
+              // (no cricket input table — manual entry lives in the dart-
+              // indicator modal). Manual mode keeps the scoring table.
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 4),
-                  child: ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusLarge),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: cs.surfaceContainerLow,
-                        borderRadius:
-                            BorderRadius.circular(AppTheme.radiusLarge),
-                        border: Border.all(
-                          color:
-                              cs.outlineVariant.withValues(alpha: 0.15),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black
-                                .withValues(alpha: AppTheme.shadowAlphaCard),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                child: autoScoringOn && cameraPreview != null
+                    ? cameraPreview(context, widget.gameId)
+                    : Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 4),
+                        child: ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusLarge),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerLow,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusLarge),
+                              border: Border.all(
+                                color:
+                                    cs.outlineVariant.withValues(alpha: 0.15),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                      alpha: AppTheme.shadowAlphaCard),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: CricketUnifiedTableWidget(
+                              gameState: gameState,
+                              onSegmentTapped: (gameState.isComplete ||
+                                      !gameState.turnActive)
+                                  ? (_) {}
+                                  : (segment) => notifier.processDart(segment),
+                              onMiss: (gameState.isComplete ||
+                                      !gameState.turnActive)
+                                  ? () {}
+                                  : () => notifier.processDart('MISS'),
+                            ),
                           ),
-                        ],
+                        ),
                       ),
-                      child: CricketUnifiedTableWidget(
-                        gameState: gameState,
-                        onSegmentTapped:
-                            (gameState.isComplete || !gameState.turnActive)
-                                ? (_) {}
-                                : (segment) =>
-                                    notifier.processDart(segment),
-                        onMiss:
-                            (gameState.isComplete || !gameState.turnActive)
-                                ? () {}
-                                : () => notifier.processDart('MISS'),
-                      ),
-                    ),
-                  ),
-                ),
               ),
               _BottomActionBar(
                 canUndo: canUndo,
@@ -370,6 +375,68 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 onMiss: () {
                   notifier.correctTurnDart(dartIndex, 'MISS');
                   Navigator.of(sheetContext).pop();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Camera-first dart-indicator tap (#427): a thrown slot opens correction; an
+  /// empty slot opens manual entry for a dart the camera missed.
+  void _onSlotTapped(BuildContext context, GameState gameState, int index,
+      int dartsThrownInTurn) {
+    if (index < dartsThrownInTurn) {
+      _showCorrectionSheet(context, gameState, index);
+    } else {
+      _showEntrySheet(context);
+    }
+  }
+
+  /// Manual-entry modal hosting the cricket scoring table — the camera-first
+  /// replacement for the always-visible table. Submits the picked segment (or
+  /// MISS) as the next dart. Watches the live turn so it disables if the turn
+  /// ends while open (e.g. the camera fills the 3rd dart).
+  void _showEntrySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text('Enter dart', style: AppTextStyles.titleMedium),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.6,
+              child: Consumer(
+                builder: (ctx, ref, _) {
+                  final s =
+                      ref.watch(activeCricketGameProvider(widget.gameId)).value;
+                  if (s == null) return const SizedBox.shrink();
+                  final notifier = ref.read(
+                      activeCricketGameProvider(widget.gameId).notifier);
+                  final active =
+                      !s.gameState.isComplete && s.gameState.turnActive;
+                  return CricketUnifiedTableWidget(
+                    gameState: s.gameState,
+                    onSegmentTapped: active
+                        ? (segment) {
+                            notifier.processDart(segment);
+                            Navigator.of(sheetContext).pop();
+                          }
+                        : (_) {},
+                    onMiss: active
+                        ? () {
+                            notifier.processDart('MISS');
+                            Navigator.of(sheetContext).pop();
+                          }
+                        : () {},
+                  );
                 },
               ),
             ),
