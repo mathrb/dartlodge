@@ -43,7 +43,15 @@ class _PracticeDartInputSink implements DartInputSink {
   @override
   void advanceTurn() {
     final s = _ref.read(activePracticeProvider(_gameId)).value;
-    if (s == null || s.gameState.isComplete) return;
+    // No-op when complete, or when the current turn has no darts yet: Catch 40's
+    // internal same-target auto-advance (inside processDart) already starts a
+    // fresh turn without bumping activeTurnSignal, so a board-clear here would
+    // otherwise advance again and emit a spurious 0-dart TurnEnded.
+    if (s == null ||
+        s.gameState.isComplete ||
+        s.gameState.dartsThrownInTurn == 0) {
+      return;
+    }
     _ref.read(activePracticeProvider(_gameId).notifier).startNextTurn();
     _ref.read(activeTurnSignalProvider.notifier).bump();
   }
