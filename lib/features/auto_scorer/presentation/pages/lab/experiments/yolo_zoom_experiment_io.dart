@@ -55,6 +55,13 @@ class _YoloZoomExperimentPageState
   double _ms = 0;
   int _manualSeq = 0;
 
+  /// Unique per page-mount so re-entering the Lab doesn't reuse handle keys:
+  /// a constant gameId + a reset [_manualSeq] would collide (t0-m1, t0-m2…) and
+  /// `CaptureStore.save` overwrites by `(gameId, handle)`, silently clobbering
+  /// earlier captures.
+  late final String _gameId =
+      'lab-yolo-zoom-${DateTime.now().millisecondsSinceEpoch}';
+
   @override
   void dispose() {
     _controller.dispose();
@@ -139,15 +146,18 @@ class _YoloZoomExperimentPageState
         predictedDarts: _darts,
         calPoints: _frame?.calPoints ?? const [],
         modelVersion: kAutoScorerModelVersion,
-        gameId: 'lab-yolo-zoom',
+        gameId: _gameId,
         handle: CaptureHandle.manual(turnOrdinal: 0, sequence: _manualSeq),
         timestamp: DateTime.now(),
         // Lab spike: captureFrame() returns the raw camera frame, while
         // YOLOResult coords are normalised to the inference frame. Coord-space
         // alignment for YOLOView captures is an open Lab question, so we tag
-        // raw and leave dims unknown rather than assert a space we haven't
-        // verified.
+        // raw and mark dims unknown with 0 — the convention auto_scorer_session
+        // uses for a raw frame whose pixel dims it can't read — rather than let
+        // CaptureRecord's 800×800 defaults misrepresent the raw frame.
         frameSpace: FrameSpace.raw,
+        frameWidth: 0,
+        frameHeight: 0,
       ),
       bytes,
     );
