@@ -12,6 +12,7 @@ import 'package:uuid/uuid.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_around_the_clock_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_cricket_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
@@ -23,6 +24,7 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/domain/usecases/correct_dart_use_case.dart';
 import 'package:dart_lodge/features/game/domain/usecases/process_cricket_dart_use_case.dart';
 import 'package:dart_lodge/features/game/domain/usecases/process_dart_use_case.dart';
+import 'package:dart_lodge/features/game/domain/usecases/process_practice_dart_use_case.dart';
 import 'package:dart_lodge/features/game/domain/usecases/undo_last_dart_use_case.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
@@ -167,6 +169,71 @@ Future<_Harness> _setupX01(dynamic base, {int startingScore = 501}) async {
       'competitor_id': c1,
       'player_id': p1,
       'starting_score': startingScore,
+      'turn_index': 0,
+      'leg_index': 0,
+    },
+    synced: false,
+    actorId: 'system',
+    source: EventSource.client,
+  ));
+  final state = replayEvents(
+    initial: GameState.initial(game, competitors),
+    events: await eventRepo.getEventsForGame(gameId),
+    engine: engine,
+  );
+
+  return _Harness(
+      game, competitors, process.execute, correct, engine, eventRepo, state);
+}
+
+Future<_Harness> _setupAtc(dynamic base) async {
+  final playerRepo = await base.createPlayerRepository();
+  final gameRepo = await base.createGameRepository();
+  final dartRepo = await base.createDartThrowRepository();
+  final eventRepo = await base.createGameEventRepository();
+
+  const gameId = 'g1';
+  const c1 = 'c1';
+  const p1 = 'p1';
+
+  await playerRepo.createPlayer(Player(
+      playerId: p1,
+      name: 'P1',
+      createdAt: DateTime.now(),
+      lastActive: DateTime.now()));
+
+  final game = Game(
+    gameId: gameId,
+    gameType: GameType.aroundTheClock,
+    config: const GameConfig.aroundTheClock(),
+    startTime: DateTime.now(),
+    isComplete: false,
+  );
+  final competitors = [
+    const Competitor(
+      competitorId: c1,
+      gameId: gameId,
+      type: CompetitorType.solo,
+      name: 'P1',
+      players: [CompetitorPlayer(playerId: p1, rotationPosition: 0)],
+    ),
+  ];
+  await gameRepo.createGame(game, competitors);
+
+  final engine = StatelessAroundTheClockEngine();
+  final process = ProcessPracticeDartUseCase(gameRepo, eventRepo, dartRepo, engine);
+  final undo = UndoLastDartUseCase(eventRepo, dartRepo, engine);
+  final correct = CorrectDartUseCase(undo, process.execute, eventRepo);
+
+  await eventRepo.appendEvent(GameEvent(
+    eventId: '$gameId-ts0',
+    gameId: gameId,
+    eventType: 'TurnStarted',
+    localSequence: 1,
+    occurredAt: DateTime.now(),
+    payload: {
+      'competitor_id': c1,
+      'player_id': p1,
       'turn_index': 0,
       'leg_index': 0,
     },
@@ -421,6 +488,45 @@ void main() {
           originalEventId: ids.first, segment: 20, multiplier: 1);
 
       expect(newState.competitors[0].score, 20);
+    });
+  });
+
+  // Practice parity (#427): the same generic CorrectDartUseCase, wired with a
+  // practice engine + practice process/undo, corrects a practice dart.
+  runHybridTests('CorrectDartUseCase — practice (ATC)', (base) {
+    test('corrects a mid-turn dart, preserving the tail', () async {
+      final h = await _setupAtc(base);
+      // Opening target is 1; three off-target throws keep the turn at 3 darts.
+      await h.throwDart('5');
+      await h.throwDart('5');
+      await h.throwDart('5');
+      final ids = await h.liveDartIds();
+      expect(ids.length, 3);
+
+      // Correct the first dart 5 → 1 (a hit on the opening target).
+      final newState = await h.correct.execute(h.state,
+          originalEventId: ids.first, segment: 1, multiplier: 1);
+
+      final darts = newState.competitors[0].dartThrows;
+      expect(darts.sublist(darts.length - 3), ['1', '5', '5']);
+    });
+
+    test('post-correction log replays to the same state (cold-load parity)',
+        () async {
+      final h = await _setupAtc(base);
+      await h.throwDart('5');
+      await h.throwDart('5');
+      await h.throwDart('5');
+      final ids = await h.liveDartIds();
+      final corrected = await h.correct.execute(h.state,
+          originalEventId: ids.first, segment: 1, multiplier: 1);
+
+      final replayed = await h.replayFromLog();
+      for (var i = 0; i < corrected.competitors.length; i++) {
+        expect(replayed.competitors[i].dartThrows,
+            corrected.competitors[i].dartThrows);
+        expect(replayed.competitors[i].score, corrected.competitors[i].score);
+      }
     });
   });
 }
