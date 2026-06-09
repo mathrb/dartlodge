@@ -1,5 +1,6 @@
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/diagnostics_provider.dart';
@@ -23,6 +24,7 @@ class AutoScorerSettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final useAuto = ref.watch(autoScoringEnabledProvider);
+    final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
     final timingHud = ref.watch(autoScorerTimingHudEnabledProvider);
     final skipPreprocess = ref.watch(autoScorerSkipPreprocessProvider);
@@ -43,6 +45,19 @@ class AutoScorerSettingsPage extends ConsumerWidget {
                 ? null
                 : (v) =>
                     ref.read(autoScoringEnabledProvider.notifier).setEnabled(v),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.skip_next),
+            title: const Text('Auto-advance turn when board is cleared'),
+            subtitle: const Text(
+                'When all darts are removed, advance to the next player '
+                'automatically instead of pressing NEXT.'),
+            value: autoAdvance.value ?? false,
+            onChanged: autoAdvance.isLoading
+                ? null
+                : (v) => ref
+                    .read(autoAdvanceOnClearEnabledProvider.notifier)
+                    .setEnabled(v),
           ),
           ListTile(
             leading: const Icon(Icons.tips_and_updates_outlined),

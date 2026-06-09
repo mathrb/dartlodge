@@ -6,8 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _RecordingSink implements DartInputSink {
   final List<String> darts = [];
+  int advances = 0;
   @override
   void submitDart(String segment) => darts.add(segment);
+  @override
+  void advanceTurn() => advances++;
 }
 
 void main() {
