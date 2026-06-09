@@ -32,7 +32,7 @@ flutter analyze                 # static analysis
 
 ```bash
 flutter create --platforms=android --org app .   # one-time, after fresh clone or rm -rf android/
-bash tools/post-create-android.sh                 # override applicationId to app.dartlodge
+bash tools/post-create-android.sh                 # override applicationId to app.dartlodge + pin minSdk 23
 flutter build apk --debug                         # or --release
 ```
 
