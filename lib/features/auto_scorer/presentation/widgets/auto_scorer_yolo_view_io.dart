@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
@@ -56,13 +57,50 @@ DetectionFrame _detectionFrameFrom(
   );
 }
 
+/// Parse the YOLOView streaming-data map into `[YOLOResult]`. We drive detection
+/// off `onStreamingData` (not `onResult`) because the plugin makes the two
+/// mutually exclusive, and only the streaming map can also carry the
+/// un-annotated original frame ([rawFrameFromStreamData]). Mirrors the plugin's
+/// private `_parseDetectionResults` field guards.
+List<YOLOResult> resultsFromStreamData(Map<String, dynamic> data) {
+  final dets = data['detections'];
+  if (dets is! List) return const [];
+  final results = <YOLOResult>[];
+  for (final d in dets) {
+    if (d is! Map) continue;
+    if (d['classIndex'] == null ||
+        d['className'] == null ||
+        d['confidence'] == null ||
+        d['boundingBox'] == null ||
+        d['normalizedBox'] == null) {
+      continue;
+    }
+    try {
+      results.add(YOLOResult.fromMap(d));
+    } catch (_) {
+      // Skip a malformed detection rather than dropping the whole frame.
+    }
+  }
+  return results;
+}
+
+/// The un-annotated camera frame (JPEG, full sensor resolution) carried on a
+/// streaming-data map when `includeOriginalImage` is set — the clean still we
+/// persist for training. Null when the native side didn't attach it this frame.
+/// This is what replaces `capturePhoto(withOverlays:false)`, which returned a
+/// black, screen-sized snapshot of the platform view (#426).
+Uint8List? rawFrameFromStreamData(Map<String, dynamic> data) {
+  final raw = data['originalImage'];
+  return raw is Uint8List ? raw : null;
+}
+
 /// Fullscreen one-time aim/calibration view backed by `YOLOView` (native
 /// streaming inference) instead of CameraController + takePicture. Feeds each
-/// `onResult` to the [CalibrationStabilityGate]; "Done aiming" enables once the
-/// four cals have held steady. Zoom drives the native `setZoomLevel`; native
-/// overlays draw the detection boxes (no Dart-side coord mapping) — but the
-/// "Capture photo" button grabs a clean full-resolution still via
-/// `capturePhoto(withOverlays: false)`, not the annotated preview snapshot.
+/// streaming frame to the [CalibrationStabilityGate]; "Done aiming" enables once
+/// the four cals have held steady. Zoom drives the native `setZoomLevel`; native
+/// overlays draw the detection boxes (no Dart-side coord mapping) — and the
+/// "Capture photo" button saves the clean original frame the streaming map
+/// carries (`includeOriginalImage`), not the annotated preview snapshot.
 /// Returns true on Done, false on Cancel/back. Riverpod-free (state + a session
 /// handle).
 class AutoScorerYoloAimView extends StatefulWidget {
@@ -96,6 +134,10 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
   late double _zoom = widget.initialZoom.clamp(_zoomMin, _zoomMax);
 
+  /// Latest clean (un-annotated) camera frame from the streaming map, persisted
+  /// by [_capture]. Replaces the broken `capturePhoto(withOverlays:false)`.
+  Uint8List? _rawFrame;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -109,10 +151,12 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
     if (_zoom != 1.0) _controller.setZoomLevel(_zoom);
   }
 
-  void _onResults(List<YOLOResult> results) {
+  void _onStreamingData(Map<String, dynamic> data) {
     _ensureNative();
-    final frame =
-        _detectionFrameFrom(results, widget.calConfidence, widget.dartConfidence);
+    final raw = rawFrameFromStreamData(data);
+    if (raw != null) _rawFrame = raw;
+    final frame = _detectionFrameFrom(resultsFromStreamData(data),
+        widget.calConfidence, widget.dartConfidence);
     final stability = _gate.update(frame);
     if (!mounted) return;
     setState(() {
@@ -132,14 +176,13 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
 
   Future<void> _capture() async {
     final messenger = ScaffoldMessenger.of(context);
-    // `capturePhoto(withOverlays: false)`, NOT `captureFrame()`: the latter
-    // snapshots the on-screen preview (widget-sized, zoom-cropped) and bakes the
-    // detection overlay in. We want a clean full-resolution still for training.
-    final bytes = await _controller.capturePhoto(withOverlays: false);
-    if (!mounted) return;
+    // The clean full-resolution frame from the streaming map (no overlay), NOT
+    // `capturePhoto(withOverlays:false)` — that returned a black, screen-sized
+    // snapshot of the platform view (#426).
+    final bytes = _rawFrame;
     if (bytes == null) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('Capture failed (no frame).')));
+          const SnackBar(content: Text('Capture failed (no frame yet).')));
       return;
     }
     await widget.session.persistManualCapture(_latest ?? _emptyFrame, bytes,
@@ -192,7 +235,11 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
                 _floor(widget.calConfidence, widget.dartConfidence),
             iouThreshold: 0.45,
             lensFacing: LensFacing.back,
-            onResult: _onResults,
+            // Drive detection off the streaming map so we can also pull the
+            // clean original frame for training capture (onResult/onStreamingData
+            // are mutually exclusive in the plugin). #426
+            streamingConfig: const YOLOStreamingConfig(includeOriginalImage: true),
+            onStreamingData: _onStreamingData,
           ),
           Align(
             alignment: Alignment.topCenter,
@@ -260,12 +307,13 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
       );
 }
 
-/// Always-on small in-game preview (~140px) backed by `YOLOView`. Each
-/// `onResult` is mapped to a [DetectionFrame] and fed to the session's tracker
+/// Always-on small in-game preview (~140px) backed by `YOLOView`. Each streaming
+/// frame is mapped to a [DetectionFrame] and fed to the session's tracker
 /// ([AutoScorerSession.processDetectionFrame]); emitted darts go to the active
-/// `DartInputSink`. Capture-on-emit grabs a clean full-resolution still via
-/// `capturePhoto(withOverlays: false)` only when darts emit AND data-collection
-/// is on. Native overlays draw the on-screen boxes but are NOT in the capture.
+/// `DartInputSink`. Capture-on-emit persists the clean original frame the
+/// streaming map carries (`includeOriginalImage`) only when darts emit AND
+/// data-collection is on. Native overlays draw the on-screen boxes but are NOT
+/// in the capture.
 class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   const AutoScorerYoloPreview({
     super.key,
@@ -296,6 +344,10 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
   bool _nativePushed = false;
   DetectionFrame _latest = _emptyFrame;
 
+  /// Latest clean (un-annotated) camera frame from the streaming map, persisted
+  /// for training. Replaces the broken `capturePhoto(withOverlays:false)` (#426).
+  Uint8List? _rawFrame;
+
   /// Whether any dart has been seen on the board since the last turn advance —
   /// the guard for auto-advance-on-clear, so a `rebaselined` frame from a board
   /// that sat empty at turn start (no darts thrown) doesn't skip the player.
@@ -317,10 +369,12 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     if (z != 1.0) _controller.setZoomLevel(z);
   }
 
-  void _onResults(List<YOLOResult> results) {
+  void _onStreamingData(Map<String, dynamic> data) {
     _ensureNative();
-    final frame =
-        _detectionFrameFrom(results, widget.calConfidence, widget.dartConfidence);
+    final raw = rawFrameFromStreamData(data);
+    if (raw != null) _rawFrame = raw;
+    final frame = _detectionFrameFrom(resultsFromStreamData(data),
+        widget.calConfidence, widget.dartConfidence);
     _latest = frame;
     final result = widget.session.processDetectionFrame(frame);
     final sink = ref.read(activeDartInputSinkProvider);
@@ -328,8 +382,11 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
       sink?.submitDart(d.segment);
     }
     if (result.emittedDarts.isNotEmpty &&
+        raw != null &&
         (ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      unawaited(_captureEmitted(frame, result.firstEmittedDartOrdinal!,
+      // Persist the exact frame these darts were detected on (captured above),
+      // not a later async grab.
+      unawaited(_captureEmitted(frame, raw, result.firstEmittedDartOrdinal!,
           result.emittedDarts.length));
     }
     // Auto-advance-on-clear (opt-in): when all darts are removed (board-clear →
@@ -346,12 +403,9 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     widget.onStatus(result.status);
   }
 
-  Future<void> _captureEmitted(
-      DetectionFrame frame, int firstOrdinal, int count) async {
+  Future<void> _captureEmitted(DetectionFrame frame, Uint8List bytes,
+      int firstOrdinal, int count) async {
     try {
-      // Full-resolution still without the baked-in overlay (see `_capture`).
-      final bytes = await _controller.capturePhoto(withOverlays: false);
-      if (!mounted || bytes == null) return;
       await widget.session.persistEmittedDarts(frame, bytes,
           turnOrdinal: widget.currentTurnOrdinal(),
           firstDartOrdinal: firstOrdinal,
@@ -364,12 +418,13 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
 
   Future<void> _manualCapture() async {
     final messenger = ScaffoldMessenger.of(context);
-    // Full-resolution still without the baked-in overlay (see `_capture`).
-    final bytes = await _controller.capturePhoto(withOverlays: false);
-    if (!mounted) return;
+    // The clean full-resolution frame from the streaming map (no overlay), NOT
+    // `capturePhoto(withOverlays:false)` — that returned a black, screen-sized
+    // snapshot of the platform view (#426).
+    final bytes = _rawFrame;
     if (bytes == null) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('Capture failed (no frame).')));
+          const SnackBar(content: Text('Capture failed (no frame yet).')));
       return;
     }
     final saved = await widget.session.persistManualCapture(_latest, bytes,
@@ -400,8 +455,12 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
                 _floor(widget.calConfidence, widget.dartConfidence),
             iouThreshold: 0.45,
             lensFacing: LensFacing.back,
-            streamingConfig: const YOLOStreamingConfig(inferenceFrequency: 3),
-            onResult: _onResults,
+            // includeOriginalImage carries the clean frame for training capture;
+            // onStreamingData (not onResult — mutually exclusive) is the only
+            // callback that receives it. #426
+            streamingConfig: const YOLOStreamingConfig(
+                inferenceFrequency: 3, includeOriginalImage: true),
+            onStreamingData: _onStreamingData,
           ),
           Positioned(
             top: 4,
