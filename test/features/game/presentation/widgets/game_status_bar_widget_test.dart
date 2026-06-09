@@ -62,4 +62,43 @@ void main() {
     // Real MISS chips render their label.
     expect(find.text('MISS'), findsNWidgets(2));
   });
+
+  testWidgets(
+      'camera-first: empty slots are tappable and report their index (#427)',
+      (tester) async {
+    final tapped = <int>[];
+    await tester.pumpWidget(_wrap(GameStatusBarWidget(
+      configLabel: '170',
+      roundInLeg: 1,
+      currentTurnDarts: const ['T20', '', ''],
+      tapEmptySlots: true,
+      onDartTapped: tapped.add,
+    )));
+
+    // Empty slots render the "enter dart" affordance instead of the inert
+    // "dart not thrown" placeholder.
+    expect(find.bySemanticsLabel('enter dart'), findsNWidgets(2));
+    expect(find.bySemanticsLabel('dart not thrown'), findsNothing);
+
+    // Tapping the first empty slot (index 1) reports that index.
+    await tester.tap(find.bySemanticsLabel('enter dart').first);
+    expect(tapped, [1]);
+
+    // The thrown dart is still tappable for correction.
+    await tester.tap(find.text('T20'));
+    expect(tapped, [1, 0]);
+  });
+
+  testWidgets('without tapEmptySlots, empty slots stay inert placeholders',
+      (tester) async {
+    await tester.pumpWidget(_wrap(GameStatusBarWidget(
+      configLabel: '170',
+      roundInLeg: 1,
+      currentTurnDarts: const ['T20', '', ''],
+      onDartTapped: (_) {},
+    )));
+
+    expect(find.bySemanticsLabel('dart not thrown'), findsNWidgets(2));
+    expect(find.bySemanticsLabel('enter dart'), findsNothing);
+  });
 }

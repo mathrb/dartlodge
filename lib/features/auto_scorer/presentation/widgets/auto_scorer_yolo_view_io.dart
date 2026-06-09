@@ -276,6 +276,7 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     required this.dartConfidence,
     required this.initialZoom,
     required this.onStatus,
+    this.expand = false,
   });
 
   final AutoScorerSession session;
@@ -285,6 +286,10 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<TrackerStatus> onStatus;
+
+  /// Camera-first layout (#427): fill the parent's height (the board places this
+  /// in an `Expanded`) instead of the fixed ~140px band.
+  final bool expand;
 
   @override
   ConsumerState<AutoScorerYoloPreview> createState() =>
@@ -387,38 +392,38 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     // own auto-advance both bump activeTurnSignal — so each new turn requires a
     // fresh dart sighting before it can auto-advance again.
     ref.listen<int>(activeTurnSignalProvider, (_, __) => _sawDartsThisTurn = false);
-    return SizedBox(
-      height: 140,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          YOLOView(
-            modelPath: kAutoScorerModelAsset,
-            task: YOLOTask.detect,
-            controller: _controller,
-            confidenceThreshold:
-                _floor(widget.calConfidence, widget.dartConfidence),
-            iouThreshold: 0.45,
-            lensFacing: LensFacing.back,
-            streamingConfig: const YOLOStreamingConfig(inferenceFrequency: 3),
-            onResult: _onResults,
-          ),
-          Positioned(
-            top: 4,
-            right: 4,
-            child: Material(
-              color: Colors.black.withValues(alpha: 0.4),
-              shape: const CircleBorder(),
-              child: IconButton(
-                tooltip: 'Capture frame',
-                icon: const Icon(Icons.add_a_photo_outlined,
-                    color: Colors.white, size: 20),
-                onPressed: _manualCapture,
-              ),
+    final stack = Stack(
+      fit: StackFit.expand,
+      children: [
+        YOLOView(
+          modelPath: kAutoScorerModelAsset,
+          task: YOLOTask.detect,
+          controller: _controller,
+          confidenceThreshold:
+              _floor(widget.calConfidence, widget.dartConfidence),
+          iouThreshold: 0.45,
+          lensFacing: LensFacing.back,
+          streamingConfig: const YOLOStreamingConfig(inferenceFrequency: 3),
+          onResult: _onResults,
+        ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: Material(
+            color: Colors.black.withValues(alpha: 0.4),
+            shape: const CircleBorder(),
+            child: IconButton(
+              tooltip: 'Capture frame',
+              icon: const Icon(Icons.add_a_photo_outlined,
+                  color: Colors.white, size: 20),
+              onPressed: _manualCapture,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
+    // Camera-first fills the Expanded the board gives it; band mode is a fixed
+    // ~140px strip under the header.
+    return widget.expand ? stack : SizedBox(height: 140, child: stack);
   }
 }

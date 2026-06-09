@@ -22,6 +22,7 @@ class GameStatusBarWidget extends StatelessWidget {
     this.legsToWin,
     this.totalRounds,
     this.onDartTapped,
+    this.tapEmptySlots = false,
     super.key,
   });
 
@@ -34,9 +35,16 @@ class GameStatusBarWidget extends StatelessWidget {
 
   /// When non-null, each thrown dart badge becomes tappable, invoking this
   /// with the dart's 0-based index in the turn — the entry point for per-dart
-  /// correction (#376). Empty (not-yet-thrown) slots stay non-interactive.
-  /// Pass null on completed/inactive turns to disable correction.
+  /// correction (#376). Empty (not-yet-thrown) slots stay non-interactive
+  /// unless [tapEmptySlots] is set. Pass null on completed/inactive turns to
+  /// disable correction.
   final void Function(int index)? onDartTapped;
+
+  /// Camera-first layout (#427): make the empty (not-yet-thrown) slots tappable
+  /// too — they call [onDartTapped] so the board can open the manual-entry grid
+  /// for a dart the camera missed. Default false keeps the manual layout's
+  /// behaviour (only thrown darts are tappable, for correction).
+  final bool tapEmptySlots;
 
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
@@ -132,12 +140,25 @@ class GameStatusBarWidget extends StatelessWidget {
                             ? null
                             : () => onDartTapped!(i),
                       )
-                    : Icon(
-                        Icons.navigation,
-                        size: 14,
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                        semanticLabel: 'dart not thrown',
-                      ),
+                    : tapEmptySlots && onDartTapped != null
+                        // Camera-first: an empty slot is a tap target to enter a
+                        // missed dart manually (the standard grid in a modal).
+                        ? InkWell(
+                            onTap: () => onDartTapped!(i),
+                            customBorder: const CircleBorder(),
+                            child: Icon(
+                              Icons.add_circle_outline,
+                              size: 16,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                              semanticLabel: 'enter dart',
+                            ),
+                          )
+                        : Icon(
+                            Icons.navigation,
+                            size: 14,
+                            color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                            semanticLabel: 'dart not thrown',
+                          ),
               ),
             ),
           ],
