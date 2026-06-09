@@ -18,7 +18,8 @@ import 'package:ultralytics_yolo/widgets/yolo_controller.dart';
 ///
 /// Validates on-device: perf (fps / processingTimeMs vs the predict path),
 /// orientation across both phone mounts, cal stability vs zoom, and that
-/// `captureFrame()` yields a usable training frame. Detections are shown as
+/// `capturePhoto(withOverlays: false)` yields a usable (clean, full-resolution)
+/// training frame. Detections are shown as
 /// **data** (cals n/4 + per-cal confidence, darts + position/confidence), not a
 /// painted overlay. Reuses the pure `buildDetectionFrame`; the
 /// `YOLOResult → RawDetection` mapping is plugin-bound so it lives here, not in
@@ -128,7 +129,10 @@ class _YoloZoomExperimentPageState
 
   Future<void> _capture() async {
     final messenger = ScaffoldMessenger.of(context);
-    final bytes = await _controller.captureFrame();
+    // `capturePhoto(withOverlays: false)`, NOT `captureFrame()`: the latter
+    // snapshots the on-screen preview (widget-sized, zoom-cropped) and bakes the
+    // detection overlay in. We want a clean full-resolution still for training.
+    final bytes = await _controller.capturePhoto(withOverlays: false);
     if (bytes == null) {
       messenger.showSnackBar(const SnackBar(
           content: Text('Capture échouée (frame indisponible).')));
@@ -149,12 +153,13 @@ class _YoloZoomExperimentPageState
         gameId: _gameId,
         handle: CaptureHandle.manual(turnOrdinal: 0, sequence: _manualSeq),
         timestamp: DateTime.now(),
-        // Lab spike: captureFrame() returns the raw camera frame, while
-        // YOLOResult coords are normalised to the inference frame. Coord-space
-        // alignment for YOLOView captures is an open Lab question, so we tag
-        // raw and mark dims unknown with 0 — the convention auto_scorer_session
-        // uses for a raw frame whose pixel dims it can't read — rather than let
-        // CaptureRecord's 800×800 defaults misrepresent the raw frame.
+        // capturePhoto() returns a full-resolution still (no preview-crop, no
+        // baked-in overlay), while YOLOResult coords are normalised to the
+        // inference frame. Coord-space alignment for YOLOView captures is an open
+        // Lab question, so we tag raw and mark dims unknown with 0 — the
+        // convention auto_scorer_session uses for a raw frame whose pixel dims it
+        // can't read — rather than let CaptureRecord's 800×800 defaults
+        // misrepresent the raw frame.
         frameSpace: FrameSpace.raw,
         frameWidth: 0,
         frameHeight: 0,

@@ -30,7 +30,7 @@ class SessionFrameResult {
   /// The dart-in-turn ordinal (1-based) of the FIRST dart emitted this frame, or
   /// null when none emitted. Captured synchronously at emission time so the
   /// async capture path ([persistEmittedDarts]) labels handles correctly even if
-  /// another frame advances the tracker before its `captureFrame()` resolves.
+  /// another frame advances the tracker before its `capturePhoto()` resolves.
   final int? firstEmittedDartOrdinal;
 
   const SessionFrameResult({
@@ -227,7 +227,7 @@ class AutoScorerSession {
   /// YOLOView path: feed an already-computed [DetectionFrame] (native streaming
   /// inference) through the tracker — no predict detector. Returns the darts to
   /// emit + status + cal confidences. Capture is separate ([persistEmittedDarts])
-  /// so `captureFrame()` is only grabbed on emission, off the hot path.
+  /// so `capturePhoto()` is only grabbed on emission, off the hot path.
   SessionFrameResult processDetectionFrame(DetectionFrame frame) {
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
@@ -245,11 +245,12 @@ class AutoScorerSession {
   }
 
   /// Store training frames for the [count] darts emitted on the just-processed
-  /// [frame] (YOLOView path): [bytes] is the raw frame from
-  /// `YOLOViewController.captureFrame()`. Tagged `FrameSpace.raw` with dims 0 —
-  /// coord-space alignment for YOLOView captures is an open question (lab
-  /// precedent). No-op without a capture store or when [count] <= 0. Mirrors the
-  /// dart-in-turn ordinal math in [onFrame].
+  /// [frame] (YOLOView path): [bytes] is the clean full-resolution still from
+  /// `YOLOViewController.capturePhoto(withOverlays: false)` — no baked-in
+  /// overlay, no preview-crop. Tagged `FrameSpace.raw` with dims 0 — coord-space
+  /// alignment for YOLOView captures is an open question (lab precedent). No-op
+  /// without a capture store or when [count] <= 0. Mirrors the dart-in-turn
+  /// ordinal math in [onFrame].
   Future<void> persistEmittedDarts(
     DetectionFrame frame,
     Uint8List bytes, {
@@ -262,7 +263,7 @@ class AutoScorerSession {
     if (store == null || count <= 0) return;
     // [firstDartOrdinal] is snapshotted at emission time (SessionFrameResult)
     // rather than re-read from the tracker here, which could have advanced
-    // during the caller's async captureFrame() await.
+    // during the caller's async capturePhoto() await.
     final capture =
         _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
     for (var i = 0; i < count; i++) {

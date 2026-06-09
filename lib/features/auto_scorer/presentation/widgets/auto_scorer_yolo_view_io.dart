@@ -58,8 +58,11 @@ DetectionFrame _detectionFrameFrom(
 /// streaming inference) instead of CameraController + takePicture. Feeds each
 /// `onResult` to the [CalibrationStabilityGate]; "Done aiming" enables once the
 /// four cals have held steady. Zoom drives the native `setZoomLevel`; native
-/// overlays draw the detection boxes (no Dart-side coord mapping). Returns true
-/// on Done, false on Cancel/back. Riverpod-free (state + a session handle).
+/// overlays draw the detection boxes (no Dart-side coord mapping) — but the
+/// "Capture photo" button grabs a clean full-resolution still via
+/// `capturePhoto(withOverlays: false)`, not the annotated preview snapshot.
+/// Returns true on Done, false on Cancel/back. Riverpod-free (state + a session
+/// handle).
 class AutoScorerYoloAimView extends StatefulWidget {
   const AutoScorerYoloAimView({
     super.key,
@@ -127,7 +130,10 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
 
   Future<void> _capture() async {
     final messenger = ScaffoldMessenger.of(context);
-    final bytes = await _controller.captureFrame();
+    // `capturePhoto(withOverlays: false)`, NOT `captureFrame()`: the latter
+    // snapshots the on-screen preview (widget-sized, zoom-cropped) and bakes the
+    // detection overlay in. We want a clean full-resolution still for training.
+    final bytes = await _controller.capturePhoto(withOverlays: false);
     if (!mounted) return;
     if (bytes == null) {
       messenger.showSnackBar(
@@ -255,8 +261,9 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
 /// Always-on small in-game preview (~140px) backed by `YOLOView`. Each
 /// `onResult` is mapped to a [DetectionFrame] and fed to the session's tracker
 /// ([AutoScorerSession.processDetectionFrame]); emitted darts go to the active
-/// `DartInputSink`. Capture-on-emit grabs the frame via `captureFrame()` only
-/// when darts emit AND data-collection is on. Native overlays draw the boxes.
+/// `DartInputSink`. Capture-on-emit grabs a clean full-resolution still via
+/// `capturePhoto(withOverlays: false)` only when darts emit AND data-collection
+/// is on. Native overlays draw the on-screen boxes but are NOT in the capture.
 class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   const AutoScorerYoloPreview({
     super.key,
@@ -322,7 +329,8 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
   Future<void> _captureEmitted(
       DetectionFrame frame, int firstOrdinal, int count) async {
     try {
-      final bytes = await _controller.captureFrame();
+      // Full-resolution still without the baked-in overlay (see `_capture`).
+      final bytes = await _controller.capturePhoto(withOverlays: false);
       if (!mounted || bytes == null) return;
       await widget.session.persistEmittedDarts(frame, bytes,
           turnOrdinal: widget.currentTurnOrdinal(),
@@ -336,7 +344,8 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
 
   Future<void> _manualCapture() async {
     final messenger = ScaffoldMessenger.of(context);
-    final bytes = await _controller.captureFrame();
+    // Full-resolution still without the baked-in overlay (see `_capture`).
+    final bytes = await _controller.capturePhoto(withOverlays: false);
     if (!mounted) return;
     if (bytes == null) {
       messenger.showSnackBar(
