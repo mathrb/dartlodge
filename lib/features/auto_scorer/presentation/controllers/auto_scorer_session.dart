@@ -20,11 +20,13 @@ class SessionFrameResult {
   final TrackerStatus status;
 
   /// Stage timings for this frame (detect + track measured here; capture is
-  /// filled in by the camera caller). Surfaced only by the diagnostics HUD.
+  /// filled in by the camera caller). Currently unread — the diagnostics HUD
+  /// that surfaced them was removed; kept on the result for now to avoid
+  /// churning the session's public shape.
   final PipelineTimings timings;
 
   /// Best confidence per cal class `[cal1..cal4]` this frame (null = absent),
-  /// for the diagnostics HUD's calibration readout.
+  /// for the calibration overlay's per-cal confidence readout.
   final List<double?> calConfidences;
 
   /// The dart-in-turn ordinal (1-based) of the FIRST dart emitted this frame, or
