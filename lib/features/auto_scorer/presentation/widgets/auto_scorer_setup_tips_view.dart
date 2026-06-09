@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 /// One-time setup tips shown before the first aim (#393 setup flow). Educational
 /// only — it teaches the framing that gets the most out of the detector. Pushed
-/// as a transient route by the board overlay before the camera opens; pops with:
+/// as a transient route by the board overlay before the camera opens; on that
+/// game-flow path (`reviewOnly: false`) it pops with:
 ///   * `null`  — back / cancel (abort starting the camera)
 ///   * `false` — continue, keep showing next time
 ///   * `true`  — continue and don't show again ("remember")
+/// In review mode (`reviewOnly: true`) there is no Continue action, so it only
+/// ever pops `null` via the AppBar back button.
 ///
 /// Riverpod-free (like the aim view): the parent reads/writes the "seen" pref and
 /// reacts to the popped value. Holds only the local checkbox state.
