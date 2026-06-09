@@ -1,3 +1,4 @@
+import 'package:dart_lodge/features/auto_scorer/presentation/pages/lab/experiments/square_crop_experiment.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/pages/lab/experiments/yolo_zoom_experiment.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +24,13 @@ class AutoScorerLabPage extends StatelessWidget {
         subtitle: 'Inférence native sur le flux ; troncature par zoom (sans '
             'distorsion). Caméra + détections cals/fléchettes en données.',
         build: _buildYoloZoom,
+      ),
+      _LabExperiment(
+        id: 'square-crop',
+        title: 'Crop carré → predict',
+        subtitle: 'Le modèle reçoit un crop carré centré (sonde qualité : le '
+            'carré aide-t-il ?). Lag du crop Dart assumé, chiffré dans le HUD.',
+        build: _buildSquareCrop,
       ),
     ];
     return Scaffold(
@@ -56,6 +64,8 @@ class AutoScorerLabPage extends StatelessWidget {
 /// Top-level so it can sit in a `const` experiment descriptor (a tear-off of an
 /// instance method can't be const).
 Widget _buildYoloZoom(BuildContext _) => const YoloZoomExperimentPage();
+
+Widget _buildSquareCrop(BuildContext _) => const SquareCropExperimentPage();
 
 class _LabExperiment {
   const _LabExperiment({
