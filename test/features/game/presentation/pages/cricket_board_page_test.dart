@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -11,6 +13,9 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/cricket_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_cricket_game_state.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/cricket_marks_strip_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/cricket_unified_table_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
 
@@ -45,6 +50,12 @@ class _LoadingActiveCricketGameNotifier extends ActiveCricketGameNotifier {
   @override
   Future<ActiveCricketGameState?> build(String gameId) =>
       Completer<ActiveCricketGameState?>().future;
+}
+
+/// Forces auto-scoring on without touching SharedPreferences.
+class _FakeAutoScoringEnabled extends AutoScoringEnabled {
+  @override
+  Future<bool> build() async => true;
 }
 
 // ── State / GameState helpers ──────────────────────────────────────────────────
@@ -152,6 +163,38 @@ Widget _buildAppWithContainer(
       routerConfig: router,
     ),
   );
+}
+
+/// Camera-first builder: auto-scoring on + a stub camera preview, so the board
+/// renders the camera-first layout (#444) without a real `CameraPreview`.
+Widget _buildAppCameraFirst(
+  _FakeActiveCricketGameNotifier notifier, {
+  String gameId = 'game-1',
+}) {
+  final router = GoRouter(
+    initialLocation: '/game/active/cricket/$gameId',
+    routes: _testRoutes(gameId: gameId),
+  );
+  return ProviderScope(
+    overrides: [
+      activeCricketGameProvider.overrideWith(() => notifier),
+      autoScoringEnabledProvider.overrideWith(() => _FakeAutoScoringEnabled()),
+      boardCameraPreviewBuilderProvider.overrideWithValue(
+        (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
+      ),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: router,
+    ),
+  );
+}
+
+/// Tall viewport so the camera-first column (strip + band + camera) fits.
+void _setTallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
@@ -706,5 +749,50 @@ void main() {
         reason: 'Abandoning the game must mark it complete so it lands '
             'in history immediately (issue #252)');
     expect(find.text('home'), findsOneWidget);
+  });
+
+  // ── Camera-first: marks strip + dart band, no status-bar darts (#444) ────────
+
+  testWidgets('Camera-first shows the marks strip and prominent dart band',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _cricketState(
+      competitors: [
+        _competitor(
+          id: 'c1',
+          name: 'Alice',
+          score: 41,
+          marksPerNumber: const {'20': 3, '19': 1},
+          dartThrows: const ['T20'],
+        ),
+        _competitor(id: 'c2', name: 'Bob', score: 0),
+      ],
+      dartsThrownInTurn: 1,
+    );
+    final notifier = _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Marks strip (F-strip) replaces the full table; both players visible.
+    expect(find.byType(CricketMarksStripWidget), findsOneWidget);
+    expect(find.text('ALICE'), findsOneWidget);
+    expect(find.text('BOB'), findsOneWidget);
+    expect(find.text('41'), findsOneWidget); // Alice's score
+    // Prominent dart band (F1) present; the unified table is gone.
+    expect(find.byType(ProminentDartBandWidget), findsOneWidget);
+    expect(find.byType(CricketUnifiedTableWidget), findsNothing);
+    // Camera stub fills the body; the status bar shows no dart placeholders.
+    expect(find.byKey(const ValueKey('camera-stub')), findsOneWidget);
+    expect(find.byIcon(Icons.navigation), findsNothing);
+  });
+
+  testWidgets('Manual mode still shows the full unified table', (tester) async {
+    final notifier = _FakeActiveCricketGameNotifier(_activeState());
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CricketUnifiedTableWidget), findsOneWidget);
+    expect(find.byType(CricketMarksStripWidget), findsNothing);
+    expect(find.byType(ProminentDartBandWidget), findsNothing);
   });
 }
