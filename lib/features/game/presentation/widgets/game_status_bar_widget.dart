@@ -6,7 +6,9 @@ import '../../domain/models/game_config.dart';
 
 /// Compact status bar shown below the app header on game boards.
 ///
-/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`
+/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`.
+/// The trailing `| [sum] [dart badges]` cluster is omitted when [showDarts] is
+/// false (camera-first layouts, where the darts move to the prominent band).
 ///
 /// [configLabel] is game-type specific — e.g. `'501'` for X01 or `'Standard'`
 /// for Cricket.

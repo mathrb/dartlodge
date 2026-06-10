@@ -52,8 +52,12 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${p.score}',
-                    style: AppTextStyles.headlineSmall.copyWith(
-                      color: cs.onSurface,
+                    maxLines: 1,
+                    // Inactive players: the score-tier token (DESIGN_SYSTEM §3.2)
+                    // in the inactive `onSurfaceVariant` colour, dimmer than the
+                    // active hero, preserving the active/inactive hierarchy.
+                    style: AppTextStyles.scoreSmall.copyWith(
+                      color: cs.onSurfaceVariant,
                     ),
                   ),
                 ],

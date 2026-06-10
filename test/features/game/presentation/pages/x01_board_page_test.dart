@@ -1015,6 +1015,10 @@ void main() {
     expect(find.byType(X01OtherPlayersStripWidget), findsOneWidget);
     expect(find.text('BOB'), findsWidgets);
     expect(find.text('280'), findsWidgets);
+    // The active player is excluded from the strip — Alice + her score 301
+    // appear exactly once (the hero), never duplicated into the strip.
+    expect(find.text('ALICE'), findsOneWidget);
+    expect(find.text('301'), findsOneWidget);
   });
 
   // ── 37. Camera-first solo: no other-players strip ────────────────────────────
