@@ -101,4 +101,22 @@ void main() {
     expect(find.bySemanticsLabel('dart not thrown'), findsNWidgets(2));
     expect(find.bySemanticsLabel('enter dart'), findsNothing);
   });
+
+  testWidgets('showDarts:false hides the darts/turn-sum, keeps the metadata',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const GameStatusBarWidget(
+      configLabel: '501',
+      roundInLeg: 3,
+      currentTurnDarts: ['T20', 'T20', '20'],
+      showDarts: false,
+    )));
+
+    // Metadata still present.
+    expect(find.text('501'), findsOneWidget);
+    expect(find.text('ROUND 3'), findsOneWidget);
+    // Darts, placeholders and the turn-sum cluster are gone.
+    expect(find.text('T20'), findsNothing);
+    expect(find.bySemanticsLabel('dart not thrown'), findsNothing);
+    expect(find.text('100'), findsNothing); // turn sum (T20+T20+20)
+  });
 }
