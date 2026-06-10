@@ -57,7 +57,7 @@ dependencies:
   # Assist-mode camera capture (#382). Raw frames → FramePreprocessor (800×800
   # center-crop, training parity §2) → detector. Mobile only; the capture UI is
   # gated behind the default-off "use auto-scoring" toggle and platform checks.
-  camera: ^0.11.0
+  camera: ">=0.11.0 <0.13.0"
 
   # Settings / preferences
   shared_preferences: ^2.3.4
