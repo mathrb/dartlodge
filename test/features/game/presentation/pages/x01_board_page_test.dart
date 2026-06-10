@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -11,6 +13,9 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/x01_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_game_state.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/x01_other_players_strip_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
 
@@ -61,6 +66,12 @@ class _LoadingActiveGameNotifier extends ActiveGameNotifier {
   @override
   Future<ActiveGameState?> build(String gameId) =>
       Completer<ActiveGameState?>().future;
+}
+
+/// Forces auto-scoring on without touching SharedPreferences.
+class _FakeAutoScoringEnabled extends AutoScoringEnabled {
+  @override
+  Future<bool> build() async => true;
 }
 
 // ── State / GameState helpers ─────────────────────────────────────────────────
@@ -146,6 +157,31 @@ Widget _buildApp(
   return ProviderScope(
     overrides: [
       activeGameProvider.overrideWith(() => notifier),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: router,
+    ),
+  );
+}
+
+/// Camera-first builder: auto-scoring on + a stub camera preview, so the board
+/// renders the camera-first layout (#443) without a real `CameraPreview`.
+Widget _buildAppCameraFirst(
+  _FakeActiveGameNotifier notifier, {
+  String gameId = 'game-1',
+}) {
+  final router = GoRouter(
+    initialLocation: '/game/active/x01/$gameId',
+    routes: _testRoutes(gameId: gameId),
+  );
+  return ProviderScope(
+    overrides: [
+      activeGameProvider.overrideWith(() => notifier),
+      autoScoringEnabledProvider.overrideWith(() => _FakeAutoScoringEnabled()),
+      boardCameraPreviewBuilderProvider.overrideWithValue(
+        (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
+      ),
     ],
     child: MaterialApp.router(
       theme: AppTheme.light(),
@@ -932,5 +968,72 @@ void main() {
 
     // After invalidation, the provider is rebuilt
     expect(notifier.buildCount, greaterThan(buildsBefore));
+  });
+
+  // ── 35. Camera-first: hero score + dart band, manual grid gone (#443) ────────
+
+  testWidgets('35. Camera-first shows hero score and prominent dart band',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [
+        _competitor(name: 'Alice', score: 301, dartThrows: const ['T20']),
+      ],
+      dartsThrownInTurn: 1,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Hero metric (F2) renders the active player's remaining score.
+    expect(find.byType(HeroMetricWidget), findsOneWidget);
+    expect(find.text('301'), findsWidgets);
+    // Prominent dart band (F1) replaces the small status-bar darts.
+    expect(find.byType(ProminentDartBandWidget), findsOneWidget);
+    // Camera stub fills the body; the status bar's dart placeholders are gone.
+    expect(find.byKey(const ValueKey('camera-stub')), findsOneWidget);
+    expect(find.byIcon(Icons.navigation), findsNothing);
+  });
+
+  // ── 36. Camera-first multi-player: other players in the compact strip ────────
+
+  testWidgets('36. Camera-first multi-player shows the other-players strip',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [
+        _competitor(id: 'c1', name: 'Alice', score: 301),
+        _competitor(id: 'c2', name: 'Bob', score: 280),
+      ],
+      currentTurnIndex: 0,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Active player (Alice) is the hero; the opponent (Bob) is in the strip.
+    expect(find.byType(X01OtherPlayersStripWidget), findsOneWidget);
+    expect(find.text('BOB'), findsWidgets);
+    expect(find.text('280'), findsWidgets);
+    // The active player is excluded from the strip — Alice + her score 301
+    // appear exactly once (the hero), never duplicated into the strip.
+    expect(find.text('ALICE'), findsOneWidget);
+    expect(find.text('301'), findsOneWidget);
+  });
+
+  // ── 37. Camera-first solo: no other-players strip ────────────────────────────
+
+  testWidgets('37. Camera-first solo shows no other-players strip',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [_competitor(name: 'Alice', score: 501)],
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(X01OtherPlayersStripWidget), findsNothing);
+    expect(find.byType(HeroMetricWidget), findsOneWidget);
   });
 }

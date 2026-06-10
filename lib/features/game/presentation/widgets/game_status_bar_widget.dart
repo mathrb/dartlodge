@@ -6,7 +6,9 @@ import '../../domain/models/game_config.dart';
 
 /// Compact status bar shown below the app header on game boards.
 ///
-/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`
+/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`.
+/// The trailing `| [sum] [dart badges]` cluster is omitted when [showDarts] is
+/// false (camera-first layouts, where the darts move to the prominent band).
 ///
 /// [configLabel] is game-type specific — e.g. `'501'` for X01 or `'Standard'`
 /// for Cricket.
@@ -23,6 +25,7 @@ class GameStatusBarWidget extends StatelessWidget {
     this.totalRounds,
     this.onDartTapped,
     this.tapEmptySlots = false,
+    this.showDarts = true,
     super.key,
   });
 
@@ -45,6 +48,13 @@ class GameStatusBarWidget extends StatelessWidget {
   /// for a dart the camera missed. Default false keeps the manual layout's
   /// behaviour (only thrown darts are tappable, for correction).
   final bool tapEmptySlots;
+
+  /// When false, the trailing cluster (turn-sum separator, turn sum, and the
+  /// three dart slots) is omitted, leaving a metadata-only bar
+  /// (`configLabel · ROUND · LEG`). Camera-first layouts set this false because
+  /// the darts move to the prominent dart band; default true keeps the manual
+  /// status bar unchanged.
+  final bool showDarts;
 
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
@@ -103,64 +113,66 @@ class GameStatusBarWidget extends StatelessWidget {
             dot,
             Text('LEG ${currentLegIndex! + 1} / $legsToWin', style: labelStyle),
           ],
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: SizedBox(
-              width: 1,
-              height: 16,
-              child: ColoredBox(
-                color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderStrong),
+          if (showDarts) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: 1,
+                height: 16,
+                child: ColoredBox(
+                  color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderStrong),
+                ),
               ),
             ),
-          ),
-          Text(
-            '$turnSum',
-            style: AppTextStyles.labelMedium.copyWith(
-              color: turnSum > 0
-                  ? cs.onSurfaceVariant.withValues(alpha: 0.8)
-                  : cs.onSurfaceVariant.withValues(alpha: 0.2),
+            Text(
+              '$turnSum',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: turnSum > 0
+                    ? cs.onSurfaceVariant.withValues(alpha: 0.8)
+                    : cs.onSurfaceVariant.withValues(alpha: 0.2),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          for (int i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 4),
-            SizedBox(
-              height: 20,
-              child: Center(
-                // Checkout-practice engine pads bust/checkout turns with an
-                // empty-slot sentinel so `dartThrows.length` stays at 3 for
-                // its round counter invariants — render those as the
-                // "dart not thrown" placeholder, not as a phantom MISS
-                // (#261).
-                child: currentTurnDarts.length > i &&
-                        currentTurnDarts[i].isNotEmpty
-                    ? _DartBadge(
-                        segment: currentTurnDarts[i],
-                        onTap: onDartTapped == null
-                            ? null
-                            : () => onDartTapped!(i),
-                      )
-                    : tapEmptySlots && onDartTapped != null
-                        // Camera-first: an empty slot is a tap target to enter a
-                        // missed dart manually (the standard grid in a modal).
-                        ? InkWell(
-                            onTap: () => onDartTapped!(i),
-                            customBorder: const CircleBorder(),
-                            child: Icon(
-                              Icons.add_circle_outline,
-                              size: 16,
-                              color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                              semanticLabel: 'enter dart',
+            const SizedBox(width: 8),
+            for (int i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              SizedBox(
+                height: 20,
+                child: Center(
+                  // Checkout-practice engine pads bust/checkout turns with an
+                  // empty-slot sentinel so `dartThrows.length` stays at 3 for
+                  // its round counter invariants — render those as the
+                  // "dart not thrown" placeholder, not as a phantom MISS
+                  // (#261).
+                  child: currentTurnDarts.length > i &&
+                          currentTurnDarts[i].isNotEmpty
+                      ? _DartBadge(
+                          segment: currentTurnDarts[i],
+                          onTap: onDartTapped == null
+                              ? null
+                              : () => onDartTapped!(i),
+                        )
+                      : tapEmptySlots && onDartTapped != null
+                          // Camera-first: an empty slot is a tap target to enter a
+                          // missed dart manually (the standard grid in a modal).
+                          ? InkWell(
+                              onTap: () => onDartTapped!(i),
+                              customBorder: const CircleBorder(),
+                              child: Icon(
+                                Icons.add_circle_outline,
+                                size: 16,
+                                color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                                semanticLabel: 'enter dart',
+                              ),
+                            )
+                          : Icon(
+                              Icons.navigation,
+                              size: 14,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+                              semanticLabel: 'dart not thrown',
                             ),
-                          )
-                        : Icon(
-                            Icons.navigation,
-                            size: 14,
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                            semanticLabel: 'dart not thrown',
-                          ),
+                ),
               ),
-            ),
+            ],
           ],
         ],
       ),

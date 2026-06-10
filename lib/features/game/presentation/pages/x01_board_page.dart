@@ -18,9 +18,12 @@ import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
+import '../widgets/hero_metric_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/player_score_section_widget.dart';
+import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
+import '../widgets/x01_other_players_strip_widget.dart';
 
 /// Trailing-menu actions on the active-game board (#331). End Game keeps
 /// the original gear-icon behaviour; Settings is a new sibling so users
@@ -244,6 +247,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                 : allDarts.sublist(allDarts.length - dartsThrownInTurn);
 
         final roundInLeg = gameState.currentRoundInLeg;
+        final cameraFirst = autoScoringOn && cameraPreview != null;
 
         return PopScope(
           canPop: false,
@@ -295,44 +299,74 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     totalRounds: gameState.x01TotalRounds,
                     currentTurnDarts: currentTurnDarts,
                     // Manual mode: tap a thrown dart to correct it (#376).
-                    // Camera-first mode (#427): every slot is a tap target —
-                    // a thrown dart corrects, an empty slot opens manual entry
-                    // for a dart the camera missed. Disabled once complete.
-                    onDartTapped: gameState.isComplete
+                    // Camera-first (#443) hides the darts here — they move to
+                    // the prominent dart band below.
+                    onDartTapped: gameState.isComplete || cameraFirst
                         ? null
-                        : (index) => autoScoringOn
-                            ? _onSlotTapped(context, index, dartsThrownInTurn)
-                            : _showCorrectionSheet(context, index),
-                    // Empty-slot manual entry only while the turn is live —
-                    // adding a dart to an inactive turn (bust/checkout/leg-over)
-                    // would throw InvalidGameStateException.
-                    tapEmptySlots: autoScoringOn &&
-                        !gameState.isComplete &&
-                        gameState.turnActive,
+                        : (index) => _showCorrectionSheet(context, index),
+                    showDarts: !cameraFirst,
                   ),
-                  PlayerScoreSectionWidget(
-                    gameState: gameState,
-                    bustFlashAnim: _bustFlashAnim,
-                  ),
-                  _CheckoutBanner(
-                    score: currentScore,
-                    outStrategy: gameState.outStrategy,
-                    dartsThrownInTurn: dartsThrownInTurn,
-                  ),
-                  // Camera-first (#427): the camera preview/controls fill the
-                  // body (no manual grid, no MISS/Bull — manual entry lives in
-                  // the dart-indicator modal). Manual mode keeps the input grid.
-                  Expanded(
-                    child: autoScoringOn && cameraPreview != null
-                        ? cameraPreview(context, widget.gameId)
-                        : DartInputGridWidget(
-                            onSegmentTapped: (segment) => ref
-                                .read(activeGameProvider(widget.gameId).notifier)
-                                .processDart(segment),
-                            enabled:
-                                !gameState.isComplete && gameState.turnActive,
-                          ),
-                  ),
+                  if (cameraFirst) ...[
+                    // Camera-first (#443): active player's remaining score as
+                    // the at-distance hero, then checkout, the other players'
+                    // scores, the prominent dart band, and the camera fills the
+                    // rest. Manual entry / correction lives in the band's modal.
+                    HeroMetricWidget(
+                      value: '${activeCompetitor.score}',
+                      label: activeCompetitor.name,
+                    ),
+                    _CheckoutBanner(
+                      score: currentScore,
+                      outStrategy: gameState.outStrategy,
+                      dartsThrownInTurn: dartsThrownInTurn,
+                    ),
+                    if (gameState.competitors.length > 1)
+                      X01OtherPlayersStripWidget(
+                        players: [
+                          for (int i = 0;
+                              i < gameState.competitors.length;
+                              i++)
+                            if (i != gameState.currentTurnIndex)
+                              (
+                                name: gameState.competitors[i].name,
+                                score: gameState.competitors[i].score,
+                              ),
+                        ],
+                      ),
+                    ProminentDartBandWidget(
+                      currentTurnDarts: currentTurnDarts,
+                      // A thrown slot opens correction; an empty slot opens
+                      // manual entry for a dart the camera missed (#427).
+                      onDartTapped: gameState.isComplete
+                          ? null
+                          : (index) =>
+                              _onSlotTapped(context, index, dartsThrownInTurn),
+                      // Empty-slot manual entry only while the turn is live —
+                      // adding a dart to an inactive turn would throw.
+                      tapEmptySlots:
+                          !gameState.isComplete && gameState.turnActive,
+                    ),
+                    Expanded(child: cameraPreview(context, widget.gameId)),
+                  ] else ...[
+                    PlayerScoreSectionWidget(
+                      gameState: gameState,
+                      bustFlashAnim: _bustFlashAnim,
+                    ),
+                    _CheckoutBanner(
+                      score: currentScore,
+                      outStrategy: gameState.outStrategy,
+                      dartsThrownInTurn: dartsThrownInTurn,
+                    ),
+                    Expanded(
+                      child: DartInputGridWidget(
+                        onSegmentTapped: (segment) => ref
+                            .read(activeGameProvider(widget.gameId).notifier)
+                            .processDart(segment),
+                        enabled:
+                            !gameState.isComplete && gameState.turnActive,
+                      ),
+                    ),
+                  ],
                   _BottomActionBar(
                     canUndo: canUndo,
                     canNext: canNext,
