@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
+import 'hero_metric_widget.dart';
 
 class PracticeTargetDisplayWidget extends StatelessWidget {
   const PracticeTargetDisplayWidget({
@@ -15,6 +16,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     this.catch40DartsOnTarget = 0,
     this.catch40TargetRemaining = 0,
     this.currentPlayerName,
+    this.heroSize = false,
     super.key,
   });
 
@@ -44,6 +46,11 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   /// surfaces whose turn it is in multi-player ATC/Shanghai games. Solo
   /// drills pass null and keep the previous target-only chrome (#276).
   final String? currentPlayerName;
+
+  /// Camera-first (#445): render the primary value (`_targetLabel`) at the
+  /// large, at-distance-readable hero size via [HeroMetricWidget]. Default false
+  /// keeps the manual board's inline `scoreMedium` target unchanged.
+  final bool heroSize;
 
   String get _targetLabel {
     // Catch 40: show how much is LEFT to finish the current target. This
@@ -120,13 +127,19 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
           ),
           const SizedBox(height: 8),
         ],
-        Text(
-          _targetLabel,
-          style: AppTextStyles.scoreMedium.copyWith(
-            color: colorScheme.primary,
+        if (heroSize)
+          HeroMetricWidget(
+            value: _targetLabel,
+            valueColor: colorScheme.primary,
+          )
+        else
+          Text(
+            _targetLabel,
+            style: AppTextStyles.scoreMedium.copyWith(
+              color: colorScheme.primary,
+            ),
+            textAlign: TextAlign.center,
           ),
-          textAlign: TextAlign.center,
-        ),
         const SizedBox(height: 8),
         Text(
           _secondaryMetric,
