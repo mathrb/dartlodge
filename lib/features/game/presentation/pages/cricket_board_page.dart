@@ -15,10 +15,12 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
+import '../widgets/cricket_marks_strip_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
+import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
 /// Trailing-menu actions on the active-game board (#331). Mirrors the
@@ -212,6 +214,29 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final canUndo = dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
         final canNext = !gameState.isComplete;
+        final cameraFirst = autoScoringOn && cameraPreview != null;
+
+        // Targets in the unified table's display order (descending + Bull),
+        // and each competitor's per-target mark counts, for the compact
+        // camera-first marks strip.
+        final displayTargets = [
+          ...([...gameState.cricketTargets]..sort((a, b) => b.compareTo(a))),
+          25,
+        ];
+        List<CricketMarksRow> marksRows() => [
+              for (var i = 0; i < gameState.competitors.length; i++)
+                (
+                  name: gameState.competitors[i].name,
+                  marks: [
+                    for (final t in displayTargets)
+                      gameState.competitors[i]
+                              .marksPerNumber[t == 25 ? 'Bull' : '$t'] ??
+                          0,
+                  ],
+                  score: gameState.competitors[i].score,
+                  isActive: i == gameState.currentTurnIndex,
+                ),
+            ];
 
         return PopScope(
           canPop: false,
@@ -261,63 +286,77 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                 totalRounds: gameState.cricketTotalRounds,
                 currentTurnDarts: currentTurnDarts,
                 // Manual mode: tap a thrown dart to correct it (#376).
-                // Camera-first mode (#427): empty slots also open manual entry
-                // for a dart the camera missed. Disabled once complete.
-                onDartTapped: gameState.isComplete
+                // Camera-first (#444) hides the darts here — they move to the
+                // prominent dart band below.
+                onDartTapped: gameState.isComplete || cameraFirst
                     ? null
-                    : (index) => autoScoringOn
-                        ? _onSlotTapped(
-                            context, gameState, index, dartsThrownInTurn)
-                        : _showCorrectionSheet(context, gameState, index),
-                tapEmptySlots: autoScoringOn &&
-                    !gameState.isComplete &&
-                    gameState.turnActive,
+                    : (index) =>
+                        _showCorrectionSheet(context, gameState, index),
+                showDarts: !cameraFirst,
               ),
-              // Camera-first (#427): the camera preview/controls fill the body
-              // (no cricket input table — manual entry lives in the dart-
-              // indicator modal). Manual mode keeps the scoring table.
-              Expanded(
-                child: autoScoringOn && cameraPreview != null
-                    ? cameraPreview(context, widget.gameId)
-                    : Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 4),
-                        child: ClipRRect(
+              if (cameraFirst) ...[
+                // Camera-first (#444): compact marks strip keeps every player's
+                // marks + score visible, then the prominent dart band, then the
+                // camera fills the rest. Manual entry / correction lives in the
+                // band's modal.
+                CricketMarksStripWidget(
+                  targets: displayTargets,
+                  rows: marksRows(),
+                  showScore: gameState.cricketScoring != 'no-score',
+                ),
+                ProminentDartBandWidget(
+                  currentTurnDarts: currentTurnDarts,
+                  // A thrown slot opens correction; an empty slot opens manual
+                  // entry for a dart the camera missed (#427).
+                  onDartTapped: gameState.isComplete
+                      ? null
+                      : (index) => _onSlotTapped(
+                          context, gameState, index, dartsThrownInTurn),
+                  tapEmptySlots:
+                      !gameState.isComplete && gameState.turnActive,
+                ),
+                Expanded(child: cameraPreview(context, widget.gameId)),
+              ] else
+                // Manual mode keeps the full scoring table.
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 4),
+                    child: ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.radiusLarge),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerLow,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusLarge),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: cs.surfaceContainerLow,
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusLarge),
-                              border: Border.all(
-                                color:
-                                    cs.outlineVariant.withValues(alpha: 0.15),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(
-                                      alpha: AppTheme.shadowAlphaCard),
-                                  blurRadius: 24,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: CricketUnifiedTableWidget(
-                              gameState: gameState,
-                              onSegmentTapped: (gameState.isComplete ||
-                                      !gameState.turnActive)
-                                  ? (_) {}
-                                  : (segment) => notifier.processDart(segment),
-                              onMiss: (gameState.isComplete ||
-                                      !gameState.turnActive)
-                                  ? () {}
-                                  : () => notifier.processDart('MISS'),
-                            ),
+                          border: Border.all(
+                            color: cs.outlineVariant.withValues(alpha: 0.15),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(
+                                  alpha: AppTheme.shadowAlphaCard),
+                              blurRadius: 24,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: CricketUnifiedTableWidget(
+                          gameState: gameState,
+                          onSegmentTapped: (gameState.isComplete ||
+                                  !gameState.turnActive)
+                              ? (_) {}
+                              : (segment) => notifier.processDart(segment),
+                          onMiss: (gameState.isComplete ||
+                                  !gameState.turnActive)
+                              ? () {}
+                              : () => notifier.processDart('MISS'),
                         ),
                       ),
-              ),
+                    ),
+                  ),
+                ),
               _BottomActionBar(
                 canUndo: canUndo,
                 canNext: canNext,
