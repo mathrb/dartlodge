@@ -20,7 +20,9 @@ import '../widgets/dartboard_highlight_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/practice_input_buttons_widget.dart';
+import '../widgets/practice_players_strip_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
+import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
 enum _DrillAction { endDrill, settings }
@@ -319,13 +321,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 // the target display's secondary metric instead.
                 totalRounds: isCheckout ? null : _totalRounds(gs),
                 currentTurnDarts: currentTurnDarts,
-                // Camera-first (#427): empty dart slots open manual entry for a
-                // dart the camera missed; thrown slots open correction.
-                onDartTapped: !cameraFirst || gs.isComplete
-                    ? null
-                    : (index) => _onSlotTapped(context, gs, index,
-                        effectiveTarget, doublesOnly),
-                tapEmptySlots: cameraFirst && !gs.isComplete && gs.turnActive,
+                // Camera-first (#445) hides the darts here — they move to the
+                // prominent dart band below. Manual practice has no per-dart
+                // correction on the bar (unchanged).
+                onDartTapped: null,
+                showDarts: !cameraFirst,
               ),
               // Camera-first hides the aim dartboard (the camera IS the board).
               if (!cameraFirst)
@@ -339,6 +339,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 ),
               PracticeTargetDisplayWidget(
                 gameType: gs.gameType,
+                // Camera-first (#445): enlarge the key target to the hero size.
+                heroSize: cameraFirst,
                 currentTarget: effectiveTarget,
                 practiceRound: displayedRound,
                 totalRounds: _totalRounds(gs),
@@ -365,11 +367,37 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               ),
               if (isShanghai)
                 _ShanghaiBonus(show: practiceState.showShanghaiBonus),
-              // Camera-first (#427): the camera fills the body in place of the
-              // input buttons; manual entry lives in the dart-indicator modal.
-              if (cameraFirst)
-                Expanded(child: cameraPreview(context, widget.gameId))
-              else if (isCatch40 || isCheckout)
+              // Camera-first (#445): the multi-player progress strip (ATC /
+              // Shanghai) → the prominent dart band → the camera fills the body.
+              // Manual entry / correction lives in the band's modal.
+              if (cameraFirst) ...[
+                if ((isAtc || isShanghai) && gs.competitors.length > 1)
+                  PracticePlayersStripWidget(
+                    players: [
+                      for (int i = 0; i < gs.competitors.length; i++)
+                        if (i != gs.currentTurnIndex)
+                          (
+                            name: gs.competitors[i].name,
+                            value: isAtc
+                                // ATC initialises currentTarget to 1; 0 is not
+                                // a valid target, so fall back to the first.
+                                ? (gs.competitors[i].currentTarget ?? 1)
+                                : gs.competitors[i].score,
+                          ),
+                    ],
+                  ),
+                ProminentDartBandWidget(
+                  currentTurnDarts: currentTurnDarts,
+                  // A thrown slot opens correction; an empty slot opens manual
+                  // entry for a dart the camera missed (#427).
+                  onDartTapped: gs.isComplete
+                      ? null
+                      : (index) => _onSlotTapped(
+                          context, gs, index, effectiveTarget, doublesOnly),
+                  tapEmptySlots: !gs.isComplete && gs.turnActive,
+                ),
+                Expanded(child: cameraPreview(context, widget.gameId)),
+              ] else if (isCatch40 || isCheckout)
                 Expanded(
                   flex: 2,
                   child: PracticeInputButtonsWidget(

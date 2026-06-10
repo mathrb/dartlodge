@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
@@ -11,8 +13,12 @@ import 'package:dart_lodge/features/game/presentation/pages/practice_board_page.
 import 'package:dart_lodge/features/game/presentation/providers/active_practice_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_practice_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/dartboard_highlight_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_input_buttons_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/practice_players_strip_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_target_display_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
 
@@ -40,6 +46,12 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
 
   @override
   Future<void> endDrill() async => endDrillCalls++;
+}
+
+/// Forces auto-scoring on without touching SharedPreferences.
+class _FakeAutoScoringEnabled extends AutoScoringEnabled {
+  @override
+  Future<bool> build() async => true;
 }
 
 /// Notifier whose [build] hangs forever → provider stays in loading state.
@@ -141,6 +153,38 @@ Widget _buildApp(
       routerConfig: router,
     ),
   );
+}
+
+/// Camera-first builder: auto-scoring on + a stub camera preview, so the board
+/// renders the camera-first layout (#445) without a real `CameraPreview`.
+Widget _buildAppCameraFirst(
+  _FakeActivePracticeNotifier notifier, {
+  String gameId = 'game-1',
+}) {
+  final router = GoRouter(
+    initialLocation: '/practice-board/$gameId',
+    routes: _testRoutes(gameId: gameId),
+  );
+  return ProviderScope(
+    overrides: [
+      activePracticeProvider.overrideWith(() => notifier),
+      autoScoringEnabledProvider.overrideWith(() => _FakeAutoScoringEnabled()),
+      boardCameraPreviewBuilderProvider.overrideWithValue(
+        (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
+      ),
+    ],
+    child: MaterialApp.router(
+      theme: AppTheme.light(),
+      routerConfig: router,
+    ),
+  );
+}
+
+/// Tall viewport so the camera-first column fits.
+void _setTallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(800, 1600);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
 }
 
 Widget _buildAppWithContainer(
@@ -1234,5 +1278,81 @@ void main() {
     expect(find.text('ROUND 1 / 20'), findsOneWidget,
         reason: 'Round indicator stays at 1/20 until NEXT ROUND.');
     expect(find.text('D2'), findsNothing);
+  });
+
+  // ── Camera-first: hero target + dart band, no dartboard highlight (#445) ─────
+
+  testWidgets('Camera-first shows the hero target and prominent dart band',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.aroundTheClock,
+      competitor: _practiceCompetitor(currentTarget: 14, dartThrows: const ['1']),
+      dartsThrownInTurn: 1,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Hero metric (F2 via heroSize) shows the target large; dart band present.
+    expect(find.byType(HeroMetricWidget), findsOneWidget);
+    expect(find.byType(ProminentDartBandWidget), findsOneWidget);
+    // The aim dartboard highlight is hidden (the camera IS the board), the
+    // manual input buttons are gone, and the camera stub fills the body.
+    expect(find.byType(DartboardHighlightWidget), findsNothing);
+    expect(find.byType(PracticeInputButtonsWidget), findsNothing);
+    expect(find.byKey(const ValueKey('camera-stub')), findsOneWidget);
+    expect(find.byIcon(Icons.navigation), findsNothing);
+  });
+
+  testWidgets('Camera-first multi-player ATC shows the other-players strip',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(gameType: GameType.aroundTheClock).copyWith(
+      competitors: [
+        _practiceCompetitor(id: 'c1', name: 'Alice', currentTarget: 14),
+        _practiceCompetitor(id: 'c2', name: 'Bob', currentTarget: 7),
+      ],
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Active player (Alice, target 14) is the hero; the opponent (Bob, 7) is
+    // in the strip.
+    expect(find.byType(PracticePlayersStripWidget), findsOneWidget);
+    expect(find.text('BOB'), findsWidgets);
+    expect(find.text('7'), findsWidgets);
+    // The active player (Alice) is the hero, not duplicated into the strip —
+    // her name header is "ALICE'S TURN", so a bare 'ALICE' chip would only
+    // appear if the exclusion filter were broken.
+    expect(find.text('ALICE'), findsNothing);
+  });
+
+  testWidgets('Camera-first solo drill shows no other-players strip',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.catch40,
+      competitor: _practiceCompetitor(),
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PracticePlayersStripWidget), findsNothing);
+    expect(find.byType(ProminentDartBandWidget), findsOneWidget);
+  });
+
+  testWidgets('Manual mode shows the input buttons and dartboard highlight',
+      (tester) async {
+    _setTallViewport(tester);
+    final notifier = _FakeActivePracticeNotifier(_activeState());
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(PracticeInputButtonsWidget), findsOneWidget);
+    expect(find.byType(ProminentDartBandWidget), findsNothing);
+    expect(find.byType(HeroMetricWidget), findsNothing);
   });
 }

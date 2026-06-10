@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_target_display_widget.dart';
 
 Widget _wrap(Widget child) =>
@@ -93,6 +94,41 @@ void main() {
         practiceSuccesses: 0,
       )));
       expect(find.textContaining('Visit'), findsNothing);
+    });
+  });
+
+  group('PracticeTargetDisplayWidget — heroSize (#445)', () {
+    testWidgets('heroSize renders the target via HeroMetricWidget',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeTargetDisplayWidget(
+        gameType: GameType.aroundTheClock,
+        currentTarget: 14,
+        practiceRound: 1,
+        totalRounds: null,
+        score: 0,
+        practiceAttempts: 0,
+        practiceSuccesses: 0,
+        heroSize: true,
+      )));
+
+      expect(find.byType(HeroMetricWidget), findsOneWidget);
+      expect(find.text('14'), findsOneWidget);
+    });
+
+    testWidgets('default (no heroSize) keeps the inline target, no hero',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeTargetDisplayWidget(
+        gameType: GameType.aroundTheClock,
+        currentTarget: 14,
+        practiceRound: 1,
+        totalRounds: null,
+        score: 0,
+        practiceAttempts: 0,
+        practiceSuccesses: 0,
+      )));
+
+      expect(find.byType(HeroMetricWidget), findsNothing);
+      expect(find.text('14'), findsOneWidget);
     });
   });
 }
