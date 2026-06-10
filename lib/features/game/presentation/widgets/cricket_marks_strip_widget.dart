@@ -102,7 +102,7 @@ class CricketMarksStripWidget extends StatelessWidget {
                           color: r.isActive
                               ? cs.primaryFixed
                               : cs.onSurfaceVariant,
-                          letterSpacing: 0.8,
+                          letterSpacing: 1.2,
                         ),
                       ),
                       align: Alignment.centerLeft,
@@ -126,8 +126,13 @@ class CricketMarksStripWidget extends StatelessWidget {
                         Text(
                           '${r.score}',
                           maxLines: 1,
+                          // Inactive players dimmer than the active one
+                          // (DESIGN_SYSTEM §2.6 inactiveScore), matching the
+                          // unified table's active/inactive hierarchy.
                           style: AppTextStyles.labelLarge.copyWith(
-                            color: cs.onSurface,
+                            color: r.isActive
+                                ? cs.onSurface
+                                : cs.onSurfaceVariant,
                           ),
                         ),
                       ),
