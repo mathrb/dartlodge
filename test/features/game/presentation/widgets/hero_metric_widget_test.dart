@@ -51,10 +51,12 @@ void main() {
     expect(text.style?.color, color);
   });
 
-  testWidgets('a long value still renders inside a FittedBox', (tester) async {
+  testWidgets('renders the value on a single line (numerals never wrap)',
+      (tester) async {
     await tester.pumpWidget(_wrap(const HeroMetricWidget(value: '1001')));
 
-    expect(find.byType(FittedBox), findsOneWidget);
     expect(find.text('1001'), findsOneWidget);
+    final text = tester.widget<Text>(find.text('1001'));
+    expect(text.maxLines, 1);
   });
 }

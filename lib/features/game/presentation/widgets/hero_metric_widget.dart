@@ -40,25 +40,26 @@ class HeroMetricWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
+          // Over-line above the hero numeral → label-sm in primaryFixed
+          // (DESIGN_SYSTEM §3); the token already carries the over-line tracking.
           Text(
             label!.toUpperCase(),
             style: AppTextStyles.labelSmall.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 1.2,
+              color: cs.primaryFixed,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
         ],
-        // Scale the value down to fit the available width rather than overflow.
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: AppTextStyles.scoreActive.copyWith(
-              color: valueColor ?? cs.onSurface,
-            ),
+        // Score numerals never scale or wrap — the container is constrained by
+        // the consumer, the numeral renders at its tier size (DESIGN_SYSTEM
+        // §3.3). maxLines:1 with the default clip keeps it to one line.
+        Text(
+          value,
+          maxLines: 1,
+          textAlign: TextAlign.center,
+          style: AppTextStyles.scoreActive.copyWith(
+            color: valueColor ?? cs.onSurface,
           ),
         ),
       ],
