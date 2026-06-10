@@ -1323,6 +1323,10 @@ void main() {
     expect(find.byType(PracticePlayersStripWidget), findsOneWidget);
     expect(find.text('BOB'), findsWidgets);
     expect(find.text('7'), findsWidgets);
+    // The active player (Alice) is the hero, not duplicated into the strip —
+    // her name header is "ALICE'S TURN", so a bare 'ALICE' chip would only
+    // appear if the exclusion filter were broken.
+    expect(find.text('ALICE'), findsNothing);
   });
 
   testWidgets('Camera-first solo drill shows no other-players strip',

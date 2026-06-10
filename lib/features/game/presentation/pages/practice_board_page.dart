@@ -379,7 +379,9 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                           (
                             name: gs.competitors[i].name,
                             value: isAtc
-                                ? (gs.competitors[i].currentTarget ?? 0)
+                                // ATC initialises currentTarget to 1; 0 is not
+                                // a valid target, so fall back to the first.
+                                ? (gs.competitors[i].currentTarget ?? 1)
                                 : gs.competitors[i].score,
                           ),
                     ],
