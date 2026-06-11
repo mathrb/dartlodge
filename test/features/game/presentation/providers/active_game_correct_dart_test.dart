@@ -6,7 +6,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
+import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
@@ -16,6 +18,13 @@ import 'package:dart_lodge/features/game/presentation/providers/active_game_prov
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
 import '../../../../drift_test_base.dart';
+
+class _FakeCorrectionSink implements CaptureCorrectionSink {
+  final calls = <({int dartInTurnOrdinal, String segment})>[];
+  @override
+  void correctDart({required int dartInTurnOrdinal, required String segment}) =>
+      calls.add((dartInTurnOrdinal: dartInTurnOrdinal, segment: segment));
+}
 
 void main() {
   late DriftTestBase base;
@@ -152,5 +161,32 @@ void main() {
     final state = container.read(activeGameProvider('g1')).value!;
     expect(state.gameState.competitors[0].score, 100);
     expect(state.showBust, isTrue);
+  });
+
+  test('correctTurnDart propagates the correction to the capture sink (#456)',
+      () async {
+    final notifier = await seedAndLoad();
+    final sink = _FakeCorrectionSink();
+    container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
+
+    await notifier.processDart('20'); // dart 1
+    await notifier.processDart('20'); // dart 2
+    await notifier.correctTurnDart(1, 'T20'); // correct dart 2 (0-based index 1)
+
+    expect(sink.calls, hasLength(1));
+    expect(sink.calls.single.dartInTurnOrdinal, 2); // 1-based handle ordinal
+    expect(sink.calls.single.segment, 'T20');
+  });
+
+  test('correctTurnDart does NOT propagate a no-op correction (#456)',
+      () async {
+    final notifier = await seedAndLoad();
+    final sink = _FakeCorrectionSink();
+    container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
+
+    await notifier.processDart('20'); // only 1 dart this turn
+    await notifier.correctTurnDart(2, '5'); // index 2 out of range → early return
+
+    expect(sink.calls, isEmpty);
   });
 }

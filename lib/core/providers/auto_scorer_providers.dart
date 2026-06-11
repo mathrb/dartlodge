@@ -1,3 +1,4 @@
+import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/game/dart_input_sink.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -48,4 +49,18 @@ class ActiveTurnSignal extends _$ActiveTurnSignal {
   int build() => 0;
 
   void bump() => state = state + 1;
+}
+
+/// Holds the [CaptureCorrectionSink] of the active auto-scoring overlay, so the
+/// game's correction flow can propagate a dart correction into the matching
+/// training capture without importing the auto_scorer feature. The auto-scorer
+/// overlay binds itself while running and clears on stop — null when no
+/// auto-scoring session is active, so the game side simply no-ops. Inverse of
+/// the [ActiveDartInputSink] bridge (here the auto_scorer binds, the game calls).
+@Riverpod(keepAlive: true)
+class ActiveCaptureCorrectionSink extends _$ActiveCaptureCorrectionSink {
+  @override
+  CaptureCorrectionSink? build() => null;
+
+  void bind(CaptureCorrectionSink? sink) => state = sink;
 }
