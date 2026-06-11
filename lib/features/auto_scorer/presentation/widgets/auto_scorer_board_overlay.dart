@@ -45,6 +45,13 @@ class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
 
 enum _Mode { idle, aim, running }
 
+/// How long to wait after the aim route returns before mounting the running
+/// preview's `YOLOView`, so the aim route's reverse transition (~300ms Material
+/// default) and the native camera teardown finish first — only one CameraX
+/// session is ever bound at a time. One-time cost per camera start (not
+/// per-frame), imperceptible after "Done aiming". See [_AutoScorerBoardOverlayState._start].
+const Duration _kAimToRunningHandoffDelay = Duration(milliseconds: 500);
+
 class _AutoScorerBoardOverlayState
     extends ConsumerState<AutoScorerBoardOverlay> {
   _Mode _mode = _Mode.idle;
@@ -129,6 +136,19 @@ class _AutoScorerBoardOverlayState
       ));
       if (!mounted) return;
       if (done == true) {
+        // Serialise the camera handoff before mounting the running preview's
+        // YOLOView. `Navigator.pop` resolves the push future at the START of the
+        // aim route's reverse transition, so the aim YOLOView — and its bound
+        // CameraX session — stays alive for the ~300ms exit animation. Mounting
+        // the preview's YOLOView immediately means two camera sessions coexist;
+        // at the opt-in 1280×960 analysis resolution (#464) their combined
+        // surfaces exceed the device's guaranteed CameraX surface-combination
+        // budget, so the preview's bindToLifecycle fails (black preview, no
+        // detection). At the old ~640×480 default the smaller surfaces tolerated
+        // the transient overlap. Wait out the exit transition + the native
+        // stop()/dispose teardown so only one session is ever bound.
+        await Future<void>.delayed(_kAimToRunningHandoffDelay);
+        if (!mounted) return;
         // The inline preview binds the correction bridge itself (#456/#457) —
         // it owns the camera controller needed to capture-at-correction. This
         // overlay only clears the binding on stop (_stop/_fail).
