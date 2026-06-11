@@ -467,18 +467,23 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
       int? effectiveTarget, bool doublesOnly) {
     final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
     if (index < gs.dartsThrownInTurn) {
+      // Correcting a recorded dart stays available after the turn ends
+      // (turnActive == false once 3 darts are thrown) — #438.
       _showSegmentSheet(context,
           title: 'Correct dart ${index + 1}',
           gameType: gs.gameType,
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
+          requireActiveTurn: false,
           onSegment: (seg) => notifier.correctTurnDart(index, seg));
     } else {
+      // Manual entry must not add a 4th dart, so it stays gated on the turn.
       _showSegmentSheet(context,
           title: 'Enter dart',
           gameType: gs.gameType,
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
+          requireActiveTurn: true,
           onSegment: (seg) => notifier.processDart(seg));
     }
   }
@@ -486,12 +491,17 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   /// Modal hosting the standard [PracticeInputButtonsWidget] — the camera-first
   /// replacement for the always-visible input. Watches the live turn so the
   /// buttons disable if the turn ends while the sheet is open.
+  ///
+  /// [requireActiveTurn] gates the buttons on `turnActive`: true for manual
+  /// entry (must not add a 4th dart), false for correcting a recorded dart
+  /// (allowed after the turn ends, before it is advanced — #438).
   void _showSegmentSheet(
     BuildContext context, {
     required String title,
     required GameType gameType,
     required int? currentTarget,
     required bool doublesOnly,
+    required bool requireActiveTurn,
     required void Function(String segment) onSegment,
   }) {
     showModalBottomSheet<void>(
@@ -513,7 +523,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       ref.watch(activePracticeProvider(widget.gameId)).value;
                   final active = s != null &&
                       !s.gameState.isComplete &&
-                      s.gameState.turnActive;
+                      (!requireActiveTurn || s.gameState.turnActive);
                   return PracticeInputButtonsWidget(
                     gameType: gameType,
                     currentTarget: currentTarget,
