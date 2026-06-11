@@ -18,10 +18,10 @@ cp ~/git/deep-darts-probe/models/dart_round<N>_withcal_saved_model/dart_round<N>
 Keep `kAutoScorerModelVersion` (in `dart_detector.dart`) in lock-step with the
 bundled stem — it is stamped onto every training capture's `model_version`.
 
-The current bundle is `dart_round12a_withcal` (float32) — single net, classes
+The current bundle is `dart_round18b_withcal` (float32) — single net, classes
 `{0:dart, 1:cal1, 2:cal2, 3:cal3, 4:cal4}`, imgsz 800, YOLO11n. It supersedes
-R11b (86.5% assist-mode segment accuracy on the R7-independent golden); see the
-probe for R12a's metrics. The probe ranks rounds by **per-dart segment accuracy
+R12a; see the probe for R18b's metrics (per-dart assist-mode segment accuracy on
+the raw serve golden). The probe ranks rounds by **per-dart segment accuracy
 (assist-mode) on the raw serve golden**, not mAP/recall. Until a round is
 confirmed past the **88.9%** ship bar there is **no code-enforced emission
 gate**: treat auto-scoring as assist / data-collection (#381). The app serves
