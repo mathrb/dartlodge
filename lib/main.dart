@@ -11,9 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'app/app.dart';
+import 'core/debug/auto_scorer_sim_bridge.dart';
 import 'core/providers/board_camera_preview_provider.dart';
 import 'core/providers/board_overlay_provider.dart';
 import 'features/auto_scorer/presentation/widgets/auto_scorer_board_overlay.dart';
+
+/// Opt-in (web E2E only) Playwright sim bridge — `--dart-define=AUTOSCORER_SIM=true`.
+/// Off in the public build, so `window.dartlodgeSim` never ships to prod.
+const _kAutoScorerSim = bool.fromEnvironment('AUTOSCORER_SIM');
 
 Future<void> main() async {
   await SentryFlutter.init(
@@ -42,7 +47,9 @@ Future<void> main() async {
                 AutoScorerBoardOverlay(gameId: gameId, expand: true),
           ),
         ],
-        child: const DartsApp(),
+        child: _kAutoScorerSim
+            ? const AutoScorerSimBridge(child: DartsApp())
+            : const DartsApp(),
       ),
     ),
   );
