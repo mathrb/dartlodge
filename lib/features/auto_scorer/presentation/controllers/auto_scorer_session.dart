@@ -142,6 +142,7 @@ class AutoScorerSession {
               CaptureHandle(
                   turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
               capture,
+              trigger: CaptureTrigger.auto,
             ),
             capture.bytes,
           );
@@ -211,6 +212,7 @@ class AutoScorerSession {
         gameId,
         CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence),
         capture,
+        trigger: CaptureTrigger.manual,
       ),
       capture.bytes,
     );
@@ -276,6 +278,7 @@ class AutoScorerSession {
           CaptureHandle(
               turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstDartOrdinal + i),
           capture,
+          trigger: CaptureTrigger.auto,
         ),
         bytes,
       );
@@ -301,6 +304,7 @@ class AutoScorerSession {
         gameId,
         CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence),
         _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0),
+        trigger: CaptureTrigger.manual,
       ),
       bytes,
     );
@@ -339,8 +343,10 @@ class AutoScorerSession {
   }
 
   CaptureRecord _recordFor(DetectionFrame frame, String gameId,
-          CaptureHandle handle, _Capture capture) =>
+          CaptureHandle handle, _Capture capture,
+          {required CaptureTrigger trigger}) =>
       CaptureRecord(
+        trigger: trigger,
         // Per-detection confidence isn't propagated through the tracker path,
         // so captures record candidate positions with conf 1.0 (a known
         // refinement — the training value is the corrected segment, #381).

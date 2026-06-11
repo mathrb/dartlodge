@@ -37,6 +37,7 @@ void main() {
       'frame_space',
       'frame_width',
       'frame_height',
+      'trigger',
     }));
     expect(json['capture_handle'], 't3-d2');
     expect(json['was_corrected'], isFalse);
@@ -100,6 +101,42 @@ void main() {
     expect(restored.frameHeight, 800);
   });
 
+  test('round-trips the capture trigger', () {
+    final manual = CaptureRecord(
+      predictedDarts: const [],
+      calPoints: const [],
+      modelVersion: 'm',
+      gameId: 'g',
+      handle: const CaptureHandle.manual(turnOrdinal: 3, sequence: 1),
+      timestamp: DateTime.utc(2026, 6, 11),
+      trigger: CaptureTrigger.manual,
+    );
+    expect(manual.toJson()['trigger'], 'manual');
+    expect(CaptureRecord.fromJson(manual.toJson()).trigger,
+        CaptureTrigger.manual);
+    // A record left at its default serialises as auto.
+    expect(sample().toJson()['trigger'], 'auto');
+  });
+
+  test('pre-#455 sidecars infer trigger from the handle kind', () {
+    // Old sidecars carry no `trigger` key — origin is inferred from the handle
+    // (the convention this field replaces): -m ⇒ manual, -d ⇒ auto.
+    Map<String, dynamic> legacy(String handle) => <String, dynamic>{
+          'predicted_darts': const [],
+          'cal_points': const [],
+          'corrected_darts': const [],
+          'model_version': 'old',
+          'game_id': 'g',
+          'capture_handle': handle,
+          'timestamp': DateTime.utc(2026, 5, 1).toIso8601String(),
+          'was_corrected': false,
+        };
+    expect(CaptureRecord.fromJson(legacy('t3-m1')).trigger,
+        CaptureTrigger.manual);
+    expect(CaptureRecord.fromJson(legacy('t3-d2')).trigger,
+        CaptureTrigger.auto);
+  });
+
   test('withCorrection sets corrected darts and flips was_corrected', () {
     final raw = CaptureRecord(
       predictedDarts: const [],
@@ -111,15 +148,17 @@ void main() {
       frameSpace: FrameSpace.raw,
       frameWidth: 1280,
       frameHeight: 720,
+      trigger: CaptureTrigger.manual,
     );
     final corrected = raw.withCorrection(const [
       CorrectedDart(x: 0.55, y: 0.45, segment: 'T20'),
     ]);
     expect(corrected.wasCorrected, isTrue);
-    // Frame space + dims survive a correction (re-attached by handle).
+    // Frame space + dims + trigger survive a correction (re-attached by handle).
     expect(corrected.frameSpace, FrameSpace.raw);
     expect(corrected.frameWidth, 1280);
     expect(corrected.frameHeight, 720);
+    expect(corrected.trigger, CaptureTrigger.manual);
     expect(corrected.correctedDarts.single.segment, 'T20');
     // The handle is unchanged — corrections re-attach by handle, not event id.
     expect(corrected.handle, const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));
