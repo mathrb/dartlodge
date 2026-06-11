@@ -59,9 +59,13 @@ class _FakeCaptureStore implements CaptureStore {
     saved.add(record);
     savedBytes.add(frameBytes);
   }
+  final List<({String gameId, CaptureHandle handle, List<CorrectedDart> corrected})>
+      corrections = [];
   @override
   Future<void> applyCorrection(
-      String gameId, CaptureHandle handle, List<CorrectedDart> c) async {}
+      String gameId, CaptureHandle handle, List<CorrectedDart> c) async {
+    corrections.add((gameId: gameId, handle: handle, corrected: c));
+  }
   @override
   Future<List<CaptureRecord>> list() async => saved;
   int retentionCalls = 0;
@@ -407,5 +411,28 @@ void main() {
             oneDartFrame, Uint8List.fromList(const [1]),
             turnOrdinal: 1, gameId: 'g'),
         isFalse);
+  });
+
+  test('applyDartCorrection forwards a handle + corrected segment (#456)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    await session.applyDartCorrection(
+        gameId: 'g', turnOrdinal: 3, dartInTurnOrdinal: 2, segment: 'T20');
+    expect(store.corrections, hasLength(1));
+    final c = store.corrections.single;
+    expect(c.gameId, 'g');
+    expect(c.handle, const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));
+    expect(c.corrected.single.segment, 'T20');
+    // The game knows only the segment — no position is recorded here.
+    expect(c.corrected.single.x, 0);
+    expect(c.corrected.single.y, 0);
+  });
+
+  test('applyDartCorrection is a no-op without a capture store', () async {
+    final session = AutoScorerSession();
+    // Must not throw.
+    await session.applyDartCorrection(
+        gameId: 'g', turnOrdinal: 1, dartInTurnOrdinal: 1, segment: 'MISS');
   });
 }

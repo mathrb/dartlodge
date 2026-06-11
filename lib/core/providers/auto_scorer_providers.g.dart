@@ -215,3 +215,86 @@ abstract class _$ActiveTurnSignal extends $Notifier<int> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Holds the [CaptureCorrectionSink] of the active auto-scoring overlay, so the
+/// game's correction flow can propagate a dart correction into the matching
+/// training capture without importing the auto_scorer feature. The auto-scorer
+/// overlay binds itself while running and clears on stop — null when no
+/// auto-scoring session is active, so the game side simply no-ops. Inverse of
+/// the [ActiveDartInputSink] bridge (here the auto_scorer binds, the game calls).
+
+@ProviderFor(ActiveCaptureCorrectionSink)
+final activeCaptureCorrectionSinkProvider =
+    ActiveCaptureCorrectionSinkProvider._();
+
+/// Holds the [CaptureCorrectionSink] of the active auto-scoring overlay, so the
+/// game's correction flow can propagate a dart correction into the matching
+/// training capture without importing the auto_scorer feature. The auto-scorer
+/// overlay binds itself while running and clears on stop — null when no
+/// auto-scoring session is active, so the game side simply no-ops. Inverse of
+/// the [ActiveDartInputSink] bridge (here the auto_scorer binds, the game calls).
+final class ActiveCaptureCorrectionSinkProvider
+    extends
+        $NotifierProvider<ActiveCaptureCorrectionSink, CaptureCorrectionSink?> {
+  /// Holds the [CaptureCorrectionSink] of the active auto-scoring overlay, so the
+  /// game's correction flow can propagate a dart correction into the matching
+  /// training capture without importing the auto_scorer feature. The auto-scorer
+  /// overlay binds itself while running and clears on stop — null when no
+  /// auto-scoring session is active, so the game side simply no-ops. Inverse of
+  /// the [ActiveDartInputSink] bridge (here the auto_scorer binds, the game calls).
+  ActiveCaptureCorrectionSinkProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'activeCaptureCorrectionSinkProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeCaptureCorrectionSinkHash();
+
+  @$internal
+  @override
+  ActiveCaptureCorrectionSink create() => ActiveCaptureCorrectionSink();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CaptureCorrectionSink? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CaptureCorrectionSink?>(value),
+    );
+  }
+}
+
+String _$activeCaptureCorrectionSinkHash() =>
+    r'2c142bd012f8e93c703224e9460244ad8b2b6a35';
+
+/// Holds the [CaptureCorrectionSink] of the active auto-scoring overlay, so the
+/// game's correction flow can propagate a dart correction into the matching
+/// training capture without importing the auto_scorer feature. The auto-scorer
+/// overlay binds itself while running and clears on stop — null when no
+/// auto-scoring session is active, so the game side simply no-ops. Inverse of
+/// the [ActiveDartInputSink] bridge (here the auto_scorer binds, the game calls).
+
+abstract class _$ActiveCaptureCorrectionSink
+    extends $Notifier<CaptureCorrectionSink?> {
+  CaptureCorrectionSink? build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref =
+        this.ref as $Ref<CaptureCorrectionSink?, CaptureCorrectionSink?>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<CaptureCorrectionSink?, CaptureCorrectionSink?>,
+              CaptureCorrectionSink?,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}

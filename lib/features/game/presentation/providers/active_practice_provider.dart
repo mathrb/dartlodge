@@ -1,3 +1,4 @@
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/dart_throw.dart';
@@ -237,6 +238,16 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
             newGs.isComplete ? newGs.winnerCompetitorId : null,
       );
     });
+
+    // Best-effort: propagate the correction into the auto-scorer capture for
+    // this (current-turn) dart, only if the correction itself succeeded (#456).
+    // No-op when no auto-scoring session is bound.
+    if (!state.hasError) {
+      ref.read(activeCaptureCorrectionSinkProvider)?.correctDart(
+            dartInTurnOrdinal: turnDartIndex + 1,
+            segment: newSegment,
+          );
+    }
   }
 
   /// Resolves the `DartThrown` event id for dart [turnDartIndex] (0-based,

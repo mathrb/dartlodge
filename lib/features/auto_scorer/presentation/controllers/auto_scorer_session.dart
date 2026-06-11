@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
@@ -309,6 +310,30 @@ class AutoScorerSession {
       bytes,
     );
     return true;
+  }
+
+  /// Propagate a user dart-correction (#456) into the matching capture: flip
+  /// its sidecar's `was_corrected` and record the corrected [segment]. Keyed by
+  /// the dart handle `t<turnOrdinal>-d<dartInTurnOrdinal>` — corrections only
+  /// target the current turn, so [turnOrdinal] is the overlay's live counter.
+  /// No-op without a capture store, and `applyCorrection` itself no-ops if no
+  /// sidecar matches the handle. The corrected dart carries no position (the
+  /// game knows only the segment); the model's detected positions remain in the
+  /// sidecar's `predicted_darts`.
+  Future<void> applyDartCorrection({
+    required String gameId,
+    required int turnOrdinal,
+    required int dartInTurnOrdinal,
+    required String segment,
+  }) async {
+    final store = _captureStore;
+    if (store == null) return;
+    await store.applyCorrection(
+      gameId,
+      CaptureHandle(
+          turnOrdinal: turnOrdinal, dartInTurnOrdinal: dartInTurnOrdinal),
+      [CorrectedDart(x: 0, y: 0, segment: segment)],
+    );
   }
 
   Future<void> dispose() async => _detector?.dispose();
