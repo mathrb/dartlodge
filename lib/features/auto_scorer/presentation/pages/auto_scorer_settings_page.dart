@@ -23,6 +23,8 @@ class AutoScorerSettingsPage extends ConsumerWidget {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
+    final captureMode = ref.watch(captureModeSettingProvider);
+    final collectOn = collect.value ?? false;
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
 
@@ -73,12 +75,36 @@ class AutoScorerSettingsPage extends ConsumerWidget {
             subtitle: const Text(
                 'Store board photos + corrections to improve detection. Stays '
                 'on this device until you export.'),
-            value: collect.value ?? false,
+            value: collectOn,
             onChanged: collect.isLoading
                 ? null
                 : (v) => ref
                     .read(dataCollectionEnabledProvider.notifier)
                     .setEnabled(v),
+          ),
+          // Capture mode (#457): "All" saves every detected dart; "Mistakes
+          // only" saves just the frames you correct (the model's errors), so the
+          // dataset isn't flooded with easy/correct examples. Only relevant —
+          // and only enabled — while data collection is on.
+          ListTile(
+            leading: const Icon(Icons.filter_alt_outlined),
+            title: const Text('What to capture'),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: SegmentedButton<CaptureMode>(
+                segments: const [
+                  ButtonSegment(value: CaptureMode.all, label: Text('All')),
+                  ButtonSegment(
+                      value: CaptureMode.partial, label: Text('Mistakes only')),
+                ],
+                selected: {captureMode.value ?? CaptureMode.all},
+                onSelectionChanged: (!collectOn || captureMode.isLoading)
+                    ? null
+                    : (selection) => ref
+                        .read(captureModeSettingProvider.notifier)
+                        .setMode(selection.first),
+              ),
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.ios_share),

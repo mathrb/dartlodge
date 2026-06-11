@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
@@ -296,7 +297,8 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
       _AutoScorerYoloPreviewState();
 }
 
-class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
+class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
+    implements CaptureCorrectionSink {
   final YOLOViewController _controller = YOLOViewController();
   bool _nativePushed = false;
   DetectionFrame _latest = _emptyFrame;
@@ -309,9 +311,68 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
   bool _sawDartsThisTurn = false;
 
   @override
+  void initState() {
+    super.initState();
+    // This preview owns the correction bridge (#456/#457): it has the camera
+    // controller needed to capture-at-correction in partial mode. Bind from a
+    // post-frame callback (ref mutation outside build). No unbind in dispose
+    // (illegal there) — the overlay's _stop/_fail bind(null), and correctDart
+    // guards on `mounted`, mirroring the DartInputSink bridge.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(activeCaptureCorrectionSinkProvider.notifier).bind(this);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  /// Propagate a user dart-correction (#456/#457). In "all" mode the capture was
+  /// already saved at emission, so rewrite its sidecar. In "partial" mode nothing
+  /// was saved, so capture the current frame now and store a new corrected
+  /// capture (capture-at-correction). Fire-and-forget — a missed capture must
+  /// never disrupt scoring.
+  @override
+  void correctDart({required int dartInTurnOrdinal, required String segment}) {
+    if (!mounted) return;
+    // Respect the data-collection opt-in: with it off we never touch the capture
+    // store — in partial mode this would otherwise silently write a frame the
+    // user opted out of (the store is non-null even when collection is off).
+    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) return;
+    final mode =
+        ref.read(captureModeSettingProvider).value ?? CaptureMode.all;
+    if (mode == CaptureMode.all) {
+      unawaited(widget.session.applyDartCorrection(
+        gameId: widget.gameId,
+        turnOrdinal: widget.currentTurnOrdinal(),
+        dartInTurnOrdinal: dartInTurnOrdinal,
+        segment: segment,
+      ));
+    } else {
+      unawaited(_captureCorrected(dartInTurnOrdinal, segment));
+    }
+  }
+
+  Future<void> _captureCorrected(int dartInTurnOrdinal, String segment) async {
+    try {
+      // Full-resolution still without the baked-in overlay (see `_capture`).
+      final bytes = await _controller.capturePhoto(withOverlays: false);
+      if (!mounted || bytes == null) return;
+      await widget.session.persistCorrectedCapture(
+        frame: _latest,
+        bytes: bytes,
+        turnOrdinal: widget.currentTurnOrdinal(),
+        dartInTurnOrdinal: dartInTurnOrdinal,
+        gameId: widget.gameId,
+        segment: segment,
+      );
+    } catch (_) {
+      // A missed training capture must never disrupt scoring.
+    }
   }
 
   void _ensureNative() {
@@ -332,8 +393,12 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview> {
     for (final d in result.emittedDarts) {
       sink?.submitDart(d.segment);
     }
+    // Auto-capture on emission only in "all" mode; in "partial" mode captures
+    // happen only at correction time (#457, see [correctDart]).
     if (result.emittedDarts.isNotEmpty &&
-        (ref.read(dataCollectionEnabledProvider).value ?? false)) {
+        (ref.read(dataCollectionEnabledProvider).value ?? false) &&
+        (ref.read(captureModeSettingProvider).value ?? CaptureMode.all) ==
+            CaptureMode.all) {
       unawaited(_captureEmitted(frame, result.firstEmittedDartOrdinal!,
           result.emittedDarts.length));
     }

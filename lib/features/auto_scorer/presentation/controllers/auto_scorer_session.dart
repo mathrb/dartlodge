@@ -336,6 +336,35 @@ class AutoScorerSession {
     );
   }
 
+  /// Partial capture-mode (#457): save a NEW corrected capture at correction
+  /// time. Used when nothing was persisted at emission, so there is no sidecar
+  /// for [applyDartCorrection] to rewrite — instead we store the current [frame]
+  /// + [bytes] under the dart's handle, already flagged `was_corrected` with the
+  /// corrected [segment]. `trigger: auto` (the dart was auto-detected; the
+  /// correction is separate metadata). No-op without a capture store.
+  Future<void> persistCorrectedCapture({
+    required DetectionFrame frame,
+    required Uint8List bytes,
+    required int turnOrdinal,
+    required int dartInTurnOrdinal,
+    required String gameId,
+    required String segment,
+  }) async {
+    final store = _captureStore;
+    if (store == null) return;
+    final capture =
+        _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
+    final record = _recordFor(
+      frame,
+      gameId,
+      CaptureHandle(
+          turnOrdinal: turnOrdinal, dartInTurnOrdinal: dartInTurnOrdinal),
+      capture,
+      trigger: CaptureTrigger.auto,
+    ).withCorrection([CorrectedDart(x: 0, y: 0, segment: segment)]);
+    await store.save(record, bytes);
+  }
+
   Future<void> dispose() async => _detector?.dispose();
 
   /// Resolve the bytes to store + their coordinate space/dims for the sidecar,

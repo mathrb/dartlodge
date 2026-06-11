@@ -35,4 +35,41 @@ void main() {
     addTearDown(reborn.dispose);
     expect(await reborn.read(dataCollectionEnabledProvider.future), isTrue);
   });
+
+  group('CaptureModeSetting (#457)', () {
+    test('defaults to all when nothing stored', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(await container.read(captureModeSettingProvider.future),
+          CaptureMode.all);
+    });
+
+    test('reads a stored mode', () async {
+      SharedPreferences.setMockInitialValues(
+          {'auto_scorer_capture_mode': 'partial'});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(await container.read(captureModeSettingProvider.future),
+          CaptureMode.partial);
+    });
+
+    test('setMode persists and survives a fresh container', () async {
+      SharedPreferences.setMockInitialValues({});
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      await container.read(captureModeSettingProvider.future);
+      await container
+          .read(captureModeSettingProvider.notifier)
+          .setMode(CaptureMode.partial);
+      expect(container.read(captureModeSettingProvider).value,
+          CaptureMode.partial);
+
+      final reborn = ProviderContainer();
+      addTearDown(reborn.dispose);
+      expect(await reborn.read(captureModeSettingProvider.future),
+          CaptureMode.partial);
+    });
+  });
 }
