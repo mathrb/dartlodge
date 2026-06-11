@@ -112,11 +112,27 @@ class DartTracker {
         _normalise(t.homography.apply(c), t.centre, t.radius),
     ];
 
+    final seenConfirmed = <int>{};
     final seenPending = <int>{};
     for (final cand in candidates) {
-      // Already a known physical dart → same dart, nothing to do.
-      if (_confirmed.any(
-          (d) => _dist(d.boardPosition, cand) <= _config.matchTolerance)) {
+      // Match the nearest not-yet-claimed confirmed dart: a confirmed dart can
+      // absorb only ONE detection per frame, so a second box landing within
+      // matchTolerance of it (a dart thrown into the same bed) is NOT silently
+      // swallowed — it falls through to pending and confirms as its own dart
+      // (#454). Without the one-to-one claim a single confirmed dart soaks up
+      // every nearby detection and the grouping is under-counted.
+      int? nearestConfirmed;
+      var bestConfirmed = double.infinity;
+      for (var i = 0; i < _confirmed.length; i++) {
+        if (seenConfirmed.contains(i)) continue;
+        final d = _dist(_confirmed[i].boardPosition, cand);
+        if (d <= _config.matchTolerance && d < bestConfirmed) {
+          bestConfirmed = d;
+          nearestConfirmed = i;
+        }
+      }
+      if (nearestConfirmed != null) {
+        seenConfirmed.add(nearestConfirmed); // same dart, nothing to do
         continue;
       }
       // Otherwise match the nearest not-yet-claimed pending candidate.

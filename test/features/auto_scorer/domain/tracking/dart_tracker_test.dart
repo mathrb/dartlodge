@@ -242,6 +242,65 @@ void main() {
     });
   });
 
+  group('close grouping (#454)', () {
+    // Canonical distance for an image-space offset: cals give centre (0.5,0.5)
+    // and radius 0.3, so a normalised point is (img-0.5)/0.3 and a δ in image
+    // space is δ/0.3 in board-radius units. An 0.012 image offset ⇒ 0.04
+    // board-radius — inside matchTolerance (0.06), i.e. ≈1 cm same-bed grouping.
+    final a = seg(20, rTreble);
+    final bClose = (x: a.x + 0.012, y: a.y); // ~0.04 board-radius from a
+
+    test('the close offset is genuinely within matchTolerance', () {
+      double norm(double v) => (v - 0.5) / 0.3;
+      final d = math.sqrt(
+        math.pow(norm(a.x) - norm(bClose.x), 2) +
+            math.pow(norm(a.y) - norm(bClose.y), 2),
+      );
+      expect(d, lessThan(const DartTrackerConfig().matchTolerance),
+          reason: 'test premise: the two darts are closer than the tolerance');
+    });
+
+    test('a 2nd dart thrown next to an existing one is still counted', () {
+      final tracker = DartTracker();
+      // Dart A lands and confirms.
+      tracker.processFrame(frame([a]));
+      final afterA = tracker.processFrame(frame([a]));
+      expect(afterA.newDarts, hasLength(1));
+      expect(afterA.status.dartsOnBoard, 1);
+
+      // Dart B is thrown into the same bed, within matchTolerance of A. A is
+      // still physically present, so every frame shows both boxes.
+      final b1 = tracker.processFrame(frame([a, bClose]));
+      expect(b1.newDarts, isEmpty, reason: 'B pending after 1 frame');
+      final b2 = tracker.processFrame(frame([a, bClose]));
+      expect(b2.newDarts, hasLength(1), reason: 'B confirms — not swallowed by A');
+      expect(b2.status.dartsOnBoard, 2);
+      expect(tracker.dartsThisTurn, 2);
+    });
+
+    test('a stationary single dart still emits exactly once (no double-count)',
+        () {
+      // The dedup this fix preserves: one confirmed dart claims its own
+      // re-detection each frame and never spawns a phantom.
+      final tracker = DartTracker();
+      var emitted = 0;
+      for (var i = 0; i < 6; i++) {
+        emitted += tracker.processFrame(frame([a])).newDarts.length;
+      }
+      expect(emitted, 1);
+      expect(tracker.confirmedDarts, hasLength(1));
+    });
+
+    test('two close darts arriving in the same frame both confirm', () {
+      // Guards the pending path stays intact (already one-to-one).
+      final tracker = DartTracker();
+      tracker.processFrame(frame([a, bClose]));
+      final confirmed = tracker.processFrame(frame([a, bClose]));
+      expect(confirmed.newDarts, hasLength(2));
+      expect(confirmed.status.dartsOnBoard, 2);
+    });
+  });
+
   group('config', () {
     test('confirmFrames = 1 emits on first sighting', () {
       final tracker =
