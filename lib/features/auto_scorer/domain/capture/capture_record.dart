@@ -52,8 +52,10 @@ enum CaptureTrigger {
 /// example. The JSON shape is the probe's ingest contract; do not add or rename
 /// keys without the reciprocal `ddp-preprocess` change in the probe repo.
 /// (The `frame_space` / `frame_width` / `frame_height` keys added by the
-/// raw-capture brief — and the `trigger` key added by #455 — need that
-/// reciprocal probe change to be consumed.)
+/// raw-capture brief are load-bearing for ingest — the probe needs them to
+/// align coords — and stay blocked on that reciprocal change. The `trigger`
+/// key added by #455 is an optional curation filter: the probe can safely
+/// ignore it until it chooses to consume it.)
 class CaptureRecord {
   final List<PredictedDart> predictedDarts;
   final List<BoardPoint> calPoints;
