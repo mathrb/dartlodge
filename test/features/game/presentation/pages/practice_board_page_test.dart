@@ -27,6 +27,7 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
 
   final ActivePracticeState? _state;
   final List<String> processedDarts = [];
+  final List<(int, String)> corrections = [];
   int undoCalls = 0;
   int nextTurnCalls = 0;
   int endDrillCalls = 0;
@@ -37,6 +38,10 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
   @override
   Future<void> processDart(String segment, {String inputMethod = 'manual'}) async =>
       processedDarts.add(segment);
+
+  @override
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) async =>
+      corrections.add((turnDartIndex, newSegment));
 
   @override
   Future<void> undoDart() async => undoCalls++;
@@ -1342,6 +1347,45 @@ void main() {
 
     expect(find.byType(PracticePlayersStripWidget), findsNothing);
     expect(find.byType(ProminentDartBandWidget), findsOneWidget);
+  });
+
+  testWidgets(
+      'Camera-first correction sheet stays usable after the turn ends (#438)',
+      (tester) async {
+    _setTallViewport(tester);
+    // Turn fully thrown (3 darts) → engine set turnActive=false but the turn is
+    // not yet advanced. Tapping a recorded dart must still let the player
+    // correct it; the segment buttons must NOT be disabled by turnActive.
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.aroundTheClock,
+      competitors: [
+        _practiceCompetitor(
+          currentTarget: 5,
+          dartThrows: const ['T18', 'T19', 'T20'],
+        ),
+      ],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 3,
+      isComplete: false,
+      turnActive: false,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Tap the 3rd recorded dart to open its correction sheet.
+    await tester.tap(find.text('T20'));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct dart 3'), findsOneWidget);
+
+    // The segment buttons must be live: tapping MISS corrects dart 3.
+    await tester.tap(find.text('MISS'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.corrections, [(2, 'MISS')]);
+    expect(find.text('Correct dart 3'), findsNothing,
+        reason: 'sheet pops after a successful correction');
   });
 
   testWidgets('Manual mode shows the input buttons and dartboard highlight',
