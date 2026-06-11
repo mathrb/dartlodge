@@ -278,6 +278,24 @@ void main() {
       expect(tracker.dartsThisTurn, 2);
     });
 
+    test('detector candidate order does not matter (no phantom)', () {
+      // The detector does not guarantee spatial ordering. With B's box listed
+      // BEFORE A's, a candidate-driven greedy match would let B claim A's slot
+      // and route A's own re-detection into pending → phantom duplicate of A.
+      // Confirmed-driven matching recognises A's re-detection regardless.
+      final tracker = DartTracker();
+      tracker.processFrame(frame([a]));
+      tracker.processFrame(frame([a])); // A confirmed
+
+      // bClose first, then a — the order that would trip greedy matching.
+      tracker.processFrame(frame([bClose, a]));
+      final settled = tracker.processFrame(frame([bClose, a]));
+      expect(settled.status.dartsOnBoard, 2, reason: 'A + B, no phantom');
+      expect(tracker.dartsThisTurn, 2);
+      // Exactly the two physical darts are tracked — not three.
+      expect(tracker.confirmedDarts, hasLength(2));
+    });
+
     test('a stationary single dart still emits exactly once (no double-count)',
         () {
       // The dedup this fix preserves: one confirmed dart claims its own
