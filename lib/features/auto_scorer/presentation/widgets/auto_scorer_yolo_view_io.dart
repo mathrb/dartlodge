@@ -33,6 +33,17 @@ const double _nativeFloor = 0.05;
 const double _zoomMin = 1.0;
 const double _zoomMax = 5.0;
 
+/// Requested CameraX analysis resolution for live detection (#461). The model
+/// input is 800×800; CameraX's default analysis frame (~640×480) is below that,
+/// so it was letterboxed + upscaled and small-object detail (dart tips) lost.
+/// 1280×960 keeps both dims ≥ 800 (no upscaling). Opt-in via `ultralytics_yolo`
+/// ≥ 0.6.4 (upstream #529); CameraX falls back to the nearest supported size and
+/// it's a no-op where unsupported, so this is non-regressive. Coords are
+/// normalised against the analysis frame, so overlays/scoring are unaffected;
+/// inference cost is unchanged (model input fixed) — only the per-frame copy
+/// grows. Tune on-device against FPS.
+const Size kAutoScorerAnalysisResolution = Size(1280, 960);
+
 double _floor(double calConf, double dartConf) =>
     [_nativeFloor, calConf, dartConf].reduce((a, b) => a < b ? a : b);
 
@@ -193,6 +204,8 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
                 _floor(widget.calConfidence, widget.dartConfidence),
             iouThreshold: 0.45,
             lensFacing: LensFacing.back,
+            streamingConfig: const YOLOStreamingConfig(
+                analysisResolution: kAutoScorerAnalysisResolution),
             onResult: _onResults,
           ),
           Align(
@@ -468,7 +481,9 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
               _floor(widget.calConfidence, widget.dartConfidence),
           iouThreshold: 0.45,
           lensFacing: LensFacing.back,
-          streamingConfig: const YOLOStreamingConfig(inferenceFrequency: 3),
+          streamingConfig: const YOLOStreamingConfig(
+              inferenceFrequency: 3,
+              analysisResolution: kAutoScorerAnalysisResolution),
           onResult: _onResults,
         ),
         Positioned(
