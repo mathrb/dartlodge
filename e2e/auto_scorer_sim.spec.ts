@@ -4,18 +4,20 @@
  * The camera + YOLO are Android-native only, so on web the camera-first layout
  * renders but produces no dart detections. Build/serve the web app with the sim
  * flag so `window.dartlodgeSim` is exposed
- * (lib/core/debug/auto_scorer_sim_bridge_web.dart):
+ * (lib/core/debug/auto_scorer_sim_bridge_web.dart). Serve a RELEASE build
+ * statically on :6780 (a DDC `flutter run -d web-server` build does not render
+ * in headless chromium):
  *
- *   flutter run -d web-server --web-port 6780 --dart-define=AUTOSCORER_SIM=true
- *   # (or: flutter build web --dart-define=AUTOSCORER_SIM=true, served on :6780)
+ *   flutter build web --dart-define=AUTOSCORER_SIM=true --base-href /
+ *   python3 -m http.server 6780 -d build/web   # or any static server
  *
  * Hooks: enableAutoScoring() | emit('T20') | advance(). This is the smoke proof
  * + template for the per-game camera-first suites. It mocks POST-detection (the
  * DartInputSink); it does not exercise the native tracker.
  *
- * NOTE: like the other specs here, this needs a browser that can render Flutter
- * CanvasKit (a real/GPU browser or the deployed build) — Flutter web does not
- * render in a GPU-less headless sandbox.
+ * Navigation note: Flutter go_router does not change the URL path for the
+ * setup screens (only the board uses a `/#/...` hash route), so this drives by
+ * content (roles/text), not `waitForURL`.
  */
 
 import { test, expect, Page } from '@playwright/test';
@@ -31,47 +33,38 @@ test.describe('Auto-scorer camera-first (sim bridge)', () => {
     const page = await browser.newPage();
     test.setTimeout(120000);
 
-    // 1. Load; wait for the Flutter view (DOM-level), then expose the semantics
-    //    tree (Flutter web only populates accessible text after this) and wait
-    //    for the sim bridge to register.
+    // 1. Load; wait for the Flutter view, expose the semantics tree (CanvasKit
+    //    only populates accessible roles/text after this), and wait for the
+    //    sim bridge to register.
     await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 60000 });
-    await page.evaluate(
-      () => document.querySelector('flt-semantics-placeholder')?.dispatchEvent(
-        new Event('click', { bubbles: true })),
-    );
+    await page.evaluate(() =>
+      document.querySelector('flt-semantics-placeholder')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     await page.waitForFunction(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       () => !!(window as any).dartlodgeSim,
       { timeout: 60000 },
     );
 
-    // 2. Turn auto-scoring on → boards render the camera-first layout.
+    // 2. Turn auto-scoring on → the board renders camera-first when it mounts.
     await sim(page, 'enableAutoScoring()');
 
-    // 3. Start a solo X01 game (mirrors cricket_3players.spec.ts navigation).
+    // 3. Start a solo X01 (501) game. Drive by content (no URL change on these
+    //    screens). A fresh context has an empty roster, so create the player.
     await page.getByRole('button', { name: /X01/i }).click();
-    await page.waitForURL('**/variant-selection/x01', { timeout: 10000 });
-    await page.getByRole('button', { name: /501/i }).first().click();
-    await page.waitForURL('**/player-selection', { timeout: 10000 });
+    await page.getByRole('button', { name: /Select 501/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('textbox', { name: /Player name/i }).fill(PLAYER);
+    await page.getByRole('button', { name: /CREATE PLAYER/i }).click(); // auto-selects
+    await page.getByRole('button', { name: /START GAME/i }).click();
 
-    if (!(await page.getByText(PLAYER).isVisible().catch(() => false))) {
-      await page.getByRole('button', { name: /Add Player|Create/i }).first().click();
-      await page.getByPlaceholder(/Name/i).fill(PLAYER);
-      await page.getByRole('button', { name: /Save|Create|OK/i }).first().click();
-      await expect(page.getByText(PLAYER)).toBeVisible({ timeout: 5000 });
-    }
-    await page.getByLabel(PLAYER).check();
-    await page.getByRole('button', { name: /Next|Continue|Start/i }).first().click();
-
-    await page.waitForURL('**/x01/**', { timeout: 10000 });
-    await page.waitForTimeout(2000); // board mounts + binds the dart sink
-
-    // 4. Confirm we're in the camera-first layout (not the manual board): on
-    //    web the camera region shows the "not available" stub, which only the
-    //    camera-first layout renders. The starting score is the hero metric.
-    await expect(page.getByText(/not available/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('501')).toBeVisible({ timeout: 10000 });
+    // 4. Confirm the camera-first layout (not the manual segment grid): only it
+    //    renders the camera overlay's "Start camera" affordance.
+    await expect(page.getByRole('button', { name: /Start camera/i }))
+      .toBeVisible({ timeout: 15000 });
+    // Hero metric shows the starting score (also in the metadata bar → .first()).
+    await expect(page.getByText('501').first()).toBeVisible({ timeout: 10000 });
 
     // 5. Inject three T20s through the sink (= the auto-scorer detected them).
     await sim(page, "emit('T20')");
