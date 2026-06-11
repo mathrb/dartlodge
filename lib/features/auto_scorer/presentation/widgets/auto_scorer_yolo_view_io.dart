@@ -339,6 +339,10 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   @override
   void correctDart({required int dartInTurnOrdinal, required String segment}) {
     if (!mounted) return;
+    // Respect the data-collection opt-in: with it off we never touch the capture
+    // store — in partial mode this would otherwise silently write a frame the
+    // user opted out of (the store is non-null even when collection is off).
+    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) return;
     final mode =
         ref.read(captureModeSettingProvider).value ?? CaptureMode.all;
     if (mode == CaptureMode.all) {
