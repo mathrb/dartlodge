@@ -112,14 +112,37 @@ class DartTracker {
         _normalise(t.homography.apply(c), t.centre, t.radius),
     ];
 
-    final seenPending = <int>{};
-    for (final cand in candidates) {
-      // Already a known physical dart → same dart, nothing to do.
-      if (_confirmed.any(
-          (d) => _dist(d.boardPosition, cand) <= _config.matchTolerance)) {
-        continue;
+    // Pass 1: each confirmed dart claims its NEAREST candidate as a re-detection
+    // (one-to-one). Driving the match from the confirmed darts — not from the
+    // candidates — keeps it independent of the detector's candidate ordering: a
+    // confirmed dart always recognises its own re-detection (distance ≈ 0)
+    // rather than letting a nearby new dart steal its slot. A confirmed dart
+    // absorbs only ONE detection per frame, so a second box landing within
+    // matchTolerance of it (a dart thrown into the same bed) is NOT silently
+    // swallowed — it falls through to pending below and confirms as its own
+    // dart (#454). Without the one-to-one claim a single confirmed dart soaks up
+    // every nearby detection and the grouping is under-counted.
+    final claimedCandidates = <int>{};
+    for (final confirmed in _confirmed) {
+      int? nearest;
+      var best = double.infinity;
+      for (var i = 0; i < candidates.length; i++) {
+        if (claimedCandidates.contains(i)) continue;
+        final d = _dist(confirmed.boardPosition, candidates[i]);
+        if (d <= _config.matchTolerance && d < best) {
+          best = d;
+          nearest = i;
+        }
       }
-      // Otherwise match the nearest not-yet-claimed pending candidate.
+      if (nearest != null) claimedCandidates.add(nearest); // same dart
+    }
+
+    // Pass 2: every candidate not claimed by a confirmed dart is a new or
+    // pending dart — match the nearest not-yet-claimed pending candidate.
+    final seenPending = <int>{};
+    for (var c = 0; c < candidates.length; c++) {
+      if (claimedCandidates.contains(c)) continue;
+      final cand = candidates[c];
       int? nearest;
       var best = double.infinity;
       for (var i = 0; i < _pending.length; i++) {
