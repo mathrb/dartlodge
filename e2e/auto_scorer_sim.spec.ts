@@ -67,7 +67,10 @@ test.describe('Auto-scorer camera-first (sim bridge)', () => {
     await page.waitForURL('**/x01/**', { timeout: 10000 });
     await page.waitForTimeout(2000); // board mounts + binds the dart sink
 
-    // 4. Camera-first board shows the starting score as the hero metric.
+    // 4. Confirm we're in the camera-first layout (not the manual board): on
+    //    web the camera region shows the "not available" stub, which only the
+    //    camera-first layout renders. The starting score is the hero metric.
+    await expect(page.getByText(/not available/i)).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('501')).toBeVisible({ timeout: 10000 });
 
     // 5. Inject three T20s through the sink (= the auto-scorer detected them).

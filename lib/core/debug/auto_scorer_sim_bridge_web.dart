@@ -42,37 +42,42 @@ class _AutoScorerSimBridgeState extends ConsumerState<AutoScorerSimBridge> {
     // Emit one detected dart into the active game (no-op if no board is open).
     api.setProperty(
       'emit'.toJS,
-      ((JSString segment) => _afterFrame(() {
+      ((JSString segment) => _afterFrame(() async {
+            if (!mounted) return;
             ref.read(activeDartInputSinkProvider)?.submitDart(segment.toDart);
           })).toJS,
     );
-    // Advance the turn (the board-clear path; no UI trigger exists otherwise).
+    // Advance the turn directly — Playwright owns the precondition. Unlike the
+    // native auto-advance, this bypasses the board-clear / autoAdvanceOnClear
+    // guards (it is a direct control, not a simulation of board-clear).
     api.setProperty(
       'advance'.toJS,
-      (() => _afterFrame(() {
+      (() => _afterFrame(() async {
+            if (!mounted) return;
             ref.read(activeDartInputSinkProvider)?.advanceTurn();
           })).toJS,
     );
-    // Turn auto-scoring on so boards switch to the camera-first layout.
+    // Turn auto-scoring on so boards switch to the camera-first layout. Awaited
+    // so the JS promise resolves after the (async) enable has taken effect.
     api.setProperty(
       'enableAutoScoring'.toJS,
-      (() => _afterFrame(() {
-            ref.read(autoScoringEnabledProvider.notifier).setEnabled(true);
+      (() => _afterFrame(() async {
+            if (!mounted) return;
+            await ref.read(autoScoringEnabledProvider.notifier).setEnabled(true);
           })).toJS,
     );
     globalContext.setProperty(_globalKey.toJS, api);
   }
 
-  /// Runs [action], then resolves the returned JS promise at the end of the next
-  /// frame so a Playwright `await` lands after the resulting rebuild has painted.
-  /// (Assertions still poll, so this only reduces flakiness.)
-  JSPromise<JSAny?> _afterFrame(void Function() action) {
+  /// Awaits [action] (which may be async — e.g. enabling auto-scoring writes to
+  /// SharedPreferences), then waits for the resulting rebuild to paint, so a
+  /// Playwright `await` lands after the effect is applied. Assertions still poll.
+  JSPromise<JSAny?> _afterFrame(Future<void> Function() action) {
     final completer = Completer<JSAny?>();
-    action();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      WidgetsBinding.instance.endOfFrame.then((_) {
-        if (!completer.isCompleted) completer.complete(null);
-      });
+    Future<void>(() async {
+      await action();
+      await WidgetsBinding.instance.endOfFrame;
+      if (!completer.isCompleted) completer.complete(null);
     });
     return completer.future.toJS;
   }
