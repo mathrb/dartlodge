@@ -435,4 +435,38 @@ void main() {
     await session.applyDartCorrection(
         gameId: 'g', turnOrdinal: 1, dartInTurnOrdinal: 1, segment: 'MISS');
   });
+
+  test('persistCorrectedCapture saves a new corrected capture (#457 partial)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    final raw = Uint8List.fromList(const [4, 2]);
+    await session.persistCorrectedCapture(
+        frame: oneDartFrame,
+        bytes: raw,
+        turnOrdinal: 3,
+        dartInTurnOrdinal: 2,
+        gameId: 'g',
+        segment: 'T20');
+    expect(store.saved, hasLength(1));
+    expect(store.savedBytes.single, raw);
+    final record = store.saved.single;
+    expect(record.wasCorrected, isTrue);
+    expect(record.correctedDarts.single.segment, 'T20');
+    expect(record.handle,
+        const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));
+    expect(record.trigger, CaptureTrigger.auto);
+    expect(record.frameSpace, FrameSpace.raw);
+  });
+
+  test('persistCorrectedCapture is a no-op without a capture store', () async {
+    final session = AutoScorerSession();
+    await session.persistCorrectedCapture(
+        frame: oneDartFrame,
+        bytes: Uint8List.fromList(const [1]),
+        turnOrdinal: 1,
+        dartInTurnOrdinal: 1,
+        gameId: 'g',
+        segment: 'T20');
+  });
 }

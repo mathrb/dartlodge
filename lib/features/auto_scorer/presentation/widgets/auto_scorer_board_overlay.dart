@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
@@ -55,11 +52,6 @@ class _AutoScorerBoardOverlayState
   AutoScorerSession? _session;
   int _turnOrdinal = 1;
   String? _error;
-
-  /// Bridges the game's correction flow to this session's capture store (#456).
-  /// Bound while running, cleared on stop.
-  late final _OverlayCaptureCorrectionSink _correctionSink =
-      _OverlayCaptureCorrectionSink(this);
 
   /// Tracker status for the chip. A [ValueNotifier] (not setState) so the live
   /// `onResult` stream (~3 Hz) updates only the chip — never rebuilding the
@@ -137,12 +129,9 @@ class _AutoScorerBoardOverlayState
       ));
       if (!mounted) return;
       if (done == true) {
-        // Bind the correction bridge so in-game dart corrections reach this
-        // session's capture store (#456). Event-handler context → ref mutation
-        // is safe here (unlike build/dispose).
-        ref
-            .read(activeCaptureCorrectionSinkProvider.notifier)
-            .bind(_correctionSink);
+        // The inline preview binds the correction bridge itself (#456/#457) —
+        // it owns the camera controller needed to capture-at-correction. This
+        // overlay only clears the binding on stop (_stop/_fail).
         setState(() {
           _mode = _Mode.running;
           _starting = false;
@@ -319,30 +308,5 @@ class _AutoScorerBoardOverlayState
           ),
       ],
     );
-  }
-}
-
-/// Bridges the game's correction flow (#456) to the running session's capture
-/// store. Reads the overlay's live session / turn ordinal / game id so it always
-/// targets the *current* turn's capture. Guards on `mounted`: the overlay can't
-/// unbind in `dispose` (mutating a provider there is illegal), so a stale
-/// binding lingers until the next overlay rebinds — exactly like the
-/// `DartInputSink` bridge — and a late correction simply no-ops. Fire-and-forget
-/// so a capture-store write never blocks or fails the game's correction.
-class _OverlayCaptureCorrectionSink implements CaptureCorrectionSink {
-  _OverlayCaptureCorrectionSink(this._state);
-
-  final _AutoScorerBoardOverlayState _state;
-
-  @override
-  void correctDart({required int dartInTurnOrdinal, required String segment}) {
-    final session = _state._session;
-    if (!_state.mounted || session == null) return;
-    unawaited(session.applyDartCorrection(
-      gameId: _state.widget.gameId,
-      turnOrdinal: _state._turnOrdinal,
-      dartInTurnOrdinal: dartInTurnOrdinal,
-      segment: segment,
-    ));
   }
 }

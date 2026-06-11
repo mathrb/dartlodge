@@ -75,6 +75,61 @@ abstract class _$DataCollectionEnabled extends $AsyncNotifier<bool> {
   }
 }
 
+/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
+/// behaviour is unchanged. Only meaningful while data collection is on.
+
+@ProviderFor(CaptureModeSetting)
+final captureModeSettingProvider = CaptureModeSettingProvider._();
+
+/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
+/// behaviour is unchanged. Only meaningful while data collection is on.
+final class CaptureModeSettingProvider
+    extends $AsyncNotifierProvider<CaptureModeSetting, CaptureMode> {
+  /// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
+  /// behaviour is unchanged. Only meaningful while data collection is on.
+  CaptureModeSettingProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'captureModeSettingProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$captureModeSettingHash();
+
+  @$internal
+  @override
+  CaptureModeSetting create() => CaptureModeSetting();
+}
+
+String _$captureModeSettingHash() =>
+    r'a70c5603fde9f1efd1db611c4826e8c510187b0f';
+
+/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
+/// behaviour is unchanged. Only meaningful while data collection is on.
+
+abstract class _$CaptureModeSetting extends $AsyncNotifier<CaptureMode> {
+  FutureOr<CaptureMode> build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<AsyncValue<CaptureMode>, CaptureMode>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<AsyncValue<CaptureMode>, CaptureMode>,
+              AsyncValue<CaptureMode>,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 /// The on-device capture store (file-backed on mobile, no-op on web). Consumers
 /// gate on [CaptureStore.isSupported] before offering capture/export.
 
