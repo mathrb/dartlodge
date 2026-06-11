@@ -14,6 +14,18 @@ class PlayerDetailPage extends ConsumerWidget {
 
   const PlayerDetailPage({super.key, required this.playerId});
 
+  /// Back navigation that survives a non-poppable stack: this page can be the
+  /// only route after a deep link / app restoration, where `context.pop()`
+  /// throws "There is nothing to pop". Falls back to the players list, the same
+  /// guard `_confirmDelete` already uses.
+  void _back(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(GameRoutes.players);
+    }
+  }
+
   Future<void> _confirmDelete(
     BuildContext context,
     WidgetRef ref,
@@ -50,11 +62,7 @@ class PlayerDetailPage extends ConsumerWidget {
     if (!context.mounted) return;
     switch (result) {
       case DeletePlayerSuccess():
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go(GameRoutes.players);
-        }
+        _back(context);
       case DeletePlayerHasGameHistory():
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -88,7 +96,7 @@ class PlayerDetailPage extends ConsumerWidget {
               Text('Failed to load player: $e'),
               const SizedBox(height: 12),
               FilledButton(
-                onPressed: () => context.pop(),
+                onPressed: () => _back(context),
                 child: const Text('Back'),
               ),
             ],
@@ -106,7 +114,7 @@ class PlayerDetailPage extends ConsumerWidget {
                   const Text('Player not found'),
                   const SizedBox(height: 12),
                   FilledButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => _back(context),
                     child: const Text('Back'),
                   ),
                 ],
