@@ -217,6 +217,7 @@ void main() {
     expect(store.saved.single.gameId, 'g');
     expect(store.saved.single.handle, const CaptureHandle(turnOrdinal: 4, dartInTurnOrdinal: 1));
     expect(store.saved.single.modelVersion, 'test-v1');
+    expect(store.saved.single.trigger, CaptureTrigger.auto);
   });
 
   test('stores the 800×800 preprocessed frame, not the raw camera bytes', () async {
@@ -275,6 +276,7 @@ void main() {
     expect(store.saved, hasLength(1));
     expect(store.saved.single.handle,
         const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
+    expect(store.saved.single.trigger, CaptureTrigger.manual);
     final stored = img.decodeImage(store.savedBytes.single)!;
     expect(stored.width, 800);
     expect(stored.height, 800);
@@ -366,6 +368,7 @@ void main() {
     expect(record.frameHeight, 0);
     expect(record.handle,
         const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 1));
+    expect(record.trigger, CaptureTrigger.auto);
   });
 
   test('persistEmittedDarts is a no-op without a store or with count 0', () async {
@@ -394,6 +397,7 @@ void main() {
     expect(record.frameSpace, FrameSpace.raw);
     expect(record.handle,
         const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
+    expect(record.trigger, CaptureTrigger.manual);
   });
 
   test('persistManualCapture returns false without a capture store', () async {

@@ -24,13 +24,36 @@ enum FrameSpace {
       );
 }
 
+/// How a capture was triggered (#455): `auto` = saved automatically on dart
+/// emission; `manual` = the user pressed a capture button. Lets downstream
+/// tooling filter by origin without parsing the `capture_handle` prefix. Wire
+/// values are stable JSON strings.
+enum CaptureTrigger {
+  auto('auto'),
+  manual('manual');
+
+  const CaptureTrigger(this.wire);
+
+  /// Stable JSON value written to / read from the sidecar's `trigger` key.
+  final String wire;
+
+  static CaptureTrigger? fromWire(String? value) {
+    if (value == null) return null;
+    for (final t in values) {
+      if (t.wire == value) return t;
+    }
+    return null;
+  }
+}
+
 /// The sidecar record stored alongside each captured frame (#381 §6).
 ///
 /// Every detection — and especially every correction — is a labelled training
 /// example. The JSON shape is the probe's ingest contract; do not add or rename
 /// keys without the reciprocal `ddp-preprocess` change in the probe repo.
 /// (The `frame_space` / `frame_width` / `frame_height` keys added by the
-/// raw-capture brief need that reciprocal probe change to be consumed.)
+/// raw-capture brief — and the `trigger` key added by #455 — need that
+/// reciprocal probe change to be consumed.)
 class CaptureRecord {
   final List<PredictedDart> predictedDarts;
   final List<BoardPoint> calPoints;
@@ -48,6 +71,10 @@ class CaptureRecord {
   final int frameWidth;
   final int frameHeight;
 
+  /// Whether this frame was captured automatically (on dart emission) or by a
+  /// manual capture button (#455).
+  final CaptureTrigger trigger;
+
   const CaptureRecord({
     required this.predictedDarts,
     required this.calPoints,
@@ -60,6 +87,7 @@ class CaptureRecord {
     this.frameSpace = FrameSpace.letterbox800,
     this.frameWidth = 800,
     this.frameHeight = 800,
+    this.trigger = CaptureTrigger.auto,
   });
 
   Map<String, dynamic> toJson() => {
@@ -76,31 +104,42 @@ class CaptureRecord {
         'frame_space': frameSpace.wire,
         'frame_width': frameWidth,
         'frame_height': frameHeight,
+        'trigger': trigger.wire,
       };
 
-  factory CaptureRecord.fromJson(Map<String, dynamic> json) => CaptureRecord(
-        predictedDarts: [
-          for (final d in (json['predicted_darts'] as List))
-            PredictedDart.fromJson((d as Map).cast<String, dynamic>())
-        ],
-        calPoints: [
-          for (final p in (json['cal_points'] as List))
-            (x: ((p as Map)['x'] as num).toDouble(), y: (p['y'] as num).toDouble())
-        ],
-        correctedDarts: [
-          for (final d in (json['corrected_darts'] as List? ?? const []))
-            CorrectedDart.fromJson((d as Map).cast<String, dynamic>())
-        ],
-        modelVersion: json['model_version'] as String,
-        gameId: json['game_id'] as String,
-        handle: CaptureHandle.parse(json['capture_handle'] as String),
-        timestamp: DateTime.parse(json['timestamp'] as String),
-        wasCorrected: json['was_corrected'] as bool? ?? false,
-        // Pre-brief sidecars: no frame_space / dims → 800×800 letterbox.
-        frameSpace: FrameSpace.fromWire(json['frame_space'] as String? ?? ''),
-        frameWidth: json['frame_width'] as int? ?? 800,
-        frameHeight: json['frame_height'] as int? ?? 800,
-      );
+  factory CaptureRecord.fromJson(Map<String, dynamic> json) {
+    final handle = CaptureHandle.parse(json['capture_handle'] as String);
+    return CaptureRecord(
+      predictedDarts: [
+        for (final d in (json['predicted_darts'] as List))
+          PredictedDart.fromJson((d as Map).cast<String, dynamic>())
+      ],
+      calPoints: [
+        for (final p in (json['cal_points'] as List))
+          (x: ((p as Map)['x'] as num).toDouble(), y: (p['y'] as num).toDouble())
+      ],
+      correctedDarts: [
+        for (final d in (json['corrected_darts'] as List? ?? const []))
+          CorrectedDart.fromJson((d as Map).cast<String, dynamic>())
+      ],
+      modelVersion: json['model_version'] as String,
+      gameId: json['game_id'] as String,
+      handle: handle,
+      timestamp: DateTime.parse(json['timestamp'] as String),
+      wasCorrected: json['was_corrected'] as bool? ?? false,
+      // Pre-brief sidecars: no frame_space / dims → 800×800 letterbox.
+      frameSpace: FrameSpace.fromWire(json['frame_space'] as String? ?? ''),
+      frameWidth: json['frame_width'] as int? ?? 800,
+      frameHeight: json['frame_height'] as int? ?? 800,
+      // Pre-#455 sidecars carry no `trigger`: infer it from the handle kind
+      // (manual sequence ⇒ a button capture), which is the implicit convention
+      // this field replaces — so existing captures stay correctly labelled.
+      trigger: CaptureTrigger.fromWire(json['trigger'] as String?) ??
+          (handle.manualSequence != null
+              ? CaptureTrigger.manual
+              : CaptureTrigger.auto),
+    );
+  }
 
   /// Returns a copy with the user's correction applied: replaces
   /// [correctedDarts] and flips [wasCorrected] true. Keyed by [handle], so this
@@ -117,5 +156,6 @@ class CaptureRecord {
         frameSpace: frameSpace,
         frameWidth: frameWidth,
         frameHeight: frameHeight,
+        trigger: trigger,
       );
 }
