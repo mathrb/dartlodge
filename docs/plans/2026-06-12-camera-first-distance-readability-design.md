@@ -99,7 +99,11 @@ preview fills the entire flexible region.
   `_vignetteExpanded` boolean — per the runtime-mutable-flip constraint above,
   the boards are untouched and need no re-flow (grid/band keep their fixed
   natural heights; the slack lives inside the camera region's `Expanded` slot,
-  above the bottom-anchored vignette). Tap on the vignette expands;
+  BELOW the vignette — the compact block sits at the top of the slot, right
+  under the dart band; a bottom-anchored vignette left an ugly dead gap
+  mid-screen, device-verified on rc112 and fixed in the follow-up PR #484,
+  which also made the tap work via `IgnorePointer` — the `YOLOView` platform
+  view consumes touches natively). Tap on the vignette expands;
   auto-collapse on a newly detected dart (`dartsOnBoard` increase), on a turn
   advance (`activeTurnSignal`), or after ~10 s.
 

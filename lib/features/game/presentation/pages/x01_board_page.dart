@@ -604,7 +604,12 @@ class _CheckoutBanner extends StatelessWidget {
                       Flexible(
                         child: Text(
                           suggestion ?? 'Suggestions appear in checkout range',
-                          style: (large
+                          // The at-distance bump applies only to a REAL
+                          // suggestion: the placeholder at headlineMedium
+                          // ellipsised ("Suggestions app…") on a 412dp screen
+                          // (device-verified on rc112), and it's not an
+                          // at-distance info anyway.
+                          style: (large && highlight
                                   ? AppTextStyles.headlineMedium
                                   : AppTextStyles.labelLarge)
                               .copyWith(

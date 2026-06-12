@@ -309,13 +309,14 @@ class _AutoScorerBoardOverlayState
 
     // Camera-first vignette (#480): collapsed by default — the preview is
     // near-useless during play once calibrated, so the freed space goes to the
-    // at-distance game info above. Only the compact block carries the overlay
-    // surface; the slack above stays transparent. Tap expands the preview
-    // (auto-collapses on the next detected dart / turn advance / ~10 s).
+    // at-distance game info above. The compact block sits at the TOP of the
+    // camera slot, right under the dart band (a bottom-anchored vignette left
+    // an ugly dead gap mid-screen — device-verified on rc112); the slack below
+    // stays transparent. Tap expands the preview (auto-collapses on the next
+    // detected dart / turn advance / ~10 s).
     if (widget.expand && preview != null && !_vignetteExpanded) {
       return Column(
         children: [
-          const Spacer(),
           Material(
             color: scheme.surfaceContainerHigh,
             child: Padding(
@@ -327,13 +328,24 @@ class _AutoScorerBoardOverlayState
                     button: true,
                     label: 'expand camera preview',
                     child: GestureDetector(
+                      // The YOLOView platform view consumes touch events
+                      // natively (it needs them for tapToFocus), so a plain
+                      // parent GestureDetector never wins the gesture arena —
+                      // taps died in the camera view (device-verified on
+                      // rc112). IgnorePointer makes the collapsed preview
+                      // inert so this opaque detector owns the whole surface.
+                      // Trade-off: the manual-capture button is disabled while
+                      // collapsed (it stays usable in the expanded state).
+                      behavior: HitTestBehavior.opaque,
                       onTap: _expandVignette,
-                      child: SizedBox(
-                        height: kAutoScorerVignettePreviewHeight,
-                        width: double.infinity,
-                        child: Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: preview),
+                      child: IgnorePointer(
+                        child: SizedBox(
+                          height: kAutoScorerVignettePreviewHeight,
+                          width: double.infinity,
+                          child: Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: preview),
+                        ),
                       ),
                     ),
                   ),
@@ -343,6 +355,7 @@ class _AutoScorerBoardOverlayState
               ),
             ),
           ),
+          const Spacer(),
         ],
       );
     }
