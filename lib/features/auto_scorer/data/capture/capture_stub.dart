@@ -30,7 +30,8 @@ class _UnsupportedCaptureStore implements CaptureStore {
   Future<void> enforceRetention(RetentionPolicy policy) async {}
 
   @override
-  Future<Uint8List> buildExportZip() async =>
+  Future<void> writeExportZip(String destPath,
+          {void Function(double)? onProgress}) async =>
       throw UnsupportedError('Capture export is not available on web.');
 
   @override
@@ -40,4 +41,6 @@ class _UnsupportedCaptureStore implements CaptureStore {
 Future<CaptureStore> openDefaultCaptureStore() async =>
     const _UnsupportedCaptureStore();
 
-Future<void> shareCaptureZip(Uint8List zipBytes) async {}
+Future<String> reserveExportZipPath() async => '';
+
+Future<void> shareCaptureZipFile(String path) async {}

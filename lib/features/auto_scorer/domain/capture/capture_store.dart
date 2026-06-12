@@ -31,9 +31,13 @@ abstract class CaptureStore {
   /// Delete captures until total storage is within [policy].
   Future<void> enforceRetention(RetentionPolicy policy);
 
-  /// Build a `dartlodge-export-*.zip` payload: one image + one sidecar JSON per
-  /// capture. The caller hands the bytes to the OS share sheet.
-  Future<Uint8List> buildExportZip();
+  /// Stream a `dartlodge-export-*.zip` to [destPath]: one image + one sidecar
+  /// JSON per capture, with flat names. Reports fractional [onProgress] (0..1)
+  /// as files are added. Bounded memory — does not assemble the archive in RAM
+  /// (#468) — so it stays within the heap regardless of capture-folder size. The
+  /// caller hands [destPath] to the OS share sheet.
+  Future<void> writeExportZip(String destPath,
+      {void Function(double)? onProgress});
 
   /// Remove all stored captures.
   Future<void> clear();

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:archive/archive.dart';
+import 'package:archive/archive_io.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_handle.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
@@ -92,23 +92,37 @@ class FileCaptureStore implements CaptureStore {
   }
 
   @override
-  Future<Uint8List> buildExportZip() async {
-    final archive = Archive();
+  Future<void> writeExportZip(String destPath,
+      {void Function(double)? onProgress}) async {
+    // Stream each capture file straight to the zip on disk (#468). The archive
+    // package's ZipFileEncoder reads via InputFileStream and writes via
+    // OutputFileStream, so peak memory is bounded by chunk buffers — never the
+    // whole (up-to-250 MB) capture folder, which the old in-memory
+    // Archive/ZipEncoder.encode path crashed on.
+    final files = <File>[];
     if (await baseDir.exists()) {
       await for (final entity in baseDir.list()) {
         if (entity is File &&
             (entity.path.endsWith('.json') || entity.path.endsWith('.jpg'))) {
-          final bytes = await entity.readAsBytes();
-          archive.addFile(
-              ArchiveFile(p.basename(entity.path), bytes.length, bytes));
+          files.add(entity);
         }
       }
     }
-    final encoded = ZipEncoder().encode(archive);
-    if (encoded == null) {
-      throw StateError('Failed to encode the capture export zip.');
+    final total = files.length;
+    final encoder = ZipFileEncoder()..create(destPath);
+    try {
+      var done = 0;
+      for (final file in files) {
+        // STORE (no deflate): frames are already-compressed JPEG so re-encoding
+        // wastes CPU for ~no size gain; sidecars are tiny. Flat basenames keep
+        // the probe's `dartlodge-export-*.zip` ingest contract.
+        await encoder.addFile(file, p.basename(file.path), ZipFileEncoder.STORE);
+        onProgress?.call(++done / total);
+      }
+    } finally {
+      await encoder.close();
     }
-    return Uint8List.fromList(encoded);
+    if (total == 0) onProgress?.call(1);
   }
 
   @override
@@ -133,20 +147,25 @@ Future<CaptureStore> openDefaultCaptureStore() async {
   return FileCaptureStore(Directory(p.join(support.path, 'auto_scorer', 'captures')));
 }
 
-/// Hand an export zip to the OS share sheet (#381 §6) — no photo-library
-/// permission needed. The file is named `dartlodge-export-<ts>.zip` (matching
-/// the probe's ingest glob `dartlodge-export-*.zip`); the name is constructed
-/// here so call sites can't deviate from the contract. `<ts>` is a
-/// filename-safe UTC stamp (`yyyyMMdd-HHmmssZ`) so collected exports read as a
-/// date/time and sort chronologically — no colons/spaces (safe on all
-/// filesystems and the glob).
-Future<void> shareCaptureZip(Uint8List zipBytes) async {
-  final fileName = 'dartlodge-export-${_exportStamp()}.zip';
+/// Reserve a temp-dir path for an export zip (#381 §6). The file is named
+/// `dartlodge-export-<ts>.zip` (matching the probe's ingest glob
+/// `dartlodge-export-*.zip`); the name is constructed here so call sites can't
+/// deviate from the contract. `<ts>` is a filename-safe UTC stamp
+/// (`yyyyMMdd-HHmmssZ`) so collected exports read as a date/time and sort
+/// chronologically — no colons/spaces (safe on all filesystems and the glob).
+/// The caller streams the zip to this path (`CaptureStore.writeExportZip`) then
+/// shares it via [shareCaptureZipFile].
+Future<String> reserveExportZipPath() async {
   final tmp = await getTemporaryDirectory();
-  final file = File(p.join(tmp.path, fileName));
-  await file.writeAsBytes(zipBytes, flush: true);
+  return p.join(tmp.path, 'dartlodge-export-${_exportStamp()}.zip');
+}
+
+/// Hand an already-written export zip at [path] to the OS share sheet — no
+/// photo-library permission needed, and no in-memory copy of the (possibly
+/// large) zip (#468).
+Future<void> shareCaptureZipFile(String path) async {
   await SharePlus.instance.share(ShareParams(
-    files: [XFile(file.path, mimeType: 'application/zip')],
+    files: [XFile(path, mimeType: 'application/zip')],
     subject: 'DartLodge training data',
   ));
 }
