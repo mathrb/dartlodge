@@ -33,6 +33,25 @@ class TrackerUpdate {
 /// Pure domain logic: no Flutter / drift / dio, no platform CV. Frames come
 /// from the (platform) detector via [DetectionFrame]; turn ownership and event
 /// emission live in the presentation layer.
+///
+/// **Known limitation — sustained false positives become phantom darts.** By
+/// design a confirmed dart is NEVER retracted individually; the only way out of
+/// [_confirmed] is a full re-baseline. This is the price of occlusion tolerance
+/// (a real dart that a later dart hides for several frames must not be dropped),
+/// so we cannot remove a dart just because it stops being detected. The flip
+/// side: a model false positive that is *stable* rather than a single-frame
+/// flash — a persistent reflection, a board blemish/hole, a background pattern,
+/// or another player's dart still in the board — survives confirm-before-emit,
+/// is emitted as a real dart (wrong score, no user action), and then lingers in
+/// [_confirmed] (counting toward [dartsOnBoard] and the 3-dart cap) until the
+/// next clear. This is **inherent to the per-arrival, occlusion-tolerant
+/// approach**, not a logic bug, and is mitigated by confirm-before-emit + the
+/// configurable dart-confidence floor; assist mode also assumes the user reviews
+/// and corrects misreads. The durable fix is model quality (training), not a
+/// naive "drop a confirmed dart when it disappears" rule — that would
+/// reintroduce the occlusion bug this design exists to avoid. Reviewed and
+/// accepted as a won't-fix limitation; do not re-flag without a design that
+/// distinguishes "occluded real dart" from "persistent non-dart detection".
 class DartTracker {
   DartTracker({DartTrackerConfig config = const DartTrackerConfig()})
       : _config = config;
