@@ -83,48 +83,62 @@ class DartTracker {
   /// Process one inference result; returns the darts to emit and the status.
   TrackerUpdate processFrame(DetectionFrame frame) {
     if (!frame.hasCalibration) {
-      // Board out of view / occluded: can't map. Keep state untouched. Only a
-      // sustained loss with no darts visible (an arm holding a single dart
-      // would still surface tips) escalates to the sticky needsCalibration
-      // alert; a frame that drops a cal dot but still sees darts is treated as
-      // transient occlusion and resets the counter (#377 §5.2).
+      // Cals occluded or board out of view. Only a sustained loss with no
+      // darts visible (an arm holding a single dart would still surface tips)
+      // escalates to the sticky needsCalibration alert; a frame that drops a
+      // cal dot but still sees darts is treated as transient occlusion and
+      // resets the counter (#377 §5.2).
       if (frame.isEmpty) {
         _noCalFrames++;
       } else {
         _noCalFrames = 0;
       }
-      return _statusOnly(_noCalFrames >= _config.noCalibrationFramesToWarn
-          ? TrackerPhase.needsCalibration
-          : TrackerPhase.noCalibration);
-    }
-    _noCalFrames = 0;
-
-    // Phone-bump recovery: a large cal-point shift ⇒ desync → re-baseline.
-    if (_lastCals != null &&
-        _meanShift(_lastCals!, frame.calPoints) > _config.calShiftThreshold) {
-      _rebaseline();
-      _lastCals = frame.calPoints;
-      return _statusOnly(TrackerPhase.cameraMoved);
-    }
-    _lastCals = frame.calPoints;
-
-    // Empty board: count consecutive empties; clear only after K of them.
-    if (frame.isEmpty) {
-      _emptyFrames++;
-      final hasState =
-          _confirmed.isNotEmpty || _pending.isNotEmpty || _transform != null;
-      if (_emptyFrames >= _config.emptyFramesToRebaseline && hasState) {
-        _rebaseline();
-        return _statusOnly(TrackerPhase.rebaselined);
+      // No held mapping (never calibrated / just re-baselined), or nothing to
+      // map: keep state untouched, status only.
+      if (_transform == null || frame.isEmpty) {
+        return _statusOnly(_noCalFrames >= _config.noCalibrationFramesToWarn
+            ? TrackerPhase.needsCalibration
+            : TrackerPhase.noCalibration);
       }
-      // Below the threshold this is occlusion, not a clear — keep darts.
-      return _statusOnly(
-          _confirmed.isEmpty ? TrackerPhase.idle : TrackerPhase.tracking);
+      // Held-homography continuation (#485): a planted dart or the player's
+      // arm occluding a cal dot must not stop scoring for the rest of the
+      // turn — the transform held since the first occupied frame still maps
+      // this frame's darts (the cals are deliberately NOT re-read while the
+      // board is occupied anyway, #377 §3.2). Phone-bump detection pauses
+      // (no cals to compare); [_lastCals] keeps the last fully-visible set,
+      // so a bump that happens DURING the occlusion is caught by the
+      // mean-shift check as soon as the cals reappear. Fall through to dart
+      // processing below.
+    } else {
+      _noCalFrames = 0;
+
+      // Phone-bump recovery: a large cal-point shift ⇒ desync → re-baseline.
+      if (_lastCals != null &&
+          _meanShift(_lastCals!, frame.calPoints) > _config.calShiftThreshold) {
+        _rebaseline();
+        _lastCals = frame.calPoints;
+        return _statusOnly(TrackerPhase.cameraMoved);
+      }
+      _lastCals = frame.calPoints;
+
+      // Empty board: count consecutive empties; clear only after K of them.
+      if (frame.isEmpty) {
+        _emptyFrames++;
+        final hasState =
+            _confirmed.isNotEmpty || _pending.isNotEmpty || _transform != null;
+        if (_emptyFrames >= _config.emptyFramesToRebaseline && hasState) {
+          _rebaseline();
+          return _statusOnly(TrackerPhase.rebaselined);
+        }
+        // Below the threshold this is occlusion, not a clear — keep darts.
+        return _statusOnly(
+            _confirmed.isEmpty ? TrackerPhase.idle : TrackerPhase.tracking);
+      }
+
+      // Hold the existing homography; derive one only if we don't have it yet.
+      _transform ??= canonicalTransform(frame.calPoints);
     }
     _emptyFrames = 0;
-
-    // Hold the existing homography; derive one only if we don't have it yet.
-    _transform ??= canonicalTransform(frame.calPoints);
     final t = _transform!;
 
     final candidates = [
