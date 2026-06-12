@@ -35,13 +35,14 @@ class TrackerUpdate {
 /// emission live in the presentation layer.
 ///
 /// **Cal occlusion does not stop scoring (#485):** the image→canonical
-/// transform is held for the whole turn, so frames with fewer than 4 cal dots
-/// (a planted dart or the player's arm masking one) still process darts off
-/// the held transform. Phone-bump detection pauses during the occlusion and
-/// resumes — against the pre-occlusion cal set — the moment the cals
-/// reappear; darts confirmed DURING a bump-and-occlusion overlap are emitted
-/// on the stale transform and are not retracted (the #376 correction flow is
-/// the recovery path).
+/// transform is refreshed from every calibrated EMPTY frame (the cleanest
+/// view of the dots) and held for the whole turn, so frames with fewer than
+/// 4 cal dots — including the very FIRST occupied frame, when the incoming
+/// dart masks a dot on arrival — still process darts off the held transform.
+/// Phone-bump detection pauses during the occlusion and resumes — against
+/// the pre-occlusion cal set — the moment the cals reappear; darts confirmed
+/// DURING a bump-and-occlusion overlap are emitted on the stale transform
+/// and are not retracted (the #376 correction flow is the recovery path).
 ///
 /// **Known limitation — a sustained false positive is emitted as a real dart.**
 /// By design a confirmed dart is NEVER retracted individually; the only way out
@@ -68,9 +69,11 @@ class DartTracker {
 
   final DartTrackerConfig _config;
 
-  /// Image→canonical transform, held stable while the board is occupied and
-  /// re-derived only on the first occupied frame after a re-baseline (#377 §3.2
-  /// homography stabilisation). Null means "derive from the next frame".
+  /// Image→canonical transform. Held stable while the board is occupied
+  /// (#377 §3.2 homography stabilisation); **refreshed from every calibrated
+  /// EMPTY frame** — the cleanest view of all 4 cal dots — so a turn can
+  /// start with a dot already occluded by the incoming dart and still score
+  /// (#485). Null only between a re-baseline and the next calibrated frame.
   CanonicalTransform? _transform;
 
   final List<TrackedDart> _confirmed = [];
@@ -85,9 +88,10 @@ class DartTracker {
   /// the phone-bump baseline. Deliberately preserved through cal occlusion
   /// (#485) so a bump that happens while a dot is hidden is still caught by
   /// the mean-shift check the moment the cals reappear. Cleared on
-  /// re-baseline: the transform is re-derived from fresh cals then, so a
-  /// pre-baseline comparison would only produce spurious `cameraMoved`s
-  /// (e.g. the user reframing between games).
+  /// re-baseline and re-seeded by the next calibrated frame (a calibrated
+  /// empty frame re-seeds it together with the refreshed [_transform]) —
+  /// once a transform is pre-derived from the empty board, a reframe between
+  /// games MUST fire `cameraMoved` to invalidate it.
   List<BoardPoint>? _lastCals;
 
   /// Confirmed physical darts on the board (across turns, until a re-baseline),
@@ -143,15 +147,24 @@ class DartTracker {
       // Empty board: count consecutive empties; clear only after K of them.
       if (frame.isEmpty) {
         _emptyFrames++;
-        final hasState =
-            _confirmed.isNotEmpty || _pending.isNotEmpty || _transform != null;
-        if (_emptyFrames >= _config.emptyFramesToRebaseline && hasState) {
-          _rebaseline();
-          return _statusOnly(TrackerPhase.rebaselined);
-        }
-        // Below the threshold this is occlusion, not a clear — keep darts.
-        return _statusOnly(
-            _confirmed.isEmpty ? TrackerPhase.idle : TrackerPhase.tracking);
+        // A transform alone is not "state" anymore: it is refreshed from
+        // every calibrated empty frame below, so an empty board would
+        // otherwise loop `rebaselined` every K frames.
+        final hasState = _confirmed.isNotEmpty || _pending.isNotEmpty;
+        final phase =
+            (_emptyFrames >= _config.emptyFramesToRebaseline && hasState)
+                ? TrackerPhase.rebaselined
+                : (_confirmed.isEmpty
+                    ? TrackerPhase.idle
+                    : TrackerPhase.tracking);
+        if (phase == TrackerPhase.rebaselined) _rebaseline();
+        // Calibrated empty board = the cleanest cal view: keep the mapping
+        // (and, after a re-baseline, the bump baseline) fresh so the FIRST
+        // dart of the next turn scores even when it occludes a cal dot on
+        // arrival (#485). While occupied the transform stays held.
+        _transform = canonicalTransform(frame.calPoints);
+        _lastCals = frame.calPoints;
+        return _statusOnly(phase);
       }
 
       // Hold the existing homography; derive one only if we don't have it yet.
