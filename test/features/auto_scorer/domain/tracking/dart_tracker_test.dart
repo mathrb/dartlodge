@@ -240,6 +240,81 @@ void main() {
       expect(noCal.status.phase, TrackerPhase.noCalibration);
       expect(tracker.confirmedDarts, hasLength(1), reason: 'state preserved');
     });
+
+    test('a dart thrown while a cal dot is occluded still scores (#485)', () {
+      final tracker = DartTracker();
+      final first = seg(20, rTreble);
+      tracker.processFrame(frame([first]));
+      tracker.processFrame(frame([first])); // T20 confirmed; transform held.
+
+      // The planted dart (or the player's arm) now masks one cal dot — only
+      // 3 of 4 cals visible for the rest of the turn.
+      final occluded = cals.sublist(0, 3);
+      final second = seg(19, rTreble);
+      final sighting = tracker.processFrame(
+          DetectionFrame(calPoints: occluded, dartCandidates: [first, second]));
+      expect(sighting.newDarts, isEmpty, reason: 'pending after 1 sighting');
+
+      final emitted = tracker.processFrame(
+          DetectionFrame(calPoints: occluded, dartCandidates: [first, second]));
+      expect(emitted.newDarts, hasLength(1),
+          reason: 'the held homography keeps mapping darts (#485)');
+      expect(emitted.newDarts.single.score.segment, 'T19');
+      expect(emitted.status.dartsOnBoard, 2);
+      expect(emitted.status.phase, TrackerPhase.tracking);
+    });
+
+    test('without a held transform, occluded-cal darts still do not score',
+        () {
+      final tracker = DartTracker();
+      // Never calibrated: a 3-cal frame with darts must stay status-only.
+      final update = tracker.processFrame(DetectionFrame(
+          calPoints: cals.sublist(0, 3), dartCandidates: [seg(20, rTreble)]));
+      expect(update.newDarts, isEmpty);
+      expect(update.status.phase, TrackerPhase.noCalibration);
+      expect(tracker.confirmedDarts, isEmpty);
+    });
+
+    test('reframing across a re-baseline is NOT a phone bump', () {
+      final tracker = DartTracker(
+          config: const DartTrackerConfig(emptyFramesToRebaseline: 2));
+      final dart = seg(20, rTreble);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed; bump baseline = cals
+
+      // Darts pulled → empty streak → auto re-baseline.
+      tracker.processFrame(frame(const []));
+      final cleared = tracker.processFrame(frame(const []));
+      expect(cleared.status.phase, TrackerPhase.rebaselined);
+
+      // The user reframes the phone between games: the next occupied frame
+      // carries shifted cals. The transform is re-derived fresh, so this must
+      // NOT fire cameraMoved off the pre-baseline cal set.
+      final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      tracker.processFrame(frame([dart], c: shifted));
+      final emitted = tracker.processFrame(frame([dart], c: shifted));
+      expect(emitted.status.phase, TrackerPhase.tracking);
+      expect(emitted.newDarts, hasLength(1));
+    });
+
+    test('a phone bump during cal occlusion is caught when cals reappear', () {
+      final tracker = DartTracker();
+      final dart = seg(20, rTreble);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed; _lastCals = cals
+
+      // Occluded frames keep scoring off the held transform...
+      tracker.processFrame(
+          DetectionFrame(calPoints: cals.sublist(0, 3), dartCandidates: [dart]));
+
+      // ...and when the cals reappear SHIFTED (the phone was bumped while the
+      // dots were hidden), the mean-shift check against the pre-occlusion set
+      // still fires the re-baseline.
+      final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      final bumped = tracker.processFrame(frame([dart], c: shifted));
+      expect(bumped.status.phase, TrackerPhase.cameraMoved);
+      expect(tracker.confirmedDarts, isEmpty);
+    });
   });
 
   group('close grouping (#454)', () {
