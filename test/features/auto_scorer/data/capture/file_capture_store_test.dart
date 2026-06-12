@@ -9,6 +9,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   late Directory dir;
@@ -72,11 +73,13 @@ void main() {
     expect((await store.list()).single.wasCorrected, isFalse);
   });
 
-  test('buildExportZip contains one image + one sidecar per capture', () async {
+  test('writeExportZip contains one image + one sidecar per capture', () async {
     await store.save(record(1), frame(10));
     await store.save(record(2), frame(10));
-    final zip = await store.buildExportZip();
-    final archive = ZipDecoder().decodeBytes(zip);
+    final dest = p.join(dir.path, 'export.zip');
+    final progress = <double>[];
+    await store.writeExportZip(dest, onProgress: progress.add);
+    final archive = ZipDecoder().decodeBytes(await File(dest).readAsBytes());
     final names = archive.files.map((f) => f.name).toSet();
     expect(names, containsAll(<String>{
       'g1_t1-d1.jpg',
@@ -84,6 +87,8 @@ void main() {
       'g1_t2-d1.jpg',
       'g1_t2-d1.json',
     }));
+    expect(progress, isNotEmpty);
+    expect(progress.last, 1.0);
   });
 
   test('enforceRetention prunes oldest un-corrected over the cap', () async {

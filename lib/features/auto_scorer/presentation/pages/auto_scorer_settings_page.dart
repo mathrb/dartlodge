@@ -15,11 +15,23 @@ import 'package:dart_lodge/features/auto_scorer/data/capture/capture_stub.dart'
 /// ("use auto-scoring" and "collect training data") plus the training-data
 /// export. Lives in the auto_scorer feature; the main Settings page links here
 /// by route, so neither feature imports the other.
-class AutoScorerSettingsPage extends ConsumerWidget {
+class AutoScorerSettingsPage extends ConsumerStatefulWidget {
   const AutoScorerSettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AutoScorerSettingsPage> createState() =>
+      _AutoScorerSettingsPageState();
+}
+
+class _AutoScorerSettingsPageState
+    extends ConsumerState<AutoScorerSettingsPage> {
+  // Inline export progress (#468). While exporting, the Export tile shows a
+  // determinate bar (fraction of capture files zipped) and disables its tap.
+  bool _exporting = false;
+  double _exportProgress = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
@@ -109,8 +121,21 @@ class AutoScorerSettingsPage extends ConsumerWidget {
           ListTile(
             leading: const Icon(Icons.ios_share),
             title: const Text('Export training data'),
-            subtitle: const Text('Share a zip of captured frames.'),
-            onTap: () => _export(context, ref),
+            subtitle: _exporting
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        LinearProgressIndicator(value: _exportProgress),
+                        const SizedBox(height: 4),
+                        Text(
+                            'Building zip… ${StatFormatter.fmtPct(_exportProgress, decimals: 0)}'),
+                      ],
+                    ),
+                  )
+                : const Text('Share a zip of captured frames.'),
+            onTap: _exporting ? null : () => _export(context),
           ),
           const Divider(),
           // Detection thresholds (#377 §3). The model's recall is measured at a
@@ -143,7 +168,7 @@ class AutoScorerSettingsPage extends ConsumerWidget {
     );
   }
 
-  Future<void> _export(BuildContext context, WidgetRef ref) async {
+  Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final store = await ref.read(captureStoreProvider.future);
     if (!store.isSupported) {
@@ -158,7 +183,19 @@ class AutoScorerSettingsPage extends ConsumerWidget {
       return;
     }
     final count = captures.length;
-    await shareCaptureZip(await store.buildExportZip());
+    final dest = await reserveExportZipPath();
+    setState(() {
+      _exporting = true;
+      _exportProgress = 0;
+    });
+    try {
+      await store.writeExportZip(dest, onProgress: (p) {
+        if (mounted) setState(() => _exportProgress = p);
+      });
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+    await shareCaptureZipFile(dest);
     // The export zips every stored capture, so re-exporting re-includes ones
     // already shared. Offer to clear them after the share sheet closes so they
     // don't pile up / re-export. Prompt (not auto-clear) because the share
