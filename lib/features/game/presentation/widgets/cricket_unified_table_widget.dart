@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
@@ -7,6 +5,7 @@ import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/cricket_segment_utils.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_state.dart';
+import 'cricket_mark_painter.dart';
 
 // ── File-private helpers ──────────────────────────────────────────────────────
 
@@ -419,62 +418,14 @@ class _MarkCell extends StatelessWidget {
           width: 28,
           height: 28,
           child: CustomPaint(
-            painter: _MarkPainter(marks: marks, color: color),
+            // Shared painter (#479); 2.5 stroke preserves the table's
+            // historical rendering exactly.
+            painter: CricketMarkPainter(marks: marks, color: color),
           ),
         ),
       ),
     );
   }
-}
-
-class _MarkPainter extends CustomPainter {
-  const _MarkPainter({required this.marks, required this.color});
-
-  final int marks;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2.5
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final arm = size.width * 0.38;
-
-    if (marks == 0) {
-      canvas.drawLine(
-        Offset(cx - arm, cy),
-        Offset(cx + arm, cy),
-        paint..strokeWidth = 2.0,
-      );
-      return;
-    }
-
-    // Diagonal arm length for slash/X marks (same for all mark counts)
-    final armDiag = arm / sqrt(2) * 1.15;
-
-    if (marks >= 3) {
-      canvas.drawCircle(Offset(cx, cy), size.width * 0.44, paint);
-    }
-
-    if (marks >= 2) {
-      canvas.drawLine(
-          Offset(cx - armDiag, cy + armDiag), Offset(cx + armDiag, cy - armDiag), paint);
-      canvas.drawLine(
-          Offset(cx - armDiag, cy - armDiag), Offset(cx + armDiag, cy + armDiag), paint);
-    } else {
-      canvas.drawLine(
-          Offset(cx - armDiag, cy + armDiag), Offset(cx + armDiag, cy - armDiag), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_MarkPainter old) =>
-      old.marks != marks || old.color != color;
 }
 
 // ── Input cell ────────────────────────────────────────────────────────────────
