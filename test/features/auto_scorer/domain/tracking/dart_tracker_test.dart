@@ -275,6 +275,28 @@ void main() {
       expect(tracker.confirmedDarts, isEmpty);
     });
 
+    test('reframing across a re-baseline is NOT a phone bump', () {
+      final tracker = DartTracker(
+          config: const DartTrackerConfig(emptyFramesToRebaseline: 2));
+      final dart = seg(20, rTreble);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed; bump baseline = cals
+
+      // Darts pulled → empty streak → auto re-baseline.
+      tracker.processFrame(frame(const []));
+      final cleared = tracker.processFrame(frame(const []));
+      expect(cleared.status.phase, TrackerPhase.rebaselined);
+
+      // The user reframes the phone between games: the next occupied frame
+      // carries shifted cals. The transform is re-derived fresh, so this must
+      // NOT fire cameraMoved off the pre-baseline cal set.
+      final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      tracker.processFrame(frame([dart], c: shifted));
+      final emitted = tracker.processFrame(frame([dart], c: shifted));
+      expect(emitted.status.phase, TrackerPhase.tracking);
+      expect(emitted.newDarts, hasLength(1));
+    });
+
     test('a phone bump during cal occlusion is caught when cals reappear', () {
       final tracker = DartTracker();
       final dart = seg(20, rTreble);

@@ -4,6 +4,8 @@
 enum TrackerPhase {
   /// No calibration this frame — the board is occluded or out of view. A
   /// transient single-frame loss; escalates to [needsCalibration] if sustained.
+  /// NOT emitted when a held mid-turn transform can still map visible darts
+  /// (#485) — those frames keep scoring and report [tracking]/[turnFull].
   noCalibration,
 
   /// Calibration has been absent (with no darts visible) for several

@@ -34,6 +34,15 @@ class TrackerUpdate {
 /// from the (platform) detector via [DetectionFrame]; turn ownership and event
 /// emission live in the presentation layer.
 ///
+/// **Cal occlusion does not stop scoring (#485):** the image→canonical
+/// transform is held for the whole turn, so frames with fewer than 4 cal dots
+/// (a planted dart or the player's arm masking one) still process darts off
+/// the held transform. Phone-bump detection pauses during the occlusion and
+/// resumes — against the pre-occlusion cal set — the moment the cals
+/// reappear; darts confirmed DURING a bump-and-occlusion overlap are emitted
+/// on the stale transform and are not retracted (the #376 correction flow is
+/// the recovery path).
+///
 /// **Known limitation — a sustained false positive is emitted as a real dart.**
 /// By design a confirmed dart is NEVER retracted individually; the only way out
 /// of [_confirmed] is a full re-baseline. This is the price of occlusion
@@ -71,6 +80,14 @@ class DartTracker {
   int _noCalFrames = 0;
   int _dartsThisTurn = 0;
   int _nextHandle = 0;
+
+  /// Last FULLY-visible cal set (only frames with all 4 cals update it) —
+  /// the phone-bump baseline. Deliberately preserved through cal occlusion
+  /// (#485) so a bump that happens while a dot is hidden is still caught by
+  /// the mean-shift check the moment the cals reappear. Cleared on
+  /// re-baseline: the transform is re-derived from fresh cals then, so a
+  /// pre-baseline comparison would only produce spurious `cameraMoved`s
+  /// (e.g. the user reframing between games).
   List<BoardPoint>? _lastCals;
 
   /// Confirmed physical darts on the board (across turns, until a re-baseline),
@@ -107,8 +124,10 @@ class DartTracker {
       // board is occupied anyway, #377 §3.2). Phone-bump detection pauses
       // (no cals to compare); [_lastCals] keeps the last fully-visible set,
       // so a bump that happens DURING the occlusion is caught by the
-      // mean-shift check as soon as the cals reappear. Fall through to dart
-      // processing below.
+      // mean-shift check as soon as the cals reappear — protecting FUTURE
+      // darts; ones confirmed inside that window were emitted on the stale
+      // transform and are not retracted (#376 correction is the recovery).
+      // Fall through to dart processing below.
     } else {
       _noCalFrames = 0;
 
@@ -138,6 +157,8 @@ class DartTracker {
       // Hold the existing homography; derive one only if we don't have it yet.
       _transform ??= canonicalTransform(frame.calPoints);
     }
+    // Both continuing paths carry a non-empty frame — the board is occupied,
+    // so any empty-streak towards a rebaseline is broken here.
     _emptyFrames = 0;
     final t = _transform!;
 
@@ -244,6 +265,10 @@ class DartTracker {
     _pending.clear();
     _transform = null;
     _emptyFrames = 0;
+    // See [_lastCals]: a fresh baseline means a fresh bump-reference too.
+    // (The cameraMoved path re-seeds it from the triggering frame right
+    // after this call.)
+    _lastCals = null;
   }
 
   TrackerUpdate _statusOnly(TrackerPhase phase) =>
