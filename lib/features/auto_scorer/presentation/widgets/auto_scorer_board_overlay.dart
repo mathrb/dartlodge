@@ -14,11 +14,12 @@ import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Scoreboard-primary assist-mode camera widget (#377 §5.2). Two layouts via
-/// [expand]: the band variant (`expand: false`, via the core `boardOverlayBuilder`
-/// seam) is a slim row under the header (Cricket); the camera-first variant
-/// (`expand: true`, via `boardCameraPreviewBuilder`, #427) fills a flexible body
-/// region with a large preview (X01). Detection runs on a live `YOLOView`
+/// Scoreboard-primary assist-mode camera widget (#377 §5.2). Three layouts:
+/// the band variant (`expand: false`, via the core `boardOverlayBuilder` seam)
+/// is a slim row under the header (Cricket); the camera-first variant
+/// (`expand: true`, via `boardCameraPreviewBuilder`, #427) defaults to a
+/// collapsed ~96px VIGNETTE while running (#480) and only fills the flexible
+/// body region while tap-expanded (X01). Detection runs on a live `YOLOView`
 /// preview shown while running (native streaming inference — YOLOView must be
 /// mounted to run, so unlike the old headless path there is now an in-game
 /// preview). The one-time aim step is a transient fullscreen `YOLOView` route.
@@ -88,7 +89,10 @@ class _AutoScorerBoardOverlayState
 
   /// Tracker status for the chip. A [ValueNotifier] (not setState) so the live
   /// `onResult` stream (~3 Hz) updates only the chip — never rebuilding the
-  /// `YOLOView` preview (which would churn / risk a native remount).
+  /// `YOLOView` preview (which would churn / risk a native remount). The one
+  /// exception (#480): a dart detected while the vignette is expanded fires a
+  /// single `_collapseVignette()` setState — bounded by user expansion, never
+  /// per-frame, and safe because [_previewKey] preserves the preview element.
   final ValueNotifier<TrackerStatus> _status = ValueNotifier(
     const TrackerStatus(
         phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
@@ -243,10 +247,11 @@ class _AutoScorerBoardOverlayState
   @override
   Widget build(BuildContext context) {
     // The board bumps this whenever the turn advances (its own next-turn button);
-    // reset the tracker's per-turn cap in lock-step (#380). No setState: the
-    // preview reads [_turnOrdinal] live for capture handles. A turn advance also
-    // collapses an expanded vignette (#480) — game activity means the player is
-    // done checking the framing.
+    // reset the tracker's per-turn cap in lock-step (#380). The tracker reset
+    // itself needs no setState (the preview reads [_turnOrdinal] live for
+    // capture handles), but a turn advance also collapses an expanded vignette
+    // (#480) — game activity means the player is done checking the framing —
+    // and THAT does setState (no-op while already collapsed, the common case).
     ref.listen<int>(activeTurnSignalProvider, (_, __) {
       _session?.onTurnAdvanced();
       _turnOrdinal += 1;
