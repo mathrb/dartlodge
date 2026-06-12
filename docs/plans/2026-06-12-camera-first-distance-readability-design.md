@@ -24,7 +24,8 @@ preview fills the entire flexible region.
    collapses to a **vignette by default**; game info takes the freed space.
    No near/far toggle — the vignette IS the camera-first default.
 2. Tapping the vignette **expands** the preview (to check framing /
-   calibration). It **auto-collapses** on the next detected dart or after
+   calibration). It **auto-collapses** on any `currentTurnDarts` change —
+   new dart OR turn advance, both mean you're done checking — or after
    ~10 s without interaction.
 3. Cricket shows the **full grid** at distance (all players' marks + scores),
    not a reduced "my targets" view — it is the complete tactical picture.
@@ -40,11 +41,11 @@ preview fills the entire flexible region.
 │ ‹  CRICKET · standard    ⋮  │             │ ‹  CRICKET · standard    ⋮  │
 │    Leg 1 · Round 3          │             │    Leg 1 · Round 3          │
 ├─────────────────────────────┤             ├─────────────────────────────┤
-│      20  19  18  17 16 15 B │             │     20 19 18 17 16 15 B     │
-│ ALICE ⊗   ⊗   ╳   ／ ·  · · │   GRILLE    │ ALICE ⊗ ⊗ ╳ ／· · ·     120 │
-│       120                   │   GRANDE    │ BOB   ⊗ ╳ · · ／· ·      85 │
-│ BOB   ⊗   ╳   ·   · ／ · ·  │             ├─────────────────────────────┤
-│       85                    │             │ ┌─────┐ ┌─────┐ ┌─────┐     │
+│     20 19 18 17 16 15 B     │             │     20 19 18 17 16 15 B     │
+│ ALICE ⊗  ⊗  ╳  ／ ·  · · 120│   GRILLE    │ ALICE ⊗ ⊗ ╳ ／· · ·     120 │
+│ BOB   ⊗  ╳  ·  ·  ／ · ·  85│   GRANDE    │ BOB   ⊗ ╳ · · ／· ·      85 │
+│                             │             ├─────────────────────────────┤
+│                             │             │ ┌─────┐ ┌─────┐ ┌─────┐     │
 ├─────────────────────────────┤             │ │ T20 │ │ 19  │ │  +  │     │
 │ ┌───────┐┌───────┐┌───────┐ │             │ └─────┘ └─────┘ └─────┘     │
 │ │  T20  ││  19   ││   +   │ │   BANDE     ├─────────────────────────────┤
@@ -67,10 +68,23 @@ preview fills the entire flexible region.
   states. Animate with `AnimatedSize` **only if** device verification shows
   CameraX platform-view resize doesn't glitch; otherwise switch between the two
   states without animation.
-- The vignette state reuses the existing `expand: false` band geometry of
-  `AutoScorerBoardOverlay` (~140 px incl. control bar); the expanded state is
-  the current `expand: true` camera-first variant. We toggle between two
-  already-tested variants of the same widget.
+- Geometry, precisely: today's `expand: false` band renders the preview at a
+  fixed 140 px (`SizedBox(height: 140)` in `AutoScorerYoloPreview.build`) with
+  the control bar + hint BELOW it (not included in the 140). The vignette is
+  that same band-style layout with the preview reduced to a NEW ~96 px height;
+  the expanded state is the current `expand: true` camera-first variant
+  (preview fills the `Expanded`). One number to pick at implementation time:
+  the vignette preview height (~96 px target, tune on device).
+- **`expand` is today a `final` constructor parameter** baked in at `main.dart`'s
+  `boardCameraPreviewBuilderProvider` override — toggling it by building a new
+  `AutoScorerBoardOverlay(expand: …)` restructures the subtree around the
+  preview (`Expanded > Padding` vs `Padding` parents) and risks exactly the
+  platform-view churn this design forbids. The implementation must make the
+  vignette/expanded flip **runtime-mutable inside the overlay** (e.g. driven by
+  a `ValueListenable`/core holder provider the board bumps, or overlay-internal
+  state with a collapse signal), keeping the `YOLOView`'s element identity
+  stable across the flip (`GlobalKey` if the wrapper structure must change).
+  Device-verify the flip does not re-bind the camera.
 - **Control bar stays visible in both states** (it lives under the preview in
   `AutoScorerBoardOverlay._barRow`): `AutoScorerStatusChip` + Remove darts +
   Stop. The chip's alert states (`Camera moved`, `needs calibration`,
@@ -88,18 +102,24 @@ preview fills the entire flexible region.
 
 ### 2. Cricket marks grid (distance version of `CricketMarksStripWidget`)
 
-- Cells ~44 px wide (2× current), rows ~56 px for 2 players, compressing to
-  ~40 px at 3–4 players. No horizontal scroll: 7 target columns + name +
-  score fit the width by construction.
+- Column widths are **flex-derived, not fixed**: the 7 target columns share
+  the width remaining after name + score (which shrink-to-fit), yielding
+  ~36–44 px per cell on common 360–412 dp screens (vs 22 px fixed today).
+  Fixed 44 px cells would NOT fit (68 + 7×44 + 44 + padding ≈ 452 px > 412 dp)
+  — flexing is what makes "no horizontal scroll" hold. The existing
+  `SingleChildScrollView` safety net is removed; rows ~56 px for 2 players,
+  compressing to ~40 px at 3–4 players. Score renders inline at the end of
+  each player's row (as in the mockups).
 - Marks become **painted glyphs** (`CustomPaint`): slash, cross,
   circled-cross with ~4 px strokes — at distance stroke weight carries
   legibility, not font size.
 - Colour semantics: closed (3+) = `primaryFixed` filled; 1–2 marks =
   `onSurface`; unmarked = faint ghost dot. **Dead target** (closed by all):
   header dimmed + struck through, marks greyed.
-- Headers `titleMedium`; scores `headlineMedium`; active player row
-  highlighted, inactive scores `onSurfaceVariant` (existing DESIGN_SYSTEM
-  rules).
+- Headers `titleMedium`; scores `headlineMedium`; player names stay
+  `labelMedium` ALL-CAPS `letterSpacing: 1.2` (the DESIGN_SYSTEM rule #434/#449
+  both initially missed); active player row highlighted, inactive scores
+  `onSurfaceVariant` (existing DESIGN_SYSTEM rules).
 - Painted glyphs lose the text finders (`X`, `⊗`) — expose `Semantics`
   labels ("2 marks", "closed") for tests and accessibility.
 
