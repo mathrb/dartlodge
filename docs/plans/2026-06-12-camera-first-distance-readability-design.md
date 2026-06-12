@@ -95,10 +95,13 @@ preview fills the entire flexible region.
   position on the preview in both states (near-distance, rare use).
 - **Idle/aim** flow unchanged: before the camera runs, the vignette region
   shows the existing "Start camera" row / error text.
-- Expanded-state ownership: the **board** owns the `expanded` boolean (it must
-  re-flow grid/band when the camera grows). Tap on the vignette toggles it;
-  auto-collapse on `currentTurnDarts` change (boards already watch it) +
-  ~10 s timer.
+- Expanded-state ownership (as built, PR #483): the **overlay** owns the
+  `_vignetteExpanded` boolean — per the runtime-mutable-flip constraint above,
+  the boards are untouched and need no re-flow (grid/band keep their fixed
+  natural heights; the slack lives inside the camera region's `Expanded` slot,
+  above the bottom-anchored vignette). Tap on the vignette expands;
+  auto-collapse on a newly detected dart (`dartsOnBoard` increase), on a turn
+  advance (`activeTurnSignal`), or after ~10 s.
 
 ### 2. Cricket marks grid (distance version of `CricketMarksStripWidget`)
 
@@ -170,9 +173,11 @@ preview fills the entire flexible region.
 ## Testing
 
 - Camera-first chrome is widget-testable (override `autoScoringEnabledProvider`
-  fake + `boardCameraPreviewBuilderProvider` stub): vignette default state,
-  tap-to-expand, auto-collapse on dart-count change and on timer (fake async),
-  control bar present in both states.
+  fake + `boardCameraPreviewBuilderProvider` stub) — but note the stub REPLACES
+  the overlay, so the vignette state machine inside the real
+  `AutoScorerBoardOverlay` (running mode = live camera) is NOT reachable in
+  `flutter test`; it is device-verified (CLAUDE.md camera-only rule). The
+  widget-testable slice is the status chip typography.
 - Grid: `Semantics`-based finders replace text glyph finders.
 - Band: size/typography assertions updated in the same session as the refactor
   (CLAUDE.md rule).

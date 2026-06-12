@@ -1,3 +1,4 @@
+import 'package:dart_lodge/core/utils/app_text_styles.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:flutter/material.dart';
 
@@ -46,8 +47,12 @@ class AutoScorerStatusChip extends StatelessWidget {
     final bg = isAlert ? scheme.errorContainer : scheme.secondaryContainer;
     return Chip(
       backgroundColor: bg,
-      avatar: Icon(info.icon, size: 18, color: fg),
-      label: Text(info.label, style: TextStyle(color: fg)),
+      avatar: Icon(info.icon, size: 20, color: fg),
+      // titleMedium (#480): with the camera collapsed to a vignette, this chip
+      // is the at-distance status/alert line — one typographic step up from
+      // the default chip label so its colour + text read from the oche.
+      label: Text(info.label,
+          style: AppTextStyles.titleMedium.copyWith(color: fg)),
     );
   }
 }

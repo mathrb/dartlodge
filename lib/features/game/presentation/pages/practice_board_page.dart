@@ -368,7 +368,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               if (isShanghai)
                 _ShanghaiBonus(show: practiceState.showShanghaiBonus),
               // Camera-first (#445): the multi-player progress strip (ATC /
-              // Shanghai) → the prominent dart band → the camera fills the body.
+              // Shanghai) → the prominent dart band → the camera region (a
+              // collapsed ~96px vignette by default, tap-expands to fill, #480).
               // Manual entry / correction lives in the band's modal.
               if (cameraFirst) ...[
                 if ((isAtc || isShanghai) && gs.competitors.length > 1)
