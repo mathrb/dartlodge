@@ -76,7 +76,7 @@ class CricketMarksStripWidget extends StatelessWidget {
     final rowHeight = compact ? 40.0 : 56.0;
     final glyphSize = compact ? 26.0 : 34.0;
 
-    Widget targetCell(int i, Widget child) =>
+    Widget targetCell(Widget child) =>
         Expanded(child: Center(child: child));
 
     final header = SizedBox(
@@ -86,7 +86,6 @@ class CricketMarksStripWidget extends StatelessWidget {
           const SizedBox(width: _nameWidth),
           for (var i = 0; i < targets.length; i++)
             targetCell(
-              i,
               Text(
                 targets[i] == 25 ? 'B' : '${targets[i]}',
                 style: AppTextStyles.titleMedium.copyWith(
@@ -162,7 +161,6 @@ class CricketMarksStripWidget extends StatelessWidget {
                   ),
                   for (var i = 0; i < targets.length; i++)
                     targetCell(
-                      i,
                       Semantics(
                         label: semanticsForMarks(_marksAt(r, i)),
                         child: SizedBox(

@@ -80,7 +80,8 @@ void main() {
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
       rows: [
-        (name: 'Alice', marks: [3, 1, 0, 0, 0, 0, 0], score: 0, isActive: true),
+        // 20 closed by BOTH (dead); 19 closed by Alice only (live closed).
+        (name: 'Alice', marks: [3, 3, 0, 0, 0, 0, 0], score: 0, isActive: true),
         (name: 'Bob', marks: [3, 0, 0, 0, 0, 0, 0], score: 0, isActive: false),
       ],
     )));
@@ -88,16 +89,18 @@ void main() {
     // The 20 column is dead → struck-through header.
     final dead = tester.widget<Text>(find.text('20'));
     expect(dead.style?.decoration, TextDecoration.lineThrough);
-    // 19 is closed by nobody → no strike.
+    // 19 is closed by Alice only → still in play, no strike.
     final alive = tester.widget<Text>(find.text('19'));
     expect(alive.style?.decoration, isNull);
 
-    // Both players' dead-column marks share the same greyed colour, distinct
-    // from a live closed mark.
-    final deadPainters =
-        _markPainters(tester).where((p) => p.marks >= 3).toList();
-    expect(deadPainters, hasLength(2));
-    expect(deadPainters[0].color, deadPainters[1].color);
+    // Three closed glyphs: two dead (20 column) + one live (Alice's 19).
+    // The dead pair shares one greyed colour, DISTINCT from the live closed
+    // mark's primaryFixed — this is what proves the dead-guard in markColor.
+    final closed = _markPainters(tester).where((p) => p.marks >= 3).toList();
+    expect(closed, hasLength(3));
+    final colours = closed.map((p) => p.color).toSet();
+    expect(colours, hasLength(2),
+        reason: 'dead marks must be greyed, not live-closed primaryFixed');
   });
 
   testWidgets('renders each player name (uppercased) and score', (tester) async {

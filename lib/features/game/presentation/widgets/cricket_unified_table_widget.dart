@@ -418,8 +418,10 @@ class _MarkCell extends StatelessWidget {
           width: 28,
           height: 28,
           child: CustomPaint(
-            // Shared painter (#479); 2.5 stroke preserves the table's
-            // historical rendering exactly.
+            // Shared painter (#479). Default 2.5 stroke preserves the table's
+            // historical rendering: marks at 2.5, and the zero-dash at
+            // 2.5 × 0.8 = 2.0 — the painter's dash factor reproduces the old
+            // hardcoded 2.0 exactly.
             painter: CricketMarkPainter(marks: marks, color: color),
           ),
         ),
