@@ -61,6 +61,24 @@ void main() {
     expect(restored.wasCorrected, isFalse);
   });
 
+  test('round-trips a corrected-sequence handle (t<turn>-c<seq>)', () {
+    final original = CaptureRecord(
+      predictedDarts: const [],
+      calPoints: const [],
+      modelVersion: 'm',
+      gameId: 'g',
+      handle: const CaptureHandle.corrected(turnOrdinal: 3, sequence: 1),
+      timestamp: DateTime.utc(2026, 6, 12),
+    ).withCorrection(const [CorrectedDart(x: 0, y: 0, segment: 'T20')]);
+    final json = original.toJson();
+    expect(json['capture_handle'], 't3-c1');
+    final restored = CaptureRecord.fromJson(json);
+    expect(restored.handle, const CaptureHandle.corrected(turnOrdinal: 3, sequence: 1));
+    expect(restored.wasCorrected, isTrue);
+    // No `trigger` key churn: a corrected capture is auto-triggered.
+    expect(restored.trigger, CaptureTrigger.auto);
+  });
+
   test('round-trips frame space + dims (raw capture)', () {
     final original = CaptureRecord(
       predictedDarts: const [],

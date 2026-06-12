@@ -418,20 +418,21 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
         segment: segment,
       ));
     } else {
-      unawaited(_captureCorrected(dartInTurnOrdinal, segment));
+      unawaited(_captureCorrected(segment));
     }
   }
 
-  Future<void> _captureCorrected(int dartInTurnOrdinal, String segment) async {
+  Future<void> _captureCorrected(String segment) async {
     try {
       // Full-resolution still without the baked-in overlay (see `_capture`).
       final bytes = await _controller.capturePhoto(withOverlays: false);
       if (!mounted || bytes == null) return;
+      // Keyed by a per-session correction sequence inside persistCorrectedCapture
+      // (collision-free), so dartInTurnOrdinal isn't needed here.
       await widget.session.persistCorrectedCapture(
         frame: _latest,
         bytes: bytes,
         turnOrdinal: widget.currentTurnOrdinal(),
-        dartInTurnOrdinal: dartInTurnOrdinal,
         gameId: widget.gameId,
         segment: segment,
       );

@@ -24,7 +24,8 @@ void main() {
     if (await dir.exists()) await dir.delete(recursive: true);
   });
 
-  CaptureRecord record(int turn, {String gameId = 'g1', bool corrected = false}) =>
+  CaptureRecord record(int turn,
+          {String gameId = 'g1', bool corrected = false, CaptureHandle? handle}) =>
       CaptureRecord(
         predictedDarts: const [PredictedDart(x: 0.5, y: 0.5, conf: 0.9)],
         calPoints: const [
@@ -35,7 +36,7 @@ void main() {
         ],
         modelVersion: 'v1',
         gameId: gameId,
-        handle: CaptureHandle(turnOrdinal: turn, dartInTurnOrdinal: 1),
+        handle: handle ?? CaptureHandle(turnOrdinal: turn, dartInTurnOrdinal: 1),
         timestamp: DateTime.utc(2026, 6, turn),
         wasCorrected: corrected,
       );
@@ -100,6 +101,22 @@ void main() {
     final remaining = (await store.list()).map((r) => r.handle.key).toSet();
     expect(remaining, isNot(contains('t1-d1')), reason: 'oldest pruned');
     expect(remaining, contains('t3-d1'), reason: 'corrected kept');
+  });
+
+  test('distinct corrected-sequence handles do not overwrite each other',
+      () async {
+    // Regression (#468 follow-up): corrected captures used to be keyed by
+    // (turn, dart); a stuck turn ordinal collided them and save() overwrote, so
+    // many corrections left only 1-2 frames. The per-session `-c<seq>` handle
+    // keeps each correction's frame on disk.
+    await store.save(
+        record(1, handle: const CaptureHandle.corrected(turnOrdinal: 1, sequence: 1)),
+        frame(10));
+    await store.save(
+        record(1, handle: const CaptureHandle.corrected(turnOrdinal: 1, sequence: 2)),
+        frame(10));
+    final keys = (await store.list()).map((r) => r.handle.key).toSet();
+    expect(keys, {'t1-c1', 't1-c2'});
   });
 
   test('clear removes everything', () async {
