@@ -22,4 +22,21 @@ void main() {
     expect(describe(TrackerPhase.tracking, onBoard: 1).label, '1 dart detected');
     expect(describe(TrackerPhase.tracking, onBoard: 3).label, '3 darts detected');
   });
+
+  testWidgets('label uses the at-distance titleMedium size (#480)',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: AutoScorerStatusChip(
+          status: TrackerStatus(
+              phase: TrackerPhase.tracking, dartsOnBoard: 2, dartsThisTurn: 2),
+        ),
+      ),
+    ));
+
+    final label = tester.widget<Text>(find.text('2 darts detected'));
+    // titleMedium = 18px — the chip is the at-distance status/alert line now
+    // that the camera preview collapses to a vignette.
+    expect(label.style?.fontSize, 18);
+  });
 }
