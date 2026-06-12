@@ -96,8 +96,9 @@ DetectionFrame _detectionFrameFrom(
 /// `onResult` to the [CalibrationStabilityGate]; "Done aiming" enables once the
 /// four cals have held steady. Zoom drives the native `setZoomLevel`; native
 /// overlays draw the detection boxes (no Dart-side coord mapping) — but the
-/// "Capture photo" button grabs a clean full-resolution still via
-/// `capturePhoto(withOverlays: false)`, not the annotated preview snapshot.
+/// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
+/// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
+/// not the annotated preview snapshot.
 /// Returns true on Done, false on Cancel/back. Riverpod-free (state + a session
 /// handle).
 class AutoScorerYoloAimView extends StatefulWidget {
