@@ -99,9 +99,10 @@ DetectionFrame _detectionFrameFrom(
 /// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
 /// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
 /// not the annotated preview snapshot.
-/// Returns true on Done, false on Cancel/back. Riverpod-free (state + a session
-/// handle).
-class AutoScorerYoloAimView extends StatefulWidget {
+/// Returns true on Done, false on Cancel/back. Consumer-backed only to read the
+/// data-collection opt-in before persisting a capture (otherwise state + a
+/// session handle).
+class AutoScorerYoloAimView extends ConsumerStatefulWidget {
   const AutoScorerYoloAimView({
     super.key,
     required this.session,
@@ -120,10 +121,11 @@ class AutoScorerYoloAimView extends StatefulWidget {
   final ValueChanged<double> onZoomChanged;
 
   @override
-  State<AutoScorerYoloAimView> createState() => _AutoScorerYoloAimViewState();
+  ConsumerState<AutoScorerYoloAimView> createState() =>
+      _AutoScorerYoloAimViewState();
 }
 
-class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
+class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   final YOLOViewController _controller = YOLOViewController();
   final CalibrationStabilityGate _gate = CalibrationStabilityGate();
 
@@ -170,6 +172,14 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
   Future<void> _capture() async {
     if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
+    // Respect the data-collection opt-in: the store is non-null even when the
+    // toggle is off, so without this gate a manual capture would write a frame
+    // the user opted out of (mirrors `_captureEmitted`/`correctDart`).
+    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) {
+      messenger.showSnackBar(const SnackBar(
+          content: Text('Enable data collection to save frames')));
+      return;
+    }
     setState(() => _capturing = true);
     try {
       // Focus first: capturePhoto doesn't trigger AF, so a manual shot is often
@@ -490,6 +500,14 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   Future<void> _manualCapture() async {
     if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
+    // Respect the data-collection opt-in (mirrors `_captureEmitted`/`correctDart`):
+    // the store is non-null even when the toggle is off, so without this gate a
+    // manual capture would write a frame the user opted out of.
+    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) {
+      messenger.showSnackBar(const SnackBar(
+          content: Text('Enable data collection to save frames')));
+      return;
+    }
     setState(() => _capturing = true);
     try {
       // Focus first: capturePhoto doesn't trigger AF, so a manual shot is often
@@ -504,13 +522,11 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
             const SnackBar(content: Text('Capture failed (no frame).')));
         return;
       }
-      final saved = await widget.session.persistManualCapture(_latest, bytes,
+      await widget.session.persistManualCapture(_latest, bytes,
           turnOrdinal: widget.currentTurnOrdinal(), gameId: widget.gameId);
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-          content: Text(saved
-              ? 'Frame saved for training'
-              : 'Enable data collection to save frames')));
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Frame saved for training')));
     } finally {
       if (mounted) setState(() => _capturing = false);
     }
