@@ -446,7 +446,6 @@ void main() {
         frame: oneDartFrame,
         bytes: raw,
         turnOrdinal: 3,
-        dartInTurnOrdinal: 2,
         gameId: 'g',
         segment: 'T20');
     expect(store.saved, hasLength(1));
@@ -455,9 +454,31 @@ void main() {
     expect(record.wasCorrected, isTrue);
     expect(record.correctedDarts.single.segment, 'T20');
     expect(record.handle,
-        const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));
+        const CaptureHandle.corrected(turnOrdinal: 3, sequence: 1));
     expect(record.trigger, CaptureTrigger.auto);
     expect(record.frameSpace, FrameSpace.raw);
+  });
+
+  test('persistCorrectedCapture keys each correction uniquely (no overwrite)',
+      () async {
+    // Same (turn, dart) repeated — the old (turn,dart) key collided and the
+    // store overwrote, losing all but one frame (#468 follow-up). The monotonic
+    // correction sequence must give each correction its own handle.
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    await session.persistCorrectedCapture(
+        frame: oneDartFrame,
+        bytes: Uint8List.fromList(const [1]),
+        turnOrdinal: 1,
+        gameId: 'g',
+        segment: 'T20');
+    await session.persistCorrectedCapture(
+        frame: oneDartFrame,
+        bytes: Uint8List.fromList(const [2]),
+        turnOrdinal: 1,
+        gameId: 'g',
+        segment: 'T19');
+    expect(store.saved.map((r) => r.handle.key), ['t1-c1', 't1-c2']);
   });
 
   test('persistCorrectedCapture is a no-op without a capture store', () async {
@@ -466,7 +487,6 @@ void main() {
         frame: oneDartFrame,
         bytes: Uint8List.fromList(const [1]),
         turnOrdinal: 1,
-        dartInTurnOrdinal: 1,
         gameId: 'g',
         segment: 'T20');
   });

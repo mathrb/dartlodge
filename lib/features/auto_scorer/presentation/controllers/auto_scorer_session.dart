@@ -221,6 +221,7 @@ class AutoScorerSession {
   }
 
   int _manualSequence = 0;
+  int _correctionSequence = 0;
 
   /// Manual next-turn pressed: reset the per-turn cap counter.
   void onTurnAdvanced() => _tracker.onTurnAdvanced();
@@ -339,26 +340,32 @@ class AutoScorerSession {
   /// Partial capture-mode (#457): save a NEW corrected capture at correction
   /// time. Used when nothing was persisted at emission, so there is no sidecar
   /// for [applyDartCorrection] to rewrite — instead we store the current [frame]
-  /// + [bytes] under the dart's handle, already flagged `was_corrected` with the
-  /// corrected [segment]. `trigger: auto` (the dart was auto-detected; the
-  /// correction is separate metadata). No-op without a capture store.
+  /// + [bytes] already flagged `was_corrected` with the corrected [segment].
+  /// `trigger: auto` (the dart was auto-detected; the correction is separate
+  /// metadata). No-op without a capture store.
+  ///
+  /// Keyed by a monotonic per-session correction sequence (`t<turn>-c<seq>`),
+  /// NOT `(turn, dart)`: the overlay's turn proxy doesn't track the game's
+  /// internal turn advances, so a `(turn, dart)` key collides across real turns
+  /// and `save` overwrites — every correction must yield its own frame (#468
+  /// follow-up). [turnOrdinal] is kept only as a label/context on the key.
   Future<void> persistCorrectedCapture({
     required DetectionFrame frame,
     required Uint8List bytes,
     required int turnOrdinal,
-    required int dartInTurnOrdinal,
     required String gameId,
     required String segment,
   }) async {
     final store = _captureStore;
     if (store == null) return;
+    _correctionSequence += 1;
     final capture =
         _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
     final record = _recordFor(
       frame,
       gameId,
-      CaptureHandle(
-          turnOrdinal: turnOrdinal, dartInTurnOrdinal: dartInTurnOrdinal),
+      CaptureHandle.corrected(
+          turnOrdinal: turnOrdinal, sequence: _correctionSequence),
       capture,
       trigger: CaptureTrigger.auto,
     ).withCorrection([CorrectedDart(x: 0, y: 0, segment: segment)]);

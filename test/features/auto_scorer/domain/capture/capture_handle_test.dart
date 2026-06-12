@@ -34,6 +34,25 @@ void main() {
     );
   });
 
+  test('corrected handle formats as t<turn>-c<seq> and round-trips', () {
+    const h = CaptureHandle.corrected(turnOrdinal: 3, sequence: 1);
+    expect(h.key, 't3-c1');
+    final parsed = CaptureHandle.parse('t3-c1');
+    expect(parsed.turnOrdinal, 3);
+    expect(parsed.correctedSequence, 1);
+    expect(parsed.manualSequence, isNull);
+    expect(parsed, h);
+  });
+
+  test('dart, manual, and corrected handles are mutually distinct', () {
+    const dart = CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2);
+    const manual = CaptureHandle.manual(turnOrdinal: 3, sequence: 2);
+    const corrected = CaptureHandle.corrected(turnOrdinal: 3, sequence: 2);
+    expect(manual, isNot(dart));
+    expect(corrected, isNot(dart));
+    expect(corrected, isNot(manual));
+  });
+
   test('equality is by (turn, dart)', () {
     expect(
       const CaptureHandle(turnOrdinal: 1, dartInTurnOrdinal: 1),
