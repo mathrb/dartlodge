@@ -47,6 +47,29 @@ const Size kAutoScorerAnalysisResolution = Size(1280, 960);
 double _floor(double calConf, double dartConf) =>
     [_nativeFloor, calConf, dartConf].reduce((a, b) => a < b ? a : b);
 
+/// How long to let autofocus/auto-exposure converge after a focus request before
+/// grabbing a manual still (#468 follow-up). The plugin's `capturePhoto` does NOT
+/// trigger AF — it freezes the current focus state — and there is no continuous
+/// AF on the analysis stream, so a manual shot taken without re-focusing is often
+/// blurry. `tapToFocus`'s Future only signals dispatch (not AF lock), and
+/// `focusEvents` is AF-complete on Android but a mere tap-ack on iOS, so we wait a
+/// fixed settle delay instead of racing the event. ~600 ms covers typical AF
+/// convergence (300–800 ms); tunable on device (raise for reliability, lower for
+/// latency).
+const Duration kAutoScorerFocusSettle = Duration(milliseconds: 600);
+
+/// Request autofocus + auto-exposure at the preview centre (where the board sits)
+/// and wait for it to settle, so the subsequent [YOLOViewController.capturePhoto]
+/// is sharp. Best-effort: a failed focus request still proceeds to capture.
+Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
+  try {
+    await controller.tapToFocus(0.5, 0.5);
+  } catch (_) {
+    // Best-effort — capture anyway at whatever focus the camera holds.
+  }
+  await Future<void>.delayed(kAutoScorerFocusSettle);
+}
+
 /// Map a YOLOView result stream into our [DetectionFrame] (cals + dart
 /// candidates). The plugin-bound `YOLOResult → ClassedDetection` step lives here;
 /// the pure mapping is the merged `rawDetectionsFromClassed` + `buildDetectionFrame`.
@@ -104,6 +127,7 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
   final CalibrationStabilityGate _gate = CalibrationStabilityGate();
 
   bool _nativePushed = false;
+  bool _capturing = false;
   DetectionFrame? _latest;
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
   late double _zoom = widget.initialZoom.clamp(_zoomMin, _zoomMax);
@@ -143,22 +167,32 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
   }
 
   Future<void> _capture() async {
+    if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
-    // `capturePhoto(withOverlays: false)`, NOT `captureFrame()`: the latter
-    // snapshots the on-screen preview (widget-sized, zoom-cropped) and bakes the
-    // detection overlay in. We want a clean full-resolution still for training.
-    final bytes = await _controller.capturePhoto(withOverlays: false);
-    if (!mounted) return;
-    if (bytes == null) {
+    setState(() => _capturing = true);
+    try {
+      // Focus first: capturePhoto doesn't trigger AF, so a manual shot is often
+      // blurry without re-focusing the board centre (see kAutoScorerFocusSettle).
+      await _focusCenterThenSettle(_controller);
+      if (!mounted) return;
+      // `capturePhoto(withOverlays: false)`, NOT `captureFrame()`: the latter
+      // snapshots the on-screen preview (widget-sized, zoom-cropped) and bakes the
+      // detection overlay in. We want a clean full-resolution still for training.
+      final bytes = await _controller.capturePhoto(withOverlays: false);
+      if (!mounted) return;
+      if (bytes == null) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('Capture failed (no frame).')));
+        return;
+      }
+      await widget.session.persistManualCapture(_latest ?? _emptyFrame, bytes,
+          turnOrdinal: 0, gameId: widget.gameId);
+      if (!mounted) return;
       messenger.showSnackBar(
-          const SnackBar(content: Text('Capture failed (no frame).')));
-      return;
+          const SnackBar(content: Text('Frame saved for training')));
+    } finally {
+      if (mounted) setState(() => _capturing = false);
     }
-    await widget.session.persistManualCapture(_latest ?? _emptyFrame, bytes,
-        turnOrdinal: 0, gameId: widget.gameId);
-    if (!mounted) return;
-    messenger.showSnackBar(
-        const SnackBar(content: Text('Frame saved for training')));
   }
 
   Future<void> _finish(bool done) async {
@@ -228,9 +262,15 @@ class _AutoScorerYoloAimViewState extends State<AutoScorerYoloAimView> {
                   children: [
                     _zoomSlider(),
                     FilledButton.tonalIcon(
-                      onPressed: _capture,
-                      icon: const Icon(Icons.add_a_photo_outlined),
-                      label: const Text('Capture photo'),
+                      onPressed: _capturing ? null : _capture,
+                      icon: _capturing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child:
+                                  CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.add_a_photo_outlined),
+                      label: Text(_capturing ? 'Focusing…' : 'Capture photo'),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -314,6 +354,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     implements CaptureCorrectionSink {
   final YOLOViewController _controller = YOLOViewController();
   bool _nativePushed = false;
+  bool _capturing = false;
   DetectionFrame _latest = _emptyFrame;
 
   /// Whether any dart has been seen on the board since the last turn advance —
@@ -446,22 +487,32 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   }
 
   Future<void> _manualCapture() async {
+    if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
-    // Full-resolution still without the baked-in overlay (see `_capture`).
-    final bytes = await _controller.capturePhoto(withOverlays: false);
-    if (!mounted) return;
-    if (bytes == null) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text('Capture failed (no frame).')));
-      return;
+    setState(() => _capturing = true);
+    try {
+      // Focus first: capturePhoto doesn't trigger AF, so a manual shot is often
+      // blurry without re-focusing the board centre (see kAutoScorerFocusSettle).
+      await _focusCenterThenSettle(_controller);
+      if (!mounted) return;
+      // Full-resolution still without the baked-in overlay (see `_capture`).
+      final bytes = await _controller.capturePhoto(withOverlays: false);
+      if (!mounted) return;
+      if (bytes == null) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('Capture failed (no frame).')));
+        return;
+      }
+      final saved = await widget.session.persistManualCapture(_latest, bytes,
+          turnOrdinal: widget.currentTurnOrdinal(), gameId: widget.gameId);
+      if (!mounted) return;
+      messenger.showSnackBar(SnackBar(
+          content: Text(saved
+              ? 'Frame saved for training'
+              : 'Enable data collection to save frames')));
+    } finally {
+      if (mounted) setState(() => _capturing = false);
     }
-    final saved = await widget.session.persistManualCapture(_latest, bytes,
-        turnOrdinal: widget.currentTurnOrdinal(), gameId: widget.gameId);
-    if (!mounted) return;
-    messenger.showSnackBar(SnackBar(
-        content: Text(saved
-            ? 'Frame saved for training'
-            : 'Enable data collection to save frames')));
   }
 
   @override
@@ -493,10 +544,16 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
             color: Colors.black.withValues(alpha: 0.4),
             shape: const CircleBorder(),
             child: IconButton(
-              tooltip: 'Capture frame',
-              icon: const Icon(Icons.add_a_photo_outlined,
-                  color: Colors.white, size: 20),
-              onPressed: _manualCapture,
+              tooltip: _capturing ? 'Focusing…' : 'Capture frame',
+              icon: _capturing
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.add_a_photo_outlined,
+                      color: Colors.white, size: 20),
+              onPressed: _capturing ? null : _manualCapture,
             ),
           ),
         ),
