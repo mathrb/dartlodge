@@ -302,6 +302,23 @@ void main() {
       expect(emitted.newDarts, hasLength(1));
     });
 
+    test('a reframe while the board stays empty blips cameraMoved once', () {
+      final tracker = DartTracker();
+      // Empty calibrated frames seed the transform + bump baseline.
+      tracker.processFrame(frame(const []));
+      tracker.processFrame(frame(const []));
+
+      // The user adjusts the phone between legs: one cameraMoved blip (the
+      // pre-derived transform must be invalidated)...
+      final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      final blip = tracker.processFrame(frame(const [], c: shifted));
+      expect(blip.status.phase, TrackerPhase.cameraMoved);
+
+      // ...then straight back to idle (no rebaselined spam, no second blip).
+      expect(tracker.processFrame(frame(const [], c: shifted)).status.phase,
+          TrackerPhase.idle);
+    });
+
     test('the FIRST dart of a turn occluding a cal dot still scores (#485)',
         () {
       final tracker = DartTracker();

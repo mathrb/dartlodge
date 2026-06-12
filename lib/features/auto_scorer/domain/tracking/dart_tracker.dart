@@ -123,8 +123,9 @@ class DartTracker {
       }
       // Held-homography continuation (#485): a planted dart or the player's
       // arm occluding a cal dot must not stop scoring for the rest of the
-      // turn — the transform held since the first occupied frame still maps
-      // this frame's darts (the cals are deliberately NOT re-read while the
+      // turn — the transform pre-derived from the empty board (or from the
+      // first occupied frame when no empty frame preceded) still maps this
+      // frame's darts (the cals are deliberately NOT re-read while the
       // board is occupied anyway, #377 §3.2). Phone-bump detection pauses
       // (no cals to compare); [_lastCals] keeps the last fully-visible set,
       // so a bump that happens DURING the occlusion is caught by the
@@ -262,7 +263,9 @@ class DartTracker {
   }
 
   /// Manual "remove darts" button: clear the baseline and re-derive the
-  /// homography on the next occupied frame (#377 §3). Does not advance the turn.
+  /// homography from the next calibrated frame — eagerly on an empty frame
+  /// (#485), or on the first occupied frame if darts are still on the board
+  /// (#377 §3). Does not advance the turn.
   TrackerUpdate removeDarts() {
     _rebaseline();
     return _statusOnly(TrackerPhase.rebaselined);
