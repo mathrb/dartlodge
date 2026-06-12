@@ -89,7 +89,10 @@ class _DartSlot extends StatelessWidget {
   /// Already gated by the parent; null means this slot is inert.
   final VoidCallback? onTap;
 
-  static const double _height = 64;
+  /// At-distance slot height (#478): sized so the segment numerals read from
+  /// the oche (~2.4 m), per docs/plans/2026-06-12-camera-first-distance-
+  /// readability-design.md §3.
+  static const double _height = 110;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +129,10 @@ class _DartSlot extends StatelessWidget {
               child: Text(
                 segment,
                 maxLines: 1,
-                style: AppTextStyles.headlineMedium.copyWith(
+                // Score-numeral token (DESIGN_SYSTEM §3): segments are
+                // score-like numerals; the FittedBox above only ever scales
+                // DOWN long segments (MISS), it never inflates short ones.
+                style: AppTextStyles.scoreMedium.copyWith(
                   color: cs.primaryFixed,
                 ),
               ),
@@ -158,13 +164,13 @@ class _DartSlot extends StatelessWidget {
         child: tappableEmpty
             ? Icon(
                 Icons.add_circle_outline,
-                size: 28,
+                size: 40,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.6),
                 semanticLabel: 'enter dart',
               )
             : Icon(
                 Icons.more_horiz,
-                size: 24,
+                size: 32,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.3),
                 semanticLabel: 'dart not thrown',
               ),

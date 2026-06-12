@@ -125,8 +125,12 @@ preview fills the entire flexible region.
 
 ### 3. Prominent dart band
 
-- Slots grow from 64 px to ~110 px; segment text `displaySmall` (~2.5×).
-  Existing `FittedBox(scaleDown)` already handles long segments (`MISS`).
+- Slots grow from 64 px to ~110 px; segment text `scoreMedium` (48 px — the
+  design doc originally said `displaySmall`, which does not exist in
+  `AppTextStyles`). The existing `FittedBox(scaleDown)` stays and only ever
+  shrinks the one long SEGMENT LABEL (`MISS`, a word, ~10 % at 412 dp) —
+  the DESIGN_SYSTEM "score numerals never scale" rule targets point-total
+  numerals, not segment labels (owner-validated trade-off, PR #481 review).
 - Behaviour unchanged: tap thrown slot = correction, tap empty slot (`+`) =
   manual entry, gating identical.
 

@@ -319,6 +319,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       score: currentScore,
                       outStrategy: gameState.outStrategy,
                       dartsThrownInTurn: dartsThrownInTurn,
+                      large: true,
                     ),
                     if (gameState.competitors.length > 1)
                       X01OtherPlayersStripWidget(
@@ -530,11 +531,17 @@ class _CheckoutBanner extends StatelessWidget {
     required this.score,
     required this.outStrategy,
     required this.dartsThrownInTurn,
+    this.large = false,
   });
 
   final int score;
   final String outStrategy;
   final int dartsThrownInTurn;
+
+  /// Camera-first (#478): render the suggestion at-distance readable (the
+  /// player stands at the oche, ~2.4 m from the mounted phone). Manual mode
+  /// keeps the compact banner.
+  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -582,7 +589,10 @@ class _CheckoutBanner extends StatelessWidget {
                     children: [
                       Text(
                         'CHECKOUT',
-                        style: AppTextStyles.labelSmall.copyWith(
+                        style: (large
+                                ? AppTextStyles.labelMedium
+                                : AppTextStyles.labelSmall)
+                            .copyWith(
                           color: highlight
                               ? cs.onSurfaceVariant
                               : cs.onSurfaceVariant.withValues(alpha: 0.35),
@@ -593,7 +603,10 @@ class _CheckoutBanner extends StatelessWidget {
                       Flexible(
                         child: Text(
                           suggestion ?? 'Suggestions appear in checkout range',
-                          style: AppTextStyles.labelLarge.copyWith(
+                          style: (large
+                                  ? AppTextStyles.headlineMedium
+                                  : AppTextStyles.labelLarge)
+                              .copyWith(
                             color: highlight
                                 ? cs.primaryFixed
                                 : cs.onSurfaceVariant.withValues(alpha: 0.25),
