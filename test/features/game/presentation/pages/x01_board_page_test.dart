@@ -1036,4 +1036,41 @@ void main() {
     expect(find.byType(X01OtherPlayersStripWidget), findsNothing);
     expect(find.byType(HeroMetricWidget), findsOneWidget);
   });
+
+  // ── 38. Camera-first checkout banner: only a REAL suggestion gets the
+  // at-distance size; the placeholder stays compact (it ellipsised as
+  // "Suggestions app…" at headlineMedium on a 412dp device).
+
+  testWidgets('38. Camera-first: checkout placeholder stays compact',
+      (tester) async {
+    _setPhoneViewport(tester);
+    // 301 → out of checkout range → placeholder shown.
+    final gs = _gameState(
+      competitors: [_competitor(name: 'Alice', score: 301)],
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    final placeholder = tester
+        .widget<Text>(find.text('Suggestions appear in checkout range'));
+    expect(placeholder.style?.fontSize, 14); // labelLarge, not headlineMedium
+  });
+
+  testWidgets(
+      '39. Camera-first: a real checkout suggestion gets the at-distance size',
+      (tester) async {
+    _setPhoneViewport(tester);
+    // 40 → in range → real suggestion rendered at the at-distance size.
+    final gs = _gameState(
+      competitors: [_competitor(name: 'Alice', score: 40)],
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Suggestions appear in checkout range'), findsNothing);
+    final suggestion = tester.widget<Text>(find.text('D20'));
+    expect(suggestion.style?.fontSize, 28); // headlineMedium
+  });
 }
