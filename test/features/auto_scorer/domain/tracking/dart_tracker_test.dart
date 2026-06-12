@@ -275,26 +275,88 @@ void main() {
       expect(tracker.confirmedDarts, isEmpty);
     });
 
-    test('reframing across a re-baseline is NOT a phone bump', () {
+    test('a reframe after a board clear fires cameraMoved once, then recovers',
+        () {
       final tracker = DartTracker(
           config: const DartTrackerConfig(emptyFramesToRebaseline: 2));
       final dart = seg(20, rTreble);
       tracker.processFrame(frame([dart]));
-      tracker.processFrame(frame([dart])); // confirmed; bump baseline = cals
+      tracker.processFrame(frame([dart])); // confirmed
 
-      // Darts pulled → empty streak → auto re-baseline.
+      // Darts pulled → empty streak → auto re-baseline. The calibrated empty
+      // frames keep a fresh transform + bump baseline (#485).
       tracker.processFrame(frame(const []));
       final cleared = tracker.processFrame(frame(const []));
       expect(cleared.status.phase, TrackerPhase.rebaselined);
 
-      // The user reframes the phone between games: the next occupied frame
-      // carries shifted cals. The transform is re-derived fresh, so this must
-      // NOT fire cameraMoved off the pre-baseline cal set.
+      // The user reframes the phone between games: the pre-derived transform
+      // is now WRONG, so the shifted cals MUST fire cameraMoved (one blip)...
       final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      final blip = tracker.processFrame(frame([dart], c: shifted));
+      expect(blip.status.phase, TrackerPhase.cameraMoved);
+
+      // ...and the very next frames re-derive from the new framing and score.
       tracker.processFrame(frame([dart], c: shifted));
       final emitted = tracker.processFrame(frame([dart], c: shifted));
       expect(emitted.status.phase, TrackerPhase.tracking);
       expect(emitted.newDarts, hasLength(1));
+    });
+
+    test('a reframe while the board stays empty blips cameraMoved once', () {
+      final tracker = DartTracker();
+      // Empty calibrated frames seed the transform + bump baseline.
+      tracker.processFrame(frame(const []));
+      tracker.processFrame(frame(const []));
+
+      // The user adjusts the phone between legs: one cameraMoved blip (the
+      // pre-derived transform must be invalidated)...
+      final shifted = [for (final c in cals) (x: c.x + 0.15, y: c.y)];
+      final blip = tracker.processFrame(frame(const [], c: shifted));
+      expect(blip.status.phase, TrackerPhase.cameraMoved);
+
+      // ...then straight back to idle (no rebaselined spam, no second blip).
+      expect(tracker.processFrame(frame(const [], c: shifted)).status.phase,
+          TrackerPhase.idle);
+    });
+
+    test('the FIRST dart of a turn occluding a cal dot still scores (#485)',
+        () {
+      final tracker = DartTracker();
+      // Empty calibrated board before the throw: the transform is derived
+      // here, not on the first occupied frame.
+      tracker.processFrame(frame(const []));
+
+      // The first dart lands masking cal1 — every occupied frame of the turn
+      // has only 3 cals.
+      final occluded = cals.sublist(1);
+      final dart = seg(20, rTreble);
+      tracker.processFrame(
+          DetectionFrame(calPoints: occluded, dartCandidates: [dart]));
+      final emitted = tracker.processFrame(
+          DetectionFrame(calPoints: occluded, dartCandidates: [dart]));
+      expect(emitted.newDarts, hasLength(1),
+          reason: 'the empty-board transform must map the whole turn');
+      expect(emitted.newDarts.single.score.segment, 'T20');
+      expect(emitted.status.phase, TrackerPhase.tracking);
+    });
+
+    test('an empty calibrated board does not loop rebaselined', () {
+      final tracker = DartTracker(
+          config: const DartTrackerConfig(emptyFramesToRebaseline: 2));
+      final dart = seg(20, rTreble);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed
+
+      tracker.processFrame(frame(const []));
+      final cleared = tracker.processFrame(frame(const []));
+      expect(cleared.status.phase, TrackerPhase.rebaselined);
+
+      // The board stays empty: the refreshed transform must not count as
+      // "state to clear" — no rebaselined spam, just idle.
+      for (var i = 0; i < 4; i++) {
+        expect(tracker.processFrame(frame(const [])).status.phase,
+            TrackerPhase.idle);
+      }
     });
 
     test('a phone bump during cal occlusion is caught when cals reappear', () {
