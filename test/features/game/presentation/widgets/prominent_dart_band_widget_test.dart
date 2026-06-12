@@ -28,6 +28,19 @@ void main() {
     expect(find.text('SB'), findsOneWidget);
   });
 
+  testWidgets('slots render at the at-distance height (#478)', (tester) async {
+    await tester.pumpWidget(_wrap(const ProminentDartBandWidget(
+      currentTurnDarts: ['T20', '', ''],
+    )));
+
+    // 110 px per the distance-readability design (2026-06-12) — readable from
+    // the oche (~2.4 m) in camera-first mode.
+    final slot = tester.getSize(
+      find.ancestor(of: find.text('T20'), matching: find.byType(Container)).first,
+    );
+    expect(slot.height, 110);
+  });
+
   testWidgets('empty-slot sentinels render as "dart not thrown" placeholders',
       (tester) async {
     await tester.pumpWidget(_wrap(const ProminentDartBandWidget(
