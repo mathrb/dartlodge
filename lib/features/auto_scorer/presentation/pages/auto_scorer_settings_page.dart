@@ -184,6 +184,7 @@ class _AutoScorerSettingsPageState
     }
     final count = captures.length;
     final dest = await reserveExportZipPath();
+    if (!mounted) return;
     setState(() {
       _exporting = true;
       _exportProgress = 0;
@@ -192,6 +193,13 @@ class _AutoScorerSettingsPageState
       await store.writeExportZip(dest, onProgress: (p) {
         if (mounted) setState(() => _exportProgress = p);
       });
+    } catch (_) {
+      // Streaming to disk can fail (e.g. storage full). Surface it rather than
+      // letting it crash to a red screen — #468 wants the export to fail
+      // gracefully with a message — and don't share a partial/missing zip.
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Export failed. Please try again.')));
+      return;
     } finally {
       if (mounted) setState(() => _exporting = false);
     }
