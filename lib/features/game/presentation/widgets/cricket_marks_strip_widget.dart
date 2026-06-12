@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import 'cricket_mark_painter.dart';
 
 /// Per-player row data for [CricketMarksStripWidget]. [marks] is aligned to the
 /// widget's `targets` list (one mark count per target).
@@ -12,12 +13,22 @@ typedef CricketMarksRow = ({
   bool isActive,
 });
 
-/// Compact marks grid shown in the camera-first Cricket layout (#444 / epic
-/// #440), where the full `CricketUnifiedTableWidget` is replaced by the camera.
-/// Keeps every player's marks + score visible at a glance above the camera.
+/// At-distance marks grid shown in the camera-first Cricket layout (#444,
+/// enlarged for the oche in #479): the player reads it from ~2.4 m, so marks
+/// are painted glyphs with thick strokes ([CricketMarkPainter]) — at distance
+/// it is stroke weight and colour that carry legibility, not font size.
 ///
-/// Game-state-free: the board resolves `targets` (display order, 25 = Bull) and
-/// each player's per-target [marks] / score, so the widget is testable in
+/// Layout is flex-derived (no horizontal scroll): the 7 target columns share
+/// the width remaining after the fixed name and score columns, so the grid
+/// fits any phone width by construction.
+///
+/// Colour semantics: closed (3+) = `primaryFixed`; 1–2 marks = `onSurface`;
+/// unmarked = ghost dot. A **dead** target (closed by every player) renders
+/// its header struck-through and all its marks greyed — at a glance, nowhere
+/// useful to aim.
+///
+/// Game-state-free: the board resolves `targets` (display order, 25 = Bull)
+/// and each player's per-target [marks] / score, so the widget is testable in
 /// isolation.
 class CricketMarksStripWidget extends StatelessWidget {
   const CricketMarksStripWidget({
@@ -38,15 +49,20 @@ class CricketMarksStripWidget extends StatelessWidget {
   final bool showScore;
 
   static const double _nameWidth = 68;
-  static const double _markWidth = 22;
-  static const double _scoreWidth = 44;
+  static const double _scoreWidth = 60;
 
-  /// Compact mark glyph: 0 unmarked, 1 slash, 2 cross, 3+ closed.
-  static String _glyph(int marks) => switch (marks) {
-        <= 0 => '·',
-        1 => '/',
-        2 => 'X',
-        _ => '⊗',
+  int _marksAt(CricketMarksRow r, int i) =>
+      i < r.marks.length ? r.marks[i] : 0;
+
+  /// A target is dead when every player has closed it — nothing left to score.
+  bool _isDead(int i) => rows.every((r) => _marksAt(r, i) >= 3);
+
+  /// Accessibility / test handle for a mark cell.
+  static String semanticsForMarks(int marks) => switch (marks) {
+        <= 0 => 'no marks',
+        1 => '1 mark',
+        2 => '2 marks',
+        _ => 'closed',
       };
 
   @override
@@ -54,47 +70,83 @@ class CricketMarksStripWidget extends StatelessWidget {
     if (rows.isEmpty) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
 
-    Widget cell(double width, Widget child, {Alignment align = Alignment.center}) =>
-        SizedBox(width: width, child: Align(alignment: align, child: child));
+    // Compress rows (and glyphs) as the player count grows so the grid keeps
+    // fitting above the dart band + camera vignette.
+    final compact = rows.length > 2;
+    final rowHeight = compact ? 40.0 : 56.0;
+    final glyphSize = compact ? 26.0 : 34.0;
 
-    final headerStyle = AppTextStyles.labelSmall.copyWith(
-      color: cs.onSurfaceVariant,
-      letterSpacing: 0.5,
+    Widget targetCell(Widget child) =>
+        Expanded(child: Center(child: child));
+
+    final header = SizedBox(
+      height: 28,
+      child: Row(
+        children: [
+          const SizedBox(width: _nameWidth),
+          for (var i = 0; i < targets.length; i++)
+            targetCell(
+              Text(
+                targets[i] == 25 ? 'B' : '${targets[i]}',
+                style: AppTextStyles.titleMedium.copyWith(
+                  color: _isDead(i)
+                      ? cs.onSurfaceVariant
+                          .withValues(alpha: AppTheme.opacityDisabled)
+                      : cs.onSurfaceVariant,
+                  decoration: _isDead(i) ? TextDecoration.lineThrough : null,
+                ),
+              ),
+            ),
+          if (showScore)
+            SizedBox(
+              width: _scoreWidth,
+              child: Center(
+                child: Text(
+                  'SC',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: cs.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
 
-    final header = Row(
-      children: [
-        cell(_nameWidth, const SizedBox.shrink()),
-        for (final t in targets)
-          cell(
-            _markWidth,
-            Text(t == 25 ? 'B' : '$t', style: headerStyle),
-          ),
-        if (showScore)
-          cell(_scoreWidth, Text('SC', style: headerStyle)),
-      ],
-    );
+    Color markColor(int marks, bool dead) {
+      if (dead) {
+        // Greyed even when closed: the whole column is out of play.
+        return cs.onSurfaceVariant.withValues(alpha: AppTheme.opacityDisabled);
+      }
+      return switch (marks) {
+        <= 0 => cs.onSurfaceVariant
+            .withValues(alpha: AppTheme.opacityGhostBorderStrong),
+        1 || 2 => cs.onSurface,
+        _ => cs.primaryFixed,
+      };
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            header,
-            for (final r in rows)
-              Container(
-                decoration: BoxDecoration(
-                  color: r.isActive ? cs.surfaceContainerLow : null,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    cell(
-                      _nameWidth,
-                      Text(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          header,
+          for (final r in rows)
+            Container(
+              height: rowHeight,
+              decoration: BoxDecoration(
+                color: r.isActive ? cs.surfaceContainerLow : null,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: _nameWidth,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
                         r.name.toUpperCase(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -105,42 +157,47 @@ class CricketMarksStripWidget extends StatelessWidget {
                           letterSpacing: 1.2,
                         ),
                       ),
-                      align: Alignment.centerLeft,
                     ),
-                    for (var i = 0; i < targets.length; i++)
-                      cell(
-                        _markWidth,
-                        Text(
-                          _glyph(i < r.marks.length ? r.marks[i] : 0),
-                          style: AppTextStyles.labelLarge.copyWith(
-                            color: (i < r.marks.length ? r.marks[i] : 0) > 0
-                                ? cs.onSurface
-                                : cs.onSurfaceVariant
-                                    .withValues(alpha: AppTheme.opacityGhostBorderStrong),
+                  ),
+                  for (var i = 0; i < targets.length; i++)
+                    targetCell(
+                      Semantics(
+                        label: semanticsForMarks(_marksAt(r, i)),
+                        child: SizedBox(
+                          width: glyphSize,
+                          height: glyphSize,
+                          child: CustomPaint(
+                            painter: CricketMarkPainter(
+                              marks: _marksAt(r, i),
+                              color: markColor(_marksAt(r, i), _isDead(i)),
+                              strokeWidth: 4,
+                              zeroAsDot: true,
+                            ),
                           ),
                         ),
                       ),
-                    if (showScore)
-                      cell(
-                        _scoreWidth,
-                        Text(
+                    ),
+                  if (showScore)
+                    SizedBox(
+                      width: _scoreWidth,
+                      child: Center(
+                        child: Text(
                           '${r.score}',
                           maxLines: 1,
                           // Inactive players dimmer than the active one
-                          // (DESIGN_SYSTEM §2.6 inactiveScore), matching the
-                          // unified table's active/inactive hierarchy.
-                          style: AppTextStyles.labelLarge.copyWith(
+                          // (DESIGN_SYSTEM §2.6 inactiveScore).
+                          style: AppTextStyles.headlineMedium.copyWith(
                             color: r.isActive
                                 ? cs.onSurface
                                 : cs.onSurfaceVariant,
                           ),
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
