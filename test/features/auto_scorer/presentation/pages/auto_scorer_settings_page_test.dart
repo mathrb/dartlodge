@@ -60,6 +60,12 @@ void main() {
     expect(tester.widget<SwitchListTile>(tile).value, isTrue);
   });
 
+  testWidgets('shows the export-latest-recording tile', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await pump(tester);
+    expect(find.text('Export latest recording'), findsOneWidget);
+  });
+
   testWidgets('capture-mode is disabled when data collection is off',
       (tester) async {
     SharedPreferences.setMockInitialValues({}); // collect off (default)

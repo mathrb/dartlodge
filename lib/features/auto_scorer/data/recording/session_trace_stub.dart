@@ -15,6 +15,9 @@ class _UnsupportedSessionTraceStore implements SessionTraceStore {
   Future<void> save(String sessionId, SessionTrace trace) async {}
 
   @override
+  Future<SessionTrace?> read(String sessionId) async => null;
+
+  @override
   Future<List<String>> list() async => const [];
 
   @override
@@ -26,3 +29,7 @@ class _UnsupportedSessionTraceStore implements SessionTraceStore {
 
 Future<SessionTraceStore> openDefaultSessionTraceStore() async =>
     const _UnsupportedSessionTraceStore();
+
+Future<String> writeSessionExport(String sessionId, String json) async => '';
+
+Future<void> shareSessionFile(String path) async {}
