@@ -16,6 +16,10 @@ abstract class SessionTraceStore {
   /// Write [trace] under [sessionId] (overwrites any existing trace for it).
   Future<void> save(String sessionId, SessionTrace trace);
 
+  /// Read the trace stored under [sessionId], or null if none exists. Used by
+  /// export (#492) to bundle a recorded session.
+  Future<SessionTrace?> read(String sessionId);
+
   /// Session ids currently stored, most-recent first.
   Future<List<String>> list();
 

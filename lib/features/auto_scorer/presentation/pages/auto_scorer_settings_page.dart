@@ -1,5 +1,7 @@
+import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_bundle.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
@@ -8,9 +10,11 @@ import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// Web-guarded share helper (no-op stub on web).
+// Web-guarded share helpers (no-op stubs on web).
 import 'package:dart_lodge/features/auto_scorer/data/capture/capture_stub.dart'
     if (dart.library.io) 'package:dart_lodge/features/auto_scorer/data/capture/capture_io.dart';
+import 'package:dart_lodge/features/auto_scorer/data/recording/session_trace_stub.dart'
+    if (dart.library.io) 'package:dart_lodge/features/auto_scorer/data/recording/session_trace_io.dart';
 
 /// Auto-scoring settings (#382 §5.1 + #381 §6): the two independent opt-ins
 /// ("use auto-scoring" and "collect training data") plus the training-data
@@ -30,6 +34,10 @@ class _AutoScorerSettingsPageState
   // determinate bar (fraction of capture files zipped) and disables its tap.
   bool _exporting = false;
   double _exportProgress = 0;
+
+  // Session-recording export (#492): small bundle (no streaming), so just a
+  // busy flag that disables the tile while building/sharing.
+  bool _exportingSession = false;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +91,18 @@ class _AutoScorerSettingsPageState
                 : (v) => ref
                     .read(sessionRecordingEnabledProvider.notifier)
                     .setEnabled(v),
+          ),
+          ListTile(
+            leading: const Icon(Icons.upload_file_outlined),
+            title: const Text('Export latest recording'),
+            subtitle: _exportingSession
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: LinearProgressIndicator())
+                : const Text(
+                    'Share the most recent session (detections + game events) '
+                    'to replay a bug off-device.'),
+            onTap: _exportingSession ? null : () => _exportSession(context),
           ),
           ListTile(
             leading: const Icon(Icons.tips_and_updates_outlined),
@@ -246,6 +266,79 @@ class _AutoScorerSettingsPageState
       await store.clear();
       messenger.showSnackBar(SnackBar(
           content: Text('Cleared $count exported frame${count == 1 ? '' : 's'}')));
+    }
+  }
+
+  /// Export the most recent recorded session as a self-contained bundle
+  /// (detection trace + correlated game events + game/competitors), then offer
+  /// to clear recordings (#492).
+  Future<void> _exportSession(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final store = await ref.read(sessionTraceStoreProvider.future);
+    if (!store.isSupported) {
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Export is not available here.')));
+      return;
+    }
+    final ids = await store.list();
+    if (ids.isEmpty) {
+      messenger.showSnackBar(
+          const SnackBar(content: Text('No recordings to export yet.')));
+      return;
+    }
+    if (!mounted) return;
+    setState(() => _exportingSession = true);
+    try {
+      final sessionId = ids.first; // most recent
+      final trace = await store.read(sessionId);
+      if (trace == null) {
+        messenger.showSnackBar(
+            const SnackBar(content: Text('Recording not found.')));
+        return;
+      }
+      final gameId = trace.header.gameId;
+      final gameRepo = ref.read(gameRepositoryProvider);
+      final game = await gameRepo.getGame(gameId);
+      if (game == null) {
+        messenger.showSnackBar(const SnackBar(
+            content: Text('The game for this recording is no longer stored.')));
+        return;
+      }
+      final events =
+          await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
+      final competitors = await gameRepo.getCompetitors(gameId);
+      final bundle = SessionBundle(
+          trace: trace, events: events, game: game, competitors: competitors);
+      final dest = await writeSessionExport(sessionId, bundle.toJsonString());
+      await shareSessionFile(dest);
+    } catch (_) {
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Export failed. Please try again.')));
+      return;
+    } finally {
+      if (mounted) setState(() => _exportingSession = false);
+    }
+    if (!context.mounted) return;
+    final clear = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Clear recordings?'),
+        content:
+            const Text('Clear all recorded sessions stored on this device?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Keep')),
+          FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Clear')),
+        ],
+      ),
+    );
+    if (clear == true) {
+      await store.clear();
+      messenger.showSnackBar(
+          const SnackBar(content: Text('Cleared recorded sessions')));
     }
   }
 }

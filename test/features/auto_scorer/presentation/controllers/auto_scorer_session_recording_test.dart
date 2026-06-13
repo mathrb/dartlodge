@@ -25,6 +25,9 @@ class _FakeTraceStore implements SessionTraceStore {
   }
 
   @override
+  Future<SessionTrace?> read(String sessionId) async => saved[sessionId];
+
+  @override
   Future<List<String>> list() async => saved.keys.toList();
 
   @override

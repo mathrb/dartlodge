@@ -41,6 +41,14 @@ void main() {
     expect(restored.header.gameId, 'g1');
   });
 
+  test('read returns the saved trace, null for a missing id', () async {
+    await store.save('s1', _trace('g1'));
+    final got = await store.read('s1');
+    expect(got, isNotNull);
+    expect(got!.header.gameId, 'g1');
+    expect(await store.read('nope'), isNull);
+  });
+
   test('list returns session ids, newest first', () async {
     await store.save('old', _trace('g'));
     await store.save('mid', _trace('g'));
