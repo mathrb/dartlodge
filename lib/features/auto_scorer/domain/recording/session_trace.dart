@@ -20,6 +20,8 @@
 /// - `tracker` markers: a tracker-instance boundary carrying the config in
 ///   force (the first is the initial instance; later ones mark a mid-session
 ///   re-creation so a single-fresh-tracker replay can re-align),
+/// - `signal` records: an out-of-band tracker mutation between frames (turn
+///   advance / remove darts) that resets per-turn / baseline state (#491),
 /// - `frame` records: the raw detections + observed tracker outcome.
 ///
 /// Timestamps are **metadata only** — replay depends solely on frame
@@ -200,12 +202,48 @@ class RecordedOutcome {
       );
 }
 
-/// A single line in a session trace, after the header. Either a [TrackerSegment]
-/// boundary or a [TraceFrame].
+/// A tracker mutation that happens **outside** the frame stream: the turn
+/// advanced (resets the per-turn dart cap) or the user removed the darts
+/// (re-baseline). Recorded interleaved with frames so a replay reproduces the
+/// cap / baseline behaviour across turns — without these, a multi-turn replay
+/// diverges once the cap counter drifts (#491).
+enum TrackerSignalKind {
+  turnAdvanced('turn_advanced'),
+  removeDarts('remove_darts');
+
+  const TrackerSignalKind(this.wire);
+
+  final String wire;
+
+  static TrackerSignalKind fromWire(String value) =>
+      values.firstWhere((k) => k.wire == value,
+          orElse: () =>
+              throw FormatException('Unknown tracker signal: $value'));
+}
+
+/// A single line in a session trace, after the header: a [TrackerSegment]
+/// boundary, a [TraceFrame], or a [TrackerSignal].
 sealed class SessionTraceLine {
   const SessionTraceLine();
 
   Map<String, dynamic> toJson();
+}
+
+/// An out-of-band tracker signal (turn advance / remove darts) recorded between
+/// frames. See [TrackerSignalKind].
+class TrackerSignal extends SessionTraceLine {
+  final TrackerSignalKind kind;
+
+  const TrackerSignal(this.kind);
+
+  @override
+  Map<String, dynamic> toJson() => {
+        'kind': 'signal',
+        'signal': kind.wire,
+      };
+
+  factory TrackerSignal.fromJson(Map<String, dynamic> json) =>
+      TrackerSignal(TrackerSignalKind.fromWire(json['signal'] as String));
 }
 
 /// A tracker-instance boundary (the epic's "reset marker"). The first marks the
@@ -323,6 +361,8 @@ class SessionTrace {
       switch (json['kind']) {
         case 'tracker':
           lines.add(TrackerSegment.fromJson(json));
+        case 'signal':
+          lines.add(TrackerSignal.fromJson(json));
         case 'frame':
           lines.add(TraceFrame.fromJson(json));
         default:

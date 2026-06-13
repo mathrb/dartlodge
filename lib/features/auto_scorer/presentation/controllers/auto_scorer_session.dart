@@ -257,12 +257,21 @@ class AutoScorerSession {
   int _manualSequence = 0;
   int _correctionSequence = 0;
 
-  /// Manual next-turn pressed: reset the per-turn cap counter.
-  void onTurnAdvanced() => _tracker.onTurnAdvanced();
+  /// Manual next-turn pressed: reset the per-turn cap counter. Recorded so a
+  /// replay resets the cap at the same point (#491).
+  void onTurnAdvanced() {
+    _tracker.onTurnAdvanced();
+    _recorder?.recordSignal(TrackerSignalKind.turnAdvanced);
+  }
 
   /// Manual "remove darts": re-baseline the tracker; returns the resulting
-  /// status (phase `rebaselined`) so the caller can refresh the chip.
-  TrackerStatus removeDarts() => _tracker.removeDarts().status;
+  /// status (phase `rebaselined`) so the caller can refresh the chip. Recorded
+  /// so a replay re-baselines at the same point (#491).
+  TrackerStatus removeDarts() {
+    final status = _tracker.removeDarts().status;
+    _recorder?.recordSignal(TrackerSignalKind.removeDarts);
+    return status;
+  }
 
   /// YOLOView path: feed an already-computed [DetectionFrame] (native streaming
   /// inference) through the tracker — no predict detector. Returns the darts to

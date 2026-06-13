@@ -105,6 +105,36 @@ void main() {
     expect(capped.emitted, isFalse);
   });
 
+  test('recordSignal appends a signal line without advancing the frame index',
+      () {
+    final rec = _recorder();
+    rec.recordFrame(
+      detections: const [],
+      calMinConfidence: 0.25,
+      dartMinConfidence: 0.25,
+      update: _update(const [], TrackerPhase.tracking),
+    );
+    rec.recordSignal(TrackerSignalKind.turnAdvanced);
+    rec.recordFrame(
+      detections: const [],
+      calMinConfidence: 0.25,
+      dartMinConfidence: 0.25,
+      update: _update(const [], TrackerPhase.idle),
+    );
+
+    expect(rec.frameCount, 2); // the signal does not count as a frame
+    final lines = rec.build().lines;
+    expect(lines.whereType<TrackerSignal>().single.kind,
+        TrackerSignalKind.turnAdvanced);
+    // Order preserved: segment, frame, signal, frame.
+    expect(lines.map((l) => l.runtimeType.toString()), [
+      'TrackerSegment',
+      'TraceFrame',
+      'TrackerSignal',
+      'TraceFrame',
+    ]);
+  });
+
   test('built trace round-trips through JSONL', () {
     final rec = _recorder();
     rec.recordFrame(

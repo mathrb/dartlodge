@@ -67,6 +67,35 @@ void main() {
     expect(store.retainedKeepLast, 20);
   });
 
+  test('records turn-advance and remove-darts signals between frames', () async {
+    final store = _FakeTraceStore();
+    final session = AutoScorerSession(
+      traceStore: store,
+      recordingSessionId: 'sess-sig',
+      recordingGameId: 'g',
+    );
+
+    session.processDetectionFrame(_emptyFrame);
+    session.onTurnAdvanced();
+    session.removeDarts();
+    session.processDetectionFrame(_emptyFrame);
+    await session.dispose();
+
+    final lines = store.saved['sess-sig']!.lines;
+    expect(
+      lines.whereType<TrackerSignal>().map((s) => s.kind),
+      [TrackerSignalKind.turnAdvanced, TrackerSignalKind.removeDarts],
+    );
+    // The signals sit between the two frames.
+    expect(lines.map((l) => l.runtimeType.toString()), [
+      'TrackerSegment',
+      'TraceFrame',
+      'TrackerSignal',
+      'TrackerSignal',
+      'TraceFrame',
+    ]);
+  });
+
   test('no store/sessionId → recording off, dispose writes nothing', () async {
     final session = AutoScorerSession(modelVersion: 'm');
     // Must not throw without a recorder.
