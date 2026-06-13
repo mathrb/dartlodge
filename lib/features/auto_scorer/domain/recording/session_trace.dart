@@ -20,6 +20,8 @@
 /// - `tracker` markers: a tracker-instance boundary carrying the config in
 ///   force (the first is the initial instance; later ones mark a mid-session
 ///   re-creation so a single-fresh-tracker replay can re-align),
+/// - `signal` records: an out-of-band tracker mutation between frames (turn
+///   advance / remove darts) that resets per-turn / baseline state (#491),
 /// - `frame` records: the raw detections + observed tracker outcome.
 ///
 /// Timestamps are **metadata only** — replay depends solely on frame

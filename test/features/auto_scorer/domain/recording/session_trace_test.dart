@@ -213,12 +213,19 @@ void main() {
       );
     });
 
-    test('tracker-signal keys + wire round-trip', () {
-      final json =
+    test('tracker-signal keys + wire round-trip (both kinds)', () {
+      final removeJson =
           const TrackerSignal(TrackerSignalKind.removeDarts).toJson();
-      expect(json.keys, unorderedEquals(['kind', 'signal']));
-      expect(json['signal'], 'remove_darts');
-      expect(TrackerSignal.fromJson(json).kind, TrackerSignalKind.removeDarts);
+      expect(removeJson.keys, unorderedEquals(['kind', 'signal']));
+      expect(removeJson['signal'], 'remove_darts');
+      expect(TrackerSignal.fromJson(removeJson).kind,
+          TrackerSignalKind.removeDarts);
+
+      final advanceJson =
+          const TrackerSignal(TrackerSignalKind.turnAdvanced).toJson();
+      expect(advanceJson['signal'], 'turn_advanced');
+      expect(TrackerSignal.fromJson(advanceJson).kind,
+          TrackerSignalKind.turnAdvanced);
     });
 
     test('frame + detection + outcome + emission keys', () {
