@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 TraceFrame _frame(
   int index,
   TrackerPhase phase, {
+  double calMinConfidence = 0.25,
+  double dartMinConfidence = 0.3,
   List<RawDetection> detections = const [],
   List<RecordedEmission> newDarts = const [],
   int dartsOnBoard = 0,
@@ -17,6 +19,8 @@ TraceFrame _frame(
 }) =>
     TraceFrame(
       frameIndex: index,
+      calMinConfidence: calMinConfidence,
+      dartMinConfidence: dartMinConfidence,
       detections: detections,
       outcome: RecordedOutcome(
         newDarts: newDarts,
@@ -28,11 +32,7 @@ TraceFrame _frame(
       ),
     );
 
-const _config = RecordedTrackerConfig(
-  tracker: DartTrackerConfig(),
-  calMinConfidence: 0.25,
-  dartMinConfidence: 0.3,
-);
+const _config = DartTrackerConfig();
 
 /// A trace covering every [TrackerPhase], emitted + capped (unemitted) darts,
 /// raw detections, and a mid-session tracker reset (a second [TrackerSegment]).
@@ -91,13 +91,10 @@ SessionTrace _sample() => SessionTrace(
         // Mid-session tracker re-creation: a fresh instance + (changed) config.
         const TrackerSegment(
           instance: 1,
-          config: RecordedTrackerConfig(
-            tracker: DartTrackerConfig(confirmFrames: 3, maxDartsPerTurn: 9),
-            calMinConfidence: 0.4,
-            dartMinConfidence: 0.4,
-          ),
+          config: DartTrackerConfig(confirmFrames: 3, maxDartsPerTurn: 9),
         ),
-        _frame(6, TrackerPhase.rebaselined),
+        _frame(6, TrackerPhase.rebaselined,
+            calMinConfidence: 0.4, dartMinConfidence: 0.4),
       ],
     );
 
@@ -132,13 +129,13 @@ void main() {
 
       final segment = restored.lines.whereType<TrackerSegment>().first;
       expect(segment.instance, 0);
-      expect(segment.config.tracker.confirmFrames, 2);
-      expect(segment.config.calMinConfidence, 0.25);
-      expect(segment.config.dartMinConfidence, 0.3);
+      expect(segment.config.confirmFrames, 2);
 
       final tracking = restored.lines
           .whereType<TraceFrame>()
           .firstWhere((f) => f.frameIndex == 3);
+      expect(tracking.calMinConfidence, 0.25);
+      expect(tracking.dartMinConfidence, 0.3);
       expect(tracking.detections, hasLength(2));
       expect(tracking.detections.first.classIndex, 0);
       expect(tracking.detections.first.conf, 0.9);
@@ -154,8 +151,8 @@ void main() {
 
       final reset = restored.lines.whereType<TrackerSegment>().last;
       expect(reset.instance, 1);
-      expect(reset.config.tracker.confirmFrames, 3);
-      expect(reset.config.tracker.maxDartsPerTurn, 9);
+      expect(reset.config.confirmFrames, 3);
+      expect(reset.config.maxDartsPerTurn, 9);
     });
 
     test('every TrackerPhase round-trips', () {
@@ -206,8 +203,6 @@ void main() {
           'cal_shift_threshold',
           'max_darts_per_turn',
           'no_calibration_frames_to_warn',
-          'cal_min_confidence',
-          'dart_min_confidence',
         ]),
       );
     });
@@ -228,8 +223,17 @@ void main() {
         ],
       ).toJson();
 
-      expect(frame.keys,
-          unorderedEquals(['kind', 'frame_index', 'detections', 'outcome']));
+      expect(
+        frame.keys,
+        unorderedEquals([
+          'kind',
+          'frame_index',
+          'cal_min_confidence',
+          'dart_min_confidence',
+          'detections',
+          'outcome',
+        ]),
+      );
       expect(
         ((frame['detections'] as List).first as Map).keys,
         unorderedEquals(['class_index', 'x', 'y', 'conf']),

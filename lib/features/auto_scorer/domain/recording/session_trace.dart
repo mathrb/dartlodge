@@ -108,48 +108,31 @@ class SessionTraceHeader {
       );
 }
 
-/// The configuration in force for a tracker instance: the [DartTrackerConfig]
-/// knobs **plus** the confidence thresholds applied in `buildDetectionFrame`
-/// — which live outside [DartTrackerConfig] but gate which raw detections reach
-/// the tracker, so they are part of the replayable contract.
-class RecordedTrackerConfig {
-  final DartTrackerConfig tracker;
-  final double calMinConfidence;
-  final double dartMinConfidence;
+/// Codec for [DartTrackerConfig] — the tracker's own knobs, genuinely constant
+/// per tracker instance, so they live on the [TrackerSegment] marker. The
+/// confidence thresholds applied in `buildDetectionFrame` are NOT here: they can
+/// vary frame-to-frame (the live preview re-reads them from a provider), so they
+/// live per-frame on [TraceFrame] instead.
+Map<String, dynamic> _trackerConfigToJson(DartTrackerConfig c) => {
+      'match_tolerance': c.matchTolerance,
+      'confirm_frames': c.confirmFrames,
+      'pending_miss_tolerance': c.pendingMissTolerance,
+      'empty_frames_to_rebaseline': c.emptyFramesToRebaseline,
+      'cal_shift_threshold': c.calShiftThreshold,
+      'max_darts_per_turn': c.maxDartsPerTurn,
+      'no_calibration_frames_to_warn': c.noCalibrationFramesToWarn,
+    };
 
-  const RecordedTrackerConfig({
-    required this.tracker,
-    required this.calMinConfidence,
-    required this.dartMinConfidence,
-  });
-
-  Map<String, dynamic> toJson() => {
-        'match_tolerance': tracker.matchTolerance,
-        'confirm_frames': tracker.confirmFrames,
-        'pending_miss_tolerance': tracker.pendingMissTolerance,
-        'empty_frames_to_rebaseline': tracker.emptyFramesToRebaseline,
-        'cal_shift_threshold': tracker.calShiftThreshold,
-        'max_darts_per_turn': tracker.maxDartsPerTurn,
-        'no_calibration_frames_to_warn': tracker.noCalibrationFramesToWarn,
-        'cal_min_confidence': calMinConfidence,
-        'dart_min_confidence': dartMinConfidence,
-      };
-
-  factory RecordedTrackerConfig.fromJson(Map<String, dynamic> json) =>
-      RecordedTrackerConfig(
-        tracker: DartTrackerConfig(
-          matchTolerance: _toDouble(json['match_tolerance']),
-          confirmFrames: json['confirm_frames'] as int,
-          pendingMissTolerance: json['pending_miss_tolerance'] as int,
-          emptyFramesToRebaseline: json['empty_frames_to_rebaseline'] as int,
-          calShiftThreshold: _toDouble(json['cal_shift_threshold']),
-          maxDartsPerTurn: json['max_darts_per_turn'] as int,
-          noCalibrationFramesToWarn: json['no_calibration_frames_to_warn'] as int,
-        ),
-        calMinConfidence: _toDouble(json['cal_min_confidence']),
-        dartMinConfidence: _toDouble(json['dart_min_confidence']),
-      );
-}
+DartTrackerConfig _trackerConfigFromJson(Map<String, dynamic> json) =>
+    DartTrackerConfig(
+      matchTolerance: _toDouble(json['match_tolerance']),
+      confirmFrames: json['confirm_frames'] as int,
+      pendingMissTolerance: json['pending_miss_tolerance'] as int,
+      emptyFramesToRebaseline: json['empty_frames_to_rebaseline'] as int,
+      calShiftThreshold: _toDouble(json['cal_shift_threshold']),
+      maxDartsPerTurn: json['max_darts_per_turn'] as int,
+      noCalibrationFramesToWarn: json['no_calibration_frames_to_warn'] as int,
+    );
 
 /// One dart the tracker reported newly (a `TrackedDart` from `TrackerUpdate`).
 /// `emitted` is false when the dart was confirmed but blocked by the 3-dart cap.
@@ -227,12 +210,13 @@ sealed class SessionTraceLine {
 
 /// A tracker-instance boundary (the epic's "reset marker"). The first marks the
 /// initial instance; subsequent ones mark a mid-session re-creation, carrying
-/// the config in force from that point. Replay starts a fresh `DartTracker` at
-/// each marker.
+/// the [DartTrackerConfig] in force from that point. Replay starts a fresh
+/// `DartTracker` at each marker. Confidence thresholds are NOT here — they live
+/// per-frame on [TraceFrame].
 class TrackerSegment extends SessionTraceLine {
   /// 0-based, increments each time the live tracker is (re)created.
   final int instance;
-  final RecordedTrackerConfig config;
+  final DartTrackerConfig config;
 
   const TrackerSegment({required this.instance, required this.config});
 
@@ -240,25 +224,30 @@ class TrackerSegment extends SessionTraceLine {
   Map<String, dynamic> toJson() => {
         'kind': 'tracker',
         'instance': instance,
-        'config': config.toJson(),
+        'config': _trackerConfigToJson(config),
       };
 
   factory TrackerSegment.fromJson(Map<String, dynamic> json) => TrackerSegment(
         instance: json['instance'] as int,
-        config: RecordedTrackerConfig.fromJson(
-            json['config'] as Map<String, dynamic>),
+        config: _trackerConfigFromJson(json['config'] as Map<String, dynamic>),
       );
 }
 
-/// One recorded frame: the raw detections fed to the tracker and the observed
-/// outcome. [frameIndex] is monotonic within the session.
+/// One recorded frame: the raw (pre-filter) detections fed to the tracker, the
+/// confidence thresholds applied to them in `buildDetectionFrame` (recorded
+/// per-frame because the live preview can change them mid-session), and the
+/// observed outcome. [frameIndex] is monotonic within the session.
 class TraceFrame extends SessionTraceLine {
   final int frameIndex;
+  final double calMinConfidence;
+  final double dartMinConfidence;
   final List<RawDetection> detections;
   final RecordedOutcome outcome;
 
   const TraceFrame({
     required this.frameIndex,
+    required this.calMinConfidence,
+    required this.dartMinConfidence,
     required this.detections,
     required this.outcome,
   });
@@ -267,12 +256,16 @@ class TraceFrame extends SessionTraceLine {
   Map<String, dynamic> toJson() => {
         'kind': 'frame',
         'frame_index': frameIndex,
+        'cal_min_confidence': calMinConfidence,
+        'dart_min_confidence': dartMinConfidence,
         'detections': [for (final d in detections) _rawDetectionToJson(d)],
         'outcome': outcome.toJson(),
       };
 
   factory TraceFrame.fromJson(Map<String, dynamic> json) => TraceFrame(
         frameIndex: json['frame_index'] as int,
+        calMinConfidence: _toDouble(json['cal_min_confidence']),
+        dartMinConfidence: _toDouble(json['dart_min_confidence']),
         detections: [
           for (final d in (json['detections'] as List))
             _rawDetectionFromJson(d as Map<String, dynamic>)

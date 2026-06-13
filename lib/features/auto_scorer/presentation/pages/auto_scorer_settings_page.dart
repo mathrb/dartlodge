@@ -3,6 +3,7 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,6 +35,7 @@ class _AutoScorerSettingsPageState
   Widget build(BuildContext context) {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
+    final recordSessions = ref.watch(sessionRecordingEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
     final captureMode = ref.watch(captureModeSettingProvider);
     final collectOn = collect.value ?? false;
@@ -66,6 +68,20 @@ class _AutoScorerSettingsPageState
                 ? null
                 : (v) => ref
                     .read(autoAdvanceOnClearEnabledProvider.notifier)
+                    .setEnabled(v),
+          ),
+          SwitchListTile(
+            secondary: const Icon(Icons.bug_report_outlined),
+            title: const Text('Record sessions (debug)'),
+            subtitle: const Text(
+                'Log the camera detection stream so a scoring bug can be '
+                'replayed off-device. Lightweight (no photos); the last few '
+                'sessions are kept on this device.'),
+            value: recordSessions.value ?? false,
+            onChanged: recordSessions.isLoading
+                ? null
+                : (v) => ref
+                    .read(sessionRecordingEnabledProvider.notifier)
                     .setEnabled(v),
           ),
           ListTile(
