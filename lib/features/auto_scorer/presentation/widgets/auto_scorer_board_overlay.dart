@@ -159,6 +159,7 @@ class _AutoScorerBoardOverlayState
       SessionTraceStore? traceStore;
       String? recordingSessionId;
       if (await ref.read(sessionRecordingEnabledProvider.future)) {
+        if (!mounted) return;
         final ts = await ref.read(sessionTraceStoreProvider.future);
         if (ts.isSupported) {
           traceStore = ts;
