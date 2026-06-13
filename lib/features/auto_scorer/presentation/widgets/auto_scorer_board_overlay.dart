@@ -2,17 +2,20 @@ import 'dart:async';
 
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/camera_zoom_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 /// Scoreboard-primary assist-mode camera widget (#377 §5.2). Three layouts:
 /// the band variant (`expand: false`, via the core `boardOverlayBuilder` seam)
@@ -151,10 +154,27 @@ class _AutoScorerBoardOverlayState
       }
       final store = await ref.read(captureStoreProvider.future);
       if (!mounted) return;
+      // Session-trace recording (#490): opt-in + device-only. When on, give the
+      // session a trace store + a fresh session id so it records this run.
+      SessionTraceStore? traceStore;
+      String? recordingSessionId;
+      if (await ref.read(sessionRecordingEnabledProvider.future)) {
+        final ts = await ref.read(sessionTraceStoreProvider.future);
+        if (ts.isSupported) {
+          traceStore = ts;
+          recordingSessionId = const Uuid().v4();
+        }
+      }
+      if (!mounted) return;
       // No predict detector: YOLOView loads its own model. The session just
       // wires the tracker + capture; start() prunes captures to the cap.
       final session = AutoScorerSession(
-          captureStore: store, modelVersion: kAutoScorerModelVersion);
+        captureStore: store,
+        modelVersion: kAutoScorerModelVersion,
+        traceStore: traceStore,
+        recordingSessionId: recordingSessionId,
+        recordingGameId: widget.gameId,
+      );
       await session.start();
       if (!mounted) return;
       _session = session;

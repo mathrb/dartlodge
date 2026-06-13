@@ -12,6 +12,12 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   Future<void> pump(WidgetTester tester) async {
+    // Tall viewport so the whole settings list fits without scrolling — the
+    // controls below the fold (capture-mode, toggles) stay tappable.
+    tester.view.physicalSize = const Size(1080, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(const ProviderScope(
         child: MaterialApp(home: AutoScorerSettingsPage())));
     await tester.pumpAndSettle();
@@ -30,10 +36,28 @@ void main() {
     expect(modeButton(tester).selected, {CaptureMode.all});
     expect(modeButton(tester).onSelectionChanged, isNotNull);
 
+    // The control sits below the fold on the test viewport; scroll it in first.
+    await tester.ensureVisible(find.text('Mistakes only'));
     await tester.tap(find.text('Mistakes only'));
     await tester.pumpAndSettle();
 
     expect(modeButton(tester).selected, {CaptureMode.partial});
+  });
+
+  testWidgets('session recording toggle defaults off and switches on',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await pump(tester);
+
+    final tile = find.widgetWithText(SwitchListTile, 'Record sessions (debug)');
+    expect(tile, findsOneWidget);
+    expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+
+    await tester.ensureVisible(tile);
+    await tester.tap(tile);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<SwitchListTile>(tile).value, isTrue);
   });
 
   testWidgets('capture-mode is disabled when data collection is off',

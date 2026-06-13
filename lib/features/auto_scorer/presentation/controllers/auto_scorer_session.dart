@@ -7,8 +7,12 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_recorder.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -60,6 +64,10 @@ class AutoScorerSession {
     DartTracker? tracker,
     CaptureStore? captureStore,
     String modelVersion = 'unknown',
+    SessionTraceStore? traceStore,
+    String? recordingSessionId,
+    String recordingGameId = '',
+    DateTime? recordingStartedAt,
   })  : _detector = detector,
         _tracker = tracker ?? DartTracker(),
         _captureStore = captureStore,
@@ -68,7 +76,23 @@ class AutoScorerSession {
         // The detector-backed path ([onFrame]/[captureCurrentFrame]) letterboxes
         // via the preprocessor, so the two must be provided together.
         assert(detector == null || preprocessor != null,
-            'a detector-backed session also needs a preprocessor');
+            'a detector-backed session also needs a preprocessor') {
+    // Session-trace recording (#490) is opt-in: only wired when the caller
+    // supplies a store + session id. The recorder captures the tracker's config
+    // (the same instance this session drives) so a replay reconstructs it.
+    if (traceStore != null && recordingSessionId != null) {
+      _recordingStore = traceStore;
+      _recordingSessionId = recordingSessionId;
+      _recorder = SessionRecorder(
+        header: SessionTraceHeader(
+          modelVersion: modelVersion,
+          gameId: recordingGameId,
+          startedAt: recordingStartedAt ?? DateTime.now(),
+        ),
+        config: _tracker.config,
+      );
+    }
+  }
 
   /// Predict-detector path (takePicture → [DartDetector.detect]). Null for the
   /// YOLOView streaming path, which computes [DetectionFrame]s natively and feeds
@@ -80,6 +104,16 @@ class AutoScorerSession {
   final CaptureStore? _captureStore;
   final FramePreprocessor? _preprocessor;
   final String _modelVersion;
+
+  /// Session-trace recording (#490), null unless opt-in is on. Accumulates the
+  /// per-frame detection stream in memory; flushed to [_recordingStore] on
+  /// [dispose].
+  SessionRecorder? _recorder;
+  SessionTraceStore? _recordingStore;
+  String? _recordingSessionId;
+
+  /// Keep the most recent N recorded sessions on the device (#490).
+  static const int _sessionRetention = 20;
 
   /// Physical darts currently tracked on the board.
   int get dartsOnBoard => _tracker.confirmedDarts.length;
@@ -234,10 +268,24 @@ class AutoScorerSession {
   /// inference) through the tracker — no predict detector. Returns the darts to
   /// emit + status + cal confidences. Capture is separate ([persistEmittedDarts])
   /// so `capturePhoto()` is only grabbed on emission, off the hot path.
-  SessionFrameResult processDetectionFrame(DetectionFrame frame) {
+  SessionFrameResult processDetectionFrame(
+    DetectionFrame frame, {
+    List<RawDetection> rawDetections = const [],
+    double calConfidence = 0.25,
+    double dartConfidence = 0.25,
+  }) {
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
     trackWatch.stop();
+    // Record the raw (pre-filter) detections + thresholds + outcome for replay
+    // (#490). recordFrame is an O(1) in-memory append — no I/O on the hot path;
+    // a null recorder (recording off) makes this a no-op.
+    _recorder?.recordFrame(
+      detections: rawDetections,
+      calMinConfidence: calConfidence,
+      dartMinConfidence: dartConfidence,
+      update: update,
+    );
     final emitted = update.newDarts.length;
     return SessionFrameResult(
       emittedDarts: [for (final d in update.newDarts) d.score],
@@ -372,7 +420,27 @@ class AutoScorerSession {
     await store.save(record, bytes);
   }
 
-  Future<void> dispose() async => _detector?.dispose();
+  Future<void> dispose() async {
+    await _flushRecording();
+    await _detector?.dispose();
+  }
+
+  /// Persist the recorded session trace (#490), then prune to the retention cap.
+  /// Best-effort + guarded: a failed write must never disrupt teardown or
+  /// scoring. No-op when recording is off or nothing was recorded.
+  Future<void> _flushRecording() async {
+    final store = _recordingStore;
+    final id = _recordingSessionId;
+    final recorder = _recorder;
+    if (store == null || id == null || recorder == null) return;
+    if (recorder.frameCount == 0) return;
+    try {
+      await store.save(id, recorder.build());
+      await store.enforceRetention(keepLast: _sessionRetention);
+    } catch (_) {
+      // Swallow: recording is a debugging aid, never a scoring dependency.
+    }
+  }
 
   /// Resolve the bytes to store + their coordinate space/dims for the sidecar,
   /// or null when no capture can be stored with coords that align to the image.

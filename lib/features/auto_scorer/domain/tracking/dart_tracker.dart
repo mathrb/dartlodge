@@ -69,6 +69,10 @@ class DartTracker {
 
   final DartTrackerConfig _config;
 
+  /// The config this tracker runs with — recorded into a session trace so a
+  /// replay can reconstruct an identical tracker (#490).
+  DartTrackerConfig get config => _config;
+
   /// Image→canonical transform. Held stable while the board is occupied
   /// (#377 §3.2 homography stabilisation); **refreshed from every calibrated
   /// EMPTY frame** — the cleanest view of all 4 cal dots — so a turn can

@@ -5,6 +5,7 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/detection_mapping.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/yolo_view_detections.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
@@ -73,7 +74,7 @@ Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
 /// Map a YOLOView result stream into our [DetectionFrame] (cals + dart
 /// candidates). The plugin-bound `YOLOResult → ClassedDetection` step lives here;
 /// the pure mapping is the merged `rawDetectionsFromClassed` + `buildDetectionFrame`.
-DetectionFrame _detectionFrameFrom(
+({DetectionFrame frame, List<RawDetection> raw}) _detectionFrameFrom(
     List<YOLOResult> results, double calConf, double dartConf) {
   final classed = <ClassedDetection>[
     for (final r in results)
@@ -84,10 +85,14 @@ DetectionFrame _detectionFrameFrom(
         cy: r.normalizedBox.center.dy,
       ),
   ];
-  return buildDetectionFrame(
-    rawDetectionsFromClassed(classed),
-    calMinConfidence: calConf,
-    dartMinConfidence: dartConf,
+  // Keep the raw (pre-filter) detections alongside the built frame: the session
+  // records them for replay (#490), so a too-aggressive threshold stays
+  // reproducible. buildDetectionFrame applies the thresholds.
+  final raw = rawDetectionsFromClassed(classed);
+  return (
+    frame: buildDetectionFrame(raw,
+        calMinConfidence: calConf, dartMinConfidence: dartConf),
+    raw: raw,
   );
 }
 
@@ -150,8 +155,9 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
 
   void _onResults(List<YOLOResult> results) {
     _ensureNative();
-    final frame =
-        _detectionFrameFrom(results, widget.calConfidence, widget.dartConfidence);
+    final frame = _detectionFrameFrom(
+            results, widget.calConfidence, widget.dartConfidence)
+        .frame;
     final stability = _gate.update(frame);
     if (!mounted) return;
     setState(() {
@@ -451,10 +457,15 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
 
   void _onResults(List<YOLOResult> results) {
     _ensureNative();
-    final frame =
-        _detectionFrameFrom(results, widget.calConfidence, widget.dartConfidence);
+    final (:frame, :raw) = _detectionFrameFrom(
+        results, widget.calConfidence, widget.dartConfidence);
     _latest = frame;
-    final result = widget.session.processDetectionFrame(frame);
+    final result = widget.session.processDetectionFrame(
+      frame,
+      rawDetections: raw,
+      calConfidence: widget.calConfidence,
+      dartConfidence: widget.dartConfidence,
+    );
     final sink = ref.read(activeDartInputSinkProvider);
     for (final d in result.emittedDarts) {
       sink?.submitDart(d.segment);
