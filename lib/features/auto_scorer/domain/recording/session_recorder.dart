@@ -43,23 +43,32 @@ class SessionRecorder {
       // Defensive copy — the caller builds a fresh list per frame, but never
       // alias a buffer into the trace.
       detections: List<RawDetection>.of(detections),
-      outcome: RecordedOutcome(
-        newDarts: [
-          for (final d in update.newDarts)
-            RecordedEmission(
-              handle: d.handle,
-              segment: d.score.segment,
-              baseNumber: d.score.baseNumber,
-              multiplier: d.score.multiplier,
-              emitted: d.emitted,
-            ),
-        ],
-        status: update.status,
-      ),
+      outcome: outcomeFromUpdate(update),
     ));
   }
+
+  /// Record an out-of-band tracker signal (turn advance / remove darts) between
+  /// frames, so a replay reproduces the cap / baseline reset (#491). Does not
+  /// advance the frame index.
+  void recordSignal(TrackerSignalKind kind) => _lines.add(TrackerSignal(kind));
 
   /// Snapshot the accumulated session as an immutable [SessionTrace].
   SessionTrace build() =>
       SessionTrace(header: _header, lines: List<SessionTraceLine>.of(_lines));
 }
+
+/// Map a tracker [TrackerUpdate] to the recorded outcome shape — shared by the
+/// recorder (write side) and the replayer (compare side) so the two never drift.
+RecordedOutcome outcomeFromUpdate(TrackerUpdate update) => RecordedOutcome(
+      newDarts: [
+        for (final d in update.newDarts)
+          RecordedEmission(
+            handle: d.handle,
+            segment: d.score.segment,
+            baseNumber: d.score.baseNumber,
+            multiplier: d.score.multiplier,
+            emitted: d.emitted,
+          ),
+      ],
+      status: update.status,
+    );

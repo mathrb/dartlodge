@@ -87,7 +87,9 @@ SessionTrace _sample() => SessionTrace(
           dartsOnBoard: 4,
           dartsThisTurn: 3,
         ),
+        const TrackerSignal(TrackerSignalKind.turnAdvanced),
         _frame(5, TrackerPhase.cameraMoved),
+        const TrackerSignal(TrackerSignalKind.removeDarts),
         // Mid-session tracker re-creation: a fresh instance + (changed) config.
         const TrackerSegment(
           instance: 1,
@@ -122,6 +124,10 @@ void main() {
 
       expect(restored.lines.whereType<TrackerSegment>(), hasLength(2));
       expect(restored.lines.whereType<TraceFrame>(), hasLength(7));
+      expect(
+        restored.lines.whereType<TrackerSignal>().map((s) => s.kind),
+        [TrackerSignalKind.turnAdvanced, TrackerSignalKind.removeDarts],
+      );
     });
 
     test('preserves raw detections, config, phases and emissions', () {
@@ -205,6 +211,14 @@ void main() {
           'no_calibration_frames_to_warn',
         ]),
       );
+    });
+
+    test('tracker-signal keys + wire round-trip', () {
+      final json =
+          const TrackerSignal(TrackerSignalKind.removeDarts).toJson();
+      expect(json.keys, unorderedEquals(['kind', 'signal']));
+      expect(json['signal'], 'remove_darts');
+      expect(TrackerSignal.fromJson(json).kind, TrackerSignalKind.removeDarts);
     });
 
     test('frame + detection + outcome + emission keys', () {
