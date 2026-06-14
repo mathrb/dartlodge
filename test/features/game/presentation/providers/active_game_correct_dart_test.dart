@@ -20,10 +20,10 @@ import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import '../../../../drift_test_base.dart';
 
 class _FakeCorrectionSink implements CaptureCorrectionSink {
-  final calls = <({int dartInTurnOrdinal, String segment})>[];
+  final calls = <({int cameraDartOrdinal, String segment})>[];
   @override
-  void correctDart({required int dartInTurnOrdinal, required String segment}) =>
-      calls.add((dartInTurnOrdinal: dartInTurnOrdinal, segment: segment));
+  void correctDart({required int cameraDartOrdinal, required String segment}) =>
+      calls.add((cameraDartOrdinal: cameraDartOrdinal, segment: segment));
 }
 
 void main() {
@@ -169,13 +169,45 @@ void main() {
     final sink = _FakeCorrectionSink();
     container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
 
-    await notifier.processDart('20'); // dart 1
-    await notifier.processDart('20'); // dart 2
+    await notifier.processDart('20', inputMethod: 'camera'); // dart 1
+    await notifier.processDart('20', inputMethod: 'camera'); // dart 2
     await notifier.correctTurnDart(1, 'T20'); // correct dart 2 (0-based index 1)
 
     expect(sink.calls, hasLength(1));
-    expect(sink.calls.single.dartInTurnOrdinal, 2); // 1-based handle ordinal
+    expect(sink.calls.single.cameraDartOrdinal, 2); // 1-based camera ordinal
     expect(sink.calls.single.segment, 'T20');
+  });
+
+  test(
+      '#469: a manual dart shifts camera ordinals — correcting the later camera '
+      'dart routes to its camera ordinal (2), not its throw-order position (3)',
+      () async {
+    final notifier = await seedAndLoad();
+    final sink = _FakeCorrectionSink();
+    container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
+
+    // Turn: camera, manual, camera.
+    await notifier.processDart('20', inputMethod: 'camera'); // dart 1 (cam #1)
+    await notifier.processDart('20'); // dart 2 (manual, no capture)
+    await notifier.processDart('20', inputMethod: 'camera'); // dart 3 (cam #2)
+
+    await notifier.correctTurnDart(2, 'T19'); // third dart (camera)
+    expect(sink.calls, hasLength(1));
+    expect(sink.calls.single.cameraDartOrdinal, 2); // camera ordinal, not 3
+    expect(sink.calls.single.segment, 'T19');
+  });
+
+  test('#469: correcting a manually-entered dart is not propagated (no capture)',
+      () async {
+    final notifier = await seedAndLoad();
+    final sink = _FakeCorrectionSink();
+    container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
+
+    await notifier.processDart('20', inputMethod: 'camera'); // dart 1 (camera)
+    await notifier.processDart('20'); // dart 2 (manual)
+
+    await notifier.correctTurnDart(1, 'T20'); // correct the manual dart
+    expect(sink.calls, isEmpty);
   });
 
   test('correctTurnDart does NOT propagate a no-op correction (#456)',

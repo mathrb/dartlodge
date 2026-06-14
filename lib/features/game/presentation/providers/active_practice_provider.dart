@@ -6,6 +6,7 @@ import '../../domain/entities/game_event.dart';
 import '../../domain/engines/base_game_engine.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import '../../domain/turn_dart_resolver.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_practice_state.dart';
 import '../../../../core/persistence/database_provider.dart';
@@ -209,8 +210,9 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     final gs = current.gameState;
     if (gs.isComplete) return;
 
-    final eventId = await _resolveTurnDartEventId(gs, turnDartIndex);
-    if (eventId == null) return;
+    final turnDart = await _resolveTurnDart(gs, turnDartIndex);
+    if (turnDart == null) return;
+    final eventId = turnDart.eventId;
 
     final parsed = Segment.parse(newSegment);
 
@@ -241,52 +243,31 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
 
     // Best-effort: propagate the correction into the auto-scorer capture for
     // this (current-turn) dart, only if the correction itself succeeded (#456).
-    // No-op when no auto-scoring session is bound.
-    if (!state.hasError) {
+    // Skip a manually-entered dart — it has no camera capture (#469). No-op
+    // when no auto-scoring session is bound.
+    final cameraOrdinal = turnDart.cameraDartOrdinal;
+    if (!state.hasError && cameraOrdinal != null) {
       ref.read(activeCaptureCorrectionSinkProvider)?.correctDart(
-            dartInTurnOrdinal: turnDartIndex + 1,
+            cameraDartOrdinal: cameraOrdinal,
             segment: newSegment,
           );
     }
   }
 
-  /// Resolves the `DartThrown` event id for dart [turnDartIndex] (0-based,
-  /// throw order) of the active competitor's current turn — the last
-  /// `dartsThrownInTurn` live (non-corrected, non-superseded) darts. Returns
-  /// null if out of range. Mirrors the X01/Cricket resolver.
-  Future<String?> _resolveTurnDartEventId(
+  /// Resolves the live current-turn dart at [turnDartIndex] (0-based, throw
+  /// order) — its event id plus the camera-only ordinal the auto-scorer keys
+  /// captures on (null for a manual dart). See [resolveTurnDart].
+  Future<TurnDartRef?> _resolveTurnDart(
       GameState gs, int turnDartIndex) async {
-    final n = gs.dartsThrownInTurn;
-    if (turnDartIndex < 0 || turnDartIndex >= n) return null;
-    final activeCompId = gs.competitors[gs.currentTurnIndex].competitorId;
     final events = await ref
         .read(gameEventRepositoryProvider)
         .getEventsForGame(gs.gameId);
-
-    final correctedIds = <String>{};
-    final supersededIds = <String>{};
-    for (final e in events) {
-      if (e.eventType != 'DartCorrected') continue;
-      final origId = e.payload['original_event_id'];
-      if (origId is String) correctedIds.add(origId);
-      final superseded = e.payload['superseded_event_ids'];
-      if (superseded is List) {
-        for (final id in superseded) {
-          if (id is String) supersededIds.add(id);
-        }
-      }
-    }
-
-    final liveForComp = [
-      for (final e in events)
-        if (e.eventType == 'DartThrown' &&
-            e.payload['competitor_id'] == activeCompId &&
-            !correctedIds.contains(e.eventId) &&
-            !supersededIds.contains(e.eventId))
-          e,
-    ];
-    if (liveForComp.length < n) return null;
-    return liveForComp.sublist(liveForComp.length - n)[turnDartIndex].eventId;
+    return resolveTurnDart(
+      events: events,
+      competitorId: gs.competitors[gs.currentTurnIndex].competitorId,
+      dartsThrownInTurn: gs.dartsThrownInTurn,
+      turnDartIndex: turnDartIndex,
+    );
   }
 
   /// Apply TurnEnded + TurnStarted events and persist them. Used for

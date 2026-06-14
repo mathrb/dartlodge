@@ -415,7 +415,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   /// capture (capture-at-correction). Fire-and-forget — a missed capture must
   /// never disrupt scoring.
   @override
-  void correctDart({required int dartInTurnOrdinal, required String segment}) {
+  void correctDart({required int cameraDartOrdinal, required String segment}) {
     if (!mounted) return;
     // Respect the data-collection opt-in: with it off we never touch the capture
     // store — in partial mode this would otherwise silently write a frame the
@@ -427,7 +427,9 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
       unawaited(widget.session.applyDartCorrection(
         gameId: widget.gameId,
         turnOrdinal: widget.currentTurnOrdinal(),
-        dartInTurnOrdinal: dartInTurnOrdinal,
+        // The capture handle's dartInTurnOrdinal is the camera-emitted ordinal
+        // (#469), which is exactly what the game now supplies.
+        dartInTurnOrdinal: cameraDartOrdinal,
         segment: segment,
       ));
     } else {

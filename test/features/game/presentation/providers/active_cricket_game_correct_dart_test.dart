@@ -21,10 +21,10 @@ import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import '../../../../drift_test_base.dart';
 
 class _FakeCorrectionSink implements CaptureCorrectionSink {
-  final calls = <({int dartInTurnOrdinal, String segment})>[];
+  final calls = <({int cameraDartOrdinal, String segment})>[];
   @override
-  void correctDart({required int dartInTurnOrdinal, required String segment}) =>
-      calls.add((dartInTurnOrdinal: dartInTurnOrdinal, segment: segment));
+  void correctDart({required int cameraDartOrdinal, required String segment}) =>
+      calls.add((cameraDartOrdinal: cameraDartOrdinal, segment: segment));
 }
 
 void main() {
@@ -155,12 +155,12 @@ void main() {
     final sink = _FakeCorrectionSink();
     container.read(activeCaptureCorrectionSinkProvider.notifier).bind(sink);
 
-    await notifier.processDart('T20'); // dart 1
-    await notifier.processDart('T19'); // dart 2
+    await notifier.processDart('T20', inputMethod: 'camera'); // dart 1
+    await notifier.processDart('T19', inputMethod: 'camera'); // dart 2
     await notifier.correctTurnDart(0, 'T18'); // correct dart 1 (0-based index 0)
 
     expect(sink.calls, hasLength(1));
-    expect(sink.calls.single.dartInTurnOrdinal, 1); // 1-based handle ordinal
+    expect(sink.calls.single.cameraDartOrdinal, 1); // 1-based camera ordinal
     expect(sink.calls.single.segment, 'T18');
   });
 
