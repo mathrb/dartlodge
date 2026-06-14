@@ -45,6 +45,12 @@ const double _zoomMax = 5.0;
 /// grows. Tune on-device against FPS.
 const Size kAutoScorerAnalysisResolution = Size(1280, 960);
 
+/// Native streaming inference rate (Hz) for BOTH the aim view and the in-game
+/// preview. Calibration stability is measured over a handful of consecutive
+/// frames and scoring polls at this rate, so a higher rate only adds heat /
+/// battery drain. Shared so the two views can't drift apart (#470).
+const int kAutoScorerInferenceHz = 3;
+
 double _floor(double calConf, double dartConf) =>
     [_nativeFloor, calConf, dartConf].reduce((a, b) => a < b ? a : b);
 
@@ -256,6 +262,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
             iouThreshold: 0.45,
             lensFacing: LensFacing.back,
             streamingConfig: const YOLOStreamingConfig(
+                inferenceFrequency: kAutoScorerInferenceHz,
                 analysisResolution: kAutoScorerAnalysisResolution),
             onResult: _onResults,
           ),
@@ -562,7 +569,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
           iouThreshold: 0.45,
           lensFacing: LensFacing.back,
           streamingConfig: const YOLOStreamingConfig(
-              inferenceFrequency: 3,
+              inferenceFrequency: kAutoScorerInferenceHz,
               analysisResolution: kAutoScorerAnalysisResolution),
           onResult: _onResults,
         ),
