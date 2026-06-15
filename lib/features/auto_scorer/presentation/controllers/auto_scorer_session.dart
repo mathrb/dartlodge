@@ -485,12 +485,18 @@ class AutoScorerSession {
           {required CaptureTrigger trigger}) =>
       CaptureRecord(
         trigger: trigger,
-        // Per-detection confidence isn't propagated through the tracker path,
-        // so captures record candidate positions with conf 1.0 (a known
-        // refinement — the training value is the corrected segment, #381).
+        // Record the model's real per-detection confidence, index-aligned with
+        // the dart candidates (carried through DetectionFrame, #501). Falls
+        // back to 1.0 only for synthetic frames that omit dartConfidences.
         predictedDarts: [
-          for (final c in frame.dartCandidates)
-            PredictedDart(x: c.x, y: c.y, conf: 1.0)
+          for (var i = 0; i < frame.dartCandidates.length; i++)
+            PredictedDart(
+              x: frame.dartCandidates[i].x,
+              y: frame.dartCandidates[i].y,
+              conf: frame.dartConfidences.length == frame.dartCandidates.length
+                  ? frame.dartConfidences[i]
+                  : 1.0,
+            )
         ],
         calPoints: frame.calPoints,
         modelVersion: _modelVersion,

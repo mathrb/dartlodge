@@ -7,6 +7,8 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dar
 import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/detection_mapping.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
@@ -374,6 +376,48 @@ void main() {
     expect(record.handle,
         const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 1));
     expect(record.trigger, CaptureTrigger.auto);
+  });
+
+  test('persistEmittedDarts records the model conf, not a placeholder (#501)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    // A frame built through the real detector mapping carries dartConfidences.
+    final confFrame = buildDetectionFrame(const [
+      RawDetection(classIndex: 1, x: 0.5, y: 0.2, conf: 0.9),
+      RawDetection(classIndex: 2, x: 0.5, y: 0.8, conf: 0.9),
+      RawDetection(classIndex: 3, x: 0.2, y: 0.5, conf: 0.9),
+      RawDetection(classIndex: 4, x: 0.8, y: 0.5, conf: 0.9),
+      RawDetection(classIndex: 0, x: 0.5, y: 0.35, conf: 0.73), // the dart
+    ]);
+    session.processDetectionFrame(confFrame);
+    final r = session.processDetectionFrame(confFrame);
+    expect(r.emittedDarts, hasLength(1));
+
+    await session.persistEmittedDarts(confFrame, Uint8List.fromList(const [1]),
+        turnOrdinal: 1,
+        firstDartOrdinal: r.firstEmittedDartOrdinal!,
+        gameId: 'g',
+        count: r.emittedDarts.length);
+
+    final record = store.saved.single;
+    expect(record.predictedDarts.single.conf, closeTo(0.73, 1e-9));
+  });
+
+  test('persistEmittedDarts falls back to conf 1.0 for a frame without '
+      'dartConfidences', () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    // oneDartFrame is built manually (no dartConfidences) — must not throw and
+    // records the 1.0 placeholder.
+    session.processDetectionFrame(oneDartFrame);
+    final r = session.processDetectionFrame(oneDartFrame);
+    await session.persistEmittedDarts(oneDartFrame, Uint8List.fromList(const [1]),
+        turnOrdinal: 1,
+        firstDartOrdinal: r.firstEmittedDartOrdinal!,
+        gameId: 'g',
+        count: r.emittedDarts.length);
+    expect(store.saved.single.predictedDarts.single.conf, 1.0);
   });
 
   test('persistEmittedDarts is a no-op without a store or with count 0', () async {
