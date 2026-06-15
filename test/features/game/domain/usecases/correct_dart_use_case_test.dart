@@ -528,5 +528,23 @@ void main() {
         expect(replayed.competitors[i].score, corrected.competitors[i].score);
       }
     });
+
+    test('correcting a false-positive hit reverts the advanced target (#500)',
+        () async {
+      final h = await _setupAtc(base);
+      // Opening target is 1. A false-positive '1' counts as a hit → the target
+      // advances to 2.
+      await h.throwDart('1');
+      expect(h.state.competitors[0].currentTarget, 2);
+      final ids = await h.liveDartIds();
+
+      // The dart actually hit single 2 (not the target). Correcting it must
+      // undo the advancement, leaving the player back on target 1.
+      final newState = await h.correct.execute(h.state,
+          originalEventId: ids.first, segment: 2, multiplier: 1);
+      expect(newState.competitors[0].currentTarget, 1,
+          reason: 'a non-target correction must revert the false advance');
+      expect(newState.competitors[0].dartThrows.last, '2');
+    });
   });
 }

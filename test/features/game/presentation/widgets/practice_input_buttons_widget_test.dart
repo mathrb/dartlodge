@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_input_buttons_widget.dart';
 
 Widget _wrap(Widget child) {
@@ -87,6 +88,75 @@ void main() {
       await tester.tap(find.text('T-5'));
       await tester.pump();
       expect(thrown, ['5', 'T5']);
+    });
+  });
+
+  // #500: in correction mode the sheet must offer the FULL board picker for
+  // every target-scoped practice type, so a false-positive advance can be
+  // corrected to the segment actually thrown — not just the (already advanced)
+  // live target's segments.
+  group('PracticeInputButtonsWidget — correction mode full picker (#500)', () {
+    for (final gameType in [
+      GameType.aroundTheClock,
+      GameType.shanghai,
+      GameType.bobs27,
+    ]) {
+      testWidgets('$gameType correction sheet shows the full grid, not the bar',
+          (tester) async {
+        final thrown = <String>[];
+        await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
+          gameType: gameType,
+          currentTarget: 19, // live (advanced) target
+          enabled: true,
+          isCorrection: true,
+          onDartThrown: thrown.add,
+        )));
+
+        // The full board picker replaces the restricted target bar entirely.
+        expect(find.byType(DartInputGridWidget), findsOneWidget);
+        expect(find.text('D-19'), findsNothing);
+
+        // Single Bull (text '25') is a segment the restricted ATC/Bob's bars
+        // never offer — tapping it proves the full picker is wired through.
+        await tester.tap(find.text('25'));
+        await tester.pump();
+        expect(thrown, ['SB']);
+      });
+    }
+
+    testWidgets('correction mode overrides doublesOnly (full grid, not the bar)',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
+        gameType: GameType.aroundTheClock,
+        currentTarget: 19,
+        doublesOnly: true, // would dim/disable S & T on the bar (#322)
+        enabled: true,
+        isCorrection: true,
+        onDartThrown: thrown.add,
+      )));
+
+      // The full grid is shown regardless of doublesOnly; a single fires.
+      expect(find.byType(DartInputGridWidget), findsOneWidget);
+      expect(find.text('S-19'), findsNothing);
+      await tester.tap(find.text('25')); // Single Bull
+      await tester.pump();
+      expect(thrown, ['SB']);
+    });
+
+    testWidgets('live (non-correction) ATC entry keeps the target-scoped bar',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
+        gameType: GameType.aroundTheClock,
+        currentTarget: 19,
+        enabled: true,
+        onDartThrown: thrown.add,
+      )));
+
+      // The restricted bar shows S-19; the full grid never would.
+      expect(find.text('S-19'), findsOneWidget);
+      expect(find.bySemanticsLabel('Single 1'), findsNothing);
     });
   });
 }

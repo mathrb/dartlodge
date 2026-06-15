@@ -1388,6 +1388,44 @@ void main() {
         reason: 'sheet pops after a successful correction');
   });
 
+  testWidgets(
+      'ATC correction sheet offers the full board, not just the advanced '
+      'target (#500)', (tester) async {
+    _setTallViewport(tester);
+    // A false positive on target 18 advanced the game to 19. The recorded dart
+    // ('18') must be correctable to the segment actually thrown (e.g. single 1)
+    // — the restricted bar would only expose 19's segments.
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.aroundTheClock,
+      competitors: [
+        _practiceCompetitor(
+          currentTarget: 19,
+          dartThrows: const ['18'],
+        ),
+      ],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 1,
+      isComplete: false,
+      turnActive: true,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Open the recorded dart's correction sheet.
+    await tester.tap(find.text('18'));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct dart 1'), findsOneWidget);
+
+    // The full grid exposes Single Bull (text '25'), which the restricted ATC
+    // bar never offers — correcting to it proves the full picker is available.
+    await tester.tap(find.text('25'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.corrections, [(0, 'SB')]);
+  });
+
   testWidgets('Manual mode shows the input buttons and dartboard highlight',
       (tester) async {
     _setTallViewport(tester);
