@@ -21,10 +21,13 @@ class PracticeInputButtonsWidget extends StatelessWidget {
   final bool doublesOnly;
 
   /// When correcting an already-recorded dart, offer the full board picker
-  /// regardless of game type or the live target — a false-positive auto-score
-  /// may have advanced the target, and the player must be able to record the
-  /// segment actually thrown so the engine replay can roll the advance back
-  /// (#500). Live/manual entry keeps the target-scoped bar (default false).
+  /// regardless of game type, the live target, or [doublesOnly] — a
+  /// false-positive auto-score may have advanced the target, and the player
+  /// must be able to record the segment actually thrown so the engine replay
+  /// can roll the advance back (#500). This intentionally bypasses the
+  /// Doubles-Only S/T tap restriction (#322): correction records what was
+  /// thrown, and the engine still treats a non-double as a non-advancing hit.
+  /// Live/manual entry keeps the target-scoped bar (default false).
   final bool isCorrection;
 
   @override

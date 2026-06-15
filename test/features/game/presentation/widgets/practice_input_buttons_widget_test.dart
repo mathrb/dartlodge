@@ -124,6 +124,26 @@ void main() {
       });
     }
 
+    testWidgets('correction mode overrides doublesOnly (full grid, not the bar)',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
+        gameType: GameType.aroundTheClock,
+        currentTarget: 19,
+        doublesOnly: true, // would dim/disable S & T on the bar (#322)
+        enabled: true,
+        isCorrection: true,
+        onDartThrown: thrown.add,
+      )));
+
+      // The full grid is shown regardless of doublesOnly; a single fires.
+      expect(find.byType(DartInputGridWidget), findsOneWidget);
+      expect(find.text('S-19'), findsNothing);
+      await tester.tap(find.text('25')); // Single Bull
+      await tester.pump();
+      expect(thrown, ['SB']);
+    });
+
     testWidgets('live (non-correction) ATC entry keeps the target-scoped bar',
         (tester) async {
       final thrown = <String>[];
