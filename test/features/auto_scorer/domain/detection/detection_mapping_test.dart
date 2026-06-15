@@ -61,6 +61,10 @@ void main() {
       expect(frame.calPoints, hasLength(4));
       expect(frame.calPoints.first, (x: 0.5, y: 0.2)); // cal order preserved
       expect(frame.dartCandidates, hasLength(2));
+      // dartConfidences carries the model conf, index-aligned with candidates.
+      expect(frame.dartConfidences, hasLength(2));
+      expect(frame.dartConfidences[0], closeTo(0.8, 1e-9));
+      expect(frame.dartConfidences[1], closeTo(0.8, 1e-9));
     });
 
     test('a missing cal point yields no calibration (occlusion-tolerant)', () {
@@ -98,6 +102,20 @@ void main() {
       ], dartMinConfidence: 0.25);
       expect(frame.dartCandidates, hasLength(1));
       expect(frame.dartCandidates.single, (x: 0.6, y: 0.6));
+      // The dropped dart's conf is dropped too — alignment is preserved.
+      expect(frame.dartConfidences, hasLength(1));
+      expect(frame.dartConfidences.single, closeTo(0.40, 1e-9));
+    });
+
+    test('dartConfidences stays index-aligned with dartCandidates', () {
+      final frame = buildDetectionFrame([
+        det(0, 0.30, 0.30, 0.42), // dart
+        det(0, 0.70, 0.70, 0.88), // dart
+      ]);
+      expect(frame.dartCandidates,
+          equals(const [(x: 0.30, y: 0.30), (x: 0.70, y: 0.70)]));
+      expect(frame.dartConfidences[0], closeTo(0.42, 1e-9));
+      expect(frame.dartConfidences[1], closeTo(0.88, 1e-9));
     });
 
     test('calMinConfidence gates a weak cal independently of darts', () {

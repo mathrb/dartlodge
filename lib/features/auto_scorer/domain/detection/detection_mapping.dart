@@ -67,16 +67,22 @@ DetectionFrame buildDetectionFrame(
       ? const <BoardPoint>[]
       : [for (final b in accepted) (x: b!.x, y: b.y)];
 
-  final darts = <BoardPoint>[
-    for (final d in detections)
-      if (d.classIndex == classes.dart && d.conf >= dartMinConfidence)
-        (x: d.x, y: d.y),
-  ];
+  // Dart candidates and their confidences, built in lockstep so
+  // dartConfidences[i] is the conf of dartCandidates[i].
+  final darts = <BoardPoint>[];
+  final dartConfidences = <double>[];
+  for (final d in detections) {
+    if (d.classIndex == classes.dart && d.conf >= dartMinConfidence) {
+      darts.add((x: d.x, y: d.y));
+      dartConfidences.add(d.conf);
+    }
+  }
 
   return DetectionFrame(
     calPoints: calPoints,
     dartCandidates: darts,
     calConfidences: calConfidences,
     calBestPoints: calBestPoints,
+    dartConfidences: dartConfidences,
   );
 }

@@ -28,11 +28,20 @@ class DetectionFrame {
   /// sees while the user reframes. The tracker does not read it.
   final List<BoardPoint?> calBestPoints;
 
+  /// The model's confidence for each dart candidate — index-aligned with
+  /// [dartCandidates]. **Diagnostic only**: the tracker reads [dartCandidates]
+  /// positions, not this; it is carried through so a capture can record the
+  /// real per-detection confidence in its sidecar (#501) instead of a
+  /// placeholder. Defaults to empty so non-detector constructors (tests) need
+  /// not supply it — consumers must treat a length mismatch as "unknown".
+  final List<double> dartConfidences;
+
   const DetectionFrame({
     required this.calPoints,
     required this.dartCandidates,
     this.calConfidences = const [null, null, null, null],
     this.calBestPoints = const [null, null, null, null],
+    this.dartConfidences = const [],
   });
 
   /// True when all four calibration points were detected this frame — required
