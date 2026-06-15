@@ -33,7 +33,9 @@ class DetectionFrame {
   /// positions, not this; it is carried through so a capture can record the
   /// real per-detection confidence in its sidecar (#501) instead of a
   /// placeholder. Defaults to empty so non-detector constructors (tests) need
-  /// not supply it — consumers must treat a length mismatch as "unknown".
+  /// not supply it; when its length doesn't match [dartCandidates] (a frame
+  /// built without confidences) consumers have no per-dart value and fall back
+  /// to the legacy 1.0 placeholder.
   final List<double> dartConfidences;
 
   const DetectionFrame({
