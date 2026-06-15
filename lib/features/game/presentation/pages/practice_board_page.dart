@@ -476,6 +476,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
           requireActiveTurn: false,
+          isCorrection: true,
           onSegment: (seg) => notifier.correctTurnDart(index, seg));
     } else {
       // Manual entry must not add a 4th dart, so it stays gated on the turn.
@@ -485,6 +486,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
           requireActiveTurn: true,
+          isCorrection: false,
           onSegment: (seg) => notifier.processDart(seg));
     }
   }
@@ -496,6 +498,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   /// [requireActiveTurn] gates the buttons on `turnActive`: true for manual
   /// entry (must not add a 4th dart), false for correcting a recorded dart
   /// (allowed after the turn ends, before it is advanced — #438).
+  ///
+  /// [isCorrection] makes the sheet offer the full board picker instead of the
+  /// target-scoped bar, so a false-positive advance can be corrected to the
+  /// real segment thrown (#500).
   void _showSegmentSheet(
     BuildContext context, {
     required String title,
@@ -503,6 +509,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     required int? currentTarget,
     required bool doublesOnly,
     required bool requireActiveTurn,
+    required bool isCorrection,
     required void Function(String segment) onSegment,
   }) {
     showModalBottomSheet<void>(
@@ -530,6 +537,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     currentTarget: currentTarget,
                     doublesOnly: doublesOnly,
                     enabled: active,
+                    isCorrection: isCorrection,
                     onDartThrown: (seg) {
                       onSegment(seg);
                       Navigator.of(sheetContext).pop();
