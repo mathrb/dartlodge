@@ -10,9 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 Widget _wrap(Widget child) {
   return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: kSupportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(body: child),
   );

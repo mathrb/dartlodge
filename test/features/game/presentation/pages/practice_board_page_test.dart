@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
@@ -154,6 +156,8 @@ Widget _buildApp(
       activePracticeProvider.overrideWith(() => notifier),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -179,6 +183,8 @@ Widget _buildAppCameraFirst(
       ),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -203,6 +209,8 @@ Widget _buildAppWithContainer(
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -226,6 +234,8 @@ void main() {
               .overrideWith(() => _LoadingActivePracticeNotifier()),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: router,
         ),
@@ -1011,6 +1021,8 @@ void main() {
           activePracticeProvider.overrideWith(() => notifierMid),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',
@@ -1046,6 +1058,8 @@ void main() {
           activePracticeProvider.overrideWith(() => notifier),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',
@@ -1115,6 +1129,8 @@ void main() {
       ProviderScope(
         overrides: [activePracticeProvider.overrideWith(() => notifier)],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',
@@ -1152,6 +1168,8 @@ void main() {
       ProviderScope(
         overrides: [activePracticeProvider.overrideWith(() => notifier)],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',
@@ -1162,7 +1180,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Success 1/3 · 1 darts thrown'), findsOneWidget);
+    expect(find.text('Success 1/3 · 1 dart thrown'), findsOneWidget);
   });
 
   testWidgets(
@@ -1183,6 +1201,8 @@ void main() {
       ProviderScope(
         overrides: [activePracticeProvider.overrideWith(() => notifier)],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',
@@ -1205,13 +1225,13 @@ void main() {
     // After round 1 (3 darts thrown, NEXT ROUND tapped → dartsThrownInTurn=0),
     // round 2 starts with 1 dart thrown so far. Pre-#328 the secondary line
     // would show "4 darts thrown" (session-cumulative); post-fix it shows
-    // "1 darts thrown" (current attempt only).
+    // "1 dart thrown" (current attempt only).
     await _pumpCheckoutPractice(
       tester,
       dartsThrownInTurn: 1,
       dartThrows: const ['T20', 'T20', 'DB', 'T20'],
     );
-    expect(find.text('1 darts thrown'), findsOneWidget);
+    expect(find.text('1 dart thrown'), findsOneWidget);
     expect(find.text('4 darts thrown'), findsNothing,
         reason: 'must NOT show session-cumulative count');
   });
@@ -1233,13 +1253,13 @@ void main() {
       'Checkout Practice: bust pad sentinels are excluded from per-round count',
       (tester) async {
     // 1-dart bust: engine appends ['T20', '', ''] and sets dartsThrownInTurn=3.
-    // User threw 1 real dart; display must show "1 darts thrown" not "3".
+    // User threw 1 real dart; display must show "1 dart thrown" not "3".
     await _pumpCheckoutPractice(
       tester,
       dartsThrownInTurn: 3,
       dartThrows: const ['T20', '', ''],
     );
-    expect(find.text('1 darts thrown'), findsOneWidget);
+    expect(find.text('1 dart thrown'), findsOneWidget);
     expect(find.text('3 darts thrown'), findsNothing,
         reason: 'sentinel pads must not inflate the per-round count (#261)');
   });
@@ -1268,6 +1288,8 @@ void main() {
           activePracticeProvider.overrideWith(() => notifierEnded),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: GoRouter(
             initialLocation: '/practice-board/game-1',

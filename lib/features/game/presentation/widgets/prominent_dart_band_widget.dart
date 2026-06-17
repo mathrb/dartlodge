@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 
@@ -166,13 +167,13 @@ class _DartSlot extends StatelessWidget {
                 Icons.add_circle_outline,
                 size: 40,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                semanticLabel: 'enter dart',
+                semanticLabel: AppLocalizations.of(context).gameEnterDartHint,
               )
             : Icon(
                 Icons.more_horiz,
                 size: 32,
                 color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                semanticLabel: 'dart not thrown',
+                semanticLabel: AppLocalizations.of(context).gameDartNotThrown,
               ),
       ),
     );

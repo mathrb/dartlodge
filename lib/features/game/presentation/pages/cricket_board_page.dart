@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
@@ -96,6 +97,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     ref.listen(activeCricketGameProvider(widget.gameId), (prev, next) {
       final prevValue = prev?.value;
@@ -160,7 +162,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
       ),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
-          title: 'Error',
+          title: l10n.commonError,
           message: '$err',
           onRetry: () =>
               ref.invalidate(activeCricketGameProvider(widget.gameId)),
@@ -168,8 +170,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
       ),
       data: (activeGameState) {
         if (activeGameState == null) {
-          return const Scaffold(
-            body: Center(child: Text('Game not found')),
+          return Scaffold(
+            body: Center(child: Text(l10n.gameNotFound)),
           );
         }
 
@@ -256,7 +258,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   icon: Icon(
                     Icons.more_vert,
                     color: cs.onSurface,
-                    semanticLabel: 'Game options',
+                    semanticLabel: l10n.gameOptionsSemantic,
                   ),
                   onSelected: (action) {
                     switch (action) {
@@ -266,14 +268,14 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                         context.push(GameRoutes.settings);
                     }
                   },
-                  itemBuilder: (_) => const [
+                  itemBuilder: (_) => [
                     PopupMenuItem(
                       value: _BoardMenuAction.endGame,
-                      child: Text('End Game'),
+                      child: Text(l10n.gameMenuEndGame),
                     ),
                     PopupMenuItem(
                       value: _BoardMenuAction.settings,
-                      child: Text('Settings'),
+                      child: Text(l10n.settingsTitle),
                     ),
                   ],
                 ),
@@ -400,7 +402,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                'Correct dart ${dartIndex + 1}',
+                AppLocalizations.of(context).gameCorrectDart(dartIndex + 1),
                 style: AppTextStyles.titleMedium,
               ),
             ),
@@ -449,7 +451,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Enter dart', style: AppTextStyles.titleMedium),
+              child: Text(AppLocalizations.of(context).gameEnterDart,
+                  style: AppTextStyles.titleMedium),
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.6,
@@ -535,6 +538,7 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     Future<void> handleAdvance() async {
       if (dartsThrownInTurn >= 3) {
@@ -585,7 +589,7 @@ class _BottomActionBar extends StatelessWidget {
                   child: Icon(
                     Icons.undo,
                     color: cs.onSurface,
-                    semanticLabel: 'Undo last dart',
+                    semanticLabel: l10n.gameUndoLastDart,
                   ),
                 ),
               ),
@@ -594,7 +598,7 @@ class _BottomActionBar extends StatelessWidget {
             // Next player / round — primary neon button
             Expanded(
               child: PulsingNextButtonWidget(
-                label: isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND',
+                label: isMultiplayer ? l10n.gameNextPlayer : l10n.gameNextRound,
                 onPressed: canNext ? handleAdvance : null,
                 pulse: pulseNext,
               ),
@@ -613,25 +617,26 @@ class _AdvanceTurnConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text('Advance turn?'),
+      title: Text(l10n.gameAdvanceTurnTitle),
       content: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: [screenWidth - 48, 320.0].reduce((a, b) => a < b ? a : b),
         ),
         child: Text(
-          "You've only thrown $dartsThrownInTurn dart(s). Advance anyway?",
+          l10n.gameAdvanceTurnBody(dartsThrownInTurn),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: const Text('Cancel'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, true),
-          child: const Text('Confirm'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );

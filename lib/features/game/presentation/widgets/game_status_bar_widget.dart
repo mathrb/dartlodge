@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../domain/models/game_config.dart';
@@ -70,6 +71,7 @@ class GameStatusBarWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final labelStyle = AppTextStyles.labelSmall.copyWith(
       color: cs.onSurfaceVariant,
       letterSpacing: 1.2,
@@ -105,13 +107,14 @@ class GameStatusBarWidget extends StatelessWidget {
           dot,
           Text(
             totalRounds != null
-                ? 'ROUND $roundInLeg / $totalRounds'
-                : 'ROUND $roundInLeg',
+                ? l10n.gameRoundOf(roundInLeg, totalRounds!)
+                : l10n.gameRound(roundInLeg),
             style: labelStyle,
           ),
           if (currentLegIndex != null && legsToWin != null) ...[
             dot,
-            Text('LEG ${currentLegIndex! + 1} / $legsToWin', style: labelStyle),
+            Text(l10n.gameLegOf(currentLegIndex! + 1, legsToWin!),
+                style: labelStyle),
           ],
           if (showDarts) ...[
             Padding(
@@ -161,14 +164,14 @@ class GameStatusBarWidget extends StatelessWidget {
                                 Icons.add_circle_outline,
                                 size: 16,
                                 color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                                semanticLabel: 'enter dart',
+                                semanticLabel: l10n.gameEnterDartHint,
                               ),
                             )
                           : Icon(
                               Icons.navigation,
                               size: 14,
                               color: cs.onSurfaceVariant.withValues(alpha: 0.3),
-                              semanticLabel: 'dart not thrown',
+                              semanticLabel: l10n.gameDartNotThrown,
                             ),
                 ),
               ),

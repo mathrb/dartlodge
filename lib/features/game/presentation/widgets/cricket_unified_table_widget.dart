@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/cricket_segment_utils.dart';
@@ -456,7 +457,7 @@ class _InputCell extends StatelessWidget {
     return Semantics(
       label: semanticLabel,
       child: Tooltip(
-        message: isRowClosed ? 'Number already closed' : '',
+        message: isRowClosed ? AppLocalizations.of(context).gameNumberClosed : '',
         child: InkWell(
           onTap: onTap,
           splashColor: AppTheme.kineticSplashColor,

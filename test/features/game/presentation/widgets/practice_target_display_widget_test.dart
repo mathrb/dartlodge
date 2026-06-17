@@ -9,9 +9,15 @@ import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_target_display_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(theme: AppTheme.light(), home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      theme: AppTheme.light(),
+      home: Scaffold(body: child),
+    );
 
 void main() {
   group('PracticeTargetDisplayWidget — Catch 40 visit indicator (#324)', () {
