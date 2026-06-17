@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/stats_table_widget.dart';
@@ -12,56 +13,57 @@ class PracticeStatsDetailTableWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final rows = switch (stats.gameType) {
       GameType.aroundTheClock => <StatsTableRow>[
-          StatsTableHeader('VALUE', leftLabel: 'METRIC'),
-          StatsTableDataRow('Drills Played', stats.totalGames.toString()),
-          StatsTableDataRow('Completions', stats.atcCompletions.toString()),
-          StatsTableDataRow('Hit Rate', StatFormatter.fmtPct(stats.atcHitRate)),
-          StatsTableDataRow('Avg Turns to Complete',
+          StatsTableHeader(l10n.statsColValue, leftLabel: l10n.statsColMetric),
+          StatsTableDataRow(l10n.statsDrillsPlayed, stats.totalGames.toString()),
+          StatsTableDataRow(l10n.statsCompletions, stats.atcCompletions.toString()),
+          StatsTableDataRow(l10n.statsHitRate, StatFormatter.fmtPct(stats.atcHitRate)),
+          StatsTableDataRow(l10n.statsAvgTurnsToComplete,
               StatFormatter.fmtDouble(stats.atcAvgTurns, decimals: 1)),
           StatsTableDataRow(
-              'Best Turns to Complete', StatFormatter.fmtInt(stats.atcBestTurns)),
+              l10n.statsBestTurnsToComplete, StatFormatter.fmtInt(stats.atcBestTurns)),
         ],
       GameType.bobs27 => <StatsTableRow>[
-          StatsTableHeader('VALUE', leftLabel: 'METRIC'),
-          StatsTableDataRow('Drills Played', stats.totalGames.toString()),
-          StatsTableDataRow('Avg Score',
+          StatsTableHeader(l10n.statsColValue, leftLabel: l10n.statsColMetric),
+          StatsTableDataRow(l10n.statsDrillsPlayed, stats.totalGames.toString()),
+          StatsTableDataRow(l10n.statsAvgScore,
               StatFormatter.fmtDouble(stats.bobs27AvgScore, decimals: 1)),
-          StatsTableDataRow('Best Score', StatFormatter.fmtInt(stats.bobs27BestScore)),
+          StatsTableDataRow(l10n.statsBestScore, StatFormatter.fmtInt(stats.bobs27BestScore)),
           StatsTableDataRow(
-              'Completion Rate', StatFormatter.fmtPct(stats.bobs27CompletionRate)),
+              l10n.statsCompletionRate, StatFormatter.fmtPct(stats.bobs27CompletionRate)),
           StatsTableDataRow(
-              'Doubles Hit Rate', StatFormatter.fmtPct(stats.bobs27DoubleHitRate)),
+              l10n.statsDoublesHitRate, StatFormatter.fmtPct(stats.bobs27DoubleHitRate)),
         ],
       GameType.shanghai => <StatsTableRow>[
-          StatsTableHeader('VALUE', leftLabel: 'METRIC'),
-          StatsTableDataRow('Drills Played', stats.totalGames.toString()),
-          StatsTableDataRow('Avg Score',
+          StatsTableHeader(l10n.statsColValue, leftLabel: l10n.statsColMetric),
+          StatsTableDataRow(l10n.statsDrillsPlayed, stats.totalGames.toString()),
+          StatsTableDataRow(l10n.statsAvgScore,
               StatFormatter.fmtDouble(stats.shanghaiAvgScore, decimals: 1)),
-          StatsTableDataRow('Best Score', StatFormatter.fmtInt(stats.shanghaiBestScore)),
-          StatsTableDataRow('Shanghai Count', stats.shanghaiCount.toString()),
+          StatsTableDataRow(l10n.statsBestScore, StatFormatter.fmtInt(stats.shanghaiBestScore)),
+          StatsTableDataRow(l10n.statsShanghaiCount, stats.shanghaiCount.toString()),
         ],
       GameType.catch40 => <StatsTableRow>[
-          StatsTableHeader('VALUE', leftLabel: 'METRIC'),
-          StatsTableDataRow('Drills Played', stats.totalGames.toString()),
-          StatsTableDataRow('Avg Score (/ 120)',
+          StatsTableHeader(l10n.statsColValue, leftLabel: l10n.statsColMetric),
+          StatsTableDataRow(l10n.statsDrillsPlayed, stats.totalGames.toString()),
+          StatsTableDataRow(l10n.statsCatch40AvgScore,
               StatFormatter.fmtDouble(stats.catch40AvgScore, decimals: 1)),
-          StatsTableDataRow('Best Score', StatFormatter.fmtInt(stats.catch40BestScore)),
+          StatsTableDataRow(l10n.statsBestScore, StatFormatter.fmtInt(stats.catch40BestScore)),
           StatsTableDataRow(
-              '2-dart checkouts', stats.catch40TwoDartCheckouts.toString()),
+              l10n.stats2DartCheckouts, stats.catch40TwoDartCheckouts.toString()),
           StatsTableDataRow(
-              '3-dart checkouts', stats.catch40ThreeDartCheckouts.toString()),
+              l10n.stats3DartCheckouts, stats.catch40ThreeDartCheckouts.toString()),
           StatsTableDataRow(
-              '4–6 dart checkouts', stats.catch40FourSixDartCheckouts.toString()),
-          StatsTableDataRow('Failed', stats.catch40FailedCheckouts.toString()),
+              l10n.stats46DartCheckouts, stats.catch40FourSixDartCheckouts.toString()),
+          StatsTableDataRow(l10n.statsFailed, stats.catch40FailedCheckouts.toString()),
         ],
       GameType.checkoutPractice => <StatsTableRow>[
-          StatsTableHeader('VALUE', leftLabel: 'METRIC'),
-          StatsTableDataRow('Total Attempts', stats.checkoutAttempts.toString()),
-          StatsTableDataRow('Total Successes', stats.checkoutSuccesses.toString()),
+          StatsTableHeader(l10n.statsColValue, leftLabel: l10n.statsColMetric),
+          StatsTableDataRow(l10n.statsTotalAttempts, stats.checkoutAttempts.toString()),
+          StatsTableDataRow(l10n.statsTotalSuccesses, stats.checkoutSuccesses.toString()),
           StatsTableDataRow(
-              'Success Rate', StatFormatter.fmtPct(stats.checkoutSuccessRate)),
+              l10n.statsSuccessRate, StatFormatter.fmtPct(stats.checkoutSuccessRate)),
         ],
       _ => <StatsTableRow>[],
     };

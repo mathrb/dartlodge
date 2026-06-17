@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/widgets/filter_chip_row_widget.dart';
 import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
@@ -28,7 +29,7 @@ class VariantChipSelectorWidget extends ConsumerWidget {
           selected: pageState.selectedStartingScore,
           labelBuilder: (score) => '$score',
           onSelected: notifier.setStartingScore,
-          allLabel: 'All X01',
+          allLabel: AppLocalizations.of(context).statsAllX01,
         );
       },
     );

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -9,6 +11,8 @@ import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       home: Scaffold(
         body: SingleChildScrollView(child: child),
@@ -197,8 +201,8 @@ void main() {
 
       // Both the opponent card AND the breakdown column subtitle use
       // ordinal labels — expect at least one of each, none of "OPPONENT".
-      expect(find.text('2ND'), findsWidgets);
-      expect(find.text('3RD'), findsWidgets);
+      expect(find.text('#2'), findsWidgets);
+      expect(find.text('#3'), findsWidgets);
       expect(find.text('OPPONENT'), findsNothing);
       // Bob (75 PPR) and Cara (50 PPR) both render on the page. Ordering
       // is implied by the ordinal labels above — explicit positional

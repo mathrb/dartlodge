@@ -9,6 +9,7 @@ import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/player_stats_page_provider.dart';
 
@@ -17,23 +18,24 @@ class PracticeTrendChartWidget extends ConsumerWidget {
 
   const PracticeTrendChartWidget({super.key, required this.playerId});
 
-  static String _yLabel(GameType type) => switch (type) {
-        GameType.aroundTheClock => 'Hit Rate',
-        GameType.checkoutPractice => 'Success Rate',
-        _ => 'Score',
+  static String _yLabel(AppLocalizations l10n, GameType type) => switch (type) {
+        GameType.aroundTheClock => l10n.statsHitRate,
+        GameType.checkoutPractice => l10n.statsSuccessRate,
+        _ => l10n.statsChartScore,
       };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncHistory = ref.watch(practiceDrillHistoryProvider(playerId));
     final pageState = ref.watch(playerStatsPageProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return asyncHistory.when(
       loading: () => const LoadingSpinnerWidget(height: 200),
       error: (e, _) => SizedBox(
         height: 200,
         child: ErrorRetryWidget(
-          message: 'Failed to load chart: $e',
+          message: l10n.statsChartLoadFailed(e.toString()),
           onRetry: () =>
               ref.invalidate(practiceDrillHistoryProvider(playerId)),
         ),
@@ -66,9 +68,10 @@ class PracticeTrendChartWidget extends ConsumerWidget {
     GameType gameType,
   ) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final primary = theme.colorScheme.primary;
     final primaryContainer = theme.colorScheme.primaryContainer;
-    final label = _yLabel(gameType);
+    final label = _yLabel(l10n, gameType);
     final isPct = gameType == GameType.aroundTheClock ||
         gameType == GameType.checkoutPractice;
 

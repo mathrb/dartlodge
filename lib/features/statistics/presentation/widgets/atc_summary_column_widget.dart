@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
@@ -18,6 +19,7 @@ class AtcSummaryColumnWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     final totalAttempts = attempts.values.fold(0, (a, b) => a + b);
     final totalHits = hits.values.fold(0, (a, b) => a + b);
@@ -94,7 +96,7 @@ class AtcSummaryColumnWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            sectionHeader('OVERALL'),
+            sectionHeader(l10n.summaryOverall.toUpperCase()),
             // The OVERALL value uses scoreSmall (36pt). On a 412px-wide
             // screen this column gets ~82px (Row flex 4:1 split), and
             // "100%" overflows — it wraps into "10\n0\n%" across three
@@ -119,15 +121,15 @@ class AtcSummaryColumnWidget extends StatelessWidget {
                     ),
             ),
             Divider(color: colorScheme.outline, height: 16),
-            sectionHeader('BEST'),
+            sectionHeader(l10n.summaryBest.toUpperCase()),
             if (best3.isEmpty)
-              emptyState('No data yet')
+              emptyState(l10n.summaryNoData)
             else
               for (final e in best3) rateRow(e.key, e.value, colorSuccess),
             Divider(color: colorScheme.outline, height: 16),
-            sectionHeader('WEAKEST'),
+            sectionHeader(l10n.summaryWeakest.toUpperCase()),
             if (worst3.isEmpty)
-              emptyState('No data yet')
+              emptyState(l10n.summaryNoData)
             else
               for (final e in worst3)
                 rateRow(e.key, e.value, colorScheme.error),

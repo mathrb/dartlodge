@@ -8,6 +8,7 @@ import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/player_stats_page_provider.dart';
 
@@ -19,13 +20,14 @@ class PprTrendChartWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncHistory = ref.watch(playerLegHistoryProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return asyncHistory.when(
       loading: () => const LoadingSpinnerWidget(height: 200),
       error: (e, _) => SizedBox(
         height: 200,
         child: ErrorRetryWidget(
-          message: 'Failed to load chart: $e',
+          message: l10n.statsChartLoadFailed(e.toString()),
           onRetry: () => ref.invalidate(playerLegHistoryProvider(playerId)),
         ),
       ),
@@ -48,6 +50,7 @@ class PprTrendChartWidget extends ConsumerWidget {
 
   Widget _buildChart(BuildContext context, List<PlayerLegSnapshot> history) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final primary = theme.colorScheme.primary;
     final primaryContainer = theme.colorScheme.primaryContainer;
     final secondary = theme.colorScheme.secondary;
@@ -123,7 +126,7 @@ class PprTrendChartWidget extends ConsumerWidget {
             sideTitles: SideTitles(showTitles: false),
           ),
           leftTitles: AxisTitles(
-            axisNameWidget: Text('Points', style: axisLabelStyle),
+            axisNameWidget: Text(l10n.statsChartPoints, style: axisLabelStyle),
             axisNameSize: 18,
             sideTitles: SideTitles(
               showTitles: true,
@@ -141,7 +144,7 @@ class PprTrendChartWidget extends ConsumerWidget {
             ),
           ),
           bottomTitles: AxisTitles(
-            axisNameWidget: Text('Legs', style: axisLabelStyle),
+            axisNameWidget: Text(l10n.statsChartLegs, style: axisLabelStyle),
             axisNameSize: 18,
             sideTitles: const SideTitles(showTitles: false),
           ),
@@ -182,6 +185,7 @@ class PprTrendChartWidget extends ConsumerWidget {
 
   Widget _buildLegend(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final labelStyle = theme.textTheme.bodySmall?.copyWith(
       color: theme.colorScheme.onSurfaceVariant,
     );
@@ -193,7 +197,7 @@ class PprTrendChartWidget extends ConsumerWidget {
         const SizedBox(width: 16),
         _LegendSwatch(color: theme.colorScheme.secondary),
         const SizedBox(width: 6),
-        Text('Checkout score', style: labelStyle),
+        Text(l10n.statsChartCheckoutScore, style: labelStyle),
       ],
     );
   }

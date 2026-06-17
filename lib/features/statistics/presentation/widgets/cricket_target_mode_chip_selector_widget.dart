@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_spacing.dart';
 import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
@@ -22,11 +23,14 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
 
   const CricketTargetModeChipSelectorWidget({super.key, required this.playerId});
 
-  static const _modes = [
-    ('fixed', 'Fixed'),
-    ('random', 'Random'),
-    ('crazy', 'Crazy'),
-  ];
+  static const _modes = ['fixed', 'random', 'crazy'];
+
+  static String _modeLabel(AppLocalizations l10n, String mode) => switch (mode) {
+        'fixed' => l10n.statsModeFixed,
+        'random' => l10n.statsModeRandom,
+        'crazy' => l10n.statsModeCrazy,
+        _ => mode,
+      };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,6 +42,7 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
     }
 
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final selected = pageState.selectedCricketTargetMode;
 
     // Wrap (multi-line) so the chip row stays visible at narrow widths
@@ -53,9 +58,9 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
         spacing: AppSpacing.space2,
         runSpacing: AppSpacing.space2,
         children: [
-          for (final (mode, label) in _modes)
+          for (final mode in _modes)
             FilterChip(
-              label: Text(label),
+              label: Text(_modeLabel(l10n, mode)),
               selected: selected == mode,
               selectedColor: cs.primaryContainer,
               checkmarkColor: cs.onPrimaryContainer,

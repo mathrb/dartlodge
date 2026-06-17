@@ -8,6 +8,7 @@ import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/widgets/trend_chart_shell_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../domain/entities/player_leg_snapshot.dart';
 import '../providers/player_stats_page_provider.dart';
 
@@ -19,13 +20,14 @@ class MptTrendChartWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncHistory = ref.watch(cricketLegHistoryProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return asyncHistory.when(
       loading: () => const LoadingSpinnerWidget(height: 200),
       error: (e, _) => SizedBox(
         height: 200,
         child: ErrorRetryWidget(
-          message: 'Failed to load chart: $e',
+          message: l10n.statsChartLoadFailed(e.toString()),
           onRetry: () => ref.invalidate(cricketLegHistoryProvider(playerId)),
         ),
       ),
@@ -38,6 +40,7 @@ class MptTrendChartWidget extends ConsumerWidget {
 
   Widget _buildChart(BuildContext context, List<PlayerLegSnapshot> history) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final primary = theme.colorScheme.primary;
     final primaryContainer = theme.colorScheme.primaryContainer;
 
@@ -54,7 +57,7 @@ class MptTrendChartWidget extends ConsumerWidget {
           // Match the wording in `TrendChartShellWidget` — chart needs
           // ≥2 games to draw a line, so the previous "Not enough data
           // yet" misread as contradicting populated stats below (#287).
-          'Need ≥2 games for a trend',
+          l10n.statsNeedTwoGames,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

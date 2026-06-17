@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/relative_date.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
@@ -18,6 +20,7 @@ class StatsTabPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -39,7 +42,7 @@ class StatsTabPage extends ConsumerWidget {
                     : _PlayerPickerList(players: players),
                 loading: () => const LoadingSpinnerWidget(),
                 error: (e, _) => ErrorRetryWidget(
-                  message: 'Failed to load players: $e',
+                  message: l10n.statsPlayersLoadFailed(e.toString()),
                   onRetry: () => ref.invalidate(allPlayersProvider),
                 ),
               ),
@@ -60,6 +63,7 @@ class _PlayerPickerList extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +76,7 @@ class _PlayerPickerList extends StatelessWidget {
             AppSpacing.space2,
           ),
           child: Text(
-            'SELECT A PLAYER',
+            l10n.statsSelectPlayer,
             style: tt.labelSmall?.copyWith(
               color: cs.onSurfaceVariant,
               letterSpacing: 1.2,
@@ -123,23 +127,20 @@ class _StatsPlayerTile extends StatelessWidget {
         ),
       ),
       title: Text(player.name),
-      subtitle: Text('Last active: ${_formatLastActive(player.lastActive)}'),
+      subtitle: Text(
+        AppLocalizations.of(context)
+            .playersCardLastActive(_formatLastActive(context)),
+      ),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
   }
-}
 
-String _formatLastActive(DateTime lastActive) {
-  final now = DateTime.now();
-  final local = lastActive.toLocal();
-  final diff = DateTime(now.year, now.month, now.day)
-      .difference(DateTime(local.year, local.month, local.day))
-      .inDays;
-  if (diff <= 0) return 'Today';
-  if (diff == 1) return 'Yesterday';
-  if (diff < 7) return '$diff days ago';
-  return DateFormat.yMMMd().format(local);
+  String _formatLastActive(BuildContext context) {
+    return relativeDayLabel(context, player.lastActive) ??
+        DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
+            .format(player.lastActive.toLocal());
+  }
 }
 
 class _EmptyState extends StatelessWidget {
@@ -147,6 +148,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -158,12 +160,12 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No players yet',
+            l10n.playersNoPlayersYet,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'Add players to start tracking stats',
+            l10n.statsAddPlayersHint,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
