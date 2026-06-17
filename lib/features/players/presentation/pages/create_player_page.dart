@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../providers/players_provider.dart';
 import '../state/player_form_state.dart';
 import '../widgets/player_form_field_widget.dart';
@@ -49,9 +50,10 @@ class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
     });
 
     final state = ref.watch(createPlayerProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New Player')),
+      appBar: AppBar(title: Text(l10n.playersNewPlayer)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -60,7 +62,7 @@ class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
             PlayerFormFieldWidget(
               controller: _controller,
               focusNode: _focusNode,
-              errorText: state.nameError,
+              error: state.nameError,
               onChanged: (v) =>
                   ref.read(createPlayerProvider.notifier).setName(v),
               onSubmitted: _submit,
@@ -68,7 +70,7 @@ class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: state.isSubmitting ? null : _submit,
-              child: const Text('Create Player'),
+              child: Text(l10n.playersCreatePlayer),
             ),
           ],
         ),

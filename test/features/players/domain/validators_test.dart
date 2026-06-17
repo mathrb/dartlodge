@@ -4,14 +4,11 @@ import 'package:dart_lodge/features/players/domain/validators.dart';
 void main() {
   group('validatePlayerName', () {
     test('returns error for empty string', () {
-      expect(validatePlayerName(''), 'Name cannot be empty');
+      expect(validatePlayerName(''), PlayerNameError.empty);
     });
 
     test('returns error for name exceeding 30 characters', () {
-      expect(
-        validatePlayerName('a' * 31),
-        'Name must be 30 characters or fewer',
-      );
+      expect(validatePlayerName('a' * 31), PlayerNameError.tooLong);
     });
 
     test('returns null for exactly 30 characters', () {

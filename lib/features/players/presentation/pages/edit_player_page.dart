@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
 import '../providers/players_provider.dart';
 import '../state/player_form_state.dart';
@@ -51,23 +52,23 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete player?'),
-        content:
-            Text('Delete ${widget.currentName}? This cannot be undone.'),
+        title: Text(l10n.playersDeleteTitle),
+        content: Text(l10n.playersDeleteConfirm(widget.currentName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -90,15 +91,11 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
         }
       case DeletePlayerHasGameHistory():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete a player with game history'),
-          ),
+          SnackBar(content: Text(l10n.playersCannotDeleteWithHistory)),
         );
       case DeletePlayerUnexpectedError():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete player. Please try again.'),
-          ),
+          SnackBar(content: Text(l10n.playersDeleteFailed)),
         );
     }
   }
@@ -113,9 +110,10 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
     });
 
     final state = ref.watch(editPlayerProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Player')),
+      appBar: AppBar(title: Text(l10n.playersEditPlayer)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -124,7 +122,7 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
             PlayerFormFieldWidget(
               controller: _controller,
               focusNode: _focusNode,
-              errorText: state.nameError,
+              error: state.nameError,
               onChanged: (v) =>
                   ref.read(editPlayerProvider.notifier).setName(v),
               onSubmitted: _save,
@@ -132,7 +130,7 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
             const SizedBox(height: 24),
             FilledButton(
               onPressed: state.isSubmitting ? null : _save,
-              child: const Text('Save'),
+              child: Text(l10n.commonSave),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -142,7 +140,7 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
                 color: Theme.of(context).colorScheme.error,
               ),
               label: Text(
-                'Delete player',
+                l10n.playersDeleteButton,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               style: OutlinedButton.styleFrom(

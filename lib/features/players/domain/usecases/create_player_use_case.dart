@@ -22,9 +22,11 @@ class CreatePlayerUseCase {
 
   Future<Player> call(String name) async {
     final trimmed = name.trim();
-    final validationError = validatePlayerName(trimmed);
-    if (validationError != null) {
-      throw ValidationException(validationError);
+    if (validatePlayerName(trimmed) != null) {
+      // Internal message only: the form providers pre-validate and surface a
+      // localized error, so this exception path is a safety net for direct
+      // callers and never reaches the UI.
+      throw ValidationException('Invalid player name');
     }
 
     final existing = await _playerRepository.getAllPlayers();
