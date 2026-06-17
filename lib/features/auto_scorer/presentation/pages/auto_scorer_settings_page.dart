@@ -7,6 +7,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_coll
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -49,16 +50,16 @@ class _AutoScorerSettingsPageState
     final collectOn = collect.value ?? false;
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Auto-scoring')),
+      appBar: AppBar(title: Text(l10n.autoScorerTitle)),
       body: ListView(
         children: [
           SwitchListTile(
             secondary: const Icon(Icons.center_focus_strong),
-            title: const Text('Use auto-scoring'),
-            subtitle: const Text(
-                'Camera-assisted dart entry on X01 and Cricket (beta).'),
+            title: Text(l10n.autoScorerUseTitle),
+            subtitle: Text(l10n.autoScorerUseSubtitle),
             value: useAuto.value ?? false,
             onChanged: useAuto.isLoading
                 ? null
@@ -67,10 +68,8 @@ class _AutoScorerSettingsPageState
           ),
           SwitchListTile(
             secondary: const Icon(Icons.skip_next),
-            title: const Text('Auto-advance turn when board is cleared'),
-            subtitle: const Text(
-                'When all darts are removed, advance to the next player '
-                'automatically instead of pressing NEXT.'),
+            title: Text(l10n.autoScorerAutoAdvanceTitle),
+            subtitle: Text(l10n.autoScorerAutoAdvanceSubtitle),
             value: autoAdvance.value ?? false,
             onChanged: autoAdvance.isLoading
                 ? null
@@ -106,8 +105,8 @@ class _AutoScorerSettingsPageState
           ),
           ListTile(
             leading: const Icon(Icons.tips_and_updates_outlined),
-            title: const Text('Camera setup tips'),
-            subtitle: const Text('How to frame the board for best results.'),
+            title: Text(l10n.autoScorerSetupTipsTile),
+            subtitle: Text(l10n.autoScorerSetupTipsTileSubtitle),
             // Review-only: opened just to re-read the tips, so the "don't show
             // again" checkbox and "Continue to camera" button are hidden and we
             // never touch the "seen" pref. The one-time prompt + dismissal live

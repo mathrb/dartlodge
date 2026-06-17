@@ -1,3 +1,4 @@
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// One-time setup tips shown before the first aim (#393 setup flow). Educational
@@ -32,52 +33,49 @@ class AutoScorerSetupTipsView extends StatefulWidget {
 class _AutoScorerSetupTipsViewState extends State<AutoScorerSetupTipsView> {
   bool _dontShowAgain = false;
 
-  static const _tips = <({IconData icon, String title, String body})>[
-    (
-      icon: Icons.center_focus_strong,
-      title: 'Fill the frame',
-      body: 'Position the camera so the board fills most of the view, with all '
-          'four corner markers visible. More board on screen means sharper '
-          'scoring.',
-    ),
-    (
-      icon: Icons.switch_camera_outlined,
-      title: 'A slight side angle',
-      body: 'A modest angle off head-on helps the camera see dart tips. Avoid '
-          'extreme or perfectly face-on angles.',
-    ),
-    (
-      icon: Icons.rotate_right,
-      title: 'Any rotation is fine',
-      body: "You don't need 20 at the top — the camera finds the markers in any "
-          'board orientation.',
-    ),
-    (
-      icon: Icons.light_mode_outlined,
-      title: 'Good, even lighting',
-      body: 'Avoid glare and deep shadows on the board so the markers stay '
-          'clearly visible.',
-    ),
-    (
-      icon: Icons.cleaning_services_outlined,
-      title: 'Pull darts between turns',
-      body: "Remove your darts each turn so they don't hide the tips of the next "
-          'ones.',
-    ),
-    (
-      icon: Icons.sports_outlined,
-      title: 'Steel-tip boards',
-      body: 'Auto-scoring is designed for steel-tip dartboards.',
-    ),
-  ];
+  List<({IconData icon, String title, String body})> _tips(
+          AppLocalizations l10n) =>
+      [
+        (
+          icon: Icons.center_focus_strong,
+          title: l10n.autoScorerTip1Title,
+          body: l10n.autoScorerTip1Body,
+        ),
+        (
+          icon: Icons.switch_camera_outlined,
+          title: l10n.autoScorerTip2Title,
+          body: l10n.autoScorerTip2Body,
+        ),
+        (
+          icon: Icons.rotate_right,
+          title: l10n.autoScorerTip3Title,
+          body: l10n.autoScorerTip3Body,
+        ),
+        (
+          icon: Icons.light_mode_outlined,
+          title: l10n.autoScorerTip4Title,
+          body: l10n.autoScorerTip4Body,
+        ),
+        (
+          icon: Icons.cleaning_services_outlined,
+          title: l10n.autoScorerTip5Title,
+          body: l10n.autoScorerTip5Body,
+        ),
+        (
+          icon: Icons.sports_outlined,
+          title: l10n.autoScorerTip6Title,
+          body: l10n.autoScorerTip6Body,
+        ),
+      ];
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Camera setup tips')),
+      appBar: AppBar(title: Text(l10n.autoScorerSetupTipsTile)),
       body: ListView(
         children: [
-          for (final tip in _tips)
+          for (final tip in _tips(l10n))
             ListTile(
               leading: Icon(tip.icon),
               title: Text(tip.title),
@@ -98,7 +96,7 @@ class _AutoScorerSetupTipsViewState extends State<AutoScorerSetupTipsView> {
                     value: _dontShowAgain,
                     onChanged: (v) =>
                         setState(() => _dontShowAgain = v ?? false),
-                    title: const Text("Don't show this again"),
+                    title: Text(l10n.autoScorerDontShowAgain),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16),
@@ -106,7 +104,7 @@ class _AutoScorerSetupTipsViewState extends State<AutoScorerSetupTipsView> {
                       onPressed: () =>
                           Navigator.of(context).pop(_dontShowAgain),
                       icon: const Icon(Icons.videocam_outlined),
-                      label: const Text('Continue to camera'),
+                      label: Text(l10n.autoScorerContinueToCamera),
                     ),
                   ),
                 ],

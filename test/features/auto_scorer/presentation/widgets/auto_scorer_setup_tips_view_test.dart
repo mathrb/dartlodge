@@ -1,4 +1,6 @@
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// contract (false = keep showing, true = remember).
 Future<void> _open(WidgetTester tester, void Function(bool?) sink) async {
   await tester.pumpWidget(MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: kSupportedLocales,
     home: Builder(
       builder: (context) => Scaffold(
         body: Center(
@@ -28,8 +32,11 @@ Future<void> _open(WidgetTester tester, void Function(bool?) sink) async {
 void main() {
   testWidgets('renders the setup tips and always-visible controls',
       (tester) async {
-    await tester.pumpWidget(
-        const MaterialApp(home: AutoScorerSetupTipsView()));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const AutoScorerSetupTipsView(),
+    ));
 
     // Top tips are on-screen (the list scrolls for the rest); the key
     // model-constraint tip ("any rotation") is among them.
@@ -47,8 +54,11 @@ void main() {
 
   testWidgets('review mode hides the checkbox + Continue action',
       (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-        home: AutoScorerSetupTipsView(reviewOnly: true)));
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const AutoScorerSetupTipsView(reviewOnly: true),
+    ));
 
     // Tips still render…
     expect(find.text('Fill the frame'), findsOneWidget);

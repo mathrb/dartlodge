@@ -1,5 +1,7 @@
 import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_settings_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,8 +20,12 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const ProviderScope(
-        child: MaterialApp(home: AutoScorerSettingsPage())));
+    await tester.pumpWidget(ProviderScope(
+        child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const AutoScorerSettingsPage(),
+    )));
     await tester.pumpAndSettle();
   }
 

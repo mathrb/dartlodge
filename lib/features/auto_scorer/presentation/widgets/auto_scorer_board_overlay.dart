@@ -13,6 +13,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tip
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -124,6 +125,9 @@ class _AutoScorerBoardOverlayState
 
   /// idle → (one-time tips) → aim (fullscreen YOLOView) → running (inline preview).
   Future<void> _start() async {
+    // Capture l10n up-front — _fail can be reached after awaits where using
+    // `context` would be unsafe.
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _error = null;
       _starting = true;
@@ -149,7 +153,7 @@ class _AutoScorerBoardOverlayState
         }
       }
       if (!kAutoScorerYoloSupported) {
-        _fail('Auto-scoring is not available on this device.');
+        _fail(l10n.autoScorerNotAvailable);
         return;
       }
       final store = await ref.read(captureStoreProvider.future);
@@ -228,7 +232,7 @@ class _AutoScorerBoardOverlayState
         _stop();
       }
     } catch (e) {
-      _fail('Camera setup failed: $e');
+      _fail(l10n.autoScorerSetupFailed('$e'));
     }
   }
 
@@ -322,7 +326,7 @@ class _AutoScorerBoardOverlayState
         ? Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Tap a dart to correct a misread',
+              AppLocalizations.of(context).autoScorerTapToCorrect,
               style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
             ),
           )
@@ -347,7 +351,7 @@ class _AutoScorerBoardOverlayState
                 children: [
                   Semantics(
                     button: true,
-                    label: 'expand camera preview',
+                    label: AppLocalizations.of(context).autoScorerExpandPreview,
                     child: GestureDetector(
                       // The YOLOView platform view consumes touch events
                       // natively (it needs them for tapToFocus), so a plain
@@ -413,6 +417,7 @@ class _AutoScorerBoardOverlayState
   }
 
   Widget _barRow() {
+    final l10n = AppLocalizations.of(context);
     if (_mode == _Mode.running) {
       return Row(
         children: [
@@ -427,13 +432,13 @@ class _AutoScorerBoardOverlayState
             ),
           ),
           IconButton(
-            tooltip: 'Remove darts',
+            tooltip: l10n.autoScorerRemoveDarts,
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.cleaning_services),
             onPressed: _removeDarts,
           ),
           IconButton(
-            tooltip: 'Stop auto-scoring',
+            tooltip: l10n.autoScorerStop,
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.stop_circle_outlined),
             onPressed: _stop,
@@ -449,7 +454,7 @@ class _AutoScorerBoardOverlayState
       children: [
         Expanded(
           child: Text(
-            _error ?? 'Auto-scoring ready',
+            _error ?? l10n.autoScorerReady,
             style: TextStyle(
                 color: _error != null ? scheme.error : scheme.onSurfaceVariant),
             maxLines: 1,
@@ -468,7 +473,7 @@ class _AutoScorerBoardOverlayState
           FilledButton.tonalIcon(
             onPressed: _start,
             icon: const Icon(Icons.videocam_outlined, size: 18),
-            label: const Text('Start camera'),
+            label: Text(l10n.autoScorerStartCamera),
           ),
       ],
     );
