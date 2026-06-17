@@ -61,7 +61,7 @@ abstract class _$AutoScorerCameraZoom extends $AsyncNotifier<double> {
   FutureOr<double> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<double>, double>;
     final element =
         ref.element
@@ -71,6 +71,6 @@ abstract class _$AutoScorerCameraZoom extends $AsyncNotifier<double> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

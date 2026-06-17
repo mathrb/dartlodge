@@ -58,7 +58,7 @@ final class PlayerStatsPageProvider
   }
 }
 
-String _$playerStatsPageHash() => r'c916220955495e5f6d5e8b97ef82df90d2642f66';
+String _$playerStatsPageHash() => r'c820b227faaafc17ecb4c2e8391da12ab8289852';
 
 final class PlayerStatsPageFamily extends $Family
     with
@@ -92,7 +92,7 @@ abstract class _$PlayerStatsPage extends $Notifier<PlayerStatsPageState> {
   PlayerStatsPageState build(String playerId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PlayerStatsPageState, PlayerStatsPageState>;
     final element =
         ref.element
@@ -102,7 +102,7 @@ abstract class _$PlayerStatsPage extends $Notifier<PlayerStatsPageState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }
 

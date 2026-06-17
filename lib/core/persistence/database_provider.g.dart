@@ -2170,7 +2170,7 @@ abstract class _$LastGameConfig extends $AsyncNotifier<GameConfig?> {
   FutureOr<GameConfig?> build(String category);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<GameConfig?>, GameConfig?>;
     final element =
         ref.element
@@ -2180,7 +2180,7 @@ abstract class _$LastGameConfig extends $AsyncNotifier<GameConfig?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }
 

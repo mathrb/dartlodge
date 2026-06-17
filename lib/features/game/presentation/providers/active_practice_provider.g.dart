@@ -53,7 +53,7 @@ final class ActivePracticeNotifierProvider
 }
 
 String _$activePracticeNotifierHash() =>
-    r'ec6d3badbe56d6ac509855f6062fe6d069f465b8';
+    r'0eb7ec555117a3e4e573afcaa8fb4e81e8acee7c';
 
 final class ActivePracticeNotifierFamily extends $Family
     with
@@ -88,7 +88,7 @@ abstract class _$ActivePracticeNotifier
   FutureOr<ActivePracticeState?> build(String gameId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<AsyncValue<ActivePracticeState?>, ActivePracticeState?>;
@@ -103,6 +103,6 @@ abstract class _$ActivePracticeNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

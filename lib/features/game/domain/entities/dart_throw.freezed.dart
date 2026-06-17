@@ -15,10 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DartThrow {
 
-@JsonKey(name: 'dart_id') String get dartId;@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'competitor_id') String get competitorId;@JsonKey(name: 'player_id') String get playerId;@JsonKey(name: 'turn_number') int get turnNumber;@JsonKey(name: 'dart_number') int get dartNumber;// 1, 2, or 3
-@JsonKey(name: 'segment') String get segment;// canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
-@JsonKey(name: 'score') int get score;@JsonKey(name: 'x') double? get x;// coordinates for auto-scoring
-@JsonKey(name: 'y') double? get y;
+@JsonKey(name: 'dart_id') String get dartId;@JsonKey(name: 'game_id') String get gameId;@JsonKey(name: 'competitor_id') String get competitorId;@JsonKey(name: 'player_id') String get playerId;@JsonKey(name: 'turn_number') int get turnNumber;@JsonKey(name: 'dart_number') int get dartNumber;@JsonKey(name: 'segment') String get segment;@JsonKey(name: 'score') int get score;@JsonKey(name: 'x') double? get x;@JsonKey(name: 'y') double? get y;
 /// Create a copy of DartThrow
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -230,12 +227,9 @@ class _DartThrow implements DartThrow {
 @override@JsonKey(name: 'player_id') final  String playerId;
 @override@JsonKey(name: 'turn_number') final  int turnNumber;
 @override@JsonKey(name: 'dart_number') final  int dartNumber;
-// 1, 2, or 3
 @override@JsonKey(name: 'segment') final  String segment;
-// canonical: '20', 'T20', 'D20', 'SB', 'DB', 'MISS'
 @override@JsonKey(name: 'score') final  int score;
 @override@JsonKey(name: 'x') final  double? x;
-// coordinates for auto-scoring
 @override@JsonKey(name: 'y') final  double? y;
 
 /// Create a copy of DartThrow

@@ -47,7 +47,7 @@ abstract class _$RouterNotifier extends $Notifier<GoRouter> {
   GoRouter build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<GoRouter, GoRouter>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$RouterNotifier extends $Notifier<GoRouter> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

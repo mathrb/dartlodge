@@ -14,13 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PlayerStatsPageState {
 
- StatsTabIndex get activeTab; int? get selectedStartingScore; String? get selectedCricketVariant;// Cricket target-mode cohort filter. Defaults to `'fixed'` so existing
-// career stats continue to render the canonical 15..20+Bull board.
-// Random/Crazy cohorts are kept separate at the loader level (see
-// `StatisticsRepository.getPlayerStats(cricketTargetMode: ...)`); the
-// Cricket tab now exposes a segmented selector so the user can switch
-// between cohorts (#260).
- String get selectedCricketTargetMode; GameType get selectedPracticeGameType; StatsTimeRange get timeRange;
+ StatsTabIndex get activeTab; int? get selectedStartingScore; String? get selectedCricketVariant; String get selectedCricketTargetMode; GameType get selectedPracticeGameType; StatsTimeRange get timeRange;
 /// Create a copy of PlayerStatsPageState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -223,12 +217,6 @@ class _PlayerStatsPageState implements PlayerStatsPageState {
 @override@JsonKey() final  StatsTabIndex activeTab;
 @override@JsonKey() final  int? selectedStartingScore;
 @override@JsonKey() final  String? selectedCricketVariant;
-// Cricket target-mode cohort filter. Defaults to `'fixed'` so existing
-// career stats continue to render the canonical 15..20+Bull board.
-// Random/Crazy cohorts are kept separate at the loader level (see
-// `StatisticsRepository.getPlayerStats(cricketTargetMode: ...)`); the
-// Cricket tab now exposes a segmented selector so the user can switch
-// between cohorts (#260).
 @override@JsonKey() final  String selectedCricketTargetMode;
 @override@JsonKey() final  GameType selectedPracticeGameType;
 @override@JsonKey() final  StatsTimeRange timeRange;

@@ -3,7 +3,7 @@ description: Local-first open-source darts scoring and statistics app for Androi
 version: 0.1.0+0
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -19,12 +19,10 @@ dependencies:
   go_router: ^17.1.0
   
   # Database (drift everywhere: NativeDatabase on mobile/desktop, WasmDatabase on web)
-  # Pin sqlite3_flutter_libs to the 0.5.x line: 0.6.0+eol is an empty marker
-  # package that bundles no native libs, breaking Android. See issue tracking
-  # the long-term move to sqlite3 v3.
-  drift: ^2.31.0
-  sqlite3: ^2.9.4
-  sqlite3_flutter_libs: ^0.5.41
+  # sqlite3 3.x bundles the native SQLite library itself via Dart build hooks
+  # (native assets) — no sqlite3_flutter_libs, no Android load workaround (#126).
+  drift: ^2.34.0
+  sqlite3: ^3.3.3
   path: ^1.8.3
   path_provider: ^2.1.1
   
@@ -70,7 +68,7 @@ dependencies:
   
   # Code generation
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.10.0
+  json_annotation: ^4.11.0
 
 dev_dependencies:
   flutter_test:
@@ -78,10 +76,15 @@ dev_dependencies:
   
   # Code generation
   build_runner: ^2.11.1
-  riverpod_generator: ^4.0.3
+  riverpod_generator: ^4.0.4
+  # Resolves to a 3.2.6-dev prerelease: the latest freezed stable (3.2.5) caps
+  # analyzer below 12, but drift_dev 2.34 + riverpod_generator 4.0.4 require
+  # analyzer 12. freezed is a build-time-only codegen dep and its output is
+  # committed + covered by the test suite; drop the prerelease once a freezed
+  # stable supports analyzer 12 (#126).
   freezed: ^3.2.5
   json_serializable: ^6.12.0
-  drift_dev: ^2.13.0
+  drift_dev: ^2.34.0
   
   # Linting
   flutter_lints: ^6.0.0
