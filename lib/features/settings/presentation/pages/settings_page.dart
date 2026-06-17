@@ -7,6 +7,7 @@ import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/language_selector.dart';
@@ -23,13 +24,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _downloading = false;
 
   Future<void> _downloadDatabase() async {
+    final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _downloading = true);
     try {
       await DriftHelper.instance.downloadDatabase();
     } catch (e) {
       if (mounted) {
-        messenger.showSnackBar(SnackBar(content: Text('Export failed: $e')));
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.settingsExportFailed(e.toString()))),
+        );
       }
     } finally {
       if (mounted) setState(() => _downloading = false);
@@ -37,30 +41,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _reportBug() async {
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController();
     final messenger = ScaffoldMessenger.of(context);
     try {
       final submitted = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Report a Bug'),
+          title: Text(l10n.settingsReportBug),
           content: TextField(
             controller: controller,
             maxLines: 4,
             textCapitalization: TextCapitalization.sentences,
-            decoration: const InputDecoration(
-              hintText: 'Describe what went wrong…',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: l10n.settingsReportBugHint,
+              border: const OutlineInputBorder(),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
+              child: Text(l10n.commonCancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Send'),
+              child: Text(l10n.commonSend),
             ),
           ],
         ),
@@ -73,7 +78,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
       if (mounted) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Thanks! Your feedback has been sent.')),
+          SnackBar(content: Text(l10n.settingsReportBugThanks)),
         );
       }
     } finally {
@@ -82,18 +87,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   Future<void> _confirmAndErase(BuildContext context) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Erase All Data?'),
-        content: const Text(
-          'This will permanently delete all players, games, and statistics. '
-          'This cannot be undone.',
-        ),
+        title: Text(l10n.settingsEraseAllDataTitle),
+        content: Text(l10n.settingsEraseAllDataConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -101,7 +104,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               foregroundColor: Theme.of(ctx).colorScheme.onError,
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Erase All Data'),
+            child: Text(l10n.settingsEraseAllData),
           ),
         ],
       ),
@@ -121,6 +124,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final themeMode =
         ref.watch(settingsProvider).value ?? ThemeMode.system;
     final notifier = ref.read(settingsProvider.notifier);
@@ -140,55 +144,55 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             }
           },
         ),
-        title: const Text('Settings'),
+        title: Text(l10n.settingsTitle),
       ),
       body: ListView(
         children: [
-          _SectionHeader(label: 'Theme', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsThemeSection, cs: cs, tt: tt),
           _ThemeModeSelector(
             value: themeMode,
             onChanged: notifier.setThemeMode,
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'Language', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsLanguageLabel, cs: cs, tt: tt),
           LanguageSelector(
             value: locale,
             onChanged: localeNotifier.setLocale,
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'Auto-scoring', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsAutoScoringSection, cs: cs, tt: tt),
           ListTile(
             leading: const Icon(Icons.center_focus_strong),
-            title: const Text('Camera auto-scoring'),
-            subtitle: const Text('Detection, data collection, and export'),
+            title: Text(l10n.settingsAutoScoringTitle),
+            subtitle: Text(l10n.settingsAutoScoringSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(GameRoutes.autoScorerSettings),
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'About', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsAboutSection, cs: cs, tt: tt),
           _InfoRow(
-            title: 'Version',
+            title: l10n.settingsVersion,
             trailing: ref.watch(appVersionProvider).value ?? '…',
             cs: cs,
             tt: tt,
           ),
           _TapRow(
-            title: 'Open Source Licenses',
+            title: l10n.settingsOpenSourceLicenses,
             onTap: () => showLicensePage(
               context: context,
               applicationName: 'DartLodge',
             ),
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'Feedback', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsFeedbackSection, cs: cs, tt: tt),
           ListTile(
             leading: const Icon(Icons.bug_report_outlined),
-            title: const Text('Report a Bug'),
-            subtitle: const Text('Let us know if something went wrong'),
+            title: Text(l10n.settingsReportBug),
+            subtitle: Text(l10n.settingsReportBugSubtitle),
             onTap: _reportBug,
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'Debug', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsDebugSection, cs: cs, tt: tt),
           ListTile(
             leading: _downloading
                 ? const SizedBox(
@@ -197,13 +201,13 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.download_outlined),
-            title: const Text('Download Database'),
-            subtitle: const Text('Export SQLite file for debugging'),
+            title: Text(l10n.settingsDownloadDatabase),
+            subtitle: Text(l10n.settingsDownloadDatabaseSubtitle),
             enabled: !_downloading,
             onTap: _downloadDatabase,
           ),
           const Divider(height: 1),
-          _SectionHeader(label: 'Danger Zone', cs: cs, tt: tt),
+          _SectionHeader(label: l10n.settingsDangerZoneSection, cs: cs, tt: tt),
           ListTile(
             leading: _erasing
                 ? SizedBox(
@@ -216,10 +220,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   )
                 : Icon(Icons.delete_forever_outlined, color: cs.error),
             title: Text(
-              'Erase All Data',
+              l10n.settingsEraseAllData,
               style: TextStyle(color: cs.error),
             ),
-            subtitle: const Text('Permanently delete all players and games'),
+            subtitle: Text(l10n.settingsEraseAllDataSubtitle),
             enabled: !_erasing,
             onTap: () => _confirmAndErase(context),
           ),
@@ -269,27 +273,28 @@ class _ThemeModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.space4,
         vertical: AppSpacing.space2,
       ),
       child: SegmentedButton<ThemeMode>(
-        segments: const [
+        segments: [
           ButtonSegment(
             value: ThemeMode.light,
-            label: Text('Light'),
-            icon: Icon(Icons.light_mode_outlined),
+            label: Text(l10n.settingsThemeLight),
+            icon: const Icon(Icons.light_mode_outlined),
           ),
           ButtonSegment(
             value: ThemeMode.system,
-            label: Text('System'),
-            icon: Icon(Icons.brightness_auto_outlined),
+            label: Text(l10n.settingsThemeSystem),
+            icon: const Icon(Icons.brightness_auto_outlined),
           ),
           ButtonSegment(
             value: ThemeMode.dark,
-            label: Text('Dark'),
-            icon: Icon(Icons.dark_mode_outlined),
+            label: Text(l10n.settingsThemeDark),
+            icon: const Icon(Icons.dark_mode_outlined),
           ),
         ],
         selected: {value},

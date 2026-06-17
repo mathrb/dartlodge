@@ -7,5 +7,118 @@
   "languageSystemDefault": "System default",
   "@languageSystemDefault": {
     "description": "Option to follow the device language"
+  },
+  "settingsTitle": "Settings",
+  "@settingsTitle": {
+    "description": "Settings screen app-bar title"
+  },
+  "settingsThemeSection": "Theme",
+  "@settingsThemeSection": {
+    "description": "Settings section header for theme selection"
+  },
+  "settingsThemeLight": "Light",
+  "@settingsThemeLight": {
+    "description": "Light theme option"
+  },
+  "settingsThemeSystem": "System",
+  "@settingsThemeSystem": {
+    "description": "System (follow device) theme option"
+  },
+  "settingsThemeDark": "Dark",
+  "@settingsThemeDark": {
+    "description": "Dark theme option"
+  },
+  "settingsAutoScoringSection": "Auto-scoring",
+  "@settingsAutoScoringSection": {
+    "description": "Settings section header for camera auto-scoring"
+  },
+  "settingsAutoScoringTitle": "Camera auto-scoring",
+  "@settingsAutoScoringTitle": {
+    "description": "Auto-scoring settings row title"
+  },
+  "settingsAutoScoringSubtitle": "Detection, data collection, and export",
+  "@settingsAutoScoringSubtitle": {
+    "description": "Auto-scoring settings row subtitle"
+  },
+  "settingsAboutSection": "About",
+  "@settingsAboutSection": {
+    "description": "Settings section header for app information"
+  },
+  "settingsVersion": "Version",
+  "@settingsVersion": {
+    "description": "App version row label"
+  },
+  "settingsOpenSourceLicenses": "Open Source Licenses",
+  "@settingsOpenSourceLicenses": {
+    "description": "Row opening the open-source licenses page"
+  },
+  "settingsFeedbackSection": "Feedback",
+  "@settingsFeedbackSection": {
+    "description": "Settings section header for feedback"
+  },
+  "settingsReportBug": "Report a Bug",
+  "@settingsReportBug": {
+    "description": "Report-a-bug row title and dialog title"
+  },
+  "settingsReportBugSubtitle": "Let us know if something went wrong",
+  "@settingsReportBugSubtitle": {
+    "description": "Report-a-bug row subtitle"
+  },
+  "settingsReportBugHint": "Describe what went wrong…",
+  "@settingsReportBugHint": {
+    "description": "Placeholder text in the bug-report text field"
+  },
+  "settingsReportBugThanks": "Thanks! Your feedback has been sent.",
+  "@settingsReportBugThanks": {
+    "description": "Confirmation shown after sending bug feedback"
+  },
+  "settingsDebugSection": "Debug",
+  "@settingsDebugSection": {
+    "description": "Settings section header for debug tools"
+  },
+  "settingsDownloadDatabase": "Download Database",
+  "@settingsDownloadDatabase": {
+    "description": "Row that exports the SQLite database"
+  },
+  "settingsDownloadDatabaseSubtitle": "Export SQLite file for debugging",
+  "@settingsDownloadDatabaseSubtitle": {
+    "description": "Download-database row subtitle"
+  },
+  "settingsExportFailed": "Export failed: {error}",
+  "@settingsExportFailed": {
+    "description": "Snackbar shown when the database export fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDangerZoneSection": "Danger Zone",
+  "@settingsDangerZoneSection": {
+    "description": "Settings section header for destructive actions"
+  },
+  "settingsEraseAllData": "Erase All Data",
+  "@settingsEraseAllData": {
+    "description": "Erase-all-data row title and confirm button"
+  },
+  "settingsEraseAllDataSubtitle": "Permanently delete all players and games",
+  "@settingsEraseAllDataSubtitle": {
+    "description": "Erase-all-data row subtitle"
+  },
+  "settingsEraseAllDataTitle": "Erase All Data?",
+  "@settingsEraseAllDataTitle": {
+    "description": "Title of the erase-all-data confirmation dialog"
+  },
+  "settingsEraseAllDataConfirm": "This will permanently delete all players, games, and statistics. This cannot be undone.",
+  "@settingsEraseAllDataConfirm": {
+    "description": "Body of the erase-all-data confirmation dialog"
+  },
+  "commonCancel": "Cancel",
+  "@commonCancel": {
+    "description": "Generic Cancel button"
+  },
+  "commonSend": "Send",
+  "@commonSend": {
+    "description": "Generic Send button"
   }
 }
