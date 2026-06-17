@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/features/game/presentation/pages/variant_selection_page.dart';
@@ -73,7 +75,7 @@ Widget _buildApp(
       playerRepositoryProvider.overrideWithValue(_FakePlayerRepository()),
       gameSetupProvider.overrideWith(() => _FixedGameSetupNotifier(initialState)),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
@@ -64,6 +65,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return SafeArea(
       child: Padding(
@@ -90,7 +92,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
               ),
             ),
             Text(
-              'GAME CONFIG',
+              l10n.setupGameConfig,
               style: tt.headlineMedium?.copyWith(
                 color: cs.onSurface,
                 letterSpacing: -0.5,
@@ -102,7 +104,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ..._buildConfigFields(),
+                    ..._buildConfigFields(l10n),
                     const SizedBox(height: AppSpacing.space6),
                   ],
                 ),
@@ -123,7 +125,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                       BorderRadius.circular(AppTheme.radiusXLarge),
                 ),
               ),
-              child: const Text('APPLY'),
+              child: Text(l10n.setupApply),
             ),
           ],
         ),
@@ -131,23 +133,23 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     );
   }
 
-  List<Widget> _buildConfigFields() {
+  List<Widget> _buildConfigFields(AppLocalizations l10n) {
     return _draftConfig.map(
-      x01: _buildX01Fields,
-      cricket: _buildCricketFields,
-      aroundTheClock: _buildAroundTheClockFields,
-      shanghai: _buildShanghaiFields,
+      x01: (c) => _buildX01Fields(l10n, c),
+      cricket: (c) => _buildCricketFields(l10n, c),
+      aroundTheClock: (c) => _buildAroundTheClockFields(l10n, c),
+      shanghai: (c) => _buildShanghaiFields(l10n, c),
       catch40: (_) => [],
       bobs27: (_) => [],
-      checkoutPractice: _buildCheckoutPracticeFields,
-      countUp: _buildCountUpFields,
+      checkoutPractice: (c) => _buildCheckoutPracticeFields(l10n, c),
+      countUp: (c) => _buildCountUpFields(l10n, c),
     );
   }
 
-  List<Widget> _buildX01Fields(X01GameConfig c) {
+  List<Widget> _buildX01Fields(AppLocalizations l10n, X01GameConfig c) {
     return [
       _FieldSection(
-        label: 'TYPE',
+        label: l10n.setupSectionType,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -187,7 +189,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       ),
       const SizedBox(height: AppSpacing.space4),
       _FieldSection(
-        label: 'IN STRATEGY',
+        label: l10n.setupSectionInStrategy,
         child: _SegmentedOptionGroup<String>(
           values: const ['straight', 'double', 'master'],
           labels: const ['STRAIGHT', 'DOUBLE', 'MASTER'],
@@ -198,7 +200,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       ),
       const SizedBox(height: AppSpacing.space4),
       _FieldSection(
-        label: 'OUT STRATEGY',
+        label: l10n.setupSectionOutStrategy,
         child: _SegmentedOptionGroup<String>(
           values: const ['straight', 'double', 'master'],
           labels: const ['STRAIGHT', 'DOUBLE', 'MASTER'],
@@ -213,7 +215,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         children: [
           Expanded(
             child: _FieldSection(
-              label: 'ROUNDS',
+              label: l10n.setupSectionRounds,
               child: _RoundsDropdown(
                 value: c.totalRounds,
                 items: const [null, 10, 15, 20, 25, 50],
@@ -225,7 +227,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
           const SizedBox(width: AppSpacing.space4),
           Expanded(
             child: _FieldSection(
-              label: 'LEGS TO WIN',
+              label: l10n.setupSectionLegsToWin,
               child: _StepperContainer(
                 child: ConfigStepperWidget(
                   value: c.legsToWin,
@@ -248,10 +250,10 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     ];
   }
 
-  List<Widget> _buildCricketFields(CricketGameConfig c) {
+  List<Widget> _buildCricketFields(AppLocalizations l10n, CricketGameConfig c) {
     return [
       _FieldSection(
-        label: 'SCORING',
+        label: l10n.setupSectionScoring,
         child: _SegmentedOptionGroup<String>(
           values: const ['standard', 'cut-throat', 'no-score'],
           labels: const ['STANDARD', 'CUT-THROAT', 'NO SCORE'],
@@ -262,7 +264,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
       ),
       const SizedBox(height: AppSpacing.space4),
       _FieldSection(
-        label: 'TARGETS',
+        label: l10n.setupSectionTargets,
         child: _SegmentedOptionGroup<String>(
           values: const ['fixed', 'random', 'crazy'],
           labels: const ['FIXED', 'RANDOM', 'CRAZY'],
@@ -277,7 +279,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
         children: [
           Expanded(
             child: _FieldSection(
-              label: 'ROUNDS',
+              label: l10n.setupSectionRounds,
               child: _RoundsDropdown(
                 value: c.totalRounds,
                 items: const [null, 10, 15, 20, 25, 50],
@@ -289,7 +291,7 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
           const SizedBox(width: AppSpacing.space4),
           Expanded(
             child: _FieldSection(
-              label: 'LEGS TO WIN',
+              label: l10n.setupSectionLegsToWin,
               child: _StepperContainer(
                 child: ConfigStepperWidget(
                   value: c.legsToWin,
@@ -312,10 +314,11 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     ];
   }
 
-  List<Widget> _buildAroundTheClockFields(AroundTheClockGameConfig c) {
+  List<Widget> _buildAroundTheClockFields(
+      AppLocalizations l10n, AroundTheClockGameConfig c) {
     return [
       _FieldSection(
-        label: 'VARIANT',
+        label: l10n.setupSectionVariant,
         child: _SegmentedOptionGroup<String>(
           values: const ['standard', 'reverse', 'doublesOnly'],
           labels: const ['STANDARD', 'REVERSE', 'DOUBLES ONLY'],
@@ -327,10 +330,11 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     ];
   }
 
-  List<Widget> _buildCheckoutPracticeFields(CheckoutPracticeGameConfig c) {
+  List<Widget> _buildCheckoutPracticeFields(
+      AppLocalizations l10n, CheckoutPracticeGameConfig c) {
     return [
       _FieldSection(
-        label: 'TARGET SUCCESSES',
+        label: l10n.setupSectionTargetSuccesses,
         child: _RoundsDropdown(
           value: c.targetSuccesses,
           items: const [null, 1, 2, 3, 5, 10, 20],
@@ -342,10 +346,10 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     ];
   }
 
-  List<Widget> _buildShanghaiFields(ShanghaiGameConfig c) {
+  List<Widget> _buildShanghaiFields(AppLocalizations l10n, ShanghaiGameConfig c) {
     return [
       _FieldSection(
-        label: 'ROUNDS',
+        label: l10n.setupSectionRounds,
         child: _RoundsDropdown(
           // `7` is the default on `ShanghaiGameConfig.totalRounds` (the
           // classic Shanghai rule plays the 20→bull set in 7 rounds), so
@@ -363,10 +367,10 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
     ];
   }
 
-  List<Widget> _buildCountUpFields(CountUpGameConfig c) {
+  List<Widget> _buildCountUpFields(AppLocalizations l10n, CountUpGameConfig c) {
     return [
       _FieldSection(
-        label: 'ROUNDS',
+        label: l10n.setupSectionRounds,
         child: _RoundsDropdown(
           value: c.totalRounds,
           items: GameConfigurationConstants.countUpAllowedRounds,
@@ -528,7 +532,7 @@ class _CustomScoreField extends StatelessWidget {
         style: tt.bodyLarge?.copyWith(color: cs.onSurface),
         decoration: InputDecoration(
           border: InputBorder.none,
-          hintText: 'Custom score',
+          hintText: AppLocalizations.of(context).setupCustomScoreHint,
           hintStyle: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
           isDense: true,
         ),
@@ -573,7 +577,7 @@ class _RoundsDropdown extends StatelessWidget {
           icon: Icon(
             Icons.expand_more,
             color: cs.primaryFixed,
-            semanticLabel: 'Expand rounds',
+            semanticLabel: AppLocalizations.of(context).setupExpandRounds,
           ),
           dropdownColor: cs.surfaceContainerLow,
           style: tt.bodyLarge?.copyWith(color: cs.onSurface),

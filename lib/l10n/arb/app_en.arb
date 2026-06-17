@@ -890,5 +890,228 @@
         "type": "String"
       }
     }
+  },
+  "setupGameConfig": "GAME CONFIG",
+  "@setupGameConfig": {
+    "description": "Game config bottom-sheet header"
+  },
+  "setupApply": "APPLY",
+  "@setupApply": {
+    "description": "Game config Apply button"
+  },
+  "setupSectionType": "TYPE",
+  "@setupSectionType": {
+    "description": "Config field label: X01 score type"
+  },
+  "setupSectionInStrategy": "IN STRATEGY",
+  "@setupSectionInStrategy": {
+    "description": "Config field label: X01 in (opening) strategy"
+  },
+  "setupSectionOutStrategy": "OUT STRATEGY",
+  "@setupSectionOutStrategy": {
+    "description": "Config field label: X01 out (checkout) strategy"
+  },
+  "setupSectionRounds": "ROUNDS",
+  "@setupSectionRounds": {
+    "description": "Config field label: rounds (also the metadata chip)"
+  },
+  "setupSectionLegsToWin": "LEGS TO WIN",
+  "@setupSectionLegsToWin": {
+    "description": "Config field label: legs to win"
+  },
+  "setupSectionScoring": "SCORING",
+  "@setupSectionScoring": {
+    "description": "Config field label: cricket scoring"
+  },
+  "setupSectionTargets": "TARGETS",
+  "@setupSectionTargets": {
+    "description": "Config field label: cricket target mode"
+  },
+  "setupSectionVariant": "VARIANT",
+  "@setupSectionVariant": {
+    "description": "Config field label: Around the Clock variant"
+  },
+  "setupSectionTargetSuccesses": "TARGET SUCCESSES",
+  "@setupSectionTargetSuccesses": {
+    "description": "Config field label: checkout-practice target successes"
+  },
+  "setupCustomScoreHint": "Custom score",
+  "@setupCustomScoreHint": {
+    "description": "Hint text in the custom X01 score field"
+  },
+  "setupExpandRounds": "Expand rounds",
+  "@setupExpandRounds": {
+    "description": "Accessibility label for the rounds dropdown expander"
+  },
+  "setupActiveLineup": "ACTIVE LINEUP",
+  "@setupActiveLineup": {
+    "description": "Player selection: active lineup section header"
+  },
+  "setupRoster": "ROSTER",
+  "@setupRoster": {
+    "description": "Player selection: roster section header"
+  },
+  "setupAddNewPlayer": "Add new player",
+  "@setupAddNewPlayer": {
+    "description": "Accessibility label for the add-player icon"
+  },
+  "setupLineupCountMax": "{count} / {max} Players",
+  "@setupLineupCountMax": {
+    "description": "Selected / max player count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "setupLineupCount": "{count, plural, one{1 Player} other{{count} Players}}",
+  "@setupLineupCount": {
+    "description": "Selected player count when there is no max",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "setupSelectAtLeastOne": "Select at least one player",
+  "@setupSelectAtLeastOne": {
+    "description": "Tooltip on the disabled START GAME button"
+  },
+  "setupStartGame": "START GAME",
+  "@setupStartGame": {
+    "description": "Start-game button label"
+  },
+  "setupStartGameSemantic": "Start game",
+  "@setupStartGameSemantic": {
+    "description": "Accessibility label for the start-game icon"
+  },
+  "setupCouldNotStartSelection": "Could not start game. Please check your selection.",
+  "@setupCouldNotStartSelection": {
+    "description": "SnackBar when the game can't start (selection problem)"
+  },
+  "setupCouldNotStartRetry": "Could not start game. Please try again.",
+  "@setupCouldNotStartRetry": {
+    "description": "SnackBar when the game can't start (unexpected error)"
+  },
+  "setupGameConfigSemantic": "Game configuration",
+  "@setupGameConfigSemantic": {
+    "description": "Accessibility label for the config-summary chip icon"
+  },
+  "setupEditConfig": "Edit game config",
+  "@setupEditConfig": {
+    "description": "Accessibility label for the edit-config icon"
+  },
+  "setupNoPlayersSelected": "No players selected",
+  "@setupNoPlayersSelected": {
+    "description": "Accessibility label for the empty-lineup icon"
+  },
+  "setupTapToAdd": "Tap a player from the roster to add",
+  "@setupTapToAdd": {
+    "description": "Empty-lineup hint"
+  },
+  "setupDragToReorder": "Drag to reorder",
+  "@setupDragToReorder": {
+    "description": "Accessibility label for the reorder drag handle"
+  },
+  "setupSetHandicap": "Set handicap",
+  "@setupSetHandicap": {
+    "description": "Tooltip for the handicap chip"
+  },
+  "setupRemovePlayer": "Remove {name}",
+  "@setupRemovePlayer": {
+    "description": "Accessibility label for the remove-player button",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "setupSelected": "Selected",
+  "@setupSelected": {
+    "description": "Accessibility label for a selected roster cell"
+  },
+  "setupMaxPlayersReached": "Maximum {max} players reached",
+  "@setupMaxPlayersReached": {
+    "description": "Tooltip on a disabled roster cell at max players",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "setupPlayerNameLabel": "Player name",
+  "@setupPlayerNameLabel": {
+    "description": "Label for the create-player name field"
+  },
+  "setupRoundsInfinite": "∞ Rounds",
+  "@setupRoundsInfinite": {
+    "description": "Config summary chip: unlimited rounds"
+  },
+  "setupRoundsCount": "{count, plural, one{1 Round} other{{count} Rounds}}",
+  "@setupRoundsCount": {
+    "description": "Config summary chip: round count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "setupLegsCount": "{count, plural, one{{count} leg} other{{count} legs}}",
+  "@setupLegsCount": {
+    "description": "Config summary chip: leg count (leg is a darts loanword)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "setupGameSelection": "GAME SELECTION",
+  "@setupGameSelection": {
+    "description": "Variant selection breadcrumb label"
+  },
+  "setupSelectVariantHint": "Select your match variation to begin",
+  "@setupSelectVariantHint": {
+    "description": "Variant selection instruction line"
+  },
+  "setupLatestPlayed": "✦ LATEST PLAYED",
+  "@setupLatestPlayed": {
+    "description": "Badge on the last-played config card"
+  },
+  "setupChipIn": "IN",
+  "@setupChipIn": {
+    "description": "Metadata chip label: in (opening) strategy"
+  },
+  "setupChipOut": "OUT",
+  "@setupChipOut": {
+    "description": "Metadata chip label: out (checkout) strategy"
+  },
+  "setupChipLegs": "LEGS",
+  "@setupChipLegs": {
+    "description": "Metadata chip label: legs (darts loanword)"
+  },
+  "setupCustomComingSoon": "Custom configuration coming soon",
+  "@setupCustomComingSoon": {
+    "description": "Tooltip on the disabled Custom variant row"
+  },
+  "setupHowToPlay": "How to play {title}",
+  "@setupHowToPlay": {
+    "description": "Info-icon tooltip; title is the variant name",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "setupSelectVariant": "Select {title}",
+  "@setupSelectVariant": {
+    "description": "Accessibility label for a variant row chevron; title is the variant name",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   }
 }

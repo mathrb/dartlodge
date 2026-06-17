@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
@@ -29,30 +30,29 @@ String _strategyLabel(String strategy) => switch (strategy) {
   _ => strategy,
 };
 
-String _configSummaryFor(GameConfig config) {
+String _roundsLabel(AppLocalizations l10n, int? rounds) =>
+    rounds == null ? l10n.setupRoundsInfinite : l10n.setupRoundsCount(rounds);
+
+String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
   return config.maybeMap(
     x01: (c) {
-      final rounds = c.totalRounds;
-      final roundsLabel = rounds == null ? '∞ Rounds' : (rounds == 1 ? '1 Round' : '$rounds Rounds');
       // Surface the in-strategy when the user picked something other than
       // the straight default — Double-In / Master-In materially change
       // the leg's opening and shouldn't get hidden from the setup chip
-      // (#329).
+      // (#329). In/Out and the strategy names stay fixed English (darts
+      // jargon); only the rounds label is localized.
       final inLabel = c.inStrategy == 'straight'
           ? ''
           : '${_strategyLabel(c.inStrategy)} In · ';
-      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · $roundsLabel';
+      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)}';
     },
-    cricket: (c) {
-      final rounds = c.totalRounds;
-      final roundsLabel = rounds == null ? '∞ Rounds' : (rounds == 1 ? '1 Round' : '$rounds Rounds');
-      return '${c.scoring} · $roundsLabel · ${c.legsToWin} ${c.legsToWin == 1 ? 'leg' : 'legs'}';
-    },
+    cricket: (c) =>
+        '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}',
     aroundTheClock: (_) => 'Around the Clock',
     catch40: (_) => 'Catch 40',
     bobs27: (_) => "Bob's 27",
-    shanghai: (c) => 'Shanghai · ${c.totalRounds} Rounds',
-    countUp: (c) => 'Count-Up · ${c.totalRounds} Rounds',
+    shanghai: (c) => 'Shanghai · ${_roundsLabel(l10n, c.totalRounds)}',
+    countUp: (c) => 'Count-Up · ${_roundsLabel(l10n, c.totalRounds)}',
     checkoutPractice: (_) => '170 Checkout',
     orElse: () => 'Game',
   );
@@ -111,6 +111,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
 
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final setupState = ref.watch(gameSetupProvider);
     final notifier = ref.read(gameSetupProvider.notifier);
 
@@ -169,9 +170,9 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                   icon: Icon(
                     Icons.settings,
                     color: cs.onSurface,
-                    semanticLabel: 'Settings',
+                    semanticLabel: l10n.settingsTitle,
                   ),
-                  tooltip: 'Settings',
+                  tooltip: l10n.settingsTitle,
                   onPressed: () => context.push(GameRoutes.settings),
                 ),
               ),
@@ -184,7 +185,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             if (config != null && _configHasEditableFields(config))
               Center(
                 child: _ConfigSummaryChip(
-                  config: config,
+                  summary: _configSummaryFor(l10n, config),
                   onTap: () => _openConfigSheet(context, setupState),
                 ),
               ),
@@ -200,7 +201,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               child: Row(
                 children: [
                   Text(
-                    'ACTIVE LINEUP',
+                    l10n.setupActiveLineup,
                     style: tt.labelSmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       letterSpacing: 1.2,
@@ -209,8 +210,8 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                   const Spacer(),
                   Text(
                     maxPlayers != null
-                        ? '${selectedIds.length} / $maxPlayers Players'
-                        : '${selectedIds.length} ${selectedIds.length == 1 ? 'Player' : 'Players'}',
+                        ? l10n.setupLineupCountMax(selectedIds.length, maxPlayers)
+                        : l10n.setupLineupCount(selectedIds.length),
                     style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
@@ -241,7 +242,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               child: Row(
                 children: [
                   Text(
-                    'ROSTER',
+                    l10n.setupRoster,
                     style: tt.labelSmall?.copyWith(
                       color: cs.onSurfaceVariant,
                       letterSpacing: 1.2,
@@ -265,11 +266,11 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                             Icons.person_add_outlined,
                             size: 14,
                             color: cs.primaryFixed,
-                            semanticLabel: 'Add new player',
+                            semanticLabel: l10n.setupAddNewPlayer,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'NEW PLAYER',
+                            l10n.playersNewPlayer.toUpperCase(),
                             style: tt.labelSmall?.copyWith(color: cs.primaryFixed),
                           ),
                         ],
@@ -302,7 +303,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                   ),
                   loading: () => const LoadingSpinnerWidget(),
                   error: (e, _) => ErrorRetryWidget(
-                    message: 'Failed to load players: $e',
+                    message: l10n.statsPlayersLoadFailed(e.toString()),
                     onRetry: () => ref.invalidate(allPlayersProvider),
                   ),
                 ),
@@ -318,7 +319,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                 AppSpacing.space4,
               ),
               child: Tooltip(
-                message: canStart ? '' : 'Select at least one player',
+                message: canStart ? '' : l10n.setupSelectAtLeastOne,
                 child: SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
@@ -349,11 +350,11 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                             width: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Icon(
+                        : Icon(
                             Icons.sports_score,
-                            semanticLabel: 'Start game',
+                            semanticLabel: l10n.setupStartGameSemantic,
                           ),
-                    label: const Text('START GAME'),
+                    label: Text(l10n.setupStartGame),
                   ),
                 ),
               ),
@@ -427,6 +428,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     GameType? gameType,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     final router = GoRouter.of(context);
     setState(() => _isStarting = true);
     try {
@@ -434,9 +436,8 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
       if (!mounted) return;
       if (gameId == null) {
         messenger.showSnackBar(
-          const SnackBar(
-            content:
-                Text('Could not start game. Please check your selection.'),
+          SnackBar(
+            content: Text(l10n.setupCouldNotStartSelection),
           ),
         );
       } else {
@@ -451,8 +452,8 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     } catch (_) {
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Could not start game. Please try again.'),
+        SnackBar(
+          content: Text(l10n.setupCouldNotStartRetry),
         ),
       );
     } finally {
@@ -464,15 +465,19 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
 // ── Config summary chip ────────────────────────────────────────────────────────
 
 class _ConfigSummaryChip extends StatelessWidget {
-  const _ConfigSummaryChip({required this.config, required this.onTap});
+  const _ConfigSummaryChip({
+    required this.summary,
+    required this.onTap,
+  });
 
-  final GameConfig config;
+  final String summary;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -495,11 +500,11 @@ class _ConfigSummaryChip extends StatelessWidget {
               Icons.settings_input_component,
               size: 16,
               color: cs.primaryFixed,
-              semanticLabel: 'Game configuration',
+              semanticLabel: l10n.setupGameConfigSemantic,
             ),
             const SizedBox(width: AppSpacing.space3),
             Text(
-              _configSummaryFor(config),
+              summary,
               style: tt.labelMedium?.copyWith(
                 color: cs.onSurface,
                 letterSpacing: 1.0,
@@ -510,7 +515,7 @@ class _ConfigSummaryChip extends StatelessWidget {
               Icons.edit_outlined,
               size: 16,
               color: cs.onSurfaceVariant,
-              semanticLabel: 'Edit game config',
+              semanticLabel: l10n.setupEditConfig,
             ),
           ],
         ),
@@ -554,6 +559,7 @@ class _ActiveLineup extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     if (selectedPlayerIds.isEmpty) {
       return Padding(
@@ -568,11 +574,11 @@ class _ActiveLineup extends StatelessWidget {
               Icons.person_add_outlined,
               size: 28,
               color: cs.onSurfaceVariant,
-              semanticLabel: 'No players selected',
+              semanticLabel: l10n.setupNoPlayersSelected,
             ),
             const SizedBox(height: AppSpacing.space2),
             Text(
-              'Tap a player from the roster to add',
+              l10n.setupTapToAdd,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
@@ -631,6 +637,7 @@ class _ActivePlayerCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final initials = _initials(player.name);
 
     final statsAsync = ref.watch(playerStatsProvider(player.playerId));
@@ -664,7 +671,7 @@ class _ActivePlayerCard extends ConsumerWidget {
                   Icons.drag_indicator,
                   size: 20,
                   color: cs.onSurfaceVariant,
-                  semanticLabel: 'Drag to reorder',
+                  semanticLabel: l10n.setupDragToReorder,
                 ),
               ),
             ),
@@ -742,7 +749,7 @@ class _ActivePlayerCard extends ConsumerWidget {
               icon: Icon(
                 Icons.remove_circle_outline,
                 color: cs.onSurfaceVariant,
-                semanticLabel: 'Remove ${player.name}',
+                semanticLabel: l10n.setupRemovePlayer(player.name),
               ),
               splashColor: cs.error.withValues(alpha: 0.08),
               highlightColor: cs.error.withValues(alpha: 0.08),
@@ -781,7 +788,7 @@ class _HandicapChip extends StatelessWidget {
     return PopupMenuButton<int>(
       initialValue: handicap,
       onSelected: onChanged,
-      tooltip: 'Set handicap',
+      tooltip: AppLocalizations.of(context).setupSetHandicap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
@@ -937,7 +944,7 @@ class _PlayerRosterCell extends StatelessWidget {
                     Icons.check_circle,
                     size: 40,
                     color: cs.primaryFixed.withValues(alpha: 0.60),
-                    semanticLabel: 'Selected',
+                    semanticLabel: AppLocalizations.of(context).setupSelected,
                   ),
               ],
             ),
@@ -959,7 +966,7 @@ class _PlayerRosterCell extends StatelessWidget {
 
     if (isDisabled && maxPlayers != null) {
       cell = Tooltip(
-        message: 'Maximum $maxPlayers players reached',
+        message: AppLocalizations.of(context).setupMaxPlayersReached(maxPlayers!),
         child: cell,
       );
     }
@@ -993,7 +1000,7 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
   Future<void> _createPlayer() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Name cannot be empty');
+      setState(() => _error = AppLocalizations.of(context).playersNameEmpty);
       return;
     }
     setState(() {
@@ -1025,6 +1032,7 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final initials = _initials(_nameController.text);
 
     return SingleChildScrollView(
@@ -1071,7 +1079,7 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
             autofocus: true,
             maxLength: 24,
             decoration: InputDecoration(
-              labelText: 'Player name',
+              labelText: l10n.setupPlayerNameLabel,
               errorText: _error,
               border: const OutlineInputBorder(),
             ),
@@ -1103,7 +1111,7 @@ class _CreatePlayerSheetState extends ConsumerState<_CreatePlayerSheet> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('CREATE PLAYER'),
+                  : Text(l10n.playersCreatePlayer.toUpperCase()),
             ),
           ),
         ],
