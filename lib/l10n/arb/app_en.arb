@@ -1,0 +1,11 @@
+{
+  "@@locale": "en",
+  "settingsLanguageLabel": "Language",
+  "@settingsLanguageLabel": {
+    "description": "Settings row label for language selection"
+  },
+  "languageSystemDefault": "System default",
+  "@languageSystemDefault": {
+    "description": "Option to follow the device language"
+  }
+}

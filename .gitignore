@@ -26,3 +26,6 @@ Thumbs.db
 # Test coverage
 coverage/
 lcov.info
+
+# Generated localizations (gen_l10n regenerates on `flutter pub get`)
+lib/l10n/gen/
