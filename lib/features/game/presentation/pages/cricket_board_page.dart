@@ -469,12 +469,20 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                     gameState: s.gameState,
                     onSegmentTapped: active
                         ? (segment) {
+                            // Manual entry = camera missed this dart; capture
+                            // the frame as labelled training data (#537).
+                            ref
+                                .read(activeCaptureCorrectionSinkProvider)
+                                ?.captureManualEntry(segment: segment);
                             notifier.processDart(segment);
                             Navigator.of(sheetContext).pop();
                           }
                         : (_) {},
                     onMiss: active
                         ? () {
+                            ref
+                                .read(activeCaptureCorrectionSinkProvider)
+                                ?.captureManualEntry(segment: 'MISS');
                             notifier.processDart('MISS');
                             Navigator.of(sheetContext).pop();
                           }

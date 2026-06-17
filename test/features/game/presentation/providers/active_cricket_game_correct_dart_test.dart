@@ -22,9 +22,13 @@ import '../../../../drift_test_base.dart';
 
 class _FakeCorrectionSink implements CaptureCorrectionSink {
   final calls = <({int cameraDartOrdinal, String segment})>[];
+  final manualEntries = <String>[];
   @override
   void correctDart({required int cameraDartOrdinal, required String segment}) =>
       calls.add((cameraDartOrdinal: cameraDartOrdinal, segment: segment));
+  @override
+  void captureManualEntry({required String segment}) =>
+      manualEntries.add(segment);
 }
 
 void main() {
