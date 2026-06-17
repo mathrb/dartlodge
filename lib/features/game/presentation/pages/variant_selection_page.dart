@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/utils/app_text_styles.dart';
@@ -59,8 +60,9 @@ class VariantSelectionPage extends ConsumerWidget {
                 onBack: () => Navigator.of(context).maybePop(),
                 trailing: IconButton(
                   icon: Icon(Icons.settings,
-                      color: cs.onSurface, semanticLabel: 'Settings'),
-                  tooltip: 'Settings',
+                      color: cs.onSurface,
+                      semanticLabel: AppLocalizations.of(context).settingsTitle),
+                  tooltip: AppLocalizations.of(context).settingsTitle,
                   onPressed: () => context.push(GameRoutes.settings),
                 ),
               ),
@@ -278,7 +280,7 @@ class _PageHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
           ),
           child: Text(
-            'GAME SELECTION',
+            AppLocalizations.of(context).setupGameSelection,
             style: AppTextStyles.labelSmall.copyWith(
               color: cs.onSecondaryContainer,
               letterSpacing: 1.5,
@@ -296,7 +298,7 @@ class _PageHeader extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Select your match variation to begin',
+          AppLocalizations.of(context).setupSelectVariantHint,
           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],
@@ -360,7 +362,7 @@ class _LastPlayedCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '✦ LATEST PLAYED',
+                    AppLocalizations.of(context).setupLatestPlayed,
                     style: AppTextStyles.labelSmall.copyWith(color: cs.primaryFixed),
                   ),
                   const SizedBox(height: 8),
@@ -409,29 +411,30 @@ class _MetadataRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final chips = config.maybeMap(
       x01: (c) => [
-        _MetaChip(label: 'IN', value: _strategyLabel(c.inStrategy)),
+        _MetaChip(label: l10n.setupChipIn, value: _strategyLabel(c.inStrategy)),
         const SizedBox(width: 16),
-        _MetaChip(label: 'OUT', value: _strategyLabel(c.outStrategy)),
+        _MetaChip(label: l10n.setupChipOut, value: _strategyLabel(c.outStrategy)),
         const SizedBox(width: 16),
         _MetaChip(
-          label: 'LEGS',
+          label: l10n.setupChipLegs,
           value: c.legsToWin == 1 ? '1' : 'Bo${c.legsToWin}',
         ),
         if (c.totalRounds != null) ...[
           const SizedBox(width: 16),
-          _MetaChip(label: 'ROUNDS', value: '${c.totalRounds}'),
+          _MetaChip(label: l10n.setupSectionRounds, value: '${c.totalRounds}'),
         ],
       ],
       cricket: (c) => [
         _MetaChip(
-          label: 'ROUNDS',
+          label: l10n.setupSectionRounds,
           value: c.totalRounds == null ? '∞' : '${c.totalRounds}',
         ),
         const SizedBox(width: 16),
         _MetaChip(
-          label: 'LEGS',
+          label: l10n.setupChipLegs,
           value: c.legsToWin == 1 ? '1' : 'Bo${c.legsToWin}',
         ),
       ],
@@ -493,6 +496,7 @@ class _VariantRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     Widget row = Semantics(
       label: title,
@@ -531,13 +535,13 @@ class _VariantRow extends StatelessWidget {
                 if (isEnabled && rulesSlug != null)
                   IconButton(
                     icon: Icon(Icons.info_outline, color: cs.onSurfaceVariant),
-                    tooltip: 'How to play $title',
+                    tooltip: l10n.setupHowToPlay(title),
                     onPressed: () => showRules(context, rulesSlug!),
                   ),
                 Icon(
                   Icons.chevron_right,
                   color: cs.onSurfaceVariant,
-                  semanticLabel: 'Select $title',
+                  semanticLabel: l10n.setupSelectVariant(title),
                 ),
               ],
             ),
@@ -550,7 +554,7 @@ class _VariantRow extends StatelessWidget {
 
     if (!isEnabled) {
       row = Tooltip(
-        message: 'Custom configuration coming soon',
+        message: l10n.setupCustomComingSoon,
         child: row,
       );
     }

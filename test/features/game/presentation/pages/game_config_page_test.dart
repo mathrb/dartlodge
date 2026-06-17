@@ -4,6 +4,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
@@ -18,6 +20,8 @@ Future<GameConfig?> _openPanel(
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
   await tester.pumpWidget(MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: kSupportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(
       body: Builder(
@@ -64,6 +68,8 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Builder(
@@ -125,6 +131,8 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
         theme: AppTheme.light(),
         home: Scaffold(
           body: Builder(

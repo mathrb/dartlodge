@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -118,7 +120,7 @@ Widget _buildApp({
         () => _FakeAllPlayersNotifier(players),
       ),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
 }
 
@@ -344,7 +346,7 @@ void main() {
               () => _FakeAllPlayersNotifier(players)),
         ],
         child: Builder(builder: (context) {
-          return MaterialApp.router(routerConfig: router);
+          return MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router);
         }),
       ),
     );
@@ -462,7 +464,7 @@ void main() {
             () => _FakeAllPlayersNotifier(players),
           ),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
@@ -518,7 +520,7 @@ void main() {
           allPlayersProvider
               .overrideWith(() => _FakeAllPlayersNotifier(players)),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
@@ -568,7 +570,7 @@ void main() {
           allPlayersProvider
               .overrideWith(() => _FakeAllPlayersNotifier(players)),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
@@ -613,7 +615,7 @@ void main() {
           allPlayersProvider
               .overrideWith(() => _FakeAllPlayersNotifier(players)),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
@@ -699,7 +701,7 @@ void main() {
             () => _FakeAllPlayersNotifier([]),
           ),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
@@ -805,7 +807,7 @@ void main() {
           allPlayersProvider
               .overrideWith(() => _FakeAllPlayersNotifier([])),
         ],
-        child: MaterialApp.router(
+        child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, 
           routerConfig: GoRouter(
             initialLocation: '/game/player-selection',
             routes: [
