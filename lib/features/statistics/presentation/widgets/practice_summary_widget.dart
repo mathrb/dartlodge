@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/post_game_hero_card_widget.dart';
 import '../../../../core/widgets/post_game_stats_breakdown_widget.dart';
@@ -18,6 +19,7 @@ class PracticeSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return switch (result) {
       AroundTheClockResult() => _AtcSummary(result: result as AroundTheClockResult),
       Catch40Result(:final competitorName, :final score, :final targetsCleared) =>
@@ -26,12 +28,12 @@ class PracticeSummaryWidget extends StatelessWidget {
           subline: 'Catch 40',
           sideStats: [
             PostGameHeroStat(
-              label: 'SCORE',
+              label: l10n.summaryScore.toUpperCase(),
               value: '$score / 120',
               emphasize: true,
             ),
             PostGameHeroStat(
-              label: 'TARGETS',
+              label: l10n.summaryTargets.toUpperCase(),
               value: '$targetsCleared / 40',
             ),
           ],
@@ -49,7 +51,7 @@ class PracticeSummaryWidget extends StatelessWidget {
           muted: bustedToZero,
           sideStats: [
             PostGameHeroStat(
-              label: 'FINAL SCORE',
+              label: l10n.summaryFinalScore.toUpperCase(),
               value: '$finalScore',
               emphasize: !bustedToZero,
               // Negative finals (drill ended on a missed double in the
@@ -58,7 +60,9 @@ class PracticeSummaryWidget extends StatelessWidget {
               // a negative score (#339).
               danger: finalScore < 0,
             ),
-            PostGameHeroStat(label: 'ROUND', value: '$roundReached / 20'),
+            PostGameHeroStat(
+                label: l10n.summaryRound.toUpperCase(),
+                value: '$roundReached / 20'),
           ],
         ),
       CheckoutPracticeResult(
@@ -69,6 +73,7 @@ class PracticeSummaryWidget extends StatelessWidget {
         :final fromScore,
       ) =>
         _buildCheckoutHero(
+          l10n: l10n,
           competitorName: competitorName,
           attempts: attempts,
           successes: successes,
@@ -88,6 +93,7 @@ class PracticeSummaryWidget extends StatelessWidget {
   /// Multi-attempt session shows a success-rate fraction and percentage so
   /// users see all of their attempts, not just the last one (#316).
   Widget _buildCheckoutHero({
+    required AppLocalizations l10n,
     required String competitorName,
     required int attempts,
     required int successes,
@@ -99,8 +105,8 @@ class PracticeSummaryWidget extends StatelessWidget {
     final anySuccess = successes > 0;
 
     final headline = isSingleAttempt
-        ? (anySuccess ? 'Checked out!' : 'Not checked out')
-        : '$successes of $attempts checkouts';
+        ? (anySuccess ? l10n.summaryCheckedOut : l10n.summaryNotCheckedOut)
+        : l10n.summaryNOfMCheckouts(successes, attempts);
     final badge = allCheckedOut ? 'CHECKED OUT' : null;
     final rate = attempts == 0
         ? null
@@ -113,18 +119,18 @@ class PracticeSummaryWidget extends StatelessWidget {
       muted: !anySuccess,
       sideStats: [
         PostGameHeroStat(
-          label: 'DARTS',
+          label: l10n.summaryDarts.toUpperCase(),
           value: '$dartsThrown',
           emphasize: anySuccess,
         ),
         if (isSingleAttempt)
           PostGameHeroStat(
-            label: 'FROM',
+            label: l10n.summaryFrom.toUpperCase(),
             value: '$fromScore',
           )
         else
           PostGameHeroStat(
-            label: 'SUCCESS RATE',
+            label: l10n.summarySuccessRate.toUpperCase(),
             value: rate ?? '—',
             emphasize: anySuccess,
           ),
@@ -140,6 +146,7 @@ class _AtcSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final competitors = result.competitors;
     final winnerId = result.winnerCompetitorId;
     final winner = winnerId == null
@@ -167,20 +174,22 @@ class _AtcSummary extends StatelessWidget {
 
     final hero = PostGameHeroCard(
       badge: isAbandoned
-          ? 'ENDED EARLY'
-          : (result.doublesOnly ? 'DOUBLES ONLY' : null),
-      headline: isAbandoned ? 'No winner' : lead.competitorName,
+          ? l10n.summaryEndedEarly.toUpperCase()
+          : (result.doublesOnly ? l10n.summaryDoublesOnly.toUpperCase() : null),
+      headline: isAbandoned ? l10n.summaryNoWinner : lead.competitorName,
       subline: 'Around the Clock',
       muted: isAbandoned,
       sideStats: isAbandoned
           ? const <PostGameHeroStat>[]
           : [
               PostGameHeroStat(
-                label: 'TURNS',
+                label: l10n.summaryTurns.toUpperCase(),
                 value: '${lead.turnsCompleted}',
                 emphasize: true,
               ),
-              PostGameHeroStat(label: 'DARTS', value: '${lead.totalDarts}'),
+              PostGameHeroStat(
+                  label: l10n.summaryDarts.toUpperCase(),
+                  value: '${lead.totalDarts}'),
             ],
     );
 
@@ -190,7 +199,8 @@ class _AtcSummary extends StatelessWidget {
       for (final c in competitors)
         PostGameBreakdownColumn(
           name: c.competitorName,
-          subtitle: c.competitorId == winnerId ? 'WINNER' : null,
+          subtitle:
+              c.competitorId == winnerId ? l10n.summaryWinner.toUpperCase() : null,
           emphasize: c.competitorId == winnerId,
         ),
     ];
@@ -210,10 +220,10 @@ class _AtcSummary extends StatelessWidget {
         PostGameStatsBreakdown(
           columns: columns,
           rows: [
-            row('Turns', (c) => '${c.turnsCompleted}'),
-            row('Darts', (c) => '${c.totalDarts}'),
-            row('Last target hit', (c) => '${c.lastTargetHit}'),
-            row('Finished', (c) => c.finished ? 'Yes' : '—'),
+            row(l10n.summaryTurns, (c) => '${c.turnsCompleted}'),
+            row(l10n.summaryDarts, (c) => '${c.totalDarts}'),
+            row(l10n.summaryLastTargetHit, (c) => '${c.lastTargetHit}'),
+            row(l10n.summaryFinished, (c) => c.finished ? l10n.commonYes : '—'),
           ],
         ),
       ],

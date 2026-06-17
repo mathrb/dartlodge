@@ -10,6 +10,7 @@ import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/statistics_providers.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/widgets/game_summary_section_widget.dart';
 import '../../../game/domain/models/game_result.dart';
 import '../../../game/presentation/providers/game_setup_provider.dart';
@@ -42,6 +43,7 @@ class PostGameSummaryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStats = ref.watch(gameStatsProvider(gameId));
+    final l10n = AppLocalizations.of(context);
 
     return PopScope(
       canPop: false,
@@ -52,7 +54,8 @@ class PostGameSummaryPage extends ConsumerWidget {
         body: SafeArea(
           child: asyncStats.when(
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, _) => Center(child: Text('Error: $err')),
+            error: (err, _) =>
+                Center(child: Text(l10n.statsError(err.toString()))),
             data: (gameStats) {
               final usesGameStats = isGameStatsBacked(gameStats.gameType);
               return Stack(
@@ -73,8 +76,8 @@ class PostGameSummaryPage extends ConsumerWidget {
                           showBack: true,
                           onBack: () => context.go('/'),
                           trailing: IconButton(
-                            icon: const Icon(Icons.settings_outlined,
-                                semanticLabel: 'Settings'),
+                            icon: Icon(Icons.settings_outlined,
+                                semanticLabel: l10n.settingsTitle),
                             onPressed: () =>
                                 context.push(GameRoutes.settings),
                           ),
@@ -117,6 +120,7 @@ class _GameResultBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncResult = ref.watch(gameResultProvider(gameId));
+    final l10n = AppLocalizations.of(context);
     return asyncResult.when(
       loading: () => const Padding(
         padding: EdgeInsets.symmetric(vertical: 32),
@@ -124,13 +128,13 @@ class _GameResultBody extends ConsumerWidget {
       ),
       error: (err, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 32),
-        child: Text('Error: $err'),
+        child: Text(l10n.statsError(err.toString())),
       ),
       data: (result) {
         if (result == null) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 32),
-            child: Text('No result available for this game.'),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 32),
+            child: Text(l10n.statsNoResult),
           );
         }
         return switch (result) {
@@ -173,6 +177,7 @@ class _StickyFooter extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return ClipRect(
       child: BackdropFilter(
@@ -192,7 +197,7 @@ class _StickyFooter extends ConsumerWidget {
             children: [
               Expanded(
                 child: _FooterButton(
-                  label: 'DONE',
+                  label: l10n.commonDone.toUpperCase(),
                   icon: Icons.check_circle_outline,
                   isPrimary: false,
                   onTap: () => context.go(GameRoutes.home),
@@ -201,7 +206,7 @@ class _StickyFooter extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: _FooterButton(
-                  label: 'PLAY AGAIN',
+                  label: l10n.statsPlayAgain.toUpperCase(),
                   icon: Icons.refresh,
                   isPrimary: true,
                   onTap: () => _playAgain(context, ref),

@@ -331,21 +331,21 @@ class _LegStatsTable extends StatelessWidget {
       AppLocalizations l10n, List<LegCompetitorStats> competitors) {
     return [
       _StatRow(
-        category: l10n.historyStatAvgPpr,
+        category: l10n.statAvgPpr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
             .toList(),
         highlightWinner: true,
       ),
       _StatRow(
-        category: l10n.historyStatCheckout,
+        category: l10n.statCheckout,
         values: competitors
             .map((c) =>
                 StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))
             .toList(),
       ),
       _StatRow(
-        category: l10n.historyStatBestOut,
+        category: l10n.statBestOut,
         values: competitors
             .map((c) => c.highestCheckout != null
                 ? '${c.highestCheckout}'
@@ -353,7 +353,7 @@ class _LegStatsTable extends StatelessWidget {
             .toList(),
       ),
       _StatRow(
-        category: l10n.historyStat180s,
+        category: l10n.stat180s,
         values:
             competitors.map((c) => c.oneEightyTurns.toString()).toList(),
       ),
@@ -361,17 +361,17 @@ class _LegStatsTable extends StatelessWidget {
       // `X01HighScoreBucketsProjection`); labels must match the actual
       // range so they don't read as cumulative "100+" / "140+" (#290).
       _StatRow(
-        category: l10n.historyStat6099,
+        category: l10n.stat6099,
         values: competitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
       ),
       _StatRow(
-        category: l10n.historyStat100139,
+        category: l10n.stat100139,
         values: competitors
             .map((c) => c.oneHundredPlusTurns.toString())
             .toList(),
       ),
       _StatRow(
-        category: l10n.historyStat140179,
+        category: l10n.stat140179,
         values: competitors
             .map((c) => c.oneFortyPlusTurns.toString())
             .toList(),
@@ -383,37 +383,37 @@ class _LegStatsTable extends StatelessWidget {
       AppLocalizations l10n, List<LegCompetitorStats> competitors) {
     return [
       _StatRow(
-        category: l10n.historyStatAvgMpr,
+        category: l10n.statAvgMpr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
             .toList(),
         highlightWinner: true,
       ),
       _StatRow(
-        category: l10n.historyStatFirst9Mpr,
+        category: l10n.statFirst9Mpr,
         values: competitors
             .map((c) =>
                 StatFormatter.fmtDouble(c.firstNineMarksPerRound, decimals: 2))
             .toList(),
       ),
       _StatRow(
-        category: l10n.historyStat5Marks,
+        category: l10n.stat5Marks,
         values: competitors.map((c) => c.fiveMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: l10n.historyStat6Marks,
+        category: l10n.stat6Marks,
         values: competitors.map((c) => c.sixMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: l10n.historyStat7Marks,
+        category: l10n.stat7Marks,
         values: competitors.map((c) => c.sevenMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: l10n.historyStat8Marks,
+        category: l10n.stat8Marks,
         values: competitors.map((c) => c.eightMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: l10n.historyStat9Marks,
+        category: l10n.stat9Marks,
         values: competitors.map((c) => c.nineMarkTurns.toString()).toList(),
       ),
     ];

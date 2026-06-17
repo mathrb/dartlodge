@@ -10,6 +10,7 @@ import '../../../../core/utils/constants.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../domain/entities/player_stats.dart';
 import '../providers/player_stats_page_provider.dart';
 import '../state/player_stats_page_state.dart';
@@ -42,17 +43,14 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  static const _tabs = [
-    Tab(text: 'X01'),
-    Tab(text: 'Cricket'),
-    Tab(text: 'Practice'),
-    Tab(text: 'Others'),
-  ];
+  // X01/Cricket/Practice are fixed game-type names; "Others" is localized
+  // (built in build()).
+  static const _tabCount = 4;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: _tabCount, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
       ref
@@ -71,8 +69,15 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final asyncPlayer = ref.watch(playerProvider(widget.playerId));
-    final playerName = asyncPlayer.value?.name ?? 'Player';
+    final playerName = asyncPlayer.value?.name ?? l10n.statsPlayerFallback;
+    final tabs = [
+      const Tab(text: 'X01'),
+      const Tab(text: 'Cricket'),
+      const Tab(text: 'Practice'),
+      Tab(text: l10n.statsOthersTab),
+    ];
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -104,7 +109,7 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
             ),
             TabBar(
               controller: _tabController,
-              tabs: _tabs,
+              tabs: tabs,
               indicatorColor: cs.primaryFixed,
               indicatorWeight: 2,
               labelColor: cs.primaryFixed,
@@ -119,7 +124,7 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
                   _X01TabContent(playerId: widget.playerId),
                   _CricketTabContent(playerId: widget.playerId),
                   _PracticeTabContent(playerId: widget.playerId),
-                  const _ComingSoonTab(label: 'Others'),
+                  _ComingSoonTab(label: l10n.statsOthersTab),
                 ],
               ),
             ),
@@ -138,6 +143,7 @@ class _X01TabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStats = ref.watch(filteredPlayerStatsProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: AppSpacing.space6),
@@ -150,7 +156,7 @@ class _X01TabContent extends ConsumerWidget {
             child: asyncStats.when(
               loading: () => const LoadingSpinnerWidget(height: 80),
               error: (e, _) => ErrorRetryWidget(
-                message: 'Failed to load stats: $e',
+                message: l10n.statsLoadFailed(e.toString()),
                 onRetry: () =>
                     ref.invalidate(filteredPlayerStatsProvider(playerId)),
               ),
@@ -168,7 +174,7 @@ class _X01TabContent extends ConsumerWidget {
           asyncStats.when(
             loading: () => const LoadingSpinnerWidget(height: 200),
             error: (e, _) => ErrorRetryWidget(
-              message: 'Failed to load stats: $e',
+              message: l10n.statsLoadFailed(e.toString()),
               onRetry: () =>
                   ref.invalidate(filteredPlayerStatsProvider(playerId)),
             ),
@@ -188,6 +194,7 @@ class _CricketTabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStats = ref.watch(filteredCricketStatsProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: AppSpacing.space6),
@@ -200,7 +207,7 @@ class _CricketTabContent extends ConsumerWidget {
             child: asyncStats.when(
               loading: () => const LoadingSpinnerWidget(height: 80),
               error: (e, _) => ErrorRetryWidget(
-                message: 'Failed to load stats: $e',
+                message: l10n.statsLoadFailed(e.toString()),
                 onRetry: () =>
                     ref.invalidate(filteredCricketStatsProvider(playerId)),
               ),
@@ -219,7 +226,7 @@ class _CricketTabContent extends ConsumerWidget {
           asyncStats.when(
             loading: () => const LoadingSpinnerWidget(height: 200),
             error: (e, _) => ErrorRetryWidget(
-              message: 'Failed to load stats: $e',
+              message: l10n.statsLoadFailed(e.toString()),
               onRetry: () =>
                   ref.invalidate(filteredCricketStatsProvider(playerId)),
             ),
@@ -239,6 +246,7 @@ class _PracticeTabContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncStats = ref.watch(filteredPracticeStatsProvider(playerId));
+    final l10n = AppLocalizations.of(context);
     final pageState = ref.watch(playerStatsPageProvider(playerId));
     final isAtc =
         pageState.selectedPracticeGameType == GameType.aroundTheClock;
@@ -255,7 +263,7 @@ class _PracticeTabContent extends ConsumerWidget {
             child: asyncStats.when(
               loading: () => const LoadingSpinnerWidget(height: 80),
               error: (e, _) => ErrorRetryWidget(
-                message: 'Failed to load stats: $e',
+                message: l10n.statsLoadFailed(e.toString()),
                 onRetry: () =>
                     ref.invalidate(filteredPracticeStatsProvider(playerId)),
               ),
@@ -267,7 +275,7 @@ class _PracticeTabContent extends ConsumerWidget {
           asyncStats.when(
             loading: () => const LoadingSpinnerWidget(height: 200),
             error: (e, _) => ErrorRetryWidget(
-              message: 'Failed to load stats: $e',
+              message: l10n.statsLoadFailed(e.toString()),
               onRetry: () =>
                   ref.invalidate(filteredPracticeStatsProvider(playerId)),
             ),
@@ -331,49 +339,50 @@ class _PracticeSummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final (label1, val1, label2, val2, label3, val3) = switch (stats.gameType) {
       GameType.aroundTheClock => (
-          'Drills Played',
+          l10n.statsDrillsPlayed,
           stats.totalGames.toString(),
-          'Completions',
+          l10n.statsCompletions,
           stats.atcCompletions.toString(),
-          'Hit Rate',
+          l10n.statsHitRate,
           StatFormatter.fmtPct(stats.atcHitRate),
         ),
       GameType.bobs27 => (
-          'Drills Played',
+          l10n.statsDrillsPlayed,
           stats.totalGames.toString(),
-          'Best Score',
+          l10n.statsBestScore,
           StatFormatter.fmtInt(stats.bobs27BestScore),
-          'Avg Score',
+          l10n.statsAvgScore,
           StatFormatter.fmtDouble(stats.bobs27AvgScore),
         ),
       GameType.shanghai => (
-          'Drills Played',
+          l10n.statsDrillsPlayed,
           stats.totalGames.toString(),
-          'Best Score',
+          l10n.statsBestScore,
           StatFormatter.fmtInt(stats.shanghaiBestScore),
-          'Shanghais',
+          l10n.statsShanghais,
           stats.shanghaiCount.toString(),
         ),
       GameType.catch40 => (
-          'Drills Played',
+          l10n.statsDrillsPlayed,
           stats.totalGames.toString(),
-          'Best Score',
+          l10n.statsBestScore,
           StatFormatter.fmtInt(stats.catch40BestScore),
-          'Avg Score',
+          l10n.statsAvgScore,
           StatFormatter.fmtDouble(stats.catch40AvgScore),
         ),
       GameType.checkoutPractice => (
-          'Attempts',
+          l10n.statsAttempts,
           stats.checkoutAttempts.toString(),
-          'Successes',
+          l10n.statsSuccesses,
           stats.checkoutSuccesses.toString(),
-          'Success Rate',
+          l10n.statsSuccessRate,
           StatFormatter.fmtPct(stats.checkoutSuccessRate),
         ),
       _ => (
-          'Games Played',
+          l10n.statsGamesPlayed,
           stats.totalGames.toString(),
           '—',
           '—',
@@ -400,6 +409,7 @@ class _ComingSoonTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Opacity(
       opacity: 0.6,
       child: Container(
@@ -415,7 +425,7 @@ class _ComingSoonTab extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.space4),
               Text(
-                'Stats for $label coming soon',
+                l10n.statsComingSoon(label),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),

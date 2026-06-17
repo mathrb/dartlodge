@@ -2,6 +2,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:dart_lodge/features/statistics/presentation/providers/player_stats_page_provider.dart';
@@ -25,6 +27,8 @@ Widget _wrap(List<PlayerLegSnapshot> history) => ProviderScope(
         playerLegHistoryProvider('p1').overrideWith((_) async => history),
       ],
       child: const MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
         home: Scaffold(body: PprTrendChartWidget(playerId: 'p1')),
       ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
 import '../utils/constants.dart';
@@ -29,6 +30,7 @@ class GameSummarySectionWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final winner = _findWinner();
     final isCricket = gameStats.gameType == GameType.cricket.name;
     final isCountUp = gameStats.gameType == GameType.countUp.name;
@@ -53,16 +55,17 @@ class GameSummarySectionWidget extends StatelessWidget {
       children: [
         if (winner != null) ...[
           PostGameHeroCard(
-            badge: 'WINNER',
+            badge: l10n.summaryWinner.toUpperCase(),
             badgeIcon: Icons.stars,
             backgroundIcon: Icons.emoji_events,
             headline: winner.competitorName,
             subline: isCountUp
                 ? null
-                : '${winner.legsWon} LEG${winner.legsWon == 1 ? '' : 'S'} WON',
+                : l10n.summaryLegsWon(winner.legsWon).toUpperCase(),
             sideStats: [
               PostGameHeroStat(
-                label: isCricket ? 'AVG MPR' : 'AVG PPR',
+                label: (isCricket ? l10n.statAvgMpr : l10n.statAvgPpr)
+                    .toUpperCase(),
                 value: isCricket
                     ? StatFormatter.fmtDouble(winner.marksPerRound,
                         decimals: 2)
@@ -70,7 +73,7 @@ class GameSummarySectionWidget extends StatelessWidget {
                 emphasize: true,
               ),
               PostGameHeroStat(
-                label: 'DARTS',
+                label: l10n.summaryDarts.toUpperCase(),
                 value: '${winner.totalDartsThrown}',
               ),
             ],
@@ -88,7 +91,9 @@ class GameSummarySectionWidget extends StatelessWidget {
                 // Count-Up: opponents are sorted by score above, so index 0
                 // is 2nd place, index 1 is 3rd, etc. Other modes keep the
                 // generic "OPPONENT" subtitle.
-                label: isCountUp ? _ordinalLabel(rank + 2) : 'OPPONENT',
+                label: isCountUp
+                    ? '#${rank + 2}'
+                    : l10n.summaryOpponent.toUpperCase(),
               ),
             );
           }),
@@ -114,9 +119,11 @@ class GameSummarySectionWidget extends StatelessWidget {
               final isWinner = c.competitorId == winner?.competitorId;
               final String subtitle;
               if (isCountUp) {
-                subtitle = isWinner ? 'WINNER' : _ordinalLabel(entry.key + 1);
+                subtitle =
+                    isWinner ? l10n.summaryWinner.toUpperCase() : '#${entry.key + 1}';
               } else {
-                subtitle = isWinner ? 'WINNER' : 'OPPONENT';
+                subtitle = (isWinner ? l10n.summaryWinner : l10n.summaryOpponent)
+                    .toUpperCase();
               }
               return PostGameBreakdownColumn(
                 name: NameFormatter.shortName(c.competitorName),
@@ -125,6 +132,7 @@ class GameSummarySectionWidget extends StatelessWidget {
               );
             }).toList(),
             rows: _buildRows(
+              l10n: l10n,
               allCompetitors: ordered,
               winnerId: winner?.competitorId,
               isCricket: isCricket,
@@ -137,6 +145,7 @@ class GameSummarySectionWidget extends StatelessWidget {
   }
 
   List<PostGameBreakdownRow> _buildRows({
+    required AppLocalizations l10n,
     required List<CompetitorStats> allCompetitors,
     required String? winnerId,
     required bool isCricket,
@@ -149,14 +158,14 @@ class GameSummarySectionWidget extends StatelessWidget {
     if (isCountUp) {
       return [
         PostGameBreakdownRow(
-          category: 'Avg PPR',
+          category: l10n.statAvgPpr,
           values: allCompetitors
               .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
               .toList(),
           highlights: winnerHighlights,
         ),
         PostGameBreakdownRow(
-          category: '180s',
+          category: l10n.stat180s,
           values:
               allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
           highlights: noHighlight,
@@ -165,21 +174,21 @@ class GameSummarySectionWidget extends StatelessWidget {
         // actual range so they don't read as cumulative "100+" / "140+"
         // (#290 finishes the rename started in #261 for the 60+ bucket).
         PostGameBreakdownRow(
-          category: '140–179',
+          category: l10n.stat140179,
           values: allCompetitors
               .map((c) => c.oneFortyPlusTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '100–139',
+          category: l10n.stat100139,
           values: allCompetitors
               .map((c) => c.oneHundredPlusTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '60–99',
+          category: l10n.stat6099,
           values:
               allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
           highlights: noHighlight,
@@ -190,7 +199,7 @@ class GameSummarySectionWidget extends StatelessWidget {
     if (isCricket) {
       return [
         PostGameBreakdownRow(
-          category: 'Avg MPR',
+          category: l10n.statAvgMpr,
           values: allCompetitors
               .map((c) =>
                   StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
@@ -198,7 +207,7 @@ class GameSummarySectionWidget extends StatelessWidget {
           highlights: winnerHighlights,
         ),
         PostGameBreakdownRow(
-          category: 'First 9 MPR',
+          category: l10n.statFirst9Mpr,
           values: allCompetitors
               .map((c) => StatFormatter.fmtDouble(c.firstNineMarksPerRound,
                   decimals: 2))
@@ -206,35 +215,35 @@ class GameSummarySectionWidget extends StatelessWidget {
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '5 Marks',
+          category: l10n.stat5Marks,
           values: allCompetitors
               .map((c) => c.fiveMarkTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '6 Marks',
+          category: l10n.stat6Marks,
           values: allCompetitors
               .map((c) => c.sixMarkTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '7 Marks',
+          category: l10n.stat7Marks,
           values: allCompetitors
               .map((c) => c.sevenMarkTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '8 Marks',
+          category: l10n.stat8Marks,
           values: allCompetitors
               .map((c) => c.eightMarkTurns.toString())
               .toList(),
           highlights: noHighlight,
         ),
         PostGameBreakdownRow(
-          category: '9 Marks',
+          category: l10n.stat9Marks,
           values: allCompetitors
               .map((c) => c.nineMarkTurns.toString())
               .toList(),
@@ -245,14 +254,14 @@ class GameSummarySectionWidget extends StatelessWidget {
 
     return [
       PostGameBreakdownRow(
-        category: 'Avg PPR',
+        category: l10n.statAvgPpr,
         values: allCompetitors
             .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
             .toList(),
         highlights: winnerHighlights,
       ),
       PostGameBreakdownRow(
-        category: 'Checkout',
+        category: l10n.statCheckout,
         values: allCompetitors
             .map((c) =>
                 StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))
@@ -260,7 +269,7 @@ class GameSummarySectionWidget extends StatelessWidget {
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: 'Best Out',
+        category: l10n.statBestOut,
         values: allCompetitors
             .map((c) =>
                 c.highestCheckout != null ? '${c.highestCheckout}' : '—')
@@ -268,7 +277,7 @@ class GameSummarySectionWidget extends StatelessWidget {
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '180s',
+        category: l10n.stat180s,
         values:
             allCompetitors.map((c) => c.oneEightyTurns.toString()).toList(),
         highlights: noHighlight,
@@ -277,59 +286,26 @@ class GameSummarySectionWidget extends StatelessWidget {
       // actual range so they don't read as cumulative "100+" / "140+"
       // (#290 finishes the rename started in #261 for the 60+ bucket).
       PostGameBreakdownRow(
-        category: '60–99',
+        category: l10n.stat6099,
         values:
             allCompetitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '100–139',
+        category: l10n.stat100139,
         values: allCompetitors
             .map((c) => c.oneHundredPlusTurns.toString())
             .toList(),
         highlights: noHighlight,
       ),
       PostGameBreakdownRow(
-        category: '140–179',
+        category: l10n.stat140179,
         values: allCompetitors
             .map((c) => c.oneFortyPlusTurns.toString())
             .toList(),
         highlights: noHighlight,
       ),
     ];
-  }
-}
-
-// ── Ordinal labels ────────────────────────────────────────────────────────────
-
-/// Renders English ordinals for ranks 1–10 (covers every realistic
-/// competitor count for a single game) and falls back to plain "Nth" for
-/// anything larger. Used to label runner-up cards on count-up post-game
-/// (#261).
-String _ordinalLabel(int n) {
-  switch (n) {
-    case 1:
-      return '1ST';
-    case 2:
-      return '2ND';
-    case 3:
-      return '3RD';
-    case 4:
-      return '4TH';
-    case 5:
-      return '5TH';
-    case 6:
-      return '6TH';
-    case 7:
-      return '7TH';
-    case 8:
-      return '8TH';
-    case 9:
-      return '9TH';
-    case 10:
-      return '10TH';
-    default:
-      return '${n}TH';
   }
 }
 
@@ -350,6 +326,7 @@ class _OpponentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -399,7 +376,7 @@ class _OpponentCard extends StatelessWidget {
               ),
               const SizedBox(width: 24),
               _SmallStat(
-                label: 'DARTS',
+                label: l10n.summaryDarts.toUpperCase(),
                 value: '${stats.totalDartsThrown}',
               ),
             ],

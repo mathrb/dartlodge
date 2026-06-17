@@ -7,12 +7,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/statistics/presentation/widgets/atc_summary_column_widget.dart';
 
 Widget _wrap(Widget child, {double width = 90}) {
   return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(
       body: Align(

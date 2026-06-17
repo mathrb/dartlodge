@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/widgets/post_game_hero_card_widget.dart';
 import '../../../../core/widgets/post_game_stats_breakdown_widget.dart';
 import '../../../game/domain/models/game_result.dart';
@@ -18,6 +19,7 @@ class ShanghaiSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final competitors = result.competitors;
     if (competitors.isEmpty) return const SizedBox.shrink();
 
@@ -36,12 +38,12 @@ class ShanghaiSummaryWidget extends StatelessWidget {
       subline: 'Shanghai',
       sideStats: [
         PostGameHeroStat(
-          label: 'TOTAL SCORE',
+          label: l10n.summaryTotalScore.toUpperCase(),
           value: '${lead.totalScore}',
           emphasize: true,
         ),
         PostGameHeroStat(
-          label: 'SHANGHAIS',
+          label: l10n.statsShanghais.toUpperCase(),
           value: '${lead.shanghaiBonuses}',
         ),
       ],
@@ -56,25 +58,25 @@ class ShanghaiSummaryWidget extends StatelessWidget {
           hero,
           const SizedBox(height: 16),
           PostGameStatsBreakdown(
-            columns: const [PostGameBreakdownColumn(name: 'Result')],
+            columns: [PostGameBreakdownColumn(name: l10n.summaryResult)],
             rows: [
               PostGameBreakdownRow(
-                category: 'Total score',
+                category: l10n.summaryTotalScore,
                 values: ['${lead.totalScore}'],
                 highlights: noHighlight,
               ),
               PostGameBreakdownRow(
-                category: 'Shanghai bonuses',
+                category: l10n.summaryShanghaiBonuses,
                 values: ['${lead.shanghaiBonuses}'],
                 highlights: noHighlight,
               ),
               PostGameBreakdownRow(
-                category: 'Best round',
+                category: l10n.summaryBestRound,
                 values: ['${lead.bestRound}'],
                 highlights: noHighlight,
               ),
               PostGameBreakdownRow(
-                category: 'Rounds played',
+                category: l10n.summaryRoundsPlayed,
                 values: ['${lead.roundsPlayed}'],
                 highlights: noHighlight,
               ),
@@ -88,7 +90,8 @@ class ShanghaiSummaryWidget extends StatelessWidget {
       for (final c in competitors)
         PostGameBreakdownColumn(
           name: c.competitorName,
-          subtitle: c.competitorId == winnerId ? 'WINNER' : null,
+          subtitle:
+              c.competitorId == winnerId ? l10n.summaryWinner.toUpperCase() : null,
           emphasize: c.competitorId == winnerId,
         ),
     ];
@@ -109,10 +112,10 @@ class ShanghaiSummaryWidget extends StatelessWidget {
         PostGameStatsBreakdown(
           columns: columns,
           rows: [
-            row('Total score', (c) => '${c.totalScore}'),
-            row('Shanghai bonuses', (c) => '${c.shanghaiBonuses}'),
-            row('Best round', (c) => '${c.bestRound}'),
-            row('Rounds played', (c) => '${c.roundsPlayed}'),
+            row(l10n.summaryTotalScore, (c) => '${c.totalScore}'),
+            row(l10n.summaryShanghaiBonuses, (c) => '${c.shanghaiBonuses}'),
+            row(l10n.summaryBestRound, (c) => '${c.bestRound}'),
+            row(l10n.summaryRoundsPlayed, (c) => '${c.roundsPlayed}'),
           ],
         ),
       ],
