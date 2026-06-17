@@ -1,3 +1,5 @@
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+
 import 'content/around_the_clock_rules.dart';
 import 'content/bobs27_rules.dart';
 import 'content/catch40_rules.dart';
@@ -8,7 +10,9 @@ import 'content/shanghai_rules.dart';
 import 'content/x01_rules.dart';
 import 'game_rules.dart';
 
-const Map<String, GameRules> kGameRules = {
+/// Slug → rules builder. Rules content is localized, so each entry is a
+/// builder that takes the active [AppLocalizations]; resolve via [rulesFor].
+final Map<String, GameRules Function(AppLocalizations)> kGameRules = {
   'x01-301': x01Rules,
   'x01-501': x01Rules,
   'x01-701': x01Rules,
@@ -26,4 +30,5 @@ const Map<String, GameRules> kGameRules = {
   'practice-count-up': countUpRules,
 };
 
-GameRules? rulesFor(String slug) => kGameRules[slug];
+GameRules? rulesFor(AppLocalizations l10n, String slug) =>
+    kGameRules[slug]?.call(l10n);

@@ -1113,5 +1113,589 @@
         "type": "String"
       }
     }
+  },
+  "rulesHeadingObjective": "Objective",
+  "@rulesHeadingObjective": {
+    "description": "Rules section heading"
+  },
+  "rulesHeadingHowToPlay": "How to play",
+  "@rulesHeadingHowToPlay": {
+    "description": "Rules section heading"
+  },
+  "rulesHeadingWinning": "Winning",
+  "@rulesHeadingWinning": {
+    "description": "Rules section heading"
+  },
+  "rulesHeadingTips": "Tips",
+  "@rulesHeadingTips": {
+    "description": "Rules section heading"
+  },
+  "rulesHeadingVariants": "Variants",
+  "@rulesHeadingVariants": {
+    "description": "Rules section heading"
+  },
+  "rulesHeadingInOut": "In and out strategies",
+  "@rulesHeadingInOut": {
+    "description": "Rules section heading"
+  },
+  "rulesRelatedVariants": "Related variants",
+  "@rulesRelatedVariants": {
+    "description": "Rules: related-variants block heading"
+  },
+  "rulesUnavailable": "Rules unavailable.",
+  "@rulesUnavailable": {
+    "description": "Shown when a rules slug has no content"
+  },
+  "rulesX01Tagline": "Race to zero. Last dart has to land just right.",
+  "@rulesX01Tagline": {
+    "description": "Game rules text"
+  },
+  "rulesX01ObjectiveBody": "Every player starts on the same score and tries to reduce it to exactly zero. The first player to do so under the chosen finishing rule wins the leg.",
+  "@rulesX01ObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesX01HowB1": "You throw three darts per turn. The total of those darts is subtracted from your remaining score.",
+  "@rulesX01HowB1": {
+    "description": "Game rules text"
+  },
+  "rulesX01HowB2": "A single scores its face value, a double scores twice, and a triple scores three times. The outer bull scores 25, the inner bull 50.",
+  "@rulesX01HowB2": {
+    "description": "Game rules text"
+  },
+  "rulesX01HowB3": "If a dart would take your score below zero, leave you on exactly one, or finish the leg without satisfying the chosen out rule, you bust. Your score reverts to where it was at the start of the turn and the rest of the turn is forfeited.",
+  "@rulesX01HowB3": {
+    "description": "Game rules text"
+  },
+  "rulesX01HowB4": "Players alternate turns until someone closes out the leg.",
+  "@rulesX01HowB4": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutBody": "Each match is configured with an in strategy (when your darts start counting) and an out strategy (how you are allowed to finish).",
+  "@rulesX01InOutBody": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB1": "Straight in: every dart counts from the very first throw.",
+  "@rulesX01InOutB1": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB2": "Double in: you have to land a double before any dart starts scoring in the leg.",
+  "@rulesX01InOutB2": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB3": "Master in: a double or a triple opens scoring in the leg.",
+  "@rulesX01InOutB3": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB4": "Straight out: finish on any segment that takes you to zero.",
+  "@rulesX01InOutB4": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB5": "Double out: the dart that takes you to zero must be a double (the inner bull counts as a double). This is the championship standard.",
+  "@rulesX01InOutB5": {
+    "description": "Game rules text"
+  },
+  "rulesX01InOutB6": "Master out: the finishing dart must be a double or a triple.",
+  "@rulesX01InOutB6": {
+    "description": "Game rules text"
+  },
+  "rulesX01WinningBody": "You win a leg by reducing your score to exactly zero on a dart that satisfies the out rule. A match runs over a configurable number of legs; the first player to reach the target number of legs wins the match.",
+  "@rulesX01WinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesX01VariantsB1": "301: short, sharp games. Strong finishing matters from the very first turn.",
+  "@rulesX01VariantsB1": {
+    "description": "Game rules text"
+  },
+  "rulesX01VariantsB2": "501: the championship classic. Long enough for high scoring to swing the leg.",
+  "@rulesX01VariantsB2": {
+    "description": "Game rules text"
+  },
+  "rulesX01VariantsB3": "701 and 901: longer games that reward consistent scoring over multiple visits.",
+  "@rulesX01VariantsB3": {
+    "description": "Game rules text"
+  },
+  "rulesX01TipsB1": "Anything from 170 down is a possible checkout, but only certain numbers are finishable in two or three darts with double out.",
+  "@rulesX01TipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesX01TipsB2": "If you cannot finish this visit, set yourself up. Leaving 32 (double 16) or 40 (double 20) is a friendlier setup than awkward odd numbers.",
+  "@rulesX01TipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesX01TipsB3": "Avoid leaving yourself on one with double out. It is an automatic bust.",
+  "@rulesX01TipsB3": {
+    "description": "Game rules text"
+  },
+  "rulesAtcTagline": "Walk the board from 1 to 20. Hit each number in order.",
+  "@rulesAtcTagline": {
+    "description": "Game rules text"
+  },
+  "rulesAtcObjectiveBody": "Hit every number from 1 through 20 in sequence. The first player to land on 20 — having visited every number along the way — wins.",
+  "@rulesAtcObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesAtcHowB1": "You start on target number 1. Hit it with any dart to advance to 2, then 3, and so on up to 20.",
+  "@rulesAtcHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesAtcHowB2": "You throw three darts per turn. Each dart that lands on your current target moves you forward; darts on any other segment do nothing.",
+  "@rulesAtcHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesAtcHowB3": "Singles, doubles and triples all count as one hit in the standard variant — the multiplier gives no extra advantage.",
+  "@rulesAtcHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesAtcHowB4": "The bullseye is not part of the sequence; it is ignored.",
+  "@rulesAtcHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesAtcHowB5": "If you reach your final number mid-turn, any remaining darts are not thrown — the leg ends immediately.",
+  "@rulesAtcHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesAtcWinningBody": "The first player to complete the sequence wins the leg. With one player it is a solo drill against the dart count; with several players it is a race.",
+  "@rulesAtcWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesAtcVariantsB1": "Standard: hit 1 through 20 in ascending order; any multiplier counts.",
+  "@rulesAtcVariantsB1": {
+    "description": "Game rules text"
+  },
+  "rulesAtcVariantsB2": "Reverse: start on 20 and count down to 1; any multiplier counts.",
+  "@rulesAtcVariantsB2": {
+    "description": "Game rules text"
+  },
+  "rulesAtcVariantsB3": "Doubles only: ascending sequence from 1 to 20, but only doubles count — singles and triples on the right number do not advance you.",
+  "@rulesAtcVariantsB3": {
+    "description": "Game rules text"
+  },
+  "rulesAtcTipsB1": "Treat each turn as a small drill on one number. Once you advance, reset your aim for the next target.",
+  "@rulesAtcTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesAtcTipsB2": "In doubles only the wire is narrow. Throwing smoothly matters more than throwing hard.",
+  "@rulesAtcTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40Tagline": "Forty checkouts from 61 to 100. Score points by finishing fast.",
+  "@rulesCatch40Tagline": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40ObjectiveBody": "Work through forty checkout targets, from 61 up to 100. For each target you get up to six darts to take the score down to exactly zero on a double. How quickly you finish decides how many points the target is worth.",
+  "@rulesCatch40ObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB1": "Each round you are given a fixed remaining score: 61 for the first target, 62 for the second, and so on up to 100 for the last.",
+  "@rulesCatch40HowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB2": "You have up to six darts per target, split across two visits of three.",
+  "@rulesCatch40HowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB3": "Standard double-out finishing applies. Going below zero, landing on one, or hitting zero with a non-double counts as a bust: the remaining score resets to the original target for that round, but the dart still counts towards your six.",
+  "@rulesCatch40HowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB4": "A checkout in one or two darts scores 3 points.",
+  "@rulesCatch40HowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB5": "A checkout in three darts scores 2 points — except the target of 99, which still scores 3.",
+  "@rulesCatch40HowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB6": "A checkout in four, five, or six darts scores 1 point.",
+  "@rulesCatch40HowB6": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40HowB7": "Failing to check out within six darts scores 0 points for that target.",
+  "@rulesCatch40HowB7": {
+    "description": "Game rules text"
+  },
+  "rulesCatch40WinningBody": "The drill is solo. There is no opponent to beat — your score is the total points across all forty targets, with a maximum of 120. Treat it as a benchmark to improve over time.",
+  "@rulesCatch40WinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27Tagline": "Twenty rounds of doubles. Miss them all and you are out.",
+  "@rulesBobs27Tagline": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27ObjectiveBody": "Hit every double from D1 through D20 in order, one number per round. Your score starts at 27 and climbs each time you land a double of the round's number — and drops sharply every round you miss.",
+  "@rulesBobs27ObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB1": "You begin with a score of 27.",
+  "@rulesBobs27HowB1": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB2": "There are 20 rounds. In round 1 the target is double 1, in round 2 it is double 2, and so on up to double 20 in round 20.",
+  "@rulesBobs27HowB2": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB3": "Each round you throw three darts at the round's double.",
+  "@rulesBobs27HowB3": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB4": "For every dart that lands on the target double, your score goes up by twice the round number. Three doubles of 20 in the final round add 120.",
+  "@rulesBobs27HowB4": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB5": "If none of your three darts hits the target double, your score drops by twice the round number instead.",
+  "@rulesBobs27HowB5": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27HowB6": "Singles, triples and any other segment do nothing — only the round's exact double counts.",
+  "@rulesBobs27HowB6": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27WinningBody": "The drill is solo. It ends after round 20, or sooner if your score drops to zero or below. Your final score is your result. A perfect run — three doubles every round — totals 1437.",
+  "@rulesBobs27WinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27TipsB1": "A single missed round on a low number costs little. A wipe on the late rounds is catastrophic — D17, D18, D19 and D20 each cost more than 30 points.",
+  "@rulesBobs27TipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesBobs27TipsB2": "The drill rewards consistency, not heroics. Trust your stance and your release.",
+  "@rulesBobs27TipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutTagline": "The biggest checkout in darts. Take it down on a double.",
+  "@rulesCheckoutTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutObjectiveBody": "Start on 170 and reduce your score to exactly zero on a double. This is a solo drill for grooving the classic 170 finish — typically triple 20, triple 20, double bull.",
+  "@rulesCheckoutObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutHowB1": "You begin with a score of 170 and are always \"in\" — every dart counts from the first throw.",
+  "@rulesCheckoutHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutHowB2": "Standard double-out finishing applies: the dart that takes you to zero must be a double, and the inner bull counts as a double.",
+  "@rulesCheckoutHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutHowB3": "You throw three darts per turn. A single scores its face value, a double scores twice, and a triple scores three times.",
+  "@rulesCheckoutHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutHowB4": "If a dart would take your score below zero, leave you on exactly one, or land you on zero without a double, that is a bust. Your score reverts to where it stood at the start of the turn and the rest of the turn is forfeited.",
+  "@rulesCheckoutHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutHowB5": "The drill continues across as many turns as it takes — there is no turn limit.",
+  "@rulesCheckoutHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutWinningBody": "The drill ends as soon as you check out, or when you tap End Drill. The checkout score shown on the summary screen is the score you were on at the start of your finishing turn — useful for tracking how often you finish from 170 in one visit versus needing to set up first.",
+  "@rulesCheckoutWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutTipsB1": "The textbook route is triple 20, triple 20, double bull. The other classic is triple 20, triple 18, double 18.",
+  "@rulesCheckoutTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesCheckoutTipsB2": "If your first dart goes wide, recalculate fast — many 170-starts only have a single one-visit path left after a stray.",
+  "@rulesCheckoutTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpTagline": "Reverse X01. No checkout, no bust — just stack points for a fixed number of rounds.",
+  "@rulesCountUpTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpObjectiveBody": "Score as many points as possible over a fixed number of rounds. Every dart adds to your running total — there is no checkout to land and no bust to worry about. When the last round ends, whoever has the highest total wins.",
+  "@rulesCountUpObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpHowB1": "The game runs for a configurable number of full rounds: 8, 12, 16, or 20.",
+  "@rulesCountUpHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpHowB2": "You throw three darts per turn. The value of every dart is added to your score: a single scores its face value, a double scores twice, and a triple scores three times. The outer bull is 25 and the inner bull is 50.",
+  "@rulesCountUpHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpHowB3": "A miss simply scores nothing — your turn still uses up a dart.",
+  "@rulesCountUpHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpHowB4": "There is no in strategy and no out strategy. Every dart counts from the first throw, and the turn always lasts the full three darts.",
+  "@rulesCountUpHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpHowB5": "Players can be given a handicap at setup — a head start of 50, 100, 150, or 200 points added to their starting score.",
+  "@rulesCountUpHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpWinningBody": "The game ends when the last player of the final round finishes their turn. The highest total wins. If two or more players tie at the top, the game is recorded as a tie with no winner.",
+  "@rulesCountUpWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpTipsB1": "Without a bust to dodge, the triple 20 is always the best target — aim hard, every visit.",
+  "@rulesCountUpTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesCountUpTipsB2": "A leader cannot ice the game early; every round plays out in full. A late three-triple turn can flip the result.",
+  "@rulesCountUpTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiTagline": "A different number every round. Score what you can, or end it on a Shanghai.",
+  "@rulesShanghaiTagline": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiObjectiveBody": "Score as many points as possible across a fixed number of rounds. Each round targets a specific number, starting at 1 and counting up — only hits on that number score. Landing a single, double and triple of the target number in the same turn is a Shanghai, which wins the game outright.",
+  "@rulesShanghaiObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB1": "The game runs for a configurable number of rounds (seven by default). Round 1 targets the number 1, round 2 targets 2, and so on.",
+  "@rulesShanghaiHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB2": "You throw three darts per round.",
+  "@rulesShanghaiHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB3": "Only hits on the current round's number score. A single scores the face value, a double scores twice, and a triple scores three times.",
+  "@rulesShanghaiHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB4": "Hits on any other number — including the bull — score nothing.",
+  "@rulesShanghaiHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB5": "If you hit the round's single, double and triple within the same three darts, that is a Shanghai. The game ends immediately and the Shanghai counts as a win.",
+  "@rulesShanghaiHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiHowB6": "Otherwise the round ends after three darts and play advances to the next number.",
+  "@rulesShanghaiHowB6": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiWinningBody": "Played solo, the drill ends when you finish the final round. There is no opponent to beat — your total score is your result. A Shanghai in any round ends the drill early as an instant win.",
+  "@rulesShanghaiWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiTipsB1": "The triple is where the big scores live. Three triples of 7 in the last round is 63 points in one turn.",
+  "@rulesShanghaiTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesShanghaiTipsB2": "Hunting for the Shanghai is high-risk, high-reward — chasing two missing multipliers usually costs you a clean scoring turn.",
+  "@rulesShanghaiTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdTagline": "Close the numbers 15 to 20 and the bull, then outscore the table.",
+  "@rulesCricketStdTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdObjectiveBody": "Close all the cricket targets before your opponents, and finish ahead on points. You need both: closing alone is not enough if someone else has scored more on you.",
+  "@rulesCricketStdObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdHowB1": "The targets are 15, 16, 17, 18, 19, 20 and the bullseye. Other numbers have no effect.",
+  "@rulesCricketStdHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdHowB2": "You throw three darts per turn. A single counts as one hit on a target, a double as two hits, and a triple as three.",
+  "@rulesCricketStdHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdHowB3": "The outer bull counts as one hit, the inner bull as two. Each bull hit is worth 25 points if you score on it.",
+  "@rulesCricketStdHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.",
+  "@rulesCricketStdHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdHowB5": "Once every player has closed a number, it is dead and nobody can score on it.",
+  "@rulesCricketStdHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. If you close everything but trail on points, the leg continues — you need to score, or hope an opponent closes a number you are leading on.",
+  "@rulesCricketStdWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdVar1Summary": "Closing only. No points are tracked; the first player to close every target wins.",
+  "@rulesCricketStdVar1Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketStdVar2Summary": "Points hit on a number only you have closed are given to opponents. Lowest score wins.",
+  "@rulesCricketStdVar2Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsTagline": "Closing only. Whoever shuts every number first wins.",
+  "@rulesCricketNsTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsObjectiveBody": "Close every cricket target before your opponents. Points do not exist in this variant — the race is purely about shutting numbers down.",
+  "@rulesCricketNsObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsHowB1": "The targets are 15, 16, 17, 18, 19, 20 and the bullseye.",
+  "@rulesCricketNsHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsHowB2": "You throw three darts per turn. A single counts as one hit, a double as two, and a triple as three.",
+  "@rulesCricketNsHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsHowB3": "The outer bull counts as one hit and the inner bull as two.",
+  "@rulesCricketNsHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsHowB4": "Hit a target three times to close it. Extra hits beyond three have no effect — no points are scored in this variant.",
+  "@rulesCricketNsHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsWinningBody": "The first player to close all seven targets wins the leg. Strategy is pure efficiency: spend every dart on a number you have not closed yet.",
+  "@rulesCricketNsWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsVar1Summary": "Closed numbers score points for the player who closed them. Highest score with everything closed wins.",
+  "@rulesCricketNsVar1Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketNsVar2Summary": "Points from closed numbers go to opponents instead. Lowest score wins.",
+  "@rulesCricketNsVar2Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtTagline": "Same closing rules, reversed scoring. Points are punishment.",
+  "@rulesCricketCtTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtObjectiveBody": "Close every cricket target — and finish on the lowest score at the table. Points are a punishment here: when you score on a number only you have closed, those points go to your opponents.",
+  "@rulesCricketCtObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtHowB1": "The targets are 15, 16, 17, 18, 19, 20 and the bullseye.",
+  "@rulesCricketCtHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtHowB2": "You throw three darts per turn. A single counts as one hit, a double as two, and a triple as three. The outer bull is one hit, the inner bull is two.",
+  "@rulesCricketCtHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtHowB3": "Hit a target three times to close it.",
+  "@rulesCricketCtHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtHowB4": "Once you close a number, extra hits on it add points to every opponent who has not closed it yet. You gain nothing on those darts.",
+  "@rulesCricketCtHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtHowB5": "Once every player has closed a number, it is dead for everyone.",
+  "@rulesCricketCtHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtWinningBody": "You win the leg when all of your targets are closed and your score is at least as low as every opponent's. If two or more players finish tied on the lowest score, whoever closed all the targets first wins. Closing every target with zero points is an instant win.",
+  "@rulesCricketCtWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtTipsB1": "Hitting a closed number a fourth time is usually bad: it feeds your opponents free points. Move to a number you still need to close.",
+  "@rulesCricketCtTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtTipsB2": "When several opponents share an open number, every overflow dart you throw on a closed number gives points to all of them.",
+  "@rulesCricketCtTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtVar1Summary": "Closed numbers score points for the player who closed them. Highest score with everything closed wins.",
+  "@rulesCricketCtVar1Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCtVar2Summary": "No points are tracked. The first to close every target wins.",
+  "@rulesCricketCtVar2Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzTagline": "The board re-rolls every turn. Close a number to lock it in.",
+  "@rulesCricketCzTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzObjectiveBody": "Close all 6 active numbers and the Bull, ahead on points (per the chosen scoring rules). The catch: the active numbers change every turn until a player closes one.",
+  "@rulesCricketCzObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzHowB1": "Each turn, every still-open slot shows a fresh number from 1 to 20, drawn at random when your turn starts. The Bull is always one of the seven targets and never re-rolls.",
+  "@rulesCricketCzHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzHowB2": "You throw three darts per turn. A single is one hit, a double is two, a triple is three. The outer bull counts as one hit, the inner bull as two.",
+  "@rulesCricketCzHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzHowB3": "Hit a number three times to close it — and the moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.",
+  "@rulesCricketCzHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzHowB4": "Partial hits (one or two marks) reset every roll. Only closed numbers (and the Bull) keep their marks across turns — even if the same number happens to roll again, you start fresh at 0 marks on it next turn.",
+  "@rulesCricketCzHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzHowB5": "Once you close every active number plus Bull and you are ahead on points (per the scoring rules), you win the leg.",
+  "@rulesCricketCzHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzWinningBody": "Identical to Standard Cricket: close everything and finish ahead on points. Since the target set keeps churning, expect bursts of progress on locked numbers and a lot of wasted darts on numbers that get rotated out.",
+  "@rulesCricketCzWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzTipsB1": "Locking a number is doubly valuable: it sticks on the board AND opponents still have to close it. Focus high-mark darts on numbers you can close quickly.",
+  "@rulesCricketCzTipsB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzTipsB2": "Spreading hits across multiple open numbers is risky — partial marks are wiped on every roll. Better to commit to closing one number in the same turn before moving on.",
+  "@rulesCricketCzTipsB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzVar1Summary": "The classic 15–20 + Bull target set. No randomness, no churn.",
+  "@rulesCricketCzVar1Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketCzVar2Summary": "Six random numbers drawn once at game start, then fixed for the whole game.",
+  "@rulesCricketCzVar2Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdTagline": "Six random numbers plus the Bull, fixed for the whole game.",
+  "@rulesCricketRdTagline": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdObjectiveBody": "Same as Standard Cricket — close every target and finish ahead on points — but the six numbers are drawn at random when the game starts. The Bull is always a target. The assigned set stays the same across every leg of the game.",
+  "@rulesCricketRdObjectiveBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdHowB1": "When the game begins, six numbers from 1 to 20 are drawn at random and shown on the board. Together with the Bull they form your seven targets.",
+  "@rulesCricketRdHowB1": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdHowB2": "The targets do not change between legs — what was drawn is what you play, start to finish.",
+  "@rulesCricketRdHowB2": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdHowB3": "You throw three darts per turn. A single is one hit on a target, a double is two, and a triple is three. The outer bull counts as one hit, the inner bull as two.",
+  "@rulesCricketRdHowB3": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.",
+  "@rulesCricketRdHowB4": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdHowB5": "Once every player has closed a number it is dead, and nobody can score on it.",
+  "@rulesCricketRdHowB5": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. Closing first while trailing on points does not end the leg — you need to score on, or have opponents close, the targets you are leading on.",
+  "@rulesCricketRdWinningBody": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdVar1Summary": "The classic 15–20 + Bull target set. No randomness.",
+  "@rulesCricketRdVar1Summary": {
+    "description": "Game rules text"
+  },
+  "rulesCricketRdVar2Summary": "Random Cricket can be combined with Cut Throat scoring — points go to opponents instead.",
+  "@rulesCricketRdVar2Summary": {
+    "description": "Game rules text"
   }
 }
