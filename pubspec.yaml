@@ -23,7 +23,7 @@ dependencies:
   # package that bundles no native libs, breaking Android. See issue tracking
   # the long-term move to sqlite3 v3.
   drift: ^2.31.0
-  sqlite3: ^2.9.4
+  sqlite3: ">=2.9.4 <4.0.0"
   sqlite3_flutter_libs: ^0.5.41
   path: ^1.8.3
   path_provider: ^2.1.1
