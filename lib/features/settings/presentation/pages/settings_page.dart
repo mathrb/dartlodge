@@ -7,7 +7,9 @@ import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
+import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
+import '../widgets/language_selector.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
@@ -122,6 +124,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final themeMode =
         ref.watch(settingsProvider).value ?? ThemeMode.system;
     final notifier = ref.read(settingsProvider.notifier);
+    final locale = ref.watch(localeSettingProvider).value; // Locale? — null = system
+    final localeNotifier = ref.read(localeSettingProvider.notifier);
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -144,6 +148,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _ThemeModeSelector(
             value: themeMode,
             onChanged: notifier.setThemeMode,
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: 'Language', cs: cs, tt: tt),
+          LanguageSelector(
+            value: locale,
+            onChanged: localeNotifier.setLocale,
           ),
           const Divider(height: 1),
           _SectionHeader(label: 'Auto-scoring', cs: cs, tt: tt),
