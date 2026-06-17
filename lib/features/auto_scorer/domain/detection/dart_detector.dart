@@ -12,7 +12,7 @@ const String kAutoScorerModelAsset = 'assets/models/dart_auto_scorer.tflite';
 /// every training capture so the probe can attribute each sample to the model
 /// that produced its predictions. Matches the probe's `pre_annotate` stem
 /// convention — bump this in lock-step with [kAutoScorerModelAsset].
-const String kAutoScorerModelVersion = 'dart_round21b_withcal';
+const String kAutoScorerModelVersion = 'dart_round24_withcal';
 
 /// Runs the on-device detector and returns a [DetectionFrame] (cal points +
 /// dart candidates) for the tracker. Implementations preprocess the raw frame
