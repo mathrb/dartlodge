@@ -716,9 +716,11 @@ void main() {
   //
   // After a manual entry + later camera re-detection the game's turn can be
   // ahead of the camera tracker: the turn ends (turnActive=false) while the
-  // tracker still emits one more dart. That stray camera dart used to reach
-  // the practice use case → InvalidGameStateException → AsyncValue.guard →
-  // AsyncError, breaking the board. It must now be a silent no-op.
+  // tracker still emits one more dart. Unlike X01/cricket (whose use cases
+  // throw InvalidGameStateException → AsyncError), ProcessPracticeDartUseCase
+  // does not validate turnActive — so without the guard the stray dart would
+  // silently apply, over-counting dartsThrownInTurn past 3 and corrupting the
+  // turn. The camera-scoped guard must drop it as a no-op instead.
 
   test('processDart(camera) is a silent no-op on a full/ended turn (#538)',
       () async {

@@ -5,7 +5,10 @@
 /// communication via `core/` only).
 abstract interface class DartInputSink {
   /// Emit one detected dart, as a canonical segment string ('20','D20','T20',
-  /// 'SB','DB','MISS') — routed to the active game's manual dart-entry path.
+  /// 'SB','DB','MISS') — routed to the active game's dart-entry path. Camera
+  /// input is best-effort: a dart that lands on a full/ended turn or a
+  /// completed game is silently dropped rather than processed (#538), so the
+  /// tracker getting ahead of the game can never wedge the board.
   void submitDart(String segment);
 
   /// Advance to the next turn/player without any confirmation prompt — invoked
