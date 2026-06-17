@@ -57,11 +57,11 @@ curl -L -o web/sqlite3.wasm \
   "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-<VERSION>/sqlite3.wasm"
 ```
 
-Example for version `2.9.4`:
+Example for version `3.3.3`:
 
 ```bash
 curl -L -o web/sqlite3.wasm \
-  "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-2.9.4/sqlite3.wasm"
+  "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-3.3.3/sqlite3.wasm"
 ```
 
 Repeat this step whenever `sqlite3` is upgraded in `pubspec.lock`.

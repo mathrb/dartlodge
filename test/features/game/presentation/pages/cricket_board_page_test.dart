@@ -752,10 +752,12 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'End Game'));
     await tester.pumpAndSettle();
 
-    final notifier =
-        container.read(activeCricketGameProvider('game-1').notifier)
-            as _FakeActiveCricketGameNotifier;
-    expect(notifier.endGameCalls, 1,
+    // Assert on the captured fake directly. Re-reading
+    // activeCricketGameProvider('game-1').notifier here would force a rebuild
+    // of the family provider that navigation home just disposed, re-associating
+    // the same Notifier instance and tripping Riverpod 3.3.2's "Notifier
+    // already associated with another provider" guard.
+    expect(fakeNotifier.endGameCalls, 1,
         reason: 'Abandoning the game must mark it complete so it lands '
             'in history immediately (issue #252)');
     expect(find.text('home'), findsOneWidget);

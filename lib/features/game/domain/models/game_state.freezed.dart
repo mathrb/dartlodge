@@ -374,9 +374,7 @@ as int?,
 /// @nodoc
 mixin _$CompetitorState {
 
- String get competitorId; String get name; List<String> get playerIds; int get score; bool get isComplete; List<String> get dartThrows;// Canonical segment strings
- bool get isIn; int get legsWon; int? get turnStartScore;// Null means same as score
- Map<String, int> get marksPerNumber; int? get closeOrder; int? get currentTarget; int get practiceRound; int get practiceAttempts; int get practiceSuccesses; int get startingScore;
+ String get competitorId; String get name; List<String> get playerIds; int get score; bool get isComplete; List<String> get dartThrows; bool get isIn; int get legsWon; int? get turnStartScore; Map<String, int> get marksPerNumber; int? get closeOrder; int? get currentTarget; int get practiceRound; int get practiceAttempts; int get practiceSuccesses; int get startingScore;
 /// Create a copy of CompetitorState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -606,13 +604,10 @@ class _CompetitorState implements CompetitorState {
   return EqualUnmodifiableListView(_dartThrows);
 }
 
-// Canonical segment strings
 @override@JsonKey() final  bool isIn;
 @override@JsonKey() final  int legsWon;
 @override final  int? turnStartScore;
-// Null means same as score
  final  Map<String, int> _marksPerNumber;
-// Null means same as score
 @override@JsonKey() Map<String, int> get marksPerNumber {
   if (_marksPerNumber is EqualUnmodifiableMapView) return _marksPerNumber;
   // ignore: implicit_dynamic_type

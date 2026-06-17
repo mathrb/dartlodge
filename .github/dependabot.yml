@@ -11,13 +11,6 @@ updates:
         update-types:
           - minor
           - patch
-    ignore:
-      # 0.6.0+eol is an empty placeholder that bundles no native libs and
-      # breaks Android. The pin lives on ^0.5.41 until the sqlite3 v3
-      # migration in issue #126 lands and removes this package entirely.
-      # See PR #127 for the original fix and #152 for a rejected
-      # dependabot auto-bump.
-      - dependency-name: "sqlite3_flutter_libs"
     labels:
       - dependencies
       - dart

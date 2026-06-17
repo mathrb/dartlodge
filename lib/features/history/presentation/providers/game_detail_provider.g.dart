@@ -85,7 +85,7 @@ abstract class _$GameDetailNotifier extends $AsyncNotifier<GameDetailState?> {
   FutureOr<GameDetailState?> build(String gameId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<GameDetailState?>, GameDetailState?>;
     final element =
@@ -96,6 +96,6 @@ abstract class _$GameDetailNotifier extends $AsyncNotifier<GameDetailState?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

@@ -41,13 +41,13 @@ final class GameSetupNotifierProvider
   }
 }
 
-String _$gameSetupNotifierHash() => r'7087ffdf69e80f3d0b627cfec1ba6ba056cc2f10';
+String _$gameSetupNotifierHash() => r'31750615c866653368d45f8bd0141a7220fc55da';
 
 abstract class _$GameSetupNotifier extends $Notifier<GameSetupState> {
   GameSetupState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<GameSetupState, GameSetupState>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$GameSetupNotifier extends $Notifier<GameSetupState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

@@ -56,7 +56,7 @@ final class ActiveCricketGameNotifierProvider
 }
 
 String _$activeCricketGameNotifierHash() =>
-    r'8e5c99d3a82bebaea07c229df9eaf79482f4dd17';
+    r'cba6464aed3b19d546a38d572022280a1c078e70';
 
 final class ActiveCricketGameNotifierFamily extends $Family
     with
@@ -91,7 +91,7 @@ abstract class _$ActiveCricketGameNotifier
   FutureOr<ActiveCricketGameState?> build(String gameId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
@@ -109,6 +109,6 @@ abstract class _$ActiveCricketGameNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

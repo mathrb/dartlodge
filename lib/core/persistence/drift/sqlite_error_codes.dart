@@ -3,7 +3,8 @@
 // Replaces fragile `e.toString().contains('UNIQUE constraint failed')` matches
 // throughout the repository layer. Works the same way on:
 //
-//   * native (mobile/desktop) — drift over `sqlite3_flutter_libs`
+//   * native (mobile/desktop) — drift over the `sqlite3` Dart package (v3
+//     bundles its own native library via build hooks)
 //   * web (Chrome/dev) — drift over the wasm build of the same `sqlite3` Dart
 //     package
 //

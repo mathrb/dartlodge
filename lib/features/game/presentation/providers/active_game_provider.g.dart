@@ -51,7 +51,7 @@ final class ActiveGameNotifierProvider
 }
 
 String _$activeGameNotifierHash() =>
-    r'6b6cd2b7c7b070bc7a212a733a668f40dd5680ae';
+    r'6de29235932a931fcb72f5a429c30d727ebde242';
 
 final class ActiveGameNotifierFamily extends $Family
     with
@@ -85,7 +85,7 @@ abstract class _$ActiveGameNotifier extends $AsyncNotifier<ActiveGameState?> {
   FutureOr<ActiveGameState?> build(String gameId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<ActiveGameState?>, ActiveGameState?>;
     final element =
@@ -96,6 +96,6 @@ abstract class _$ActiveGameNotifier extends $AsyncNotifier<ActiveGameState?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

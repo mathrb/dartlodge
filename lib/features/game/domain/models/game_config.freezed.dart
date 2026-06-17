@@ -62,7 +62,6 @@ GameConfig _$GameConfigFromJson(
 /// @nodoc
 mixin _$GameConfig {
 
-// 'standard', 'reverse', 'doublesOnly'
  String? get startingPlayerId;
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -304,9 +303,7 @@ class X01GameConfig implements GameConfig {
 
  final  int startingScore;
  final  String inStrategy;
-// 'straight', 'double', 'master'
  final  String outStrategy;
-// 'straight', 'double', 'master'
 @JsonKey() final  int legsToWin;
 @JsonKey() final  int? totalRounds;
 @override@JsonKey() final  String? startingPlayerId;
@@ -485,7 +482,6 @@ class AroundTheClockGameConfig implements GameConfig {
   factory AroundTheClockGameConfig.fromJson(Map<String, dynamic> json) => _$AroundTheClockGameConfigFromJson(json);
 
 @JsonKey() final  String variant;
-// 'standard', 'reverse', 'doublesOnly'
 @override@JsonKey() final  String? startingPlayerId;
 
 @JsonKey(name: 'runtimeType')

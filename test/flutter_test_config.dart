@@ -33,4 +33,13 @@ class _DisableAnimations implements AccessibilityFeatures {
   bool get reduceMotion => false;
   @override
   bool get supportsAnnounce => false;
+  // Added in Flutter 3.44 — mirror the real "no accessibility flags" defaults
+  // (animated images/videos auto-play; cursor non-deterministic). Only
+  // disableAnimations deviates, which is this fake's whole purpose.
+  @override
+  bool get autoPlayAnimatedImages => true;
+  @override
+  bool get autoPlayVideos => true;
+  @override
+  bool get deterministicCursor => false;
 }

@@ -15,22 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PlayerStats {
 
- String get playerId; GameType get gameType; int get totalGames; int get gamesWon; double get winRate; double get threeDartAverage; double? get checkoutPercentage;// null for non-X01 games
- int? get highestCheckout; int get highestTurnScore; int get totalDartsThrown; double get dartsPerLeg; double get bustRate;// 0.0–1.0
- int get legsPlayed; int get legsWon; double? get firstNinePpr; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns; int get oneEightyTurns;// X01 best-of metrics (null when no data)
- double? get bestLegPpr; double? get bestFirstNinePpr; double? get avgCheckoutScore; double? get bestGameCheckoutPercentage;// X01 strategy-conditional metrics (null when strategy is 'straight' or
-// when no attempts recorded). Values are percentages (0–100).
- double? get doubleOutSuccessRate; double? get firstDartInSuccessRate;// Cricket-specific fields (null for non-cricket games). Mark-turn
-// counters in this career bundle are ≥-N counts (5+, 6+, 7+, 8+, 9
-// exact). For exact-N per-game counts, see `getGameStats`.
- double? get marksPerTurn; double? get hitRate; int get fiveMarkTurns; int get sixMarkTurns; int get sevenMarkTurns; int get eightMarkTurns; int get nineMarkTurns;// Cricket best-of metrics (null when no data)
- double? get bestLegMpt; double? get bestGameHitRate;// Average marks in the first 9 darts (first 3 turns) per leg (#286).
- double? get firstNineMpr;// ATC practice fields
- int get atcCompletions; double? get atcHitRate; double? get atcAvgTurns; int? get atcBestTurns; Map<int, int> get atcSegmentHits; Map<int, int> get atcSegmentAttempts;// Bob's 27 practice fields
- double? get bobs27AvgScore; int? get bobs27BestScore; double? get bobs27CompletionRate; double? get bobs27DoubleHitRate;// Shanghai practice fields
- double? get shanghaiAvgScore; int? get shanghaiBestScore; int get shanghaiCount;// Catch-40 practice fields
- double? get catch40AvgScore; int? get catch40BestScore; int get catch40TwoDartCheckouts; int get catch40ThreeDartCheckouts; int get catch40FourSixDartCheckouts; int get catch40FailedCheckouts;// Checkout practice fields
- int get checkoutAttempts; int get checkoutSuccesses; double? get checkoutSuccessRate;
+ String get playerId; GameType get gameType; int get totalGames; int get gamesWon; double get winRate; double get threeDartAverage; double? get checkoutPercentage; int? get highestCheckout; int get highestTurnScore; int get totalDartsThrown; double get dartsPerLeg; double get bustRate; int get legsPlayed; int get legsWon; double? get firstNinePpr; int get sixtyPlusTurns; int get oneHundredPlusTurns; int get oneFortyPlusTurns; int get oneEightyTurns; double? get bestLegPpr; double? get bestFirstNinePpr; double? get avgCheckoutScore; double? get bestGameCheckoutPercentage; double? get doubleOutSuccessRate; double? get firstDartInSuccessRate; double? get marksPerTurn; double? get hitRate; int get fiveMarkTurns; int get sixMarkTurns; int get sevenMarkTurns; int get eightMarkTurns; int get nineMarkTurns; double? get bestLegMpt; double? get bestGameHitRate; double? get firstNineMpr; int get atcCompletions; double? get atcHitRate; double? get atcAvgTurns; int? get atcBestTurns; Map<int, int> get atcSegmentHits; Map<int, int> get atcSegmentAttempts; double? get bobs27AvgScore; int? get bobs27BestScore; double? get bobs27CompletionRate; double? get bobs27DoubleHitRate; double? get shanghaiAvgScore; int? get shanghaiBestScore; int get shanghaiCount; double? get catch40AvgScore; int? get catch40BestScore; int get catch40TwoDartCheckouts; int get catch40ThreeDartCheckouts; int get catch40FourSixDartCheckouts; int get catch40FailedCheckouts; int get checkoutAttempts; int get checkoutSuccesses; double? get checkoutSuccessRate;
 /// Create a copy of PlayerStats
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -290,13 +275,11 @@ class _PlayerStats implements PlayerStats {
 @override final  double winRate;
 @override final  double threeDartAverage;
 @override final  double? checkoutPercentage;
-// null for non-X01 games
 @override final  int? highestCheckout;
 @override final  int highestTurnScore;
 @override final  int totalDartsThrown;
 @override final  double dartsPerLeg;
 @override final  double bustRate;
-// 0.0–1.0
 @override@JsonKey() final  int legsPlayed;
 @override@JsonKey() final  int legsWon;
 @override final  double? firstNinePpr;
@@ -304,18 +287,12 @@ class _PlayerStats implements PlayerStats {
 @override@JsonKey() final  int oneHundredPlusTurns;
 @override@JsonKey() final  int oneFortyPlusTurns;
 @override@JsonKey() final  int oneEightyTurns;
-// X01 best-of metrics (null when no data)
 @override final  double? bestLegPpr;
 @override final  double? bestFirstNinePpr;
 @override final  double? avgCheckoutScore;
 @override final  double? bestGameCheckoutPercentage;
-// X01 strategy-conditional metrics (null when strategy is 'straight' or
-// when no attempts recorded). Values are percentages (0–100).
 @override final  double? doubleOutSuccessRate;
 @override final  double? firstDartInSuccessRate;
-// Cricket-specific fields (null for non-cricket games). Mark-turn
-// counters in this career bundle are ≥-N counts (5+, 6+, 7+, 8+, 9
-// exact). For exact-N per-game counts, see `getGameStats`.
 @override final  double? marksPerTurn;
 @override final  double? hitRate;
 @override@JsonKey() final  int fiveMarkTurns;
@@ -323,12 +300,9 @@ class _PlayerStats implements PlayerStats {
 @override@JsonKey() final  int sevenMarkTurns;
 @override@JsonKey() final  int eightMarkTurns;
 @override@JsonKey() final  int nineMarkTurns;
-// Cricket best-of metrics (null when no data)
 @override final  double? bestLegMpt;
 @override final  double? bestGameHitRate;
-// Average marks in the first 9 darts (first 3 turns) per leg (#286).
 @override final  double? firstNineMpr;
-// ATC practice fields
 @override@JsonKey() final  int atcCompletions;
 @override final  double? atcHitRate;
 @override final  double? atcAvgTurns;
@@ -347,23 +321,19 @@ class _PlayerStats implements PlayerStats {
   return EqualUnmodifiableMapView(_atcSegmentAttempts);
 }
 
-// Bob's 27 practice fields
 @override final  double? bobs27AvgScore;
 @override final  int? bobs27BestScore;
 @override final  double? bobs27CompletionRate;
 @override final  double? bobs27DoubleHitRate;
-// Shanghai practice fields
 @override final  double? shanghaiAvgScore;
 @override final  int? shanghaiBestScore;
 @override@JsonKey() final  int shanghaiCount;
-// Catch-40 practice fields
 @override final  double? catch40AvgScore;
 @override final  int? catch40BestScore;
 @override@JsonKey() final  int catch40TwoDartCheckouts;
 @override@JsonKey() final  int catch40ThreeDartCheckouts;
 @override@JsonKey() final  int catch40FourSixDartCheckouts;
 @override@JsonKey() final  int catch40FailedCheckouts;
-// Checkout practice fields
 @override@JsonKey() final  int checkoutAttempts;
 @override@JsonKey() final  int checkoutSuccesses;
 @override final  double? checkoutSuccessRate;

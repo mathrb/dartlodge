@@ -4652,10 +4652,7 @@ final class $$AccountsTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.players,
-    aliasName: $_aliasNameGenerator(
-      db.accounts.accountId,
-      db.players.accountId,
-    ),
+    aliasName: 'accounts__account_id__players__account_id',
   );
 
   $$PlayersTableProcessedTableManager get playersRefs {
@@ -4992,9 +4989,7 @@ final class $$PlayersTableReferences
   $$PlayersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $AccountsTable _accountIdTable(_$AppDatabase db) =>
-      db.accounts.createAlias(
-        $_aliasNameGenerator(db.players.accountId, db.accounts.accountId),
-      );
+      db.accounts.createAlias('players__account_id__accounts__account_id');
 
   $$AccountsTableProcessedTableManager? get accountId {
     final $_column = $_itemColumn<String>('account_id');
@@ -5014,10 +5009,7 @@ final class $$PlayersTableReferences
   _competitorPlayersRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.competitorPlayers,
-        aliasName: $_aliasNameGenerator(
-          db.players.playerId,
-          db.competitorPlayers.playerId,
-        ),
+        aliasName: 'players__player_id__competitor_players__player_id',
       );
 
   $$CompetitorPlayersTableProcessedTableManager get competitorPlayersRefs {
@@ -5041,10 +5033,7 @@ final class $$PlayersTableReferences
   static MultiTypedResultKey<$DartThrowsTable, List<DartThrow>>
   _dartThrowsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dartThrows,
-    aliasName: $_aliasNameGenerator(
-      db.players.playerId,
-      db.dartThrows.playerId,
-    ),
+    aliasName: 'players__player_id__dart_throws__player_id',
   );
 
   $$DartThrowsTableProcessedTableManager get dartThrowsRefs {
@@ -5061,10 +5050,7 @@ final class $$PlayersTableReferences
   static MultiTypedResultKey<$GameSessionsTable, List<GameSession>>
   _hostedSessionsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.gameSessions,
-    aliasName: $_aliasNameGenerator(
-      db.players.playerId,
-      db.gameSessions.hostPlayerId,
-    ),
+    aliasName: 'players__player_id__game_sessions__host_player_id',
   );
 
   $$GameSessionsTableProcessedTableManager get hostedSessions {
@@ -5084,10 +5070,7 @@ final class $$PlayersTableReferences
   static MultiTypedResultKey<$GameSessionsTable, List<GameSession>>
   _currentTurnSessionsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.gameSessions,
-    aliasName: $_aliasNameGenerator(
-      db.players.playerId,
-      db.gameSessions.currentTurnPlayerId,
-    ),
+    aliasName: 'players__player_id__game_sessions__current_turn_player_id',
   );
 
   $$GameSessionsTableProcessedTableManager get currentTurnSessions {
@@ -5744,7 +5727,7 @@ final class $$GamesTableReferences
   static MultiTypedResultKey<$CompetitorsTable, List<Competitor>>
   _competitorsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.competitors,
-    aliasName: $_aliasNameGenerator(db.games.gameId, db.competitors.gameId),
+    aliasName: 'games__game_id__competitors__game_id',
   );
 
   $$CompetitorsTableProcessedTableManager get competitorsRefs {
@@ -5762,7 +5745,7 @@ final class $$GamesTableReferences
   static MultiTypedResultKey<$DartThrowsTable, List<DartThrow>>
   _dartThrowsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dartThrows,
-    aliasName: $_aliasNameGenerator(db.games.gameId, db.dartThrows.gameId),
+    aliasName: 'games__game_id__dart_throws__game_id',
   );
 
   $$DartThrowsTableProcessedTableManager get dartThrowsRefs {
@@ -5779,7 +5762,7 @@ final class $$GamesTableReferences
   static MultiTypedResultKey<$GameEventsTable, List<GameEvent>>
   _gameEventsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.gameEvents,
-    aliasName: $_aliasNameGenerator(db.games.gameId, db.gameEvents.gameId),
+    aliasName: 'games__game_id__game_events__game_id',
   );
 
   $$GameEventsTableProcessedTableManager get gameEventsRefs {
@@ -5796,7 +5779,7 @@ final class $$GamesTableReferences
   static MultiTypedResultKey<$GameSessionsTable, List<GameSession>>
   _gameSessionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.gameSessions,
-    aliasName: $_aliasNameGenerator(db.games.gameId, db.gameSessions.gameId),
+    aliasName: 'games__game_id__game_sessions__game_id',
   );
 
   $$GameSessionsTableProcessedTableManager get gameSessionsRefs {
@@ -6376,9 +6359,8 @@ final class $$CompetitorsTableReferences
     extends BaseReferences<_$AppDatabase, $CompetitorsTable, Competitor> {
   $$CompetitorsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GamesTable _gameIdTable(_$AppDatabase db) => db.games.createAlias(
-    $_aliasNameGenerator(db.competitors.gameId, db.games.gameId),
-  );
+  static $GamesTable _gameIdTable(_$AppDatabase db) =>
+      db.games.createAlias('competitors__game_id__games__game_id');
 
   $$GamesTableProcessedTableManager get gameId {
     final $_column = $_itemColumn<String>('game_id')!;
@@ -6398,10 +6380,8 @@ final class $$CompetitorsTableReferences
   _competitorPlayersRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.competitorPlayers,
-        aliasName: $_aliasNameGenerator(
-          db.competitors.competitorId,
-          db.competitorPlayers.competitorId,
-        ),
+        aliasName:
+            'competitors__competitor_id__competitor_players__competitor_id',
       );
 
   $$CompetitorPlayersTableProcessedTableManager get competitorPlayersRefs {
@@ -6426,10 +6406,7 @@ final class $$CompetitorsTableReferences
   static MultiTypedResultKey<$DartThrowsTable, List<DartThrow>>
   _dartThrowsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.dartThrows,
-    aliasName: $_aliasNameGenerator(
-      db.competitors.competitorId,
-      db.dartThrows.competitorId,
-    ),
+    aliasName: 'competitors__competitor_id__dart_throws__competitor_id',
   );
 
   $$DartThrowsTableProcessedTableManager get dartThrowsRefs {
@@ -6899,10 +6876,7 @@ final class $$CompetitorPlayersTableReferences
 
   static $CompetitorsTable _competitorIdTable(_$AppDatabase db) =>
       db.competitors.createAlias(
-        $_aliasNameGenerator(
-          db.competitorPlayers.competitorId,
-          db.competitors.competitorId,
-        ),
+        'competitor_players__competitor_id__competitors__competitor_id',
       );
 
   $$CompetitorsTableProcessedTableManager get competitorId {
@@ -6919,13 +6893,8 @@ final class $$CompetitorPlayersTableReferences
     );
   }
 
-  static $PlayersTable _playerIdTable(_$AppDatabase db) =>
-      db.players.createAlias(
-        $_aliasNameGenerator(
-          db.competitorPlayers.playerId,
-          db.players.playerId,
-        ),
-      );
+  static $PlayersTable _playerIdTable(_$AppDatabase db) => db.players
+      .createAlias('competitor_players__player_id__players__player_id');
 
   $$PlayersTableProcessedTableManager get playerId {
     final $_column = $_itemColumn<String>('player_id')!;
@@ -7297,9 +7266,8 @@ final class $$DartThrowsTableReferences
     extends BaseReferences<_$AppDatabase, $DartThrowsTable, DartThrow> {
   $$DartThrowsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GamesTable _gameIdTable(_$AppDatabase db) => db.games.createAlias(
-    $_aliasNameGenerator(db.dartThrows.gameId, db.games.gameId),
-  );
+  static $GamesTable _gameIdTable(_$AppDatabase db) =>
+      db.games.createAlias('dart_throws__game_id__games__game_id');
 
   $$GamesTableProcessedTableManager get gameId {
     final $_column = $_itemColumn<String>('game_id')!;
@@ -7315,13 +7283,9 @@ final class $$DartThrowsTableReferences
     );
   }
 
-  static $CompetitorsTable _competitorIdTable(_$AppDatabase db) =>
-      db.competitors.createAlias(
-        $_aliasNameGenerator(
-          db.dartThrows.competitorId,
-          db.competitors.competitorId,
-        ),
-      );
+  static $CompetitorsTable _competitorIdTable(_$AppDatabase db) => db
+      .competitors
+      .createAlias('dart_throws__competitor_id__competitors__competitor_id');
 
   $$CompetitorsTableProcessedTableManager get competitorId {
     final $_column = $_itemColumn<String>('competitor_id')!;
@@ -7338,9 +7302,7 @@ final class $$DartThrowsTableReferences
   }
 
   static $PlayersTable _playerIdTable(_$AppDatabase db) =>
-      db.players.createAlias(
-        $_aliasNameGenerator(db.dartThrows.playerId, db.players.playerId),
-      );
+      db.players.createAlias('dart_throws__player_id__players__player_id');
 
   $$PlayersTableProcessedTableManager get playerId {
     final $_column = $_itemColumn<String>('player_id')!;
@@ -7901,9 +7863,8 @@ final class $$GameEventsTableReferences
     extends BaseReferences<_$AppDatabase, $GameEventsTable, GameEvent> {
   $$GameEventsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GamesTable _gameIdTable(_$AppDatabase db) => db.games.createAlias(
-    $_aliasNameGenerator(db.gameEvents.gameId, db.games.gameId),
-  );
+  static $GamesTable _gameIdTable(_$AppDatabase db) =>
+      db.games.createAlias('game_events__game_id__games__game_id');
 
   $$GamesTableProcessedTableManager get gameId {
     final $_column = $_itemColumn<String>('game_id')!;
@@ -8627,9 +8588,8 @@ final class $$GameSessionsTableReferences
     extends BaseReferences<_$AppDatabase, $GameSessionsTable, GameSession> {
   $$GameSessionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
-  static $GamesTable _gameIdTable(_$AppDatabase db) => db.games.createAlias(
-    $_aliasNameGenerator(db.gameSessions.gameId, db.games.gameId),
-  );
+  static $GamesTable _gameIdTable(_$AppDatabase db) =>
+      db.games.createAlias('game_sessions__game_id__games__game_id');
 
   $$GamesTableProcessedTableManager get gameId {
     final $_column = $_itemColumn<String>('game_id')!;
@@ -8645,10 +8605,8 @@ final class $$GameSessionsTableReferences
     );
   }
 
-  static $PlayersTable _hostPlayerIdTable(_$AppDatabase db) =>
-      db.players.createAlias(
-        $_aliasNameGenerator(db.gameSessions.hostPlayerId, db.players.playerId),
-      );
+  static $PlayersTable _hostPlayerIdTable(_$AppDatabase db) => db.players
+      .createAlias('game_sessions__host_player_id__players__player_id');
 
   $$PlayersTableProcessedTableManager get hostPlayerId {
     final $_column = $_itemColumn<String>('host_player_id')!;
@@ -8664,13 +8622,8 @@ final class $$GameSessionsTableReferences
     );
   }
 
-  static $PlayersTable _currentTurnPlayerIdTable(_$AppDatabase db) =>
-      db.players.createAlias(
-        $_aliasNameGenerator(
-          db.gameSessions.currentTurnPlayerId,
-          db.players.playerId,
-        ),
-      );
+  static $PlayersTable _currentTurnPlayerIdTable(_$AppDatabase db) => db.players
+      .createAlias('game_sessions__current_turn_player_id__players__player_id');
 
   $$PlayersTableProcessedTableManager? get currentTurnPlayerId {
     final $_column = $_itemColumn<String>('current_turn_player_id');

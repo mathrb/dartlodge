@@ -42,13 +42,13 @@ final class EditPlayerNotifierProvider
 }
 
 String _$editPlayerNotifierHash() =>
-    r'fee365c170a176fe5b6d7c2924da6962eead1085';
+    r'2850562bcbdffe87805f9709260f3beb278fa5c4';
 
 abstract class _$EditPlayerNotifier extends $Notifier<PlayerFormState> {
   PlayerFormState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PlayerFormState, PlayerFormState>;
     final element =
         ref.element
@@ -58,7 +58,7 @@ abstract class _$EditPlayerNotifier extends $Notifier<PlayerFormState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 
@@ -95,13 +95,13 @@ final class CreatePlayerNotifierProvider
 }
 
 String _$createPlayerNotifierHash() =>
-    r'8e791952297da5d1b0c025e81b0fab7b99aa2ba9';
+    r'be619545cdaae5137910acd0008fad925a53e022';
 
 abstract class _$CreatePlayerNotifier extends $Notifier<PlayerFormState> {
   PlayerFormState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PlayerFormState, PlayerFormState>;
     final element =
         ref.element
@@ -111,6 +111,6 @@ abstract class _$CreatePlayerNotifier extends $Notifier<PlayerFormState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

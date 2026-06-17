@@ -40,7 +40,7 @@ abstract class _$GameHistoryNotifier extends $AsyncNotifier<GameHistoryState> {
   FutureOr<GameHistoryState> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<GameHistoryState>, GameHistoryState>;
     final element =
@@ -51,6 +51,6 @@ abstract class _$GameHistoryNotifier extends $AsyncNotifier<GameHistoryState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
