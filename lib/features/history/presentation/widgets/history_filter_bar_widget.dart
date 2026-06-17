@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 /// Floor passed to `showDateRangePicker.firstDate`. Chosen pragmatically
 /// as "before any game in this app could plausibly exist" — DartLodge
@@ -55,10 +56,11 @@ class HistoryFilterBarWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final hasRange = selectedDateFrom != null && selectedDateTo != null;
     final dateLabel = hasRange
         ? '${_formatDateShort(selectedDateFrom!)} – ${_formatDateShort(selectedDateTo!)}'
-        : 'Date Range';
+        : l10n.historyFilterDateRange;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -70,16 +72,16 @@ class HistoryFilterBarWidget extends StatelessWidget {
               initialValue: selectedGameType,
               isExpanded: true,
               isDense: true,
-              decoration: const InputDecoration(
-                labelText: 'Game type',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.historyFilterGameType,
+                border: const OutlineInputBorder(),
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
               items: <DropdownMenuItem<GameType?>>[
-                const DropdownMenuItem<GameType?>(
+                DropdownMenuItem<GameType?>(
                   value: null,
-                  child: Text('All'),
+                  child: Text(l10n.historyFilterAll),
                 ),
                 ...GameType.values.map(
                   (t) => DropdownMenuItem<GameType?>(
@@ -112,7 +114,7 @@ class HistoryFilterBarWidget extends StatelessWidget {
             const SizedBox(width: 4),
             IconButton(
               icon: const Icon(Icons.clear),
-              tooltip: 'Clear filters',
+              tooltip: l10n.historyFilterClear,
               onPressed: onClearFilters,
             ),
           ],

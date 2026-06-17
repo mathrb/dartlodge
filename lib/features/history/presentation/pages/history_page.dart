@@ -7,6 +7,7 @@ import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
 import 'package:dart_lodge/features/history/presentation/providers/game_history_provider.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/game_summary_card_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/history_filter_bar_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
   const HistoryPage({super.key});
@@ -42,6 +43,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   Widget build(BuildContext context) {
     final asyncState = ref.watch(gameHistoryProvider);
     final notifier = ref.read(gameHistoryProvider.notifier);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -54,12 +56,12 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             }
           },
         ),
-        title: const Text('History'),
+        title: Text(l10n.historyTitle),
       ),
       body: asyncState.when(
         loading: () => const LoadingSpinnerWidget(),
         error: (e, _) => ErrorRetryWidget(
-          message: 'Failed to load history. Tap retry to try again.',
+          message: l10n.historyLoadFailed,
           onRetry: () => ref.invalidate(gameHistoryProvider),
         ),
         data: (historyState) => Column(
@@ -86,7 +88,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                                 .onSurfaceVariant,
                           ),
                           const SizedBox(height: 8),
-                          const Text('No completed games yet'),
+                          Text(l10n.historyEmpty),
                         ],
                       ),
                     )

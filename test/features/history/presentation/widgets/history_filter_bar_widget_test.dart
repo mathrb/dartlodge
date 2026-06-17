@@ -3,8 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/history_filter_bar_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 Widget _wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       home: Scaffold(
         body: child,
       ),

@@ -3,6 +3,7 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/name_formatter.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 /// Renders the per-leg turn breakdown for a single leg. The column layout
 /// switches based on [gameType] following the spec in issue #105.
@@ -74,28 +75,66 @@ class _TurnTableState extends State<_TurnTable> {
     super.dispose();
   }
 
-  List<String> _columns() {
+  List<String> _columns(AppLocalizations l10n) {
+    // 'Shanghai' (column header) stays fixed — it is a game-type proper noun.
     switch (widget.gameType) {
       case GameType.x01:
-        return ['Round', 'Start', 'Darts', 'Turn', 'Left'];
+        return [
+          l10n.historyColRound,
+          l10n.historyColStart,
+          l10n.historyColDarts,
+          l10n.historyColTurn,
+          l10n.historyColLeft,
+        ];
       case GameType.cricket:
-        return ['Round', 'Marks', 'Darts'];
+        return [l10n.historyColRound, l10n.historyColMarks, l10n.historyColDarts];
       case GameType.bobs27:
-        return ['Round', 'Target', 'Darts', 'Hits', 'Score', 'Total'];
+        return [
+          l10n.historyColRound,
+          l10n.historyColTarget,
+          l10n.historyColDarts,
+          l10n.historyColHits,
+          l10n.historyColScore,
+          l10n.historyColTotal,
+        ];
       case GameType.catch40:
-        return ['Round', 'Target', 'Darts', 'Score', 'Total', 'Done'];
+        return [
+          l10n.historyColRound,
+          l10n.historyColTarget,
+          l10n.historyColDarts,
+          l10n.historyColScore,
+          l10n.historyColTotal,
+          l10n.historyColDone,
+        ];
       case GameType.shanghai:
-        return ['Round', 'Darts', 'Score', 'Shanghai', 'Total'];
+        return [
+          l10n.historyColRound,
+          l10n.historyColDarts,
+          l10n.historyColScore,
+          'Shanghai',
+          l10n.historyColTotal,
+        ];
       case GameType.checkoutPractice:
-        return ['Turn', 'Start', 'Darts', 'Total', 'End'];
+        return [
+          l10n.historyColTurn,
+          l10n.historyColStart,
+          l10n.historyColDarts,
+          l10n.historyColTotal,
+          l10n.historyColEnd,
+        ];
       case GameType.countUp:
-        return ['Round', 'Darts', 'Score', 'Total'];
+        return [
+          l10n.historyColRound,
+          l10n.historyColDarts,
+          l10n.historyColScore,
+          l10n.historyColTotal,
+        ];
       case GameType.aroundTheClock:
-        return ['Round', 'Darts', 'Score'];
+        return [l10n.historyColRound, l10n.historyColDarts, l10n.historyColScore];
     }
   }
 
-  List<Widget> _cellsFor(TurnRow row, ThemeData theme) {
+  List<Widget> _cellsFor(TurnRow row, ThemeData theme, AppLocalizations l10n) {
     final cs = theme.colorScheme;
     Widget txt(String s, {Color? color, FontWeight? weight}) => Text(
           s,
@@ -167,8 +206,9 @@ class _TurnTableState extends State<_TurnTable> {
                 : Icons.cancel,
             size: 18,
             color: row.targetCompleted == true ? cs.primary : cs.outline,
-            semanticLabel:
-                row.targetCompleted == true ? 'Completed' : 'Not completed',
+            semanticLabel: row.targetCompleted == true
+                ? l10n.historyCompleted
+                : l10n.historyNotCompleted,
           ),
         ];
       case GameType.shanghai:
@@ -227,10 +267,11 @@ class _TurnTableState extends State<_TurnTable> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final columns = _columns();
+    final l10n = AppLocalizations.of(context);
+    final columns = _columns(l10n);
     final showCompetitor = !widget.singleCompetitor;
     final headers = [
-      if (showCompetitor) 'Player',
+      if (showCompetitor) l10n.historyColPlayer,
       ...columns,
     ];
 
@@ -276,7 +317,8 @@ class _TurnTableState extends State<_TurnTable> {
                           fontWeight: FontWeight.w600,
                         ),
                       )),
-                    for (final cell in _cellsFor(row, theme)) DataCell(cell),
+                    for (final cell in _cellsFor(row, theme, l10n))
+                      DataCell(cell),
                   ],
                 ),
             ],
@@ -316,6 +358,7 @@ class _AtcSegmentTableState extends State<_AtcSegmentTable> {
     if (widget.segments.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Container(
       decoration: BoxDecoration(
@@ -340,11 +383,11 @@ class _AtcSegmentTableState extends State<_AtcSegmentTable> {
               fontWeight: FontWeight.w900,
               letterSpacing: 1.1,
             ),
-            columns: const [
-              DataColumn(label: Text('SEGMENT')),
-              DataColumn(label: Text('HITS')),
-              DataColumn(label: Text('ATTEMPTS')),
-              DataColumn(label: Text('RATE')),
+            columns: [
+              DataColumn(label: Text(l10n.historyColSegment.toUpperCase())),
+              DataColumn(label: Text(l10n.historyColHits.toUpperCase())),
+              DataColumn(label: Text(l10n.historyColAttempts.toUpperCase())),
+              DataColumn(label: Text(l10n.historyColRate.toUpperCase())),
             ],
             rows: [
               for (final s in widget.segments)

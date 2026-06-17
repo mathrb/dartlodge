@@ -8,6 +8,7 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class LegBreakdownTableWidget extends StatefulWidget {
   final List<LegStatsBreakdown> legs;
@@ -64,11 +65,12 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     if (widget.legs.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(16),
-          child: Text('No legs completed'),
+          padding: const EdgeInsets.all(16),
+          child: Text(l10n.historyNoLegs),
         ),
       );
     }
@@ -81,21 +83,21 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
         if (_expandable) 3: const FixedColumnWidth(40),
       },
       children: [
-        _headerRow(theme),
+        _headerRow(theme, l10n),
         for (final leg in widget.legs) ...[
           _legRow(leg, theme),
           if (_expandedLegs.contains(leg.legNumber))
-            _expandedRow(leg, theme),
+            _expandedRow(leg, theme, l10n),
         ],
       ],
     );
   }
 
-  TableRow _headerRow(ThemeData theme) {
+  TableRow _headerRow(ThemeData theme, AppLocalizations l10n) {
     final cells = <Widget>[
-      _headerCell('Leg'),
-      _headerCell('Winner'),
-      _headerCell('Darts'),
+      _headerCell(l10n.historyColLeg),
+      _headerCell(l10n.historyWinner),
+      _headerCell(l10n.historyColDarts),
       if (_expandable) const SizedBox.shrink(),
     ];
     return TableRow(
@@ -159,7 +161,8 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
     );
   }
 
-  TableRow _expandedRow(LegStatsBreakdown leg, ThemeData theme) {
+  TableRow _expandedRow(
+      LegStatsBreakdown leg, ThemeData theme, AppLocalizations l10n) {
     final showStatsTable = widget.gameType == GameType.x01 ||
         widget.gameType == GameType.cricket;
     final breakdown = _turnBreakdownByLeg[leg.legNumber];
@@ -179,7 +182,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
               if (breakdown != null && !breakdown.isEmpty) ...[
                 if (showStatsTable) const SizedBox(height: 12),
                 Text(
-                  'Turn Breakdown',
+                  l10n.historyTurnBreakdown,
                   style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.6,
@@ -212,11 +215,13 @@ class _LegStatsTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final competitors = leg.byCompetitor;
     if (competitors.isEmpty) return const SizedBox.shrink();
 
     final isCricket = gameType == GameType.cricket;
-    final rows = isCricket ? _cricketRows(competitors) : _x01Rows(competitors);
+    final rows =
+        isCricket ? _cricketRows(l10n, competitors) : _x01Rows(l10n, competitors);
 
     const cellPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 8);
     final headerStyle = tt.labelSmall?.copyWith(
@@ -256,7 +261,8 @@ class _LegStatsTable extends StatelessWidget {
               children: [
                 Padding(
                   padding: cellPadding,
-                  child: Text('CATEGORY', style: headerStyle),
+                  child: Text(l10n.historyCategory.toUpperCase(),
+                      style: headerStyle),
                 ),
                 ...competitors.map((c) {
                   final isWinner = c.competitorId == leg.winnerCompetitorId;
@@ -273,7 +279,8 @@ class _LegStatsTable extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          isWinner ? 'WINNER' : 'OPPONENT',
+                          (isWinner ? l10n.historyWinner : l10n.historyOpponent)
+                              .toUpperCase(),
                           style: tt.labelSmall?.copyWith(
                             color: isWinner
                                 ? cs.primaryFixed.withValues(alpha: 0.7)
@@ -320,24 +327,25 @@ class _LegStatsTable extends StatelessWidget {
     );
   }
 
-  List<_StatRow> _x01Rows(List<LegCompetitorStats> competitors) {
+  List<_StatRow> _x01Rows(
+      AppLocalizations l10n, List<LegCompetitorStats> competitors) {
     return [
       _StatRow(
-        category: 'Avg PPR',
+        category: l10n.historyStatAvgPpr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
             .toList(),
         highlightWinner: true,
       ),
       _StatRow(
-        category: 'Checkout',
+        category: l10n.historyStatCheckout,
         values: competitors
             .map((c) =>
                 StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))
             .toList(),
       ),
       _StatRow(
-        category: 'Best Out',
+        category: l10n.historyStatBestOut,
         values: competitors
             .map((c) => c.highestCheckout != null
                 ? '${c.highestCheckout}'
@@ -345,7 +353,7 @@ class _LegStatsTable extends StatelessWidget {
             .toList(),
       ),
       _StatRow(
-        category: '180s',
+        category: l10n.historyStat180s,
         values:
             competitors.map((c) => c.oneEightyTurns.toString()).toList(),
       ),
@@ -353,17 +361,17 @@ class _LegStatsTable extends StatelessWidget {
       // `X01HighScoreBucketsProjection`); labels must match the actual
       // range so they don't read as cumulative "100+" / "140+" (#290).
       _StatRow(
-        category: '60–99',
+        category: l10n.historyStat6099,
         values: competitors.map((c) => c.sixtyPlusTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '100–139',
+        category: l10n.historyStat100139,
         values: competitors
             .map((c) => c.oneHundredPlusTurns.toString())
             .toList(),
       ),
       _StatRow(
-        category: '140–179',
+        category: l10n.historyStat140179,
         values: competitors
             .map((c) => c.oneFortyPlusTurns.toString())
             .toList(),
@@ -371,40 +379,41 @@ class _LegStatsTable extends StatelessWidget {
     ];
   }
 
-  List<_StatRow> _cricketRows(List<LegCompetitorStats> competitors) {
+  List<_StatRow> _cricketRows(
+      AppLocalizations l10n, List<LegCompetitorStats> competitors) {
     return [
       _StatRow(
-        category: 'Avg MPR',
+        category: l10n.historyStatAvgMpr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
             .toList(),
         highlightWinner: true,
       ),
       _StatRow(
-        category: 'First 9 MPR',
+        category: l10n.historyStatFirst9Mpr,
         values: competitors
             .map((c) =>
                 StatFormatter.fmtDouble(c.firstNineMarksPerRound, decimals: 2))
             .toList(),
       ),
       _StatRow(
-        category: '5 Marks',
+        category: l10n.historyStat5Marks,
         values: competitors.map((c) => c.fiveMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '6 Marks',
+        category: l10n.historyStat6Marks,
         values: competitors.map((c) => c.sixMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '7 Marks',
+        category: l10n.historyStat7Marks,
         values: competitors.map((c) => c.sevenMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '8 Marks',
+        category: l10n.historyStat8Marks,
         values: competitors.map((c) => c.eightMarkTurns.toString()).toList(),
       ),
       _StatRow(
-        category: '9 Marks',
+        category: l10n.historyStat9Marks,
         values: competitors.map((c) => c.nineMarkTurns.toString()).toList(),
       ),
     ];

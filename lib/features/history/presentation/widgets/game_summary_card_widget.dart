@@ -6,6 +6,7 @@ import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
+import 'package:dart_lodge/l10n/relative_date.dart';
 
 class GameSummaryCardWidget extends StatelessWidget {
   final Game game;
@@ -21,16 +22,13 @@ class GameSummaryCardWidget extends StatelessWidget {
     super.key,
   });
 
-  String _formatDate(DateTime? date) {
+  String _formatDate(BuildContext context, DateTime? date) {
     if (date == null) return '—';
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final d = DateTime(date.year, date.month, date.day);
-    final diff = today.difference(d).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    if (diff <= 7) return '$diff days ago';
-    return DateFormat('d MMM y').format(date);
+    // maxDays: 8 keeps the original behaviour of showing "7 days ago" at
+    // exactly a week (the player card uses the default 7).
+    return relativeDayLabel(context, date, maxDays: 8) ??
+        DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
+            .format(date);
   }
 
   static String gameTypeName(GameType type) {
@@ -124,7 +122,7 @@ class GameSummaryCardWidget extends StatelessWidget {
                   ],
                   const Spacer(),
                   Text(
-                    _formatDate(game.endTime),
+                    _formatDate(context, game.endTime),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
