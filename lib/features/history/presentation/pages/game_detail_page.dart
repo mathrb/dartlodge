@@ -22,6 +22,7 @@ import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/core/widgets/game_summary_section_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class GameDetailPage extends ConsumerWidget {
   final String gameId;
@@ -33,18 +34,19 @@ class GameDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(gameDetailProvider(gameId));
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Game Detail')),
+      appBar: AppBar(title: Text(l10n.historyGameDetailTitle)),
       body: asyncState.when(
         loading: () => const LoadingSpinnerWidget(),
         error: (e, _) => ErrorRetryWidget(
-          message: 'Error: $e',
+          message: l10n.historyGameLoadError(e.toString()),
           onRetry: () => ref.invalidate(gameDetailProvider(gameId)),
         ),
         data: (detail) {
           if (detail == null) {
-            return const Center(child: Text('Game not found'));
+            return Center(child: Text(l10n.historyGameNotFound));
           }
           return _buildBody(context, ref, detail);
         },
@@ -56,6 +58,7 @@ class GameDetailPage extends ConsumerWidget {
       BuildContext context, WidgetRef ref, GameDetailState detail) {
     final game = detail.game!;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final winner = game.winnerCompetitorId;
 
     final sortedCompetitors = [...detail.competitors]..sort((a, b) {
@@ -89,7 +92,7 @@ class GameDetailPage extends ConsumerWidget {
           if (showLegBreakdown) ...[
             const SizedBox(height: 16),
             Text(
-              'Leg Breakdown',
+              l10n.historyLegBreakdown,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -105,7 +108,7 @@ class GameDetailPage extends ConsumerWidget {
           if (showCheckoutRounds) ...[
             const SizedBox(height: 16),
             Text(
-              'Round Breakdown',
+              l10n.historyRoundBreakdown,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -240,7 +243,11 @@ class _StatsSection extends ConsumerWidget {
       ),
       error: (err, _) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Text('Error loading summary: $err'),
+        child: Text(
+          AppLocalizations.of(context).historyErrorLoadingSummary(
+            err.toString(),
+          ),
+        ),
       ),
       data: (result) {
         if (result == null) return const SizedBox.shrink();
@@ -278,9 +285,9 @@ class _CheckoutRoundsBreakdown extends StatelessWidget {
     );
     final leg = breakdown[1];
     if (leg == null || leg.turns.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8),
-        child: Text('No attempts recorded'),
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Text(AppLocalizations.of(context).historyNoAttempts),
       );
     }
     return TurnBreakdownTableWidget(

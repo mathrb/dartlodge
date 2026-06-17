@@ -18,6 +18,8 @@ import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/models/game_result.dart';
 import 'package:dart_lodge/features/history/presentation/pages/game_detail_page.dart';
 import 'package:dart_lodge/features/history/presentation/providers/game_detail_provider.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:dart_lodge/features/history/presentation/state/game_detail_state.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/statistics/presentation/widgets/practice_summary_widget.dart';
@@ -98,6 +100,8 @@ Widget _pump({
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       home: const GameDetailPage(gameId: 'game-1'),
     ),
   );

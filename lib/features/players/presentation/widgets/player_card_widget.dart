@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/presentation/widgets/player_avatar_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/relative_date.dart';
 
 class PlayerCardWidget extends StatelessWidget {
   final Player player;
@@ -16,17 +17,10 @@ class PlayerCardWidget extends StatelessWidget {
     this.trailing,
   });
 
-  String _formatLastActive(BuildContext context, AppLocalizations l10n) {
-    final now = DateTime.now();
-    final local = player.lastActive.toLocal();
-    final diff = DateTime(now.year, now.month, now.day)
-        .difference(DateTime(local.year, local.month, local.day))
-        .inDays;
-    if (diff <= 0) return l10n.playersRelativeToday;
-    if (diff == 1) return l10n.playersRelativeYesterday;
-    if (diff < 7) return l10n.playersRelativeDaysAgo(diff);
-    return DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
-        .format(local);
+  String _formatLastActive(BuildContext context) {
+    return relativeDayLabel(context, player.lastActive) ??
+        DateFormat.yMMMd(Localizations.localeOf(context).toLanguageTag())
+            .format(player.lastActive.toLocal());
   }
 
   @override
@@ -37,8 +31,7 @@ class PlayerCardWidget extends StatelessWidget {
       minTileHeight: 64,
       leading: PlayerAvatarWidget(player: player, size: 40),
       title: Text(player.name),
-      subtitle:
-          Text(l10n.playersCardLastActive(_formatLastActive(context, l10n))),
+      subtitle: Text(l10n.playersCardLastActive(_formatLastActive(context))),
       trailing: trailing,
       onTap: onTap,
     );
