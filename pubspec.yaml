@@ -3,7 +3,10 @@ description: Local-first open-source darts scoring and statistics app for Androi
 version: 0.1.0+0
 
 environment:
-  sdk: ">=3.10.0 <4.0.0"
+  # Dart 3.12 floor: the resolved graph requires it (drift 2.34 / sqlite3 3.x
+  # need ≥3.10, and camera_android_camerax 0.7.2+ pulls the floor to 3.12).
+  # Ships with Flutter 3.44+.
+  sdk: ">=3.12.0 <4.0.0"
 
 dependencies:
   flutter:
