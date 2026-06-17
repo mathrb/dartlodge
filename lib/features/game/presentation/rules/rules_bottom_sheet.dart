@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 import 'game_rules.dart';
 import 'rules_registry.dart';
@@ -27,14 +28,15 @@ class RulesBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rules = rulesFor(slug);
+    final l10n = AppLocalizations.of(context);
+    final rules = rulesFor(l10n, slug);
     final cs = Theme.of(context).colorScheme;
 
     if (rules == null) {
       return Padding(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
         child: Text(
-          'Rules unavailable.',
+          l10n.rulesUnavailable,
           style: AppTextStyles.bodyLarge.copyWith(color: cs.onSurface),
         ),
       );
@@ -147,7 +149,7 @@ class _VariantsBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Related variants',
+            AppLocalizations.of(context).rulesRelatedVariants,
             style: AppTextStyles.labelMedium.copyWith(color: cs.primary),
           ),
           const SizedBox(height: 12),

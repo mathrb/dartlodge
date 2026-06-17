@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/features/game/presentation/rules/rules_bottom_sheet.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
 void main() {
   Widget _host() => MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
             body: Center(
@@ -29,6 +33,8 @@ void main() {
   testWidgets('shows "Rules unavailable." for an unknown slug', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
             body: Center(

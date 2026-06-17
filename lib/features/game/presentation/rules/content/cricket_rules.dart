@@ -1,208 +1,160 @@
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../game_rules.dart';
 
-const cricketStandardRules = GameRules(
-  title: 'Cricket — Standard',
-  tagline: 'Close the numbers 15 to 20 and the bull, then outscore the table.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Close all the cricket targets before your opponents, and finish ahead on points. '
-          'You need both: closing alone is not enough if someone else has scored more on you.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'The targets are 15, 16, 17, 18, 19, 20 and the bullseye. Other numbers have no effect.',
-        'You throw three darts per turn. A single counts as one hit on a target, a double as two hits, and a triple as three.',
-        'The outer bull counts as one hit, the inner bull as two. Each bull hit is worth 25 points if you score on it.',
-        'Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.',
-        'Once every player has closed a number, it is dead and nobody can score on it.',
+GameRules cricketStandardRules(AppLocalizations l10n) => GameRules(
+      title: 'Cricket — Standard',
+      tagline: l10n.rulesCricketStdTagline,
+      sections: [
+        RulesSection(
+          heading: l10n.rulesHeadingObjective,
+          body: l10n.rulesCricketStdObjectiveBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingHowToPlay,
+          bullets: [
+            l10n.rulesCricketStdHowB1,
+            l10n.rulesCricketStdHowB2,
+            l10n.rulesCricketStdHowB3,
+            l10n.rulesCricketStdHowB4,
+            l10n.rulesCricketStdHowB5,
+          ],
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingWinning,
+          body: l10n.rulesCricketStdWinningBody,
+        ),
       ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'You win the leg the moment all of your targets are closed and your score is at least as high as every opponent\'s. '
-          'If you close everything but trail on points, the leg continues — you need to score, or hope an opponent closes a number you are leading on.',
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'No Score',
-      summary: 'Closing only. No points are tracked; the first player to close every target wins.',
-    ),
-    RulesVariant(
-      name: 'Cut Throat',
-      summary: 'Points hit on a number only you have closed are given to opponents. Lowest score wins.',
-    ),
-  ],
-);
+      relatedVariants: [
+        RulesVariant(name: 'No Score', summary: l10n.rulesCricketStdVar1Summary),
+        RulesVariant(name: 'Cut Throat', summary: l10n.rulesCricketStdVar2Summary),
+      ],
+    );
 
-const cricketNoScoreRules = GameRules(
-  title: 'Cricket — No Score',
-  tagline: 'Closing only. Whoever shuts every number first wins.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Close every cricket target before your opponents. Points do not exist in this variant — the race is purely about shutting numbers down.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'The targets are 15, 16, 17, 18, 19, 20 and the bullseye.',
-        'You throw three darts per turn. A single counts as one hit, a double as two, and a triple as three.',
-        'The outer bull counts as one hit and the inner bull as two.',
-        'Hit a target three times to close it. Extra hits beyond three have no effect — no points are scored in this variant.',
+GameRules cricketNoScoreRules(AppLocalizations l10n) => GameRules(
+      title: 'Cricket — No Score',
+      tagline: l10n.rulesCricketNsTagline,
+      sections: [
+        RulesSection(
+          heading: l10n.rulesHeadingObjective,
+          body: l10n.rulesCricketNsObjectiveBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingHowToPlay,
+          bullets: [
+            l10n.rulesCricketNsHowB1,
+            l10n.rulesCricketNsHowB2,
+            l10n.rulesCricketNsHowB3,
+            l10n.rulesCricketNsHowB4,
+          ],
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingWinning,
+          body: l10n.rulesCricketNsWinningBody,
+        ),
       ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'The first player to close all seven targets wins the leg. Strategy is pure efficiency: spend every dart on a number you have not closed yet.',
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'Standard',
-      summary: 'Closed numbers score points for the player who closed them. Highest score with everything closed wins.',
-    ),
-    RulesVariant(
-      name: 'Cut Throat',
-      summary: 'Points from closed numbers go to opponents instead. Lowest score wins.',
-    ),
-  ],
-);
+      relatedVariants: [
+        RulesVariant(name: 'Standard', summary: l10n.rulesCricketNsVar1Summary),
+        RulesVariant(name: 'Cut Throat', summary: l10n.rulesCricketNsVar2Summary),
+      ],
+    );
 
-const cricketCutThroatRules = GameRules(
-  title: 'Cricket — Cut Throat',
-  tagline: 'Same closing rules, reversed scoring. Points are punishment.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Close every cricket target — and finish on the lowest score at the table. '
-          'Points are a punishment here: when you score on a number only you have closed, those points go to your opponents.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'The targets are 15, 16, 17, 18, 19, 20 and the bullseye.',
-        'You throw three darts per turn. A single counts as one hit, a double as two, and a triple as three. The outer bull is one hit, the inner bull is two.',
-        'Hit a target three times to close it.',
-        'Once you close a number, extra hits on it add points to every opponent who has not closed it yet. You gain nothing on those darts.',
-        'Once every player has closed a number, it is dead for everyone.',
+GameRules cricketCutThroatRules(AppLocalizations l10n) => GameRules(
+      title: 'Cricket — Cut Throat',
+      tagline: l10n.rulesCricketCtTagline,
+      sections: [
+        RulesSection(
+          heading: l10n.rulesHeadingObjective,
+          body: l10n.rulesCricketCtObjectiveBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingHowToPlay,
+          bullets: [
+            l10n.rulesCricketCtHowB1,
+            l10n.rulesCricketCtHowB2,
+            l10n.rulesCricketCtHowB3,
+            l10n.rulesCricketCtHowB4,
+            l10n.rulesCricketCtHowB5,
+          ],
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingWinning,
+          body: l10n.rulesCricketCtWinningBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingTips,
+          bullets: [
+            l10n.rulesCricketCtTipsB1,
+            l10n.rulesCricketCtTipsB2,
+          ],
+        ),
       ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'You win the leg when all of your targets are closed and your score is at least as low as every opponent\'s. '
-          'If two or more players finish tied on the lowest score, whoever closed all the targets first wins. '
-          'Closing every target with zero points is an instant win.',
-    ),
-    RulesSection(
-      heading: 'Tips',
-      bullets: [
-        'Hitting a closed number a fourth time is usually bad: it feeds your opponents free points. Move to a number you still need to close.',
-        'When several opponents share an open number, every overflow dart you throw on a closed number gives points to all of them.',
+      relatedVariants: [
+        RulesVariant(name: 'Standard', summary: l10n.rulesCricketCtVar1Summary),
+        RulesVariant(name: 'No Score', summary: l10n.rulesCricketCtVar2Summary),
       ],
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'Standard',
-      summary: 'Closed numbers score points for the player who closed them. Highest score with everything closed wins.',
-    ),
-    RulesVariant(
-      name: 'No Score',
-      summary: 'No points are tracked. The first to close every target wins.',
-    ),
-  ],
-);
+    );
 
-const cricketCrazyRules = GameRules(
-  title: 'Cricket — Crazy',
-  tagline: 'The board re-rolls every turn. Close a number to lock it in.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Close all 6 active numbers and the Bull, ahead on points (per the chosen scoring rules). '
-          'The catch: the active numbers change every turn until a player closes one.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'Each turn, every still-open slot shows a fresh number from 1 to 20, drawn at random when your turn starts. The Bull is always one of the seven targets and never re-rolls.',
-        'You throw three darts per turn. A single is one hit, a double is two, a triple is three. The outer bull counts as one hit, the inner bull as two.',
-        'Hit a number three times to close it — and the moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.',
-        'Partial hits (one or two marks) reset every roll. Only closed numbers (and the Bull) keep their marks across turns — even if the same number happens to roll again, you start fresh at 0 marks on it next turn.',
-        'Once you close every active number plus Bull and you are ahead on points (per the scoring rules), you win the leg.',
+GameRules cricketCrazyRules(AppLocalizations l10n) => GameRules(
+      title: 'Cricket — Crazy',
+      tagline: l10n.rulesCricketCzTagline,
+      sections: [
+        RulesSection(
+          heading: l10n.rulesHeadingObjective,
+          body: l10n.rulesCricketCzObjectiveBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingHowToPlay,
+          bullets: [
+            l10n.rulesCricketCzHowB1,
+            l10n.rulesCricketCzHowB2,
+            l10n.rulesCricketCzHowB3,
+            l10n.rulesCricketCzHowB4,
+            l10n.rulesCricketCzHowB5,
+          ],
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingWinning,
+          body: l10n.rulesCricketCzWinningBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingTips,
+          bullets: [
+            l10n.rulesCricketCzTipsB1,
+            l10n.rulesCricketCzTipsB2,
+          ],
+        ),
       ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'Identical to Standard Cricket: close everything and finish ahead on points. '
-          'Since the target set keeps churning, expect bursts of progress on locked numbers and a lot of wasted darts on numbers that get rotated out.',
-    ),
-    RulesSection(
-      heading: 'Tips',
-      bullets: [
-        'Locking a number is doubly valuable: it sticks on the board AND opponents still have to close it. Focus high-mark darts on numbers you can close quickly.',
-        'Spreading hits across multiple open numbers is risky — partial marks are wiped on every roll. Better to commit to closing one number in the same turn before moving on.',
+      relatedVariants: [
+        RulesVariant(name: 'Standard', summary: l10n.rulesCricketCzVar1Summary),
+        RulesVariant(name: 'Random', summary: l10n.rulesCricketCzVar2Summary),
       ],
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'Standard',
-      summary: 'The classic 15–20 + Bull target set. No randomness, no churn.',
-    ),
-    RulesVariant(
-      name: 'Random',
-      summary: 'Six random numbers drawn once at game start, then fixed for the whole game.',
-    ),
-  ],
-);
+    );
 
-const cricketRandomRules = GameRules(
-  title: 'Cricket — Random',
-  tagline: 'Six random numbers plus the Bull, fixed for the whole game.',
-  sections: [
-    RulesSection(
-      heading: 'Objective',
-      body:
-          'Same as Standard Cricket — close every target and finish ahead on points — but the six numbers are drawn at random when the game starts. '
-          'The Bull is always a target. The assigned set stays the same across every leg of the game.',
-    ),
-    RulesSection(
-      heading: 'How to play',
-      bullets: [
-        'When the game begins, six numbers from 1 to 20 are drawn at random and shown on the board. Together with the Bull they form your seven targets.',
-        'The targets do not change between legs — what was drawn is what you play, start to finish.',
-        'You throw three darts per turn. A single is one hit on a target, a double is two, and a triple is three. The outer bull counts as one hit, the inner bull as two.',
-        'Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.',
-        'Once every player has closed a number it is dead, and nobody can score on it.',
+GameRules cricketRandomRules(AppLocalizations l10n) => GameRules(
+      title: 'Cricket — Random',
+      tagline: l10n.rulesCricketRdTagline,
+      sections: [
+        RulesSection(
+          heading: l10n.rulesHeadingObjective,
+          body: l10n.rulesCricketRdObjectiveBody,
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingHowToPlay,
+          bullets: [
+            l10n.rulesCricketRdHowB1,
+            l10n.rulesCricketRdHowB2,
+            l10n.rulesCricketRdHowB3,
+            l10n.rulesCricketRdHowB4,
+            l10n.rulesCricketRdHowB5,
+          ],
+        ),
+        RulesSection(
+          heading: l10n.rulesHeadingWinning,
+          body: l10n.rulesCricketRdWinningBody,
+        ),
       ],
-    ),
-    RulesSection(
-      heading: 'Winning',
-      body:
-          'You win the leg the moment all of your targets are closed and your score is at least as high as every opponent\'s. '
-          'Closing first while trailing on points does not end the leg — you need to score on, or have opponents close, the targets you are leading on.',
-    ),
-  ],
-  relatedVariants: [
-    RulesVariant(
-      name: 'Standard',
-      summary: 'The classic 15–20 + Bull target set. No randomness.',
-    ),
-    RulesVariant(
-      name: 'Cut Throat',
-      summary: 'Random Cricket can be combined with Cut Throat scoring — points go to opponents instead.',
-    ),
-  ],
-);
+      relatedVariants: [
+        RulesVariant(name: 'Standard', summary: l10n.rulesCricketRdVar1Summary),
+        RulesVariant(name: 'Cut Throat', summary: l10n.rulesCricketRdVar2Summary),
+      ],
+    );
