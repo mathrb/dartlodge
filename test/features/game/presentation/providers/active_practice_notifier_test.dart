@@ -711,4 +711,36 @@ void main() {
     expect(after.showBust, isFalse,
         reason: 'a zero-value MISS dart is not a bust');
   });
+
+  // ── Regression #538: stray camera dart on a full/ended turn is a no-op ────
+  //
+  // After a manual entry + later camera re-detection the game's turn can be
+  // ahead of the camera tracker: the turn ends (turnActive=false) while the
+  // tracker still emits one more dart. Unlike X01/cricket (whose use cases
+  // throw InvalidGameStateException → AsyncError), ProcessPracticeDartUseCase
+  // does not validate turnActive — so without the guard the stray dart would
+  // silently apply, over-counting dartsThrownInTurn past 3 and corrupting the
+  // turn. The camera-scoped guard must drop it as a no-op instead.
+
+  test('processDart(camera) is a silent no-op on a full/ended turn (#538)',
+      () async {
+    stubBuild(game: makeAtcGame(), events: [turnStartedEvent()]);
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // 3 darts → turn ends (turnActive == false) awaiting NEXT.
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    final full = container.read(activePracticeProvider('g1')).value!;
+    expect(full.gameState.turnActive, false);
+    expect(full.gameState.dartsThrownInTurn, 3);
+
+    // Stray camera dart on the ended turn → dropped, no error, no change.
+    await notifier.processDart('1', inputMethod: 'camera');
+
+    final after = container.read(activePracticeProvider('g1'));
+    expect(after.hasError, isFalse);
+    expect(after.value!.gameState, full.gameState);
+  });
 }

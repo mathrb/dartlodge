@@ -36,6 +36,16 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     if (current == null) return;
 
     final gs = current.gameState;
+
+    // A stray camera dart on a full/ended turn (or completed game) must never
+    // flip the provider to AsyncError — it is best-effort input. The turn/game
+    // can be ahead of the tracker after a manual entry + later re-detection
+    // (#538). Return before AsyncValue.guard so the error channel is untouched;
+    // manual entry is unaffected (its UI is already gated on turnActive).
+    if (inputMethod == 'camera' && (gs.isComplete || !gs.turnActive)) {
+      return;
+    }
+
     final competitor = gs.competitors[gs.currentTurnIndex];
 
     final dart = DartThrow(
