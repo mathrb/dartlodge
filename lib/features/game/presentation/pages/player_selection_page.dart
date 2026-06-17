@@ -185,7 +185,6 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             if (config != null && _configHasEditableFields(config))
               Center(
                 child: _ConfigSummaryChip(
-                  config: config,
                   summary: _configSummaryFor(l10n, config),
                   onTap: () => _openConfigSheet(context, setupState),
                 ),
@@ -467,12 +466,10 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
 
 class _ConfigSummaryChip extends StatelessWidget {
   const _ConfigSummaryChip({
-    required this.config,
     required this.summary,
     required this.onTap,
   });
 
-  final GameConfig config;
   final String summary;
   final VoidCallback onTap;
 
