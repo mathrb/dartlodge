@@ -429,6 +429,37 @@ class AutoScorerSession {
     await store.save(record, bytes);
   }
 
+  /// Manual-entry capture (#537): the user typed [segment] for a dart the model
+  /// missed (empty-slot entry). Stores the current [frame] + [bytes] as a
+  /// labelled mistake — `trigger: manual` (user-initiated, like the force-capture
+  /// button) AND `was_corrected: true` with [segment] as ground truth — so the
+  /// probe reads it as a labelled missed-detection and it lands in both the
+  /// "all" and "mistakes only" datasets. Keyed by the manual sequence
+  /// (`t<turn>-m<seq>`), shared with the force-capture button (the segment-bearing
+  /// `corrected_darts` is what distinguishes a labelled entry from an unlabelled
+  /// button press). No-op without a capture store.
+  Future<void> persistManualEntry(
+    DetectionFrame frame,
+    Uint8List bytes, {
+    required int turnOrdinal,
+    required String gameId,
+    required String segment,
+  }) async {
+    final store = _captureStore;
+    if (store == null) return;
+    _manualSequence += 1;
+    final capture =
+        _Capture(bytes: bytes, space: FrameSpace.raw, width: 0, height: 0);
+    final record = _recordFor(
+      frame,
+      gameId,
+      CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence),
+      capture,
+      trigger: CaptureTrigger.manual,
+    ).withCorrection([CorrectedDart(x: 0, y: 0, segment: segment)]);
+    await store.save(record, bytes);
+  }
+
   Future<void> dispose() async {
     await _flushRecording();
     await _detector?.dispose();

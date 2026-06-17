@@ -495,6 +495,11 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   return DartInputGridWidget(
                     enabled: active,
                     onSegmentTapped: (segment) {
+                      // A manual entry means the camera missed this dart —
+                      // capture the frame as labelled training data (#537).
+                      ref
+                          .read(activeCaptureCorrectionSinkProvider)
+                          ?.captureManualEntry(segment: segment);
                       ref
                           .read(activeGameProvider(widget.gameId).notifier)
                           .processDart(segment);

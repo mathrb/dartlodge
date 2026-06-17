@@ -458,6 +458,36 @@ void main() {
         isFalse);
   });
 
+  test('persistManualEntry stores a manual-trigger labelled-mistake record (#537)',
+      () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(captureStore: store);
+    final raw = Uint8List.fromList(const [5, 5]);
+
+    await session.persistManualEntry(oneDartFrame, raw,
+        turnOrdinal: 2, gameId: 'g', segment: 'T20');
+
+    expect(store.savedBytes.single, raw); // verbatim
+    final record = store.saved.single;
+    expect(record.frameSpace, FrameSpace.raw);
+    // Manual-triggered (user-initiated), under a manual handle.
+    expect(record.trigger, CaptureTrigger.manual);
+    expect(record.handle,
+        const CaptureHandle.manual(turnOrdinal: 2, sequence: 1));
+    // Flagged as a mistake, with the entered segment as ground truth — so it
+    // lands in the "mistakes only" dataset as well as "all".
+    expect(record.wasCorrected, isTrue);
+    expect(record.correctedDarts.single.segment, 'T20');
+  });
+
+  test('persistManualEntry is a no-op without a capture store (#537)', () async {
+    final session = AutoScorerSession();
+    // Must not throw without a store.
+    await session.persistManualEntry(
+        oneDartFrame, Uint8List.fromList(const [1]),
+        turnOrdinal: 1, gameId: 'g', segment: '20');
+  });
+
   test('applyDartCorrection forwards a handle + corrected segment (#456)',
       () async {
     final store = _FakeCaptureStore();

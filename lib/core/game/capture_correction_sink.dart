@@ -17,4 +17,13 @@ abstract interface class CaptureCorrectionSink {
   /// metadata enrichment — it must never block or affect game state, and is a
   /// no-op when no capture exists for the dart.
   void correctDart({required int cameraDartOrdinal, required String segment});
+
+  /// The user **manually entered** [segment] for a dart the model missed or
+  /// mis-detected (the empty-slot entry path, not a correction of a detected
+  /// dart). Capture the current frame as a labelled mistake — [segment] is the
+  /// ground truth — so the missed detection becomes training data. Captured in
+  /// BOTH capture modes (a manual entry is always a detection error), gated on
+  /// the data-collection opt-in. Best-effort: never blocks or affects game
+  /// state, and a no-op when no auto-scoring session is bound (#537).
+  void captureManualEntry({required String segment});
 }

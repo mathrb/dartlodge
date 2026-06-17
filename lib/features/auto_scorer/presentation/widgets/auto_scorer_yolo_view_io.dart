@@ -459,6 +459,36 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     }
   }
 
+  /// The user manually entered [segment] for a dart the model missed (#537):
+  /// capture the current frame as a labelled mistake. Unlike [correctDart] this
+  /// does NOT branch on the capture mode — a manual entry is always a detection
+  /// error, so it is captured in both "all" and "mistakes only" modes. Gated on
+  /// the data-collection opt-in; fire-and-forget so a missed capture can never
+  /// disrupt scoring.
+  @override
+  void captureManualEntry({required String segment}) {
+    if (!mounted) return;
+    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) return;
+    unawaited(_captureManualEntry(segment));
+  }
+
+  Future<void> _captureManualEntry(String segment) async {
+    try {
+      // Full-resolution still without the baked-in overlay (see `_capture`).
+      final bytes = await _controller.capturePhoto(withOverlays: false);
+      if (!mounted || bytes == null) return;
+      await widget.session.persistManualEntry(
+        _latest,
+        bytes,
+        turnOrdinal: widget.currentTurnOrdinal(),
+        gameId: widget.gameId,
+        segment: segment,
+      );
+    } catch (_) {
+      // A missed training capture must never disrupt scoring.
+    }
+  }
+
   void _ensureNative() {
     if (_nativePushed) return;
     _nativePushed = true;

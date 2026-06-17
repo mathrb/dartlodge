@@ -492,7 +492,14 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           doublesOnly: doublesOnly,
           requireActiveTurn: true,
           isCorrection: false,
-          onSegment: (seg) => notifier.processDart(seg));
+          onSegment: (seg) {
+            // Manual entry = camera missed this dart; capture the frame as
+            // labelled training data (#537).
+            ref
+                .read(activeCaptureCorrectionSinkProvider)
+                ?.captureManualEntry(segment: seg);
+            notifier.processDart(seg);
+          });
     }
   }
 
