@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../domain/models/game_state.dart';
@@ -28,19 +29,20 @@ class _CapWinnerSelectionDialogWidgetState
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: false,
       child: AlertDialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
         ),
-        title: const Text('Round limit reached'),
+        title: Text(l10n.gameRoundLimitReached),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'No automatic winner — pick who wins this leg.',
+              l10n.gameNoAutoWinner,
               style: AppTextStyles.bodyMedium.copyWith(
                 color: cs.onSurfaceVariant,
               ),
@@ -70,7 +72,7 @@ class _CapWinnerSelectionDialogWidgetState
                     Navigator.of(context).pop();
                     widget.onSelect(id);
                   },
-            child: const Text('Set winner'),
+            child: Text(l10n.gameSetWinner),
           ),
         ],
       ),

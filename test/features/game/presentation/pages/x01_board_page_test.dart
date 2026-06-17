@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
@@ -159,6 +161,8 @@ Widget _buildApp(
       activeGameProvider.overrideWith(() => notifier),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -184,6 +188,8 @@ Widget _buildAppCameraFirst(
       ),
     ],
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -202,6 +208,8 @@ Widget _buildAppWithContainer(
   return UncontrolledProviderScope(
     container: container,
     child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
       theme: AppTheme.light(),
       routerConfig: router,
     ),
@@ -233,6 +241,8 @@ void main() {
               .overrideWith(() => _LoadingActiveGameNotifier()),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: router,
         ),
@@ -924,6 +934,8 @@ void main() {
               .overrideWith(() => _LoadingActiveGameNotifier()),
         ],
         child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
           theme: AppTheme.light(),
           routerConfig: router,
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
@@ -122,6 +123,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     // Bust listener — fires on showBust false→true transition
     ref.listen(activeGameProvider(widget.gameId), (prev, next) {
@@ -217,15 +219,15 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       ),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
-          title: 'Error',
+          title: l10n.commonError,
           message: '$err',
           onRetry: () => ref.invalidate(activeGameProvider(widget.gameId)),
         ),
       ),
       data: (activeGameState) {
         if (activeGameState == null) {
-          return const Scaffold(
-            body: Center(child: Text('Game not found')),
+          return Scaffold(
+            body: Center(child: Text(l10n.gameNotFound)),
           );
         }
 
@@ -269,7 +271,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       icon: Icon(
                         Icons.more_vert,
                         color: cs.onSurface,
-                        semanticLabel: 'Game options',
+                        semanticLabel: l10n.gameOptionsSemantic,
                       ),
                       onSelected: (action) {
                         switch (action) {
@@ -279,14 +281,14 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                             context.push(GameRoutes.settings);
                         }
                       },
-                      itemBuilder: (_) => const [
+                      itemBuilder: (_) => [
                         PopupMenuItem(
                           value: _BoardMenuAction.endGame,
-                          child: Text('End Game'),
+                          child: Text(l10n.gameMenuEndGame),
                         ),
                         PopupMenuItem(
                           value: _BoardMenuAction.settings,
-                          child: Text('Settings'),
+                          child: Text(l10n.settingsTitle),
                         ),
                       ],
                     ),
@@ -432,7 +434,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                'Correct dart ${dartIndex + 1}',
+                AppLocalizations.of(context).gameCorrectDart(dartIndex + 1),
                 style: AppTextStyles.titleMedium,
               ),
             ),
@@ -476,7 +478,8 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text('Enter dart', style: AppTextStyles.titleMedium),
+              child: Text(AppLocalizations.of(context).gameEnterDart,
+                  style: AppTextStyles.titleMedium),
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
@@ -603,7 +606,8 @@ class _CheckoutBanner extends StatelessWidget {
                       const SizedBox(width: 12),
                       Flexible(
                         child: Text(
-                          suggestion ?? 'Suggestions appear in checkout range',
+                          suggestion ??
+                              AppLocalizations.of(context).gameCheckoutHint,
                           // The at-distance bump applies only to a REAL
                           // suggestion: the placeholder at headlineMedium
                           // ellipsised ("Suggestions app…") on a 412dp screen
@@ -654,6 +658,7 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return SafeArea(
       child: Container(
@@ -690,7 +695,7 @@ class _BottomActionBar extends StatelessWidget {
                   child: Icon(
                     Icons.undo,
                     color: cs.onSurface,
-                    semanticLabel: 'Undo last dart',
+                    semanticLabel: l10n.gameUndoLastDart,
                   ),
                 ),
               ),
@@ -699,7 +704,7 @@ class _BottomActionBar extends StatelessWidget {
             // Next player / round — primary neon button
             Expanded(
               child: PulsingNextButtonWidget(
-                label: isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND',
+                label: isMultiplayer ? l10n.gameNextPlayer : l10n.gameNextRound,
                 onPressed: canNext ? onNextRound : null,
                 pulse: pulseNext,
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/widgets/app_dialog_widget.dart';
 
 class EndGameDialogWidget extends StatelessWidget {
@@ -14,17 +15,18 @@ class EndGameDialogWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AppDialogWidget(
-      title: 'End Game?',
-      content: 'The current game will be abandoned.',
+      title: l10n.gameEndGameTitle,
+      content: l10n.gameEndGameBody,
       actions: [
         DialogAction(
-          label: 'Cancel',
+          label: l10n.commonCancel,
           onPressed: onCancel,
           autoClose: false,
         ),
         DialogAction(
-          label: 'End Game',
+          label: l10n.gameMenuEndGame,
           onPressed: onConfirm,
           isDestructive: true,
           autoClose: false,

@@ -284,138 +284,274 @@
     "description": "Validation: unexpected error saving a player name"
   },
   "historyTitle": "History",
-  "@historyTitle": { "description": "History list screen title" },
+  "@historyTitle": {
+    "description": "History list screen title"
+  },
   "historyLoadFailed": "Failed to load history. Tap retry to try again.",
-  "@historyLoadFailed": { "description": "Error message on the history list" },
+  "@historyLoadFailed": {
+    "description": "Error message on the history list"
+  },
   "historyEmpty": "No completed games yet",
-  "@historyEmpty": { "description": "Empty state on the history list" },
+  "@historyEmpty": {
+    "description": "Empty state on the history list"
+  },
   "historyGameDetailTitle": "Game Detail",
-  "@historyGameDetailTitle": { "description": "Game detail screen title" },
+  "@historyGameDetailTitle": {
+    "description": "Game detail screen title"
+  },
   "historyGameNotFound": "Game not found",
-  "@historyGameNotFound": { "description": "Shown when a game id has no match" },
+  "@historyGameNotFound": {
+    "description": "Shown when a game id has no match"
+  },
   "historyGameLoadError": "Error: {error}",
   "@historyGameLoadError": {
     "description": "Error loading a game detail",
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "historyLegBreakdown": "Leg Breakdown",
-  "@historyLegBreakdown": { "description": "Leg breakdown section title" },
+  "@historyLegBreakdown": {
+    "description": "Leg breakdown section title"
+  },
   "historyRoundBreakdown": "Round Breakdown",
-  "@historyRoundBreakdown": { "description": "Round breakdown section title (checkout practice)" },
+  "@historyRoundBreakdown": {
+    "description": "Round breakdown section title (checkout practice)"
+  },
   "historyTurnBreakdown": "Turn Breakdown",
-  "@historyTurnBreakdown": { "description": "Turn breakdown subsection title" },
+  "@historyTurnBreakdown": {
+    "description": "Turn breakdown subsection title"
+  },
   "historyErrorLoadingSummary": "Error loading summary: {error}",
   "@historyErrorLoadingSummary": {
     "description": "Error loading a game's summary",
-    "placeholders": { "error": { "type": "String" } }
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   },
   "historyNoAttempts": "No attempts recorded",
-  "@historyNoAttempts": { "description": "Empty state for checkout-practice rounds" },
+  "@historyNoAttempts": {
+    "description": "Empty state for checkout-practice rounds"
+  },
   "historyFilterGameType": "Game type",
-  "@historyFilterGameType": { "description": "Game-type filter dropdown label" },
+  "@historyFilterGameType": {
+    "description": "Game-type filter dropdown label"
+  },
   "historyFilterAll": "All",
-  "@historyFilterAll": { "description": "Filter option: all game types" },
+  "@historyFilterAll": {
+    "description": "Filter option: all game types"
+  },
   "historyFilterDateRange": "Date Range",
-  "@historyFilterDateRange": { "description": "Date-range filter button label" },
+  "@historyFilterDateRange": {
+    "description": "Date-range filter button label"
+  },
   "historyFilterClear": "Clear filters",
-  "@historyFilterClear": { "description": "Tooltip to clear history filters" },
+  "@historyFilterClear": {
+    "description": "Tooltip to clear history filters"
+  },
   "historyColLeg": "Leg",
-  "@historyColLeg": { "description": "Leg-breakdown column: leg number" },
+  "@historyColLeg": {
+    "description": "Leg-breakdown column: leg number"
+  },
   "historyWinner": "Winner",
-  "@historyWinner": { "description": "Leg winner column header and competitor label" },
+  "@historyWinner": {
+    "description": "Leg winner column header and competitor label"
+  },
   "historyOpponent": "Opponent",
-  "@historyOpponent": { "description": "Non-winner competitor label" },
+  "@historyOpponent": {
+    "description": "Non-winner competitor label"
+  },
   "historyCategory": "Category",
-  "@historyCategory": { "description": "Stat-table category column header" },
+  "@historyCategory": {
+    "description": "Stat-table category column header"
+  },
   "historyNoLegs": "No legs completed",
-  "@historyNoLegs": { "description": "Empty state for the leg breakdown table" },
+  "@historyNoLegs": {
+    "description": "Empty state for the leg breakdown table"
+  },
   "statAvgPpr": "Avg PPR",
-  "@statAvgPpr": { "description": "X01 stat: three-dart average (points per round)" },
+  "@statAvgPpr": {
+    "description": "X01 stat: three-dart average (points per round)"
+  },
   "statCheckout": "Checkout",
-  "@statCheckout": { "description": "X01 stat: checkout percentage" },
+  "@statCheckout": {
+    "description": "X01 stat: checkout percentage"
+  },
   "statBestOut": "Best Out",
-  "@statBestOut": { "description": "X01 stat: highest checkout" },
+  "@statBestOut": {
+    "description": "X01 stat: highest checkout"
+  },
   "stat180s": "180s",
-  "@stat180s": { "description": "X01 stat: number of 180 turns" },
+  "@stat180s": {
+    "description": "X01 stat: number of 180 turns"
+  },
   "stat6099": "60–99",
-  "@stat6099": { "description": "X01 stat: turns scoring 60-99" },
+  "@stat6099": {
+    "description": "X01 stat: turns scoring 60-99"
+  },
   "stat100139": "100–139",
-  "@stat100139": { "description": "X01 stat: turns scoring 100-139" },
+  "@stat100139": {
+    "description": "X01 stat: turns scoring 100-139"
+  },
   "stat140179": "140–179",
-  "@stat140179": { "description": "X01 stat: turns scoring 140-179" },
+  "@stat140179": {
+    "description": "X01 stat: turns scoring 140-179"
+  },
   "statAvgMpr": "Avg MPR",
-  "@statAvgMpr": { "description": "Cricket stat: marks per round" },
+  "@statAvgMpr": {
+    "description": "Cricket stat: marks per round"
+  },
   "statFirst9Mpr": "First 9 MPR",
-  "@statFirst9Mpr": { "description": "Cricket stat: first-nine marks per round" },
+  "@statFirst9Mpr": {
+    "description": "Cricket stat: first-nine marks per round"
+  },
   "stat5Marks": "5 Marks",
-  "@stat5Marks": { "description": "Cricket stat: turns with 5 marks" },
+  "@stat5Marks": {
+    "description": "Cricket stat: turns with 5 marks"
+  },
   "stat6Marks": "6 Marks",
-  "@stat6Marks": { "description": "Cricket stat: turns with 6 marks" },
+  "@stat6Marks": {
+    "description": "Cricket stat: turns with 6 marks"
+  },
   "stat7Marks": "7 Marks",
-  "@stat7Marks": { "description": "Cricket stat: turns with 7 marks" },
+  "@stat7Marks": {
+    "description": "Cricket stat: turns with 7 marks"
+  },
   "stat8Marks": "8 Marks",
-  "@stat8Marks": { "description": "Cricket stat: turns with 8 marks" },
+  "@stat8Marks": {
+    "description": "Cricket stat: turns with 8 marks"
+  },
   "stat9Marks": "9 Marks",
-  "@stat9Marks": { "description": "Cricket stat: turns with 9 marks" },
+  "@stat9Marks": {
+    "description": "Cricket stat: turns with 9 marks"
+  },
   "historyColRound": "Round",
-  "@historyColRound": { "description": "Turn-breakdown column: round number" },
+  "@historyColRound": {
+    "description": "Turn-breakdown column: round number"
+  },
   "historyColStart": "Start",
-  "@historyColStart": { "description": "Turn-breakdown column: starting score" },
+  "@historyColStart": {
+    "description": "Turn-breakdown column: starting score"
+  },
   "historyColDarts": "Darts",
-  "@historyColDarts": { "description": "Turn-breakdown column: darts thrown" },
+  "@historyColDarts": {
+    "description": "Turn-breakdown column: darts thrown"
+  },
   "historyColTurn": "Turn",
-  "@historyColTurn": { "description": "Turn-breakdown column: turn score / turn number" },
+  "@historyColTurn": {
+    "description": "Turn-breakdown column: turn score / turn number"
+  },
   "historyColLeft": "Left",
-  "@historyColLeft": { "description": "Turn-breakdown column: remaining score" },
+  "@historyColLeft": {
+    "description": "Turn-breakdown column: remaining score"
+  },
   "historyColEnd": "End",
-  "@historyColEnd": { "description": "Turn-breakdown column: ending score (checkout practice)" },
+  "@historyColEnd": {
+    "description": "Turn-breakdown column: ending score (checkout practice)"
+  },
   "historyColMarks": "Marks",
-  "@historyColMarks": { "description": "Turn-breakdown column: cricket marks" },
+  "@historyColMarks": {
+    "description": "Turn-breakdown column: cricket marks"
+  },
   "historyColTarget": "Target",
-  "@historyColTarget": { "description": "Turn-breakdown column: target number" },
+  "@historyColTarget": {
+    "description": "Turn-breakdown column: target number"
+  },
   "historyColHits": "Hits",
-  "@historyColHits": { "description": "Turn-breakdown column: successful hits" },
+  "@historyColHits": {
+    "description": "Turn-breakdown column: successful hits"
+  },
   "historyColScore": "Score",
-  "@historyColScore": { "description": "Turn-breakdown column: score" },
+  "@historyColScore": {
+    "description": "Turn-breakdown column: score"
+  },
   "historyColTotal": "Total",
-  "@historyColTotal": { "description": "Turn-breakdown column: running total" },
+  "@historyColTotal": {
+    "description": "Turn-breakdown column: running total"
+  },
   "historyColDone": "Done",
-  "@historyColDone": { "description": "Turn-breakdown column: target completed" },
+  "@historyColDone": {
+    "description": "Turn-breakdown column: target completed"
+  },
   "historyColPlayer": "Player",
-  "@historyColPlayer": { "description": "Turn-breakdown column: competitor name" },
+  "@historyColPlayer": {
+    "description": "Turn-breakdown column: competitor name"
+  },
   "historyColSegment": "Segment",
-  "@historyColSegment": { "description": "ATC segment table column: board segment" },
+  "@historyColSegment": {
+    "description": "ATC segment table column: board segment"
+  },
   "historyColAttempts": "Attempts",
-  "@historyColAttempts": { "description": "ATC segment table column: attempts" },
+  "@historyColAttempts": {
+    "description": "ATC segment table column: attempts"
+  },
   "historyColRate": "Rate",
-  "@historyColRate": { "description": "ATC segment table column: hit rate" },
+  "@historyColRate": {
+    "description": "ATC segment table column: hit rate"
+  },
   "historyCompleted": "Completed",
-  "@historyCompleted": { "description": "Semantic label: target completed" },
+  "@historyCompleted": {
+    "description": "Semantic label: target completed"
+  },
   "historyNotCompleted": "Not completed",
-  "@historyNotCompleted": { "description": "Semantic label: target not completed" },
+  "@historyNotCompleted": {
+    "description": "Semantic label: target not completed"
+  },
   "summaryWinner": "Winner",
-  "@summaryWinner": { "description": "Post-game winner badge/label" },
+  "@summaryWinner": {
+    "description": "Post-game winner badge/label"
+  },
   "summaryOpponent": "Opponent",
-  "@summaryOpponent": { "description": "Post-game runner-up label" },
+  "@summaryOpponent": {
+    "description": "Post-game runner-up label"
+  },
   "summaryDarts": "Darts",
-  "@summaryDarts": { "description": "Post-game darts-thrown stat label" },
+  "@summaryDarts": {
+    "description": "Post-game darts-thrown stat label"
+  },
   "summaryLegsWon": "{count, plural, one{{count} leg won} other{{count} legs won}}",
   "@summaryLegsWon": {
     "description": "Post-game winner subline: legs won",
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "commonDone": "Done",
   "commonYes": "Yes",
   "statsSelectPlayer": "SELECT A PLAYER",
   "statsAddPlayersHint": "Add players to start tracking stats",
   "statsPlayersLoadFailed": "Failed to load players: {error}",
-  "@statsPlayersLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@statsPlayersLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "statsOthersTab": "Others",
   "statsPlayerFallback": "Player",
   "statsLoadFailed": "Failed to load stats: {error}",
-  "@statsLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@statsLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "statsComingSoon": "Stats for {section} coming soon",
-  "@statsComingSoon": {"placeholders": {"section": {"type": "String"}}},
+  "@statsComingSoon": {
+    "placeholders": {
+      "section": {
+        "type": "String"
+      }
+    }
+  },
   "statsDrillsPlayed": "Drills Played",
   "statsCompletions": "Completions",
   "statsHitRate": "Hit Rate",
@@ -427,7 +563,13 @@
   "statsSuccessRate": "Success Rate",
   "statsGamesPlayed": "Games Played",
   "statsError": "Error: {error}",
-  "@statsError": {"placeholders": {"error": {"type": "String"}}},
+  "@statsError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "statsNoResult": "No result available for this game.",
   "statsPlayAgain": "Play again",
   "statsLegsPlayed": "Legs Played",
@@ -471,7 +613,13 @@
   "statsModeRandom": "Random",
   "statsModeCrazy": "Crazy",
   "statsChartLoadFailed": "Failed to load chart: {error}",
-  "@statsChartLoadFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@statsChartLoadFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "statsChartPoints": "Points",
   "statsChartLegs": "Legs",
   "statsChartCheckoutScore": "Checkout score",
@@ -486,7 +634,16 @@
   "summaryCheckedOut": "Checked out!",
   "summaryNotCheckedOut": "Not checked out",
   "summaryNOfMCheckouts": "{successes} of {attempts} checkouts",
-  "@summaryNOfMCheckouts": {"placeholders": {"successes": {"type": "int"}, "attempts": {"type": "int"}}},
+  "@summaryNOfMCheckouts": {
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "attempts": {
+        "type": "int"
+      }
+    }
+  },
   "summaryTurns": "Turns",
   "summaryLastTargetHit": "Last target hit",
   "summaryFinished": "Finished",
@@ -501,5 +658,237 @@
   "summaryOverall": "Overall",
   "summaryBest": "Best",
   "summaryWeakest": "Weakest",
-  "summaryNoData": "No data yet"
+  "summaryNoData": "No data yet",
+  "commonConfirm": "Confirm",
+  "@commonConfirm": {
+    "description": "Generic confirm button label"
+  },
+  "gameMenuEndGame": "End Game",
+  "@gameMenuEndGame": {
+    "description": "Board menu item / button to end (abandon) the game"
+  },
+  "gameMenuEndDrill": "End Drill",
+  "@gameMenuEndDrill": {
+    "description": "Board menu item to end a solo practice drill"
+  },
+  "gameOptionsSemantic": "Game options",
+  "@gameOptionsSemantic": {
+    "description": "Accessibility label for the board options menu button"
+  },
+  "gameUndoLastDart": "Undo last dart",
+  "@gameUndoLastDart": {
+    "description": "Accessibility label for the undo-last-dart button"
+  },
+  "gameEnterDart": "Enter dart",
+  "@gameEnterDart": {
+    "description": "Title of the manual dart-entry bottom sheet"
+  },
+  "gameCorrectDart": "Correct dart {number}",
+  "@gameCorrectDart": {
+    "description": "Title of the dart-correction sheet; number is the 1-based dart index",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameNextPlayer": "NEXT PLAYER",
+  "@gameNextPlayer": {
+    "description": "Bottom-bar button: hand the turn to the next player (uppercase)"
+  },
+  "gameNextRound": "NEXT ROUND",
+  "@gameNextRound": {
+    "description": "Bottom-bar button: advance to the next round (uppercase)"
+  },
+  "gameNextTarget": "NEXT TARGET",
+  "@gameNextTarget": {
+    "description": "Bottom-bar button: advance to the next Catch 40 target (uppercase)"
+  },
+  "gameNotFound": "Game not found",
+  "@gameNotFound": {
+    "description": "Shown when an active game cannot be loaded"
+  },
+  "gameDrillLoadFailed": "Failed to load drill.",
+  "@gameDrillLoadFailed": {
+    "description": "Error title when a practice drill fails to load"
+  },
+  "gameCheckoutHint": "Suggestions appear in checkout range",
+  "@gameCheckoutHint": {
+    "description": "Placeholder hint in the checkout banner when no checkout is available"
+  },
+  "gameAdvanceTurnTitle": "Advance turn?",
+  "@gameAdvanceTurnTitle": {
+    "description": "Title of the cricket confirm dialog when advancing with <3 darts"
+  },
+  "gameAdvanceTurnBody": "You've only thrown {count, plural, one{1 dart} other{{count} darts}}. Advance anyway?",
+  "@gameAdvanceTurnBody": {
+    "description": "Body of the advance-turn confirm dialog; count is darts thrown so far",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameRoundLimitReached": "Round limit reached",
+  "@gameRoundLimitReached": {
+    "description": "Title of the cap-winner dialog shown at the per-leg round limit"
+  },
+  "gameNoAutoWinner": "No automatic winner — pick who wins this leg.",
+  "@gameNoAutoWinner": {
+    "description": "Cap-winner dialog body asking the user to pick the leg winner"
+  },
+  "gameSetWinner": "Set winner",
+  "@gameSetWinner": {
+    "description": "Cap-winner dialog confirm button"
+  },
+  "gameEndGameTitle": "End Game?",
+  "@gameEndGameTitle": {
+    "description": "Title of the end-game confirmation dialog"
+  },
+  "gameEndGameBody": "The current game will be abandoned.",
+  "@gameEndGameBody": {
+    "description": "Body of the end-game confirmation dialog"
+  },
+  "gameLegWonBy": "Leg {leg} won by {winner}",
+  "@gameLegWonBy": {
+    "description": "Leg-complete modal title; leg is the leg number, winner the player name",
+    "placeholders": {
+      "leg": {
+        "type": "int"
+      },
+      "winner": {
+        "type": "String"
+      }
+    }
+  },
+  "gameNextLeg": "Next Leg",
+  "@gameNextLeg": {
+    "description": "Leg-complete modal button to start the next leg"
+  },
+  "gameRound": "ROUND {round}",
+  "@gameRound": {
+    "description": "Status bar round indicator without a total (uppercase)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "gameRoundOf": "ROUND {round} / {total}",
+  "@gameRoundOf": {
+    "description": "Status bar round indicator with a total (uppercase)",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "gameLegOf": "LEG {leg} / {total}",
+  "@gameLegOf": {
+    "description": "Status bar leg indicator (uppercase); LEG kept as the darts loanword",
+    "placeholders": {
+      "leg": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "gameEnterDartHint": "enter dart",
+  "@gameEnterDartHint": {
+    "description": "Accessibility label for an empty, tappable dart slot (manual entry)"
+  },
+  "gameDartNotThrown": "dart not thrown",
+  "@gameDartNotThrown": {
+    "description": "Accessibility label for a not-yet-thrown dart slot"
+  },
+  "gameNumberClosed": "Number already closed",
+  "@gameNumberClosed": {
+    "description": "Tooltip on a cricket number that is already closed by all players"
+  },
+  "gamePlayerTurn": "{name}'S TURN",
+  "@gamePlayerTurn": {
+    "description": "Practice header showing whose turn it is; name is already uppercased",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "gamePracticeRound": "Round {round}",
+  "@gamePracticeRound": {
+    "description": "Around-the-Clock secondary metric: current round",
+    "placeholders": {
+      "round": {
+        "type": "int"
+      }
+    }
+  },
+  "gamePracticeScore": "Score: {score}",
+  "@gamePracticeScore": {
+    "description": "Bob's 27 secondary metric: current score",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "gameShanghaiProgress": "Score: {score} | Round {round}/{total}",
+  "@gameShanghaiProgress": {
+    "description": "Shanghai secondary metric: score and round progress",
+    "placeholders": {
+      "score": {
+        "type": "int"
+      },
+      "round": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "gameCatch40Progress": "Target {target} | Visit {visit}/2 | Score {score}",
+  "@gameCatch40Progress": {
+    "description": "Catch 40 secondary metric: target, visit and score",
+    "placeholders": {
+      "target": {
+        "type": "int"
+      },
+      "visit": {
+        "type": "int"
+      },
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "gameDartsThrown": "{count, plural, one{1 dart thrown} other{{count} darts thrown}}",
+  "@gameDartsThrown": {
+    "description": "Checkout-practice darts-thrown count for the round",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "gameCheckoutSuccess": "Success {successes}/{target} · {dartsLine}",
+  "@gameCheckoutSuccess": {
+    "description": "Checkout-practice progress line; dartsLine is the localized darts-thrown text",
+    "placeholders": {
+      "successes": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      },
+      "dartsLine": {
+        "type": "String"
+      }
+    }
+  }
 }

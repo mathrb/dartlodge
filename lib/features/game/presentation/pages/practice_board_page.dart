@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
@@ -97,6 +98,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     // Listen for natural completion transitions and navigate to the post-game
     // summary — mirroring x01/cricket boards. Manual "End Drill" also routes
     // to the post-game summary (#289/#291), but it does so explicitly from
@@ -173,7 +175,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
       ),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
-          title: 'Failed to load drill.',
+          title: l10n.gameDrillLoadFailed,
           message: '$err',
           onRetry: () => ref.invalidate(activePracticeProvider(widget.gameId)),
         ),
@@ -183,10 +185,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           return Scaffold(
             body: Center(
               child: Column(mainAxisSize: MainAxisSize.min, children: [
-                const Text('Game not found'),
+                Text(l10n.gameNotFound),
                 TextButton(
                   onPressed: () => context.go(GameRoutes.home),
-                  child: const Text('Back'),
+                  child: Text(l10n.commonBack),
                 ),
               ]),
             ),
@@ -297,16 +299,18 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       // Multi-player ATC / Shanghai is a competitive game,
                       // not a solo drill — match the label to the context.
                       child: Text(
-                        gs.competitors.length > 1 ? 'End Game' : 'End Drill',
+                        gs.competitors.length > 1
+                            ? l10n.gameMenuEndGame
+                            : l10n.gameMenuEndDrill,
                       ),
                     ),
                     // Settings entry so users don't have to abandon the
                     // drill to reach theme/preferences (#342). `push`
                     // (not `go`) preserves the active-game route so
                     // the back arrow returns to the board.
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: _DrillAction.settings,
-                      child: Text('Settings'),
+                      child: Text(l10n.settingsTitle),
                     ),
                   ],
                 ),
@@ -467,11 +471,12 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   void _onSlotTapped(BuildContext context, GameState gs, int index,
       int? effectiveTarget, bool doublesOnly) {
     final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
+    final l10n = AppLocalizations.of(context);
     if (index < gs.dartsThrownInTurn) {
       // Correcting a recorded dart stays available after the turn ends
       // (turnActive == false once 3 darts are thrown) — #438.
       _showSegmentSheet(context,
-          title: 'Correct dart ${index + 1}',
+          title: l10n.gameCorrectDart(index + 1),
           gameType: gs.gameType,
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
@@ -481,7 +486,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     } else {
       // Manual entry must not add a 4th dart, so it stays gated on the turn.
       _showSegmentSheet(context,
-          title: 'Enter dart',
+          title: l10n.gameEnterDart,
           gameType: gs.gameType,
           currentTarget: effectiveTarget,
           doublesOnly: doublesOnly,
@@ -643,10 +648,11 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final isCatch40 = gameType == GameType.catch40;
 
     final nextEnabled = isCatch40 ? showNextTarget : showNextRound;
-    final nextLabel = isCatch40 ? 'NEXT TARGET' : 'NEXT ROUND';
+    final nextLabel = isCatch40 ? l10n.gameNextTarget : l10n.gameNextRound;
     final VoidCallback? onNext = nextEnabled ? () => onNextRound() : null;
 
     return Container(
