@@ -15,6 +15,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.d
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ultralytics_yolo/ultralytics_yolo.dart';
@@ -235,19 +236,21 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final calibrated = _latest?.hasCalibration ?? false;
     final found = _latest?.calBestPoints.where((p) => p != null).length ?? 0;
     final fill = _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final ready = _stability.isReady;
     final hint = _latest == null
-        ? 'Aim at the board…'
+        ? l10n.autoScorerAimHint
         : !calibrated
-            ? '$found/4 markers — reframe so all 4 show. Any board rotation is fine.'
+            ? l10n.autoScorerMarkersReframe(found)
+            // Stability counter stays English (diagnostic readout).
             : !ready
                 ? 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}'
                 : fill < kGoodFillRatio
-                    ? 'Ready — move closer or zoom in for better accuracy, or Done aiming'
-                    : 'Ready — Done aiming';
+                    ? l10n.autoScorerReadyZoomHint
+                    : l10n.autoScorerReadyDone;
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
@@ -302,11 +305,11 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                       children: [
                         FilledButton.tonal(
                             onPressed: () => _finish(false),
-                            child: const Text('Cancel')),
+                            child: Text(l10n.commonCancel)),
                         FilledButton.icon(
                           onPressed: ready ? () => _finish(true) : null,
                           icon: const Icon(Icons.check),
-                          label: const Text('Done aiming'),
+                          label: Text(l10n.autoScorerDoneAiming),
                         ),
                       ],
                     ),

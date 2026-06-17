@@ -1,5 +1,6 @@
 import 'package:dart_lodge/core/utils/app_text_styles.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Compact status chip for assist mode (#382 §5.2): keeps the scoreboard
@@ -11,35 +12,38 @@ class AutoScorerStatusChip extends StatelessWidget {
 
   const AutoScorerStatusChip({super.key, required this.status});
 
-  /// Pure presentation mapping for the chip. Returns the user-facing label and
-  /// an icon for the given [status].
-  static ({String label, IconData icon}) describe(TrackerStatus status) {
+  /// Pure presentation mapping for the chip. Returns the user-facing (localized)
+  /// label and an icon for the given [status].
+  static ({String label, IconData icon}) describe(
+      AppLocalizations l10n, TrackerStatus status) {
     switch (status.phase) {
       case TrackerPhase.noCalibration:
-        return (label: 'Aim at the board', icon: Icons.visibility_off);
+        return (label: l10n.autoScorerStatusAim, icon: Icons.visibility_off);
       case TrackerPhase.needsCalibration:
         return (
-          label: 'Camera needs calibration',
+          label: l10n.autoScorerStatusNeedsCal,
           icon: Icons.crop_free
         );
       case TrackerPhase.idle:
-        return (label: 'Ready', icon: Icons.center_focus_weak);
+        return (label: l10n.autoScorerStatusReady, icon: Icons.center_focus_weak);
       case TrackerPhase.tracking:
-        final n = status.dartsOnBoard;
-        return (label: '$n dart${n == 1 ? '' : 's'} detected', icon: Icons.center_focus_strong);
+        return (
+          label: l10n.autoScorerStatusDetected(status.dartsOnBoard),
+          icon: Icons.center_focus_strong
+        );
       case TrackerPhase.turnFull:
-        return (label: 'Turn full — advance', icon: Icons.do_not_disturb_on);
+        return (label: l10n.autoScorerStatusTurnFull, icon: Icons.do_not_disturb_on);
       case TrackerPhase.cameraMoved:
-        return (label: 'Camera moved', icon: Icons.screen_rotation);
+        return (label: l10n.autoScorerStatusCameraMoved, icon: Icons.screen_rotation);
       case TrackerPhase.rebaselined:
-        return (label: 'Board cleared', icon: Icons.cleaning_services);
+        return (label: l10n.autoScorerStatusBoardCleared, icon: Icons.cleaning_services);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final info = describe(status);
+    final info = describe(AppLocalizations.of(context), status);
     final isAlert = status.phase == TrackerPhase.turnFull ||
         status.phase == TrackerPhase.cameraMoved ||
         status.phase == TrackerPhase.needsCalibration;

@@ -1697,5 +1697,184 @@
   "rulesCricketRdVar2Summary": "Random Cricket can be combined with Cut Throat scoring — points go to opponents instead.",
   "@rulesCricketRdVar2Summary": {
     "description": "Game rules text"
+  },
+  "autoScorerTitle": "Auto-scoring",
+  "@autoScorerTitle": {
+    "description": "Auto-scorer settings page title"
+  },
+  "autoScorerUseTitle": "Use auto-scoring",
+  "@autoScorerUseTitle": {
+    "description": "Toggle: enable camera auto-scoring"
+  },
+  "autoScorerUseSubtitle": "Camera-assisted dart entry on X01 and Cricket (beta).",
+  "@autoScorerUseSubtitle": {
+    "description": "Subtitle for the use-auto-scoring toggle"
+  },
+  "autoScorerAutoAdvanceTitle": "Auto-advance turn when board is cleared",
+  "@autoScorerAutoAdvanceTitle": {
+    "description": "Toggle: auto-advance turn when board cleared"
+  },
+  "autoScorerAutoAdvanceSubtitle": "When all darts are removed, advance to the next player automatically instead of pressing NEXT.",
+  "@autoScorerAutoAdvanceSubtitle": {
+    "description": "Subtitle for the auto-advance toggle"
+  },
+  "autoScorerSetupTipsTile": "Camera setup tips",
+  "@autoScorerSetupTipsTile": {
+    "description": "Tile/title: camera setup tips"
+  },
+  "autoScorerSetupTipsTileSubtitle": "How to frame the board for best results.",
+  "@autoScorerSetupTipsTileSubtitle": {
+    "description": "Subtitle for the setup-tips tile"
+  },
+  "autoScorerTip1Title": "Fill the frame",
+  "@autoScorerTip1Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip1Body": "Position the camera so the board fills most of the view, with all four corner markers visible. More board on screen means sharper scoring.",
+  "@autoScorerTip1Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerTip2Title": "A slight side angle",
+  "@autoScorerTip2Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip2Body": "A modest angle off head-on helps the camera see dart tips. Avoid extreme or perfectly face-on angles.",
+  "@autoScorerTip2Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerTip3Title": "Any rotation is fine",
+  "@autoScorerTip3Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip3Body": "You don't need 20 at the top — the camera finds the markers in any board orientation.",
+  "@autoScorerTip3Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerTip4Title": "Good, even lighting",
+  "@autoScorerTip4Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip4Body": "Avoid glare and deep shadows on the board so the markers stay clearly visible.",
+  "@autoScorerTip4Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerTip5Title": "Pull darts between turns",
+  "@autoScorerTip5Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip5Body": "Remove your darts each turn so they don't hide the tips of the next ones.",
+  "@autoScorerTip5Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerTip6Title": "Steel-tip boards",
+  "@autoScorerTip6Title": {
+    "description": "Setup tip title"
+  },
+  "autoScorerTip6Body": "Auto-scoring is designed for steel-tip dartboards.",
+  "@autoScorerTip6Body": {
+    "description": "Setup tip body"
+  },
+  "autoScorerDontShowAgain": "Don't show this again",
+  "@autoScorerDontShowAgain": {
+    "description": "Setup tips checkbox"
+  },
+  "autoScorerContinueToCamera": "Continue to camera",
+  "@autoScorerContinueToCamera": {
+    "description": "Setup tips continue button"
+  },
+  "autoScorerNotAvailable": "Auto-scoring is not available on this device.",
+  "@autoScorerNotAvailable": {
+    "description": "Shown when auto-scoring isn't supported on the device"
+  },
+  "autoScorerSetupFailed": "Camera setup failed: {error}",
+  "@autoScorerSetupFailed": {
+    "description": "Camera setup error; error is the failure detail",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "autoScorerReady": "Auto-scoring ready",
+  "@autoScorerReady": {
+    "description": "Idle state label before starting the camera"
+  },
+  "autoScorerTapToCorrect": "Tap a dart to correct a misread",
+  "@autoScorerTapToCorrect": {
+    "description": "Hint shown while detecting"
+  },
+  "autoScorerExpandPreview": "expand camera preview",
+  "@autoScorerExpandPreview": {
+    "description": "Accessibility label for the expand-preview button"
+  },
+  "autoScorerRemoveDarts": "Remove darts",
+  "@autoScorerRemoveDarts": {
+    "description": "Tooltip: tell the tracker the darts were pulled"
+  },
+  "autoScorerStop": "Stop auto-scoring",
+  "@autoScorerStop": {
+    "description": "Tooltip: stop auto-scoring"
+  },
+  "autoScorerStartCamera": "Start camera",
+  "@autoScorerStartCamera": {
+    "description": "Button: start the camera"
+  },
+  "autoScorerStatusAim": "Aim at the board",
+  "@autoScorerStatusAim": {
+    "description": "Status chip: aiming, no calibration yet"
+  },
+  "autoScorerStatusNeedsCal": "Camera needs calibration",
+  "@autoScorerStatusNeedsCal": {
+    "description": "Status chip: needs calibration"
+  },
+  "autoScorerStatusReady": "Ready",
+  "@autoScorerStatusReady": {
+    "description": "Status chip: ready"
+  },
+  "autoScorerStatusDetected": "{count, plural, one{1 dart detected} other{{count} darts detected}}",
+  "@autoScorerStatusDetected": {
+    "description": "Status chip: N darts detected on the board",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "autoScorerStatusTurnFull": "Turn full — advance",
+  "@autoScorerStatusTurnFull": {
+    "description": "Status chip: 3 darts in, advance the turn"
+  },
+  "autoScorerStatusCameraMoved": "Camera moved",
+  "@autoScorerStatusCameraMoved": {
+    "description": "Status chip: camera moved, recalibrating"
+  },
+  "autoScorerStatusBoardCleared": "Board cleared",
+  "@autoScorerStatusBoardCleared": {
+    "description": "Status chip: board cleared of darts"
+  },
+  "autoScorerAimHint": "Aim at the board…",
+  "@autoScorerAimHint": {
+    "description": "Aim view: initial hint"
+  },
+  "autoScorerMarkersReframe": "{found}/4 markers — reframe so all 4 show. Any board rotation is fine.",
+  "@autoScorerMarkersReframe": {
+    "description": "Aim view: partial calibration hint; found is 0-4",
+    "placeholders": {
+      "found": {
+        "type": "int"
+      }
+    }
+  },
+  "autoScorerReadyZoomHint": "Ready — move closer or zoom in for better accuracy, or Done aiming",
+  "@autoScorerReadyZoomHint": {
+    "description": "Aim view: ready but suboptimal framing"
+  },
+  "autoScorerReadyDone": "Ready — Done aiming",
+  "@autoScorerReadyDone": {
+    "description": "Aim view: ready, good framing"
+  },
+  "autoScorerDoneAiming": "Done aiming",
+  "@autoScorerDoneAiming": {
+    "description": "Aim view: confirm/done button"
   }
 }
