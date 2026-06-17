@@ -2,6 +2,8 @@ import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/players/presentation/pages/player_detail_page.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,7 +35,12 @@ void main() {
         playerProvider('p1')
             .overrideWith((ref) async => throw Exception('boom')),
       ],
-      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
+        routerConfig: router,
+      ),
     ));
     await tester.pumpAndSettle();
 
@@ -57,7 +64,12 @@ void main() {
       overrides: [
         playerProvider('p1').overrideWith((ref) async => null),
       ],
-      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
+        routerConfig: router,
+      ),
     ));
     await tester.pumpAndSettle();
 
@@ -76,7 +88,12 @@ void main() {
       overrides: [
         playerProvider('p1').overrideWith((ref) async => null),
       ],
-      child: MaterialApp.router(theme: AppTheme.light(), routerConfig: router),
+      child: MaterialApp.router(
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: kSupportedLocales,
+        routerConfig: router,
+      ),
     ));
     await tester.pumpAndSettle();
 

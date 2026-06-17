@@ -7,12 +7,14 @@ import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/presentation/providers/players_provider.dart';
 import 'package:dart_lodge/features/players/presentation/widgets/player_card_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class PlayerListPage extends ConsumerWidget {
   const PlayerListPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
@@ -24,11 +26,11 @@ class PlayerListPage extends ConsumerWidget {
             }
           },
         ),
-        title: const Text('Players'),
+        title: Text(l10n.playersTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: 'Add player',
+            tooltip: l10n.playersAddPlayerTooltip,
             onPressed: () => context.push('/players/add'),
           ),
         ],
@@ -39,14 +41,14 @@ class PlayerListPage extends ConsumerWidget {
             : _PlayerList(players: players),
         loading: () => const _SkeletonList(),
         error: (error, _) => ErrorRetryWidget(
-          title: 'Failed to load players',
+          title: l10n.playersLoadListFailed,
           message: error.toString(),
           onRetry: () => ref.invalidate(allPlayersProvider),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/players/add'),
-        tooltip: 'Add player',
+        tooltip: l10n.playersAddPlayerTooltip,
         child: const Icon(Icons.add),
       ),
     );
@@ -58,6 +60,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -69,13 +72,13 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No players yet',
+            l10n.playersNoPlayersYet,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           ElevatedButton(
             onPressed: () => context.push('/players/add'),
-            child: const Text('Add your first player'),
+            child: Text(l10n.playersAddFirstPlayer),
           ),
         ],
       ),
@@ -90,6 +93,7 @@ class _PlayerList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return ListView.builder(
       itemCount: players.length,
       itemBuilder: (context, index) {
@@ -104,9 +108,9 @@ class _PlayerList extends ConsumerWidget {
               }
               if (value == 'delete') _showDeleteConfirmation(context, ref, p);
             },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'edit', child: Text('Edit')),
-              PopupMenuItem(value: 'delete', child: Text('Delete')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'edit', child: Text(l10n.commonEdit)),
+              PopupMenuItem(value: 'delete', child: Text(l10n.commonDelete)),
             ],
           ),
         );
@@ -119,22 +123,23 @@ class _PlayerList extends ConsumerWidget {
     WidgetRef ref,
     Player player,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete player?'),
-        content: Text('Delete ${player.name}? This cannot be undone.'),
+        title: Text(l10n.playersDeleteTitle),
+        content: Text(l10n.playersDeleteConfirm(player.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -155,15 +160,11 @@ class _PlayerList extends ConsumerWidget {
         break;
       case DeletePlayerHasGameHistory():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete a player with game history'),
-          ),
+          SnackBar(content: Text(l10n.playersCannotDeleteWithHistory)),
         );
       case DeletePlayerUnexpectedError():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete player. Please try again.'),
-          ),
+          SnackBar(content: Text(l10n.playersDeleteFailed)),
         );
     }
   }

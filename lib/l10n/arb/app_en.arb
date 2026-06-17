@@ -120,5 +120,167 @@
   "commonSend": "Send",
   "@commonSend": {
     "description": "Generic Send button"
+  },
+  "commonDelete": "Delete",
+  "@commonDelete": {
+    "description": "Generic Delete button / menu item"
+  },
+  "commonSave": "Save",
+  "@commonSave": {
+    "description": "Generic Save button"
+  },
+  "commonBack": "Back",
+  "@commonBack": {
+    "description": "Generic Back button"
+  },
+  "commonEdit": "Edit",
+  "@commonEdit": {
+    "description": "Generic Edit menu item"
+  },
+  "commonError": "Error",
+  "@commonError": {
+    "description": "Generic error screen title"
+  },
+  "commonName": "Name",
+  "@commonName": {
+    "description": "Generic Name field label"
+  },
+  "playersTitle": "Players",
+  "@playersTitle": {
+    "description": "Players list screen title"
+  },
+  "playersNewPlayer": "New Player",
+  "@playersNewPlayer": {
+    "description": "Create-player screen title"
+  },
+  "playersCreatePlayer": "Create Player",
+  "@playersCreatePlayer": {
+    "description": "Create-player submit button"
+  },
+  "playersEditPlayer": "Edit Player",
+  "@playersEditPlayer": {
+    "description": "Edit-player screen title"
+  },
+  "playersDeleteButton": "Delete player",
+  "@playersDeleteButton": {
+    "description": "Button that opens the delete-player confirmation"
+  },
+  "playersDeleteTitle": "Delete player?",
+  "@playersDeleteTitle": {
+    "description": "Delete-player confirmation dialog title"
+  },
+  "playersDeleteConfirm": "Delete {name}? This cannot be undone.",
+  "@playersDeleteConfirm": {
+    "description": "Delete-player confirmation dialog body",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "playersCannotDeleteWithHistory": "Cannot delete a player with game history",
+  "@playersCannotDeleteWithHistory": {
+    "description": "Snackbar when deleting a player that has games"
+  },
+  "playersDeleteFailed": "Failed to delete player. Please try again.",
+  "@playersDeleteFailed": {
+    "description": "Snackbar on an unexpected delete failure"
+  },
+  "playersLoadFailed": "Failed to load player: {error}",
+  "@playersLoadFailed": {
+    "description": "Error shown when a player fails to load",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playersLoadListFailed": "Failed to load players",
+  "@playersLoadListFailed": {
+    "description": "Error title when the players list fails to load"
+  },
+  "playersNotFound": "Player not found",
+  "@playersNotFound": {
+    "description": "Shown when a player id has no matching player"
+  },
+  "playersCareerStatistics": "Career Statistics",
+  "@playersCareerStatistics": {
+    "description": "Career statistics card title on the player detail screen"
+  },
+  "playersViewStatistics": "VIEW STATISTICS",
+  "@playersViewStatistics": {
+    "description": "Button navigating to the player's statistics"
+  },
+  "playersAddPlayerTooltip": "Add player",
+  "@playersAddPlayerTooltip": {
+    "description": "Tooltip for the add-player buttons"
+  },
+  "playersNoPlayersYet": "No players yet",
+  "@playersNoPlayersYet": {
+    "description": "Empty-state title on the players list"
+  },
+  "playersAddFirstPlayer": "Add your first player",
+  "@playersAddFirstPlayer": {
+    "description": "Empty-state call to action"
+  },
+  "playersMemberSince": "Member since {date}",
+  "@playersMemberSince": {
+    "description": "Player detail: account creation date",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playersLastActiveDate": "Last active {date}",
+  "@playersLastActiveDate": {
+    "description": "Player detail: last-active date",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "playersCardLastActive": "Last active: {value}",
+  "@playersCardLastActive": {
+    "description": "Player card subtitle wrapping a relative time",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "playersRelativeToday": "Today",
+  "@playersRelativeToday": {
+    "description": "Relative time: the player was active today"
+  },
+  "playersRelativeYesterday": "Yesterday",
+  "@playersRelativeYesterday": {
+    "description": "Relative time: the player was active yesterday"
+  },
+  "playersRelativeDaysAgo": "{count, plural, one{{count} day ago} other{{count} days ago}}",
+  "@playersRelativeDaysAgo": {
+    "description": "Relative time: N days ago",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playersNameEmpty": "Name cannot be empty",
+  "@playersNameEmpty": {
+    "description": "Validation: empty player name"
+  },
+  "playersNameTooLong": "Name must be 30 characters or fewer",
+  "@playersNameTooLong": {
+    "description": "Validation: player name too long"
+  },
+  "playersNameExists": "A player with this name already exists",
+  "@playersNameExists": {
+    "description": "Validation: duplicate player name"
+  },
+  "playersNameErrorGeneric": "Something went wrong. Please try again.",
+  "@playersNameErrorGeneric": {
+    "description": "Validation: unexpected error saving a player name"
   }
 }

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PlayerFormState {
 
- String get name; String? get nameError; bool get isSubmitting;
+ String get name; PlayerNameError? get nameError; bool get isSubmitting;
 /// Create a copy of PlayerFormState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $PlayerFormStateCopyWith<$Res>  {
   factory $PlayerFormStateCopyWith(PlayerFormState value, $Res Function(PlayerFormState) _then) = _$PlayerFormStateCopyWithImpl;
 @useResult
 $Res call({
- String name, String? nameError, bool isSubmitting
+ String name, PlayerNameError? nameError, bool isSubmitting
 });
 
 
@@ -66,7 +66,7 @@ class _$PlayerFormStateCopyWithImpl<$Res>
   return _then(_self.copyWith(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nameError: freezed == nameError ? _self.nameError : nameError // ignore: cast_nullable_to_non_nullable
-as String?,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as PlayerNameError?,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -152,7 +152,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String? nameError,  bool isSubmitting)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  PlayerNameError? nameError,  bool isSubmitting)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PlayerFormState() when $default != null:
 return $default(_that.name,_that.nameError,_that.isSubmitting);case _:
@@ -173,7 +173,7 @@ return $default(_that.name,_that.nameError,_that.isSubmitting);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String? nameError,  bool isSubmitting)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  PlayerNameError? nameError,  bool isSubmitting)  $default,) {final _that = this;
 switch (_that) {
 case _PlayerFormState():
 return $default(_that.name,_that.nameError,_that.isSubmitting);case _:
@@ -193,7 +193,7 @@ return $default(_that.name,_that.nameError,_that.isSubmitting);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String? nameError,  bool isSubmitting)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  PlayerNameError? nameError,  bool isSubmitting)?  $default,) {final _that = this;
 switch (_that) {
 case _PlayerFormState() when $default != null:
 return $default(_that.name,_that.nameError,_that.isSubmitting);case _:
@@ -212,7 +212,7 @@ class _PlayerFormState implements PlayerFormState {
   
 
 @override final  String name;
-@override final  String? nameError;
+@override final  PlayerNameError? nameError;
 @override final  bool isSubmitting;
 
 /// Create a copy of PlayerFormState
@@ -245,7 +245,7 @@ abstract mixin class _$PlayerFormStateCopyWith<$Res> implements $PlayerFormState
   factory _$PlayerFormStateCopyWith(_PlayerFormState value, $Res Function(_PlayerFormState) _then) = __$PlayerFormStateCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String? nameError, bool isSubmitting
+ String name, PlayerNameError? nameError, bool isSubmitting
 });
 
 
@@ -266,7 +266,7 @@ class __$PlayerFormStateCopyWithImpl<$Res>
   return _then(_PlayerFormState(
 name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,nameError: freezed == nameError ? _self.nameError : nameError // ignore: cast_nullable_to_non_nullable
-as String?,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as PlayerNameError?,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

@@ -34,10 +34,10 @@ final class DeletePlayerUnexpectedError extends DeletePlayerResult {
   const DeletePlayerUnexpectedError(this.error);
 }
 
-String _playerFormErrorMessage(Object e) =>
+PlayerNameError _playerFormError(Object e) =>
     (e is DuplicatePlayerException || e is DuplicatePlayerNameException)
-        ? 'A player with this name already exists'
-        : e.toString();
+        ? PlayerNameError.duplicate
+        : PlayerNameError.unknown;
 
 @riverpod
 class EditPlayerNotifier extends _$EditPlayerNotifier {
@@ -81,7 +81,7 @@ class EditPlayerNotifier extends _$EditPlayerNotifier {
       error: (e, _) {
         state = state.copyWith(
           isSubmitting: false,
-          nameError: _playerFormErrorMessage(e),
+          nameError: _playerFormError(e),
         );
       },
       loading: () {},
@@ -147,7 +147,7 @@ class CreatePlayerNotifier extends _$CreatePlayerNotifier {
       error: (e, _) {
         state = state.copyWith(
           isSubmitting: false,
-          nameError: _playerFormErrorMessage(e),
+          nameError: _playerFormError(e),
         );
       },
       loading: () {},

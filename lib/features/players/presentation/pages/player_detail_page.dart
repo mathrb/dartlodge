@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
 import '../../../../core/providers/players_providers.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
@@ -31,22 +32,23 @@ class PlayerDetailPage extends ConsumerWidget {
     WidgetRef ref,
     String playerName,
   ) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete player?'),
-        content: Text('Delete $playerName? This cannot be undone.'),
+        title: Text(l10n.playersDeleteTitle),
+        content: Text(l10n.playersDeleteConfirm(playerName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(ctx).colorScheme.error,
             ),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -65,15 +67,11 @@ class PlayerDetailPage extends ConsumerWidget {
         _back(context);
       case DeletePlayerHasGameHistory():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Cannot delete a player with game history'),
-          ),
+          SnackBar(content: Text(l10n.playersCannotDeleteWithHistory)),
         );
       case DeletePlayerUnexpectedError():
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete player. Please try again.'),
-          ),
+          SnackBar(content: Text(l10n.playersDeleteFailed)),
         );
     }
   }
@@ -81,6 +79,7 @@ class PlayerDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncPlayer = ref.watch(playerProvider(playerId));
+    final l10n = AppLocalizations.of(context);
 
     return asyncPlayer.when(
       loading: () => Scaffold(
@@ -88,16 +87,16 @@ class PlayerDetailPage extends ConsumerWidget {
         body: const LoadingSpinnerWidget(),
       ),
       error: (e, _) => Scaffold(
-        appBar: AppBar(title: const Text('Error')),
+        appBar: AppBar(title: Text(l10n.commonError)),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Failed to load player: $e'),
+              Text(l10n.playersLoadFailed(e.toString())),
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: () => _back(context),
-                child: const Text('Back'),
+                child: Text(l10n.commonBack),
               ),
             ],
           ),
@@ -106,16 +105,16 @@ class PlayerDetailPage extends ConsumerWidget {
       data: (player) {
         if (player == null) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Player not found')),
+            appBar: AppBar(title: Text(l10n.playersNotFound)),
             body: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Player not found'),
+                  Text(l10n.playersNotFound),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: () => _back(context),
-                    child: const Text('Back'),
+                    child: Text(l10n.commonBack),
                   ),
                 ],
               ),
@@ -124,6 +123,7 @@ class PlayerDetailPage extends ConsumerWidget {
         }
 
         final theme = Theme.of(context);
+        final dateLocale = Localizations.localeOf(context).toLanguageTag();
         return Scaffold(
           appBar: AppBar(
             title: Text(player.name),
@@ -161,13 +161,19 @@ class PlayerDetailPage extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Center(
                   child: Text(
-                    'Member since ${DateFormat.yMMMd().format(player.createdAt.toLocal())}',
+                    l10n.playersMemberSince(
+                      DateFormat.yMMMd(dateLocale)
+                          .format(player.createdAt.toLocal()),
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
                 Center(
                   child: Text(
-                    'Last active ${DateFormat.yMMMd().format(player.lastActive.toLocal())}',
+                    l10n.playersLastActiveDate(
+                      DateFormat.yMMMd(dateLocale)
+                          .format(player.lastActive.toLocal()),
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -176,11 +182,11 @@ class PlayerDetailPage extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Card(
                     child: ListTile(
-                      title: const Text('Career Statistics'),
+                      title: Text(l10n.playersCareerStatistics),
                       trailing: FilledButton(
                         onPressed: () =>
                             context.push('/stats/player/$playerId'),
-                        child: const Text('VIEW STATISTICS'),
+                        child: Text(l10n.playersViewStatistics),
                       ),
                     ),
                   ),
