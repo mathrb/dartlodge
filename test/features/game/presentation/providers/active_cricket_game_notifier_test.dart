@@ -582,4 +582,39 @@ void main() {
     final s = container.read(activeCricketGameProvider('g1'));
     expect(s.hasError, isFalse);
   });
+
+  // ── Regression #538: stray camera dart on a full/ended turn is a no-op ────
+  //
+  // After a manual entry + later camera re-detection the game's turn can be
+  // ahead of the camera tracker: the turn ends (turnActive=false) while the
+  // tracker still emits one more dart. That stray camera dart used to reach
+  // ProcessCricketDartUseCase → InvalidGameStateException → AsyncValue.guard →
+  // AsyncError, breaking the board. It must now be a silent no-op.
+
+  test('processDart(camera) is a silent no-op on a full/ended turn (#538)',
+      () async {
+    stubBuild(events: [turnStartedEvent()]);
+    await container.read(activeCricketGameProvider('g1').future);
+    final notifier = container.read(activeCricketGameProvider('g1').notifier);
+
+    // Fill the turn (3 darts) → turn ends, turnActive == false.
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    final full = container.read(activeCricketGameProvider('g1')).value!;
+    expect(full.gameState.turnActive, false);
+    expect(full.gameState.dartsThrownInTurn, 3);
+
+    // Stray camera dart on the ended turn → dropped, no error, no change.
+    await notifier.processDart('T20', inputMethod: 'camera');
+
+    final after = container.read(activeCricketGameProvider('g1'));
+    expect(after.hasError, isFalse);
+    expect(after.value!.gameState, full.gameState);
+
+    // Scoping: a *manual* dart on the same ended turn still follows the
+    // pre-existing path (engine validation → AsyncError) — camera-only no-op.
+    await notifier.processDart('T20');
+    expect(container.read(activeCricketGameProvider('g1')).hasError, isTrue);
+  });
 }
