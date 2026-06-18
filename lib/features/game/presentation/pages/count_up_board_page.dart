@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_count_up_provider.dart';
+import '../sound/wire_game_sounds.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
@@ -52,6 +53,13 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+    // Sound effects: hit/miss per dart (count-up has no bust).
+    wireGameSounds(
+      ref,
+      activeCountUpProvider(widget.gameId),
+      gameStateOf: (s) => s?.gameState,
+    );
 
     // Game-end transition → navigate to post-game summary.
     ref.listen(activeCountUpProvider(widget.gameId), (prev, next) {

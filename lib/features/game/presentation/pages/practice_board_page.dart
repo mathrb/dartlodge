@@ -16,6 +16,7 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
+import '../sound/wire_game_sounds.dart';
 import '../state/active_practice_state.dart';
 import '../widgets/dartboard_highlight_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
@@ -99,6 +100,15 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+
+    // Sound effects: hit/miss per dart, bust on a Catch-40 bust.
+    wireGameSounds(
+      ref,
+      activePracticeProvider(widget.gameId),
+      gameStateOf: (s) => s?.gameState,
+      bustOf: (s) => s?.showBust ?? false,
+    );
+
     // Listen for natural completion transitions and navigate to the post-game
     // summary — mirroring x01/cricket boards. Manual "End Drill" also routes
     // to the post-game summary (#289/#291), but it does so explicitly from

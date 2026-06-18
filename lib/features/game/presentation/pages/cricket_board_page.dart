@@ -15,6 +15,7 @@ import '../../domain/models/game_state.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
+import '../sound/wire_game_sounds.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/cricket_marks_strip_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
@@ -98,6 +99,13 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+
+    // Sound effects: hit/miss per dart (cricket has no bust).
+    wireGameSounds(
+      ref,
+      activeCricketGameProvider(widget.gameId),
+      gameStateOf: (s) => s?.gameState,
+    );
 
     ref.listen(activeCricketGameProvider(widget.gameId), (prev, next) {
       final prevValue = prev?.value;

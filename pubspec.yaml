@@ -122,6 +122,8 @@ flutter:
   # Assets configuration
   assets:
     - assets/images/
+    # Sound effects (#516): dartHit / dartMiss / bust, played via SoundService.
+    - assets/sounds/
     # On-device auto-scorer model (#377/#378). Produced from the trained .pt by
     # deep-darts-probe's dart-train/export_mobile.py — see
     # docs/AUTO_SCORER_ENABLEMENT.md. ~11 MB; loaded via kAutoScorerModelAsset.
