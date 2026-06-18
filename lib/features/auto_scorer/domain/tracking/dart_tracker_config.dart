@@ -19,6 +19,21 @@ class DartTrackerConfig {
   final int pendingMissTolerance;
 
   /// Consecutive empty-board frames before an auto re-baseline (K, #377 §3).
+  ///
+  /// This is a **confirm-before-clear** gate symmetric to [confirmFrames]: the
+  /// board must read empty for K consecutive calibrated frames before the
+  /// baseline (and the confirmed darts) are cleared. Confirmed darts are
+  /// retained during the streak, so a dart that reappears before K resets the
+  /// count and re-matches without re-emitting.
+  ///
+  /// At the production inference rate (`kAutoScorerInferenceHz` = 3 Hz, see
+  /// `auto_scorer_yolo_view_io.dart`), the default 9 ≈ **3 seconds** — long
+  /// enough to reject a transient dart-detection flicker or a brief darts-only
+  /// occlusion (~1s, cals still visible) without a false clear, while a genuine
+  /// pull (board empty for several seconds as the player collects the darts)
+  /// still clears normally. A too-short window (the old default of 3 ≈ 1s) made
+  /// a flicker look like a pull → premature turn advance + double-counted dart
+  /// (#499).
   final int emptyFramesToRebaseline;
 
   /// Mean per-cal-point image-space displacement (normalised 0–1) above which a
@@ -38,7 +53,7 @@ class DartTrackerConfig {
     this.matchTolerance = 0.06,
     this.confirmFrames = 2,
     this.pendingMissTolerance = 2,
-    this.emptyFramesToRebaseline = 3,
+    this.emptyFramesToRebaseline = 9,
     this.calShiftThreshold = 0.08,
     this.maxDartsPerTurn = 3,
     this.noCalibrationFramesToWarn = 3,

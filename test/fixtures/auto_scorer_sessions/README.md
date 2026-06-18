@@ -9,6 +9,18 @@ format from #489) replayed deterministically by `SessionReplayer` in
   positions (two turns, a `turn_advanced` signal, emissions DB / 13 / 3). It is
   not a device capture; it exercises the replay end-to-end.
 
+- **`single_dart_d11_flicker.json`** — a real device `SessionBundle` (#499): an
+  essentially static single-dart board where the dart's detection confidence
+  flickered. As captured (`empty_frames_to_rebaseline: 3`, ≈1s at 3 Hz) it
+  produced 4 spurious `rebaselined` frames — each followed by a `turn_advanced`
+  — and twice re-emitted the same dart as `D11`. **Its embedded tracker config
+  was hand-edited to the fixed default `empty_frames_to_rebaseline: 9`** (the
+  only change from the raw capture), because `SessionReplayer` rebuilds the
+  tracker from the embedded config — replaying the unedited K=3 capture would
+  reproduce the bug. `session_499_regression_test.dart` replays it and asserts
+  the fix (no `rebaselined`, no `D11` re-emission). Loaded via `loadBundle`.
+
 To add a **real regression fixture**: record a session on device (Settings →
-"Record sessions (debug)"), export it (sub-issue #492), drop the `.jsonl` here,
-and write a test that `loadTrace`s it and asserts the expected (fixed) outcome.
+"Record sessions (debug)"), export it (sub-issue #492), drop the `.jsonl`
+(`SessionTrace`) or `.json` (`SessionBundle`) here, and write a test that
+`loadTrace`/`loadBundle`s it and asserts the expected (fixed) outcome.
