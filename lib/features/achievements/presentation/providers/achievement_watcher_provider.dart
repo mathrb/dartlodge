@@ -26,11 +26,13 @@ class AchievementWatcher extends _$AchievementWatcher {
 
   @override
   Stream<List<UnlockedAchievement>> build() async* {
-    // ref.read (not watch): these repos are keepAlive singletons; re-watching
-    // would re-run build() and reset _processed if one ever rebuilt.
-    final gameRepo = ref.read(gameRepositoryProvider);
-    final statsRepo = ref.read(statisticsRepositoryProvider);
-    final achievementRepo = ref.read(achievementRepositoryProvider);
+    // The repos are keepAlive singletons (gated on databaseProvider), so this
+    // build runs once and the await-for below runs for the app lifetime. If a
+    // repo ever rebuilt, Riverpod re-runs build() on a fresh notifier, which
+    // correctly re-seeds the skip-initial snapshot.
+    final gameRepo = ref.watch(gameRepositoryProvider);
+    final statsRepo = ref.watch(statisticsRepositoryProvider);
+    final achievementRepo = ref.watch(achievementRepositoryProvider);
 
     var seeded = false;
     await for (final games in gameRepo.watchCompletedGames()) {
@@ -85,6 +87,9 @@ class AchievementWatcher extends _$AchievementWatcher {
           }
         } catch (_) {
           // A single failed game evaluation must not kill the lifetime stream.
+          // Un-mark it so a transient failure is retried on the next emission
+          // rather than skipped forever.
+          _processed.remove(game.gameId);
         }
       }
       if (unlocked.isNotEmpty) yield unlocked;

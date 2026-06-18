@@ -133,6 +133,8 @@ void main() {
 
     expect(emissions, isEmpty);
     expect(recorded, isEmpty);
+    // Prove the diff path actually consulted getUnlocked (not short-circuited).
+    verify(achievements.getUnlocked('p1')).called(1);
   });
 
   test('re-emitting the same completed game is not reprocessed', () async {
