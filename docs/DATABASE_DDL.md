@@ -13,8 +13,11 @@
 | Version | Change |
 |---------|--------|
 | 1       | Complete schema — players, games, competitors, competitor_players, dart_throws, game_events, accounts, sync_queue, game_sessions |
+| 2       | Add `unlocked_achievements` (per-player achievement unlock facts, #521/#522) — the project's first incremental migration |
 
-All tables — including backend sync capabilities (`accounts`, `sync_queue`, `game_sessions`) — are created together in version 1. There are no incremental migrations. The `players` table includes `account_id` and `avatar_url` from the initial schema; `account_id = NULL` for local-only players preserves full offline functionality.
+Version 1 created all base tables together (including backend sync scaffolding). **Version 2 (#522) is the project's first incremental migration**, adding the `unlocked_achievements` table via `onUpgrade` (`drift`'s `m.createTable`). Fresh installs get every table via `onCreate` (`m.createAll`); existing v1 installs gain only the new table. The `players` table includes `account_id` and `avatar_url` from the initial schema; `account_id = NULL` for local-only players preserves full offline functionality.
+
+> **Migration testing:** schema snapshots live in `drift_schemas/` (`drift_schema_v1.json`, `drift_schema_v2.json`) and the generated verifier helpers in `test/drift_schemas/`. Regenerate after any schema change with `dart run drift_dev schema dump lib/core/persistence/drift/database.dart drift_schemas/` then `dart run drift_dev schema generate drift_schemas/ test/drift_schemas/`; `test/core/persistence/drift/migration_test.dart` validates each upgrade with drift's `SchemaVerifier`.
 
 > **Inactive scaffolding (as of 2026-04-27):** The `accounts`, `sync_queue`, and `game_sessions` tables and the `players.account_id` / `players.avatar_url` columns are created in v1 but are **not yet wired into application code** — no repository, provider, use case, or UI reads or writes them. They exist so backend-integration work (see `BACKEND_INTEGRATION.md`) can land without a schema migration. Treat them as authoritative shapes for future use, not as descriptions of current behaviour. Sections describing these tables/columns are flagged with **"Inactive"** below.
 
@@ -262,6 +265,24 @@ CREATE INDEX idx_game_sessions_game_id ON game_sessions(game_id);
 
 ---
 
+### unlocked_achievements
+
+**Added in v2 (#521/#522).** Per-player achievement unlock facts: one row per unlocked achievement. The row's *presence* is "unlocked" — there is **no progress column and no notification flag** (progress is computed live as a projection; achievements are never re-notified once a row exists). `game_id` credits the game that earned it and is nullable / `ON DELETE SET NULL`, so deleting a game keeps the trophy.
+
+```sql
+CREATE TABLE unlocked_achievements (
+    player_id      TEXT  NOT NULL REFERENCES players(player_id) ON DELETE CASCADE,
+    achievement_id TEXT  NOT NULL,  -- catalogue slug, e.g. 'first_180'
+    unlocked_at    TEXT  NOT NULL,  -- ISO 8601
+    game_id        TEXT  REFERENCES games(game_id) ON DELETE SET NULL,
+    PRIMARY KEY (player_id, achievement_id)
+);
+```
+
+The composite PK makes `recordUnlock` idempotent — re-recording the same `(player_id, achievement_id)` is a no-op (the first unlock is kept).
+
+---
+
 ## Full Migration Script
 
 ```sql
@@ -386,6 +407,18 @@ CREATE TABLE game_sessions (
 );
 
 CREATE INDEX idx_game_sessions_game_id ON game_sessions(game_id);
+
+-- ============================================================
+-- Version 2 (#522) — added via onUpgrade on existing installs
+-- ============================================================
+
+CREATE TABLE unlocked_achievements (
+    player_id      TEXT  NOT NULL REFERENCES players(player_id) ON DELETE CASCADE,
+    achievement_id TEXT  NOT NULL,
+    unlocked_at    TEXT  NOT NULL,
+    game_id        TEXT  REFERENCES games(game_id) ON DELETE SET NULL,
+    PRIMARY KEY (player_id, achievement_id)
+);
 ```
 
 ---
@@ -404,7 +437,7 @@ CREATE INDEX idx_game_sessions_game_id ON game_sessions(game_id);
 
 **`ON DELETE RESTRICT` on players.** Players cannot be deleted while they have recorded dart throws or are members of competitors. This protects historical statistics.
 
-**Single version schema.** All tables including backend sync capabilities are created in version 1. This simplifies the initial setup and ensures all functionality is available from the start, while maintaining full offline capability through nullable foreign keys (e.g., `account_id = NULL` for local-only players).
+**v1 created all base tables together; migrations begin at v2.** Version 1 created every base table at once (including backend sync scaffolding), so the initial setup was simple and all functionality was available from the start (with offline capability via nullable foreign keys, e.g. `account_id = NULL` for local-only players). **v2 (#521/#522) introduces incremental migration** via `onUpgrade`, adding `unlocked_achievements`; further migrations follow the same `databaseVersion` bump + `onUpgrade` + schema-snapshot pattern (see Versioning).
 
 **`accounts` created before `players`.** Because `players.account_id` references `accounts(account_id)`, `accounts` must be created first in `onCreate`. This is the only ordering constraint in the schema.
 

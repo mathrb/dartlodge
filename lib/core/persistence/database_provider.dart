@@ -12,7 +12,9 @@ import 'drift/repositories/game_repository_drift.dart';
 import 'drift/repositories/dart_throw_repository_drift.dart';
 import 'drift/repositories/game_event_repository_drift.dart';
 import 'drift/repositories/statistics_repository_drift.dart';
+import 'drift/repositories/achievement_repository_drift.dart';
 import '../../features/players/domain/repositories/player_repository.dart';
+import '../../features/achievements/domain/repositories/achievement_repository.dart';
 import '../../features/players/domain/usecases/create_player_use_case.dart';
 import '../../features/game/domain/repositories/game_repository.dart';
 import '../../features/game/domain/repositories/dart_throw_repository.dart';
@@ -82,6 +84,12 @@ ComputeLegStatsUseCase computeLegStatsUseCase(Ref ref) =>
 StatisticsRepository statisticsRepository(Ref ref) {
   final db = ref.watch(databaseProvider).requireValue;
   return StatisticsRepositoryDrift(db);
+}
+
+@Riverpod(keepAlive: true)
+AchievementRepository achievementRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return AchievementRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)

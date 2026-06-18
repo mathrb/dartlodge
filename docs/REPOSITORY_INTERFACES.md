@@ -487,7 +487,39 @@ abstract interface class StatisticsRepository {
 
 ---
 
-## 6. Exception Hierarchy
+## 6. AchievementRepository
+
+**File:** `lib/features/achievements/domain/repositories/achievement_repository.dart`
+**Drift impl:** `lib/core/persistence/drift/repositories/achievement_repository_drift.dart`
+**Added:** #521/#522 (alongside the `unlocked_achievements` table, schema v2).
+
+Persists which achievements a player has unlocked. An achievement is identified by
+its catalogue slug (e.g. `'first_180'`); the *presence* of a record means
+"unlocked" — there is no progress or notification state. Reads expose only the
+set of unlocked ids (all the watcher / UI need). Stores a *fact*, not an
+aggregate, so the "statistics are never stored" rule does not apply.
+
+```dart
+abstract interface class AchievementRepository {
+  /// The set of achievement ids unlocked by [playerId] (empty if none).
+  Future<Set<String>> getUnlocked(String playerId);
+
+  /// Reactive variant of [getUnlocked] — re-emits when the set changes.
+  Stream<Set<String>> watchUnlocked(String playerId);
+
+  /// Record that [playerId] unlocked [id] at [at], optionally crediting the
+  /// [gameId] that earned it. Idempotent: re-recording the same
+  /// `(playerId, id)` is a no-op (the first unlock is kept). Failures →
+  /// [RepositoryException] (an unknown player/game FK violation surfaces as
+  /// [DatabaseException]).
+  Future<void> recordUnlock(String playerId, String id, DateTime at,
+      {String? gameId});
+}
+```
+
+---
+
+## 7. Exception Hierarchy
 
 All repository exceptions extend a common base, making catch blocks predictable:
 
@@ -591,7 +623,7 @@ final class ValidationException extends RepositoryException {
 
 ---
 
-## 7. Riverpod Provider Wiring
+## 8. Riverpod Provider Wiring
 
 These providers live in `core/persistence/` and are the single place where
 concrete implementations are selected per platform.
@@ -643,7 +675,7 @@ lifetime of the app and must never be auto-disposed.
 
 ---
 
-## 8. Use Case → Repository Mapping
+## 9. Use Case → Repository Mapping
 
 | Use Case | Repository/ies Used |
 |---|---|
@@ -660,7 +692,7 @@ lifetime of the app and must never be auto-disposed.
 
 ---
 
-## 9. Testing Contracts
+## 10. Testing Contracts
 
 Every concrete repository implementation must pass the same suite of interface
 contract tests. This ensures the sqflite and drift implementations behave

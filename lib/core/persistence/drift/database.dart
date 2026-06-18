@@ -168,6 +168,22 @@ class GameSessions extends Table {
   Set<Column> get primaryKey => {sessionId};
 }
 
+/// Per-player achievement unlock facts (#521/#522). One row per unlocked
+/// achievement: the row's presence IS "unlocked" — no progress column, no
+/// notification flag. `gameId` records the game that earned it (nullable, kept
+/// when that game is deleted). Added in schema v2 (first migration).
+class UnlockedAchievements extends Table {
+  TextColumn get playerId =>
+      text().references(Players, #playerId, onDelete: KeyAction.cascade)();
+  TextColumn get achievementId => text()(); // catalogue slug, e.g. 'first_180'
+  TextColumn get unlockedAt => text()(); // ISO 8601
+  TextColumn get gameId =>
+      text().nullable().references(Games, #gameId, onDelete: KeyAction.setNull)();
+
+  @override
+  Set<Column> get primaryKey => {playerId, achievementId};
+}
+
 @DriftDatabase(
   tables: [
     Players,
@@ -179,6 +195,7 @@ class GameSessions extends Table {
     Accounts,
     SyncQueue,
     GameSessions,
+    UnlockedAchievements,
   ],
   daos: [],
 )
@@ -188,10 +205,15 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => DatabaseConstants.databaseVersion;
 
-  // No `onUpgrade` is provided: pre-1.0 we accept that existing web installs
-  // miss the `@TableIndex` indexes added in this commit until they clear site
-  // data (or until the sqflite-removal consolidation resets schemas). Fresh
-  // installs get them via `m.createAll()` in `onCreate`. See issue #112.
+  // Migration history:
+  //   v1 → v2 (#522): add `unlocked_achievements` (the project's first
+  //   migration). Only a new table is added — no existing table is rebuilt — so
+  //   no FK-disable dance is needed, and a `PRAGMA foreign_keys` toggle inside
+  //   `onUpgrade` would be a no-op anyway (SQLite ignores it inside the
+  //   migration transaction). Live-connection FK enforcement stays guaranteed by
+  //   `beforeOpen`. Fresh installs get every table via `m.createAll()` in
+  //   `onCreate`. Pre-1.0 caveat from #112 still applies: existing web installs
+  //   may miss `@TableIndex` indexes until they clear site data.
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
@@ -203,6 +225,11 @@ class AppDatabase extends _$AppDatabase {
         await m.database.customStatement(
           'CREATE UNIQUE INDEX idx_games_single_active ON games(is_complete) WHERE is_complete = 0;',
         );
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          await m.createTable(unlockedAchievements);
+        }
       },
       beforeOpen: (OpeningDetails details) async {
         // Enable foreign key constraints for every connection

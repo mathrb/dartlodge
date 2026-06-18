@@ -4482,6 +4482,340 @@ class GameSessionsCompanion extends UpdateCompanion<GameSession> {
   }
 }
 
+class $UnlockedAchievementsTable extends UnlockedAchievements
+    with TableInfo<$UnlockedAchievementsTable, UnlockedAchievement> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UnlockedAchievementsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _playerIdMeta = const VerificationMeta(
+    'playerId',
+  );
+  @override
+  late final GeneratedColumn<String> playerId = GeneratedColumn<String>(
+    'player_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES players (player_id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _achievementIdMeta = const VerificationMeta(
+    'achievementId',
+  );
+  @override
+  late final GeneratedColumn<String> achievementId = GeneratedColumn<String>(
+    'achievement_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unlockedAtMeta = const VerificationMeta(
+    'unlockedAt',
+  );
+  @override
+  late final GeneratedColumn<String> unlockedAt = GeneratedColumn<String>(
+    'unlocked_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _gameIdMeta = const VerificationMeta('gameId');
+  @override
+  late final GeneratedColumn<String> gameId = GeneratedColumn<String>(
+    'game_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES games (game_id) ON DELETE SET NULL',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    playerId,
+    achievementId,
+    unlockedAt,
+    gameId,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'unlocked_achievements';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<UnlockedAchievement> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('player_id')) {
+      context.handle(
+        _playerIdMeta,
+        playerId.isAcceptableOrUnknown(data['player_id']!, _playerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_playerIdMeta);
+    }
+    if (data.containsKey('achievement_id')) {
+      context.handle(
+        _achievementIdMeta,
+        achievementId.isAcceptableOrUnknown(
+          data['achievement_id']!,
+          _achievementIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_achievementIdMeta);
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+        _unlockedAtMeta,
+        unlockedAt.isAcceptableOrUnknown(data['unlocked_at']!, _unlockedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unlockedAtMeta);
+    }
+    if (data.containsKey('game_id')) {
+      context.handle(
+        _gameIdMeta,
+        gameId.isAcceptableOrUnknown(data['game_id']!, _gameIdMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {playerId, achievementId};
+  @override
+  UnlockedAchievement map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return UnlockedAchievement(
+      playerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}player_id'],
+      )!,
+      achievementId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}achievement_id'],
+      )!,
+      unlockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unlocked_at'],
+      )!,
+      gameId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}game_id'],
+      ),
+    );
+  }
+
+  @override
+  $UnlockedAchievementsTable createAlias(String alias) {
+    return $UnlockedAchievementsTable(attachedDatabase, alias);
+  }
+}
+
+class UnlockedAchievement extends DataClass
+    implements Insertable<UnlockedAchievement> {
+  final String playerId;
+  final String achievementId;
+  final String unlockedAt;
+  final String? gameId;
+  const UnlockedAchievement({
+    required this.playerId,
+    required this.achievementId,
+    required this.unlockedAt,
+    this.gameId,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['player_id'] = Variable<String>(playerId);
+    map['achievement_id'] = Variable<String>(achievementId);
+    map['unlocked_at'] = Variable<String>(unlockedAt);
+    if (!nullToAbsent || gameId != null) {
+      map['game_id'] = Variable<String>(gameId);
+    }
+    return map;
+  }
+
+  UnlockedAchievementsCompanion toCompanion(bool nullToAbsent) {
+    return UnlockedAchievementsCompanion(
+      playerId: Value(playerId),
+      achievementId: Value(achievementId),
+      unlockedAt: Value(unlockedAt),
+      gameId: gameId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(gameId),
+    );
+  }
+
+  factory UnlockedAchievement.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return UnlockedAchievement(
+      playerId: serializer.fromJson<String>(json['playerId']),
+      achievementId: serializer.fromJson<String>(json['achievementId']),
+      unlockedAt: serializer.fromJson<String>(json['unlockedAt']),
+      gameId: serializer.fromJson<String?>(json['gameId']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'playerId': serializer.toJson<String>(playerId),
+      'achievementId': serializer.toJson<String>(achievementId),
+      'unlockedAt': serializer.toJson<String>(unlockedAt),
+      'gameId': serializer.toJson<String?>(gameId),
+    };
+  }
+
+  UnlockedAchievement copyWith({
+    String? playerId,
+    String? achievementId,
+    String? unlockedAt,
+    Value<String?> gameId = const Value.absent(),
+  }) => UnlockedAchievement(
+    playerId: playerId ?? this.playerId,
+    achievementId: achievementId ?? this.achievementId,
+    unlockedAt: unlockedAt ?? this.unlockedAt,
+    gameId: gameId.present ? gameId.value : this.gameId,
+  );
+  UnlockedAchievement copyWithCompanion(UnlockedAchievementsCompanion data) {
+    return UnlockedAchievement(
+      playerId: data.playerId.present ? data.playerId.value : this.playerId,
+      achievementId: data.achievementId.present
+          ? data.achievementId.value
+          : this.achievementId,
+      unlockedAt: data.unlockedAt.present
+          ? data.unlockedAt.value
+          : this.unlockedAt,
+      gameId: data.gameId.present ? data.gameId.value : this.gameId,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnlockedAchievement(')
+          ..write('playerId: $playerId, ')
+          ..write('achievementId: $achievementId, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('gameId: $gameId')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(playerId, achievementId, unlockedAt, gameId);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is UnlockedAchievement &&
+          other.playerId == this.playerId &&
+          other.achievementId == this.achievementId &&
+          other.unlockedAt == this.unlockedAt &&
+          other.gameId == this.gameId);
+}
+
+class UnlockedAchievementsCompanion
+    extends UpdateCompanion<UnlockedAchievement> {
+  final Value<String> playerId;
+  final Value<String> achievementId;
+  final Value<String> unlockedAt;
+  final Value<String?> gameId;
+  final Value<int> rowid;
+  const UnlockedAchievementsCompanion({
+    this.playerId = const Value.absent(),
+    this.achievementId = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.gameId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UnlockedAchievementsCompanion.insert({
+    required String playerId,
+    required String achievementId,
+    required String unlockedAt,
+    this.gameId = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : playerId = Value(playerId),
+       achievementId = Value(achievementId),
+       unlockedAt = Value(unlockedAt);
+  static Insertable<UnlockedAchievement> custom({
+    Expression<String>? playerId,
+    Expression<String>? achievementId,
+    Expression<String>? unlockedAt,
+    Expression<String>? gameId,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (playerId != null) 'player_id': playerId,
+      if (achievementId != null) 'achievement_id': achievementId,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (gameId != null) 'game_id': gameId,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UnlockedAchievementsCompanion copyWith({
+    Value<String>? playerId,
+    Value<String>? achievementId,
+    Value<String>? unlockedAt,
+    Value<String?>? gameId,
+    Value<int>? rowid,
+  }) {
+    return UnlockedAchievementsCompanion(
+      playerId: playerId ?? this.playerId,
+      achievementId: achievementId ?? this.achievementId,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      gameId: gameId ?? this.gameId,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (playerId.present) {
+      map['player_id'] = Variable<String>(playerId.value);
+    }
+    if (achievementId.present) {
+      map['achievement_id'] = Variable<String>(achievementId.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<String>(unlockedAt.value);
+    }
+    if (gameId.present) {
+      map['game_id'] = Variable<String>(gameId.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UnlockedAchievementsCompanion(')
+          ..write('playerId: $playerId, ')
+          ..write('achievementId: $achievementId, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('gameId: $gameId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4495,6 +4829,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GameEventsTable gameEvents = $GameEventsTable(this);
   late final $SyncQueueTable syncQueue = $SyncQueueTable(this);
   late final $GameSessionsTable gameSessions = $GameSessionsTable(this);
+  late final $UnlockedAchievementsTable unlockedAchievements =
+      $UnlockedAchievementsTable(this);
   late final Index idxCompetitorsGameId = Index(
     'idx_competitors_game_id',
     'CREATE INDEX idx_competitors_game_id ON competitors (game_id)',
@@ -4549,6 +4885,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     gameEvents,
     syncQueue,
     gameSessions,
+    unlockedAchievements,
     idxCompetitorsGameId,
     idxCompetitorPlayersPlayerId,
     idxDartThrowsGameId,
@@ -4617,6 +4954,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('game_sessions', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'players',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('unlocked_achievements', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'games',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('unlocked_achievements', kind: UpdateKind.update)],
     ),
   ]);
 }
@@ -5088,6 +5439,35 @@ final class $$PlayersTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<
+    $UnlockedAchievementsTable,
+    List<UnlockedAchievement>
+  >
+  _unlockedAchievementsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.unlockedAchievements,
+        aliasName: 'players__player_id__unlocked_achievements__player_id',
+      );
+
+  $$UnlockedAchievementsTableProcessedTableManager
+  get unlockedAchievementsRefs {
+    final manager =
+        $$UnlockedAchievementsTableTableManager(
+          $_db,
+          $_db.unlockedAchievements,
+        ).filter(
+          (f) =>
+              f.playerId.playerId.sqlEquals($_itemColumn<String>('player_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _unlockedAchievementsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PlayersTableFilterComposer
@@ -5238,6 +5618,31 @@ class $$PlayersTableFilterComposer
           }) => $$GameSessionsTableFilterComposer(
             $db: $db,
             $table: $db.gameSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> unlockedAchievementsRefs(
+    Expression<bool> Function($$UnlockedAchievementsTableFilterComposer f) f,
+  ) {
+    final $$UnlockedAchievementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.unlockedAchievements,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UnlockedAchievementsTableFilterComposer(
+            $db: $db,
+            $table: $db.unlockedAchievements,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -5455,6 +5860,32 @@ class $$PlayersTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> unlockedAchievementsRefs<T extends Object>(
+    Expression<T> Function($$UnlockedAchievementsTableAnnotationComposer a) f,
+  ) {
+    final $$UnlockedAchievementsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.playerId,
+          referencedTable: $db.unlockedAchievements,
+          getReferencedColumn: (t) => t.playerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UnlockedAchievementsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.unlockedAchievements,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$PlayersTableTableManager
@@ -5476,6 +5907,7 @@ class $$PlayersTableTableManager
             bool dartThrowsRefs,
             bool hostedSessions,
             bool currentTurnSessions,
+            bool unlockedAchievementsRefs,
           })
         > {
   $$PlayersTableTableManager(_$AppDatabase db, $PlayersTable table)
@@ -5540,6 +5972,7 @@ class $$PlayersTableTableManager
                 dartThrowsRefs = false,
                 hostedSessions = false,
                 currentTurnSessions = false,
+                unlockedAchievementsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -5548,6 +5981,7 @@ class $$PlayersTableTableManager
                     if (dartThrowsRefs) db.dartThrows,
                     if (hostedSessions) db.gameSessions,
                     if (currentTurnSessions) db.gameSessions,
+                    if (unlockedAchievementsRefs) db.unlockedAchievements,
                   ],
                   addJoins:
                       <
@@ -5667,6 +6101,27 @@ class $$PlayersTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (unlockedAchievementsRefs)
+                        await $_getPrefetchedData<
+                          Player,
+                          $PlayersTable,
+                          UnlockedAchievement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PlayersTableReferences
+                              ._unlockedAchievementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PlayersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).unlockedAchievementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.playerId == item.playerId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -5693,6 +6148,7 @@ typedef $$PlayersTableProcessedTableManager =
         bool dartThrowsRefs,
         bool hostedSessions,
         bool currentTurnSessions,
+        bool unlockedAchievementsRefs,
       })
     >;
 typedef $$GamesTableCreateCompanionBuilder =
@@ -5789,6 +6245,34 @@ final class $$GamesTableReferences
         );
 
     final cache = $_typedResult.readTableOrNull(_gameSessionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $UnlockedAchievementsTable,
+    List<UnlockedAchievement>
+  >
+  _unlockedAchievementsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.unlockedAchievements,
+        aliasName: 'games__game_id__unlocked_achievements__game_id',
+      );
+
+  $$UnlockedAchievementsTableProcessedTableManager
+  get unlockedAchievementsRefs {
+    final manager =
+        $$UnlockedAchievementsTableTableManager(
+          $_db,
+          $_db.unlockedAchievements,
+        ).filter(
+          (f) => f.gameId.gameId.sqlEquals($_itemColumn<String>('game_id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(
+      _unlockedAchievementsRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -5934,6 +6418,31 @@ class $$GamesTableFilterComposer extends Composer<_$AppDatabase, $GamesTable> {
           }) => $$GameSessionsTableFilterComposer(
             $db: $db,
             $table: $db.gameSessions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> unlockedAchievementsRefs(
+    Expression<bool> Function($$UnlockedAchievementsTableFilterComposer f) f,
+  ) {
+    final $$UnlockedAchievementsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gameId,
+      referencedTable: $db.unlockedAchievements,
+      getReferencedColumn: (t) => t.gameId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$UnlockedAchievementsTableFilterComposer(
+            $db: $db,
+            $table: $db.unlockedAchievements,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -6134,6 +6643,32 @@ class $$GamesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> unlockedAchievementsRefs<T extends Object>(
+    Expression<T> Function($$UnlockedAchievementsTableAnnotationComposer a) f,
+  ) {
+    final $$UnlockedAchievementsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.gameId,
+          referencedTable: $db.unlockedAchievements,
+          getReferencedColumn: (t) => t.gameId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$UnlockedAchievementsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.unlockedAchievements,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$GamesTableTableManager
@@ -6154,6 +6689,7 @@ class $$GamesTableTableManager
             bool dartThrowsRefs,
             bool gameEventsRefs,
             bool gameSessionsRefs,
+            bool unlockedAchievementsRefs,
           })
         > {
   $$GamesTableTableManager(_$AppDatabase db, $GamesTable table)
@@ -6223,6 +6759,7 @@ class $$GamesTableTableManager
                 dartThrowsRefs = false,
                 gameEventsRefs = false,
                 gameSessionsRefs = false,
+                unlockedAchievementsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -6231,6 +6768,7 @@ class $$GamesTableTableManager
                     if (dartThrowsRefs) db.dartThrows,
                     if (gameEventsRefs) db.gameEvents,
                     if (gameSessionsRefs) db.gameSessions,
+                    if (unlockedAchievementsRefs) db.unlockedAchievements,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -6311,6 +6849,27 @@ class $$GamesTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (unlockedAchievementsRefs)
+                        await $_getPrefetchedData<
+                          Game,
+                          $GamesTable,
+                          UnlockedAchievement
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GamesTableReferences
+                              ._unlockedAchievementsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GamesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).unlockedAchievementsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.gameId == item.gameId,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -6336,6 +6895,7 @@ typedef $$GamesTableProcessedTableManager =
         bool dartThrowsRefs,
         bool gameEventsRefs,
         bool gameSessionsRefs,
+        bool unlockedAchievementsRefs,
       })
     >;
 typedef $$CompetitorsTableCreateCompanionBuilder =
@@ -9126,6 +9686,415 @@ typedef $$GameSessionsTableProcessedTableManager =
         bool currentTurnPlayerId,
       })
     >;
+typedef $$UnlockedAchievementsTableCreateCompanionBuilder =
+    UnlockedAchievementsCompanion Function({
+      required String playerId,
+      required String achievementId,
+      required String unlockedAt,
+      Value<String?> gameId,
+      Value<int> rowid,
+    });
+typedef $$UnlockedAchievementsTableUpdateCompanionBuilder =
+    UnlockedAchievementsCompanion Function({
+      Value<String> playerId,
+      Value<String> achievementId,
+      Value<String> unlockedAt,
+      Value<String?> gameId,
+      Value<int> rowid,
+    });
+
+final class $$UnlockedAchievementsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $UnlockedAchievementsTable,
+          UnlockedAchievement
+        > {
+  $$UnlockedAchievementsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PlayersTable _playerIdTable(_$AppDatabase db) => db.players
+      .createAlias('unlocked_achievements__player_id__players__player_id');
+
+  $$PlayersTableProcessedTableManager get playerId {
+    final $_column = $_itemColumn<String>('player_id')!;
+
+    final manager = $$PlayersTableTableManager(
+      $_db,
+      $_db.players,
+    ).filter((f) => f.playerId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_playerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $GamesTable _gameIdTable(_$AppDatabase db) =>
+      db.games.createAlias('unlocked_achievements__game_id__games__game_id');
+
+  $$GamesTableProcessedTableManager? get gameId {
+    final $_column = $_itemColumn<String>('game_id');
+    if ($_column == null) return null;
+    final manager = $$GamesTableTableManager(
+      $_db,
+      $_db.games,
+    ).filter((f) => f.gameId.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_gameIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$UnlockedAchievementsTableFilterComposer
+    extends Composer<_$AppDatabase, $UnlockedAchievementsTable> {
+  $$UnlockedAchievementsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get achievementId => $composableBuilder(
+    column: $table.achievementId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$PlayersTableFilterComposer get playerId {
+    final $$PlayersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableFilterComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GamesTableFilterComposer get gameId {
+    final $$GamesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gameId,
+      referencedTable: $db.games,
+      getReferencedColumn: (t) => t.gameId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GamesTableFilterComposer(
+            $db: $db,
+            $table: $db.games,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnlockedAchievementsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UnlockedAchievementsTable> {
+  $$UnlockedAchievementsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get achievementId => $composableBuilder(
+    column: $table.achievementId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PlayersTableOrderingComposer get playerId {
+    final $$PlayersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableOrderingComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GamesTableOrderingComposer get gameId {
+    final $$GamesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gameId,
+      referencedTable: $db.games,
+      getReferencedColumn: (t) => t.gameId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GamesTableOrderingComposer(
+            $db: $db,
+            $table: $db.games,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnlockedAchievementsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UnlockedAchievementsTable> {
+  $$UnlockedAchievementsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get achievementId => $composableBuilder(
+    column: $table.achievementId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => column,
+  );
+
+  $$PlayersTableAnnotationComposer get playerId {
+    final $$PlayersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.playerId,
+      referencedTable: $db.players,
+      getReferencedColumn: (t) => t.playerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PlayersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.players,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$GamesTableAnnotationComposer get gameId {
+    final $$GamesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.gameId,
+      referencedTable: $db.games,
+      getReferencedColumn: (t) => t.gameId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GamesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.games,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$UnlockedAchievementsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UnlockedAchievementsTable,
+          UnlockedAchievement,
+          $$UnlockedAchievementsTableFilterComposer,
+          $$UnlockedAchievementsTableOrderingComposer,
+          $$UnlockedAchievementsTableAnnotationComposer,
+          $$UnlockedAchievementsTableCreateCompanionBuilder,
+          $$UnlockedAchievementsTableUpdateCompanionBuilder,
+          (UnlockedAchievement, $$UnlockedAchievementsTableReferences),
+          UnlockedAchievement,
+          PrefetchHooks Function({bool playerId, bool gameId})
+        > {
+  $$UnlockedAchievementsTableTableManager(
+    _$AppDatabase db,
+    $UnlockedAchievementsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UnlockedAchievementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UnlockedAchievementsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$UnlockedAchievementsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> playerId = const Value.absent(),
+                Value<String> achievementId = const Value.absent(),
+                Value<String> unlockedAt = const Value.absent(),
+                Value<String?> gameId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UnlockedAchievementsCompanion(
+                playerId: playerId,
+                achievementId: achievementId,
+                unlockedAt: unlockedAt,
+                gameId: gameId,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String playerId,
+                required String achievementId,
+                required String unlockedAt,
+                Value<String?> gameId = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UnlockedAchievementsCompanion.insert(
+                playerId: playerId,
+                achievementId: achievementId,
+                unlockedAt: unlockedAt,
+                gameId: gameId,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$UnlockedAchievementsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({playerId = false, gameId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (playerId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.playerId,
+                                referencedTable:
+                                    $$UnlockedAchievementsTableReferences
+                                        ._playerIdTable(db),
+                                referencedColumn:
+                                    $$UnlockedAchievementsTableReferences
+                                        ._playerIdTable(db)
+                                        .playerId,
+                              )
+                              as T;
+                    }
+                    if (gameId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.gameId,
+                                referencedTable:
+                                    $$UnlockedAchievementsTableReferences
+                                        ._gameIdTable(db),
+                                referencedColumn:
+                                    $$UnlockedAchievementsTableReferences
+                                        ._gameIdTable(db)
+                                        .gameId,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$UnlockedAchievementsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UnlockedAchievementsTable,
+      UnlockedAchievement,
+      $$UnlockedAchievementsTableFilterComposer,
+      $$UnlockedAchievementsTableOrderingComposer,
+      $$UnlockedAchievementsTableAnnotationComposer,
+      $$UnlockedAchievementsTableCreateCompanionBuilder,
+      $$UnlockedAchievementsTableUpdateCompanionBuilder,
+      (UnlockedAchievement, $$UnlockedAchievementsTableReferences),
+      UnlockedAchievement,
+      PrefetchHooks Function({bool playerId, bool gameId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -9148,4 +10117,6 @@ class $AppDatabaseManager {
       $$SyncQueueTableTableManager(_db, _db.syncQueue);
   $$GameSessionsTableTableManager get gameSessions =>
       $$GameSessionsTableTableManager(_db, _db.gameSessions);
+  $$UnlockedAchievementsTableTableManager get unlockedAchievements =>
+      $$UnlockedAchievementsTableTableManager(_db, _db.unlockedAchievements);
 }

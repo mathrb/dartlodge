@@ -216,7 +216,7 @@ Sound seam addition (additive): this epic adds `SoundCue.achievementUnlock` to `
 
 One epic (v1), serial (1 PR per sub-issue, `code-review` → green CI → merge), GitHub native sub-issues.
 
-- **SI-1** — Migration v1→v2 + `unlocked_achievements` table + `AchievementRepository` (+ contract test).
+- **SI-1** ✅ (#522) — Migration v1→v2 + `unlocked_achievements` table + `AchievementRepository` (+ contract test).
 - **SI-2** — Domain: `kAchievements` registry (v1 catalogue), `AchievementEvaluator`, metrics model (+ registry test, evaluator tests).
 - **SI-3** — Two projections (`NineDarterProjection`, `Games501Projection`) + `achievementMetricsFromEvents` in the assembler.
 - **SI-4** — `AchievementWatcher` (reactive detection + persistence) + app-shell host mounting.
