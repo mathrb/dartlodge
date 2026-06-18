@@ -100,8 +100,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    // Sound effects: hit/miss per dart (cricket has no bust).
-    wireGameSounds(
+    // Sound effects: per-mark ticks (single/triple), hit/miss fallback; cricket
+    // has no bust.
+    wireCricketSounds(
       ref,
       activeCricketGameProvider(widget.gameId),
       gameStateOf: (s) => s?.gameState,
