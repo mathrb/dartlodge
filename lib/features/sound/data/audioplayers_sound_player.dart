@@ -17,7 +17,10 @@ import '../domain/sound_player.dart';
 class AudioPlayersSoundPlayer implements SoundPlayer {
   final Map<String, AudioPlayer> _players = {};
 
-  AudioPlayer _playerFor(String asset) => _players[asset] ??= AudioPlayer();
+  // ReleaseMode.stop keeps the source resident after a clip finishes, so the
+  // next play() reuses the prepared player instead of re-decoding from assets.
+  AudioPlayer _playerFor(String asset) =>
+      _players[asset] ??= AudioPlayer()..setReleaseMode(ReleaseMode.stop);
 
   @override
   Future<void> preload(Iterable<String> assets) async {
