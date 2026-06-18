@@ -30,11 +30,14 @@ class AchievementNotificationHost extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Read l10n synchronously in build (context is valid here) and capture it —
+    // the ref.listen callback fires async, where `context` may be deactivated.
+    // A locale change rebuilds this host, refreshing the captured l10n.
+    final l10n = AppLocalizations.of(context);
     ref.listen(achievementWatcherProvider, (prev, next) {
       final unlocks = next.value;
       if (next is! AsyncData || unlocks == null || unlocks.isEmpty) return;
 
-      final l10n = AppLocalizations.of(context);
       final messenger = messengerKey.currentState;
       if (messenger == null) return;
 

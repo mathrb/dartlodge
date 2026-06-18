@@ -66,6 +66,15 @@ void main() {
       expect(fake.played, ['sounds/bust.wav']);
     });
 
+    test('play(achievementUnlock) maps to the achievement asset', () async {
+      final (container, fake) = await _harness(true);
+      addTearDown(container.dispose);
+
+      container.read(soundPortProvider).play(SoundCue.achievementUnlock);
+
+      expect(fake.played, ['sounds/achievement.wav']);
+    });
+
     test('plays nothing when sound is disabled (gate)', () async {
       final (container, fake) = await _harness(false);
       addTearDown(container.dispose);
