@@ -37,6 +37,33 @@ if [[ -f $MANIFEST ]]; then
   sed -i 's/android:label="dart_lodge"/android:label="DartLodge"/g' "$MANIFEST"
 fi
 
+# Disable R8 shrinking on the release build. Flutter 3.44+'s Gradle plugin
+# force-enables `isMinifyEnabled = true` on the release build type by default
+# (FlutterPlugin.kt, gated by the `shrink` project property which defaults to
+# true). R8 then strips the reflection-loaded Room implementation class of
+# WorkManager (androidx.work, pulled in transitively), which crashes the
+# release APK at startup via androidx.startup.InitializationProvider:
+#   java.lang.RuntimeException: Failed to create an instance of class
+#   androidx.work.impl.WorkDatabase
+# Flutter's bundled proguard rules only keep FlutterPlugin classes, not Room,
+# and the app ships no android/app/proguard-rules.pro. Setting `shrink=false`
+# turns minification off, restoring the pre-3.44 behaviour (the last working
+# release was rc143, before the Flutter 3.41→3.44 bump in #551).
+# Follow-up: re-enable R8 with a tested android/app/proguard-rules.pro keeping
+# Room/WorkManager (and any other reflection-based libs).
+GRADLE_PROPS="android/gradle.properties"
+if [[ ! -f $GRADLE_PROPS ]]; then
+  echo "no $GRADLE_PROPS found — run 'flutter create --platforms=android --org app .' first" >&2
+  exit 1
+fi
+# Upsert (not just append-if-absent) so re-running always lands on shrink=false,
+# even if a previous run or a manual edit left a different value.
+if grep -q '^shrink=' "$GRADLE_PROPS"; then
+  sed -i 's/^shrink=.*/shrink=false/' "$GRADLE_PROPS"
+else
+  printf '\n# Disable R8 shrinking: it strips WorkManager/Room reflection classes and\n# crashes the release APK at startup. See tools/post-create-android.sh.\nshrink=false\n' >> "$GRADLE_PROPS"
+fi
+
 # `flutter create` regenerates the default counter-app smoke test that
 # references a non-existent `MyApp` class. Drop it so `flutter analyze` stays
 # clean — but only if the file is the generated smoke test (matches `MyApp`).
@@ -46,4 +73,4 @@ if [[ -f test/widget_test.dart ]] && grep -q "MyApp" test/widget_test.dart; then
   rm -f test/widget_test.dart
 fi
 
-echo "android applicationId set to app.dartlodge, label set to DartLodge, minSdk pinned to 23"
+echo "android applicationId set to app.dartlodge, label set to DartLodge, minSdk pinned to 23, R8 shrinking disabled"
