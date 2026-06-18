@@ -118,6 +118,50 @@ class MockStatisticsRepository extends _i1.Mock
           as _i5.Future<_i3.PlayerStats>);
 
   @override
+  _i5.Future<
+    ({
+      int games501Played,
+      bool hasNineDarter,
+      int highestCheckout,
+      int total180s,
+      int totalDartsThrown,
+      int totalWins,
+    })
+  >
+  achievementMetricsForPlayer(String? playerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#achievementMetricsForPlayer, [playerId]),
+            returnValue:
+                _i5.Future<
+                  ({
+                    int games501Played,
+                    bool hasNineDarter,
+                    int highestCheckout,
+                    int total180s,
+                    int totalDartsThrown,
+                    int totalWins,
+                  })
+                >.value((
+                  games501Played: 0,
+                  hasNineDarter: false,
+                  highestCheckout: 0,
+                  total180s: 0,
+                  totalDartsThrown: 0,
+                  totalWins: 0,
+                )),
+          )
+          as _i5.Future<
+            ({
+              int games501Played,
+              bool hasNineDarter,
+              int highestCheckout,
+              int total180s,
+              int totalDartsThrown,
+              int totalWins,
+            })
+          >);
+
+  @override
   _i5.Future<List<_i7.PlayerLegSnapshot>> getPlayerLegHistory(
     String? playerId, {
     _i6.GameType? gameType,

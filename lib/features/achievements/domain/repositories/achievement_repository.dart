@@ -15,6 +15,11 @@ abstract interface class AchievementRepository {
   /// unlocked set changes.
   Stream<Set<String>> watchUnlocked(String playerId);
 
+  /// Reactive id → `unlockedAt` map for [playerId] — the dated unlock facts the
+  /// achievements UI renders (id presence = unlocked, value = when). Superset of
+  /// [watchUnlocked]; re-emits on any change.
+  Stream<Map<String, DateTime>> watchUnlockedDetails(String playerId);
+
   /// Record that [playerId] unlocked achievement [id] at [at], optionally
   /// crediting the [gameId] that earned it. Idempotent: recording the same
   /// `(playerId, id)` again is a no-op (the first unlock is kept).

@@ -9,6 +9,7 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
+import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../domain/entities/player_stats.dart';
@@ -90,6 +91,13 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
               child: AppHeader(
                 showBack: true,
                 onBack: () => context.pop(),
+                trailing: IconButton(
+                  icon: const Icon(Icons.emoji_events_outlined),
+                  color: cs.onSurface,
+                  tooltip: l10n.achievementsPageTitle,
+                  onPressed: () => context
+                      .push(GameRoutes.achievements(widget.playerId)),
+                ),
               ),
             ),
             Padding(

@@ -394,6 +394,14 @@ class MockAchievementRepository extends _i1.Mock
           as _i5.Stream<Set<String>>);
 
   @override
+  _i5.Stream<Map<String, DateTime>> watchUnlockedDetails(String? playerId) =>
+      (super.noSuchMethod(
+            Invocation.method(#watchUnlockedDetails, [playerId]),
+            returnValue: _i5.Stream<Map<String, DateTime>>.empty(),
+          )
+          as _i5.Stream<Map<String, DateTime>>);
+
+  @override
   _i5.Future<void> recordUnlock(
     String? playerId,
     String? id,
