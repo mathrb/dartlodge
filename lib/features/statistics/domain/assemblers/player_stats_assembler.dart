@@ -41,6 +41,8 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/games_501_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/nine_darter_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_high_score_buckets_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_checkout_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_highest_turn_score_projection.dart';
@@ -48,6 +50,21 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_legs_proje
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_win_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
+
+/// The cross-type metric bundle for achievement evaluation (#521/#524).
+///
+/// A statistics-owned record (not the achievements feature's `AchievementMetrics`)
+/// so the statistics layer never imports the achievements feature — the
+/// achievements watcher (SI-4) maps this record to `AchievementMetrics`,
+/// keeping the dependency one-way (achievements → statistics).
+typedef AchievementMetricsData = ({
+  int total180s,
+  int highestCheckout,
+  int totalWins,
+  int totalDartsThrown,
+  int games501Played,
+  bool hasNineDarter,
+});
 
 class PlayerStatsAssembler {
   const PlayerStatsAssembler();
@@ -59,6 +76,77 @@ class PlayerStatsAssembler {
     GameType.catch40,
     GameType.checkoutPractice,
   };
+
+  /// Computes the cross-type achievement metric bundle for [playerId] (#524).
+  ///
+  /// [events] is the player's full history across ALL game types, sorted
+  /// `(game_id, local_sequence)`; [gameTypesById] maps each gameId to its type
+  /// so X01-only projections see only X01 events (a cricket turn scoring 180
+  /// points must not inflate the 180 count). [totalDartsThrown] is supplied by
+  /// the repository (a `dart_throws` row count), not derived here.
+  ///
+  /// - total180s: X01 + Count-Up `oneEightyTurns` (both score-max formats).
+  /// - highestCheckout / games501Played / hasNineDarter: X01 only.
+  /// - totalWins: every `GameCompleted` the player won, across all types
+  ///   (solo practice completions carry a null winner and are excluded).
+  AchievementMetricsData achievementMetricsFromEvents({
+    required String playerId,
+    required List<GameEvent> events,
+    required int totalDartsThrown,
+    required Map<String, GameType> gameTypesById,
+  }) {
+    final stripped = _stripCorrectedDarts(events);
+    final x01Events = [
+      for (final e in stripped)
+        if (gameTypesById[e.gameId] == GameType.x01) e
+    ];
+    final countUpEvents = [
+      for (final e in stripped)
+        if (gameTypesById[e.gameId] == GameType.countUp) e
+    ];
+
+    final x01Runner = ProjectionRunner([
+      X01HighScoreBucketsProjection(),
+      X01HighestCheckoutProjection(),
+      NineDarterProjection(),
+      Games501Projection(),
+    ])
+      ..init(ProjectionContext(
+        playerId: playerId,
+        gameType: GameType.x01,
+        inStrategy: 'straight',
+        outStrategy: 'double',
+      ));
+    x01Runner.run(x01Events);
+    final xs = x01Runner.snapshot();
+
+    final countUpRunner = ProjectionRunner([CountUpHighScoreBucketsProjection()])
+      ..init(ProjectionContext(
+        playerId: playerId,
+        gameType: GameType.countUp,
+        inStrategy: 'straight',
+        outStrategy: 'double',
+      ));
+    countUpRunner.run(countUpEvents);
+    final cus = countUpRunner.snapshot();
+
+    final total180s = (xs['x01.highScoreBuckets']?['oneEightyTurns'] as int? ?? 0) +
+        (cus['count_up.highScoreBuckets']?['oneEightyTurns'] as int? ?? 0);
+    final totalWins = stripped
+        .where((e) =>
+            e.eventType == 'GameCompleted' &&
+            e.payload['winner_player_id'] == playerId)
+        .length;
+
+    return (
+      total180s: total180s,
+      highestCheckout: (xs['x01_highest_checkout']?['highestCheckout'] as int?) ?? 0,
+      totalWins: totalWins,
+      totalDartsThrown: totalDartsThrown,
+      games501Played: (xs['x01.games501']?['games501Played'] as int? ?? 0),
+      hasNineDarter: (xs['x01.nineDarter']?['hasNineDarter'] as bool? ?? false),
+    );
+  }
 
   /// Computes the canonical Bob's 27 score for one leg of events, scoped to
   /// [playerId]. Mirrors the bonus/penalty replay in `_computeBobs27Stats`:
