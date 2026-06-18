@@ -42,6 +42,27 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsWidgets);
   });
 
+  testWidgets('cards do not overflow on a narrow phone surface',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        achievementMetricsProvider('p1').overrideWith((ref) async =>
+            const AchievementMetrics(total180s: 1, totalDartsThrown: 6320)),
+        unlockedAchievementsProvider('p1').overrideWith(
+            (ref) => Stream.value({'first_180': DateTime(2026, 1, 2)})),
+      ],
+      child: page(),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull); // no RenderFlex overflow
+  });
+
   testWidgets('metrics loading → spinner', (tester) async {
     await tester.pumpWidget(ProviderScope(
       overrides: [

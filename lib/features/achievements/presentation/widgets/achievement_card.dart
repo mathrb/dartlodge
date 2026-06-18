@@ -50,7 +50,7 @@ class AchievementCard extends StatelessWidget {
           Icon(
             _unlocked ? Icons.emoji_events : Icons.emoji_events_outlined,
             color: iconColor,
-            size: 28,
+            size: 24,
           ),
           const SizedBox(height: AppSpacing.space2),
           Text(
@@ -63,7 +63,7 @@ class AchievementCard extends StatelessWidget {
           Text(
             achievementDescription(l10n, a),
             style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: AppSpacing.space2),
@@ -94,6 +94,7 @@ class _CounterProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -108,7 +109,10 @@ class _CounterProgress extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.space1),
         Text(
-          '${StatFormatter.fmtInt(status.current)} / ${StatFormatter.fmtInt(status.target)}',
+          l10n.achievementProgress(
+            StatFormatter.fmtInt(status.current),
+            StatFormatter.fmtInt(status.target),
+          ),
           style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant),
         ),
       ],

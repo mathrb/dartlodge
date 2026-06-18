@@ -71,11 +71,17 @@ class AchievementsPage extends ConsumerWidget {
                   return GridView.builder(
                     padding: const EdgeInsets.all(AppSpacing.space4),
                     gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                      // Fixed-ish card width → responsive column count (2 on a
+                      // phone, more on wide screens) instead of 2 giant columns.
+                      maxCrossAxisExtent: 200,
                       mainAxisSpacing: AppSpacing.space3,
                       crossAxisSpacing: AppSpacing.space3,
-                      childAspectRatio: 1.35,
+                      // Cells taller than wide: headroom for a 2-line title +
+                      // 1-line description + footer (date / progress) so cards
+                      // don't RenderFlex-overflow on narrow phones, incl. longer
+                      // translations (#526 review).
+                      childAspectRatio: 0.78,
                     ),
                     itemCount: ordered.length,
                     itemBuilder: (context, i) {
