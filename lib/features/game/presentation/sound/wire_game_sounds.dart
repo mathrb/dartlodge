@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 
 import '../../domain/models/game_state.dart';
+import '../../domain/sound/cricket_mark_signal.dart';
 import '../../domain/sound/dart_sound_signal.dart';
 
 /// Wires sound effects to a game board by listening to its active-game provider:
@@ -40,5 +41,33 @@ void wireGameSounds<T>(
     final segment =
         newestDartSegment(gameStateOf(prev?.value), gameStateOf(next.value));
     if (segment != null) sound.dartThrown(segment);
+  });
+}
+
+/// Cricket-specific wiring: instead of the generic hit/miss mapping, plays a
+/// mark tick keyed on the marks a dart actually scored — `cricketTripleMark` for
+/// 3 marks, `cricketSingleMark` for 1–2 — falling back to `dartHit` when the
+/// dart scored points without marking (a closed number) and `dartMiss` on a true
+/// miss. See `cricketDartOutcome` for the (pure) fact extraction.
+void wireCricketSounds<T>(
+  WidgetRef ref,
+  ProviderListenable<AsyncValue<T?>> provider, {
+  required GameState? Function(T?) gameStateOf,
+}) {
+  ref.listen(provider, (prev, next) {
+    final outcome = cricketDartOutcome(
+      gameStateOf(prev?.value),
+      gameStateOf(next.value),
+    );
+    if (outcome == null) return;
+    final SoundCue cue;
+    if (outcome.marks >= 3) {
+      cue = SoundCue.cricketTripleMark;
+    } else if (outcome.marks >= 1) {
+      cue = SoundCue.cricketSingleMark;
+    } else {
+      cue = outcome.scoredPoints ? SoundCue.dartHit : SoundCue.dartMiss;
+    }
+    ref.read(soundPortProvider).play(cue);
   });
 }

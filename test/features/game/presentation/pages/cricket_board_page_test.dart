@@ -825,11 +825,23 @@ void main() {
     expect(find.byType(ProminentDartBandWidget), findsNothing);
   });
 
-  testWidgets('plays dartThrown(segment) on a new dart (no bust mechanic)',
-      (tester) async {
+  // ── Sound wiring (per-mark cues, no generic dartThrown) ──────────────────────
+
+  /// Pumps the cricket board with a sound spy, emits a post-dart state, and
+  /// returns the recorded cues. [before]/[after] are the active competitor's
+  /// marks/score on the previous and new state.
+  Future<_FakeSoundPort> _pumpDart(
+    WidgetTester tester, {
+    required CompetitorState before,
+    required CompetitorState after,
+  }) async {
     final sound = _FakeSoundPort();
+    final bob = _competitor(id: 'c2', name: 'Bob');
     final fakeNotifier = _FakeActiveCricketGameNotifier(
-      _activeState(gameState: _cricketState(dartsThrownInTurn: 0)),
+      _activeState(
+        gameState:
+            _cricketState(dartsThrownInTurn: 0, competitors: [before, bob]),
+      ),
     );
     final container = ProviderContainer(
       overrides: [
@@ -842,20 +854,51 @@ void main() {
     await tester.pumpWidget(_buildAppWithContainer(container));
     await tester.pumpAndSettle();
 
-    final notifier = container.read(activeCricketGameProvider('game-1').notifier)
-        as _FakeActiveCricketGameNotifier;
-    notifier.emit(_activeState(
-      gameState: _cricketState(
-        dartsThrownInTurn: 1,
-        competitors: [
-          _competitor(id: 'c1', name: 'Alice', dartThrows: const ['T20']),
-          _competitor(id: 'c2', name: 'Bob'),
-        ],
-      ),
+    (container.read(activeCricketGameProvider('game-1').notifier)
+            as _FakeActiveCricketGameNotifier)
+        .emit(_activeState(
+      gameState:
+          _cricketState(dartsThrownInTurn: 1, competitors: [after, bob]),
     ));
     await tester.pump();
+    return sound;
+  }
 
-    expect(sound.dartThrows, ['T20']);
-    expect(sound.cues, isEmpty);
+  testWidgets('a triple (3 marks) plays cricketTripleMark', (tester) async {
+    final sound = await _pumpDart(
+      tester,
+      before: _competitor(),
+      after: _competitor(marksPerNumber: const {'20': 3}),
+    );
+    expect(sound.cues, [SoundCue.cricketTripleMark]);
+    expect(sound.dartThrows, isEmpty);
+  });
+
+  testWidgets('1–2 marks play cricketSingleMark', (tester) async {
+    final sound = await _pumpDart(
+      tester,
+      before: _competitor(),
+      after: _competitor(marksPerNumber: const {'20': 2}),
+    );
+    expect(sound.cues, [SoundCue.cricketSingleMark]);
+  });
+
+  testWidgets('a closed number scoring points plays dartHit', (tester) async {
+    final sound = await _pumpDart(
+      tester,
+      before: _competitor(score: 0, marksPerNumber: const {'20': 3}),
+      after: _competitor(score: 60, marksPerNumber: const {'20': 3}),
+    );
+    expect(sound.cues, [SoundCue.dartHit]);
+  });
+
+  testWidgets('a true miss (no marks, no points) plays dartMiss',
+      (tester) async {
+    final sound = await _pumpDart(
+      tester,
+      before: _competitor(),
+      after: _competitor(),
+    );
+    expect(sound.cues, [SoundCue.dartMiss]);
   });
 }

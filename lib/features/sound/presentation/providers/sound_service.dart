@@ -25,6 +25,8 @@ class SoundService implements SoundPort {
     SoundCue.dartHit: 'sounds/dartHit.mp3',
     SoundCue.dartMiss: 'sounds/dartMiss.wav',
     SoundCue.bust: 'sounds/bust.wav',
+    SoundCue.cricketSingleMark: 'sounds/cricketSingleMark.wav',
+    SoundCue.cricketTripleMark: 'sounds/cricketTripleMark.wav',
   };
 
   /// Every asset, for preloading at startup.
