@@ -334,6 +334,101 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   }
 
   @override
+  Future<AchievementMetricsData> achievementMetricsForPlayer(
+      String playerId) async {
+    try {
+      // 1. Verify player exists (parity with getPlayerStats).
+      final playerExists = await (_db.select(_db.players)
+                ..where((p) => p.playerId.equals(playerId))
+                ..limit(1))
+              .getSingleOrNull() !=
+          null;
+      if (!playerExists) {
+        throw PlayerNotFoundException(playerId);
+      }
+
+      // 2. All completed games the player participated in, ANY type. The
+      //    assembler partitions by gameTypesById internally, so no type filter.
+      final gamesQuery = _db.selectOnly(_db.games)
+        ..addColumns([_db.games.gameId, _db.games.gameType])
+        ..join([
+          innerJoin(_db.competitors,
+              _db.competitors.gameId.equalsExp(_db.games.gameId)),
+          innerJoin(_db.competitorPlayers,
+              _db.competitorPlayers.competitorId
+                  .equalsExp(_db.competitors.competitorId)),
+        ])
+        ..where(_db.competitorPlayers.playerId.equals(playerId) &
+            _db.games.isComplete.equals(1))
+        ..groupBy([_db.games.gameId]);
+      final gameRows = await gamesQuery.get();
+
+      final gameTypesById = <String, GameType>{
+        for (final r in gameRows)
+          r.read(_db.games.gameId)!:
+              parseGameTypeFromColumn(r.read(_db.games.gameType)!),
+      };
+      final gameIds = gameTypesById.keys.toList();
+
+      if (gameIds.isEmpty) {
+        return (
+          total180s: 0,
+          highestCheckout: 0,
+          totalWins: 0,
+          totalDartsThrown: 0,
+          games501Played: 0,
+          hasNineDarter: false,
+        );
+      }
+
+      // 3. Total dart count for the player across these games.
+      final dartCountQuery = _db.selectOnly(_db.dartThrows)
+        ..addColumns([_db.dartThrows.dartId.count()])
+        ..where(_db.dartThrows.playerId.equals(playerId) &
+            _db.dartThrows.gameId.isIn(gameIds));
+      final dartCountResult = await dartCountQuery.getSingle();
+      final totalDartsThrown =
+          dartCountResult.read(_db.dartThrows.dartId.count()) ?? 0;
+
+      // 4. Full event history ordered (game_id, local_sequence) — no leg limit.
+      final eventRows = await (_db.select(_db.gameEvents)
+            ..where((e) => e.gameId.isIn(gameIds))
+            ..orderBy([
+              (e) => OrderingTerm.asc(e.gameId),
+              (e) => OrderingTerm.asc(e.localSequence),
+            ]))
+          .get();
+      final events = eventRows
+          .map((row) => domain.GameEvent(
+                eventId: row.eventId,
+                gameId: row.gameId,
+                eventType: row.eventType,
+                localSequence: row.localSequence,
+                occurredAt: DateTime.parse(row.occurredAt),
+                payload: jsonDecode(row.payloadJson) as Map<String, dynamic>,
+                synced: row.synced == 1,
+                actorId: row.actorId,
+                globalSequence: row.globalSequence,
+                source: parseEventSourceFromColumn(row.source),
+              ))
+          .toList();
+
+      // 5. Delegate to the assembler (statistics owns the projection wiring).
+      return _assembler.achievementMetricsFromEvents(
+        playerId: playerId,
+        events: events,
+        totalDartsThrown: totalDartsThrown,
+        gameTypesById: gameTypesById,
+      );
+    } on RepositoryException {
+      rethrow;
+    } catch (e) {
+      throw StatisticsException(
+          'Failed to compute achievement metrics: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<PlayerStats> getPlayerStatsForGame(
       String playerId, String gameId) async {
     try {
