@@ -416,6 +416,54 @@ final class StatisticsRepositoryProvider
 String _$statisticsRepositoryHash() =>
     r'28abdff3dde657f85c34b95ff81a514b97ca07aa';
 
+@ProviderFor(achievementRepository)
+final achievementRepositoryProvider = AchievementRepositoryProvider._();
+
+final class AchievementRepositoryProvider
+    extends
+        $FunctionalProvider<
+          AchievementRepository,
+          AchievementRepository,
+          AchievementRepository
+        >
+    with $Provider<AchievementRepository> {
+  AchievementRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'achievementRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$achievementRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<AchievementRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AchievementRepository create(Ref ref) {
+    return achievementRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AchievementRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AchievementRepository>(value),
+    );
+  }
+}
+
+String _$achievementRepositoryHash() =>
+    r'c94be0d2e2e3c03b8346816a289a5ea6f15d1569';
+
 @ProviderFor(x01Engine)
 final x01EngineProvider = X01EngineProvider._();
 

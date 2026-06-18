@@ -8,6 +8,7 @@ import 'package:dart_lodge/core/persistence/drift/repositories/game_repository_d
 import 'package:dart_lodge/core/persistence/drift/repositories/dart_throw_repository_drift.dart';
 import 'package:dart_lodge/core/persistence/drift/repositories/game_event_repository_drift.dart';
 import 'package:dart_lodge/core/persistence/drift/repositories/statistics_repository_drift.dart';
+import 'package:dart_lodge/core/persistence/drift/repositories/achievement_repository_drift.dart';
 
 class DriftTestBase {
   late AppDatabase db;
@@ -34,6 +35,9 @@ class DriftTestBase {
 
   Future<StatisticsRepositoryDrift> createStatisticsRepository() async =>
       StatisticsRepositoryDrift(db);
+
+  Future<AchievementRepositoryDrift> createAchievementRepository() async =>
+      AchievementRepositoryDrift(db);
 }
 
 /// Bridges legacy sqflite-style `db.insert(table, {col: value, ...})` calls

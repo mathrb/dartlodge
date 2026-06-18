@@ -56,7 +56,8 @@ enum EventSource {
 // Database Constants
 class DatabaseConstants {
   static const String databaseName = 'darts_app.db';
-  static const int databaseVersion = 1;
+  // v2 (#522): add unlocked_achievements (first schema migration).
+  static const int databaseVersion = 2;
 }
 
 // Game Configuration Constants
