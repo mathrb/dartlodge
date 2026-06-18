@@ -6,10 +6,10 @@ part 'sound_settings_provider.g.dart';
 const _kSoundEnabledKey = 'sound_enabled';
 
 /// The global "Sounds" on/off preference, default **ON** — a discreet dart
-/// thunk is expected. [SoundService] reads this to gate playback. The Settings
-/// UI row that toggles it is added in #519 (mirrors how [DataCollectionEnabled]
-/// shipped its persisted state before its Settings row); this is the persisted
-/// state + the gate the sound pipeline consults.
+/// thunk is expected. Lives in `core/` (not `features/sound/`) because it is
+/// read across features: `SoundService` gates playback on it and the Settings
+/// page toggles it — a cross-feature seam belongs in `core/` (mirrors
+/// `AutoScoringEnabled`). The Settings "Sound" row drives [setEnabled].
 @Riverpod(keepAlive: true)
 class SoundEnabled extends _$SoundEnabled {
   @override

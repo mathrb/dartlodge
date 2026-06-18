@@ -6,6 +6,7 @@ import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../providers/locale_provider.dart';
@@ -130,6 +131,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final notifier = ref.read(settingsProvider.notifier);
     final locale = ref.watch(localeSettingProvider).value; // Locale? — null = system
     final localeNotifier = ref.read(localeSettingProvider.notifier);
+    final soundEnabled = ref.watch(soundEnabledProvider).value ?? true;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -158,6 +160,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           LanguageSelector(
             value: locale,
             onChanged: localeNotifier.setLocale,
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: l10n.settingsSoundSection, cs: cs, tt: tt),
+          SwitchListTile(
+            secondary: const Icon(Icons.volume_up_outlined),
+            title: Text(l10n.settingsSoundEffectsTitle),
+            subtitle: Text(l10n.settingsSoundEffectsSubtitle),
+            value: soundEnabled,
+            onChanged: (v) =>
+                ref.read(soundEnabledProvider.notifier).setEnabled(v),
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsAutoScoringSection, cs: cs, tt: tt),

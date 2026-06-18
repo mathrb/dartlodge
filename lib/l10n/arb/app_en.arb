@@ -40,6 +40,18 @@
   "@settingsAutoScoringSubtitle": {
     "description": "Auto-scoring settings row subtitle"
   },
+  "settingsSoundSection": "Sound",
+  "@settingsSoundSection": {
+    "description": "Settings section header for sound effects"
+  },
+  "settingsSoundEffectsTitle": "Sound effects",
+  "@settingsSoundEffectsTitle": {
+    "description": "Sound effects toggle row title"
+  },
+  "settingsSoundEffectsSubtitle": "Play sound effects during games",
+  "@settingsSoundEffectsSubtitle": {
+    "description": "Sound effects toggle row subtitle"
+  },
   "settingsAboutSection": "About",
   "@settingsAboutSection": {
     "description": "Settings section header for app information"
