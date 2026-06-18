@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Erfolge",
   "achievementUnlockedOn": "Freigeschaltet am {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Erfolge konnten nicht geladen werden: {error}"
+  "achievementsLoadFailed": "Erfolge konnten nicht geladen werden: {error}",
+  "achievementUnlockedBanner": "🏆 Erfolg freigeschaltet: {title}"
 }

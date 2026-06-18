@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Prestaties",
   "achievementUnlockedOn": "Ontgrendeld op {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Laden van prestaties mislukt: {error}"
+  "achievementsLoadFailed": "Laden van prestaties mislukt: {error}",
+  "achievementUnlockedBanner": "🏆 Prestatie ontgrendeld: {title}"
 }

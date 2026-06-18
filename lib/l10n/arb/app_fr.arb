@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Succès",
   "achievementUnlockedOn": "Débloqué le {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Échec du chargement des succès : {error}"
+  "achievementsLoadFailed": "Échec du chargement des succès : {error}",
+  "achievementUnlockedBanner": "🏆 Succès débloqué : {title}"
 }

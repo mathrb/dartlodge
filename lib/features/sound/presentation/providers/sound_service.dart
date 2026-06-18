@@ -27,6 +27,9 @@ class SoundService implements SoundPort {
     SoundCue.bust: 'sounds/bust.wav',
     SoundCue.cricketSingleMark: 'sounds/cricketSingleMark.wav',
     SoundCue.cricketTripleMark: 'sounds/cricketTripleMark.wav',
+    // Placeholder (#567): a copy of cricketTripleMark until a dedicated
+    // achievement sound is provided. Same filename → swap is asset-only.
+    SoundCue.achievementUnlock: 'sounds/achievement.wav',
   };
 
   /// Every asset, for preloading at startup.
