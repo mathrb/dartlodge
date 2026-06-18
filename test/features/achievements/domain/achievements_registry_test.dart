@@ -1,4 +1,5 @@
 import 'package:dart_lodge/features/achievements/domain/achievement.dart';
+import 'package:dart_lodge/features/achievements/domain/achievement_metric.dart';
 import 'package:dart_lodge/features/achievements/domain/achievements_registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,6 +57,22 @@ void main() {
       final bigFish = kAchievements.firstWhere((a) => a.id == 'big_fish');
       expect(bigFish.kind, AchievementKind.binary);
       expect(bigFish.threshold, 170);
+    });
+
+    test('big_fish is the ONLY binary with an explicit threshold', () {
+      final binariesWithThreshold = kAchievements
+          .where((a) => a.kind == AchievementKind.binary && a.threshold != null)
+          .map((a) => a.id)
+          .toList();
+      expect(binariesWithThreshold, ['big_fish']);
+    });
+
+    test('hasNineDarter metric is only used by binary achievements', () {
+      // A counter on a bool metric (always 0/1) makes no semantic sense.
+      final users = kAchievements
+          .where((a) => a.metric == AchievementMetric.hasNineDarter);
+      expect(users, isNotEmpty);
+      expect(users.every((a) => a.kind == AchievementKind.binary), isTrue);
     });
   });
 }

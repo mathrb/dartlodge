@@ -102,8 +102,8 @@ class Achievement {
   final AchievementKind kind;
   final AchievementMetric metric;
   final int? threshold;          // counter only (binary => threshold 1)
-  final String titleKey;         // hardcoded EN now; i18n later
-  final String descriptionKey;
+  final String titleKey;         // l10n key (ARB), resolved by AppLocalizations in SI-5
+  final String descriptionKey;   // l10n key (ARB), resolved by AppLocalizations in SI-5
 }
 
 enum AchievementMetric {

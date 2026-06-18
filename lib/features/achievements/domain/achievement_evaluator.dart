@@ -8,9 +8,10 @@ import 'package:dart_lodge/features/achievements/domain/achievements_registry.da
 /// (#521/#523). No Flutter / DB / randomness — fully deterministic.
 ///
 /// An achievement unlocks when its metric value reaches its target
-/// (`threshold ?? 1`). Binaries leave `threshold` null (unlock on first
-/// occurrence); counters set an explicit milestone. `hasNineDarter` (bool) reads
-/// as 0/1 so every metric compares uniformly.
+/// (`threshold ?? 1`). Binaries usually leave `threshold` null (unlock on first
+/// occurrence) — except `big_fish`, a binary carrying an explicit 170; counters
+/// set an explicit milestone. `hasNineDarter` (bool) reads as 0/1 so every
+/// metric compares uniformly.
 class AchievementEvaluator {
   const AchievementEvaluator();
 
