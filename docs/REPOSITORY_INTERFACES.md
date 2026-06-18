@@ -668,9 +668,15 @@ StatisticsRepository statisticsRepository(StatisticsRepositoryRef ref) {
   final db = ref.watch(appDatabaseProvider).requireValue;
   return StatisticsRepositoryImpl(db);
 }
+
+@Riverpod(keepAlive: true)
+AchievementRepository achievementRepository(AchievementRepositoryRef ref) {
+  final db = ref.watch(appDatabaseProvider).requireValue;
+  return AchievementRepositoryImpl(db);
+}
 ```
 
-All five repositories are `keepAlive: true` — they are singletons for the
+All repositories are `keepAlive: true` — they are singletons for the
 lifetime of the app and must never be auto-disposed.
 
 ---

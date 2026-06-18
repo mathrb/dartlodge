@@ -208,12 +208,13 @@ class AppDatabase extends _$AppDatabase {
   // Migration history:
   //   v1 → v2 (#522): add `unlocked_achievements` (the project's first
   //   migration). Only a new table is added — no existing table is rebuilt — so
-  //   no FK-disable dance is needed, and a `PRAGMA foreign_keys` toggle inside
-  //   `onUpgrade` would be a no-op anyway (SQLite ignores it inside the
-  //   migration transaction). Live-connection FK enforcement stays guaranteed by
-  //   `beforeOpen`. Fresh installs get every table via `m.createAll()` in
-  //   `onCreate`. Pre-1.0 caveat from #112 still applies: existing web installs
-  //   may miss `@TableIndex` indexes until they clear site data.
+  //   no FK-disable dance is needed (CREATE TABLE never triggers FK checks). We
+  //   deliberately don't touch `PRAGMA foreign_keys` in `onUpgrade`: `beforeOpen`
+  //   runs immediately after the migration on the same connection and already
+  //   sets it ON for all real usage. Fresh installs get every table via
+  //   `m.createAll()` in `onCreate`. Pre-1.0 caveat from #112 still applies:
+  //   existing web installs may miss `@TableIndex` indexes until they clear site
+  //   data.
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
@@ -247,6 +248,7 @@ class AppDatabase extends _$AppDatabase {
         'DELETE FROM game_events;',
         'DELETE FROM competitor_players;',
         'DELETE FROM competitors;',
+        'DELETE FROM unlocked_achievements;',
         'DELETE FROM games;',
         'DELETE FROM players;',
         'DELETE FROM accounts;',

@@ -64,6 +64,16 @@ void runAchievementRepositoryContractTests(
         throwsA(isA<RepositoryException>()),
       );
     });
+
+    test('surfaces an FK violation (unknown gameId) as a RepositoryException',
+        () async {
+      await seedPlayer('p1');
+      await expectLater(
+        () => repo.recordUnlock('p1', 'first_180', DateTime.now(),
+            gameId: 'ghost-game'),
+        throwsA(isA<RepositoryException>()),
+      );
+    });
   });
 
   group('watchUnlocked', () {
@@ -72,10 +82,10 @@ void runAchievementRepositoryContractTests(
 
       final emissions = <Set<String>>[];
       final sub = repo.watchUnlocked('p1').listen(emissions.add);
-      await pumpEventQueue();
+      await pumpEventQueue(times: 50);
 
       await repo.recordUnlock('p1', 'first_180', DateTime.now());
-      await pumpEventQueue();
+      await pumpEventQueue(times: 50);
 
       await sub.cancel();
 
