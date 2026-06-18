@@ -52,7 +52,15 @@ fi
 # Follow-up: re-enable R8 with a tested android/app/proguard-rules.pro keeping
 # Room/WorkManager (and any other reflection-based libs).
 GRADLE_PROPS="android/gradle.properties"
-if [[ -f $GRADLE_PROPS ]] && ! grep -q '^shrink=' "$GRADLE_PROPS"; then
+if [[ ! -f $GRADLE_PROPS ]]; then
+  echo "no $GRADLE_PROPS found — run 'flutter create --platforms=android --org app .' first" >&2
+  exit 1
+fi
+# Upsert (not just append-if-absent) so re-running always lands on shrink=false,
+# even if a previous run or a manual edit left a different value.
+if grep -q '^shrink=' "$GRADLE_PROPS"; then
+  sed -i 's/^shrink=.*/shrink=false/' "$GRADLE_PROPS"
+else
   printf '\n# Disable R8 shrinking: it strips WorkManager/Room reflection classes and\n# crashes the release APK at startup. See tools/post-create-android.sh.\nshrink=false\n' >> "$GRADLE_PROPS"
 fi
 
