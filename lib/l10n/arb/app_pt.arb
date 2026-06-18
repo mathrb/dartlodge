@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Conquistas",
   "achievementUnlockedOn": "Desbloqueado em {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Falha ao carregar as conquistas: {error}"
+  "achievementsLoadFailed": "Falha ao carregar as conquistas: {error}",
+  "achievementUnlockedBanner": "🏆 Conquista desbloqueada: {title}"
 }

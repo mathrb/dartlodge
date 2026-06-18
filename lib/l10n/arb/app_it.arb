@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Obiettivi",
   "achievementUnlockedOn": "Sbloccato il {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Caricamento degli obiettivi non riuscito: {error}"
+  "achievementsLoadFailed": "Caricamento degli obiettivi non riuscito: {error}",
+  "achievementUnlockedBanner": "🏆 Obiettivo sbloccato: {title}"
 }

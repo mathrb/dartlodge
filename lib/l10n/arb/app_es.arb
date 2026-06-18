@@ -513,5 +513,6 @@
   "achievementsPageTitle": "Logros",
   "achievementUnlockedOn": "Desbloqueado el {date}",
   "achievementProgress": "{current} / {target}",
-  "achievementsLoadFailed": "Error al cargar los logros: {error}"
+  "achievementsLoadFailed": "Error al cargar los logros: {error}",
+  "achievementUnlockedBanner": "🏆 Logro desbloqueado: {title}"
 }

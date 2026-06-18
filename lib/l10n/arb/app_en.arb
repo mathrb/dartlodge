@@ -2042,5 +2042,14 @@
         "type": "String"
       }
     }
+  },
+  "achievementUnlockedBanner": "🏆 Achievement unlocked: {title}",
+  "@achievementUnlockedBanner": {
+    "description": "Toast shown when an achievement is unlocked",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   }
 }
