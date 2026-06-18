@@ -180,7 +180,10 @@ void main() {
     }
 
     test('auto re-baseline after K consecutive empty frames', () {
-      final tracker = DartTracker(); // K = 3
+      // Explicit K=3 so the test is decoupled from the production default
+      // (raised to 9 for #499).
+      final tracker = DartTracker(
+          config: const DartTrackerConfig(emptyFramesToRebaseline: 3));
       confirmOne(tracker);
       expect(tracker.confirmedDarts, hasLength(1));
 
@@ -194,7 +197,8 @@ void main() {
     });
 
     test('board clear does NOT advance the turn (cap counter survives)', () {
-      final tracker = DartTracker();
+      final tracker = DartTracker(
+          config: const DartTrackerConfig(emptyFramesToRebaseline: 3));
       confirmOne(tracker);
       expect(tracker.dartsThisTurn, 1);
       for (var i = 0; i < 3; i++) {
@@ -202,6 +206,50 @@ void main() {
       }
       expect(tracker.confirmedDarts, isEmpty);
       expect(tracker.dartsThisTurn, 1, reason: 're-baseline is not a turn advance');
+    });
+
+    // #499: a transient empty-board reading (a dart-detection flicker or a
+    // brief darts-only occlusion, cals still visible) must NOT be treated as a
+    // pull. With the production default K=9 (~3s at 3 Hz), a sub-window empty
+    // streak keeps the confirmed dart and never re-emits it when it reappears.
+    test('a transient empty streak does not clear or re-emit (#499)', () {
+      final tracker = DartTracker(); // production default K = 9
+      final dart = seg(11, rSingle);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed + emitted
+      expect(tracker.dartsThisTurn, 1);
+      expect(tracker.confirmedDarts, hasLength(1));
+
+      // 8 empty frames (< K) — a ~2.6s flicker/occlusion at 3 Hz.
+      for (var i = 0; i < 8; i++) {
+        final e = tracker.processFrame(frame(const []));
+        expect(e.status.phase, isNot(TrackerPhase.rebaselined),
+            reason: 'sub-window empty must not clear (frame ${i + 1})');
+        expect(tracker.confirmedDarts, hasLength(1),
+            reason: 'confirmed dart retained through the streak');
+      }
+
+      // The same physical dart reappears at the same canonical position.
+      final back = tracker.processFrame(frame([dart]));
+      expect(back.newDarts, isEmpty, reason: 'no second emission of the same dart');
+      expect(tracker.dartsThisTurn, 1, reason: 'no double count');
+      expect(tracker.confirmedDarts, hasLength(1));
+    });
+
+    test('a genuine pull (>= K empty frames) still clears (#499)', () {
+      final tracker = DartTracker(); // production default K = 9
+      final dart = seg(11, rSingle);
+      tracker.processFrame(frame([dart]));
+      tracker.processFrame(frame([dart])); // confirmed
+      expect(tracker.confirmedDarts, hasLength(1));
+
+      TrackerUpdate? last;
+      for (var i = 0; i < 9; i++) {
+        last = tracker.processFrame(frame(const []));
+      }
+      expect(last!.status.phase, TrackerPhase.rebaselined,
+          reason: 'a several-second empty board is a real pull');
+      expect(tracker.confirmedDarts, isEmpty);
     });
 
     test('manual removeDarts clears the board but not the turn counter', () {
