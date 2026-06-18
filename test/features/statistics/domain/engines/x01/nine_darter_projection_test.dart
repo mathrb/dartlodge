@@ -114,6 +114,23 @@ void main() {
     expect(snap['nineDarterCount'], 0);
   });
 
+  test('a game abandoned mid-leg does not bleed darts into the next game', () {
+    // g1: 6 darts then a GameCompleted with NO LegCompleted (abandoned),
+    // followed by g2: a real 9-darter. The match-boundary reset must clear the
+    // 6 leftover darts so g2 still counts as exactly 9.
+    final events = <GameEvent>[
+      _ev('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, gameId: 'g1'),
+      _ev('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3, 'score': 60}, gameId: 'g1'),
+      _ev('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3, 'score': 60}, gameId: 'g1'),
+      _ev('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3, 'score': 60}, gameId: 'g1'),
+      _ev('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, gameId: 'g1'),
+      _ev('GameCompleted', {'winner_player_id': null}, gameId: 'g1'),
+      ..._leg(startingScore: 501, dartCount: 9, gameId: 'g2'),
+    ];
+    final snap = _run(events);
+    expect(snap['nineDarterCount'], 1);
+  });
+
   test('descriptor declares only x01', () {
     expect(NineDarterProjection().descriptor.supportedGameTypes,
         equals({GameType.x01}));

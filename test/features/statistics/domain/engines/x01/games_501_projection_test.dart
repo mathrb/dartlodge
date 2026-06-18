@@ -76,6 +76,16 @@ void main() {
     );
   });
 
+  test('only the tracked player\'s TurnStarted sets the starting score', () {
+    // If only an opponent threw (no p1 TurnStarted), the game is not attributed
+    // to p1 even on GameCompleted.
+    final events = [
+      _ev('TurnStarted', {'player_id': 'p2', 'starting_score': 501}),
+      _ev('GameCompleted', {'winner_player_id': 'p2'}),
+    ];
+    expect(_run(events), 0);
+  });
+
   test('descriptor declares only x01', () {
     expect(Games501Projection().descriptor.supportedGameTypes,
         equals({GameType.x01}));

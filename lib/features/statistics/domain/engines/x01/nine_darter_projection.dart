@@ -11,13 +11,16 @@ import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.
 /// on the player's `TurnStarted`s — the leg opener is 501) and counts the
 /// player's `DartThrown`s. On `LegCompleted`, a leg counts when the player won
 /// it, threw exactly 9 darts, and started from 501. Per-leg state resets on the
-/// leg boundary; the cumulative result persists.
+/// leg (and match) boundary; the cumulative result persists.
+///
+/// Solo-game filtering (`ProjectionContext.soloGameIds`) is deliberately NOT
+/// applied: a nine-darter is a shot-quality feat, valid in solo practice too.
 class NineDarterProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01.nineDarter',
     supportedGameTypes: {GameType.x01},
     consumedEventTypes: {'TurnStarted', 'DartThrown', 'LegCompleted'},
-    scope: ProjectionScope.match,
+    scope: ProjectionScope.leg,
   );
 
   @override
@@ -65,8 +68,11 @@ class NineDarterProjection extends ProjectionEngine {
 
   @override
   void reset(ProjectionScope scope) {
-    // Per-leg counters reset on the leg boundary; the cumulative result lives on.
-    if (scope == ProjectionScope.leg) {
+    // Per-leg counters reset on the leg boundary; the cumulative result lives
+    // on. Also clear on the match boundary so a game abandoned mid-leg (a
+    // GameCompleted with no preceding LegCompleted) can't bleed darts into the
+    // next game's first leg.
+    if (scope == ProjectionScope.leg || scope == ProjectionScope.match) {
       _dartsInLeg = 0;
       _legStartingScore = null;
     }
