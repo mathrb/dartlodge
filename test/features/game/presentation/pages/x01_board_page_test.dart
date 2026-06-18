@@ -9,6 +9,9 @@ import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
+import 'package:dart_lodge/core/sound/sound_cue.dart';
+import 'package:dart_lodge/core/sound/sound_port.dart';
+import 'package:dart_lodge/core/sound/sound_port_provider.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -69,6 +72,20 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
   /// For test 24: transition showBust from false → true.
   void triggerBust() =>
       state = state.whenData((s) => s?.copyWith(showBust: true));
+
+  /// Pushes a new state (used to drive sound listeners).
+  void emit(ActiveGameState s) => state = AsyncData(s);
+}
+
+class _FakeSoundPort implements SoundPort {
+  final List<String> dartThrows = [];
+  final List<SoundCue> cues = [];
+
+  @override
+  void dartThrown(String segment) => dartThrows.add(segment);
+
+  @override
+  void play(SoundCue cue) => cues.add(cue);
 }
 
 /// Notifier whose [build] hangs forever → provider stays in loading state.
@@ -1189,5 +1206,69 @@ void main() {
     // Correction path → correctTurnDart, never the manual-entry capture seam.
     expect(notifier.correctedDarts, isNotEmpty);
     expect(sink.manualEntries, isEmpty);
+  });
+
+  // ── Sound wiring ─────────────────────────────────────────────────────────────
+
+  testWidgets('plays dartThrown(segment) when a new dart is thrown',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final sound = _FakeSoundPort();
+    final fakeNotifier = _FakeActiveGameNotifier(
+      _activeState(gameState: _gameState(dartsThrownInTurn: 0)),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activeGameProvider.overrideWith(() => fakeNotifier),
+        soundPortProvider.overrideWith((ref) => sound),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    final notifier = container.read(activeGameProvider('game-1').notifier)
+        as _FakeActiveGameNotifier;
+    notifier.emit(_activeState(
+      gameState: _gameState(
+        dartsThrownInTurn: 1,
+        competitors: [_competitor(dartThrows: const ['T20'])],
+      ),
+    ));
+    await tester.pump();
+
+    expect(sound.dartThrows, ['T20']);
+    expect(sound.cues, isEmpty);
+  });
+
+  testWidgets('plays bust cue on showBust false→true (not dartThrown)',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final sound = _FakeSoundPort();
+    final fakeNotifier = _FakeActiveGameNotifier(
+      _activeState(gameState: _gameState(), showBust: false),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activeGameProvider.overrideWith(() => fakeNotifier),
+        soundPortProvider.overrideWith((ref) => sound),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    final notifier = container.read(activeGameProvider('game-1').notifier)
+        as _FakeActiveGameNotifier;
+    notifier.triggerBust();
+    await tester.pump();
+
+    expect(sound.cues, [SoundCue.bust]);
+    expect(sound.dartThrows, isEmpty);
+
+    // Advance past the bust-dismissal timer to avoid a pending-timer warning.
+    await tester.pump(const Duration(seconds: 3));
   });
 }

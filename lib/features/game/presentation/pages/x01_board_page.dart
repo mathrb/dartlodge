@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_game_provider.dart';
+import '../sound/wire_game_sounds.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
@@ -124,6 +125,14 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+
+    // Sound effects: hit/miss per dart, bust on a bust.
+    wireGameSounds(
+      ref,
+      activeGameProvider(widget.gameId),
+      gameStateOf: (s) => s?.gameState,
+      bustOf: (s) => s?.showBust ?? false,
+    );
 
     // Bust listener — fires on showBust false→true transition
     ref.listen(activeGameProvider(widget.gameId), (prev, next) {

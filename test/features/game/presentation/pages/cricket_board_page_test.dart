@@ -8,6 +8,9 @@ import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
+import 'package:dart_lodge/core/sound/sound_cue.dart';
+import 'package:dart_lodge/core/sound/sound_port.dart';
+import 'package:dart_lodge/core/sound/sound_port_provider.dart';
 import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -45,6 +48,20 @@ class _FakeActiveCricketGameNotifier extends ActiveCricketGameNotifier {
 
   @override
   Future<void> endGame() async => endGameCalls++;
+
+  /// Pushes a new state (used to drive sound listeners).
+  void emit(ActiveCricketGameState s) => state = AsyncData(s);
+}
+
+class _FakeSoundPort implements SoundPort {
+  final List<String> dartThrows = [];
+  final List<SoundCue> cues = [];
+
+  @override
+  void dartThrown(String segment) => dartThrows.add(segment);
+
+  @override
+  void play(SoundCue cue) => cues.add(cue);
 }
 
 /// Notifier whose [build] hangs forever → provider stays in loading state.
@@ -806,5 +823,39 @@ void main() {
     expect(find.byType(CricketUnifiedTableWidget), findsOneWidget);
     expect(find.byType(CricketMarksStripWidget), findsNothing);
     expect(find.byType(ProminentDartBandWidget), findsNothing);
+  });
+
+  testWidgets('plays dartThrown(segment) on a new dart (no bust mechanic)',
+      (tester) async {
+    final sound = _FakeSoundPort();
+    final fakeNotifier = _FakeActiveCricketGameNotifier(
+      _activeState(gameState: _cricketState(dartsThrownInTurn: 0)),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activeCricketGameProvider.overrideWith(() => fakeNotifier),
+        soundPortProvider.overrideWith((ref) => sound),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    final notifier = container.read(activeCricketGameProvider('game-1').notifier)
+        as _FakeActiveCricketGameNotifier;
+    notifier.emit(_activeState(
+      gameState: _cricketState(
+        dartsThrownInTurn: 1,
+        competitors: [
+          _competitor(id: 'c1', name: 'Alice', dartThrows: const ['T20']),
+          _competitor(id: 'c2', name: 'Bob'),
+        ],
+      ),
+    ));
+    await tester.pump();
+
+    expect(sound.dartThrows, ['T20']);
+    expect(sound.cues, isEmpty);
   });
 }

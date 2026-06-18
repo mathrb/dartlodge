@@ -8,6 +8,9 @@ import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
+import 'package:dart_lodge/core/sound/sound_cue.dart';
+import 'package:dart_lodge/core/sound/sound_port.dart';
+import 'package:dart_lodge/core/sound/sound_port_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
@@ -53,6 +56,24 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
 
   @override
   Future<void> endDrill() async => endDrillCalls++;
+
+  @override
+  void dismissBust() =>
+      state = state.whenData((s) => s?.copyWith(showBust: false));
+
+  /// Pushes a new state (used to drive sound listeners).
+  void emit(ActivePracticeState s) => state = AsyncData(s);
+}
+
+class _FakeSoundPort implements SoundPort {
+  final List<String> dartThrows = [];
+  final List<SoundCue> cues = [];
+
+  @override
+  void dartThrown(String segment) => dartThrows.add(segment);
+
+  @override
+  void play(SoundCue cue) => cues.add(cue);
 }
 
 /// Forces auto-scoring on without touching SharedPreferences.
@@ -115,12 +136,14 @@ ActivePracticeState _activeState({
   GameState? gameState,
   String? pendingGameWinnerId,
   bool showShanghaiBonus = false,
+  bool showBust = false,
   bool wasEndedManually = false,
 }) =>
     ActivePracticeState(
       gameState: gameState ?? _practiceState(),
       pendingGameWinnerId: pendingGameWinnerId,
       showShanghaiBonus: showShanghaiBonus,
+      showBust: showBust,
       wasEndedManually: wasEndedManually,
     );
 
@@ -1458,5 +1481,74 @@ void main() {
     expect(find.byType(PracticeInputButtonsWidget), findsOneWidget);
     expect(find.byType(ProminentDartBandWidget), findsNothing);
     expect(find.byType(HeroMetricWidget), findsNothing);
+  });
+
+  // ── Sound wiring ─────────────────────────────────────────────────────────────
+
+  testWidgets('plays dartThrown(segment) on a new dart', (tester) async {
+    _setTallViewport(tester);
+    final sound = _FakeSoundPort();
+    final fakeNotifier = _FakeActivePracticeNotifier(
+      _activeState(gameState: _practiceState(dartsThrownInTurn: 0)),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(() => fakeNotifier),
+        soundPortProvider.overrideWith((ref) => sound),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    final notifier = container.read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+    notifier.emit(_activeState(
+      gameState: _practiceState(
+        dartsThrownInTurn: 1,
+        competitor: _practiceCompetitor(dartThrows: const ['T20']),
+      ),
+    ));
+    await tester.pump();
+
+    expect(sound.dartThrows, ['T20']);
+    expect(sound.cues, isEmpty);
+  });
+
+  testWidgets('plays bust cue on a Catch-40 bust (showBust false→true)',
+      (tester) async {
+    _setTallViewport(tester);
+    final sound = _FakeSoundPort();
+    final fakeNotifier = _FakeActivePracticeNotifier(
+      _activeState(
+        gameState: _practiceState(gameType: GameType.catch40),
+        showBust: false,
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activePracticeProvider.overrideWith(() => fakeNotifier),
+        soundPortProvider.overrideWith((ref) => sound),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+
+    final notifier = container.read(activePracticeProvider('game-1').notifier)
+        as _FakeActivePracticeNotifier;
+    notifier.emit(_activeState(
+      gameState: _practiceState(gameType: GameType.catch40),
+      showBust: true,
+    ));
+    await tester.pump();
+
+    expect(sound.cues, [SoundCue.bust]);
+    expect(sound.dartThrows, isEmpty);
+
+    // Advance past the bust-dismissal timer to avoid a pending-timer warning.
+    await tester.pump(const Duration(seconds: 3));
   });
 }
