@@ -34,7 +34,11 @@ class SoundService implements SoundPort {
   void play(SoundCue cue) {
     // Global gate; defaults to ON while the preference is loading/absent.
     if (!(_ref.read(soundEnabledProvider).value ?? true)) return;
-    _player.play(_assets[cue]!);
+    // No-op (don't throw) for an unmapped cue — a future SoundCue without an
+    // asset must not disrupt scoring (sound-never-disrupts-scoring invariant).
+    final asset = _assets[cue];
+    if (asset == null) return;
+    _player.play(asset);
   }
 
   @override
