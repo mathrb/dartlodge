@@ -14,7 +14,10 @@ import 'app/app.dart';
 import 'core/debug/auto_scorer_sim_bridge.dart';
 import 'core/providers/board_camera_preview_provider.dart';
 import 'core/providers/board_overlay_provider.dart';
+import 'core/sound/sound_port_provider.dart';
 import 'features/auto_scorer/presentation/widgets/auto_scorer_board_overlay.dart';
+import 'features/sound/data/audioplayers_sound_player.dart';
+import 'features/sound/presentation/providers/sound_service.dart';
 
 /// Opt-in (web E2E only) Playwright sim bridge — `--dart-define=AUTOSCORER_SIM=true`.
 /// Off in the public build, so `window.dartlodgeSim` never ships to prod.
@@ -46,6 +49,15 @@ Future<void> main() async {
             (context, gameId) =>
                 AutoScorerBoardOverlay(gameId: gameId, expand: true),
           ),
+          // Composition root wires the real audio impl into the core sound
+          // seam, so the game feature plays sounds without importing the sound
+          // feature. Prod-only: `flutter test` keeps the default no-op port.
+          soundPortProvider.overrideWith((ref) {
+            final player = AudioPlayersSoundPlayer()
+              ..preload(SoundService.allAssets);
+            ref.onDispose(player.dispose);
+            return SoundService(ref, player);
+          }),
         ],
         child: _kAutoScorerSim
             ? const AutoScorerSimBridge(child: DartsApp())
