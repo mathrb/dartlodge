@@ -102,8 +102,8 @@ class Achievement {
   final AchievementKind kind;
   final AchievementMetric metric;
   final int? threshold;          // counter only (binary => threshold 1)
-  final String titleKey;         // hardcoded EN now; i18n later
-  final String descriptionKey;
+  final String titleKey;         // l10n key (ARB), resolved by AppLocalizations in SI-5
+  final String descriptionKey;   // l10n key (ARB), resolved by AppLocalizations in SI-5
 }
 
 enum AchievementMetric {
@@ -217,7 +217,7 @@ Sound seam addition (additive): this epic adds `SoundCue.achievementUnlock` to `
 One epic (v1), serial (1 PR per sub-issue, `code-review` → green CI → merge), GitHub native sub-issues.
 
 - **SI-1** ✅ (#522) — Migration v1→v2 + `unlocked_achievements` table + `AchievementRepository` (+ contract test).
-- **SI-2** — Domain: `kAchievements` registry (v1 catalogue), `AchievementEvaluator`, metrics model (+ registry test, evaluator tests).
+- **SI-2** ✅ (#523) — Domain: `kAchievements` registry (v1 catalogue), `AchievementEvaluator`, metrics model (+ registry test, evaluator tests). Note: `big_fish` carries an explicit `threshold: 170` (binary kind, magnitude metric); title/description are l10n keys resolved in SI-5.
 - **SI-3** — Two projections (`NineDarterProjection`, `Games501Projection`) + `achievementMetricsFromEvents` in the assembler.
 - **SI-4** — `AchievementWatcher` (reactive detection + persistence) + app-shell host mounting.
 - **SI-5** — `AchievementsPage` + "Succès" entry in the stats screen.
