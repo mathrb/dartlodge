@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../core/persistence/database_provider.dart';
 import '../core/utils/app_theme.dart';
+import '../features/achievements/presentation/providers/achievement_watcher_provider.dart';
 import '../features/settings/presentation/providers/locale_provider.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
 import '../l10n/locale_resolution.dart';
@@ -34,6 +35,10 @@ class DartsApp extends ConsumerWidget {
         ),
       ),
       data: (_) {
+        // Activate the lifetime achievement watcher (#525) once the DB is
+        // ready, without rebuilding the app on each emission. SI-6 will hang
+        // the notification host off the same provider.
+        ref.listen(achievementWatcherProvider, (_, __) {});
         final router = ref.watch(routerProvider);
         final themeMode =
             ref.watch(settingsProvider).value ?? ThemeMode.light;

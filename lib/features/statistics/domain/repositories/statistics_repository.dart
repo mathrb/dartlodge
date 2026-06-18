@@ -4,6 +4,7 @@
 import '../entities/player_stats.dart';
 import '../entities/player_leg_snapshot.dart';
 import '../entities/game_stats.dart';
+import '../assemblers/player_stats_assembler.dart' show AchievementMetricsData;
 import '../../../../core/utils/constants.dart';
 
 abstract interface class StatisticsRepository {
@@ -45,6 +46,14 @@ abstract interface class StatisticsRepository {
     int? legLimit,
     String cricketTargetMode = 'fixed',
   });
+
+  /// Cross-type achievement metric bundle for [playerId] (#525): replays the
+  /// player's FULL completed history across ALL game types (no type filter) and
+  /// delegates to `PlayerStatsAssembler.achievementMetricsFromEvents`. Returns a
+  /// zero record when the player has no completed games. Throws
+  /// [PlayerNotFoundException] if [playerId] does not exist. The achievements
+  /// watcher maps this statistics-owned record to its `AchievementMetrics`.
+  Future<AchievementMetricsData> achievementMetricsForPlayer(String playerId);
 
   /// Returns per-leg PPR/MPT snapshots ordered oldest → newest.
   ///
