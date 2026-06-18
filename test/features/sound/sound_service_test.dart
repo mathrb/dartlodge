@@ -1,8 +1,8 @@
 import 'package:dart_lodge/core/sound/sound_cue.dart';
 import 'package:dart_lodge/core/sound/sound_port_provider.dart';
 import 'package:dart_lodge/features/sound/domain/sound_player.dart';
+import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:dart_lodge/features/sound/presentation/providers/sound_service.dart';
-import 'package:dart_lodge/features/sound/presentation/providers/sound_settings_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';

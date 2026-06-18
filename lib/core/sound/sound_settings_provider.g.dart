@@ -9,26 +9,26 @@ part of 'sound_settings_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// The global "Sounds" on/off preference, default **ON** — a discreet dart
-/// thunk is expected. [SoundService] reads this to gate playback. The Settings
-/// UI row that toggles it is added in #519 (mirrors how [DataCollectionEnabled]
-/// shipped its persisted state before its Settings row); this is the persisted
-/// state + the gate the sound pipeline consults.
+/// thunk is expected. Lives in `core/` (not `features/sound/`) because it is
+/// read across features: `SoundService` gates playback on it and the Settings
+/// page toggles it — a cross-feature seam belongs in `core/` (mirrors
+/// `AutoScoringEnabled`). The Settings "Sound" row drives [setEnabled].
 
 @ProviderFor(SoundEnabled)
 final soundEnabledProvider = SoundEnabledProvider._();
 
 /// The global "Sounds" on/off preference, default **ON** — a discreet dart
-/// thunk is expected. [SoundService] reads this to gate playback. The Settings
-/// UI row that toggles it is added in #519 (mirrors how [DataCollectionEnabled]
-/// shipped its persisted state before its Settings row); this is the persisted
-/// state + the gate the sound pipeline consults.
+/// thunk is expected. Lives in `core/` (not `features/sound/`) because it is
+/// read across features: `SoundService` gates playback on it and the Settings
+/// page toggles it — a cross-feature seam belongs in `core/` (mirrors
+/// `AutoScoringEnabled`). The Settings "Sound" row drives [setEnabled].
 final class SoundEnabledProvider
     extends $AsyncNotifierProvider<SoundEnabled, bool> {
   /// The global "Sounds" on/off preference, default **ON** — a discreet dart
-  /// thunk is expected. [SoundService] reads this to gate playback. The Settings
-  /// UI row that toggles it is added in #519 (mirrors how [DataCollectionEnabled]
-  /// shipped its persisted state before its Settings row); this is the persisted
-  /// state + the gate the sound pipeline consults.
+  /// thunk is expected. Lives in `core/` (not `features/sound/`) because it is
+  /// read across features: `SoundService` gates playback on it and the Settings
+  /// page toggles it — a cross-feature seam belongs in `core/` (mirrors
+  /// `AutoScoringEnabled`). The Settings "Sound" row drives [setEnabled].
   SoundEnabledProvider._()
     : super(
         from: null,
@@ -51,10 +51,10 @@ final class SoundEnabledProvider
 String _$soundEnabledHash() => r'b68fc7a77e1f798473810170c000dd8ca4f76151';
 
 /// The global "Sounds" on/off preference, default **ON** — a discreet dart
-/// thunk is expected. [SoundService] reads this to gate playback. The Settings
-/// UI row that toggles it is added in #519 (mirrors how [DataCollectionEnabled]
-/// shipped its persisted state before its Settings row); this is the persisted
-/// state + the gate the sound pipeline consults.
+/// thunk is expected. Lives in `core/` (not `features/sound/`) because it is
+/// read across features: `SoundService` gates playback on it and the Settings
+/// page toggles it — a cross-feature seam belongs in `core/` (mirrors
+/// `AutoScoringEnabled`). The Settings "Sound" row drives [setEnabled].
 
 abstract class _$SoundEnabled extends $AsyncNotifier<bool> {
   FutureOr<bool> build();

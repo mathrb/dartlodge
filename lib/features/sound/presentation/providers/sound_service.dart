@@ -1,9 +1,9 @@
 import 'package:dart_lodge/core/sound/sound_cue.dart';
 import 'package:dart_lodge/core/sound/sound_port.dart';
+import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/sound_player.dart';
-import 'sound_settings_provider.dart';
 
 /// Real [SoundPort] implementation: maps cues to assets, gates on the global
 /// [soundEnabledProvider], and delegates playback to a [SoundPlayer]. Injected

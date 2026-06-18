@@ -34,6 +34,8 @@ void main() {
     await pump(tester, const Locale('en'));
     expect(find.text('Settings'), findsOneWidget); // AppBar title
     expect(find.text('THEME'), findsOneWidget); // section header (uppercased)
+    expect(find.text('SOUND'), findsOneWidget); // section header (uppercased)
+    expect(find.text('Sound effects'), findsOneWidget); // toggle title
     expect(find.text('DANGER ZONE'), findsOneWidget);
   });
 
@@ -41,6 +43,27 @@ void main() {
     await pump(tester, const Locale('fr'));
     expect(find.text('Paramètres'), findsOneWidget); // AppBar title
     expect(find.text('THÈME'), findsOneWidget); // section header (uppercased)
+    expect(find.text('SON'), findsOneWidget); // section header (uppercased)
     expect(find.text('ZONE DE DANGER'), findsOneWidget);
+  });
+
+  testWidgets('sound toggle is on by default and persists when turned off',
+      (tester) async {
+    await pump(tester, const Locale('en'));
+
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isTrue, // default ON
+    );
+
+    await tester.tap(find.byType(SwitchListTile));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      isFalse,
+    );
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('sound_enabled'), isFalse);
   });
 }
