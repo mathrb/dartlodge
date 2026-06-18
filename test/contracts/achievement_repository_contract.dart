@@ -93,4 +93,25 @@ void runAchievementRepositoryContractTests(
       expect(emissions.last, {'first_180'}, reason: 'reactive update');
     });
   });
+
+  group('watchUnlockedDetails', () {
+    test('emits the id → unlockedAt map, reactively, with the date round-trip',
+        () async {
+      await seedPlayer('p1');
+      final at = DateTime(2026, 1, 2, 3, 4, 5);
+
+      final emissions = <Map<String, DateTime>>[];
+      final sub = repo.watchUnlockedDetails('p1').listen(emissions.add);
+      await pumpEventQueue(times: 50);
+
+      await repo.recordUnlock('p1', 'first_180', at);
+      await pumpEventQueue(times: 50);
+
+      await sub.cancel();
+
+      expect(emissions.first, isEmpty, reason: 'initial empty map');
+      expect(emissions.last, {'first_180': at},
+          reason: 'reactive update with the persisted date');
+    });
+  });
 }

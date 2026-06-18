@@ -28,6 +28,15 @@ class AchievementRepositoryDrift implements AchievementRepository {
   }
 
   @override
+  Stream<Map<String, DateTime>> watchUnlockedDetails(String playerId) {
+    final query = _db.select(_db.unlockedAchievements)
+      ..where((t) => t.playerId.equals(playerId));
+    return query.watch().map((rows) => {
+          for (final r in rows) r.achievementId: DateTime.parse(r.unlockedAt),
+        });
+  }
+
+  @override
   Future<void> recordUnlock(String playerId, String id, DateTime at,
       {String? gameId}) async {
     try {

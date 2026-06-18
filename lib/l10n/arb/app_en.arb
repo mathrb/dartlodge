@@ -1888,5 +1888,159 @@
   "autoScorerDoneAiming": "Done aiming",
   "@autoScorerDoneAiming": {
     "description": "Aim view: confirm/done button"
+  },
+  "achievementFirst180Title": "First 180",
+  "@achievementFirst180Title": {
+    "description": "Achievement label"
+  },
+  "achievementBigFishTitle": "Big Fish",
+  "@achievementBigFishTitle": {
+    "description": "Achievement label"
+  },
+  "achievementFirstWinTitle": "First Win",
+  "@achievementFirstWinTitle": {
+    "description": "Achievement label"
+  },
+  "achievementNineDarterTitle": "Nine-Darter",
+  "@achievementNineDarterTitle": {
+    "description": "Achievement label"
+  },
+  "achievementDarts1000Title": "1,000 Darts",
+  "@achievementDarts1000Title": {
+    "description": "Achievement label"
+  },
+  "achievementDarts10000Title": "10,000 Darts",
+  "@achievementDarts10000Title": {
+    "description": "Achievement label"
+  },
+  "achievementDarts50000Title": "50,000 Darts",
+  "@achievementDarts50000Title": {
+    "description": "Achievement label"
+  },
+  "achievementCount18010Title": "10× 180",
+  "@achievementCount18010Title": {
+    "description": "Achievement label"
+  },
+  "achievementCount18050Title": "50× 180",
+  "@achievementCount18050Title": {
+    "description": "Achievement label"
+  },
+  "achievementCount180100Title": "100× 180",
+  "@achievementCount180100Title": {
+    "description": "Achievement label"
+  },
+  "achievementGames501100Title": "100 Games of 501",
+  "@achievementGames501100Title": {
+    "description": "Achievement label"
+  },
+  "achievementGames501500Title": "500 Games of 501",
+  "@achievementGames501500Title": {
+    "description": "Achievement label"
+  },
+  "achievementWins10Title": "10 Wins",
+  "@achievementWins10Title": {
+    "description": "Achievement label"
+  },
+  "achievementWins50Title": "50 Wins",
+  "@achievementWins50Title": {
+    "description": "Achievement label"
+  },
+  "achievementWins100Title": "100 Wins",
+  "@achievementWins100Title": {
+    "description": "Achievement label"
+  },
+  "achievementFirst180Description": "Score a 180 in a single turn",
+  "@achievementFirst180Description": {
+    "description": "Achievement label"
+  },
+  "achievementBigFishDescription": "Check out 170 in one turn",
+  "@achievementBigFishDescription": {
+    "description": "Achievement label"
+  },
+  "achievementFirstWinDescription": "Win your first game",
+  "@achievementFirstWinDescription": {
+    "description": "Achievement label"
+  },
+  "achievementNineDarterDescription": "Win a 501 leg in 9 darts",
+  "@achievementNineDarterDescription": {
+    "description": "Achievement label"
+  },
+  "achievementDarts1000Description": "Throw 1,000 darts",
+  "@achievementDarts1000Description": {
+    "description": "Achievement label"
+  },
+  "achievementDarts10000Description": "Throw 10,000 darts",
+  "@achievementDarts10000Description": {
+    "description": "Achievement label"
+  },
+  "achievementDarts50000Description": "Throw 50,000 darts",
+  "@achievementDarts50000Description": {
+    "description": "Achievement label"
+  },
+  "achievementCount18010Description": "Hit ten 180s",
+  "@achievementCount18010Description": {
+    "description": "Achievement label"
+  },
+  "achievementCount18050Description": "Hit fifty 180s",
+  "@achievementCount18050Description": {
+    "description": "Achievement label"
+  },
+  "achievementCount180100Description": "Hit one hundred 180s",
+  "@achievementCount180100Description": {
+    "description": "Achievement label"
+  },
+  "achievementGames501100Description": "Play 100 games of 501",
+  "@achievementGames501100Description": {
+    "description": "Achievement label"
+  },
+  "achievementGames501500Description": "Play 500 games of 501",
+  "@achievementGames501500Description": {
+    "description": "Achievement label"
+  },
+  "achievementWins10Description": "Win 10 games",
+  "@achievementWins10Description": {
+    "description": "Achievement label"
+  },
+  "achievementWins50Description": "Win 50 games",
+  "@achievementWins50Description": {
+    "description": "Achievement label"
+  },
+  "achievementWins100Description": "Win 100 games",
+  "@achievementWins100Description": {
+    "description": "Achievement label"
+  },
+  "achievementsPageTitle": "Achievements",
+  "@achievementsPageTitle": {
+    "description": "Achievements page title and trophy entry tooltip"
+  },
+  "achievementUnlockedOn": "Unlocked on {date}",
+  "@achievementUnlockedOn": {
+    "description": "Achievement card: unlock date",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementProgress": "{current} / {target}",
+  "@achievementProgress": {
+    "description": "Achievement card: counter progress",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "achievementsLoadFailed": "Failed to load achievements: {error}",
+  "@achievementsLoadFailed": {
+    "description": "Achievements page load error",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
   }
 }

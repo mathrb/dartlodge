@@ -29,6 +29,7 @@ import 'package:dart_lodge/features/game/presentation/pages/x01_board_page.dart'
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 import 'package:dart_lodge/features/history/presentation/pages/game_detail_page.dart';
+import 'package:dart_lodge/features/achievements/presentation/pages/achievements_page.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/player_stats_page.dart';
 import 'package:dart_lodge/features/statistics/presentation/pages/post_game_summary_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_settings_page.dart';
@@ -54,6 +55,7 @@ abstract final class GameRoutes {
 
   static String gameDetail(String id) => '/game/history/$id';
   static String playerStats(String id) => '/stats/player/$id';
+  static String achievements(String playerId) => '/achievements/$playerId';
   static String postGame(String id) => '/post-game/$id';
 }
 
@@ -120,6 +122,8 @@ Widget _countUpBoardPage(BuildContext _, GoRouterState s) =>
     CountUpBoardPage(gameId: s.pathParameters['gameId']!);
 Widget _playerStatsPage(BuildContext _, GoRouterState s) =>
     PlayerStatsPage(playerId: s.pathParameters['playerId']!);
+Widget _achievementsPage(BuildContext _, GoRouterState s) =>
+    AchievementsPage(playerId: s.pathParameters['playerId']!);
 Widget _postGameSummaryPage(BuildContext _, GoRouterState s) =>
     PostGameSummaryPage(gameId: s.pathParameters['gameId']!);
 Widget _gameDetailPage(BuildContext _, GoRouterState s) =>
@@ -273,6 +277,9 @@ List<RouteBase> _buildRoutes() => [
       GoRoute(
           path: '/stats/player/:playerId',
           builder: _playerStatsPage),
+      GoRoute(
+          path: '/achievements/:playerId',
+          builder: _achievementsPage),
       GoRoute(
           path: '/post-game/:gameId',
           builder: _postGameSummaryPage),
