@@ -6,6 +6,8 @@
 import 'dart:async' as _i5;
 
 import 'package:dart_lodge/core/utils/constants.dart' as _i6;
+import 'package:dart_lodge/features/statistics/domain/entities/dart_position.dart'
+    as _i8;
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart'
     as _i2;
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart'
@@ -234,4 +236,26 @@ class MockStatisticsRepository extends _i1.Mock
             returnValue: _i5.Stream<_i3.PlayerStats>.empty(),
           )
           as _i5.Stream<_i3.PlayerStats>);
+
+  @override
+  _i5.Future<List<_i8.DartPosition>> getDartPositions({
+    String? gameId,
+    required String? playerId,
+    _i6.GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getDartPositions, [], {
+              #gameId: gameId,
+              #playerId: playerId,
+              #gameType: gameType,
+              #from: from,
+              #to: to,
+            }),
+            returnValue: _i5.Future<List<_i8.DartPosition>>.value(
+              <_i8.DartPosition>[],
+            ),
+          )
+          as _i5.Future<List<_i8.DartPosition>>);
 }

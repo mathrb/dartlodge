@@ -4,6 +4,7 @@
 import '../entities/player_stats.dart';
 import '../entities/player_leg_snapshot.dart';
 import '../entities/game_stats.dart';
+import '../entities/dart_position.dart';
 import '../assemblers/player_stats_assembler.dart' show AchievementMetricsData;
 import '../../../../core/utils/constants.dart';
 
@@ -95,4 +96,29 @@ abstract interface class StatisticsRepository {
   /// [gameType] is required for the same reasons as [getPlayerStats].
   Stream<PlayerStats> watchPlayerStats(String playerId,
       {required GameType gameType});
+
+  /// Returns the recorded normalised positions of darts thrown by [playerId]
+  /// for the impact heatmap (#576).
+  ///
+  /// These are RAW per-dart facts read directly from `dart_throws` — NOT a
+  /// computed statistic, so the query does not route through
+  /// `PlayerStatsAssembler`. Only located darts are returned: rows where
+  /// `x`/`y` are NULL (manual entry, corrections, or pre-capture games) are
+  /// excluded.
+  ///
+  /// Filters (all optional except [playerId], ANDed together):
+  /// - [gameId]: a single game (post-game heatmap).
+  /// - [gameType]: only darts from games of this type (stats tabs).
+  /// - [from] / [to]: inclusive date window applied to the game's `start_time`.
+  ///
+  /// Coordinates are in the canonical board frame (origin = bullseye, radius
+  /// 1.0 = outer double edge, "20 up"); see
+  /// `docs/plans/2026-06-19-heatmap-design.md`.
+  Future<List<DartPosition>> getDartPositions({
+    String? gameId,
+    required String playerId,
+    GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  });
 }
