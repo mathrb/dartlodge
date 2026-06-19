@@ -543,6 +543,7 @@ The dart-impact density heatmap (epic #571; see `docs/plans/2026-06-19-heatmap-d
 - **Colormap**: a cold→hot ramp — transparent → blue → cyan → yellow → red — with alpha rising with density (soft ease-in so the low-density tail fades to transparent rather than a hard floor).
 - **KDE constants**: `kHeatGridExtent = 1.1` (grid half-width in canonical board units, `1.0` = outer double-ring edge, so misses just outside still contribute), `kHeatNoiseRadius = 1.5` (points beyond this are dropped as detector noise), `kHeatGridResolution = 64` (grid cells per axis). The gaussian blur radius is adaptive to point count.
 - **Dartboard segment colours** in `heatmap_dartboard_widget.dart` are **intentional domain literals** (board black/white/red/green), NOT themed tokens — a formalized won't-fix exception like the identity palette (§2.7) and the dartboard colours documented under audit #195. Do not flag them in future audits.
+- **No legend, density scale, or segment numbers** by design (#617 / F-005). The heatmap is a qualitative "where did my darts land" overlay on a recognisable board, not a quantitative chart — the cold→hot ramp reads intuitively against the dartboard itself, and the board's own geometry (20 at top, the rings, the bull) is the implicit reference. Adding a numeric scale or per-segment labels would clutter the at-a-glance read. This is a formalized won't-fix; do not flag the absence of a heatmap legend in future audits.
 
 ---
 
