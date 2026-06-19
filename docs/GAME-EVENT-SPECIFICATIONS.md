@@ -171,7 +171,10 @@ open_targets    List<Integer>   The 6 active numbers for the new turn:
 
 ```text
 competitor_id    UUID
+player_id        UUID            Resolved player throwing this turn
 turn_index       Integer
+leg_index        Integer
+starting_score   Integer?        Optional — score at turn start (X01)
 ```
 
 **Invariant**
@@ -184,7 +187,14 @@ turn_index       Integer
 
 ```text
 competitor_id    UUID
+player_id        UUID
 reason           Enum {normal, bust, disconnect}
+turn_score       Integer?        Optional, X01 only — score-delta for the
+                                turn (turn_start_score − turn_end_score,
+                                see §5.2). Bust and not-in (Double-In)
+                                turns score 0 so they contribute 0 to the
+                                average projection (#318). Omitted for
+                                non-X01 game types.
 ```
 
 ---
@@ -195,13 +205,20 @@ reason           Enum {normal, bust, disconnect}
 
 ```text
 competitor_id    UUID
+player_id        UUID            Resolved player who threw the dart
 segment          Enum {0, 1–20, bull}
                  0 = miss (dart did not hit a scoring segment)
 multiplier       Integer {1, 2, 3}
+score            Integer         Points scored by this dart
 input_method     Enum {manual, camera}   # 'camera' = on-device auto-scorer (#377)
+bust             Boolean?  # conditional — set true on the dart that busts the turn
 x                Double?  # optional — normalised canonical impact position (#571)
 y                Double?  # optional — heatmap frame; omitted for manual/old darts
 ```
+
+> `bust: true` is added to the busting dart's payload by `ProcessDartUseCase`
+> when the engine resolves the throw as a bust. It is **omitted** (→ `null` on
+> read) for all non-busting darts.
 
 > `x`/`y` are the dart's normalised impact position in the stable heatmap frame
 > (origin = board centre, radius `1.0` at the double ring, "20 at top"), emitted
@@ -221,21 +238,33 @@ y                Double?  # optional — heatmap frame; omitted for manual/old d
 
 ---
 
-### 4.4 Vision Corrections (Optional but Supported)
+### 4.4 Corrections / Undo
 
 #### `DartCorrected`
 
 ```text
-original_event_id  UUID
-corrected_segment  Enum
-corrected_multiplier Integer
+original_event_id     UUID         The corrected DartThrown's event_id
+corrected_dart_id     UUID         Dart record being corrected
+                                  (dart_id == event_id by spec)
+superseded_event_ids  List<UUID>   Other events cancelled by this undo
+                                  (e.g. a TurnStarted and its trailing
+                                  CrazyTargetsRolled at a turn boundary)
 ```
+
+**Emitted by**
+
+* `UndoLastDartUseCase` — this is an **undo/supersession record**, not a
+  vision re-score. Undoing the last dart appends a `DartCorrected` (so the
+  audit trail stays complete), deletes the physical dart record, then fully
+  replays. Replay **skips** every event referenced by `original_event_id` /
+  `superseded_event_ids`. (`actor_id = "system"`, `source = client`.)
 
 **Invariant**
 
-* Must reference an existing `DartThrown`
-* Original event is not removed
-* Engine must recompute state from correction forward
+* `original_event_id` must reference an existing `DartThrown`
+* The original event is not removed; it is skipped on replay
+* Engine recomputes state by replaying from the start, skipping the
+  superseded events — `DartCorrected` itself carries no engine state change
 
 ---
 

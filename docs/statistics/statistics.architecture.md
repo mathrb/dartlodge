@@ -137,9 +137,25 @@ The projection engine:
 ### 5.2 Engine Guarantees
 
 * Events applied exactly once per replay
-* Order = `global_sequence`
+* Order = `(game_id, local_sequence)` — `local_sequence` restarts at 1 per
+  game, so cross-game replays sort by `game_id` first to keep each game's
+  events contiguous (ordering by `local_sequence` alone interleaves games and
+  corrupts projection state)
 * Idempotent per event ID
 * Stateless between replays
+
+### 5.3 Snapshot Structure (two-level)
+
+`ProjectionRunner.snapshot()` returns a **two-level map**:
+
+```text
+{ <descriptor.id>: { <fieldName>: value } }
+```
+
+The outer key is the projection's `descriptor.id` (e.g. `x01.nineDarter`); the
+inner map is that projection's own field → value snapshot (e.g.
+`hasNineDarter`, `nineDarterCount`). Consumers must index **both** levels —
+e.g. `snapshot['x01.nineDarter']?['hasNineDarter']`.
 
 ---
 
@@ -197,6 +213,23 @@ These depend on rules:
 | X01     | Checkout %, double-out success |
 | Cricket | Marks per turn, closure rate   |
 
+#### Achievement-feeding projections (X01)
+
+Two X01 projections exist solely to feed the achievements feature:
+
+| Projection      | Descriptor id    | Snapshot keys                     |
+| --------------- | ---------------- | --------------------------------- |
+| NineDarter      | `x01.nineDarter` | `hasNineDarter`, `nineDarterCount` |
+| Games501        | `x01.games501`   | `games501Played`                  |
+
+`PlayerStatsAssembler.achievementMetricsFromEvents` runs these two
+projections (alongside the high-score buckets and highest-checkout
+projections) and packages their snapshot values into an
+`AchievementMetricsData` bundle for the achievements feature to consume.
+This is a deliberate **one-way achievements → statistics** dependency: the
+statistics layer exposes the metrics, the achievements layer reads them — the
+statistics layer never reaches into achievements.
+
 ### 7.3 Cricket Career Cohorts (target-mode aware)
 
 Cricket career stats are bucketed by `targetMode` ∈ {`fixed`, `random`,
@@ -234,6 +267,24 @@ Game-specific projections:
 
 * Must declare required rules
 * Must not assume scoring semantics outside rules
+
+### 7.4 Dart-position heatmap (raw, non-projection)
+
+The dart-impact heatmap is a **deliberate exception** to the "statistics are
+projections over events" rule. `StatisticsRepository.getDartPositions` reads
+`dart_throws` rows **directly** — it bypasses `PlayerStatsAssembler` and
+`ProjectionRunner` entirely (`statistics_repository_drift.dart`). The query
+returns only located darts: rows filtered on `is_complete = 1` (in-progress
+darts never leak) and non-NULL `x`/`y`. The result is consumed by
+`dartHeatmapProvider` and rendered as a density heatmap.
+
+Positions are **facts, not computed stats** — there is nothing to project or
+replay — so reading them straight from the table is correct. This is the only
+sanctioned bypass of the projection pipeline.
+
+Dart `x`/`y` are persisted as **nullable** columns on `dart_throws`. Only
+auto-scored darts carry coordinates; manually entered and corrected darts
+store `x`/`y` as `NULL` (hence the non-NULL filter above excludes them).
 
 ---
 
