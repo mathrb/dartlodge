@@ -30,7 +30,7 @@
 | Provider Type | Use For | Example |
 |--------------|---------|---------|
 | `Provider` | Immutable dependencies (repositories, use cases) | Database, API clients |
-| `StateProvider` | Simple values (no business logic) | Selected filter, toggle states |
+| `StateProvider` | Discouraged — unused in this codebase; prefer a code-gen `Notifier` | — |
 | `NotifierProvider` | Synchronous state with logic | Game setup wizard |
 | `AsyncNotifierProvider` | Async state (database, network) | Active game, player list |
 | `StreamProvider` | Real-time data streams | Multiplayer updates, sync status |
@@ -40,7 +40,7 @@
 **State Structure:**
 ```dart
 @freezed
-class GameState with _$GameState {
+abstract class GameState with _$GameState {
   const factory GameState({
     required String gameId,
     required bool isComplete,
@@ -146,7 +146,6 @@ The following sections provide comprehensive examples and patterns for implement
 │      State Notifiers (Controllers)      │
 │  - AsyncNotifierProvider                │
 │  - NotifierProvider                     │
-│  - StateNotifierProvider                │
 └─────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────┐
@@ -174,13 +173,13 @@ Used for: Dependencies that don't change (repositories, use cases)
 
 ```dart
 @riverpod
-GameRepository gameRepository(GameRepositoryRef ref) {
+GameRepository gameRepository(Ref ref) {
   final database = ref.watch(databaseProvider);
   return GameRepositoryImpl(database);
 }
 
 @riverpod
-ProcessDartUseCase processDartUseCase(ProcessDartUseCaseRef ref) {
+ProcessDartUseCase processDartUseCase(Ref ref) {
   final repository = ref.watch(gameRepositoryProvider);
   return ProcessDartUseCase(repository);
 }
@@ -195,6 +194,8 @@ ProcessDartUseCase processDartUseCase(ProcessDartUseCaseRef ref) {
 ---
 
 ### 3.2 StateProvider (Simple State)
+
+> **Discouraged / unused in this codebase.** `StateProvider` (and the legacy `StateNotifierProvider`, removed in Riverpod 3.x) have zero usage in `lib/`. Prefer a code-gen `@riverpod` `Notifier` even for simple values. The example below is retained for reference only.
 
 Used for: Simple state that can be modified directly
 
@@ -223,6 +224,7 @@ Used for: State with synchronous business logic
 ```dart
 @riverpod
 class GameSetupNotifier extends _$GameSetupNotifier {
+  // Generated provider drops the `Notifier` suffix → `gameSetupProvider`.
   @override
   GameSetupState build() {
     return GameSetupState.initial();
@@ -263,7 +265,8 @@ Used for: State that requires async operations (database, network)
 
 ```dart
 @riverpod
-class ActiveGame extends _$ActiveGame {
+class ActiveGameNotifier extends _$ActiveGameNotifier {
+  // Generated provider drops the `Notifier` suffix → `activeGameProvider`.
   @override
   Future<GameState?> build() async {
     // Load active game from database
@@ -337,16 +340,16 @@ Used for: Subscribing to data streams (database changes, event logs)
 ```dart
 @riverpod
 Stream<List<GameEvent>> gameEventsStream(
-  GameEventsStreamRef ref,
+  Ref ref,
   String gameId,
 ) {
-  final repository = ref.watch(gameRepositoryProvider);
-  return repository.watchGameEvents(gameId);
+  final repository = ref.watch(gameEventRepositoryProvider);
+  return repository.watchEventsForGame(gameId);
 }
 
 @riverpod
 Stream<GameStats> liveGameStats(
-  LiveGameStatsRef ref,
+  Ref ref,
   String gameId,
 ) {
   final repository = ref.watch(statisticsRepositoryProvider);
@@ -364,7 +367,7 @@ Stream<GameStats> liveGameStats(
 // When remote multiplayer is implemented:
 @riverpod
 Stream<MultiplayerGameState> multiplayerGameStream(
-  MultiplayerGameStreamRef ref,
+  Ref ref,
   String sessionId,
 ) {
   final service = ref.watch(multiplayerServiceProvider);
@@ -382,7 +385,7 @@ All state classes must be immutable and use `freezed` for generation:
 
 ```dart
 @freezed
-class GameState with _$GameState {
+abstract class GameState with _$GameState {
   const factory GameState({
     required String gameId,
     required GameType type,
@@ -398,7 +401,7 @@ class GameState with _$GameState {
 }
 
 @freezed
-class CompetitorState with _$CompetitorState {
+abstract class CompetitorState with _$CompetitorState {
   const factory CompetitorState({
     required String competitorId,
     required String name,
@@ -428,7 +431,7 @@ Use freezed unions for state that can be in multiple modes:
 
 ```dart
 @freezed
-class GameSetupState with _$GameSetupState {
+abstract class GameSetupState with _$GameSetupState {
   const factory GameSetupState.selectingType() = _SelectingType;
   
   const factory GameSetupState.configuringGame({
@@ -483,6 +486,8 @@ state = await AsyncValue.guard(() async {
   return result;
 });
 ```
+
+> **Reading the value:** use `AsyncValue.value` (returns `T?`), NOT `valueOrNull`, in Riverpod 3.x.
 
 **Never:**
 - Catch exceptions manually when using `AsyncValue.guard`
@@ -539,24 +544,25 @@ lib/
 ```dart
 // Providers that expose data
 @riverpod
-Future<List<Player>> players(PlayersRef ref) async { }
+Future<List<Player>> players(Ref ref) async { }
 
 // Providers that manage state
 @riverpod
-class ActiveGame extends _$ActiveGame { }
+class ActiveGameNotifier extends _$ActiveGameNotifier { }
 
 // Providers for dependencies
 @riverpod
-GameRepository gameRepository(GameRepositoryRef ref) { }
-
-// State providers (simple values)
-final selectedGameTypeProvider = StateProvider<GameType?>((ref) => null);
+GameRepository gameRepository(Ref ref) { }
 ```
 
+**The `Notifier` suffix is stripped from the generated provider name.** In Riverpod 3.x / `riverpod_annotation`:
+- A class `FooNotifier` generates `fooProvider` — **NOT** `fooNotifierProvider`. e.g. `ActiveGameNotifier` → `activeGameProvider`, `GameSetupNotifier` → `gameSetupProvider`. Family variant `FooNotifier.build(String id)` → `fooProvider('id')` (callable).
+- The same stripping applies to **function-style** providers: `@riverpod Foo fooNotifier(Ref ref)` generates `fooProvider`, not `fooNotifierProvider`. When unsure, grep the generated `.g.dart`.
+- All providers take a plain `Ref ref` — the legacy typed `XxxRef` parameter types (`GameRepositoryRef`, `PlayersRef`, …) no longer exist in Riverpod 3.x.
+
 **Naming rules:**
-- NotifierProviders: PascalCase class name
+- NotifierProviders: PascalCase class name, `Notifier` suffix stripped from the generated provider
 - Function providers: camelCase function name
-- StateProviders: descriptive camelCase with `Provider` suffix
 - Stream providers: descriptive name with `Stream` suffix
 
 ---
@@ -873,7 +879,7 @@ return setupState.map(
 ```dart
 // Derive state from other providers
 @riverpod
-bool canStartGame(CanStartGameRef ref) {
+bool canStartGame(Ref ref) {
   final setupState = ref.watch(gameSetupProvider);
   
   return setupState.maybeMap(
@@ -883,7 +889,7 @@ bool canStartGame(CanStartGameRef ref) {
 }
 
 @riverpod
-String currentPlayerName(CurrentPlayerNameRef ref) {
+String currentPlayerName(Ref ref) {
   final game = ref.watch(activeGameProvider).value;
   if (game == null) return '';
   
@@ -1012,28 +1018,28 @@ Future<GameState> build() async {
 ```dart
 // WRONG
 @riverpod
-int valueA(ValueARef ref) {
+int valueA(Ref ref) {
   return ref.watch(valueBProvider) + 1;
 }
 
 @riverpod
-int valueB(ValueBRef ref) {
+int valueB(Ref ref) {
   return ref.watch(valueAProvider) + 1; // Circular!
 }
 
 // CORRECT - extract shared dependency
 @riverpod
-int baseValue(BaseValueRef ref) {
+int baseValue(Ref ref) {
   return 10;
 }
 
 @riverpod
-int valueA(ValueARef ref) {
+int valueA(Ref ref) {
   return ref.watch(baseValueProvider) + 1;
 }
 
 @riverpod
-int valueB(ValueBRef ref) {
+int valueB(Ref ref) {
   return ref.watch(baseValueProvider) + 2;
 }
 ```
@@ -1067,12 +1073,12 @@ class GameSetup extends _$GameSetup {
 
 ```dart
 @riverpod
-Future<List<Player>> players(PlayersRef ref) async {
+Future<List<Player>> players(Ref ref) async {
   // All players
 }
 
 @riverpod
-Future<Player> player(PlayerRef ref, String playerId) async {
+Future<Player> player(Ref ref, String playerId) async {
   // Single player by ID
 }
 ```
@@ -1084,7 +1090,7 @@ Future<Player> player(PlayerRef ref, String playerId) async {
 ```dart
 @riverpod
 Future<PlayerStats> playerStats(
-  PlayerStatsRef ref,
+  Ref ref,
   String playerId,
 ) async {
   // Statistics for a player
@@ -1092,7 +1098,7 @@ Future<PlayerStats> playerStats(
 
 @riverpod
 Stream<GameStats> liveGameStats(
-  LiveGameStatsRef ref,
+  Ref ref,
   String gameId,
 ) {
   // Real-time statistics during game
@@ -1127,7 +1133,7 @@ class MultiplayerSession extends _$MultiplayerSession {
 
 @riverpod
 Stream<MultiplayerGameState> multiplayerGameStream(
-  MultiplayerGameStreamRef ref,
+  Ref ref,
   String sessionId,
 ) {
   // Real-time game state updates via WebSocket
@@ -1197,7 +1203,7 @@ final currentScore = ref.watch(
 
 ```dart
 @riverpod
-Future<Player> player(PlayerRef ref, String playerId) async {
+Future<Player> player(Ref ref, String playerId) async {
   // Each playerId gets its own provider instance
   final repository = ref.watch(playerRepositoryProvider);
   return await repository.getPlayer(playerId);
