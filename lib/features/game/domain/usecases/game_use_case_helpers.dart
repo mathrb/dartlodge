@@ -38,6 +38,8 @@ GameEvent buildDartThrownEvent({
   int? score,
   String? playerId,
   String inputMethod = 'manual',
+  double? x,
+  double? y,
 }) {
   return GameEvent(
     eventId: dartId,
@@ -52,6 +54,11 @@ GameEvent buildDartThrownEvent({
       'multiplier': multiplier,
       if (score != null) 'score': score,
       'input_method': inputMethod,
+      // Normalised canonical impact position from the auto-scorer (#571).
+      // Omitted (→ null on read) for manual entry and pre-#571 events so the
+      // payload key-set stays minimal and old events parse unchanged.
+      if (x != null) 'x': x,
+      if (y != null) 'y': y,
     },
     synced: false,
     actorId: actorId,

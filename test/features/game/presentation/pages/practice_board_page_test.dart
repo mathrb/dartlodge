@@ -41,7 +41,8 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
   Future<ActivePracticeState?> build(String gameId) async => _state;
 
   @override
-  Future<void> processDart(String segment, {String inputMethod = 'manual'}) async =>
+  Future<void> processDart(String segment,
+          {String inputMethod = 'manual', double? x, double? y}) async =>
       processedDarts.add(segment);
 
   @override

@@ -510,7 +510,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     );
     final sink = ref.read(activeDartInputSinkProvider);
     for (final d in result.emittedDarts) {
-      sink?.submitDart(d.segment);
+      sink?.submitDart(d.segment, x: d.x, y: d.y);
     }
     // Auto-capture on emission only in "all" mode; in "partial" mode captures
     // happen only at correction time (#457, see [correctDart]).

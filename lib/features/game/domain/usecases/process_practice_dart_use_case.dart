@@ -57,6 +57,11 @@ class ProcessPracticeDartUseCase {
       score: parsedSegment.scoreValue,
       playerId: currentPlayerId,
       inputMethod: inputMethod,
+      // Carry the auto-scorer's normalised impact position (#571) — null for
+      // manual entry. The DartThrow itself already holds x/y for the DB insert
+      // at step 6; mirror them into the event payload for the heatmap.
+      x: dartThrow.x,
+      y: dartThrow.y,
     );
 
     // 5. Apply DartThrown through engine

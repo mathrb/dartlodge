@@ -294,6 +294,42 @@ void main() {
       expect(correctionEvent.payload['superseded_event_ids'], isEmpty);
     });
 
+    test(
+        'correction deletes the dart and never re-inserts it — no position is '
+        're-inherited (#571)', () async {
+      // The corrected dart carries a recorded impact position. Undo must NOT
+      // re-emit it: the physical DartThrow row is deleted and the original
+      // DartThrown is skipped on replay, so the position can never resurface.
+      // A re-thrown dart is a fresh manual entry → x/y null by design.
+      final state = _makeState(score1: 481, dartsThrownInTurn: 1);
+      final events = _eventLog(dartEventIds: ['dt1']);
+      // Give the corrected DartThrown an x/y in its payload to prove the value
+      // is discarded by the delete-and-skip flow, not threaded forward.
+      final withPos = [
+        for (final e in events)
+          if (e.eventId == 'dt1')
+            e.copyWith(payload: {...e.payload, 'x': 0.2, 'y': -0.4})
+          else
+            e,
+      ];
+      when(mockEventRepo.getEventsForGame('g1'))
+          .thenAnswer((_) async => withPos);
+
+      await useCase.execute(state);
+
+      // The dart row is deleted; no DartThrow is ever inserted by undo, so the
+      // old position has nowhere to land.
+      verify(mockDartRepo.deleteDart('dt1')).called(1);
+      verifyNever(mockDartRepo.insertDart(any));
+
+      // The appended DartCorrected itself carries no position.
+      final correctionEvent =
+          verify(mockEventRepo.appendEvent(captureAny)).captured.first
+              as GameEvent;
+      expect(correctionEvent.payload.containsKey('x'), isFalse);
+      expect(correctionEvent.payload.containsKey('y'), isFalse);
+    });
+
     test('deleteDart is called with the correct dartId', () async {
       final state = _makeState(score1: 481, dartsThrownInTurn: 1);
       when(mockEventRepo.getEventsForGame('g1'))
