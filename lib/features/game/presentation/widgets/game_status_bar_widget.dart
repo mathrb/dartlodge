@@ -27,6 +27,7 @@ class GameStatusBarWidget extends StatelessWidget {
     this.onDartTapped,
     this.tapEmptySlots = false,
     this.showDarts = true,
+    this.turnBusted = false,
     super.key,
   });
 
@@ -56,6 +57,10 @@ class GameStatusBarWidget extends StatelessWidget {
   /// the darts move to the prominent dart band; default true keeps the manual
   /// status bar unchanged.
   final bool showDarts;
+
+  /// When true, the turn-points readout shows 0 instead of the raw dart sum —
+  /// a busted turn scored nothing even though its darts landed (#604).
+  final bool turnBusted;
 
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
@@ -89,7 +94,8 @@ class GameStatusBarWidget extends StatelessWidget {
       ),
     );
 
-    final turnSum = _turnSum;
+    // A busted turn scored 0 — show 0, not the raw sum of the busted darts.
+    final turnSum = turnBusted ? 0 : _turnSum;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),

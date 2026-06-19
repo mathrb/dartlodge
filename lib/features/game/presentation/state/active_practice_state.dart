@@ -18,6 +18,15 @@ abstract class ActivePracticeState with _$ActivePracticeState {
     /// `ActiveGameState`).
     @Default(false) bool showBust,
 
+    /// `true` while the currently-displayed turn busted (Checkout Practice:
+    /// a dart that overshot, reverting the score). Unlike [showBust] (a
+    /// transient snackbar trigger that's dismissed after the flash), this
+    /// persists for the whole displayed turn so the status-bar turn-points
+    /// readout can show 0 instead of the raw busted-dart sum (#604). Reset to
+    /// false when the next turn starts (every construction site rebuilds via
+    /// the constructor, defaulting it back).
+    @Default(false) bool turnBusted,
+
     /// Set to `true` when `EndPracticeUseCase` was invoked via the
     /// "End Drill" menu (i.e. the user manually ended the drill). Both
     /// natural completion and manual end now route to the post-game

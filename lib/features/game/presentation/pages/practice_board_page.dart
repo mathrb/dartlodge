@@ -346,6 +346,9 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 // correction on the bar (unchanged).
                 onDartTapped: null,
                 showDarts: !cameraFirst,
+                // Checkout Practice: a busted turn scored 0 — don't show the
+                // raw busted-dart sum in the readout (#604).
+                turnBusted: practiceState.turnBusted,
               ),
               // Camera-first hides the aim dartboard (the camera IS the board).
               if (!cameraFirst)

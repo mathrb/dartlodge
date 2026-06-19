@@ -147,19 +147,23 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       // to 0 (decrease), and a normal hit also decreases the score, so the
       // ">" inequality cleanly isolates the bust case (#340).
       final newCompetitor = newGs.competitors[gs.currentTurnIndex];
+      final checkoutBusted = isCheckout &&
+          dartValue > 0 &&
+          newCompetitor.score > prevCheckoutScore;
       final showBust = (isCatch40 &&
               dartValue > 0 &&
               newGs.catch40DartsOnTarget > prevCatch40DartsOnTarget &&
               newGs.catch40TargetRemaining >= prevCatch40Remaining) ||
-          (isCheckout &&
-              dartValue > 0 &&
-              newCompetitor.score > prevCheckoutScore);
+          checkoutBusted;
 
       return ActivePracticeState(
         gameState: newGs,
         pendingGameWinnerId: pendingGameWinnerId,
         showShanghaiBonus: shanghaiBonus,
         showBust: showBust,
+        // Persist the busted-turn flag so the status-bar turn-points readout
+        // shows 0 (not the raw busted-dart sum) until the next turn (#604).
+        turnBusted: checkoutBusted,
       );
     });
   }
