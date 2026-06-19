@@ -522,6 +522,142 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
+  // Multi-player natural completion — #595 regression
+  //
+  // The bug: `apply('TurnEnded')` set `isComplete=true` in state but returned
+  // a bare `EngineResult` (outcome=none). `_advanceTurn` gates GameCompleted
+  // emission on `outcome == gameCompleted`, so it skipped completion and
+  // emitted a TurnStarted for a phantom round 8 → board soft-lock. These
+  // tests assert the EngineResult itself (not just .state), which the prior
+  // tests never did, and exercise a real round-by-round rotation to the end.
+  // -------------------------------------------------------------------------
+  group('Multi-player natural completion (#595)', () {
+    test('final TurnEnded surfaces outcome=gameCompleted + winner', () {
+      // P2 already beyond the final round; P1 throws its last round-7 turn.
+      final comps = [
+        CompetitorState(
+          competitorId: 'c1',
+          name: 'Player 1',
+          playerIds: ['p1'],
+          score: 0,
+          practiceRound: 7,
+        ),
+        CompetitorState(
+          competitorId: 'c2',
+          name: 'Player 2',
+          playerIds: ['p2'],
+          score: 50,
+          practiceRound: 8,
+        ),
+      ];
+      var state = _makeState(totalRounds: 7, competitors: comps, currentTurnIndex: 0);
+      state = engine.apply(state, _turnStarted('c1')).state;
+      for (var i = 0; i < 3; i++) {
+        state = engine
+            .apply(state, _dartThrown(competitorId: 'c1', segment: 0, multiplier: 1))
+            .state;
+      }
+      final result = engine.apply(state, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, 'c2');
+      expect(result.state.isComplete, isTrue);
+    });
+
+    test('single-player final TurnEnded surfaces outcome=gameCompleted, null winner', () {
+      // Same soft-lock affected solo play; the fix is player-count agnostic.
+      var state = _makeState(practiceRound: 7, turnActive: false);
+      state = engine.apply(state, _turnStarted('c1')).state;
+      for (var i = 0; i < 3; i++) {
+        state = engine
+            .apply(state, _dartThrown(competitorId: 'c1', segment: 0, multiplier: 1))
+            .state;
+      }
+      final result = engine.apply(state, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.state.isComplete, isTrue);
+    });
+
+    test('intermediate TurnEnded has outcome=none (rotation continues)', () {
+      final comps = [
+        CompetitorState(
+          competitorId: 'c1',
+          name: 'Player 1',
+          playerIds: ['p1'],
+          score: 0,
+          practiceRound: 2,
+        ),
+        CompetitorState(
+          competitorId: 'c2',
+          name: 'Player 2',
+          playerIds: ['p2'],
+          score: 0,
+          practiceRound: 2,
+        ),
+      ];
+      var state = _makeState(totalRounds: 2, competitors: comps, currentTurnIndex: 0);
+      state = engine.apply(state, _turnStarted('c1')).state;
+      for (var i = 0; i < 3; i++) {
+        state = engine
+            .apply(state, _dartThrown(competitorId: 'c1', segment: 0, multiplier: 1))
+            .state;
+      }
+      // P1 finishes its final round but P2 still owes round 2 → not complete.
+      final result = engine.apply(state, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.isComplete, isFalse);
+      expect(result.state.currentTurnIndex, 1);
+    });
+
+    test('full 2-player rotation completes via the last TurnEnded', () {
+      // Mirrors the live repro: both players play every round; the game must
+      // complete on the final competitor's TurnEnded, not roll into round N+1.
+      const rounds = 3;
+      final comps = [
+        CompetitorState(
+            competitorId: 'c1',
+            name: 'P1',
+            playerIds: ['p1'],
+            score: 0,
+            practiceRound: 1),
+        CompetitorState(
+            competitorId: 'c2',
+            name: 'P2',
+            playerIds: ['p2'],
+            score: 0,
+            practiceRound: 1),
+      ];
+      var state = _makeState(totalRounds: rounds, competitors: comps);
+      EngineResult? last;
+      for (var r = 1; r <= rounds; r++) {
+        for (final cid in ['c1', 'c2']) {
+          state = engine.apply(state, _turnStarted(cid)).state;
+          for (var i = 0; i < 3; i++) {
+            // c1 always scores its round number, c2 always misses → c1 wins.
+            final hit = cid == 'c1';
+            state = engine
+                .apply(
+                    state,
+                    _dartThrown(
+                        competitorId: cid,
+                        segment: hit ? r : 0,
+                        multiplier: 1))
+                .state;
+          }
+          last = engine.apply(state, _turnEnded(cid));
+          state = last.state;
+        }
+      }
+      expect(state.isComplete, isTrue,
+          reason: 'game must complete after the final round rotation');
+      expect(last!.outcome, LegOutcome.gameCompleted);
+      expect(state.winnerCompetitorId, 'c1');
+      // No phantom extra round: both competitors land exactly at rounds+1.
+      expect(state.competitors.every((c) => c.practiceRound == rounds + 1), isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   // TurnStarted
   // -------------------------------------------------------------------------
   group('TurnStarted', () {
