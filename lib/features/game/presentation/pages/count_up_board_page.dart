@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+
 import '../../../../app/app_router.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
@@ -53,6 +55,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     // Sound effects: hit/miss per dart (count-up has no bust).
     wireGameSounds(
@@ -81,15 +84,15 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
       ),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
-          title: 'Error',
+          title: l10n.commonError,
           message: '$err',
           onRetry: () => ref.invalidate(activeCountUpProvider(widget.gameId)),
         ),
       ),
       data: (activeState) {
         if (activeState == null) {
-          return const Scaffold(
-            body: Center(child: Text('Game not found')),
+          return Scaffold(
+            body: Center(child: Text(l10n.gameNotFound)),
           );
         }
 
@@ -130,7 +133,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                     icon: Icon(
                       Icons.more_vert,
                       color: cs.onSurface,
-                      semanticLabel: 'Game options',
+                      semanticLabel: l10n.gameOptionsSemantic,
                     ),
                     onSelected: (action) {
                       switch (action) {
@@ -140,14 +143,14 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                           context.push(GameRoutes.settings);
                       }
                     },
-                    itemBuilder: (_) => const [
+                    itemBuilder: (_) => [
                       PopupMenuItem(
                         value: _BoardMenuAction.endGame,
-                        child: Text('End Game'),
+                        child: Text(l10n.gameMenuEndGame),
                       ),
                       PopupMenuItem(
                         value: _BoardMenuAction.settings,
-                        child: Text('Settings'),
+                        child: Text(l10n.settingsTitle),
                       ),
                     ],
                   ),
@@ -239,6 +242,7 @@ class _BottomActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return SafeArea(
       child: Container(
@@ -276,7 +280,7 @@ class _BottomActionBar extends StatelessWidget {
                   child: Icon(
                     Icons.undo,
                     color: cs.onSurface,
-                    semanticLabel: 'Undo last dart',
+                    semanticLabel: l10n.gameUndoLastDart,
                   ),
                 ),
               ),
@@ -284,7 +288,7 @@ class _BottomActionBar extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: PulsingNextButtonWidget(
-                label: isMultiplayer ? 'NEXT PLAYER' : 'NEXT ROUND',
+                label: isMultiplayer ? l10n.gameNextPlayer : l10n.gameNextRound,
                 onPressed: canNext ? onNextRound : null,
                 pulse: pulseNext,
               ),
