@@ -40,11 +40,19 @@ class _AutoScorerSimBridgeState extends ConsumerState<AutoScorerSimBridge> {
   void _register() {
     final api = JSObject();
     // Emit one detected dart into the active game (no-op if no board is open).
+    // Optional normalised x/y (heatmap frame: origin = board centre, radius 1.0
+    // at the double ring, "20 at top") let a Playwright run populate the impact
+    // heatmap (#571); call `emit('T20')` with no coords for a positionless dart
+    // (mirrors manual entry). Missing JS args arrive as null → x/y stay null.
     api.setProperty(
       'emit'.toJS,
-      ((JSString segment) => _afterFrame(() async {
+      ((JSString segment, [JSNumber? x, JSNumber? y]) => _afterFrame(() async {
             if (!mounted) return;
-            ref.read(activeDartInputSinkProvider)?.submitDart(segment.toDart);
+            ref.read(activeDartInputSinkProvider)?.submitDart(
+                  segment.toDart,
+                  x: x?.toDartDouble,
+                  y: y?.toDartDouble,
+                );
           })).toJS,
     );
     // Advance the turn directly — Playwright owns the precondition. Unlike the
