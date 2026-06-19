@@ -64,6 +64,32 @@ List<GameEvent> _x01Turn({
   ];
 }
 
+List<GameEvent> _cricketTurn({
+  required String competitorId,
+  required String playerId,
+  required List<({int segment, int multiplier})> darts,
+}) {
+  return [
+    _event('TurnStarted', {
+      'competitor_id': competitorId,
+      'player_id': playerId,
+    }),
+    ...darts.map((d) => _event('DartThrown', {
+          'competitor_id': competitorId,
+          'player_id': playerId,
+          'segment': d.segment,
+          'multiplier': d.multiplier,
+          'score': d.segment * d.multiplier,
+          'input_method': 'camera',
+        })),
+    _event('TurnEnded', {
+      'competitor_id': competitorId,
+      'player_id': playerId,
+      'reason': 'normal',
+    }),
+  ];
+}
+
 GameEvent _legCompleted(String winnerId) => _event('LegCompleted', {
       'winner_competitor_id': winnerId,
     });
@@ -166,6 +192,98 @@ void main() {
       expect(turn.bust, isTrue);
       expect(turn.startingScore, 50);
       expect(turn.remainingScore, 50);
+    });
+  });
+
+  group('Cricket turn breakdown — marks gate by target (#569)', () {
+    // Regression for #569: the per-turn marks column summed the multiplier of
+    // every non-MISS dart, so auto-scored hits on non-target numbers (4, 6,
+    // 10…) were miscounted as marks. Only hits on the active targets
+    // (15–20 + Bull) may count.
+    Game cricketGame() => Game(
+          gameId: 'g',
+          gameType: GameType.cricket,
+          config: const GameConfig.cricket(
+            scoring: 'standard',
+            targetMode: 'fixed',
+          ),
+          startTime: DateTime(2024),
+        );
+
+    test('non-target singles score 0 marks, targets count', () {
+      final c1 = _solo('c1', 'Alice', 'p1');
+      final events = <GameEvent>[
+        _event('GameCreated', {}),
+        // 18 + 4 + 20 → only 18 and 20 are targets → 2 marks (not 3).
+        ..._cricketTurn(competitorId: 'c1', playerId: 'p1', darts: [
+          (segment: 18, multiplier: 1),
+          (segment: 4, multiplier: 1),
+          (segment: 20, multiplier: 1),
+        ]),
+        // 6 + 6 + 1 → no targets → 0 marks (not 3).
+        ..._cricketTurn(competitorId: 'c1', playerId: 'p1', darts: [
+          (segment: 6, multiplier: 1),
+          (segment: 6, multiplier: 1),
+          (segment: 1, multiplier: 1),
+        ]),
+        // 20 + 10 + 1 → only 20 is a target → 1 mark (not 3).
+        ..._cricketTurn(competitorId: 'c1', playerId: 'p1', darts: [
+          (segment: 20, multiplier: 1),
+          (segment: 10, multiplier: 1),
+          (segment: 1, multiplier: 1),
+        ]),
+        _legCompleted('c1'),
+        _gameCompleted('c1'),
+      ];
+
+      final result = const TurnBreakdownBuilder().build(
+        game: cricketGame(),
+        competitors: [c1],
+        events: events,
+      );
+
+      final turns = result[1]!.turns;
+      expect(turns, hasLength(3));
+      expect(turns[0].darts, ['18', '4', '20']);
+      expect(turns[0].turnScore, 2);
+      expect(turns[1].darts, ['6', '6', '1']);
+      expect(turns[1].turnScore, 0);
+      expect(turns[2].darts, ['20', '10', '1']);
+      expect(turns[2].turnScore, 1);
+    });
+
+    test('multipliers and bull count; non-target triple scores 0', () {
+      final c1 = _solo('c1', 'Alice', 'p1');
+      final events = <GameEvent>[
+        _event('GameCreated', {}),
+        // T20 + D15 + SB → 3 + 2 + 1 = 6 marks.
+        ..._cricketTurn(competitorId: 'c1', playerId: 'p1', darts: [
+          (segment: 20, multiplier: 3),
+          (segment: 15, multiplier: 2),
+          (segment: 25, multiplier: 1),
+        ]),
+        // T10 + MISS + DB → 0 (non-target triple) + 0 + 2 = 2 marks.
+        ..._cricketTurn(competitorId: 'c1', playerId: 'p1', darts: [
+          (segment: 10, multiplier: 3),
+          (segment: 0, multiplier: 1),
+          (segment: 25, multiplier: 2),
+        ]),
+        _legCompleted('c1'),
+        _gameCompleted('c1'),
+      ];
+
+      final result = const TurnBreakdownBuilder().build(
+        game: cricketGame(),
+        competitors: [c1],
+        events: events,
+      );
+
+      final turns = result[1]!.turns;
+      expect(turns, hasLength(2));
+      expect(turns[0].darts, ['T20', 'D15', 'SB']);
+      expect(turns[0].turnScore, 6);
+      expect(turns[1].darts, ['T10', 'MISS', 'DB']);
+      expect(turns[1].turnScore, 2);
     });
   });
 

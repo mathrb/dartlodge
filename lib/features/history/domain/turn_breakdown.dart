@@ -1,4 +1,5 @@
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/game_engine_factory.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
@@ -265,12 +266,18 @@ class TurnBreakdownBuilder {
         );
 
       case GameType.cricket:
-        // Marks scored this turn = sum of multipliers (1, 2, or 3 per dart;
-        // 0 for MISS). Capped per segment by 3 each but we keep it simple:
-        // raw multiplier sum reflects what the player threw.
+        // Marks scored this turn — only hits on the active cricket targets
+        // count (15–20 + Bull for fixed; the rolled set for random/crazy). A
+        // dart on a non-target number scores 0, exactly like a MISS — so an
+        // auto-scored '4'/'10'/etc. is not miscounted as a mark (#569). Uses
+        // the shared `cricketMarksForSegment` (same source of truth as the
+        // stats projections). Targets are constant within a turn
+        // (CrazyTargetsRolled fires right after TurnStarted), so postState
+        // holds this turn's set.
+        final targets = {...postState.cricketTargets, 25};
         final marks = darts.fold<int>(
           0,
-          (s, d) => s + (d == 'MISS' ? 0 : Segment.parse(d).multiplier),
+          (s, d) => s + cricketMarksForSegment(d, targets: targets),
         );
         return TurnRow(
           round: round,
