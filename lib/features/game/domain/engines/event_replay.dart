@@ -14,11 +14,29 @@ GameState replayEvents({
   required List<GameEvent> events,
   required GameEngine engine,
 }) {
-  // Build skip sets from DartCorrected events so undone darts and the
-  // turn-boundary events that bracketed them aren't re-applied on cold load.
-  // Without this, an undo that spans a turn boundary leaves a stale
-  // TurnStarted in the log; replaying it shifts currentTurnIndex and any
-  // later DartThrown gets attributed to the wrong competitor (issue #108).
+  var gs = initial;
+  for (final event in stripSupersededEvents(events)) {
+    gs = engine.apply(gs, event).state;
+  }
+  return gs;
+}
+
+/// Removes the events that a `DartCorrected` supersedes, returning a stream
+/// safe to fold through an engine or scan for display. Two skip flavours:
+///
+///   * `original_event_id` — the corrected `DartThrown`; dropped so consumers
+///     see only the replacement dart (#187).
+///   * `superseded_event_ids` — the turn-boundary events (TurnStarted /
+///     TurnEnded) that bracketed a cross-turn undo. Replaying a stale
+///     TurnStarted shifts `currentTurnIndex` so later darts land on the wrong
+///     competitor (#108); a stale TurnEnded inflates per-turn projection
+///     denominators (#321).
+///
+/// This is the single source of truth for DartCorrected skip handling. Every
+/// replay-aware path MUST funnel raw events through it: cold-load replay
+/// (above), the stats assembler, and the history turn-breakdown builder.
+/// Returns [events] unchanged (same instance) when nothing is superseded.
+List<GameEvent> stripSupersededEvents(List<GameEvent> events) {
   final correctedDartIds = <String>{};
   final supersededEventIds = <String>{};
   for (final e in events) {
@@ -32,17 +50,11 @@ GameState replayEvents({
       }
     }
   }
-
-  var gs = initial;
-  for (final event in events) {
-    if (event.eventType == 'DartThrown' &&
-        correctedDartIds.contains(event.eventId)) {
-      continue;
+  if (correctedDartIds.isEmpty && supersededEventIds.isEmpty) return events;
+  return events.where((e) {
+    if (e.eventType == 'DartThrown' && correctedDartIds.contains(e.eventId)) {
+      return false;
     }
-    if (supersededEventIds.contains(event.eventId)) {
-      continue;
-    }
-    gs = engine.apply(gs, event).state;
-  }
-  return gs;
+    return !supersededEventIds.contains(e.eventId);
+  }).toList();
 }

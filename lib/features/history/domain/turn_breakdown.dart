@@ -1,6 +1,7 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
 import 'package:dart_lodge/features/game/domain/engines/game_engine_factory.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
@@ -106,6 +107,13 @@ class TurnBreakdownBuilder {
     required List<GameEvent> events,
   }) {
     if (competitors.isEmpty) return const {};
+
+    // Drop darts/turn-boundary events superseded by a DartCorrected so the
+    // breakdown shows the corrected dart and a correct running total —
+    // consistent with the board, post-game and stats projections, which all
+    // replay through the same helper (CLAUDE.md: "Any replay-aware code path
+    // … must collect these and skip the originals"). (#597 / F-010)
+    events = stripSupersededEvents(events);
 
     final isAtc = game.gameType == GameType.aroundTheClock;
     final isCatch40 = game.gameType == GameType.catch40;
