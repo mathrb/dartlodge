@@ -533,6 +533,60 @@ void main() {
       expect(b27.roundReached, 5);
     }));
 
+    test("bobs27: full 21-round game (Double-Bull finale) → roundReached 21",
+        (() async {
+      const gameId = 'g-bobs27-full';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.bobs27,
+        config: const GameConfig.bobs27(),
+        playerId: playerId,
+        playerName: 'Dave',
+        competitorId: competitorId,
+      );
+
+      // Perfect run: 3 doubles of the round number for rounds 1–20, then three
+      // Double Bulls in round 21 → 27 + Σ(3·2r, 1..20) + 3·50 = 1437 (#588).
+      final events = <GameEvent>[];
+      var seq = 1;
+      for (var round = 1; round <= 21; round++) {
+        events.add(buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ));
+        final segment = round >= 21 ? 25 : round; // 25 = bull
+        for (var d = 0; d < 3; d++) {
+          events.add(dart(gameId, competitorId, playerId, seq++, segment, 2));
+        }
+        events.add(buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+        ));
+      }
+      events.add(buildGameCompletedEvent(
+        gameId: gameId,
+        winnerCompetitorId: null,
+        localSequence: seq++,
+      ));
+
+      await completeWithEvents(gameId, null, events);
+
+      final b27 = await useCase.execute(gameId) as Bobs27Result;
+      expect(b27.bustedToZero, isFalse);
+      expect(b27.finalScore, 1437);
+      // The Double-Bull finale is round 21 — roundReached must reach 21, not
+      // be clamped to 20 (#588/#600).
+      expect(b27.roundReached, 21);
+    }));
+
     test('checkoutPractice: successful checkout records darts and remaining=0',
         (() async {
       const gameId = 'g-co';

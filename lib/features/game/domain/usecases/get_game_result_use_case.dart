@@ -121,8 +121,8 @@ class GetGameResultUseCase {
           finalScore: subject.score,
           // practiceRound is bumped after a round's 3rd dart finalises that
           // round's scoring, so `practiceRound - 1` is the last round
-          // actually played (1..20).
-          roundReached: math.max(1, subject.practiceRound - 1).clamp(1, 20),
+          // actually played (1..21 — round 21 is the Double-Bull finale, #588).
+          roundReached: math.max(1, subject.practiceRound - 1).clamp(1, 21),
           bustedToZero: subject.score <= 0,
         ),
       GameType.checkoutPractice => GameResult.checkoutPractice(
