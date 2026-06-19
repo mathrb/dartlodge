@@ -38,6 +38,7 @@
   "commonEdit": "Editar",
   "commonError": "Erro",
   "commonRetry": "Tentar novamente",
+  "dbErrorMessage": "O DartLodge não conseguiu abrir os seus dados. Tenta novamente.",
   "homeSubtitleCricket": "Jogo estratégico",
   "homeSubtitleCasual": "Shanghai, Count-Up",
   "homeSubtitlePractice": "Melhorar as habilidades",
