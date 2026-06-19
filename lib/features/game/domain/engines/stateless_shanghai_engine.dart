@@ -21,7 +21,7 @@ class StatelessShanghaiEngine implements GameEngine {
           state: state.copyWith(status: GameEngineStatus.inProgress)),
       'TurnStarted' => EngineResult(state: _applyTurnStarted(state, event)),
       'DartThrown' => _applyDartThrownWithOutcome(state, event),
-      'TurnEnded' => EngineResult(state: _applyTurnEnded(state, event)),
+      'TurnEnded' => _applyTurnEndedWithOutcome(state, event),
       'GameCompleted' => EngineResult(
           state: _applyGameCompleted(state, event),
           outcome: LegOutcome.gameCompleted),
@@ -131,6 +131,25 @@ class StatelessShanghaiEngine implements GameEngine {
 
     // Normal end of turn — caller sends TurnEnded
     return (newState.copyWith(turnActive: false), LegOutcome.none, null);
+  }
+
+  /// Wraps [_applyTurnEnded] and surfaces a `gameCompleted` outcome when the
+  /// final round's last competitor finishes. The producer (`_advanceTurn`)
+  /// gates `GameCompleted` emission on this signal — without it a multi-player
+  /// game would set `isComplete` in state yet never emit `GameCompleted`,
+  /// leaving `is_complete = 0` in storage and the board soft-locked one round
+  /// past the cap (#595). The instant-win Shanghai path completes via
+  /// `DartThrown` and is unaffected.
+  EngineResult _applyTurnEndedWithOutcome(GameState state, GameEvent event) {
+    final newState = _applyTurnEnded(state, event);
+    if (!state.isComplete && newState.isComplete) {
+      return EngineResult(
+        state: newState,
+        outcome: LegOutcome.gameCompleted,
+        winnerCompetitorId: newState.winnerCompetitorId,
+      );
+    }
+    return EngineResult(state: newState);
   }
 
   // TurnEnded: increment practiceRound for current competitor, then rotate index.
