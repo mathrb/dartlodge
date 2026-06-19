@@ -61,6 +61,12 @@ dans `e2e/`.
 | F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | **confirmé (live)** |
 | F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
 | F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | issue #610 |
+| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | confirmé (live DE+NL) |
+| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | confirmé |
+| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | confirmé |
+| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | confirmé |
+| F-025 | i18n | P2 | es/pt : split « Puntos/Pontos » vs « Puntuación/Pontuação » (intentionnel ?) | à confirmer (conf. basse) |
+| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | confirmé (cosmétique) |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
@@ -257,6 +263,40 @@ dans `e2e/`.
 ---
 
 ## Axe 5 — i18n
+
+> **Exécution (agents parallèles, 2026-06-19)** : débordement DE+NL (runtime), jargon (web+ARB), pluriels/cohérence (ARB).
+
+### F-021 — Lacune de localisation large (Home + stats/post-game)
+- Axe : i18n · Surface : Home, Stats, post-game, game detail · Rail : web · Sévérité : P2
+- Observé (en DE et NL) : sous-titres des cartes Home (« STRATEGIC PLAY », « SHANGHAI, COUNT-UP », « IMPROVE SKILLS », « ANALYZE DATA », « SESSIONS », « ROSTER ») non traduits ; « STATISTICS BREAKDOWN », « CATEGORY » (alors que le tableau detail utilise « CATEGORIE » en nl → incohérent), « Need ≥2 games for a trend », onglet « Practice », chip config « Double Out » restent EN.
+- Attendu : localiser ces chaînes (non-jargon). Superset de F-007 (`Retry`) / F-008 (home Settings).
+- Preuve : `de-home.png`, `nl-settings.png`, `de-statsdetail.png`.
+- Statut : confirmé (live DE+NL)
+
+### F-022 — nl : descriptions de succès « Win N games » non traduites
+- Axe : i18n · Surface : Achievements (nl) · Sévérité : P2
+- Observé : `achievementWins10/50/100Description` = « Win 10/50/100 games » (phrase anglaise) ; les 5 autres locales le traduisent (de « Gewinne 10 Spiele », fr « Gagner 10 parties »…). nl seul outlier.
+- Attendu : « Win 10 spellen/potjes ».
+- Statut : confirmé
+
+### F-023 / F-024 — fr : « manche » au lieu de « tour » / « leg »
+- Axe : i18n · Surface : history detail / achievements (fr) · Sévérité : P2
+- Observé : `historyRoundBreakdown` = « Détail des **manches** » (tout le reste fr utilise « tour » pour round ; « manche » = un set de legs, sémantiquement faux) ; `achievementNineDarterDescription` = « Gagner une **manche** de 501 » (tout le reste fr utilise le loanword « leg »).
+- Attendu : « Détail des tours » ; « Gagner un leg de 501 ».
+- Preuve : `app_fr.arb`. Source : darts-nerd.com/glossaire.
+- Statut : confirmé (drift terminologique intra-langue)
+
+### F-025 / F-026 — low-confidence (es/pt score split ; fr idiome)
+- **F-025** : es/pt `historyColScore` = « Puntos »/« Pontos » vs « Puntuación »/« Pontuação » ailleurs — possiblement intentionnel (points-par-tour vs métrique agrégée). À confirmer.
+- **F-026** (cosmétique) : fr `gameAdvanceTurnBody` branche `one` code « que 1 fléchette » au lieu de « qu'une fléchette ».
+
+### Confirmations positives — Axe 5
+- **Débordement DE+NL : AUCUN** sur toutes les surfaces atteintes (Settings, variant selection dont la **rangée 4-chips** EINSTIEG/AUSSTIEG/LEGS/RUNDEN, board, config, modals, stats, history). Ellipse checkout = gracieuse ; turn-breakdown = scroll horizontal by-design. *(Post-game/turn-breakdown DE non atteints — abandon route home.)*
+- **Pluriels ICU** : 9 clés × 7 locales corrects (fr/pt count=0 → `one`/singulier OK ; pas de catégorie surnuméraire) ; **placeholders** tous présents + bien positionnés (réordonnancement fr/it vérifié) ; pas de double-espace.
+- **Cohérence terminologique** : de/es/it/nl/pt propres (1 radical/concept) ; seul fr a les 2 « manche » (F-023/024).
+- **Loanwords légitimes** (PAS des défauts) : de Name/System/Debug/Darts, nl Tips/VARIANT, it Round/Feedback, es Error ; checkout/leg/marks/180s/bull cohérents par locale.
+
+---
 
 > Candidats **pressentis** (analyse code passe 1, tableau d'offenders) — à confirmer en passe 2.
 
