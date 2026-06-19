@@ -395,7 +395,7 @@
   "rulesShanghaiHowB4": "Les hits sur tout autre nombre — y compris le bull — ne marquent rien.",
   "rulesShanghaiHowB5": "Si vous touchez le simple, le double et le triple du tour dans les mêmes trois fléchettes, c'est un Shanghai. La partie se termine immédiatement et le Shanghai compte comme une victoire.",
   "rulesShanghaiHowB6": "Sinon, le tour se termine après trois fléchettes et le jeu passe au nombre suivant.",
-  "rulesShanghaiWinningBody": "Joué en solo, l'exercice se termine quand vous achevez le dernier tour. Il n'y a pas d'adversaire à battre — votre score total est votre résultat. Un Shanghai dans n'importe quel tour met fin à l'exercice plus tôt par une victoire instantanée.",
+  "rulesShanghaiWinningBody": "Le Shanghai se joue en solo ou en compétition. La partie se termine une fois le dernier tour achevé, et le score total le plus élevé l'emporte. Un Shanghai dans n'importe quel tour — le simple, le double et le triple du tour dans une même volée — met fin à la partie plus tôt par une victoire instantanée.",
   "rulesShanghaiTipsB1": "C'est dans le triple que se trouvent les gros scores. Trois triples 7 au dernier tour font 63 points en une seule volée.",
   "rulesShanghaiTipsB2": "Chasser le Shanghai est à haut risque et haute récompense — courir après deux multiplicateurs manquants vous coûte généralement une volée de scoring propre.",
   "rulesCricketStdTagline": "Fermez les nombres 15 à 20 et le bull, puis dominez la table aux points.",

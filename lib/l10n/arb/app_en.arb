@@ -1533,7 +1533,7 @@
   "@rulesShanghaiHowB6": {
     "description": "Game rules text"
   },
-  "rulesShanghaiWinningBody": "Played solo, the drill ends when you finish the final round. There is no opponent to beat — your total score is your result. A Shanghai in any round ends the drill early as an instant win.",
+  "rulesShanghaiWinningBody": "Shanghai can be played solo or competitively. The game ends when the final round is finished, and the highest total score wins. A Shanghai in any round — the round's single, double and triple in one turn — ends the game early as an instant win.",
   "@rulesShanghaiWinningBody": {
     "description": "Game rules text"
   },

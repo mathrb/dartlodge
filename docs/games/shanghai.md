@@ -59,11 +59,11 @@ gagnants (selon variante).
 
 > Candidats findings pour l'axe 1. `stateless_shanghai_engine.dart`, défaut `shanghaiTotalRounds = 7`.
 
-- **D-1 (P2, texte de règles trompeur)** — `rulesShanghaiWinningBody` / `…ObjectiveBody` décrivent
-  Shanghai comme un drill **« solo … no opponent to beat »**. Le canonique est **multi-joueurs
-  compétitif**, et l'engine SUPPORTE le multi-joueurs (victoire = plus haut score / Shanghai
-  instantané). → Le **texte de règles** diverge du canonique et de l'engine ; l'engine, lui, est
-  conforme. Corriger le texte (axe 2 / i18n), pas l'engine.
+- **D-1 (RÉSOLU — issue #605)** — `rulesShanghaiWinningBody` disait à tort **« Played solo … no
+  opponent to beat »**. Réécrit (7 langues) pour refléter le jeu **multi-joueurs compétitif** (solo ou
+  compétitif ; fin après le dernier tour ; plus haut score gagne ; Shanghai = victoire instantanée),
+  conforme au canonique et à l'engine (qui supportait déjà le multi-joueurs). Texte corrigé, engine
+  inchangé.
 - **D-2 (P2, départage)** — l'engine départage par **« premier de la liste »** ; le canonique
   départage par **nombre de triples** (puis bull-up / nul). Divergence de tie-break → finding ou
   simplification assumée. **Décision mainteneur.**
