@@ -257,11 +257,17 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         } else {
           displayedRound = competitor.practiceRound;
         }
-        final effectiveTarget = (isBobs27 || isShanghai)
-            ? displayedRound
-            : isCheckout
-                ? competitor.score
-                : competitor.currentTarget;
+        // Bob's 27: rounds 1–20 target the double of the round number; round 21
+        // is the Double-Bull finale, whose board segment is 25 (#588). The
+        // displayed round counter stays 1–21; only the *target segment* maps to
+        // 25 so the input bar offers "Double Bull" and the label reads DB.
+        final effectiveTarget = isBobs27
+            ? (displayedRound > 20 ? 25 : displayedRound)
+            : isShanghai
+                ? displayedRound
+                : isCheckout
+                    ? competitor.score
+                    : competitor.currentTarget;
         final roundScore = isCatch40
             ? _computeRoundScore(competitor.dartThrows, gs.dartsThrownInTurn)
             : 0;
@@ -345,7 +351,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               if (!cameraFirst)
                 Expanded(
                   child: DartboardHighlightWidget(
-                    currentTarget: effectiveTarget,
+                    // The highlight widget treats null as the bull; map Bob's
+                    // 27's bull-round segment (25) to null so the finale lights
+                    // up the bullseye, not a (non-existent) number 25 (#588).
+                    currentTarget:
+                        (isBobs27 && effectiveTarget == 25) ? null : effectiveTarget,
                     doublesOnly: doublesOnly,
                     bobs27: isBobs27,
                     noHighlight: isCatch40 || isCheckout,
@@ -613,7 +623,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
 
   static int? _totalRounds(GameState gs) => switch (gs.gameType) {
         GameType.aroundTheClock => null, // completion-based, no round limit
-        GameType.bobs27 => 20,
+        GameType.bobs27 => 21,
         GameType.shanghai => gs.shanghaiTotalRounds,
         GameType.catch40 => 40,
         GameType.checkoutPractice => gs.checkoutTargetSuccesses,

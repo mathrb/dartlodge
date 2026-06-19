@@ -1,7 +1,11 @@
 // Stateless Bob's 27 Game Engine
-// Pure functional implementation of Bob's 27 darts practice drill
-// 20 rounds, each targeting D{round}. Hit scores round*2*hitCount; miss deducts round*2.
-// Drill ends after round 20 or if score drops to <= 0.
+// Pure functional implementation of Bob's 27 darts practice drill.
+// 21 rounds: rounds 1–20 target D{round}, round 21 targets the Double Bull (DB).
+// A double-number hit scores round*2*hitCount; a Double Bull hit scores 50*hitCount;
+// a whitewashed round deducts the same per-hit value (round*2, or 50 for the bull).
+// Drill ends after the bull round (round 21) or if score drops to <= 0.
+// The canonical perfect run (three doubles every round + three Double Bulls)
+// totals 27 + Σ(3·2n, n=1..20) + 3·50 = 1437 — see docs/games/bobs-27.md.
 
 import '../models/game_config.dart';
 import '../models/game_state.dart';
@@ -90,8 +94,11 @@ class StatelessBobs27Engine implements GameEngine {
 
     // 3rd dart: evaluate the round
     final competitor = newState.competitors[newState.currentTurnIndex];
-    final roundNum = competitor.practiceRound; // 1–20
-    final requiredSegment = 'D$roundNum';
+    final roundNum = competitor.practiceRound; // 1–21
+    // Rounds 1–20 target the round's double; round 21 is the Double-Bull finale.
+    final isBullRound = roundNum >= 21;
+    final requiredSegment = isBullRound ? 'DB' : 'D$roundNum';
+    final pointsPerHit = isBullRound ? 50 : roundNum * 2;
 
     // Last 3 dart throws are this turn's darts
     final dartThrows = competitor.dartThrows;
@@ -102,9 +109,9 @@ class StatelessBobs27Engine implements GameEngine {
     // Apply score delta
     int newScore = competitor.score;
     if (hitCount > 0) {
-      newScore += roundNum * 2 * hitCount;
+      newScore += pointsPerHit * hitCount;
     } else {
-      newScore -= roundNum * 2;
+      newScore -= pointsPerHit;
     }
 
     // Advance practice round
@@ -119,8 +126,9 @@ class StatelessBobs27Engine implements GameEngine {
       turnActive: false,
     );
 
-    // End condition check (priority order)
-    if (newScore <= 0 || roundNum >= 20) {
+    // End condition check (priority order): bust out at <= 0, or finish the
+    // Double-Bull round (round 21).
+    if (newScore <= 0 || roundNum >= 21) {
       newState = newState.copyWith(
         isComplete: true,
         status: GameEngineStatus.completed,
