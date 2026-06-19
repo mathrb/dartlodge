@@ -9,7 +9,14 @@ abstract interface class DartInputSink {
   /// input is best-effort: a dart that lands on a full/ended turn or a
   /// completed game is silently dropped rather than processed (#538), so the
   /// tracker getting ahead of the game can never wedge the board.
-  void submitDart(String segment);
+  ///
+  /// [x]/[y] are the dart's normalised canonical impact position (heatmap
+  /// frame: origin = board centre, radius `1.0` at the double ring, "20 at
+  /// top") used for the impact heatmap (#571). They are raw doubles so this
+  /// core port never depends on the auto_scorer's `BoardPoint` type, and are
+  /// `null` for manual entry or any dart with no usable position. Stored as
+  /// received — the auto-scorer already normalises; do NOT re-normalise here.
+  void submitDart(String segment, {double? x, double? y});
 
   /// Advance to the next turn/player without any confirmation prompt — invoked
   /// by the auto-scorer's opt-in "auto-advance when board is cleared" feature

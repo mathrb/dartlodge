@@ -130,7 +130,7 @@
   "statsPlayerFallback": "Giocatore",
   "statsLoadFailed": "Caricamento delle statistiche non riuscito: {error}",
   "statsComingSoon": "Statistiche {section} in arrivo",
-  "statsHeatmapTitle": "Mappa di calore",
+  "statsHeatmapTitle": "Mappa di calore degli impatti",
   "statsHeatmapNoData": "Nessuna freccetta localizzata per questo giocatore",
   "statsHeatmapUnlocated": "{count, plural, one{1 freccetta non localizzata} other{{count} freccette non localizzate}}",
   "statsDrillsPlayed": "Esercizi giocati",

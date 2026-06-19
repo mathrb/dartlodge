@@ -106,6 +106,8 @@ void main() {
     String dartId = 'd1',
     String segment = '20',
     int score = 20,
+    double? x,
+    double? y,
   }) {
     return DartThrow(
       dartId: dartId,
@@ -116,6 +118,8 @@ void main() {
       dartNumber: 1,
       segment: segment,
       score: score,
+      x: x,
+      y: y,
     );
   }
 
@@ -190,6 +194,48 @@ void main() {
           _makeDart(segment: '20', score: 20),
           inputMethod: 'camera');
       expect(_captureEvents()[0].payload['input_method'], 'camera');
+    });
+  });
+
+  group('Impact position (#571 heatmap)', () {
+    test('auto dart: x/y land in the DartThrown payload AND the inserted DartThrow',
+        () async {
+      final state = _makeState(score1: 501, dartsThrownInTurn: 0);
+      final dart =
+          _makeDart(segment: '20', score: 20, x: 0.12, y: -0.34);
+
+      await useCase.execute(state, dart, inputMethod: 'camera');
+
+      // Event payload carries the position.
+      final events = _captureEvents();
+      expect(events[0].eventType, 'DartThrown');
+      expect(events[0].payload['x'], 0.12);
+      expect(events[0].payload['y'], -0.34);
+
+      // The exact DartThrow (with x/y) is what gets inserted — its columns
+      // are populated by the drift repo, not re-derived here.
+      final inserted =
+          verify(mockDartRepo.insertDart(captureAny)).captured.single
+              as DartThrow;
+      expect(inserted.x, 0.12);
+      expect(inserted.y, -0.34);
+    });
+
+    test('manual dart: no x/y key in payload, null on the DartThrow', () async {
+      final state = _makeState(score1: 501, dartsThrownInTurn: 0);
+      final dart = _makeDart(segment: '20', score: 20); // no x/y
+
+      await useCase.execute(state, dart);
+
+      final events = _captureEvents();
+      expect(events[0].payload.containsKey('x'), isFalse);
+      expect(events[0].payload.containsKey('y'), isFalse);
+
+      final inserted =
+          verify(mockDartRepo.insertDart(captureAny)).captured.single
+              as DartThrow;
+      expect(inserted.x, isNull);
+      expect(inserted.y, isNull);
     });
   });
 

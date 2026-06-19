@@ -27,11 +27,13 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
     return ActivePracticeState(gameState: gs);
   }
 
-  Future<void> processDart(String segment, {String inputMethod = 'manual'}) =>
-      _serializer.run(() => _processDartImpl(segment, inputMethod: inputMethod));
+  Future<void> processDart(String segment,
+          {String inputMethod = 'manual', double? x, double? y}) =>
+      _serializer.run(
+          () => _processDartImpl(segment, inputMethod: inputMethod, x: x, y: y));
 
   Future<void> _processDartImpl(String segment,
-      {String inputMethod = 'manual'}) async {
+      {String inputMethod = 'manual', double? x, double? y}) async {
     final current = state.value;
     if (current == null) return;
 
@@ -59,6 +61,8 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       dartNumber: gs.dartsThrownInTurn + 1,
       segment: segment,
       score: Segment.parse(segment).scoreValue,
+      x: x,
+      y: y,
     );
 
     final isShanghai = gs.gameType == GameType.shanghai;

@@ -130,7 +130,7 @@
   "statsPlayerFallback": "Jogador",
   "statsLoadFailed": "Falha ao carregar as estatísticas: {error}",
   "statsComingSoon": "Estatísticas de {section} em breve",
-  "statsHeatmapTitle": "Mapa de calor",
+  "statsHeatmapTitle": "Mapa de calor de impactos",
   "statsHeatmapNoData": "Nenhum dardo localizado para este jogador",
   "statsHeatmapUnlocated": "{count, plural, one{1 dardo não localizado} other{{count} dardos não localizados}}",
   "statsDrillsPlayed": "Treinos jogados",

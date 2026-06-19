@@ -130,7 +130,7 @@
   "statsPlayerFallback": "Speler",
   "statsLoadFailed": "Statistieken laden mislukt: {error}",
   "statsComingSoon": "Statistieken voor {section} komen binnenkort",
-  "statsHeatmapTitle": "Heatmap",
+  "statsHeatmapTitle": "Impact-heatmap",
   "statsHeatmapNoData": "Geen gelokaliseerde darts voor deze speler",
   "statsHeatmapUnlocated": "{count, plural, one{1 niet-gelokaliseerde dart} other{{count} niet-gelokaliseerde darts}}",
   "statsDrillsPlayed": "Gespeelde oefeningen",
