@@ -32,6 +32,7 @@ class StatsTabPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
               child: AppHeader(
                 showBack: true,
+                title: l10n.statsTitle,
                 onBack: () => context.go(GameRoutes.home),
               ),
             ),

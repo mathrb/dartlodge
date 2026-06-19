@@ -137,6 +137,7 @@
   "statsAddPlayersHint": "Voeg spelers toe om statistieken bij te houden",
   "statsPlayersLoadFailed": "Spelers laden mislukt: {error}",
   "statsOthersTab": "Overige",
+  "statsTitle": "Statistieken",
   "statsPlayerFallback": "Speler",
   "statsLoadFailed": "Statistieken laden mislukt: {error}",
   "statsComingSoon": "Statistieken voor {section} komen binnenkort",
