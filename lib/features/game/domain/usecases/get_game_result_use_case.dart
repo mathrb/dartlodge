@@ -278,12 +278,9 @@ class GetGameResultUseCase {
   /// `CompetitorState.dartThrows.length`, which can include phantom MISS
   /// padding the checkout-practice engine inserts on bust.
   int _countDarts(List<GameEvent> events, String competitorId) {
-    final skip = _buildSkipSets(events);
     var count = 0;
-    for (final e in events) {
+    for (final e in stripSupersededEvents(events)) {
       if (e.eventType != 'DartThrown') continue;
-      if (skip.correctedDartIds.contains(e.eventId)) continue;
-      if (skip.supersededEventIds.contains(e.eventId)) continue;
       if (e.payload['competitor_id'] != competitorId) continue;
       count++;
     }
@@ -295,11 +292,9 @@ class GetGameResultUseCase {
   /// TurnEnded because End Drill mid-attempt skips the closing TurnEnded
   /// while TurnStarted was already recorded when the attempt began.
   int _countTurnStarted(List<GameEvent> events, String competitorId) {
-    final skip = _buildSkipSets(events);
     var count = 0;
-    for (final e in events) {
+    for (final e in stripSupersededEvents(events)) {
       if (e.eventType != 'TurnStarted') continue;
-      if (skip.supersededEventIds.contains(e.eventId)) continue;
       if (e.payload['competitor_id'] != competitorId) continue;
       count++;
     }
@@ -315,8 +310,6 @@ class GetGameResultUseCase {
     required GameEngine engine,
     required String competitorId,
   }) {
-    final skip = _buildSkipSets(events);
-
     int compIndex(GameState gs) =>
         gs.competitors.indexWhere((c) => c.competitorId == competitorId);
 
@@ -327,13 +320,7 @@ class GetGameResultUseCase {
     var currentRoundScore = 0;
     var best = 0;
 
-    for (final event in events) {
-      if (event.eventType == 'DartThrown' &&
-          skip.correctedDartIds.contains(event.eventId)) {
-        continue;
-      }
-      if (skip.supersededEventIds.contains(event.eventId)) continue;
-
+    for (final event in stripSupersededEvents(events)) {
       // Close out the round just before applying TurnEnded for this
       // competitor, so the round's score deltas are correctly bucketed.
       if (event.eventType == 'TurnEnded' &&
@@ -355,27 +342,4 @@ class GetGameResultUseCase {
     best = math.max(best, currentRoundScore);
     return best;
   }
-
-  _SkipSets _buildSkipSets(List<GameEvent> events) {
-    final corrected = <String>{};
-    final superseded = <String>{};
-    for (final e in events) {
-      if (e.eventType != 'DartCorrected') continue;
-      final origId = e.payload['original_event_id'];
-      if (origId is String) corrected.add(origId);
-      final list = e.payload['superseded_event_ids'];
-      if (list is List) {
-        for (final id in list) {
-          if (id is String) superseded.add(id);
-        }
-      }
-    }
-    return _SkipSets(corrected, superseded);
-  }
-}
-
-class _SkipSets {
-  final Set<String> correctedDartIds;
-  final Set<String> supersededEventIds;
-  const _SkipSets(this.correctedDartIds, this.supersededEventIds);
 }

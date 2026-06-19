@@ -1,9 +1,11 @@
 // Event replay — pure helper that takes an initial GameState plus the
 // recorded event log and returns the final GameState after engine application.
 //
-// Sole place where DartCorrected / superseded-event skip handling lives, so
-// every call site (cold loaders for active-game notifiers, post-game
-// `GetGameResultUseCase`) recovers identical state from the same events.
+// `stripSupersededEvents` (below) is the single source of truth for
+// DartCorrected / superseded-event skip handling, so every replay-aware call
+// site (cold loaders for active-game notifiers, post-game `GetGameResultUseCase`,
+// the stats assembler, the history turn-breakdown builder) recovers identical
+// results from the same events.
 
 import '../entities/game_event.dart';
 import '../models/game_state.dart';
