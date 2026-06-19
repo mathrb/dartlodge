@@ -174,7 +174,7 @@ void main() {
         result: GameResult.bobs27(
           competitorName: 'Alice',
           finalScore: 162,
-          roundReached: 20,
+          roundReached: 21,
           bustedToZero: false,
         ),
       )));
@@ -184,7 +184,8 @@ void main() {
       expect(find.text('FINAL SCORE'), findsOneWidget);
       expect(find.text('162'), findsOneWidget);
       expect(find.text('ROUND'), findsOneWidget);
-      expect(find.text('20 / 20'), findsOneWidget);
+      // 21 rounds incl. the Double-Bull finale (#588).
+      expect(find.text('21 / 21'), findsOneWidget);
       expect(find.text('BUSTED'), findsNothing);
     });
 

@@ -45,9 +45,9 @@ class PracticeSummaryWidget extends StatelessWidget {
         :final bustedToZero,
       ) =>
         PostGameHeroCard(
-          badge: bustedToZero ? 'BUSTED' : null,
+          badge: bustedToZero ? l10n.bobs27BustedBadge.toUpperCase() : null,
           headline: competitorName,
-          subline: bustedToZero ? "Bob's 27 — drill ended" : "Bob's 27",
+          subline: bustedToZero ? l10n.bobs27BustedSubline : "Bob's 27",
           muted: bustedToZero,
           sideStats: [
             PostGameHeroStat(
@@ -62,7 +62,8 @@ class PracticeSummaryWidget extends StatelessWidget {
             ),
             PostGameHeroStat(
                 label: l10n.summaryRound.toUpperCase(),
-                value: '$roundReached / 20'),
+                // 21 rounds incl. the Double-Bull finale (#588).
+                value: '$roundReached / 21'),
           ],
         ),
       CheckoutPracticeResult(
