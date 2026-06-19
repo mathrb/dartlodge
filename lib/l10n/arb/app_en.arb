@@ -564,6 +564,7 @@
       }
     }
   },
+  "statsHeatmapTitle": "Impact heatmap",
   "statsDrillsPlayed": "Drills Played",
   "statsCompletions": "Completions",
   "statsHitRate": "Hit Rate",

@@ -130,6 +130,7 @@
   "statsPlayerFallback": "Spieler",
   "statsLoadFailed": "Statistiken konnten nicht geladen werden: {error}",
   "statsComingSoon": "Statistiken für {section} folgen bald",
+  "statsHeatmapTitle": "Trefferverteilung",
   "statsDrillsPlayed": "Gespielte Übungen",
   "statsCompletions": "Abschlüsse",
   "statsHitRate": "Trefferquote",
