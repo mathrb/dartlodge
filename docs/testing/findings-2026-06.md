@@ -53,6 +53,8 @@ dans `e2e/`.
 | F-018 | i18n | P2 | Shanghai — texte règles « solo » alors que jeu multi-joueurs (D-1) | confirmé |
 
 > F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
+
+**Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 infirmé, pas d'issue.)_
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | à confirmer |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
