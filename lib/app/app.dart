@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../core/persistence/database_provider.dart';
 import '../core/utils/app_theme.dart';
+import '../core/widgets/error_retry_widget.dart';
 import '../features/achievements/presentation/widgets/achievement_notification_host.dart';
 import '../features/settings/presentation/providers/locale_provider.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
@@ -34,8 +35,14 @@ class DartsApp extends ConsumerWidget {
         ),
       ),
       error: (e, _) => _BootstrapApp(
-        child: Scaffold(
-          body: Center(child: Text('Database failed to open: $e')),
+        // Styled, localized error surface (#616). The raw exception [e] is not
+        // surfaced to the user (it would leak internals) — a friendly message
+        // is shown instead. Note: a consumed FutureProvider error is NOT routed
+        // to Sentry's zone handler, so this startup failure is currently
+        // unreported; wiring `Sentry.captureException(e)` once (not per rebuild)
+        // would be a separate observability follow-up.
+        child: _DbErrorScreen(
+          onRetry: () => ref.invalidate(databaseProvider),
         ),
       ),
       data: (_) {
@@ -71,14 +78,47 @@ class DartsApp extends ConsumerWidget {
   }
 }
 
-/// Minimal MaterialApp wrapper used before the database is ready.
-/// Provides Theme and Directionality so standard widgets render correctly.
+/// Minimal MaterialApp wrapper used before the database is ready. Provides the
+/// theme, Localizations delegates and Directionality so the loading spinner and
+/// the DB-error surface render themed and translated (#616). The locale follows
+/// the device here — the stored preference isn't loaded until the DB is ready.
 class _BootstrapApp extends StatelessWidget {
   final Widget child;
   const _BootstrapApp({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: child);
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
+      supportedLocales: kSupportedLocales,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      home: child,
+    );
+  }
+}
+
+/// Styled startup error shown when the local database fails to open (#616).
+/// Built below [_BootstrapApp]'s MaterialApp so [AppLocalizations] resolves.
+class _DbErrorScreen extends StatelessWidget {
+  const _DbErrorScreen({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ErrorRetryWidget(
+          title: l10n.commonError,
+          message: l10n.dbErrorMessage,
+          onRetry: onRetry,
+        ),
+      ),
+    );
   }
 }

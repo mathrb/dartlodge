@@ -157,6 +157,10 @@
   "@commonRetry": {
     "description": "Retry button on the shared error/retry widget"
   },
+  "dbErrorMessage": "DartLodge couldn't open its data. Please try again.",
+  "@dbErrorMessage": {
+    "description": "Shown on the startup screen when the local database fails to open"
+  },
   "homeSubtitleCricket": "Strategic Play",
   "@homeSubtitleCricket": {
     "description": "Home Cricket card subtitle (rendered upper-case)"
