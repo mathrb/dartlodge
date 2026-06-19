@@ -55,6 +55,22 @@ void main() {
     expect(find.text('60'), findsOneWidget);
   });
 
+  testWidgets('turnBusted shows the turn sum as 0, not the raw dart sum (#604)',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const GameStatusBarWidget(
+      configLabel: '170',
+      roundInLeg: 1,
+      currentTurnDarts: ['T20', 'T20', 'T20'],
+      turnBusted: true,
+    )));
+
+    // The busted turn scored 0 — the readout shows 0, not 180.
+    expect(find.text('0'), findsOneWidget);
+    expect(find.text('180'), findsNothing);
+    // The dart chips still render (the darts were thrown).
+    expect(find.text('T20'), findsNWidgets(3));
+  });
+
   testWidgets('a real MISS still renders as a MISS chip', (tester) async {
     await tester.pumpWidget(_wrap(const GameStatusBarWidget(
       configLabel: '170',
