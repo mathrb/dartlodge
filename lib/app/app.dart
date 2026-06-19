@@ -36,7 +36,11 @@ class DartsApp extends ConsumerWidget {
       ),
       error: (e, _) => _BootstrapApp(
         // Styled, localized error surface (#616). The raw exception [e] is not
-        // surfaced to the user; it still reaches Sentry via the zone handler.
+        // surfaced to the user (it would leak internals) — a friendly message
+        // is shown instead. Note: a consumed FutureProvider error is NOT routed
+        // to Sentry's zone handler, so this startup failure is currently
+        // unreported; wiring `Sentry.captureException(e)` once (not per rebuild)
+        // would be a separate observability follow-up.
         child: _DbErrorScreen(
           onRetry: () => ref.invalidate(databaseProvider),
         ),
