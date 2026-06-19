@@ -199,7 +199,16 @@ segment          Enum {0, 1–20, bull}
                  0 = miss (dart did not hit a scoring segment)
 multiplier       Integer {1, 2, 3}
 input_method     Enum {manual, camera}   # 'camera' = on-device auto-scorer (#377)
+x                Double?  # optional — normalised canonical impact position (#571)
+y                Double?  # optional — heatmap frame; omitted for manual/old darts
 ```
+
+> `x`/`y` are the dart's normalised impact position in the stable heatmap frame
+> (origin = board centre, radius `1.0` at the double ring, "20 at top"), emitted
+> only by the auto-scorer (#571). Both keys are **omitted** when no position is
+> available (manual entry, detection noise, pre-#571 events) — readers treat a
+> missing key as `null`. The same values are written to the `dart_throws.x`/`.y`
+> columns. A corrected dart re-entered manually carries no position by design.
 
 **Critical Invariants**
 

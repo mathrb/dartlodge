@@ -42,7 +42,8 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
   }
 
   @override
-  Future<void> processDart(String segment, {String inputMethod = 'manual'}) async =>
+  Future<void> processDart(String segment,
+          {String inputMethod = 'manual', double? x, double? y}) async =>
       processedDarts.add(segment);
 
   final List<({int index, String segment})> correctedDarts = [];
