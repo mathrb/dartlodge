@@ -160,12 +160,13 @@ void main() {
       expect(after.competitors[0].score, 47);
     });
 
-    test('R20: D20 twice → score = 107 and game ends', () {
+    test('R20: D20 twice → score = 107, game continues to the bull round', () {
       final state = _makeState(score: 27, practiceRound: 20);
       final after = _applyTurn(engine, state, ['D20', 'D20', 'MISS']);
-      // 27 + 20*2*2 = 107
+      // 27 + 20*2*2 = 107; round 20 is no longer the last round (#588).
       expect(after.competitors[0].score, 107);
-      expect(after.isComplete, isTrue);
+      expect(after.isComplete, isFalse);
+      expect(after.competitors[0].practiceRound, 21);
     });
   });
 
@@ -264,11 +265,12 @@ void main() {
       expect(after.isComplete, isFalse);
     });
 
-    test('after full turn for R20 (miss), practiceRound = 21 and game ends', () {
+    test('after full turn for R20 (miss), practiceRound = 21, game continues', () {
       final state = _makeState(score: 100, practiceRound: 20);
       final after = _applyTurn(engine, state, ['MISS', 'MISS', 'MISS']);
-      // round was 20, after increment it's 21; game ends
-      expect(after.isComplete, isTrue);
+      // round was 20, after increment it's 21 (the bull round) — NOT the end.
+      expect(after.competitors[0].practiceRound, 21);
+      expect(after.isComplete, isFalse);
     });
   });
 
@@ -358,37 +360,73 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Normal end — all 20 rounds complete
+  // Bull round (round 21) — the Double-Bull finale (#588)
   // -------------------------------------------------------------------------
-  group('Normal end — all 20 rounds complete', () {
-    test('R20 hit D20 → score > 0 but isComplete = true, no winner', () {
+  group('Bull round (round 21)', () {
+    test('R20 hit D20 → still in progress, advances to the bull round', () {
       final state = _makeState(score: 27, practiceRound: 20);
       final after = _applyTurn(engine, state, ['D20', 'MISS', 'MISS']);
+      expect(after.isComplete, isFalse);
+      expect(after.competitors[0].practiceRound, 21);
+    });
+
+    test('R21 DB once → +50 and game ends, no winner', () {
+      final state = _makeState(score: 100, practiceRound: 21);
+      final after = _applyTurn(engine, state, ['DB', 'MISS', 'MISS']);
+      expect(after.competitors[0].score, 150);
       expect(after.isComplete, isTrue);
       expect(after.winnerCompetitorId, isNull);
     });
 
-    test('R20 hit D20 three times → score positive, game ends', () {
-      final state = _makeState(score: 27, practiceRound: 20);
-      final after = _applyTurn(engine, state, ['D20', 'D20', 'D20']);
-      // 27 + 20*2*3 = 147, but game still ends because roundNum >= 20
-      expect(after.competitors[0].score, 147);
+    test('R21 DB three times → +150 and game ends', () {
+      final state = _makeState(score: 100, practiceRound: 21);
+      final after = _applyTurn(engine, state, ['DB', 'DB', 'DB']);
+      expect(after.competitors[0].score, 250);
       expect(after.isComplete, isTrue);
     });
 
-    test('R20 result has outcome = gameCompleted', () {
+    test('R21 whitewash → -50 and game ends', () {
+      final state = _makeState(score: 100, practiceRound: 21);
+      final after = _applyTurn(engine, state, ['MISS', 'MISS', 'MISS']);
+      expect(after.competitors[0].score, 50);
+      expect(after.isComplete, isTrue);
+    });
+
+    test('R21 single bull (SB) does NOT count — only Double Bull scores', () {
+      final state = _makeState(score: 100, practiceRound: 21);
+      final after = _applyTurn(engine, state, ['SB', 'SB', 'SB']);
+      // No DB hit → whitewash penalty of 50.
+      expect(after.competitors[0].score, 50);
+      expect(after.isComplete, isTrue);
+    });
+
+    test('R21 result has outcome = gameCompleted', () {
       final state = _makeState(
-        score: 27,
-        practiceRound: 20,
+        score: 100,
+        practiceRound: 21,
         turnActive: true,
         dartsThrownInTurn: 2,
         dartThrows: ['MISS', 'MISS'],
       );
       final result = engine.apply(
         state,
-        _dartThrown(competitorId: 'c1', segment: 0, multiplier: 1),
+        _dartThrown(competitorId: 'c1', segment: 25, multiplier: 2),
       );
       expect(result.outcome, LegOutcome.gameCompleted);
+    });
+
+    test('perfect run (3 doubles every round + 3 Double Bulls) totals 1437', () {
+      var state = _makeState(score: 27, practiceRound: 1);
+      for (var round = 1; round <= 21; round++) {
+        final dart = round >= 21 ? 'DB' : 'D$round';
+        state = _applyTurn(engine, state, [dart, dart, dart]);
+        if (round < 21) {
+          state = engine.apply(state, _turnEnded('c1')).state;
+          state = engine.apply(state, _turnStarted('c1')).state;
+        }
+      }
+      expect(state.competitors[0].score, 1437);
+      expect(state.isComplete, isTrue);
     });
   });
 

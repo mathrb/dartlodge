@@ -1341,11 +1341,11 @@
   "@rulesCatch40WinningBody": {
     "description": "Game rules text"
   },
-  "rulesBobs27Tagline": "Twenty rounds of doubles. Miss them all and you are out.",
+  "rulesBobs27Tagline": "Every double from 1 to 20, then the bull. Miss them all and you are out.",
   "@rulesBobs27Tagline": {
     "description": "Game rules text"
   },
-  "rulesBobs27ObjectiveBody": "Hit every double from D1 through D20 in order, one number per round. Your score starts at 27 and climbs each time you land a double of the round's number — and drops sharply every round you miss.",
+  "rulesBobs27ObjectiveBody": "Hit every double from D1 through D20 in order, one number per round, then finish on the double bull. Your score starts at 27 and climbs each time you land the round's target — and drops sharply every round you miss.",
   "@rulesBobs27ObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1353,31 +1353,31 @@
   "@rulesBobs27HowB1": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB2": "There are 20 rounds. In round 1 the target is double 1, in round 2 it is double 2, and so on up to double 20 in round 20.",
+  "rulesBobs27HowB2": "There are 21 rounds. In round 1 the target is double 1, in round 2 it is double 2, and so on up to double 20 in round 20 — then round 21 targets the bull (double bull).",
   "@rulesBobs27HowB2": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB3": "Each round you throw three darts at the round's double.",
+  "rulesBobs27HowB3": "Each round you throw three darts at the round's target.",
   "@rulesBobs27HowB3": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB4": "For every dart that lands on the target double, your score goes up by twice the round number. Three doubles of 20 in the final round add 120.",
+  "rulesBobs27HowB4": "For every dart that lands on the round's target, your score goes up — by twice the round number on a double, or by 50 on a double bull. Three double bulls in the final round add 150.",
   "@rulesBobs27HowB4": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB5": "If none of your three darts hits the target double, your score drops by twice the round number instead.",
+  "rulesBobs27HowB5": "If none of your three darts hits the round's target, your score drops by the same amount a single hit would have added.",
   "@rulesBobs27HowB5": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB6": "Singles, triples and any other segment do nothing — only the round's exact double counts.",
+  "rulesBobs27HowB6": "Singles, triples and any other segment do nothing — only the round's exact double counts, or the double bull in the final round.",
   "@rulesBobs27HowB6": {
     "description": "Game rules text"
   },
-  "rulesBobs27WinningBody": "The drill is solo. It ends after round 20, or sooner if your score drops to zero or below. Your final score is your result. A perfect run — three doubles every round — totals 1437.",
+  "rulesBobs27WinningBody": "The drill is solo. It ends after the bull round (round 21), or sooner if your score drops to zero or below. Your final score is your result. A perfect run — three doubles every round and three double bulls — totals 1437.",
   "@rulesBobs27WinningBody": {
     "description": "Game rules text"
   },
-  "rulesBobs27TipsB1": "A single missed round on a low number costs little. A wipe on the late rounds is catastrophic — D17, D18, D19 and D20 each cost more than 30 points.",
+  "rulesBobs27TipsB1": "A single missed round on a low number costs little. A wipe on the late rounds is catastrophic — D17, D18, D19, D20 and the bull each cost more than 30 points.",
   "@rulesBobs27TipsB1": {
     "description": "Game rules text"
   },

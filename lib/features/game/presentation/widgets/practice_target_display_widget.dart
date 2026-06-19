@@ -63,7 +63,8 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
     final n = currentTarget;
     if (n == null) return '—';
     return switch (gameType) {
-      GameType.bobs27 => 'D$n',
+      // Round 21 is the Double-Bull finale (#588); rounds 1–20 are D{n}.
+      GameType.bobs27 => n > 20 ? 'DB' : 'D$n',
       _ => '$n',
     };
   }

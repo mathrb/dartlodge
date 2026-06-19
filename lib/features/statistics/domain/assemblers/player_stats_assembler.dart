@@ -151,10 +151,11 @@ class PlayerStatsAssembler {
 
   /// Computes the canonical Bob's 27 score for one leg of events, scoped to
   /// [playerId]. Mirrors the bonus/penalty replay in `_computeBobs27Stats`:
-  /// starts at 27, adds `turnDoubleHits * currentRound * 2` per turn that
-  /// landed at least one double on the round's target, otherwise subtracts
-  /// `currentRound * 2`. Returns null if no player turns were observed.
-  /// See #190.
+  /// starts at 27, adds `turnDoubleHits * pointsPerHit` per turn that landed at
+  /// least one hit on the round's target, otherwise subtracts `pointsPerHit`.
+  /// Rounds 1–20 target the round's double (`D{n}`, worth `n*2`); round 21 is
+  /// the Double-Bull finale (`DB`, worth 50) — see `_bobs27Match`/`_bobs27Points`.
+  /// Returns null if no player turns were observed. See #190 / #588.
   static int? _bobs27LegScore(List<GameEvent> legEvents, String playerId) {
     int score = 27;
     int currentRound = 1;
@@ -174,14 +175,15 @@ class PlayerStatsAssembler {
           if (!inPlayerTurn || epid != playerId) break;
           final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
           final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-          if (mult == 2 && seg == currentRound) turnDoubleHits++;
+          if (_bobs27Match(seg, mult, currentRound)) turnDoubleHits++;
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
           inPlayerTurn = false;
+          final pts = _bobs27Points(currentRound);
           if (turnDoubleHits > 0) {
-            score += turnDoubleHits * currentRound * 2;
+            score += turnDoubleHits * pts;
           } else {
-            score -= currentRound * 2;
+            score -= pts;
           }
           currentRound++;
       }
@@ -189,6 +191,16 @@ class PlayerStatsAssembler {
 
     return sawAnyTurn ? score : null;
   }
+
+  /// True when a dart `(segment, multiplier)` hits the Bob's 27 target for
+  /// [round]: the round's double for rounds 1–20, the Double Bull for round 21.
+  static bool _bobs27Match(int segment, int multiplier, int round) => round >= 21
+      ? (segment == 25 && multiplier == 2)
+      : (multiplier == 2 && segment == round);
+
+  /// Points a single target hit (or whitewash penalty) is worth for the given
+  /// Bob's 27 [round]: `round*2` for rounds 1–20, 50 for the Double-Bull round.
+  static int _bobs27Points(int round) => round >= 21 ? 50 : round * 2;
 
   /// Strips events superseded by any DartCorrected payload. Two flavours
   /// of skip:
@@ -1602,22 +1614,24 @@ class PlayerStatsAssembler {
           // land 19 on the round's double, the rate should be 31.7%, not
           // 19/something-smaller.
           doubleAttempts++;
-          if (mult == 2 && seg == currentRound) {
+          if (_bobs27Match(seg, mult, currentRound)) {
             doubleHits++;
             turnDoubleHits++;
           }
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
           inPlayerTurn = false;
+          final pts = _bobs27Points(currentRound);
           if (turnDoubleHits > 0) {
-            currentScore += turnDoubleHits * currentRound * 2;
+            currentScore += turnDoubleHits * pts;
           } else {
-            currentScore -= currentRound * 2;
+            currentScore -= pts;
           }
           currentRound++;
         case 'GameCompleted':
-          // Bob's 27 ends on either bust (score ≤ 0) or finishing round
-          // 20 — both paths emit GameCompleted directly with no preceding
+          // Bob's 27 ends on either bust (score ≤ 0) or finishing the
+          // Double-Bull round (round 21) — both paths emit GameCompleted
+          // directly with no preceding
           // LegCompleted (see `StatelessBobs27Engine._applyDartThrown`).
           // Gate score accumulation on GameCompleted, not LegCompleted,
           // and include busted final scores in Best/Avg so the stats

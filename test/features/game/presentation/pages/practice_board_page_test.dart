@@ -1030,7 +1030,8 @@ void main() {
   testWidgets("23. Bob's 27: shows just-played round while turn is locked",
       (tester) async {
     // Mid-round state: 2 darts thrown, practiceRound still 1, turn active.
-    // Expect target label "D1" and round indicator "1 / 20".
+    // Expect target label "D1" and round indicator "1 / 21" (21 rounds incl.
+    // the Double-Bull finale, #588).
     final gsMidTurn = _practiceState(
       gameType: GameType.bobs27,
       dartsThrownInTurn: 2,
@@ -1057,7 +1058,41 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('D1'), findsOneWidget);
-    expect(find.text('ROUND 1 / 20'), findsOneWidget);
+    expect(find.text('ROUND 1 / 21'), findsOneWidget);
+  });
+
+  testWidgets("23a. Bob's 27: bull round shows DB target and ROUND 21 / 21",
+      (tester) async {
+    // The Double-Bull finale (#588): round 21 targets the bull, so the label
+    // reads "DB" (not "D21") and the progress reads "21 / 21".
+    final gsBull = _practiceState(
+      gameType: GameType.bobs27,
+      dartsThrownInTurn: 1,
+      competitor: _practiceCompetitor(practiceRound: 21),
+    );
+    final notifier = _FakeActivePracticeNotifier(
+      _activeState(gameState: gsBull),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          activePracticeProvider.overrideWith(() => notifier),
+        ],
+        child: MaterialApp.router(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: kSupportedLocales,
+          theme: AppTheme.light(),
+          routerConfig: GoRouter(
+            initialLocation: '/practice-board/game-1',
+            routes: _testRoutes(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('DB'), findsOneWidget);
+    expect(find.text('ROUND 21 / 21'), findsOneWidget);
+    expect(find.text('D21'), findsNothing);
   });
 
   // ── 23c. Checkout Practice: ROUND counter increments per attempt (#261) ──
@@ -1326,8 +1361,8 @@ void main() {
 
     expect(find.text('D1'), findsOneWidget,
         reason: 'Target stays on just-played D1, not the engine-bumped D2.');
-    expect(find.text('ROUND 1 / 20'), findsOneWidget,
-        reason: 'Round indicator stays at 1/20 until NEXT ROUND.');
+    expect(find.text('ROUND 1 / 21'), findsOneWidget,
+        reason: 'Round indicator stays at 1/21 until NEXT ROUND.');
     expect(find.text('D2'), findsNothing);
   });
 

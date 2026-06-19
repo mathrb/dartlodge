@@ -55,14 +55,13 @@ manche et on en perd quand on rate les trois.
 
 > Candidats findings pour l'axe 1. Décision mainteneur requise avant toute correction.
 
-- **D-1 (P1, manche bull manquante — issue #588)** — `stateless_bobs_27_engine.dart:123` termine à `roundNum >= 20`
-  (cible toujours `D{roundNum}`, aucune manche bull). Max atteignable = **1287**, donc le « 1437 »
-  affiché dans les règles in-app (`rulesBobs27WinningBody`, 7 langues) est **inatteignable**.
-  → Soit ajouter la manche bull (aligner sur le canonique), soit corriger le texte à 1287 (variante
-  20-manches assumée). **Décision mainteneur.**
-- **D-2 (P2, texte de règles)** — `rulesBobs27HowB2` dit « There are 20 rounds … up to double 20 »
-  (omet le bull), tout en citant 1437 dans `rulesBobs27WinningBody` → contradiction interne, à
-  résoudre en même temps que D-1.
+- **D-1 (RÉSOLU — issue #588, PR ajoutant la manche bull)** — décision mainteneur : **ajouter la
+  manche bull canonique** (round 21 = Double Bull). `stateless_bobs_27_engine.dart` termine désormais
+  à `roundNum >= 21` ; round 21 cible `DB` (+50/hit, −50 en blanchissage). Le parfait **1437** est
+  donc atteignable et conforme à §6. L'engine est aligné sur le canonique — ce doc fait foi.
+- **D-2 (RÉSOLU avec D-1)** — `rulesBobs27HowB2`/`Tagline`/`ObjectiveBody`/`HowB4`/`WinningBody` (7
+  langues) réécrits pour décrire 21 manches finissant sur le double bull ; le « 1437 » de
+  `rulesBobs27WinningBody` est maintenant correct. Plus de contradiction interne.
 - **D-3 (note)** — fin sur `score <= 0` (zéro inclus) sans flag « busted/perdu » explicite ;
   cohérent avec « zero or below » du canonique. À confirmer côté UX (axe 2) que l'utilisateur
   comprend la fin.
