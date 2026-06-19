@@ -14,28 +14,30 @@ Repository interfaces are defined in the **domain layer** and are completely fre
 lib/
 ├── core/
 │   └── persistence/
-│       └── database_provider.dart      ← wires concrete impl at startup
+│       ├── database_provider.dart           ← wires concrete impl at startup
+│       └── drift/
+│           └── repositories/
+│               ├── player_repository_drift.dart  ← drift impl
+│               ├── game_repository_drift.dart
+│               ├── game_event_repository_drift.dart
+│               ├── dart_throw_repository_drift.dart
+│               └── statistics_repository_drift.dart
 ├── features/
 │   ├── players/
-│   │   └── domain/
-│   │       └── repositories/
-│   │           └── player_repository.dart       ← interface (this doc)
-│   │   └── data/
-│   │       └── repositories/
-│   │           └── player_repository_impl.dart  ← sqflite / drift impl
+│   │   └── domain/repositories/
+│   │       └── player_repository.dart       ← interface (this doc)
 │   ├── game/
 │   │   └── domain/repositories/
 │   │       ├── game_repository.dart
 │   │       └── game_event_repository.dart
-│   │   └── data/repositories/
-│   │       ├── game_repository_impl.dart
-│   │       └── game_event_repository_impl.dart
 │   └── statistics/
 │       └── domain/repositories/
 │           └── statistics_repository.dart
-│       └── data/repositories/
-│           └── statistics_repository_impl.dart
 ```
+
+The app runs on a **single drift backend** on every platform (native SQLite
+on mobile/desktop, WASM over IndexedDB on web — selected once in the drift
+factory). Concrete implementations are the `*Drift` classes.
 
 **Rules that must never be violated:**
 - Interfaces import only plain Dart — no `sqflite`, `drift`, `http`, or Flutter
@@ -130,7 +132,21 @@ class PlayerStats {
 
 class GameStats {
   final String gameId;
+  final String gameType;   // load-bearing: post-game summary branches on this
+                           // (== GameType.cricket.name) for MPR vs PPR labels
   final List<CompetitorStats> byCompetitor;
+}
+
+// lib/features/statistics/domain/entities/dart_position.dart
+// A raw recorded dart position for the impact heatmap (#576) — read directly
+// from `dart_throws` (WHERE x IS NOT NULL), never routed through a projection.
+// Coordinates are normalised in the canonical board frame: origin (0,0) =
+// bullseye, radius 1.0 = outer edge of the double ring, "20 up". A miss outside
+// the double has r > 1.0. See docs/plans/2026-06-19-heatmap-design.md.
+class DartPosition {
+  final double x;
+  final double y;
+  final String? segment;
 }
 
 class CompetitorStats {
@@ -178,6 +194,11 @@ abstract interface class PlayerRepository {
   /// Throws [PlayerNotFoundException] if the player does not exist.
   Future<void> touchPlayer(String playerId);
 
+  /// Deletes the player with [playerId].
+  /// Throws [PlayerNotFoundException] if not found.
+  /// Throws [PlayerHasGameHistoryException] if the player has any competitor history.
+  Future<void> deletePlayer(String playerId);
+
   /// Emits the full player list whenever any player row changes.
   /// Used by player selection screens to stay reactive without polling.
   Stream<List<Player>> watchAllPlayers();
@@ -217,10 +238,15 @@ abstract interface class GameRepository {
 
   /// Returns all completed games ordered by [end_time] descending.
   /// [limit] and [offset] support pagination.
+  /// [dateFrom] and [dateTo] are inclusive end_time filters when supplied.
+  /// Date filtering is pushed to the database so paginated pages stay aligned
+  /// with the displayed-rows count.
   Future<List<Game>> getCompletedGames({
     int limit = 20,
     int offset = 0,
     GameType? filterByType,
+    DateTime? dateFrom,
+    DateTime? dateTo,
   });
 
   /// Returns all competitors for [gameId], each with their player roster.
@@ -235,16 +261,29 @@ abstract interface class GameRepository {
   /// one competitor.
   Future<void> createGame(Game game, List<Competitor> competitors);
 
-  /// Overwrites the [game_state_json] column for [gameId].
-  /// Throws [GameNotFoundException] if [gameId] does not exist.
-  /// Throws [GameAlreadyCompleteException] if the game is already marked complete.
-  Future<void> saveGameState(String gameId, GameStateSnapshot state);
-
   /// Marks the game as complete: sets [is_complete = 1], [end_time],
-  /// and [winner_competitor_id]. Clears [game_state_json].
+  /// and [winner_competitor_id].
   /// Throws [GameNotFoundException] if [gameId] does not exist.
   /// Throws [GameAlreadyCompleteException] if already complete.
   Future<void> completeGame({
+    required String gameId,
+    required String? winnerCompetitorId,
+    required DateTime endTime,
+  });
+
+  /// Appends [events] AND marks the game complete in a single transaction.
+  /// Either both writes land, or neither does — preventing the failure mode
+  /// where a crash between `appendEvents(...)` and `completeGame(...)` leaves
+  /// the event log saying the game is complete while `games.is_complete`
+  /// stays 0 (#188).
+  ///
+  /// All [events] must share the same [gameId]; otherwise throws
+  /// [ValidationException].
+  /// Throws [GameNotFoundException] if [gameId] does not exist.
+  /// Throws [GameAlreadyCompleteException] if already complete.
+  /// Throws [SequenceConflictException] on any sequence collision (rolls back).
+  Future<void> appendEventsAndCompleteGame({
+    required List<GameEvent> events,
     required String gameId,
     required String? winnerCompetitorId,
     required DateTime endTime,
@@ -362,8 +401,10 @@ abstract interface class GameEventRepository {
   /// ([synced = 0]), ordered by (game_id, local_sequence).
   Future<List<GameEvent>> getUnsyncedEvents();
 
-  /// Returns the highest [local_sequence] for [gameId], or -1 if no events
-  /// exist. Used to assign the next sequence number before insertion.
+  /// Returns the highest [local_sequence] for [gameId], or 0 if no events
+  /// exist. Callers compute `getLatestSequence(...) + 1` to assign the next
+  /// sequence; with the 0 sentinel, the first event of every game lands at
+  /// `local_sequence = 1` (1-based, restarts per game).
   Future<int> getLatestSequence(String gameId);
 
   // ── Writes ────────────────────────────────────────────────────────────────
@@ -410,9 +451,11 @@ class SequenceConflictException implements Exception {
   final int localSequence;
 }
 class GameNotEditableException implements Exception {
+  final String gameId;
   // Thrown by appendEvent/appendEvents when the target game is already complete.
 }
 class EventNotFoundException implements Exception {
+  final String eventId;
   // Thrown by markSynced/updateGlobalSequences when any id does not exist;
   // the surrounding transaction is rolled back so no partial updates land.
 }
@@ -454,13 +497,46 @@ abstract interface class StatisticsRepository {
   /// metrics (`marksPerTurn`, mark buckets) only apply to cricket.
   ///
   /// [from] and [to] are inclusive date-range filters applied to [start_time].
+  /// [startingScore] / [variant] / [legLimit] narrow the cohort further, and
+  /// [cricketTargetMode] selects the cricket target-mode cohort
+  /// (`fixed` / `random` / `crazy`, default `fixed`).
   /// Throws [PlayerNotFoundException] if [playerId] does not exist.
   Future<PlayerStats> getPlayerStats(
     String playerId, {
     required GameType gameType,
     DateTime? from,
     DateTime? to,
+    int? startingScore,
+    String? variant,
+    int? legLimit,
+    String cricketTargetMode = 'fixed',
   });
+
+  /// Cross-type achievement metric bundle for [playerId] (#525): replays the
+  /// player's FULL completed history across ALL game types (no type filter)
+  /// and delegates to `PlayerStatsAssembler.achievementMetricsFromEvents`.
+  /// Returns a zero record when the player has no completed games.
+  /// Throws [PlayerNotFoundException] if [playerId] does not exist.
+  Future<AchievementMetricsData> achievementMetricsForPlayer(String playerId);
+
+  /// Returns per-leg PPR/MPT snapshots ordered oldest → newest.
+  /// [cricketTargetMode] selects the cricket target-mode cohort
+  /// (`fixed` / `random` / `crazy`, default `fixed`).
+  Future<List<PlayerLegSnapshot>> getPlayerLegHistory(
+    String playerId, {
+    GameType? gameType,
+    int? startingScore,
+    String? variant,
+    int? limit,
+    String cricketTargetMode = 'fixed',
+  });
+
+  /// Returns distinct X01 starting scores for the player's completed games,
+  /// sorted ascending.
+  Future<List<int>> getPlayerX01StartingScores(String playerId);
+
+  /// Returns distinct cricket variant strings for the player's completed games.
+  Future<List<String>> getPlayerCricketVariants(String playerId);
 
   /// Returns statistics for [playerId] scoped to a single completed [gameId].
   /// Throws [GameNotFoundException] if [gameId] does not exist.
@@ -488,16 +564,6 @@ abstract interface class StatisticsRepository {
     DateTime? from,
     DateTime? to,
   });
-
-  // ── Leaderboard ───────────────────────────────────────────────────────────
-
-  /// Returns all players ranked by [PlayerStats.threeDartAverage] descending
-  /// for [gameType]. Excludes players with fewer than [minGames] games.
-  Future<List<PlayerStats>> getLeaderboard({
-    required GameType gameType,
-    int minGames = 1,
-    int limit = 50,
-  });
 }
 ```
 
@@ -522,6 +588,11 @@ abstract interface class AchievementRepository {
 
   /// Reactive variant of [getUnlocked] — re-emits when the set changes.
   Stream<Set<String>> watchUnlocked(String playerId);
+
+  /// Reactive id → `unlockedAt` map for [playerId] — the dated unlock facts
+  /// the achievements UI renders (id presence = unlocked, value = when).
+  /// Superset of [watchUnlocked]; re-emits on any change.
+  Stream<Map<String, DateTime>> watchUnlockedDetails(String playerId);
 
   /// Record that [playerId] unlocked [id] at [at], optionally crediting the
   /// [gameId] that earned it. Idempotent: re-recording the same
@@ -560,6 +631,19 @@ final class DuplicatePlayerException extends RepositoryException {
       : super('Player already exists: $playerId');
 }
 
+/// Thrown by the domain use case when a new player's NAME collides with an
+/// existing player (case-insensitive). Distinct from [DuplicatePlayerException],
+/// which is the data-layer's primary-key (id) conflict signal.
+final class DuplicatePlayerNameException extends RepositoryException {
+  final String name;
+  const DuplicatePlayerNameException(this.name)
+      : super('A player with this name already exists: $name');
+}
+
+final class PlayerHasGameHistoryException extends RepositoryException {
+  const PlayerHasGameHistoryException(super.reason);
+}
+
 // ── Game ──────────────────────────────────────────────────────────────────
 final class GameNotFoundException extends RepositoryException {
   final String gameId;
@@ -573,15 +657,22 @@ final class DuplicateGameException extends RepositoryException {
       : super('Game already exists: $gameId');
 }
 
+/// Thrown by `completeGame` when called against a game already finalized
+/// (`is_complete == 1`). Scoped to "completing a game twice"; for "editing
+/// after completion" use [GameNotEditableException].
 final class GameAlreadyCompleteException extends RepositoryException {
   final String gameId;
   const GameAlreadyCompleteException(this.gameId)
       : super('Game is already complete: $gameId');
 }
 
-final class MultipleActiveGamesException extends RepositoryException {
-  const MultipleActiveGamesException()
-      : super('Multiple active games detected - only one game can be active at a time');
+/// Thrown when an attempt is made to mutate a finalized game's event log or
+/// throw history (`appendEvent`, `appendEvents`, `insertDart`, etc.) — i.e.
+/// the target game has `is_complete == 1`. Carries [gameId].
+final class GameNotEditableException extends RepositoryException {
+  final String gameId;
+  const GameNotEditableException(this.gameId)
+      : super('Game is complete and not editable: $gameId');
 }
 
 final class ActiveGameAlreadyExistsException extends RepositoryException {
@@ -591,6 +682,11 @@ final class ActiveGameAlreadyExistsException extends RepositoryException {
 
 final class InvalidCompetitorException extends RepositoryException {
   const InvalidCompetitorException(super.reason);
+}
+
+// ── Statistics ──────────────────────────────────────────────────────────────
+final class StatisticsException extends RepositoryException {
+  const StatisticsException(super.message);
 }
 
 // ── Dart throw ────────────────────────────────────────────────────────────
@@ -606,6 +702,34 @@ final class DuplicateDartException extends RepositoryException {
       : super('Dart throw already exists: $dartId');
 }
 
+// ── Game engine ─────────────────────────────────────────────────────────────
+final class InvalidGameStateException extends RepositoryException {
+  const InvalidGameStateException(super.reason);
+}
+
+final class NoDartsToUndoException extends RepositoryException {
+  final String gameId;
+  const NoDartsToUndoException(this.gameId)
+      : super('No darts to undo in current turn for game: $gameId');
+}
+
+/// Thrown by `CorrectDartUseCase` when the targeted dart cannot be corrected:
+/// [eventId] does not reference a live (non-corrected, non-superseded)
+/// `DartThrown` event in [gameId]. Distinct from [NoDartsToUndoException].
+final class DartNotCorrectableException extends RepositoryException {
+  final String gameId;
+  final String eventId;
+  const DartNotCorrectableException(this.gameId, this.eventId)
+      : super('Dart not correctable (no live DartThrown $eventId) '
+            'in game: $gameId');
+}
+
+// ── Infrastructure ────────────────────────────────────────────────────────
+final class DatabaseException extends RepositoryException {
+  final Object? cause;
+  const DatabaseException(super.message, {this.cause});
+}
+
 // ── Event ─────────────────────────────────────────────────────────────────
 final class SequenceConflictException extends RepositoryException {
   final String gameId;
@@ -614,21 +738,10 @@ final class SequenceConflictException extends RepositoryException {
       : super('Sequence $localSequence already taken in game $gameId');
 }
 
-final class GameNotEditableException extends RepositoryException {
-  final String gameId;
-  const GameNotEditableException(this.gameId)
-      : super('Game is complete and not editable: $gameId');
-}
-
 final class EventNotFoundException extends RepositoryException {
   final String eventId;
   const EventNotFoundException(this.eventId)
       : super('Event not found: $eventId');
-}
-
-// ── Player ────────────────────────────────────────────────────────────────
-final class PlayerHasGameHistoryException extends RepositoryException {
-  const PlayerHasGameHistoryException(super.reason);
 }
 
 // ── Validation ────────────────────────────────────────────────────────────
@@ -648,49 +761,49 @@ concrete implementations are selected per platform.
 // lib/core/persistence/database_provider.dart
 
 @Riverpod(keepAlive: true)
-Future<AppDatabase> appDatabase(AppDatabaseRef ref) async {
-  // AppDatabase is an abstract interface.
-  // The concrete class is chosen at compile time via conditional imports
-  // or a build-time flag.
-  return await AppDatabaseFactory.create();
+Future<AppDatabase> database(Ref ref) => DriftHelper.instance.database;
+
+@Riverpod(keepAlive: true)
+PlayerRepository playerRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return PlayerRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
-PlayerRepository playerRepository(PlayerRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return PlayerRepositoryImpl(db);  // sqflite on mobile, drift on web
+GameRepository gameRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return GameRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
-GameRepository gameRepository(GameRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return GameRepositoryImpl(db);
+DartThrowRepository dartThrowRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return DartThrowRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
-DartThrowRepository dartThrowRepository(DartThrowRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return DartThrowRepositoryImpl(db);
+GameEventRepository gameEventRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return GameEventRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
-GameEventRepository gameEventRepository(GameEventRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return GameEventRepositoryImpl(db);
+StatisticsRepository statisticsRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return StatisticsRepositoryDrift(db);
 }
 
 @Riverpod(keepAlive: true)
-StatisticsRepository statisticsRepository(StatisticsRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return StatisticsRepositoryImpl(db);
-}
-
-@Riverpod(keepAlive: true)
-AchievementRepository achievementRepository(AchievementRepositoryRef ref) {
-  final db = ref.watch(appDatabaseProvider).requireValue;
-  return AchievementRepositoryImpl(db);
+AchievementRepository achievementRepository(Ref ref) {
+  final db = ref.watch(databaseProvider).requireValue;
+  return AchievementRepositoryDrift(db);
 }
 ```
+
+The `database(Ref ref)` provider generates `databaseProvider`; `DriftHelper`
+selects the platform backend (native SQLite vs WASM) once. Repository
+provider signatures take a plain `Ref ref` (Riverpod 3.x — no typed `XxxRef`),
+and the concrete implementations are the `*Drift` classes.
 
 All repositories are `keepAlive: true` — they are singletons for the
 lifetime of the app and must never be auto-disposed.
@@ -717,8 +830,9 @@ lifetime of the app and must never be auto-disposed.
 ## 10. Testing Contracts
 
 Every concrete repository implementation must pass the same suite of interface
-contract tests. This ensures the sqflite and drift implementations behave
-identically.
+contract tests, run against a fresh in-memory drift database per test. There is
+a single drift backend; the `runHybridTests` helper name (`test/hybrid_test_runner.dart`)
+is vestigial from the dual-backend era (issue #112).
 
 ```dart
 // test/features/players/domain/player_repository_contract_test.dart
@@ -774,22 +888,15 @@ void runPlayerRepositoryContractTests(PlayerRepository Function() factory) {
   });
 }
 
-// Concrete test files simply call the shared suite:
-
-// test/features/players/data/sqflite_player_repository_test.dart
-void main() {
-  runPlayerRepositoryContractTests(
-    () => PlayerRepositoryImpl(inMemorySqfliteDatabase()),
-  );
-}
+// Concrete test files simply call the shared suite against the drift impl:
 
 // test/features/players/data/drift_player_repository_test.dart
 void main() {
   runPlayerRepositoryContractTests(
-    () => PlayerRepositoryImpl(inMemoryDriftDatabase()),
+    () => PlayerRepositoryDrift(inMemoryDriftDatabase()),
   );
 }
 ```
 
-The same pattern applies to all five repositories. Shared contract test
-functions live in `test/contracts/`.
+The same pattern applies to all repositories. Shared contract test functions
+live in `test/contracts/`.
