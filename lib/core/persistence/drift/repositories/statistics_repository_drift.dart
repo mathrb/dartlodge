@@ -12,6 +12,7 @@ import 'package:dart_lodge/features/statistics/domain/repositories/statistics_re
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/dart_position.dart';
 import '../database.dart' as drift_db;
 import '../repository_parsers.dart';
 
@@ -510,6 +511,75 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       throw StatisticsException(
           'Failed to watch player statistics: ${error.toString()}');
     });
+  }
+
+  @override
+  Future<List<DartPosition>> getDartPositions({
+    String? gameId,
+    required String playerId,
+    GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    try {
+      // 1. Verify player exists (parity with the other per-player methods).
+      final playerExists = await (_db.select(_db.players)
+                ..where((p) => p.playerId.equals(playerId))
+                ..limit(1))
+              .getSingleOrNull() !=
+          null;
+      if (!playerExists) {
+        throw PlayerNotFoundException(playerId);
+      }
+
+      // Raw per-dart positions — read `dart_throws` directly (NOT via the
+      // assembler; positions are facts, not a computed stat). Only located
+      // darts (x/y not NULL) are returned. The `games` join is always present
+      // so we can gate on `is_complete = 1` — in-progress darts must never leak
+      // into any result, matching every other stats query here.
+      final query = _db.selectOnly(_db.dartThrows)
+        ..addColumns([
+          _db.dartThrows.x,
+          _db.dartThrows.y,
+          _db.dartThrows.segment,
+        ])
+        ..join([
+          innerJoin(_db.games,
+              _db.games.gameId.equalsExp(_db.dartThrows.gameId)),
+        ]);
+      query.where(_db.dartThrows.playerId.equals(playerId) &
+          _db.dartThrows.x.isNotNull() &
+          _db.dartThrows.y.isNotNull() &
+          _db.games.isComplete.equals(1));
+      if (gameId != null) {
+        query.where(_db.dartThrows.gameId.equals(gameId));
+      }
+      if (gameType != null) {
+        query.where(_db.games.gameType.equals(gameType.name));
+      }
+      if (from != null) {
+        query.where(
+            _db.games.startTime.isBiggerOrEqualValue(from.toIso8601String()));
+      }
+      if (to != null) {
+        query.where(
+            _db.games.startTime.isSmallerOrEqualValue(to.toIso8601String()));
+      }
+
+      final rows = await query.get();
+      return rows
+          .map((r) => DartPosition(
+                x: r.read(_db.dartThrows.x)!,
+                y: r.read(_db.dartThrows.y)!,
+                segment: r.read(_db.dartThrows.segment),
+              ))
+          .toList();
+    } on RepositoryException {
+      rethrow;
+    } catch (e) {
+      throw StatisticsException(
+          'Failed to retrieve dart positions: ${e.toString()}');
+    }
   }
 
   // ── Helper methods ──────────────────────────────────────────────────────────

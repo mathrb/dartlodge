@@ -7,7 +7,7 @@ import 'dart:async' as _i5;
 
 import 'package:dart_lodge/core/utils/constants.dart' as _i7;
 import 'package:dart_lodge/features/achievements/domain/repositories/achievement_repository.dart'
-    as _i12;
+    as _i13;
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart'
     as _i8;
 import 'package:dart_lodge/features/game/domain/entities/game.dart' as _i6;
@@ -15,6 +15,8 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart'
     as _i9;
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart'
     as _i4;
+import 'package:dart_lodge/features/statistics/domain/entities/dart_position.dart'
+    as _i12;
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart'
     as _i2;
 import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart'
@@ -366,13 +368,35 @@ class MockStatisticsRepository extends _i1.Mock
             returnValue: _i5.Stream<_i3.PlayerStats>.empty(),
           )
           as _i5.Stream<_i3.PlayerStats>);
+
+  @override
+  _i5.Future<List<_i12.DartPosition>> getDartPositions({
+    String? gameId,
+    required String? playerId,
+    _i7.GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  }) =>
+      (super.noSuchMethod(
+            Invocation.method(#getDartPositions, [], {
+              #gameId: gameId,
+              #playerId: playerId,
+              #gameType: gameType,
+              #from: from,
+              #to: to,
+            }),
+            returnValue: _i5.Future<List<_i12.DartPosition>>.value(
+              <_i12.DartPosition>[],
+            ),
+          )
+          as _i5.Future<List<_i12.DartPosition>>);
 }
 
 /// A class which mocks [AchievementRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAchievementRepository extends _i1.Mock
-    implements _i12.AchievementRepository {
+    implements _i13.AchievementRepository {
   MockAchievementRepository() {
     _i1.throwOnMissingStub(this);
   }

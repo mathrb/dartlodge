@@ -582,6 +582,174 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
               'the cricket game');
     });
   });
+
+  // ── getDartPositions ──────────────────────────────────────────────────────
+
+  group('getDartPositions', () {
+    test('returns located positions for a player, excluding NULL-position darts',
+        () async {
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      // Two located darts + one NULL-position dart (manual entry).
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: -0.2, segment: 'T20');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd2', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 20, x: 0.5, y: 0.5, segment: '20');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd3', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 5, segment: '5'); // no x/y → excluded
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      final positions = await statsRepo.getDartPositions(playerId: 'p1');
+      expect(positions, hasLength(2));
+      expect(positions.map((p) => p.segment), containsAll(['T20', '20']));
+      final t20 = positions.firstWhere((p) => p.segment == 'T20');
+      expect(t20.x, closeTo(0.1, 1e-9));
+      expect(t20.y, closeTo(-0.2, 1e-9));
+    });
+
+    test('filters by gameId', () async {
+      // Only one incomplete game may exist at a time, and competitor IDs are
+      // globally unique — complete each game (with its own competitor) before
+      // starting the next.
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1', startTime: DateTime.now(),
+          competitorId: 'c1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g2', startTime: DateTime.now(),
+          competitorId: 'c2');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd2', gameId: 'g2', competitorId: 'c2', playerId: 'p1',
+          score: 20, x: 0.2, y: 0.2, segment: '20');
+      await gameRepo.completeGame(
+          gameId: 'g2', winnerCompetitorId: 'c2', endTime: DateTime.now());
+
+      final positions =
+          await statsRepo.getDartPositions(playerId: 'p1', gameId: 'g1');
+      expect(positions, hasLength(1));
+      expect(positions.single.segment, 'T20');
+    });
+
+    test('filters by player', () async {
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      // Opponent 'p1_opp' is seeded by the multiplayer fixture; give them a
+      // located dart too and ensure it is not returned for p1.
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd2', gameId: 'g1', competitorId: 'c-opp',
+          playerId: 'p1_opp', score: 20, x: 0.9, y: 0.9, segment: '20');
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      final positions = await statsRepo.getDartPositions(playerId: 'p1');
+      expect(positions, hasLength(1));
+      expect(positions.single.segment, 'T20');
+    });
+
+    test('filters by gameType', () async {
+      // X01 game (via the shared fixture) + a cricket game, both for p1.
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g-x01');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'dx', gameId: 'g-x01', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      await gameRepo.completeGame(
+          gameId: 'g-x01', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      await _createCricketGameWithLocatedDart(playerRepo, gameRepo,
+          dartThrowRepo,
+          playerId: 'p1', gameId: 'g-cri', competitorId: 'cc1',
+          dartId: 'dc', x: 0.3, y: 0.3, segment: '17');
+
+      final x01Positions = await statsRepo.getDartPositions(
+          playerId: 'p1', gameType: GameType.x01);
+      expect(x01Positions, hasLength(1));
+      expect(x01Positions.single.segment, 'T20');
+
+      final cricketPositions = await statsRepo.getDartPositions(
+          playerId: 'p1', gameType: GameType.cricket);
+      expect(cricketPositions, hasLength(1));
+      expect(cricketPositions.single.segment, '17');
+    });
+
+    test('filters by date window (from/to on game start_time)', () async {
+      final old = DateTime(2020, 1, 1);
+      final recent = DateTime(2024, 6, 1);
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g-old', startTime: old,
+          competitorId: 'c-old');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd-old', gameId: 'g-old', competitorId: 'c-old',
+          playerId: 'p1', score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      await gameRepo.completeGame(
+          gameId: 'g-old', winnerCompetitorId: 'c-old', endTime: old);
+
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g-new', startTime: recent,
+          competitorId: 'c-new');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd-new', gameId: 'g-new', competitorId: 'c-new',
+          playerId: 'p1', score: 20, x: 0.2, y: 0.2, segment: '20');
+      await gameRepo.completeGame(
+          gameId: 'g-new', winnerCompetitorId: 'c-new', endTime: recent);
+
+      final windowed = await statsRepo.getDartPositions(
+        playerId: 'p1',
+        from: DateTime(2024, 1, 1),
+        to: DateTime(2024, 12, 31),
+      );
+      expect(windowed, hasLength(1));
+      expect(windowed.single.segment, '20');
+    });
+
+    test('returns empty list for a player with no located darts', () async {
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 5, segment: '5'); // no x/y
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      final positions = await statsRepo.getDartPositions(playerId: 'p1');
+      expect(positions, isEmpty);
+    });
+
+    test('excludes located darts from incomplete (in-progress) games',
+        () async {
+      // Game is created but never completed — its located darts must NOT leak
+      // into any result. Would FAIL if the `is_complete = 1` gate were removed.
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1', startTime: DateTime.now(),
+          competitorId: 'c1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      // Intentionally NOT completing the game.
+
+      final positions = await statsRepo.getDartPositions(playerId: 'p1');
+      expect(positions, isEmpty);
+    });
+
+    test('throws PlayerNotFoundException for non-existent player', () async {
+      expect(
+        () => statsRepo.getDartPositions(playerId: 'nope'),
+        throwsA(isA<PlayerNotFoundException>()),
+      );
+    });
+  });
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -657,6 +825,9 @@ Future<void> _createDartThrow(
   required String competitorId,
   required String playerId,
   required int score,
+  String segment = 'T20',
+  double? x,
+  double? y,
 }) async {
   await repo.insertDart(DartThrow(
     dartId: dartId,
@@ -665,9 +836,90 @@ Future<void> _createDartThrow(
     playerId: playerId,
     turnNumber: 1,
     dartNumber: 1,
-    segment: 'T20',
+    segment: segment,
     score: score,
+    x: x,
+    y: y,
   ));
+}
+
+/// Creates a player + incomplete X01 game with a chosen [startTime] and a solo
+/// competitor `c1`. Caller inserts darts then calls `completeGame`.
+Future<void> _createX01GameAt(
+  PlayerRepository playerRepo,
+  GameRepository gameRepo, {
+  required String playerId,
+  required String gameId,
+  required DateTime startTime,
+  String competitorId = 'c1',
+}) async {
+  await _createPlayer(playerRepo, playerId);
+  await gameRepo.createGame(
+    Game(
+      gameId: gameId,
+      gameType: GameType.x01,
+      config: const GameConfig.x01(
+        startingScore: 501,
+        inStrategy: 'straight',
+        outStrategy: 'double',
+      ),
+      startTime: startTime,
+      isComplete: false,
+    ),
+    [
+      Competitor(
+        competitorId: competitorId,
+        gameId: gameId,
+        type: CompetitorType.solo,
+        name: 'Player $playerId',
+        players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
+      ),
+    ],
+  );
+}
+
+/// Creates a player + completed cricket game holding a single located dart.
+/// Used to verify the gameType filter of `getDartPositions`.
+Future<void> _createCricketGameWithLocatedDart(
+  PlayerRepository playerRepo,
+  GameRepository gameRepo,
+  DartThrowRepository dartThrowRepo, {
+  required String playerId,
+  required String gameId,
+  required String competitorId,
+  required String dartId,
+  required double x,
+  required double y,
+  required String segment,
+}) async {
+  await _createPlayer(playerRepo, playerId);
+  await gameRepo.createGame(
+    Game(
+      gameId: gameId,
+      gameType: GameType.cricket,
+      config: const GameConfig.cricket(
+        scoring: 'standard',
+        numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+        legsToWin: 1,
+      ),
+      startTime: DateTime.now(),
+      isComplete: false,
+    ),
+    [
+      Competitor(
+        competitorId: competitorId,
+        gameId: gameId,
+        type: CompetitorType.solo,
+        name: 'Player $playerId',
+        players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
+      ),
+    ],
+  );
+  await _createDartThrow(dartThrowRepo,
+      dartId: dartId, gameId: gameId, competitorId: competitorId,
+      playerId: playerId, score: 17, x: x, y: y, segment: segment);
+  await gameRepo.completeGame(
+      gameId: gameId, winnerCompetitorId: competitorId, endTime: DateTime.now());
 }
 
 /// Creates a player + completed cricket game with two turns of darts and

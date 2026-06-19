@@ -473,6 +473,22 @@ abstract interface class StatisticsRepository {
   Stream<PlayerStats> watchPlayerStats(String playerId,
       {required GameType gameType});
 
+  // ── Heatmap ───────────────────────────────────────────────────────────────
+
+  /// Returns the located dart positions thrown by [playerId] (for the impact
+  /// heatmap), read directly from `dart_throws` — raw facts, not a computed
+  /// stat. Only darts with non-NULL x/y from completed games are returned;
+  /// optionally narrowed by [gameId], [gameType], and a [from]/[to] date
+  /// window on the game's start time. Throws [PlayerNotFoundException] if
+  /// [playerId] does not exist.
+  Future<List<DartPosition>> getDartPositions({
+    String? gameId,
+    required String playerId,
+    GameType? gameType,
+    DateTime? from,
+    DateTime? to,
+  });
+
   // ── Leaderboard ───────────────────────────────────────────────────────────
 
   /// Returns all players ranked by [PlayerStats.threeDartAverage] descending
