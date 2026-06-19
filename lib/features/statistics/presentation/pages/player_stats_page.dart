@@ -77,7 +77,7 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
     final tabs = [
       const Tab(text: 'X01'),
       const Tab(text: 'Cricket'),
-      const Tab(text: 'Practice'),
+      Tab(text: l10n.statsPracticeTab),
       Tab(text: l10n.statsOthersTab),
     ];
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../utils/app_spacing.dart';
 
 /// A shared error widget for `AsyncValue.when()` error branches.
@@ -24,6 +25,7 @@ class ErrorRetryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
 
     if (title == null) {
       return Center(
@@ -32,7 +34,7 @@ class ErrorRetryWidget extends StatelessWidget {
           children: [
             Text(message),
             const SizedBox(height: AppSpacing.space2),
-            TextButton(onPressed: onRetry, child: const Text('Retry')),
+            TextButton(onPressed: onRetry, child: Text(l10n.commonRetry)),
           ],
         ),
       );
@@ -51,7 +53,7 @@ class ErrorRetryWidget extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(l10n.commonRetry),
           ),
         ],
       ),

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:dart_lodge/features/game/presentation/pages/home_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
@@ -36,7 +38,7 @@ class _FixedGameSetupNotifier extends GameSetupNotifier {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-Widget _buildApp({GoRouter? router}) {
+Widget _buildApp({GoRouter? router, Locale? locale}) {
   final r = router ??
       GoRouter(
         initialLocation: '/',
@@ -50,7 +52,13 @@ Widget _buildApp({GoRouter? router}) {
       playerRepositoryProvider.overrideWithValue(_FakePlayerRepository()),
       gameSetupProvider.overrideWith(() => _FixedGameSetupNotifier()),
     ],
-    child: MaterialApp.router(routerConfig: r, theme: AppTheme.light()),
+    child: MaterialApp.router(
+      routerConfig: r,
+      theme: AppTheme.light(),
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+    ),
   );
 }
 
@@ -146,6 +154,21 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byTooltip('Settings'), findsOneWidget);
+    });
+
+    testWidgets('subtitles/descriptors + Settings are localized (fr) — #612',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(locale: const Locale('fr')));
+      await tester.pumpAndSettle();
+
+      // Subtitles/descriptors render the French values (upper-cased), and the
+      // English literals are gone.
+      expect(find.text('JEU STRATÉGIQUE'), findsOneWidget); // Cricket subtitle
+      expect(find.text('ANALYSER LES DONNÉES'), findsOneWidget); // Statistics
+      expect(find.text('EFFECTIF'), findsOneWidget); // Players "Roster"
+      expect(find.text('STRATEGIC PLAY'), findsNothing);
+      expect(find.text('ROSTER'), findsNothing);
+      expect(find.byTooltip('Paramètres'), findsOneWidget);
     });
 
     testWidgets('each game card renders its icon', (tester) async {

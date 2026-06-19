@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../utils/app_spacing.dart';
 import '../utils/app_theme.dart';
 
@@ -38,7 +39,7 @@ class TrendChartShellWidget extends StatelessWidget {
                 // "Not enough data yet" which read as contradicting the
                 // populated stat values below the chart (#287); be
                 // specific about what's missing instead.
-                'Need ≥2 games for a trend',
+                AppLocalizations.of(context).statsNeedTwoGames,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

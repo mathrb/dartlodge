@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: Scaffold(body: child),
+    );
 
 void main() {
   group('ErrorRetryWidget — compact (no title)', () {
