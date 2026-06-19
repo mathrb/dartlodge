@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 import '../../../../app/app_router.dart';
+import '../../../../core/game/dart_input_sink.dart';
+import '../../../../core/providers/auto_scorer_providers.dart';
+import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
@@ -15,8 +18,38 @@ import '../sound/wire_game_sounds.dart';
 import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
+import '../widgets/hero_metric_widget.dart';
 import '../widgets/player_score_section_widget.dart';
+import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
+import '../widgets/x01_other_players_strip_widget.dart';
+
+/// Auto-scorer → Count-Up emit sink (#601). Mirrors the X01/practice boards so
+/// the camera (and the Playwright sim bridge) can drive a Count-Up game.
+/// Count-Up's `processDart` doesn't take x/y, so impact positions aren't
+/// captured here (no Count-Up heatmap yet) — a follow-up if wanted.
+class _CountUpDartInputSink implements DartInputSink {
+  _CountUpDartInputSink(this._ref, this._gameId);
+  final WidgetRef _ref;
+  final String _gameId;
+
+  @override
+  void submitDart(String segment, {double? x, double? y}) => _ref
+      .read(activeCountUpProvider(_gameId).notifier)
+      .processDart(segment);
+
+  @override
+  void advanceTurn() {
+    final s = _ref.read(activeCountUpProvider(_gameId)).value;
+    // No-op when complete or before any dart this turn (a board-clear at turn
+    // start must not skip the player). Mirrors the other boards' guard.
+    if (s == null || s.gameState.isComplete || s.gameState.dartsThrownInTurn == 0) {
+      return;
+    }
+    _ref.read(activeCountUpProvider(_gameId).notifier).advanceTurn();
+    _ref.read(activeTurnSignalProvider.notifier).bump();
+  }
+}
 
 /// Trailing-menu actions on the active count-up board (#331). Mirrors the
 /// X01/Cricket boards so users can reach Settings without abandoning
@@ -44,6 +77,15 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
   void initState() {
     super.initState();
     WakelockPlus.enable();
+    // Register the auto-scorer→game emit sink (#601), post-frame to avoid
+    // mutating a provider during build.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref
+            .read(activeDartInputSinkProvider.notifier)
+            .bind(_CountUpDartInputSink(ref, widget.gameId));
+      }
+    });
   }
 
   @override
@@ -56,6 +98,8 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+    final autoScoringOn = ref.watch(autoScoringEnabledProvider).value ?? false;
+    final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     // Sound effects: hit/miss per dart (count-up has no bust).
     wireGameSounds(
@@ -116,6 +160,11 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
         // is persisted. Treat that as "turn done — tap NEXT to continue".
         final turnDone = !gameState.turnActive && !gameState.isComplete;
 
+        // Camera-first layout (#601): when auto-scoring is on and a board
+        // camera preview is available, replace the manual grid with the hero
+        // score + prominent dart band + live preview, mirroring X01.
+        final cameraFirst = autoScoringOn && cameraPreview != null;
+
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
@@ -160,20 +209,49 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                   roundInLeg: gameState.currentRoundInLeg,
                   totalRounds: gameState.countUpTotalRounds,
                   currentTurnDarts: currentTurnDarts,
+                  // Camera-first moves the darts to the prominent band below.
+                  showDarts: !cameraFirst,
                 ),
-                PlayerScoreSectionWidget(
-                  gameState: gameState,
-                  // No bust → no flash. Pass an always-zero animation.
-                  bustFlashAnim: const AlwaysStoppedAnimation<double>(0.0),
-                ),
-                Expanded(
-                  child: DartInputGridWidget(
-                    onSegmentTapped: (segment) => ref
-                        .read(activeCountUpProvider(widget.gameId).notifier)
-                        .processDart(segment),
-                    enabled: !gameState.isComplete && gameState.turnActive,
+                if (cameraFirst) ...[
+                  HeroMetricWidget(
+                    value: '${activeCompetitor.score}',
+                    label: activeCompetitor.name,
                   ),
-                ),
+                  if (gameState.competitors.length > 1)
+                    X01OtherPlayersStripWidget(
+                      players: [
+                        for (int i = 0; i < gameState.competitors.length; i++)
+                          if (i != gameState.currentTurnIndex)
+                            (
+                              name: gameState.competitors[i].name,
+                              score: gameState.competitors[i].score,
+                            ),
+                      ],
+                    ),
+                  ProminentDartBandWidget(
+                    currentTurnDarts: currentTurnDarts,
+                    // Empty slot → manual entry for a dart the camera missed.
+                    onDartTapped: gameState.isComplete
+                        ? null
+                        : (index) => _onSlotTapped(context, index, dartsThrownInTurn),
+                    tapEmptySlots: !gameState.isComplete && gameState.turnActive,
+                  ),
+                  Expanded(child: cameraPreview(context, widget.gameId)),
+                ] else ...[
+                  PlayerScoreSectionWidget(
+                    gameState: gameState,
+                    // No bust → no flash. Pass an always-zero animation.
+                    bustFlashAnim: const AlwaysStoppedAnimation<double>(0.0),
+                  ),
+                  Expanded(
+                    child: DartInputGridWidget(
+                      onSegmentTapped: (segment) => ref
+                          .read(activeCountUpProvider(widget.gameId).notifier)
+                          .processDart(segment),
+                      enabled: !gameState.isComplete && gameState.turnActive,
+                    ),
+                  ),
+                ],
                 _BottomActionBar(
                   canUndo: canUndo,
                   canNext: canNext,
@@ -182,9 +260,13 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                   onUndo: () => ref
                       .read(activeCountUpProvider(widget.gameId).notifier)
                       .undoDart(),
-                  onNextRound: () => ref
-                      .read(activeCountUpProvider(widget.gameId).notifier)
-                      .advanceTurn(),
+                  onNextRound: () {
+                    ref
+                        .read(activeCountUpProvider(widget.gameId).notifier)
+                        .advanceTurn();
+                    // Reset the auto-scorer's per-turn cap for the next player.
+                    ref.read(activeTurnSignalProvider.notifier).bump();
+                  },
                 ),
               ],
             ),
@@ -217,6 +299,39 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
           context.go(GameRoutes.home);
         },
         onCancel: () => Navigator.of(dialogContext).pop(),
+      ),
+    );
+  }
+
+  /// Camera-first manual entry (#601): tapping an empty dart slot opens the
+  /// standard input grid in a modal to record a dart the camera missed.
+  /// Count-Up has no per-dart correction, so already-thrown slots are inert.
+  void _onSlotTapped(BuildContext context, int index, int dartsThrownInTurn) {
+    if (index < dartsThrownInTurn) return;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: SizedBox(
+          height: MediaQuery.of(sheetContext).size.height * 0.55,
+          child: Consumer(
+            builder: (ctx, ref, _) {
+              final s = ref.watch(activeCountUpProvider(widget.gameId)).value;
+              final enabled = s != null &&
+                  !s.gameState.isComplete &&
+                  s.gameState.turnActive;
+              return DartInputGridWidget(
+                enabled: enabled,
+                onSegmentTapped: (segment) {
+                  ref
+                      .read(activeCountUpProvider(widget.gameId).notifier)
+                      .processDart(segment);
+                  Navigator.of(sheetContext).pop();
+                },
+              );
+            },
+          ),
+        ),
       ),
     );
   }

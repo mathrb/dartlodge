@@ -3,12 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
+import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_count_up_state.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 
@@ -19,6 +23,12 @@ class _FakeActiveCountUpNotifier extends ActiveCountUpNotifier {
 
   @override
   Future<ActiveCountUpState?> build(String gameId) async => _state;
+}
+
+/// Forces auto-scoring on without touching SharedPreferences.
+class _FakeAutoScoringEnabled extends AutoScoringEnabled {
+  @override
+  Future<bool> build() async => true;
 }
 
 GameState _countUpState({List<CompetitorState>? competitors}) => GameState(
@@ -40,7 +50,8 @@ GameState _countUpState({List<CompetitorState>? competitors}) => GameState(
       countUpTotalRounds: 8,
     );
 
-Widget _buildApp(_FakeActiveCountUpNotifier notifier, {Locale? locale}) {
+Widget _buildApp(_FakeActiveCountUpNotifier notifier,
+    {Locale? locale, bool cameraFirst = false}) {
   final router = GoRouter(
     initialLocation: '/game/active/count-up/game-1',
     routes: [
@@ -52,7 +63,15 @@ Widget _buildApp(_FakeActiveCountUpNotifier notifier, {Locale? locale}) {
     ],
   );
   return ProviderScope(
-    overrides: [activeCountUpProvider.overrideWith(() => notifier)],
+    overrides: [
+      activeCountUpProvider.overrideWith(() => notifier),
+      if (cameraFirst) ...[
+        autoScoringEnabledProvider.overrideWith(() => _FakeAutoScoringEnabled()),
+        boardCameraPreviewBuilderProvider.overrideWithValue(
+          (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
+        ),
+      ],
+    ],
     child: MaterialApp.router(
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -94,6 +113,26 @@ void main() {
 
       expect(find.text('JOUEUR SUIVANT'), findsOneWidget);
       expect(find.text('NEXT PLAYER'), findsNothing);
+    });
+
+    testWidgets('camera-first layout shows the hero score + camera, not the grid (#601)',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(
+        _FakeActiveCountUpNotifier(ActiveCountUpState(
+          gameState: _countUpState(competitors: const [
+            CompetitorState(
+                competitorId: 'c1', name: 'Alice', playerIds: [], score: 140),
+          ]),
+        )),
+        cameraFirst: true,
+      ));
+      await tester.pumpAndSettle();
+
+      // Camera-first chrome: hero score + the stub camera preview, no grid.
+      expect(find.byType(HeroMetricWidget), findsOneWidget);
+      expect(find.text('140'), findsOneWidget);
+      expect(find.byKey(const ValueKey('camera-stub')), findsOneWidget);
+      expect(find.byType(DartInputGridWidget), findsNothing);
     });
 
     testWidgets('overflow menu shows localized End Game / Settings (fr)',
