@@ -132,7 +132,7 @@
   "statsComingSoon": "Estatísticas de {section} em breve",
   "statsHeatmapTitle": "Mapa de calor",
   "statsHeatmapNoData": "Nenhum dardo localizado para este jogador",
-  "statsHeatmapUnlocated": "{count, plural, =1{1 dardo não localizado} other{{count} dardos não localizados}}",
+  "statsHeatmapUnlocated": "{count, plural, one{1 dardo não localizado} other{{count} dardos não localizados}}",
   "statsDrillsPlayed": "Treinos jogados",
   "statsCompletions": "Conclusões",
   "statsHitRate": "Taxa de acerto",

@@ -566,8 +566,9 @@
   },
   "statsHeatmapTitle": "Heatmap",
   "statsHeatmapNoData": "No located darts for this player",
-  "statsHeatmapUnlocated": "{count, plural, =1{1 un-located dart} other{{count} un-located darts}}",
+  "statsHeatmapUnlocated": "{count, plural, one{1 un-located dart} other{{count} un-located darts}}",
   "@statsHeatmapUnlocated": {
+    "description": "Note shown below the post-game heatmap when some of the player's darts have no recorded impact position; {count} is the number of un-located darts.",
     "placeholders": {
       "count": {
         "type": "int"

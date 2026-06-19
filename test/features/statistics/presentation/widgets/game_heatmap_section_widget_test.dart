@@ -104,6 +104,38 @@ void main() {
     expect(find.byType(HeatmapDartboardWidget), findsOneWidget);
   });
 
+  testWidgets(
+      'shows the section and surfaces the error when a provider throws',
+      (tester) async {
+    final stats = _gameStats([
+      _competitor('c1', 'Alice', 'p1'),
+      _competitor('c2', 'Bob', 'p2'),
+    ]);
+
+    await tester.pumpWidget(_wrap(
+      GameHeatmapSectionWidget(gameStats: stats),
+      overrides: [
+        // Alice (default-selected) errors; Bob resolves empty. The section
+        // must NOT be hidden — the error has to surface for Alice.
+        dartHeatmapProvider(
+          const DartHeatmapFilter(gameId: _gameId, playerId: 'p1'),
+        ).overrideWith((ref) async => throw Exception('boom')),
+        _heatmapOverride('p2', const []),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    final l10n = await AppLocalizations.delegate.load(const Locale('en'));
+    // Section is shown (title visible), and the error UI from _HeatmapBody
+    // renders for the selected player.
+    expect(find.text(l10n.statsHeatmapTitle.toUpperCase()), findsOneWidget);
+    expect(find.byType(HeatmapDartboardWidget), findsNothing);
+    expect(
+      find.text(l10n.statsLoadFailed(Exception('boom').toString())),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('switching the selector requests the other player\'s filter',
       (tester) async {
     final stats = _gameStats([

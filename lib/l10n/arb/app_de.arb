@@ -132,7 +132,7 @@
   "statsComingSoon": "Statistiken für {section} folgen bald",
   "statsHeatmapTitle": "Heatmap",
   "statsHeatmapNoData": "Keine lokalisierten Darts für diesen Spieler",
-  "statsHeatmapUnlocated": "{count, plural, =1{1 nicht lokalisierter Dart} other{{count} nicht lokalisierte Darts}}",
+  "statsHeatmapUnlocated": "{count, plural, one{1 nicht lokalisierter Dart} other{{count} nicht lokalisierte Darts}}",
   "statsDrillsPlayed": "Gespielte Übungen",
   "statsCompletions": "Abschlüsse",
   "statsHitRate": "Trefferquote",

@@ -132,7 +132,7 @@
   "statsComingSoon": "Statistiche {section} in arrivo",
   "statsHeatmapTitle": "Mappa di calore",
   "statsHeatmapNoData": "Nessuna freccetta localizzata per questo giocatore",
-  "statsHeatmapUnlocated": "{count, plural, =1{1 freccetta non localizzata} other{{count} freccette non localizzate}}",
+  "statsHeatmapUnlocated": "{count, plural, one{1 freccetta non localizzata} other{{count} freccette non localizzate}}",
   "statsDrillsPlayed": "Esercizi giocati",
   "statsCompletions": "Completamenti",
   "statsHitRate": "Percentuale colpi",

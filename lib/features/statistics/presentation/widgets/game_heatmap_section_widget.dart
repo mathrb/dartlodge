@@ -91,11 +91,13 @@ class _GameHeatmapSectionWidgetState
 
     final allResolved =
         positionsByCompetitor.every((p) => p.hasValue || p.hasError);
-    final anyLocated = positionsByCompetitor
-        .any((p) => (p.value ?? const <DartPosition>[]).isNotEmpty);
+    final allEmptySuccess = positionsByCompetitor
+        .every((p) => p.hasValue && (p.value ?? const <DartPosition>[]).isEmpty);
 
-    // Fully manual game (or every player un-located) → nothing to show.
-    if (allResolved && !anyLocated) return const SizedBox.shrink();
+    // Fully manual game (every player resolved to an empty list) → nothing to
+    // show. If ANY competitor's provider errored, keep the section visible so
+    // `_HeatmapBody` can surface the error for the selected player.
+    if (allResolved && allEmptySuccess) return const SizedBox.shrink();
 
     final selectedIndex =
         _selectedIndex.clamp(0, competitors.length - 1).toInt();
@@ -109,7 +111,7 @@ class _GameHeatmapSectionWidgetState
         children: [
           Text(
             l10n.statsHeatmapTitle.toUpperCase(),
-            style: AppTextStyles.labelLarge.copyWith(
+            style: AppTextStyles.labelSmall.copyWith(
               color: cs.onSurfaceVariant,
               letterSpacing: 1.2,
             ),
