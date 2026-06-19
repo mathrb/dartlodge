@@ -656,20 +656,24 @@ class PlayerStatsAssembler {
       // turn_score-delta average from X01AverageProjection; cricket/count-up
       // keep the raw dart-score sum (count-up has no busts, cricket's AVG is
       // not PPR-shaped). (#610)
+      // When the events carry darts, X01 uses the projection (bust=0); when
+      // they don't (fixtures inserting dart_throws without DartThrown events),
+      // fall back to the raw dart aggregate — same contract as
+      // playerStatsForGameFromEvents.
+      final useX01Projection = isX01 && x01CompetitorDarts > 0;
       for (final playerId in playerIds) {
         final darts = playerDartsByPlayer[playerId] ?? 0;
-        final avg = isX01
+        final dartSum = playerDartSumByPlayer[playerId] ?? 0;
+        final avg = useX01Projection
             ? (x01AvgByPlayer[playerId] ?? 0.0)
-            : (darts > 0
-                ? (playerDartSumByPlayer[playerId]! / darts) * 3
-                : 0.0);
+            : (darts > 0 ? (dartSum / darts) * 3 : 0.0);
         playerTurnStats.add(PlayerTurnStats(
           playerId: playerId,
           threeDartAverage: avg,
           dartsThrown: darts,
         ));
       }
-      final competitorAvg = isX01
+      final competitorAvg = useX01Projection
           ? (x01CompetitorDarts > 0
               ? (x01CompetitorPoints / x01CompetitorDarts) * 3
               : 0.0)
@@ -1096,6 +1100,11 @@ class PlayerStatsAssembler {
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
           currentTurnMarks = 0;
+          // Reset the X01 per-turn dart-sum fallback too (mirrors the
+          // projection engines' turn-scope reset) so a dangling TurnStarted
+          // — e.g. after a cross-turn undo strips the TurnEnded — can't bleed
+          // the prior turn's darts into this one (#610).
+          currentTurnScore = 0;
           atcInPlayerTurn = true;
           lastPlayerTurnStartingScore =
               (payload['starting_score'] as num?)?.toInt();
