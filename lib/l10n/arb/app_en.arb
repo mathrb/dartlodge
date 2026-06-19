@@ -564,6 +564,16 @@
       }
     }
   },
+  "statsHeatmapTitle": "Heatmap",
+  "statsHeatmapNoData": "No located darts for this player",
+  "statsHeatmapUnlocated": "{count, plural, =1{1 un-located dart} other{{count} un-located darts}}",
+  "@statsHeatmapUnlocated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsDrillsPlayed": "Drills Played",
   "statsCompletions": "Completions",
   "statsHitRate": "Hit Rate",
