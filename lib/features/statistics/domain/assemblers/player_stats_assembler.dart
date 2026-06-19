@@ -14,6 +14,7 @@
 
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
+import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
@@ -205,35 +206,10 @@ class PlayerStatsAssembler {
   ///     assembler in line so subsequent projection passes agree.
   ///
   /// Applied at every public method entry that consumes raw events, not
-  /// just the career path.
-  static List<GameEvent> _stripCorrectedDarts(List<GameEvent> events) {
-    final correctedDartIds = <String>{};
-    final supersededEventIds = <String>{};
-    for (final e in events) {
-      if (e.eventType != 'DartCorrected') continue;
-      final origId = e.payload['original_event_id'];
-      if (origId is String) correctedDartIds.add(origId);
-      final superseded = e.payload['superseded_event_ids'];
-      if (superseded is List) {
-        for (final id in superseded) {
-          if (id is String) supersededEventIds.add(id);
-        }
-      }
-    }
-    if (correctedDartIds.isEmpty && supersededEventIds.isEmpty) return events;
-    return events
-        .where((e) {
-          if (e.eventType == 'DartThrown' &&
-              correctedDartIds.contains(e.eventId)) {
-            return false;
-          }
-          if (supersededEventIds.contains(e.eventId)) {
-            return false;
-          }
-          return true;
-        })
-        .toList();
-  }
+  /// just the career path. Delegates to the shared [stripSupersededEvents]
+  /// (single source of truth for DartCorrected skip handling).
+  static List<GameEvent> _stripCorrectedDarts(List<GameEvent> events) =>
+      stripSupersededEvents(events);
 
   /// Builds a PlayerStats snapshot from events the caller has already
   /// loaded, filtered to the player's completed games of [gameType], and

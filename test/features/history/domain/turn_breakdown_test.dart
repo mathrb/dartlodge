@@ -287,6 +287,87 @@ void main() {
     });
   });
 
+  group('Cricket turn breakdown — corrections (#597 / F-010)', () {
+    Game cricketGame() => Game(
+          gameId: 'g',
+          gameType: GameType.cricket,
+          config: const GameConfig.cricket(
+            scoring: 'standard',
+            targetMode: 'fixed',
+          ),
+          startTime: DateTime(2024),
+        );
+
+    test('shows the corrected dart, not the superseded original', () {
+      // Repro: T20, 5, single-19 → undo single-19 → re-throw T19. The
+      // breakdown must show T19 (the replacement) and 6 marks, matching the
+      // board/post-game — not the stale single-19 with 4 marks.
+      final c1 = _solo('c1', 'Alice', 'p1');
+      final events = <GameEvent>[];
+      events.add(_event('GameCreated', {}));
+      events.add(_event('TurnStarted', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+      }));
+      events.add(_event('DartThrown', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'segment': 20,
+        'multiplier': 3,
+        'score': 60,
+        'input_method': 'camera',
+      }));
+      events.add(_event('DartThrown', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'segment': 5,
+        'multiplier': 1,
+        'score': 5,
+        'input_method': 'camera',
+      }));
+      final stale = _event('DartThrown', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'segment': 19,
+        'multiplier': 1,
+        'score': 19,
+        'input_method': 'camera',
+      });
+      events.add(stale);
+      events.add(_event('DartCorrected', {
+        'original_event_id': stale.eventId,
+      }));
+      events.add(_event('DartThrown', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'segment': 19,
+        'multiplier': 3,
+        'score': 57,
+        'input_method': 'camera',
+      }));
+      events.add(_event('TurnEnded', {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'reason': 'normal',
+      }));
+      events.add(_legCompleted('c1'));
+      events.add(_gameCompleted('c1'));
+
+      final result = const TurnBreakdownBuilder().build(
+        game: cricketGame(),
+        competitors: [c1],
+        events: events,
+      );
+
+      final turns = result[1]!.turns;
+      expect(turns, hasLength(1));
+      // The superseded single-19 is gone; the replacement T19 is shown.
+      expect(turns[0].darts, ['T20', '5', 'T19']);
+      // T20 (3) + 5 (0, non-target) + T19 (3) = 6 marks (was 4 with the stale).
+      expect(turns[0].turnScore, 6);
+    });
+  });
+
   group('Around-the-Clock per-segment hit rate', () {
     test('counts attempts/hits per current target', () {
       final c1 = _solo('c1', 'Alice', 'p1');
