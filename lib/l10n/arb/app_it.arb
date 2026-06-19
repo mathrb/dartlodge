@@ -137,6 +137,7 @@
   "statsAddPlayersHint": "Aggiungi giocatori per tracciare le statistiche",
   "statsPlayersLoadFailed": "Caricamento dei giocatori non riuscito: {error}",
   "statsOthersTab": "Altri",
+  "statsTitle": "Statistiche",
   "statsPlayerFallback": "Giocatore",
   "statsLoadFailed": "Caricamento delle statistiche non riuscito: {error}",
   "statsComingSoon": "Statistiche {section} in arrivo",

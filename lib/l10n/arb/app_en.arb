@@ -587,6 +587,10 @@
     }
   },
   "statsOthersTab": "Others",
+  "statsTitle": "Statistics",
+  "@statsTitle": {
+    "description": "Statistics page header title"
+  },
   "statsPlayerFallback": "Player",
   "statsLoadFailed": "Failed to load stats: {error}",
   "@statsLoadFailed": {

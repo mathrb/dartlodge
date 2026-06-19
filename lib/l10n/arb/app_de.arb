@@ -137,6 +137,7 @@
   "statsAddPlayersHint": "Füge Spieler hinzu, um Statistiken zu erfassen",
   "statsPlayersLoadFailed": "Spieler konnten nicht geladen werden: {error}",
   "statsOthersTab": "Andere",
+  "statsTitle": "Statistik",
   "statsPlayerFallback": "Spieler",
   "statsLoadFailed": "Statistiken konnten nicht geladen werden: {error}",
   "statsComingSoon": "Statistiken für {section} folgen bald",
