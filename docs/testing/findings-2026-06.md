@@ -60,7 +60,7 @@ dans `e2e/`.
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
 | F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | **confirmé (live)** |
 | F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
-| F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | confirmé (live + code) |
+| F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | issue #610 |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
@@ -245,7 +245,7 @@ dans `e2e/`.
 - Attendu : x01.projections.md §5.2 « bust turns score = 0 » → PPR = 501/12×3 = **125.25** (numérateur exclut les points bustés, dénominateur garde les 3 fléchettes).
 - Cause : `gameStatsFromEvents` somme `dart_throws.score` brut ; `X01BestLegPprProjection` inclut délibérément les busts (commentaire périmé renvoyant à `X01AverageProjection`, qui depuis #318 les EXCLUT via `turn_score`). Possiblement une divergence doc↔code (#246) → réconcilier (corriger le code à bust=0, OU amender §5.2 + le commentaire).
 - Preuve : `a4stats-04-postgame2.png` (170.3/12), `a4stats-05-career.png` (AVERAGE 143.1, BEST 170.3).
-- Statut : confirmé (live + lecture code) — candidat issue (P1)
+- Statut : **issue #610**
 
 ### Confirmations positives — Axe 4 (agents parallèles, 2026-06-19)
 - **Stats** : 9-darter 167, buckets mutuellement exclusifs ; **agrégation cross-game + ordering `(game_id, local_sequence)` corrects** (carrière 143.1 = combiné des 2 parties — si l'ordering était cassé, les `local_sequence` qui se chevauchent corromptraient le total) ; #106 (parties solo exclues des legs carrière mais comptées en Games Played) wiré correctement.
