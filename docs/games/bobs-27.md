@@ -55,7 +55,7 @@ manche et on en perd quand on rate les trois.
 
 > Candidats findings pour l'axe 1. Décision mainteneur requise avant toute correction.
 
-- **D-1 (P1, manche bull manquante)** — `stateless_bobs_27_engine.dart:123` termine à `roundNum >= 20`
+- **D-1 (P1, manche bull manquante — issue #588)** — `stateless_bobs_27_engine.dart:123` termine à `roundNum >= 20`
   (cible toujours `D{roundNum}`, aucune manche bull). Max atteignable = **1287**, donc le « 1437 »
   affiché dans les règles in-app (`rulesBobs27WinningBody`, 7 langues) est **inatteignable**.
   → Soit ajouter la manche bull (aligner sur le canonique), soit corriger le texte à 1287 (variante

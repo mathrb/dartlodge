@@ -223,7 +223,7 @@ Charte exploratoire (par jeu) = **missions** (« explore X, note tout ce qui dé
 - **Cas scriptés critiques** — _[à remplir : passe 2]_
 - **Cas-limites** — _[à remplir]_
 - Oracle : `docs/games/bobs-27.md` (canonique : D1..D20 **+ Bull**, parfait 1437). **Tester engine vs canonique.**
-- **Divergences canonique↔engine (voir bobs-27.md §7)** : **D-1 (P1) — manche bull finale absente** (`engine:123` finit à `roundNum >= 20`) → max atteignable **1287**, donc le « 1437 » des règles in-app est **inatteignable** ; **D-2 (P2)** — texte `rulesBobs27HowB2` « 20 rounds » contredit son propre 1437. Décision mainteneur : ajouter la manche bull OU corriger le texte à 1287.
+- **Divergences canonique↔engine (voir bobs-27.md §7)** : **D-1 (P1, issue #588) — manche bull finale absente** (`engine:123` finit à `roundNum >= 20`) → max atteignable **1287**, donc le « 1437 » des règles in-app est **inatteignable** ; **D-2 (P2)** — texte `rulesBobs27HowB2` « 20 rounds » contredit son propre 1437. Décision mainteneur : ajouter la manche bull OU corriger le texte à 1287.
 
 ### 4.7 Checkout Practice
 
