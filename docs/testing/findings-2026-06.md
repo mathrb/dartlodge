@@ -55,7 +55,7 @@ dans `e2e/`.
 > F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
 
 **Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 infirmé, pas d'issue.)_
-| F-002 | Design | P2 | Surface DB-error = string brut non stylé | à confirmer |
+| F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
 | F-005 | Design | P2 | Heatmap sans légende/échelle (gap oracle DESIGN_SYSTEM §7.6) | à confirmer |
@@ -166,6 +166,13 @@ dans `e2e/`.
 - **Count Up** : additif sans bust ni borne, MISS=0/SB=25/**DB=50**, tour = exactement 3 fléchettes, rotation + round++ après dernier joueur, fin après round 8, winner=plus haut score, buckets + PPR (sans checkout) corrects, invariant darts = comp×rounds×3. ✅ (défauts = F-006 P1 + F-013/F-014 P2).
 - **Checkout Practice** : start 170, quota {∞,1,2,3,5,10,20}, checkout sur double incrémente succès, **reset 170** au tour suivant, complétion exacte au quota, bust → revert 170 sans incrément. ✅ (défauts = F-015 P1 + F-016/F-017 P2).
 
+### Axe 3 — Design (passe solo, thèmes clair + sombre, 2026-06-19)
+> Capture + inspection contre les checklists de `axis-3-design.md`. **Design solide, aucun nouveau finding.**
+- **Thème clair** : Home, board X01 (score `onSurface`, nom `primaryFixed` mint, 50 BULL mint, grille sans overflow), post-game (trophée/héro/breakdown), History (carte badge+trophée), Stats (PPR 167, solo exclu des legs #106), Settings, états vides — tous propres et token-compliant. ✅
+- **Thème sombre** : Home + Stats re-capturés — parité parfaite (fond sombre, accents mint, texte clair, contraste OK). ✅
+- **F-009 re-confirmé** (header Stats = logo « DARTLODGE », pas titré comme Players/History). **F-002 confirmé** (surface DB-error = string brut non stylé).
+- **Reste de l'axe 3** : camera-first (#477) — vérifier si le chrome bascule sur web (cameraPreview possiblement null sans stub builder) ; **heatmap** (rendu + colormap) — nécessite l'extension sim-bridge x/y (différée) ; **F-005** (heatmap sans légende) à confirmer ; cohérence inter-écrans (largement OK).
+
 ---
 
 ## Axe 3 — Design visuel
@@ -179,8 +186,8 @@ dans `e2e/`.
 - Sévérité : P2
 - Observé : `Center(child: Text('Database failed to open: $e'))` — pas d'icône, pas de thème, pas de retry ; `$e` brut exposé. (Vu sur device pendant la validation résolution Pixel 6a.)
 - Attendu : surface d'erreur stylée (icône + message borné + thème), cf. dimension « états transitoires ».
-- Preuve : capture de la validation résolution (DB stale) ; `lib/app/app.dart:~38`.
-- Statut : à confirmer
+- Preuve : capture de la validation résolution (DB stale) — string brut centré, sans icône/thème/retry ; `lib/app/app.dart:~38`.
+- Statut : **confirmé (vu live)** — candidat issue P2 (recoupe l'i18n F-006/DB-error)
 
 ### F-003 — Incohérence visuelle des empty-states
 - Axe : Design
