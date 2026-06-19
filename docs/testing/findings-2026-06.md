@@ -44,6 +44,15 @@ dans `e2e/`.
 | F-001 | Correctness | P1 | Bob's 27 — score parfait 1437 inatteignable (manche bull absente) | issue #588 (confirmé live : run parfait = 1287) |
 | F-010 | Correctness | P1 | Cricket — Turn Breakdown (historique) ignore DartCorrected → fléchette périmée + marks faux | confirmé (live + code) |
 | F-011 | UX | P2 | Bob's 27 — fin sur score≤0 sans cadrage « busted/perdu » | confirmé |
+| **F-012** | **Correctness/UX** | **P0** | **Shanghai multi-joueurs : fin naturelle ne complète jamais → board soft-lock (irrécupérable)** | **confirmé (live ×2 + code)** |
+| F-015 | Correctness/Données | P1 | Checkout Practice — fléchettes bustées comptées dans DARTS (spec §4/§6 vs projection) | confirmé |
+| F-013 | UX | P2 | Count-Up sans DartInputSink → sim/auto-scoring inerte (probt intentionnel) | confirmé |
+| F-014 | UX | P2 | Count-Up — NEXT termine le tour <3 fléchettes sans garde (auto-MISS-fill) | confirmé |
+| F-016 | UX | P2 | Checkout — headline « N OF M » : M = tentatives, pas le quota configuré | confirmé |
+| F-017 | UX | P2 | Checkout — readout « turn points » = somme brute (180) sur tour busté | confirmé |
+| F-018 | i18n | P2 | Shanghai — texte règles « solo » alors que jeu multi-joueurs (D-1) | confirmé |
+
+> F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | à confirmer |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
@@ -101,6 +110,35 @@ dans `e2e/`.
 - Preuve : `exec-03-stats-empty.png` (header DARTLODGE) vs `exec-01-players-empty.png` / `exec-02-history-empty.png` (titrés).
 - Statut : à trier
 
+### F-012 — Shanghai multi-joueurs : la fin naturelle ne complète jamais (soft-lock irrécupérable) — **P0**
+- Axe : Correctness / UX
+- Surface : board Shanghai (`practice_board_page`) ; `active_practice_provider._advanceTurn` ; `stateless_shanghai_engine`
+- Rail : web
+- Sévérité : **P0**
+- Observé : partie 2 joueurs, 7 rounds, jouée proprement. Après le tour round-7 du 2ᵉ joueur, **pas de post-game** : board bloqué sur « ROUND 8 / 7 », inputs morts (« dart not thrown » persiste, NEXT désactivé), `is_complete=false`, **et même « End Game » → confirm ne navigue pas**. Irrécupérable. Reproduit 2×.
+- Attendu : plus haut score gagne en fin de round final → post-game (oracle shanghai.md §5).
+- Cause (code) : l'engine Shanghai `apply('TurnEnded')` renvoie l'état avec `isComplete=true` **mais sans** `outcome: LegOutcome.gameCompleted` ; `_advanceTurn` (~ligne 341) gate la complétion sur cet outcome → la saute et émet un TurnStarted pour un compétiteur « suivant » fantôme (round 8). Catch40 met l'outcome (→ marche) ; le Shanghai instant-win passe par le chemin DartThrown (→ marche). Les tests ratent : ils pré-règlent `practiceRound:8` et font finir l'index-0, jamais une vraie rotation jusqu'à la fin.
+- Preuve : trace tours 1–14 puis board figé « ROUND 8/7 BOB'S TURN » (inputs `generic` non-interactifs).
+- Statut : **confirmé (live ×2 + lecture code)** — **candidat issue P0**
+
+### F-015 — Checkout Practice : fléchettes bustées comptées dans le total DARTS — **P1**
+- Axe : Correctness / Données
+- Surface : post-game Checkout Practice (`practice_summary_widget._buildCheckoutHero` ← `legCompetitorStatsFromEvents`)
+- Rail : web
+- Sévérité : P1
+- Observé : 2 checkouts (3 darts chacun) + 1 tour busté (3 darts) → **DARTS = 9**.
+- Attendu : oracle checkout-practice.md §4/§6 « une fléchette bustée n'incrémente pas darts_thrown / ne compte que les non-bustées » → **DARTS = 6**.
+- Cause : l'engine enregistre la fléchette de bust dans `dartThrows` (intentionnel, replay — comme X01) ; la projection `legCompetitorStatsFromEvents` compte tous les `DartThrown` sans filtre bust. Spec et projection se contredisent.
+- Preuve : `exec-checkout-04-postgame.png` (DARTS 9).
+- Statut : confirmé — candidat issue (P1) ; trancher spec vs projection
+
+### Vague 2 — autres findings P2
+- **F-013** — Count-Up board ne bind pas `DartInputSink` → `dartlodgeSim.emit` inerte + auto-scoring caméra mort sur Count-Up (probablement intentionnel : count-up manuel-only). À confirmer comme voulu.
+- **F-014** — Count-Up : NEXT termine le tour avec <3 fléchettes (auto-remplit MISS), sans garde → un user peut forfaiter des fléchettes par erreur. Pas un bug de score (invariant darts préservé via MISS-fill), garde UX manquante.
+- **F-016** — Checkout post-game headline « 2 OF 3 CHECKOUTS » : le dénominateur = tentatives, pas le quota configuré (2) → potentiellement confus.
+- **F-017** — Checkout : readout « turn points » du status bar montre la somme brute (180) sur un tour busté (le score reste correctement à 170). Cosmétique.
+- **F-018** — Shanghai : `rulesShanghaiWinningBody` dit « Played solo … no opponent » alors que le jeu est multi-joueurs (canonique + engine). Corriger le **texte** (i18n), pas l'engine.
+
 ---
 
 ## Confirmations positives — passe 1 (X01, axes 1+2, 2026-06-19)
@@ -119,6 +157,12 @@ dans `e2e/`.
 - **Cricket** : fermeture des marks (hits cap 3), overflow standard sur nombre fermé avec adversaire ouvert (T20→+60), **Bull = 25/mark (pas 50 pour DB)**, #569 in-game (segment hors-cible affiché mais 0 mark), undo in-game cohérent, rotation, leg→post-game, stats per-game/leg cohérentes. ✅ (seul défaut = F-010, spécifique à l'historique + correction).
 - **Bob's 27** : start 27, cible D{n}, +2n/hit, −2n sur blanchissage, solo. ✅ (défauts = F-001/#588 + F-011).
 - **Catch 40** : **conforme au canonique de bout en bout** — 61→100 (40 cibles), 2-dart=3pts / 3-dart=2 / 4-6=1, **exception 99→3pts**, max 120, bust-reset (checkout exige un double), fin de drill solo sans gagnant, apparition en History. ✅ **Aucun défaut.**
+
+### Vague 2 — ATC / Shanghai / Count Up / Checkout (agents parallèles, 2026-06-19)
+- **Around the Clock** : **aucun défaut** — progression 1→20, variantes standard/reverse/**doublesOnly** (seul mult==2 avance), Bull/MISS ignorés, hors-séquence ne fait pas avancer (fléchette comptée), >3 darts rejetés, victoire immédiate mid-turn, rotation multi-joueurs + cibles indépendantes, undo, post-game, labels de variante en historique. ✅
+- **Shanghai** : scoring round×mult sur le numéro du round, **instant-win Shanghai** (S+D+T même tour) fonctionne de bout en bout, 3 hits sans les 3 multiplicateurs ≠ Shanghai, rotation, round cap 7 configurable. ✅ (défauts = F-012 P0 sur la fin naturelle + F-018 texte).
+- **Count Up** : additif sans bust ni borne, MISS=0/SB=25/**DB=50**, tour = exactement 3 fléchettes, rotation + round++ après dernier joueur, fin après round 8, winner=plus haut score, buckets + PPR (sans checkout) corrects, invariant darts = comp×rounds×3. ✅ (défauts = F-006 P1 + F-013/F-014 P2).
+- **Checkout Practice** : start 170, quota {∞,1,2,3,5,10,20}, checkout sur double incrémente succès, **reset 170** au tour suivant, complétion exacte au quota, bust → revert 170 sans incrément. ✅ (défauts = F-015 P1 + F-016/F-017 P2).
 
 ---
 
@@ -186,7 +230,7 @@ _(aucun finding confirmé — passe d'exécution à venir)_
 - Observé : seul board avec des chaînes en dur (« Error », « Game not found », « End Game », « Settings », « Undo last dart », « NEXT PLAYER »/« NEXT ROUND », semanticLabels) ; X01/Cricket/Practice sont localisés.
 - Attendu : câbler `l10n.*` — les clés ARB existent déjà et sont consommées par X01 (`gameNotFound`, `commonError`, `gameMenuEndGame`, `settingsTitle`, `gameOptionsSemantic`, `gameUndoLastDart`, `gameNextPlayer`/`gameNextRound`). Aucune clé à créer.
 - Preuve : `count_up_board_page.dart:84,92,133,146,150,279,287`.
-- Statut : à confirmer (priorité si Count-Up est expédié)
+- Statut : **confirmé (live + source, vague 2)** — candidat issue (P1) ; priorité si Count-Up est expédié
 
 ### F-007 — `ErrorRetryWidget` « Retry » en dur
 - Axe : i18n
