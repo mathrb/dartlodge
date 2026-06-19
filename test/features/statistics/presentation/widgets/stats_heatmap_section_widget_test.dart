@@ -6,8 +6,6 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/widgets/heatmap_dartboard_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/dart_position.dart';
 import 'package:dart_lodge/features/statistics/presentation/providers/dart_heatmap_provider.dart';
-import 'package:dart_lodge/features/statistics/presentation/providers/player_stats_page_provider.dart';
-import 'package:dart_lodge/features/statistics/presentation/state/player_stats_page_state.dart';
 import 'package:dart_lodge/features/statistics/presentation/widgets/stats_heatmap_section_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -74,7 +72,9 @@ void main() {
     expect(find.text(l10n.statsHeatmapTitle.toUpperCase()), findsNothing);
   });
 
-  testWidgets('requests the filter for the tab game type', (tester) async {
+  testWidgets(
+      'requests an all-time (null from/to) filter for the tab game type',
+      (tester) async {
     positions = const [DartPosition(x: 0.0, y: 0.0)];
 
     await tester.pumpWidget(_host(GameType.cricket));
@@ -83,69 +83,9 @@ void main() {
     expect(requestedFilters, isNotEmpty);
     expect(requestedFilters.last.playerId, playerId);
     expect(requestedFilters.last.gameType, GameType.cricket);
-  });
-
-  testWidgets('changing the time range changes the requested date window',
-      (tester) async {
-    positions = const [DartPosition(x: 0.0, y: 0.0)];
-
-    late WidgetRef capturedRef;
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [heatmapOverride],
-        child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: kSupportedLocales,
-          home: Scaffold(
-            body: Consumer(
-              builder: (context, ref, _) {
-                capturedRef = ref;
-                return SingleChildScrollView(
-                  child: const StatsHeatmapSectionWidget(
-                    playerId: playerId,
-                    gameType: GameType.x01,
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    // Default time range is "all" → global aggregate, no date window.
+    // The heatmap is global per game type — the time-range selector does not
+    // apply, so the date window is always unbounded.
     expect(requestedFilters.last.from, isNull);
     expect(requestedFilters.last.to, isNull);
-
-    // Switch to last-10 → a bounded `from` cutoff is applied.
-    capturedRef
-        .read(playerStatsPageProvider(playerId).notifier)
-        .setTimeRange(StatsTimeRange.last10);
-    await tester.pumpAndSettle();
-
-    expect(requestedFilters.last.from, isNotNull);
-  });
-
-  group('statsTimeRangeToDateWindow', () {
-    final now = DateTime(2026, 6, 19, 12);
-
-    test('all → null window (global aggregate)', () {
-      final w = statsTimeRangeToDateWindow(StatsTimeRange.all, now: now);
-      expect(w.from, isNull);
-      expect(w.to, isNull);
-    });
-
-    test('last10 → 30-day cutoff', () {
-      final w = statsTimeRangeToDateWindow(StatsTimeRange.last10, now: now);
-      expect(w.from, now.subtract(const Duration(days: 30)));
-      expect(w.to, isNull);
-    });
-
-    test('last100 → 365-day cutoff', () {
-      final w = statsTimeRangeToDateWindow(StatsTimeRange.last100, now: now);
-      expect(w.from, now.subtract(const Duration(days: 365)));
-      expect(w.to, isNull);
-    });
   });
 }
