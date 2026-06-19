@@ -13,15 +13,19 @@ import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_prepr
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_recorder.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/scoring/dart_position.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/scoring/emitted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracked_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 
 /// Result of feeding one camera frame through the session.
 class SessionFrameResult {
   /// Darts newly confirmed+emitted this frame, to submit to the active game.
-  final List<ScoredDart> emittedDarts;
+  /// Each carries its classified segment plus the normalised canonical impact
+  /// position `(x, y)` (null when the position is detection noise, #572).
+  final List<EmittedDart> emittedDarts;
   final TrackerStatus status;
 
   /// Stage timings for this frame (detect + track measured here; capture is
@@ -186,7 +190,7 @@ class AutoScorerSession {
     }
 
     return SessionFrameResult(
-      emittedDarts: [for (final d in update.newDarts) d.score],
+      emittedDarts: _emittedFrom(update.newDarts),
       status: update.status,
       timings: PipelineTimings(
         detect: detectWatch.elapsed,
@@ -297,7 +301,7 @@ class AutoScorerSession {
     );
     final emitted = update.newDarts.length;
     return SessionFrameResult(
-      emittedDarts: [for (final d in update.newDarts) d.score],
+      emittedDarts: _emittedFrom(update.newDarts),
       status: update.status,
       timings: PipelineTimings(track: trackWatch.elapsed),
       calConfidences: frame.calConfidences,
@@ -538,6 +542,19 @@ class AutoScorerSession {
         frameWidth: capture.width,
         frameHeight: capture.height,
       );
+
+  /// Build the emission list from the tracker's newly-confirmed darts (#572):
+  /// each carries its segment plus the normalised canonical impact position.
+  /// `TrackedDart.boardPosition` is already in the canonical centre=0/radius=1
+  /// frame, so [normaliseDartPosition] only applies the noise guard (null past
+  /// [kDartNoiseRadius]).
+  static List<EmittedDart> _emittedFrom(List<TrackedDart> newDarts) => [
+        for (final d in newDarts)
+          () {
+            final pos = normaliseDartPosition(d.boardPosition);
+            return EmittedDart(score: d.score, x: pos?.x, y: pos?.y);
+          }()
+      ];
 }
 
 /// The bytes to persist for a capture plus the sidecar metadata describing

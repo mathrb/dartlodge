@@ -337,6 +337,22 @@ void main() {
         session.processDetectionFrame(oneDartFrame).emittedDarts, hasLength(1));
   });
 
+  test('emitted darts carry the normalised canonical impact position', () {
+    // Centred-square cals (centre (0.5,0.5), radius 0.3); candidate at image
+    // (0.5, 0.35) → canonical ((0.5-0.5)/0.3, (0.35-0.5)/0.3) = (0.0, -0.5):
+    // dead-centre horizontally, half-way to the top double ring.
+    final session = AutoScorerSession();
+    session.processDetectionFrame(oneDartFrame); // pending
+    final r = session.processDetectionFrame(oneDartFrame); // confirm + emit
+    expect(r.emittedDarts, hasLength(1));
+    final d = r.emittedDarts.single;
+    expect(d.x, isNotNull);
+    expect(d.y, isNotNull);
+    expect(d.x!, closeTo(0.0, 1e-9));
+    expect(d.y!, closeTo(-0.5, 1e-9));
+    expect(d.segment, d.score.segment); // getter mirrors the score
+  });
+
   test('processDetectionFrame surfaces status + cal confidences (track-only)',
       () {
     final frame = DetectionFrame(
