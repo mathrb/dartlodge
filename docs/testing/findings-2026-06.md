@@ -43,12 +43,13 @@ dans `e2e/`.
 |----|-----|----------|-------|--------|
 | F-001 | Correctness | P1 | Bob's 27 — score parfait 1437 inatteignable (manche bull absente) | issue #588 |
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | à confirmer |
-| F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | à confirmer |
+| F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
 | F-005 | Design | P2 | Heatmap sans légende/échelle (gap oracle DESIGN_SYSTEM §7.6) | à confirmer |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
+| F-009 | Design | P2 | Page Stats : header logo « DARTLODGE » vs header titré (Players/History) | à trier (confidence basse) |
 
 ---
 
@@ -68,7 +69,29 @@ dans `e2e/`.
 
 ## Axe 2 — UX / flux
 
-_(aucun finding confirmé — passe d'exécution à venir)_
+### F-009 — Page Statistiques : header logo au lieu d'un titre d'écran
+- Axe : Design / UX (cohérence inter-écrans)
+- Surface : Statistics (root / player-picker)
+- Rail : web
+- Sévérité : P2 (confidence basse — possiblement intentionnel)
+- Observé : la page Stats affiche le logo « DARTLODGE » en header, alors que Players et History affichent un header **titré** (« Players » / « History »).
+- Attendu : cohérence de traitement des headers — OU confirmer que le logo est intentionnel pour la page « hub » Stats.
+- Preuve : `exec-03-stats-empty.png` (header DARTLODGE) vs `exec-01-players-empty.png` / `exec-02-history-empty.png` (titrés).
+- Statut : à trier
+
+---
+
+## Confirmations positives — passe 1 (X01, axes 1+2, 2026-06-19)
+
+> Vérifié en exécution réelle (Pixel 6a portrait, build release, sim bridge). **Aucun défaut** sur ces points.
+
+- **États vides** (Players / History / Stats) : propres, cohérents, on-brand (icône 64px + titre + CTA/hint). → **F-003 (spacing 8 vs 16) infirmé visuellement** : pas de différence perceptible, marqué won't-fix.
+- **Scoring X01** : 501 − T20×3 = 321 ; undo → 381 (cohérent band/score) ; checkout T20+T19+D12 → 0.
+- **9-darter** : 9 fléchettes (l'undo exclut bien la fléchette annulée du compte), AVG PPR = 167 (= 501×3/9).
+- **Buckets** : 180s = 2, 140-179 = 1 (mutuellement exclusifs, le 141 ne double-compte pas) ; CHECKOUT 100 % ; BEST OUT 141.
+- **Nav post-game** : checkout → écran de fin (winner, breakdown) correct.
+- **Succès** (axe 4) : First 180 + First Win + **Nine-Darter** débloqués et datés ; Big Fish correctement **non** débloqué (141 ≠ 170) ; progress « 100 Games of 501 » = 1/100.
+- **Sim bridge** opérationnel dans le build release (prérequis passe 2 confirmé).
 
 ---
 
@@ -93,8 +116,8 @@ _(aucun finding confirmé — passe d'exécution à venir)_
 - Sévérité : P2
 - Observé : gap icône→label 16dp (Players/Stats) vs 8dp (History) ; titre History en body vs `titleLarge` ailleurs.
 - Attendu : empty-states cohérents (typo titre + rythme) — `axis-3-design.md` §2.7.
-- Preuve : _[capture passe 2]_
-- Statut : à confirmer
+- Preuve : `exec-01-players-empty.png` / `exec-02-history-empty.png` — visuellement cohérents.
+- Statut : **infirmé** — la différence de code (8 vs 16dp) n'est pas visuellement perceptible ; won't-fix.
 
 ### F-004 — Loading non uniforme
 - Axe : Design
