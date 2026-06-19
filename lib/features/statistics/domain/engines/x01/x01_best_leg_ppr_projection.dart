@@ -6,13 +6,16 @@ import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.
 
 /// Tracks best single-leg PPR and best single-leg First 9 PPR across all legs.
 ///
-/// Both metrics are derived from the points actually scored by darts — the
-/// same convention as `X01AverageProjection`. Leg PPR is NOT derived from the
-/// leg's starting score: an X01 handicap is baked into the `starting_score`
-/// payload, so a starting-score-based PPR would credit the player with points
-/// the handicap granted rather than threw, and it would also miss busted
-/// darts. Summing dart scores keeps best-leg PPR consistent with the player's
-/// 3-dart average. See issue #246.
+/// Both metrics use the per-turn `turn_score` delta (`turn_start - turn_end`,
+/// 0 on a bust) — the SAME convention as `X01AverageProjection` per
+/// docs/statistics/x01.projections.md §5.2 (#318/#610). Leg PPR is NOT derived
+/// from the leg's starting score: an X01 handicap is baked into the
+/// `starting_score` payload, so a starting-score-based PPR would credit points
+/// the handicap granted rather than threw. The `turn_score` delta is equally
+/// handicap-independent (it is the turn's own start-minus-end), and additionally
+/// scores busted turns as 0 so best-leg PPR matches the player's 3-dart average.
+/// Legacy events lacking `turn_score` fall back to the dart-score sum, keeping
+/// pre-#318 game numbers unchanged. See issues #246 / #318 / #610.
 class X01BestLegPprProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01.bestLegPpr',
@@ -79,11 +82,14 @@ class X01BestLegPprProjection extends ProjectionEngine {
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        // PPR counts every dart's score, busts included — see
-        // X01AverageProjection for the rationale.
-        _legScore += _currentTurnScore;
+        // Prefer the `turn_score` delta (0 on a bust / Double-In not-in turn),
+        // matching X01AverageProjection per §5.2; fall back to the dart-sum for
+        // legacy events that predate the field (#318/#610).
+        final delta =
+            (event.payload['turn_score'] as num?)?.toInt() ?? _currentTurnScore;
+        _legScore += delta;
         if (_turnIndex <= 3) {
-          _firstNineScore += _currentTurnScore;
+          _firstNineScore += delta;
         }
         _currentTurnScore = 0;
       case 'LegCompleted':

@@ -51,9 +51,10 @@ void main() {
     return event('TurnStarted', payload);
   }
 
-  GameEvent turnEnded({String? reason}) {
+  GameEvent turnEnded({String? reason, int? turnScore}) {
     final payload = <String, dynamic>{'player_id': playerId};
     if (reason != null) payload['reason'] = reason;
+    if (turnScore != null) payload['turn_score'] = turnScore;
     return event('TurnEnded', payload);
   }
 
@@ -1197,21 +1198,24 @@ void main() {
     });
 
     test(
-        'X01 — per-player and per-competitor AVG include all darts (busts not subtracted)',
+        'X01 — per-game AVG scores a busted turn as 0 but still counts its darts (§5.2 / #610)',
         () {
-      // Solo competitor; one player; one bust + one normal turn, both 180.
-      // Per X01 convention now: AVG = (180 + 180) / 6 * 3 = 180.
+      // Solo competitor; one bust turn (turn_score 0) + one normal turn
+      // (turn_score 180). Both threw three T20s, so the busted turn's darts
+      // still count in the denominator (6 darts) but contribute 0 points —
+      // matching the career AVERAGE. AVG = 180 / 6 * 3 = 90 (was 180 when the
+      // busted darts were counted at face value — the F-020 bug).
       final events = [
         turnStarted(turnNumber: 1, startingScore: 100),
         dart(20, 3),
         dart(20, 3),
         dart(20, 3),
-        turnEnded(reason: 'bust'),
+        turnEnded(reason: 'bust', turnScore: 0),
         turnStarted(turnNumber: 2, startingScore: 100),
         dart(20, 3),
         dart(20, 3),
         dart(20, 3),
-        turnEnded(),
+        turnEnded(turnScore: 180),
       ];
 
       final throws = [
@@ -1231,8 +1235,8 @@ void main() {
       final c = stats.byCompetitor.single;
       expect(c.competitorName, 'Alice');
       expect(c.totalDartsThrown, 6);
-      expect(c.threeDartAverage, 180.0);
-      expect(c.byPlayer.single.threeDartAverage, 180.0);
+      expect(c.threeDartAverage, 90.0);
+      expect(c.byPlayer.single.threeDartAverage, 90.0);
       // Bucket excludes the busted 180.
       expect(c.oneEightyTurns, 1);
     });

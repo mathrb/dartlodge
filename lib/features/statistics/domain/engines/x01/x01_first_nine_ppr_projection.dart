@@ -53,9 +53,12 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        // First-9 PPR counts every dart's score in the first three turns,
-        // busts included — see X01AverageProjection for rationale.
-        _totalFirstNinePoints += _currentTurnScore;
+        // Prefer the `turn_score` delta (0 on a bust / Double-In not-in turn),
+        // matching X01AverageProjection per §5.2; fall back to the dart-sum for
+        // legacy events lacking the field (#318/#610).
+        final delta =
+            (event.payload['turn_score'] as num?)?.toInt() ?? _currentTurnScore;
+        _totalFirstNinePoints += delta;
         _currentTurnScore = 0;
       case 'LegCompleted':
         // First-9 PPR divides total first-nine points by `legs × 9`. Only
