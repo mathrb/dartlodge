@@ -60,11 +60,19 @@ Faire transiter le `(x,y)` normalisé du tracker jusqu'à l'événement et la ta
 
 1. **Normalisation à la source** (auto_scorer, domain). Le tracker a déjà
    `TrackedDart.boardPosition` (unités canoniques) + `centre`/`radius` via
-   `CanonicalTransform`. À l'émission :
+   `CanonicalTransform`. La normalisation `(p - centre) / radius` aboutissant au repère
+   « centre=0, double-ring=1 » s'écrirait :
    ```
    x = (boardPosition.x - centre.x) / radius
    y = (boardPosition.y - centre.y) / radius
    ```
+   > **⚠️ Finding /plan (#572) :** `DartTracker._normalise` applique **déjà** cette
+   > formule en construisant les candidats, donc `TrackedDart.boardPosition` est **déjà**
+   > dans ce repère (vérifié par `scoreDartAt(..., 1.0)` où `rDouble = 1.0`). La
+   > réappliquer à l'émission **double-normaliserait**. SI-1 ne fait donc qu'un
+   > pass-through + un garde-fou bruit (`r > 1.5` → position null, segment conservé).
+   > SI-2/SI-3 ne doivent **pas** re-normaliser.
+
    `SessionFrameResult.emittedDarts` porte désormais `(segment, x, y)` au lieu du seul
    `segment`.
 
