@@ -522,28 +522,35 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     DateTime? to,
   }) async {
     try {
+      // 1. Verify player exists (parity with the other per-player methods).
+      final playerExists = await (_db.select(_db.players)
+                ..where((p) => p.playerId.equals(playerId))
+                ..limit(1))
+              .getSingleOrNull() !=
+          null;
+      if (!playerExists) {
+        throw PlayerNotFoundException(playerId);
+      }
+
       // Raw per-dart positions — read `dart_throws` directly (NOT via the
       // assembler; positions are facts, not a computed stat). Only located
-      // darts (x/y not NULL) are returned. The `games` join is only added when
-      // a gameType / date-window filter is requested; a gameId-only or
-      // unfiltered query stays on `dart_throws` alone.
-      final needsGameJoin = gameType != null || from != null || to != null;
-
+      // darts (x/y not NULL) are returned. The `games` join is always present
+      // so we can gate on `is_complete = 1` — in-progress darts must never leak
+      // into any result, matching every other stats query here.
       final query = _db.selectOnly(_db.dartThrows)
         ..addColumns([
           _db.dartThrows.x,
           _db.dartThrows.y,
           _db.dartThrows.segment,
-        ]);
-      if (needsGameJoin) {
-        query.join([
+        ])
+        ..join([
           innerJoin(_db.games,
               _db.games.gameId.equalsExp(_db.dartThrows.gameId)),
         ]);
-      }
       query.where(_db.dartThrows.playerId.equals(playerId) &
           _db.dartThrows.x.isNotNull() &
-          _db.dartThrows.y.isNotNull());
+          _db.dartThrows.y.isNotNull() &
+          _db.games.isComplete.equals(1));
       if (gameId != null) {
         query.where(_db.dartThrows.gameId.equals(gameId));
       }

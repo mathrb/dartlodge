@@ -726,6 +726,29 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       final positions = await statsRepo.getDartPositions(playerId: 'p1');
       expect(positions, isEmpty);
     });
+
+    test('excludes located darts from incomplete (in-progress) games',
+        () async {
+      // Game is created but never completed — its located darts must NOT leak
+      // into any result. Would FAIL if the `is_complete = 1` gate were removed.
+      await _createX01GameAt(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1', startTime: DateTime.now(),
+          competitorId: 'c1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60, x: 0.1, y: 0.1, segment: 'T20');
+      // Intentionally NOT completing the game.
+
+      final positions = await statsRepo.getDartPositions(playerId: 'p1');
+      expect(positions, isEmpty);
+    });
+
+    test('throws PlayerNotFoundException for non-existent player', () async {
+      expect(
+        () => statsRepo.getDartPositions(playerId: 'nope'),
+        throwsA(isA<PlayerNotFoundException>()),
+      );
+    });
   });
 }
 

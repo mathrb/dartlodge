@@ -114,6 +114,8 @@ abstract interface class StatisticsRepository {
   /// Coordinates are in the canonical board frame (origin = bullseye, radius
   /// 1.0 = outer double edge, "20 up"); see
   /// `docs/plans/2026-06-19-heatmap-design.md`.
+  ///
+  /// Throws [PlayerNotFoundException] if [playerId] does not exist.
   Future<List<DartPosition>> getDartPositions({
     String? gameId,
     required String playerId,
