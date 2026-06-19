@@ -131,6 +131,8 @@
   "statsLoadFailed": "Statistiken konnten nicht geladen werden: {error}",
   "statsComingSoon": "Statistiken für {section} folgen bald",
   "statsHeatmapTitle": "Trefferverteilung",
+  "statsHeatmapNoData": "Keine lokalisierten Darts für diesen Spieler",
+  "statsHeatmapUnlocated": "{count, plural, one{1 nicht lokalisierter Dart} other{{count} nicht lokalisierte Darts}}",
   "statsDrillsPlayed": "Gespielte Übungen",
   "statsCompletions": "Abschlüsse",
   "statsHitRate": "Trefferquote",

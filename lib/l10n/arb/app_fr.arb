@@ -131,6 +131,8 @@
   "statsLoadFailed": "Échec du chargement des statistiques : {error}",
   "statsComingSoon": "Statistiques {section} bientôt disponibles",
   "statsHeatmapTitle": "Carte de chaleur des impacts",
+  "statsHeatmapNoData": "Aucune fléchette localisée pour ce joueur",
+  "statsHeatmapUnlocated": "{count, plural, one{1 fléchette non localisée} other{{count} fléchettes non localisées}}",
   "statsDrillsPlayed": "Exercices joués",
   "statsCompletions": "Complétions",
   "statsHitRate": "Taux de touche",

@@ -15,6 +15,7 @@ import '../../../../core/widgets/game_summary_section_widget.dart';
 import '../../../game/domain/models/game_result.dart';
 import '../../../game/presentation/providers/game_setup_provider.dart';
 import '../utils/post_game_routing.dart';
+import '../widgets/game_heatmap_section_widget.dart';
 import '../widgets/practice_summary_widget.dart';
 import '../widgets/shanghai_summary_widget.dart';
 
@@ -82,9 +83,10 @@ class PostGameSummaryPage extends ConsumerWidget {
                                 context.push(GameRoutes.settings),
                           ),
                         ),
-                        if (usesGameStats)
-                          GameSummarySectionWidget(gameStats: gameStats)
-                        else
+                        if (usesGameStats) ...[
+                          GameSummarySectionWidget(gameStats: gameStats),
+                          GameHeatmapSectionWidget(gameStats: gameStats),
+                        ] else
                           Padding(
                             padding: const EdgeInsets.only(top: 64),
                             child: _GameResultBody(gameId: gameId),

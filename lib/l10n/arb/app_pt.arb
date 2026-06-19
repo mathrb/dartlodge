@@ -131,6 +131,8 @@
   "statsLoadFailed": "Falha ao carregar as estatísticas: {error}",
   "statsComingSoon": "Estatísticas de {section} em breve",
   "statsHeatmapTitle": "Mapa de calor de impactos",
+  "statsHeatmapNoData": "Nenhum dardo localizado para este jogador",
+  "statsHeatmapUnlocated": "{count, plural, one{1 dardo não localizado} other{{count} dardos não localizados}}",
   "statsDrillsPlayed": "Treinos jogados",
   "statsCompletions": "Conclusões",
   "statsHitRate": "Taxa de acerto",
