@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
 
@@ -45,12 +46,15 @@ class PostGameStatsBreakdown extends StatelessWidget {
     super.key,
     required this.columns,
     required this.rows,
-    this.title = 'STATISTICS BREAKDOWN',
-    this.categoryHeader = 'CATEGORY',
+    this.title,
+    this.categoryHeader,
   });
 
-  final String title;
-  final String categoryHeader;
+  /// Defaults to the localized "Statistics Breakdown" (upper-cased) when null.
+  final String? title;
+
+  /// Defaults to the localized "Category" (upper-cased) when null.
+  final String? categoryHeader;
   final List<PostGameBreakdownColumn> columns;
   final List<PostGameBreakdownRow> rows;
 
@@ -58,6 +62,10 @@ class PostGameStatsBreakdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
+    final resolvedTitle = title ?? l10n.statisticsBreakdown.toUpperCase();
+    final resolvedCategoryHeader =
+        categoryHeader ?? l10n.historyCategory.toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,7 +75,7 @@ class PostGameStatsBreakdown extends StatelessWidget {
             Container(width: 32, height: 1, color: cs.primaryFixed),
             const SizedBox(width: 12),
             Text(
-              title,
+              resolvedTitle,
               style: tt.labelSmall?.copyWith(
                 color: cs.onSurfaceVariant,
                 letterSpacing: 3,
@@ -100,7 +108,7 @@ class PostGameStatsBreakdown extends StatelessWidget {
                   child: _BreakdownTable(
                     columns: columns,
                     rows: rows,
-                    categoryHeader: categoryHeader,
+                    categoryHeader: resolvedCategoryHeader,
                     flexColumns: true,
                   ),
                 );
@@ -110,7 +118,7 @@ class PostGameStatsBreakdown extends StatelessWidget {
                 child: _BreakdownTable(
                   columns: columns,
                   rows: rows,
-                  categoryHeader: categoryHeader,
+                  categoryHeader: resolvedCategoryHeader,
                   flexColumns: false,
                 ),
               );

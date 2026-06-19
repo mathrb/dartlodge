@@ -153,6 +153,42 @@
   "@commonError": {
     "description": "Generic error screen title"
   },
+  "commonRetry": "Retry",
+  "@commonRetry": {
+    "description": "Retry button on the shared error/retry widget"
+  },
+  "homeSubtitleCricket": "Strategic Play",
+  "@homeSubtitleCricket": {
+    "description": "Home Cricket card subtitle (rendered upper-case)"
+  },
+  "homeSubtitleCasual": "Shanghai, Count-Up",
+  "@homeSubtitleCasual": {
+    "description": "Home Casual card subtitle (rendered upper-case)"
+  },
+  "homeSubtitlePractice": "Improve Skills",
+  "@homeSubtitlePractice": {
+    "description": "Home Practice card subtitle (rendered upper-case)"
+  },
+  "homeNavStatistics": "Analyze Data",
+  "@homeNavStatistics": {
+    "description": "Home Statistics nav-row descriptor (rendered upper-case)"
+  },
+  "homeNavHistory": "Sessions",
+  "@homeNavHistory": {
+    "description": "Home History nav-row descriptor (rendered upper-case)"
+  },
+  "homeNavPlayers": "Roster",
+  "@homeNavPlayers": {
+    "description": "Home Players nav-row descriptor (rendered upper-case)"
+  },
+  "statisticsBreakdown": "Statistics Breakdown",
+  "@statisticsBreakdown": {
+    "description": "Post-game stats breakdown table title (rendered upper-case)"
+  },
+  "statsPracticeTab": "Practice",
+  "@statsPracticeTab": {
+    "description": "Practice tab label on the player statistics page"
+  },
   "commonName": "Name",
   "@commonName": {
     "description": "Generic Name field label"

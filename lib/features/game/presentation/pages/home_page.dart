@@ -5,6 +5,7 @@ import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -12,6 +13,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -21,8 +23,9 @@ class HomePage extends ConsumerWidget {
             children: [
               AppHeader(
                 trailing: IconButton(
-                  icon: Icon(Icons.settings, color: cs.onSurface, semanticLabel: 'Settings'),
-                  tooltip: 'Settings',
+                  icon: Icon(Icons.settings,
+                      color: cs.onSurface, semanticLabel: l10n.settingsTitle),
+                  tooltip: l10n.settingsTitle,
                   onPressed: () => context.push(GameRoutes.settings),
                 ),
               ),
@@ -39,7 +42,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 12),
               _KineticGameCard(
                 label: 'Cricket',
-                subtitle: 'Strategic Play',
+                subtitle: l10n.homeSubtitleCricket,
                 icon: Icons.sports_cricket,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
@@ -49,7 +52,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 12),
               _KineticGameCard(
                 label: 'Casual',
-                subtitle: 'Shanghai, Count-Up',
+                subtitle: l10n.homeSubtitleCasual,
                 icon: Icons.casino,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
@@ -59,7 +62,7 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 12),
               _KineticGameCard(
                 label: 'Practice',
-                subtitle: 'Improve Skills',
+                subtitle: l10n.homeSubtitlePractice,
                 icon: Icons.track_changes,
                 onTap: () {
                   ref.read(gameSetupProvider.notifier).reset();
@@ -69,21 +72,21 @@ class HomePage extends ConsumerWidget {
               const SizedBox(height: 24),
               _FlatNavRow(
                 label: 'Statistics',
-                descriptor: 'Analyze Data',
+                descriptor: l10n.homeNavStatistics,
                 icon: Icons.bar_chart,
                 onTap: () => context.push(GameRoutes.stats),
               ),
               const SizedBox(height: 4),
               _FlatNavRow(
                 label: 'History',
-                descriptor: 'Sessions',
+                descriptor: l10n.homeNavHistory,
                 icon: Icons.history,
                 onTap: () => context.push(GameRoutes.history),
               ),
               const SizedBox(height: 4),
               _FlatNavRow(
                 label: 'Players',
-                descriptor: 'Roster',
+                descriptor: l10n.homeNavPlayers,
                 icon: Icons.group,
                 onTap: () => context.push(GameRoutes.players),
               ),
