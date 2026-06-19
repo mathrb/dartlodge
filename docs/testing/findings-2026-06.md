@@ -54,7 +54,9 @@ dans `e2e/`.
 
 > F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
 
-**Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 infirmé, pas d'issue.)_
+**Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605 · F-020→#610. **Axe 5** : F-021→#612 (englobe F-007/F-008) · F-022→#613 · F-023/F-024/F-026→#614. _(F-003 infirmé, pas d'issue.)_
+
+**Findings confirmés SANS issue (candidats)** : **F-002** (DB-error string brut), **F-005** (heatmap sans légende). **À confirmer avant issue** : F-004 (loading non uniforme), F-019 (heatmap lavage bleu), F-025 (es/pt split score).
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
