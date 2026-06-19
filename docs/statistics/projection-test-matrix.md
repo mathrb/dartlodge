@@ -72,7 +72,7 @@ Every projection must be tested across **five orthogonal dimensions**:
 | C3   | Parallel replays converge to identical snapshot   |
 
 **Golden rule:**
-Event order = `global_sequence`, nothing else.
+Event order = `(game_id, local_sequence)`, nothing else.
 
 ---
 

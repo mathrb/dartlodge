@@ -55,6 +55,7 @@ The dark palette is rooted in `surface` (#0c0e10), providing a deep, obsidian ba
 | `surfaceContainerHigh` | `#1E2124` | Intermediate elevation |
 | `surfaceContainerHighest` | `#242729` | Singles segment buttons, bottom bar bg, config summary chip |
 | `surfaceBright` | `#2B2C2C` | Level-3 popovers / floating elements |
+| `surfaceVariant` | `#252626` | Inset variants |
 | `primary` | `#AFFFD1` | Primary action text / icons |
 | `onPrimary` | `#004A2F` | Text on `primary` backgrounds |
 | `primaryFixed` | `#00FFAB` | Brand neon — CTA fills, active player accent, dart badges |
@@ -62,9 +63,10 @@ The dark palette is rooted in `surface` (#0c0e10), providing a deep, obsidian ba
 | `onPrimaryFixed` | `#002112` | Text on any neon fill — 8.9:1 contrast |
 | `onSurface` | `#E7E5E5` | Primary body text and icons |
 | `onSurfaceVariant` | `#ACABAA` | Secondary labels, metadata, placeholder text |
-| `outlineVariant` | `#46484A` | Ghost border at 20% opacity only — see No-Line Rule |
+| `outlineVariant` | `#484848` | Ghost border at 20% opacity only — see No-Line Rule |
 | `outline` | `#767575` | Structural outlines when required |
 | `secondary` | `#1FC46A` | Secondary actions (variant selection highlight) |
+| `onSecondary` | `#003417` | Text on `secondary` |
 | `secondaryContainer` | `#004520` | "Latest played" card background |
 | `onSecondaryContainer` | `#40D97C` | Text on `secondaryContainer` |
 | `error` | `#EE7D77` | Bust indicator, validation errors |
@@ -76,7 +78,7 @@ The dark palette is rooted in `surface` (#0c0e10), providing a deep, obsidian ba
 
 ### 2.2 Light Mode Palette
 
-The light palette uses a neutral M3 grayscale base. The brand neon (`primaryFixed` `#00FFAB`) and primary tonal family are **identical to dark mode** — neon green stays neon green across themes.
+The light palette uses a neutral M3 grayscale base. The **fixed** brand-neon tokens — `primaryFixed` (`#00FFAB`), `primaryFixedDim` (`#00F2A2`) and `onPrimaryFixed` (`#002112`) — are **identical to dark mode** by design (neon green stays neon green across themes). The adaptive `primary` token, by contrast, is **theme-specific**: it resolves to an accessible dark green (`#006D45`) on light surfaces and to neon mint (`#AFFFD1`) on dark surfaces (M3 accent-text role).
 
 | Token | Hex | Usage |
 |---|---|---|
@@ -88,7 +90,7 @@ The light palette uses a neutral M3 grayscale base. The brand neon (`primaryFixe
 | `surfaceContainerHighest` | `#E4E4E4` | Singles segment buttons, config summary chip |
 | `surfaceBright` | `#FFFFFF` | Floating elements / popovers |
 | `surfaceVariant` | `#E6E6E6` | Inset variants |
-| `primary` | `#AFFFD1` | Primary tonal — button fills, accents (matches dark) |
+| `primary` | `#006D45` | Accent text / icons — accessible green on light surfaces (theme-adaptive; differs from dark) |
 | `onPrimary` | `#004A2F` | Text on `primary` backgrounds |
 | `primaryContainer` | `#005234` | Primary container fill |
 | `onPrimaryContainer` | `#00ED9F` | Text on `primaryContainer` |
@@ -223,13 +225,13 @@ Fallback stack: `system-ui, sans-serif`
 
 | Token | Family | Weight | Size | Usage |
 |---|---|---|---|---|
-| `textScoreActive` | Space Grotesk | Bold (700) | 80px | Active player score — 1-player game |
-| `textScoreLarge` | Space Grotesk | Bold (700) | 64px | Active player score — 2-player game |
-| `textScoreMedium` | Space Grotesk | Bold (700) | 48px | 3–4 player games; post-game summary, leaderboard top |
-| `textScoreSmall` | Space Grotesk | Bold (700) | 36px | 5+ player games; history list scores, stat cards |
-| `textScoreInactive` | Space Grotesk | Bold (700) | 56px | Inactive player scores |
-| `textSegmentButton` | Inter | SemiBold (600) | 18px | Dart segment grid button numbers |
-| `textMultiplierLabel` | Inter | Medium (500) | 11px | "DBL" / "TRP" labels on segment buttons |
+| `scoreActive` | Space Grotesk | Bold (700) | 80px | Active player score — 1-player game |
+| `scoreLarge` | Space Grotesk | Bold (700) | 64px | Active player score — 2-player game |
+| `scoreMedium` | Space Grotesk | Bold (700) | 48px | 3–4 player games; post-game summary, leaderboard top |
+| `scoreSmall` | Space Grotesk | Bold (700) | 36px | 5+ player games; history list scores, stat cards |
+| `scoreInactive` | Space Grotesk | Bold (700) | 56px | Inactive player scores |
+| `segmentButton` | Inter | SemiBold (600) | 18px | Dart segment grid button numbers |
+| `multiplierLabel` | Inter | Medium (500) | 11px | "DBL" / "TRP" labels on segment buttons |
 
 **Dynamic score sizing rule (game board):**
 
@@ -237,10 +239,10 @@ Both active and inactive scores scale with player count.
 
 | Player count | Active score token | Inactive score token |
 |---|---|---|
-| 1 | `textScoreActive` (80px) | `textScoreInactive` (56px) |
-| 2 | `textScoreLarge` (64px) | `textScoreMedium` (48px) |
-| 3–4 | `textScoreMedium` (48px) | `textScoreSmall` (36px) |
-| 5+ | `textScoreSmall` (36px) | `textScoreSmall` (36px) |
+| 1 | `scoreActive` (80px) | `scoreInactive` (56px) |
+| 2 | `scoreLarge` (64px) | `scoreMedium` (48px) |
+| 3–4 | `scoreMedium` (48px) | `scoreSmall` (36px) |
+| 5+ | `scoreSmall` (36px) | `scoreSmall` (36px) |
 
 ### 3.3 Usage Rules
 
@@ -369,7 +371,7 @@ are not interchangeable when the intent differs.
 - Cell spacing: 4dp (between cells and rows)
 - Minimum height: 48dp
 - Splash: `kineticSplashColor` (#0D00FFAB)
-- Text: `textSegmentButton` (18px Inter SemiBold)
+- Text: `segmentButton` (18px Inter SemiBold)
 - Tier differentiation:
 
 | Tier | Background | Text color | Dots |
@@ -521,9 +523,26 @@ are not interchangeable when the intent differs.
 ### 7.4 Overlays & Modals
 
 - Backdrop: `scrim` (`#000000`) at **80% opacity** + **20px backdrop-blur**
-- Sheet / dialog surface: `surfaceBright` (`#292C30`)
+- Sheet / dialog surface: `surfaceBright` (`#2B2C2C`)
 - Border-radius: `radiusXLarge` (24dp)
 - Entry animation: slide up 200ms `easeOut`; dismiss: slide down 200ms `easeIn`
+
+### 7.5 Camera-First / At-Distance Readability
+
+Auto-scoring mounts the phone near the board while the player stands at the oche (~2.4 m), where the compact match-mode chrome is illegible. The camera-first board layout (epic #477; see `docs/plans/2026-06-12-camera-first-distance-readability-design.md`) enlarges the primary state for at-distance reading. These components are presentational and game-agnostic — X01 / Cricket / Practice layouts compose them with no per-game branching; manual-mode layouts keep the compact chrome.
+
+- **Prominent dart band** (`ProminentDartBandWidget`): the 3-dart turn indicator rendered as three large slots, each **110px tall**. Each thrown segment uses the `scoreMedium` (48px) score token in a `FittedBox(fit: scaleDown)` — long labels (e.g. `MISS`) scale **down** to fit; short numerals never inflate. Thrown slots use the `primaryFixed` @ 10% fill + @ 20% ghost border (dart-badge pattern, §2.5); empty slots are an inert `surfaceContainer` placeholder, or a tappable manual-entry affordance when missed-dart entry is enabled.
+- **Hero metric** (`HeroMetricWidget`): the single primary value (X01 remaining score, current practice target) rendered with the `scoreActive` (80px) token, tinted `onSurface` by default. An optional caption renders above it as an **over-line**: `label-sm` (`labelSmall`) in `primaryFixed` color (per §3.3). The numeral is `maxLines: 1` and never scales or wraps — the consumer constrains the container.
+- **At-distance per-game strips**: each game type supplies a compact secondary strip for the other players' state (X01 other-players strip, Cricket marks strip, Practice players strip) so the hero value stays uncontested.
+- **Cricket marks**: the shared `CricketMarkPainter` draws the open/slash/circle marks with a stroke weight tuned for legibility at distance.
+
+### 7.6 Heatmap / dartboard widget
+
+The dart-impact density heatmap (epic #571; see `docs/plans/2026-06-19-heatmap-design.md`) renders over a self-drawn mock dartboard (`HeatmapDartboardWidget`), with the pure density/colormap logic in `lib/core/widgets/heatmap_density.dart`.
+
+- **Colormap**: a cold→hot ramp — transparent → blue → cyan → yellow → red — with alpha rising with density (soft ease-in so the low-density tail fades to transparent rather than a hard floor).
+- **KDE constants**: `kHeatGridExtent = 1.1` (grid half-width in canonical board units, `1.0` = outer double-ring edge, so misses just outside still contribute), `kHeatNoiseRadius = 1.5` (points beyond this are dropped as detector noise), `kHeatGridResolution = 64` (grid cells per axis). The gaussian blur radius is adaptive to point count.
+- **Dartboard segment colours** in `heatmap_dartboard_widget.dart` are **intentional domain literals** (board black/white/red/green), NOT themed tokens — a formalized won't-fix exception like the identity palette (§2.7) and the dartboard colours documented under audit #195. Do not flag them in future audits.
 
 ---
 
@@ -585,7 +604,7 @@ are not interchangeable when the intent differs.
 
 Ripple color: `kineticSplashColor` (`#0D00FFAB`, neon @ 5%). No scale transforms — avoid "pop" animations during rapid dart entry.
 
-**Kinetic Shift:** Primary buttons shift to `primaryFixedDim` (`#00E297`) background on press.
+**Kinetic Shift:** Primary buttons shift to `primaryFixedDim` (`#00F2A2`) background on press.
 
 ### 10.2 Focused State (keyboard / accessibility)
 
@@ -611,7 +630,7 @@ All other player panels:
 - No left border, no shadow
 - Background: `surfaceContainer`
 - Border: 1px `outlineVariant` @ 10%
-- Score numeral: `textScoreInactive`, `onSurfaceVariant`
+- Score numeral: `scoreInactive`, `onSurfaceVariant`
 - Player name: `player-name` style, ALL CAPS, `onSurfaceVariant` color
 
 ### 10.5 Bust Feedback

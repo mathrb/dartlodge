@@ -1,7 +1,7 @@
 # UI Screen Flow Specifications
 
 **Status:** Authoritative
-**Version:** 4.0.0
+**Version:** 5.0.0
 **Companion specs:**
 - `docs/design/SCREEN_SPECS.md` — detailed per-screen layout, typography, color, and notes
 - `docs/design/DESIGN_SYSTEM.md` — design tokens (color, typography, spacing, radius)
@@ -18,9 +18,18 @@ The app uses a **hub-and-spoke** pattern.
 - There is **no persistent bottom navigation bar** anywhere in the app.
 - **Settings** is accessed via a gear icon (⚙) in the Home AppBar only.
 - Every sub-screen has only a back button in its AppBar — no other persistent nav chrome.
-- **Game boards** (X01, Cricket, Practice) are full-screen with no AppBar navigation chrome.
+- **Game boards** (X01, Cricket, Count Up, Practice) are full-screen with no AppBar navigation chrome.
 - Sub-screen state does not need to be preserved between visits — reload-on-entry is acceptable.
 - No `StatefulShellRoute` / persistent navigation stack is needed.
+
+### Navigation Semantics (`context.push` vs `context.go`)
+
+`go_router` is wired in `lib/app/app_router.dart`. The intent rule:
+
+- **`context.push`** — back-poppable forward navigation. Used for every Home → spoke jump (Statistics, History, Players, Settings), list → detail, and Settings → Auto-Scorer Settings. The Android/OS back button pops back to the previous screen.
+- **`context.go`** — intentional stack resets that must NOT be back-poppable: game start → board, board/post-game → Home, and post-deletion / erase-all-data redirects.
+- **`PopScope(canPop: false)`** wraps screens reached via `go()` that still need a working hardware back button (e.g. Variant Selection redirects back to Home on pop).
+- **`GoRoute.onExit`** guards the active boards (X01 / Cricket / Practice). It runs for in-app `context.go`, browser back/forward, and OS gesture — showing a confirm-before-leave dialog so an in-progress game can't be silently abandoned (#319). It short-circuits (no dialog) when the game is already complete in the DB. Count Up has no `onExit` guard.
 
 ---
 
@@ -28,25 +37,33 @@ The app uses a **hub-and-spoke** pattern.
 
 ```mermaid
 graph TD
-    HOME["/  Home"] --> VS["/game/variant-selection/:gameType"]
-    HOME --> PL["/players  Player List"]
+    HOME["/  Home"] --> VS["/game/variant-selection/:category"]
+    HOME --> STATSROOT["/stats  Stats (player picker)"]
     HOME --> HIST["/history  History"]
+    HOME --> PL["/players  Player List"]
     HOME --> SETTINGS["/settings  Settings"]
 
+    SETTINGS --> ASS["/settings/auto-scoring  Auto-Scorer Settings"]
+
     VS --> PS["/game/player-selection"]
-    PS --> CFG["/game/config  Game Config (bottom sheet)"]
-    PS --> X01["/game/x01/:gameId  X01 Board"]
-    PS --> CRICK["/game/cricket/:gameId  Cricket Board"]
-    PS --> PRAC["/game/practice/:gameId  Practice Board"]
+    PS -. "config bottom sheet (no route)" .-> PS
+    PS --> X01["/game/active/x01/:gameId  X01 Board"]
+    PS --> CRICK["/game/active/cricket/:gameId  Cricket Board"]
+    PS --> COUNTUP["/game/active/count-up/:gameId  Count Up Board"]
+    PS --> PRAC["/practice-board/:gameId  Practice Board"]
 
     X01 --> PGS["/post-game/:gameId  Post-Game Summary"]
     CRICK --> PGS
-    PRAC --> HOME
+    COUNTUP --> PGS
+    PRAC --> PGS
 
     PGS --> HOME
 
+    STATSROOT --> STATS["/stats/player/:playerId  Player Stats"]
     PL --> PD["/players/:playerId  Player Detail"]
-    PD --> STATS["/stats/player/:playerId  Player Stats"]
+    PD --> EDIT["/players/:playerId/edit  Edit Player"]
+    PD --> STATS
+    STATS --> ACH["/achievements/:playerId  Achievements"]
     PL --> CP["/players/add  Create Player"]
 
     HIST --> GD["/game/history/:gameId  Game Detail"]
@@ -59,12 +76,13 @@ graph TD
 | # | Screen | Route |
 |---|--------|-------|
 | 1 | Home | `/` |
-| 2 | Variant Selection | `/game/variant-selection/:gameType` |
+| 2 | Variant Selection | `/game/variant-selection/:category` |
 | 3 | Player Selection | `/game/player-selection` |
-| 4 | Game Config (bottom sheet) | `/game/config` |
-| 5 | X01 Board | `/game/x01/:gameId` |
-| 6 | Cricket Board | `/game/cricket/:gameId` |
-| 7 | Practice Board | `/game/practice/:gameId` |
+| 4 | Game Config (modal bottom sheet — no route) | — |
+| 5 | X01 Board | `/game/active/x01/:gameId` |
+| 6 | Cricket Board | `/game/active/cricket/:gameId` |
+| 6b | Count Up Board | `/game/active/count-up/:gameId` |
+| 7 | Practice Board | `/practice-board/:gameId` |
 | 7a | — Around the Clock | (subtype of 7) |
 | 7b | — Bob's 27 | (subtype of 7) |
 | 7c | — Catch-40 | (subtype of 7) |
@@ -73,15 +91,17 @@ graph TD
 | 8 | Player List | `/players` |
 | 9 | Player Detail | `/players/:playerId` |
 | 10 | Create Player | `/players/add` |
-| 12 | Stats Root *(deferred)* | `/stats` |
-| 13 | Leaderboard *(deferred)* | `/stats/leaderboard` |
+| 11 | Edit Player | `/players/:playerId/edit` |
+| 12 | Stats Root (player picker) | `/stats` |
 | 14 | Player Statistics | `/stats/player/:playerId` |
+| 14a | Achievements | `/achievements/:playerId` |
 | 15 | Post-Game Summary | `/post-game/:gameId` |
 | 16 | History | `/history` |
 | 17 | Game Detail | `/game/history/:gameId` |
 | 18 | Settings | `/settings` |
+| 19 | Auto-Scorer Settings | `/settings/auto-scoring` |
 
-> Numbers 11 and the gap between 10 and 12 are intentionally absent — those slots are reserved for future screens.
+> Number 13 is intentionally absent — a Leaderboard route is reserved for a future screen and is not yet implemented.
 
 ---
 
@@ -93,32 +113,31 @@ For full layout details, typography, and color usage see `docs/design/SCREEN_SPE
 
 ```
 ┌─────────────────────────────┐
-│  Darts                   ⚙ │  ← gear → Settings
+│  DartLodge               ⚙ │  ← gear → Settings (AppHeader trailing)
 ├─────────────────────────────┤
-│   [X01]      [Cricket]      │  ← 2×2 square game cards
-│   [Practice] [Statistics]   │
-├─────────────────────────────┤
-│  [History              →]   │  ← full-width nav card
-│  [Players              →]   │  ← full-width nav card
-├─────────────────────────────┤
-│  (Coming soon, 0.6 opacity) │
-│   [Game Lobby]              │
-│   [VS Friends]              │
-│   [Bluetooth]               │
+│  [⊕ X01      301, 501, 701  →] │  ← vertical list of kinetic game cards
+│  [⊕ CRICKET  Strategic Play →] │    (80dp tall, full-width)
+│  [⊕ CASUAL   Shanghai, …    →] │
+│  [⊕ PRACTICE Improve Skills →] │
+│                             │
+│  📊 STATISTICS  Analyze Data  │  ← flat nav rows (no card chrome)
+│  🕘 HISTORY     Sessions      │
+│  👥 PLAYERS     Roster        │
 └─────────────────────────────┘
 ```
 
-- Gear icon (⚙) in AppBar is the **only** entry point to Settings; it is not a card.
-- Coming-soon cards have no `onTap` handler and are visually de-emphasised (opacity 0.6).
-- 2×2 game cards are square (`childAspectRatio: 1.0`), `radiusLarge` corners, minimum 120dp.
+- A single vertically-scrolling `Column` (`SingleChildScrollView`). There is **no** 2×2 grid and **no** "coming soon" block.
+- **Four kinetic game cards**, in order: X01 (→ `variant-selection/x01`), Cricket (→ `.../cricket`), Casual (→ `.../casual`), Practice (→ `.../practice`). Each is 80dp tall, full-width, with a leading icon chip in `primaryContainer`, an ALL-CAPS label, a subtitle, and a trailing chevron. Tapping resets `gameSetupProvider` then `context.push`es the matching Variant Selection.
+- **Three flat nav rows** below the cards: Statistics (→ `/stats`), History (→ `/history`), Players (→ `/players`). These are plain `InkWell` rows (icon + ALL-CAPS label + right-aligned descriptor), NOT game cards — Statistics is a nav row, not a game card.
+- Gear icon (⚙) is the `AppHeader` trailing action and is the **only** entry point to Settings.
 
 ---
 
-### 2. Variant Selection (`/game/variant-selection/:gameType`)
+### 2. Variant Selection (`/game/variant-selection/:category`)
 
 ```
 ┌─────────────────────────────┐
-│  AppBar: "[Game Type]"      │
+│  AppBar: "[Category]"       │
 ├─────────────────────────────┤
 │  [501 — Double Out]         │  ← tappable variant tiles
 │  [301 — Double Out]         │    minimum 64dp height
@@ -127,7 +146,13 @@ For full layout details, typography, and color usage see `docs/design/SCREEN_SPE
 └─────────────────────────────┘
 ```
 
+- The path parameter is **`:category`**, not a game type. Valid values: `x01`, `cricket`, `casual`, `practice` (one per Home game card).
+  - `x01` — 301 / 501 / 701 variants.
+  - `cricket` — standard / cut-throat / no-score × fixed / random / crazy target modes.
+  - **`casual`** — Shanghai and Count-Up.
+  - `practice` — Around the Clock, Bob's 27, Catch-40, Checkout Practice.
 - A single tap pre-selects the variant and navigates directly to Player Selection — no confirm button.
+- Reached via `context.go` from Home; the page wraps its body in `PopScope(canPop: false)` so the hardware back button redirects to Home instead of doing nothing.
 - Selected tile: `colorPrimaryContainer` background, 3dp `colorPrimary` left border.
 
 ---
@@ -160,7 +185,9 @@ For full layout details, typography, and color usage see `docs/design/SCREEN_SPE
 
 ---
 
-### 4. Game Config (`/game/config`) — Bottom Sheet
+### 4. Game Config — Modal Bottom Sheet (no route)
+
+> Game Config is **not** a routed screen. It is a `showModalBottomSheet<GameConfig>` opened from the config-summary chip on Player Selection (`player_selection_page.dart`). There is no `/game/config` URL.
 
 ```
 ┌─────────────────────────────┐
@@ -181,9 +208,9 @@ For full layout details, typography, and color usage see `docs/design/SCREEN_SPE
 
 ---
 
-### 5. X01 Board (`/game/x01/:gameId`)
+### 5. X01 Board (`/game/active/x01/:gameId`)
 
-Full-screen, no AppBar nav chrome.
+Full-screen, no AppBar nav chrome. `GoRoute.onExit` shows a confirm-before-leave dialog for any in-progress exit (#319).
 
 ```
 AppBar: "501" / "Leg 1 of 3"                          [⋮]
@@ -209,11 +236,13 @@ Segment input grid:
 - Active player column: `colorActivePlayerBg` background, 4dp `colorActivePlayer` left border.
 - Singles: `colorSurface`; doubles: `colorPrimaryContainer`; triples: `colorPrimary` background.
 
+**Camera-first variant.** When auto-scoring is on and a camera preview is available (`cameraFirst = autoScoringOn && cameraPreview != null`, #477), the board switches to an alternate at-distance-readable layout: a `HeroMetricWidget` for the active player's score, an `X01OtherPlayersStripWidget` for opponents, and a `ProminentDartBandWidget` carrying the dart indicator (the status bar hides its darts). The manual segment grid above is the `else` layout.
+
 ---
 
-### 6. Cricket Board (`/game/cricket/:gameId`)
+### 6. Cricket Board (`/game/active/cricket/:gameId`)
 
-Full-screen, no AppBar nav chrome. Unified table — scoreboard columns and input button columns share the same rows.
+Full-screen, no AppBar nav chrome. `GoRoute.onExit` confirm-before-leave (#319). Unified table — scoreboard columns and input button columns share the same rows.
 
 ```
 AppBar: "Cricket | Standard · Leg 1"                [⋮]
@@ -237,11 +266,19 @@ Mark symbols: `─` (0 marks) → `/` (1) → `X` (2) → `⊗` (3+, `colorCrick
 Closed rows (all players ≥3 marks) are dimmed to 38% opacity; input buttons disabled.
 Input button styling mirrors X01: single = `colorSurface`, double = `colorPrimaryContainer`, triple = `colorPrimary`.
 
+**Camera-first variant.** Like X01, when `cameraFirst` is active the board uses the at-distance layout (#477): `HeroMetricWidget` for the active player's marks/score, a `CricketMarksStripWidget` for the per-target mark state, and `ProminentDartBandWidget` for the darts.
+
 ---
 
-### 7. Practice Board (`/game/practice/:gameId`)
+### 6b. Count Up Board (`/game/active/count-up/:gameId`)
 
-Full-screen, no AppBar nav chrome. Five sub-types share a common chrome:
+Full-screen, no AppBar nav chrome. The casual "Count Up" game (score-accumulation, fixed rounds). Unlike X01/Cricket/Practice, this board has **no** `GoRoute.onExit` confirm guard. Completion routes to Post-Game Summary.
+
+---
+
+### 7. Practice Board (`/practice-board/:gameId`)
+
+Full-screen, no AppBar nav chrome. `GoRoute.onExit` confirm-before-leave (#319). Five sub-types share a common chrome:
 
 ```
 AppBar: "[Game Name]" / "[progress subtitle]"        [⋮]
@@ -268,6 +305,8 @@ Dart indicator: [60] [T20] [○] [○]
 
 **7e. Checkout Practice** — subtitle "{successes}/{attempts} checkouts". Input: full X01-style segment grid. Action: `END DRILL` (always enabled after 3 darts). No `MISS` button in bottom bar (use grid row 0). Turn advances automatically after 3 darts.
 
+**Camera-first variant.** When `cameraFirst` is active (#477), the practice board uses the at-distance layout: `PracticeTargetDisplayWidget(heroSize: true)` for the current target, a `PracticePlayersStripWidget`, and `ProminentDartBandWidget` for the darts.
+
 ---
 
 ### 8. Player List (`/players`)
@@ -293,22 +332,19 @@ Dart indicator: [60] [T20] [○] [○]
 
 ```
 ┌─────────────────────────────┐
-│  AppBar: "ALICE"       [🗑] │
+│  AppBar: "ALICE"    [✏] [🗑] │
 ├─────────────────────────────┤
-│  [Avatar 80dp]              │
-│  [  ALICE  ] ← inline editable
-│                             │
-│  [Games: 42] [Win%: 62%]   │
-│  [Darts: 1204]              │
+│  [Avatar 96dp]              │
+│   ALICE                     │
+│   Member since … · Last active … │
 ├─────────────────────────────┤
-│  [VIEW STATISTICS]          │
-│  [VIEW GAME HISTORY]        │
+│  Career Statistics [VIEW STATISTICS] │
 └─────────────────────────────┘
 ```
 
-- Name is an inline editable field — no separate ✏ icon. AppBar title syncs.
-- Stat cards: Games Played, Win Rate, Darts Thrown (game-type-agnostic only).
-- Delete (🗑) shows confirmation dialog with `colorError` destructive confirm.
+- AppBar actions: **edit** (✏) → `context.push` Edit Player (Screen 11, passing the current name via `extra`); **delete** (🗑) → confirmation dialog with `colorError` destructive confirm → on confirm, `context.go` back to Player List.
+- Shows avatar, name, "Member since" and "Last active" dates.
+- "VIEW STATISTICS" `context.push`es Player Statistics (Screen 14).
 
 ---
 
@@ -329,15 +365,15 @@ Dart indicator: [60] [T20] [○] [○]
 
 ---
 
-### 12. Stats Root (`/stats`) — Deferred
+### 11. Edit Player (`/players/:playerId/edit`)
 
-Not yet specified. May redirect to a player-selection screen or show a placeholder. To be defined when leaderboard is planned.
+Edits an existing player's name. Reached from Player Detail (the name is the editable field; the route receives the current name via `extra`). Save validation mirrors Create Player (non-empty, unique). Back returns to Player Detail.
 
 ---
 
-### 13. Leaderboard (`/stats/leaderboard`) — Deferred
+### 12. Stats Root (`/stats`) — Player Picker
 
-Out of scope for the current iteration. Route is reserved.
+`StatsTabPage`. Reached from the Home **Statistics** nav row. Presents a player picker; selecting a player pushes their Player Statistics (Screen 14). (No longer "deferred".)
 
 ---
 
@@ -345,9 +381,10 @@ Out of scope for the current iteration. Route is reserved.
 
 ```
 ┌─────────────────────────────┐
-│  AppBar: "ALICE — Stats" [←]│
+│  [←]                     🏆 │  ← AppHeader: back + trophy → Achievements
+│  ALICE                      │
 ├─────────────────────────────┤
-│  [X01] [Cricket] [Practice] │  ← game-type tab bar
+│  [X01] [Cricket] [Practice] [Others] │  ← 4 game-type tabs
 ├─────────────────────────────┤
 │  [Legs Played] [Legs Won] [Solo Games]  ← 3 summary cards
 ├─────────────────────────────┤
@@ -356,15 +393,24 @@ Out of scope for the current iteration. Route is reserved.
 │  [Last 10] [Last 100] [All] │  ← time range segmented button
 ├─────────────────────────────┤
 │  PPR trend (line chart)     │
-│  [📊 Overlay: Checkout %]   │
 ├─────────────────────────────┤
 │  Detail table               │
 │  PPR | First9 PPR | CO% | … │
+├─────────────────────────────┤
+│  Impact heatmap (all-time)  │  ← StatsHeatmapSectionWidget
 └─────────────────────────────┘
 ```
 
-- Cricket, Practice, Others tabs show a "coming soon" placeholder.
-- Reached via "VIEW STATISTICS" on Player Detail. Route was previously `/stats/career/:playerId`.
+- **Four tabs:** X01, Cricket, Practice, Others. X01 / Cricket / Practice each render full stats (summary cards, selectors, trend chart, detail table) — they are NOT "coming soon". Only the **Others** tab is a coming-soon placeholder. (The Cricket tab adds a target-mode + variant chip selector; the Practice tab adds a game-type chip selector and an annotated dartboard for Around the Clock.)
+- **Achievements trophy** (🏆) in the AppHeader trailing action → `/achievements/:playerId` (Screen 14a).
+- **All-time impact heatmap** (`StatsHeatmapSectionWidget`) at the bottom of the X01 / Cricket / Practice tabs — see "Heatmap surfaces" below. It is **aggregated all-time per gameType** and explicitly **ignores** the Last 10 / Last 100 / All time-range selector. Auto-hidden when the player has no located darts for that gameType.
+- Reached from the Home Statistics row (via the `/stats` player picker) or "VIEW STATISTICS" on Player Detail.
+
+---
+
+### 14a. Achievements (`/achievements/:playerId`)
+
+`AchievementsPage`. Reached from the trophy action in the Player Statistics AppHeader. Lists the player's unlocked / locked achievements (epic #521). Back returns to Player Statistics.
 
 ---
 
@@ -379,12 +425,16 @@ Out of scope for the current iteration. Route is reserved.
 │  BOB                        │  ← loser card (colorSurface)
 │   Avg: 54.1  Darts: –       │
 ├─────────────────────────────┤
+│  Impact heatmap             │  ← GameHeatmapSectionWidget
+│  [ALICE ▾]  ●●● on board    │    (per-player selector if multi-competitor)
+├─────────────────────────────┤
 │  [PLAY AGAIN]  [DONE]       │
 └─────────────────────────────┘
 ```
 
 - No back button (`automaticallyImplyLeading: false`). Navigation is explicit via the two buttons.
 - Winner card: animated checkmark entrance (300ms scale-in) on first appear.
+- **Per-game impact heatmap** (`GameHeatmapSectionWidget`): renders detected dart impacts for the game on a mock dartboard. A per-player selector chooses which competitor's impacts to show (multi-competitor games). The whole section is **auto-hidden** when the game has no located darts (e.g. a fully-manual game).
 
 ---
 
@@ -434,23 +484,63 @@ Out of scope for the current iteration. Route is reserved.
 
 ```
 ┌─────────────────────────────┐
-│  AppBar: "Settings"         │
+│  AppBar: "Settings"  [←]   │
 ├─────────────────────────────┤
-│  Theme                      │
-│   [Dark Mode] toggle        │
-│   [System default] option   │
-│  About                      │
+│  THEME                      │
+│   [Light | System | Dark]   │  ← 3-way SegmentedButton
+│  LANGUAGE                   │
+│   [Language selector]       │
+│  SOUND                      │
+│   [Sound effects]  toggle   │
+│  AUTO-SCORING               │
+│   [Camera auto-scoring  →]  │  → Auto-Scorer Settings
+│  ABOUT                      │
 │   [Version]                 │
 │   [Open Source Licenses]    │
+│  FEEDBACK                   │
+│   [Report a Bug]            │  → Sentry feedback dialog
+│  DEBUG                      │
+│   [Download database]       │
+│  DANGER ZONE                │
+│   [Erase all data]          │  ← destructive (colorError)
 └─────────────────────────────┘
 ```
 
-- Accessed via ⚙ in Home AppBar only. Back returns to Home.
-- "Open Source Licenses" → Flutter's built-in `LicensePage`.
+- Accessed via ⚙ in Home AppHeader only. Back returns to Home (`context.pop`, falling back to `context.go(home)`).
+- **Theme** — a 3-way `SegmentedButton` (Light / System / Dark). Not a Dark-Mode toggle.
+- **Language** — locale selector (`null` = system locale); part of the i18n epic.
+- **Sound effects** — `SwitchListTile` toggling the sound-effects opt-in.
+- **Auto-Scoring** — a `ListTile` that `context.push`es Auto-Scorer Settings (Screen 19).
+- **About** — Version (read from `appVersionProvider`) + "Open Source Licenses" → Flutter's built-in `LicensePage`.
+- **Feedback** — "Report a Bug" opens a text dialog and submits via `Sentry.captureFeedback`.
+- **Debug** — "Download database" exports the Drift DB (shows inline progress).
+- **Danger Zone** — "Erase all data" (destructive, `colorError`); confirms, clears all data, then `context.go(home)`.
+
+---
+
+### 19. Auto-Scorer Settings (`/settings/auto-scoring`)
+
+`AutoScorerSettingsPage` (in the `auto_scorer` feature). Reached from the Auto-Scoring `ListTile` in Settings. Controls:
+
+- **Use auto-scoring** — master opt-in for camera detection during games.
+- **Auto-advance when board is cleared** — opt-in to auto-advance the turn on a confirmed board-clear.
+- **Record sessions (debug)** — log the camera detection stream for off-device replay; "Export latest recording" shares the most recent session bundle.
+- **Setup tips** — review-only re-read of the camera setup tips.
+- **Collect training data** — opt-in to store board photos + corrections; "What to capture" is a `SegmentedButton` (All / Mistakes only); "Export training data" shares a zip of captured frames (with a clear-after-export prompt).
+- **Detection thresholds** — two confidence sliders (Calibration confidence, Dart confidence), 0.05–0.90.
 
 ---
 
 ## Cross-Screen Patterns
+
+### Heatmap surfaces (#571)
+
+Dart-impact heatmaps render located dart positions on a mock dartboard. There are two surfaces, both **auto-hidden when there are no located darts** (e.g. a fully-manual game has no impact positions):
+
+| Surface | Widget | Scope |
+|---|---|---|
+| Post-Game Summary (Screen 15) | `GameHeatmapSectionWidget` | This game only; per-player selector for multi-competitor games. |
+| Player Statistics (Screen 14) | `StatsHeatmapSectionWidget` | All-time, aggregated per gameType tab (X01 / Cricket / Practice). **Ignores** the Last 10 / Last 100 / All time-range selector. |
 
 ### Loading States
 
