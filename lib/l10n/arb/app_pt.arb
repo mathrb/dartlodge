@@ -395,7 +395,7 @@
   "rulesShanghaiHowB4": "Acertos em qualquer outro número — incluindo o bull — não pontuam.",
   "rulesShanghaiHowB5": "Se acertares no simples, no duplo e no triplo da rodada dentro dos mesmos três dardos, isso é um Shanghai. O jogo termina de imediato e o Shanghai conta como vitória.",
   "rulesShanghaiHowB6": "Caso contrário, a rodada termina ao fim de três dardos e o jogo avança para o número seguinte.",
-  "rulesShanghaiWinningBody": "Jogado a solo, o treino termina quando acabas a rodada final. Não há adversário a bater — a tua pontuação total é o teu resultado. Um Shanghai em qualquer rodada termina o treino mais cedo como vitória imediata.",
+  "rulesShanghaiWinningBody": "O Shanghai pode ser jogado a solo ou de forma competitiva. O jogo termina quando se acaba a rodada final, e vence a pontuação total mais alta. Um Shanghai em qualquer rodada — o simples, o duplo e o triplo da rodada na mesma vez — termina o jogo mais cedo como vitória imediata.",
   "rulesShanghaiTipsB1": "É no triplo que estão as grandes pontuações. Três triplos de 7 na última rodada são 63 pontos numa só vez.",
   "rulesShanghaiTipsB2": "Caçar o Shanghai é alto risco, alta recompensa — perseguir dois multiplicadores em falta costuma custar-te uma vez limpa de pontuação.",
   "rulesCricketStdTagline": "Fecha os números de 15 a 20 e o bull, depois pontua mais do que a mesa.",
