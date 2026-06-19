@@ -14,7 +14,12 @@ import 'base_game_engine.dart';
 class StatelessShanghaiEngine implements GameEngine {
   @override
   EngineResult apply(GameState state, GameEvent event) {
-    if (state.isComplete) return EngineResult(state: state);
+    // GameCompleted must pass even when already complete so a full-log replay
+    // re-applies it (mirrors StatelessCatch40Engine); every other event on a
+    // completed game is a no-op.
+    if (state.isComplete && event.eventType != 'GameCompleted') {
+      return EngineResult(state: state);
+    }
 
     return switch (event.eventType) {
       'GameCreated' => EngineResult(

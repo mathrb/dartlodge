@@ -563,6 +563,21 @@ void main() {
       expect(result.state.isComplete, isTrue);
     });
 
+    test('single-player final TurnEnded surfaces outcome=gameCompleted, null winner', () {
+      // Same soft-lock affected solo play; the fix is player-count agnostic.
+      var state = _makeState(practiceRound: 7, turnActive: false);
+      state = engine.apply(state, _turnStarted('c1')).state;
+      for (var i = 0; i < 3; i++) {
+        state = engine
+            .apply(state, _dartThrown(competitorId: 'c1', segment: 0, multiplier: 1))
+            .state;
+      }
+      final result = engine.apply(state, _turnEnded('c1'));
+      expect(result.outcome, LegOutcome.gameCompleted);
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.state.isComplete, isTrue);
+    });
+
     test('intermediate TurnEnded has outcome=none (rotation continues)', () {
       final comps = [
         CompetitorState(
