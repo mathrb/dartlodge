@@ -314,25 +314,51 @@ void main() {
     expect(engine.descriptor.supportedGameTypes.contains(GameType.cricket), isFalse);
   });
 
-  test('GS3 — bust turn still contributes to first nine score', () {
+  test('GS3 — legacy events (no turn_score): bust falls back to the dart sum', () {
+    // Pre-#318 events carry no `turn_score`, so the projection falls back to
+    // the per-dart sum and the bust's 60 IS counted — keeping old-game numbers
+    // unchanged. The turn_score-present case (bust → 0) is GS4.
     engine.init(_makeContext());
     int seq = 1;
-    // Turn 1: bust — bust points ARE counted in firstNineScore (per AVG convention)
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, seq: seq++));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'bust'}, seq: seq++));
-    // Turn 2
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, seq: seq++));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, seq: seq++));
-    // Turn 3
     engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 441}, seq: seq++));
     engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
     engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}, seq: seq++));
     engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: seq++));
 
-    // firstNineScore = 60 (bust) + 60 + 60 = 180
-    // bestFirstNinePpr = 180/9*3 = 60.0
+    // firstNineScore = 60 (bust, dart-sum fallback) + 60 + 60 = 180 → 60.0
     expect(engine.snapshot()['bestFirstNinePpr'], closeTo(60.0, 0.001));
+  });
+
+  test('GS4 — turn_score present: a busted turn scores 0 (§5.2 / #610)', () {
+    // Real #318+ games stamp `turn_score` on TurnEnded; a busted turn carries
+    // turn_score: 0, so its darts do not inflate PPR — consistent with the
+    // career AVERAGE.
+    engine.init(_makeContext());
+    int seq = 1;
+    // Turn 1: T20 then bust → turn_score 0.
+    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, seq: seq++));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'bust', 'turn_score': 0}, seq: seq++));
+    // Turn 2: T20 → 60.
+    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 501}, seq: seq++));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal', 'turn_score': 60}, seq: seq++));
+    // Turn 3: T20 → 60.
+    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 441}, seq: seq++));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'segment': 20, 'multiplier': 3}, seq: seq++));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal', 'turn_score': 60}, seq: seq++));
+    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: seq++));
+
+    final snap = engine.snapshot();
+    // firstNineScore = 0 (bust) + 60 + 60 = 120 → 120/9*3 = 40.0.
+    expect(snap['bestFirstNinePpr'], closeTo(40.0, 0.001));
+    // legScore = 0 + 60 + 60 = 120 over 3 darts → 120/3*3 = 120.0.
+    expect(snap['bestLegPpr'], closeTo(120.0, 0.001));
   });
 }

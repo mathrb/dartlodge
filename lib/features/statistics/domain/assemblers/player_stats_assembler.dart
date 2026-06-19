@@ -480,25 +480,29 @@ class PlayerStatsAssembler {
       final byPlayer = entry.value;
       final List<PlayerTurnStats> playerTurnStats = [];
       int competitorDarts = 0;
-      int competitorScore = 0;
+      // Raw dart-score aggregates (per player + competitor). Used for the
+      // count-up/cricket AVG and as the X01 fallback; the X01 AVG itself is
+      // sourced from X01AverageProjection below so busted turns score 0 per
+      // §5.2 (#610), consistent with the career AVERAGE.
+      final playerDartsByPlayer = <String, int>{};
+      final playerDartSumByPlayer = <String, int>{};
+      int competitorDartSum = 0;
       for (final playerEntry in byPlayer.entries) {
         final playerId = playerEntry.key;
         final playerScores = playerEntry.value;
         final playerDarts = playerScores.length;
         final playerTotal =
             playerScores.fold<int>(0, (sum, s) => sum + s);
-        final playerAvg =
-            playerDarts > 0 ? (playerTotal / playerDarts) * 3 : 0.0;
-        playerTurnStats.add(PlayerTurnStats(
-          playerId: playerId,
-          threeDartAverage: playerAvg,
-          dartsThrown: playerDarts,
-        ));
+        playerDartsByPlayer[playerId] = playerDarts;
+        playerDartSumByPlayer[playerId] = playerTotal;
         competitorDarts += playerDarts;
-        competitorScore += playerTotal;
+        competitorDartSum += playerTotal;
       }
-      final competitorAvg =
-          competitorDarts > 0 ? (competitorScore / competitorDarts) * 3 : 0.0;
+      // X01 per-player AVG from X01AverageProjection (turn_score delta, bust=0).
+      // Populated in the isX01 projection block below; empty for other types.
+      final x01AvgByPlayer = <String, double>{};
+      int x01CompetitorPoints = 0;
+      int x01CompetitorDarts = 0;
 
       // Legs won — count LegCompleted events with this competitor as winner.
       final legsWon = events.where((e) {
@@ -533,6 +537,7 @@ class PlayerStatsAssembler {
         final perPlayer = <String, List<ProjectionEngine>>{};
         for (final playerId in playerIds) {
           final engines = <ProjectionEngine>[
+            X01AverageProjection(),
             X01CheckoutProjection(),
             X01HighScoreBucketsProjection(),
             X01HighestCheckoutProjection(),
@@ -548,10 +553,19 @@ class PlayerStatsAssembler {
           perPlayer[playerId] = engines;
         }
         _runMultiPlayer(events, perPlayer.values);
-        for (final engines in perPlayer.values) {
+        for (final pe in perPlayer.entries) {
+          final engines = pe.value;
           final snap = <String, Map<String, dynamic>>{
             for (final e in engines) e.descriptor.id: e.snapshot(),
           };
+
+          // Per-game AVG (turn_score delta → bust turns score 0, §5.2 / #610).
+          final avgSnap = snap['x01_average'] ?? const {};
+          x01AvgByPlayer[pe.key] =
+              (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0;
+          x01CompetitorPoints += (avgSnap['totalScoredPoints'] as int? ?? 0);
+          x01CompetitorDarts += (avgSnap['totalDartsThrown'] as int? ?? 0);
+
           final buckets = snap['x01.highScoreBuckets'] ?? const {};
           totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
           totalFortyPlus += (buckets['oneFortyPlusTurns'] as int? ?? 0);
@@ -638,6 +652,31 @@ class PlayerStatsAssembler {
         }
       }
 
+      // Build per-player AVG + competitor AVG. X01 uses the bust-aware
+      // turn_score-delta average from X01AverageProjection; cricket/count-up
+      // keep the raw dart-score sum (count-up has no busts, cricket's AVG is
+      // not PPR-shaped). (#610)
+      for (final playerId in playerIds) {
+        final darts = playerDartsByPlayer[playerId] ?? 0;
+        final avg = isX01
+            ? (x01AvgByPlayer[playerId] ?? 0.0)
+            : (darts > 0
+                ? (playerDartSumByPlayer[playerId]! / darts) * 3
+                : 0.0);
+        playerTurnStats.add(PlayerTurnStats(
+          playerId: playerId,
+          threeDartAverage: avg,
+          dartsThrown: darts,
+        ));
+      }
+      final competitorAvg = isX01
+          ? (x01CompetitorDarts > 0
+              ? (x01CompetitorPoints / x01CompetitorDarts) * 3
+              : 0.0)
+          : (competitorDarts > 0
+              ? (competitorDartSum / competitorDarts) * 3
+              : 0.0);
+
       final checkoutPercentage = totalCheckoutAttempts > 0
           ? (totalSuccessfulCheckouts / totalCheckoutAttempts) * 100
           : null;
@@ -722,7 +761,8 @@ class PlayerStatsAssembler {
 
   /// Builds per-competitor stats for a single leg's worth of events.
   ///
-  /// AVG uses [X01AverageProjection] (events-driven, bust-inclusive). The
+  /// AVG uses [X01AverageProjection] (events-driven; busted turns score 0 per
+  /// §5.2). The
   /// caller is responsible for slicing all-game events into per-leg windows
   /// before calling this method (see `ComputeLegStatsUseCase`).
   ///
@@ -993,6 +1033,13 @@ class PlayerStatsAssembler {
 
     int legDartCount = 0;
     int legScoreTotal = 0;
+    // X01 PPR numerator via the turn_score delta (bust turns score 0, §5.2 /
+    // #610) — kept separate from `legScoreTotal` (the raw dart sum, which
+    // shanghai/catch40 still use for their practiceScore). `currentTurnScore`
+    // is the per-turn dart-sum fallback for legacy events lacking turn_score.
+    final bool isX01Leg = gameType == GameType.x01;
+    int legX01Score = 0;
+    int currentTurnScore = 0;
     int legTotalMarks = 0;
     int legTotalTurns = 0;
     int currentTurnMarks = 0;
@@ -1063,6 +1110,7 @@ class PlayerStatsAssembler {
               ? segInt * mult
               : (payload['score'] as num?)?.toInt() ?? 0;
           legScoreTotal += score;
+          currentTurnScore += score;
 
           // Cricket marks (numeric or canonical-string segment). Uses the
           // active target set so Random Cricket marks land correctly.
@@ -1106,14 +1154,22 @@ class PlayerStatsAssembler {
         case 'TurnEnded':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
+          // X01 PPR: add the turn_score delta (0 on a bust), falling back to
+          // the per-turn dart-sum for legacy events (#610).
+          legX01Score +=
+              (payload['turn_score'] as num?)?.toInt() ?? currentTurnScore;
+          currentTurnScore = 0;
           legTotalMarks += currentTurnMarks;
           legTotalTurns++;
           currentTurnMarks = 0;
           atcInPlayerTurn = false;
         case 'LegCompleted':
           legIndex++;
+          // X01 PPR uses the bust-aware turn_score sum; other types keep the
+          // raw dart sum (count-up has no busts). (#610)
+          final pprNumerator = isX01Leg ? legX01Score : legScoreTotal;
           final ppr =
-              legDartCount > 0 ? (legScoreTotal / legDartCount) * 3 : 0.0;
+              legDartCount > 0 ? (pprNumerator / legDartCount) * 3 : 0.0;
           final mpt =
               legTotalTurns > 0 ? legTotalMarks / legTotalTurns : null;
 
@@ -1188,6 +1244,8 @@ class PlayerStatsAssembler {
           // Reset for next leg.
           legDartCount = 0;
           legScoreTotal = 0;
+          legX01Score = 0;
+          currentTurnScore = 0;
           legTotalMarks = 0;
           legTotalTurns = 0;
           currentTurnMarks = 0;
@@ -1207,10 +1265,11 @@ class PlayerStatsAssembler {
 
   /// Builds a per-game PlayerStats slice for one player in one game.
   ///
-  /// AVG uses the caller-supplied dart aggregate (matches the historical
-  /// raw-throw semantic and works with fixtures that insert dart_throws
-  /// without corresponding DartThrown events). Other stats come from
-  /// projections over [events].
+  /// X01 AVG comes from [X01AverageProjection] over [events] (turn_score delta,
+  /// bust turns score 0 — §5.2 / #610), falling back to the caller-supplied
+  /// dart aggregate when the events carry no darts (fixtures that insert
+  /// dart_throws without DartThrown events). Non-X01 AVG uses the caller
+  /// aggregate. Other stats come from projections over [events].
   PlayerStats playerStatsForGameFromEvents({
     required String playerId,
     required GameType gameType,
@@ -1332,6 +1391,7 @@ class PlayerStatsAssembler {
     }
 
     final runner = ProjectionRunner([
+      X01AverageProjection(),
       X01BustRateProjection(),
       X01CheckoutProjection(),
       X01HighestCheckoutProjection(),
@@ -1347,6 +1407,7 @@ class PlayerStatsAssembler {
     runner.run(events);
     final snap = runner.snapshot();
 
+    final avgSnap = snap['x01_average'] ?? {};
     final bustRateSnap = snap['x01_bust_rate'] ?? {};
     final checkoutSnap = snap['x01_checkout'] ?? {};
     final highestCheckoutSnap = snap['x01_highest_checkout'] ?? {};
@@ -1356,13 +1417,22 @@ class PlayerStatsAssembler {
     final legsPlayed = legsSnap['legsPlayed'] as int? ?? 0;
     final legsWon = legsSnap['legsWon'] as int? ?? 0;
 
+    // X01 AVG from X01AverageProjection (turn_score delta → bust turns score 0,
+    // §5.2 / #610). Falls back to the caller-supplied raw dart aggregate when
+    // the events carry no darts (fixtures that insert dart_throws without
+    // DartThrown events — see the method doc).
+    final x01ProjectedDarts = avgSnap['totalDartsThrown'] as int? ?? 0;
+    final x01ThreeDartAverage = x01ProjectedDarts > 0
+        ? (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? threeDartAverage
+        : threeDartAverage;
+
     return PlayerStats(
       playerId: playerId,
       gameType: gameType,
       totalGames: 1,
       gamesWon: legsWon > 0 ? 1 : 0,
       winRate: legsWon > 0 ? 1.0 : 0.0,
-      threeDartAverage: threeDartAverage,
+      threeDartAverage: x01ThreeDartAverage,
       bustRate: (bustRateSnap['bustRate'] as num?)?.toDouble() ?? 0.0,
       checkoutPercentage:
           (checkoutSnap['checkoutPercentage'] as num?)?.toDouble(),
