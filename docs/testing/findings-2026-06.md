@@ -58,7 +58,8 @@ dans `e2e/`.
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
-| F-005 | Design | P2 | Heatmap sans légende/échelle (gap oracle DESIGN_SYSTEM §7.6) | à confirmer |
+| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | **confirmé (live)** |
+| F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
@@ -171,7 +172,8 @@ dans `e2e/`.
 - **Thème clair** : Home, board X01 (score `onSurface`, nom `primaryFixed` mint, 50 BULL mint, grille sans overflow), post-game (trophée/héro/breakdown), History (carte badge+trophée), Stats (PPR 167, solo exclu des legs #106), Settings, états vides — tous propres et token-compliant. ✅
 - **Thème sombre** : Home + Stats re-capturés — parité parfaite (fond sombre, accents mint, texte clair, contraste OK). ✅
 - **F-009 re-confirmé** (header Stats = logo « DARTLODGE », pas titré comme Players/History). **F-002 confirmé** (surface DB-error = string brut non stylé).
-- **Reste de l'axe 3** : camera-first (#477) — vérifier si le chrome bascule sur web (cameraPreview possiblement null sans stub builder) ; **heatmap** (rendu + colormap) — nécessite l'extension sim-bridge x/y (différée) ; **F-005** (heatmap sans légende) à confirmer ; cohérence inter-écrans (largement OK).
+- **Heatmap (vérifiée live, après extension sim-bridge x/y #607)** : un 9-darter joué avec coordonnées (`emit('T20', x, y)`) **peuple la heatmap** au post-game → chemin complet x/y validé (sim → submitDart → payload → dart_throws → getDartPositions → rendu). Le dartboard auto-dessiné + densité KDE s'affichent (hotspot rouge où les fléchettes clusterisent). **F-005 confirmé** (pas de légende/numéros) ; **F-019** (lavage bleu basse densité, conf. basse). ✅ chemin OK.
+- **Reste de l'axe 3** : camera-first (#477) — vérifier si le chrome bascule sur web (cameraPreview possiblement null sans stub builder) ; cohérence inter-écrans (largement OK).
 
 ---
 
@@ -216,8 +218,18 @@ dans `e2e/`.
 - Sévérité : P2
 - Observé : le widget ne dessine ni légende/échelle ni numéros de segments, alors que `DESIGN_SYSTEM.md` §7.6 mentionne une « légende lisible ».
 - Attendu : trancher — ajouter la légende OU corriger l'oracle.
-- Preuve : `heatmap_dartboard_widget.dart` ; DESIGN_SYSTEM §7.6.
-- Statut : à confirmer
+- Preuve : `heatmap_dartboard_widget.dart` ; DESIGN_SYSTEM §7.6 ; **vu live** (`hm-postgame-scrolled.png` — heatmap rendue sans légende ni numéros).
+- Statut : **confirmé (live)**
+
+### F-019 — Heatmap : faible densité tinte tout le plateau en bleu
+- Axe : Design
+- Surface : Heatmap (post-game)
+- Rail : web
+- Sévérité : P2 (confidence basse)
+- Observé : avec 9 fléchettes positionnées, la densité KDE basse tinte la quasi-totalité du plateau en bleu (le board sous-jacent — segments/anneaux — est lavé de bleu), réduisant sa lisibilité ; seuls les hotspots ressortent.
+- Attendu : checklist axe 3 §2.6 — « la traîne basse densité s'estompe vers transparent, pas de plancher dur ». À revoir avec un jeu de données plus dense (possiblement normal pour 9 fléchettes éparses).
+- Preuve : `hm-postgame-scrolled.png`.
+- Statut : à confirmer (conf. basse) — revoir avec plus de fléchettes
 
 ---
 
