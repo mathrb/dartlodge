@@ -34,9 +34,16 @@ class _CountUpDartInputSink implements DartInputSink {
   final String _gameId;
 
   @override
-  void submitDart(String segment, {double? x, double? y}) => _ref
-      .read(activeCountUpProvider(_gameId).notifier)
-      .processDart(segment);
+  void submitDart(String segment, {double? x, double? y}) {
+    // A fire-and-forget camera dart can arrive after the turn's 3rd dart (turn
+    // no longer active, NEXT not yet tapped) or after the game completes.
+    // Count-Up's processDart THROWS on an invalid dart (→ AsyncValue error →
+    // the board swaps to the error screen), so drop it here — mirrors the
+    // X01 camera guard (#538). The manual grid is already turnActive-gated.
+    final s = _ref.read(activeCountUpProvider(_gameId)).value;
+    if (s == null || s.gameState.isComplete || !s.gameState.turnActive) return;
+    _ref.read(activeCountUpProvider(_gameId).notifier).processDart(segment);
+  }
 
   @override
   void advanceTurn() {

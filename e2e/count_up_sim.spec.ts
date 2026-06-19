@@ -62,6 +62,16 @@ test.describe('Count-Up sim bridge (#601)', () => {
     // The score reflects the emitted darts — proof the sink is bound and live.
     await expect(page.getByText('180').first()).toBeVisible({ timeout: 10000 });
 
+    // A fire-and-forget 4th dart arrives after the turn is done (turn no longer
+    // active, NEXT not tapped). The sink must DROP it — Count-Up's processDart
+    // throws on an out-of-turn dart, which without the guard would swap the
+    // board for an error screen. Assert the board stays put (score still 180,
+    // no error UI).
+    await sim(page, "emit('T20')");
+    await page.waitForTimeout(400);
+    await expect(page.getByText('180').first()).toBeVisible();
+    await expect(page.getByText(/Retry/i)).toHaveCount(0);
+
     await context.close();
   });
 });
