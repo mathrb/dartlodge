@@ -692,6 +692,14 @@
   "summaryTargets": "Targets",
   "summaryFinalScore": "Final score",
   "summaryRound": "Round",
+  "bobs27BustedBadge": "Busted",
+  "@bobs27BustedBadge": {
+    "description": "Post-game badge when a Bob's 27 drill ends on a score of zero or below (shown upper-case)"
+  },
+  "bobs27BustedSubline": "Bob's 27 — drill ended",
+  "@bobs27BustedSubline": {
+    "description": "Post-game subline for a busted-out Bob's 27 drill"
+  },
   "summaryFrom": "From",
   "summarySuccessRate": "Success rate",
   "summaryCheckedOut": "Checked out!",
