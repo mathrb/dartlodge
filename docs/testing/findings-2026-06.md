@@ -41,7 +41,9 @@ dans `e2e/`.
 
 | ID | Axe | Sévérité | Titre | Statut |
 |----|-----|----------|-------|--------|
-| F-001 | Correctness | P1 | Bob's 27 — score parfait 1437 inatteignable (manche bull absente) | issue #588 |
+| F-001 | Correctness | P1 | Bob's 27 — score parfait 1437 inatteignable (manche bull absente) | issue #588 (confirmé live : run parfait = 1287) |
+| F-010 | Correctness | P1 | Cricket — Turn Breakdown (historique) ignore DartCorrected → fléchette périmée + marks faux | confirmé (live + code) |
+| F-011 | UX | P2 | Bob's 27 — fin sur score≤0 sans cadrage « busted/perdu » | confirmé |
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | à confirmer |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
@@ -63,11 +65,31 @@ dans `e2e/`.
 - Observé : les règles in-app annoncent un parcours parfait à 1437 ; la partie s'arrête après Double 20, max atteignable = 1287.
 - Attendu : oracle `docs/games/bobs-27.md` — Bob's 27 canonique termine sur une manche Double Bull (1437). Résolution (ajouter la manche bull vs corriger le texte) = décision mainteneur.
 - Preuve : `stateless_bobs_27_engine.dart:123` (`roundNum >= 20`) ; règles `rulesBobs27WinningBody`/`HowB2`.
-- Statut : **issue #588**
+- Statut : **issue #588** — **confirmé en live** : run parfait joué = FINAL SCORE **1287**, fin à ROUND 20/20, aucune manche bull.
+
+### F-010 — Cricket : le Turn Breakdown de l'historique ignore les corrections (DartCorrected)
+- Axe : Correctness (+ Données)
+- Surface : History → Game Detail → tableau Turn Breakdown
+- Rail : web
+- Sévérité : P1
+- Observé : un tour où une fléchette a été annulée+re-lancée (T20, 5, single-19 → undo single-19 → T19) s'affiche « T20 5 19 », MARKS = 4 dans le breakdown ; alors que le board live, l'AVG MPR post-game (6) et les mark-buckets reflètent la correction (T19, 6 marks). Seul le Turn Breakdown montre la fléchette périmée.
+- Attendu : le breakdown doit refléter la fléchette corrigée comme toutes les autres surfaces. `TurnBreakdownBuilder.build` (`lib/features/history/domain/turn_breakdown.dart`) traite chaque `DartThrown` SANS gérer `DartCorrected`/supersession, contrairement à `PlayerStatsAssembler.fromEvents` (qui strippe les `original_event_id`/`superseded_event_ids`). **Viole le contrat CLAUDE.md** : « Any replay-aware code path … must collect these and skip the originals ». Risque aussi de corrompre le `runningTotal` rejoué pour tout tour contenant une fléchette annulée.
+- Preuve : `exec-cricket-17.png` (row « Alice 2 4 T20 5 19 ») vs board `exec-cricket-11.png` (19 fermé = 3 hits) + post-game MPR 6.
+- Statut : **confirmé (live + lecture code)** — candidat issue (P1)
 
 ---
 
 ## Axe 2 — UX / flux
+
+### F-011 — Bob's 27 : fin sur score ≤ 0 sans cadrage « busted/perdu »
+- Axe : UX
+- Surface : Bob's 27 post-game
+- Rail : web
+- Sévérité : P2
+- Observé : l'écran de fin est une carte neutre « FINAL SCORE / ROUND n/20 » (DONE + PLAY AGAIN), sans label win/lose/busted — identique pour une fin normale (round 20) et une fin anticipée sur score ≤ 0.
+- Attendu : un signal distinct pour la fin anticipée « zéro » (cf. oracle bobs-27.md §7 D-3) — à confirmer comme intentionnel ou non.
+- Preuve : `exec-bobs27-03.png`.
+- Statut : confirmé (mineur)
 
 ### F-009 — Page Statistiques : header logo au lieu d'un titre d'écran
 - Axe : Design / UX (cohérence inter-écrans)
@@ -92,6 +114,11 @@ dans `e2e/`.
 - **Nav post-game** : checkout → écran de fin (winner, breakdown) correct.
 - **Succès** (axe 4) : First 180 + First Win + **Nine-Darter** débloqués et datés ; Big Fish correctement **non** débloqué (141 ≠ 170) ; progress « 100 Games of 501 » = 1/100.
 - **Sim bridge** opérationnel dans le build release (prérequis passe 2 confirmé).
+
+### Vague 1 — Cricket / Bob's 27 / Catch 40 (agents parallèles, 2026-06-19)
+- **Cricket** : fermeture des marks (hits cap 3), overflow standard sur nombre fermé avec adversaire ouvert (T20→+60), **Bull = 25/mark (pas 50 pour DB)**, #569 in-game (segment hors-cible affiché mais 0 mark), undo in-game cohérent, rotation, leg→post-game, stats per-game/leg cohérentes. ✅ (seul défaut = F-010, spécifique à l'historique + correction).
+- **Bob's 27** : start 27, cible D{n}, +2n/hit, −2n sur blanchissage, solo. ✅ (défauts = F-001/#588 + F-011).
+- **Catch 40** : **conforme au canonique de bout en bout** — 61→100 (40 cibles), 2-dart=3pts / 3-dart=2 / 4-6=1, **exception 99→3pts**, max 120, bust-reset (checkout exige un double), fin de drill solo sans gagnant, apparition en History. ✅ **Aucun défaut.**
 
 ---
 
