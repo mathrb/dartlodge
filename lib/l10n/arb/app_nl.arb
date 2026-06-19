@@ -130,6 +130,7 @@
   "statsPlayerFallback": "Speler",
   "statsLoadFailed": "Statistieken laden mislukt: {error}",
   "statsComingSoon": "Statistieken voor {section} komen binnenkort",
+  "statsHeatmapTitle": "Impact-heatmap",
   "statsDrillsPlayed": "Gespeelde oefeningen",
   "statsCompletions": "Voltooiingen",
   "statsHitRate": "Trefferpercentage",

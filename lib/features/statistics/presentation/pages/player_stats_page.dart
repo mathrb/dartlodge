@@ -27,6 +27,7 @@ import '../widgets/practice_trend_chart_widget.dart';
 import '../widgets/ppr_trend_chart_widget.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/stats_detail_table_widget.dart';
+import '../widgets/stats_heatmap_section_widget.dart';
 import '../widgets/summary_cards_row_widget.dart';
 import '../widgets/time_range_selector_widget.dart';
 import '../widgets/variant_chip_selector_widget.dart';
@@ -188,6 +189,10 @@ class _X01TabContent extends ConsumerWidget {
             ),
             data: (stats) => StatsDetailTableWidget(stats: stats),
           ),
+          StatsHeatmapSectionWidget(
+            playerId: playerId,
+            gameType: GameType.x01,
+          ),
         ],
       ),
     );
@@ -239,6 +244,10 @@ class _CricketTabContent extends ConsumerWidget {
                   ref.invalidate(filteredCricketStatsProvider(playerId)),
             ),
             data: (stats) => CricketStatsDetailTableWidget(stats: stats),
+          ),
+          StatsHeatmapSectionWidget(
+            playerId: playerId,
+            gameType: GameType.cricket,
           ),
         ],
       ),
@@ -300,6 +309,10 @@ class _PracticeTabContent extends ConsumerWidget {
                       PracticeStatsDetailTableWidget(stats: stats),
                     ],
                   ),
+          ),
+          StatsHeatmapSectionWidget(
+            playerId: playerId,
+            gameType: pageState.selectedPracticeGameType,
           ),
         ],
       ),
