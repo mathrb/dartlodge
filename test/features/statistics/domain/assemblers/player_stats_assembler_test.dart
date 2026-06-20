@@ -717,14 +717,22 @@ void main() {
   });
 
   group('practice — Checkout', () {
-    test('counts attempts and successes from TurnEnded reason', () {
+    test('an attempt counts only when a double was thrown at (#635)', () {
+      // Visit 1: 170 → T20, T20, DB → checkout (threw at the double → attempt,
+      // success). Visit 2: a pure setup visit (S20×3 → 110) that never reaches
+      // a double → NOT an attempt. Old code counted both visits → 1/2 = 50%;
+      // new code → 1/1 = 100%.
       final events = [
         turnStarted(),
-        dart(20, 3),
+        dart(20, 3), // 170 → 110
+        dart(20, 3), // 110 → 50
+        dart(25, 2), // 50 → 0 (DB, at a double)
         turnEnded(reason: 'checkout'),
         turnStarted(),
-        dart(20, 3),
-        turnEnded(reason: 'failed'),
+        dart(20, 1), // 170 → 150 (setup)
+        dart(20, 1), // 150 → 130 (setup)
+        dart(20, 1), // 130 → 110 (setup, never on a double)
+        turnEnded(reason: 'normal'),
       ];
 
       final stats = assembler.fromEvents(
@@ -732,12 +740,38 @@ void main() {
         gameType: GameType.checkoutPractice,
         events: events,
         totalGames: 1,
-        totalDartsThrown: 2,
+        totalDartsThrown: 6,
       );
 
-      expect(stats.checkoutAttempts, 2);
+      expect(stats.checkoutAttempts, 1,
+          reason: 'only the finishing visit threw at a double');
       expect(stats.checkoutSuccesses, 1);
-      expect(stats.checkoutSuccessRate, 0.5);
+      expect(stats.checkoutSuccessRate, 1.0);
+    });
+
+    test('a finishing visit that reaches a double but misses is an attempt (#635)',
+        () {
+      // 170 → T20, T20, then S5 (50 → 45): the 3rd dart was thrown from 50 (on
+      // DB) but missed → attempt, no success. Not a checkout.
+      final events = [
+        turnStarted(),
+        dart(20, 3), // 170 → 110
+        dart(20, 3), // 110 → 50 (now on a double)
+        dart(5, 1), // 50 → 45 (threw from a double position, missed)
+        turnEnded(reason: 'normal'),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.checkoutPractice,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 3,
+      );
+
+      expect(stats.checkoutAttempts, 1);
+      expect(stats.checkoutSuccesses, 0);
+      expect(stats.checkoutSuccessRate, 0.0);
     });
   });
 

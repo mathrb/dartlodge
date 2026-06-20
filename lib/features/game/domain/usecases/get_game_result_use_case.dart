@@ -32,6 +32,7 @@ import '../models/game_result.dart';
 import '../models/game_state.dart';
 import '../repositories/game_event_repository.dart';
 import '../repositories/game_repository.dart';
+import '../../../../core/utils/checkout_table.dart';
 import '../../../../core/utils/constants.dart';
 
 class GetGameResultUseCase {
@@ -127,7 +128,7 @@ class GetGameResultUseCase {
         ),
       GameType.checkoutPractice => GameResult.checkoutPractice(
           competitorName: subject.name,
-          attempts: _countTurnStarted(events, subject.competitorId),
+          attempts: _countCheckoutAttempts(events, subject.competitorId),
           successes: subject.practiceSuccesses,
           dartsThrown: _countDarts(events, subject.competitorId),
           fromScore: subject.startingScore,
@@ -301,6 +302,41 @@ class GetGameResultUseCase {
       count++;
     }
     return count;
+  }
+
+  /// Counts Checkout-Practice attempts: a visit only counts if the player threw
+  /// at a finishing double (the running score reached a single-dart double-out
+  /// position), not every visit (#635). Mirrors `_computeCheckoutStats` in
+  /// PlayerStatsAssembler — kept in sync (the no-cross-feature-import rule
+  /// prevents sharing the scan; both use the core `isOnADoubleFinish`
+  /// predicate). The drill starts at 170, resets on checkout, reverts on a
+  /// bust, so `remaining` is reconstructable from events.
+  /// #636: revisit the hardcoded 170 when varied checkout targets land.
+  int _countCheckoutAttempts(List<GameEvent> events, String competitorId) {
+    var attempts = 0;
+    var remaining = 170;
+    var visitStart = 170;
+    var threwAtDouble = false;
+    for (final e in stripSupersededEvents(events)) {
+      if (e.payload['competitor_id'] != competitorId) continue;
+      switch (e.eventType) {
+        case 'TurnStarted':
+          visitStart = remaining;
+          threwAtDouble = false;
+        case 'DartThrown':
+          if (isOnADoubleFinish(remaining)) threwAtDouble = true;
+          remaining -= (e.payload['score'] as num?)?.toInt() ?? 0;
+        case 'TurnEnded':
+          if (e.payload['reason'] == 'checkout') {
+            attempts++;
+            remaining = 170;
+          } else {
+            if (remaining < 2) remaining = visitStart;
+            if (threwAtDouble) attempts++;
+          }
+      }
+    }
+    return attempts;
   }
 
   /// Highest single-round score the [competitorId] accumulated in Shanghai.

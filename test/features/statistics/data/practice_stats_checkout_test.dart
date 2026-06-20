@@ -82,14 +82,19 @@ void main() {
       expect(stats.checkoutSuccessRate, isNull);
     });
 
-    test('counts attempts per TurnEnded event for this player', () async {
+    test('counts an attempt only when a double was thrown at (#635)', () async {
       await _setupGame([
+        // Visit 1: checkout (reason='checkout' ⇒ always an attempt + success).
         {'__type': 'TurnStarted', 'player_id': playerId},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 2, 'score': 40},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
+        // Visit 2: reaches 50 (on DB) then misses ⇒ an attempt, no success.
         {'__type': 'TurnStarted', 'player_id': playerId},
-        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 5, 'multiplier': 1, 'score': 5},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 3, 'score': 60},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 3, 'score': 60},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 10, 'multiplier': 1, 'score': 10},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'miss'},
+        // Visit 3: checkout again.
         {'__type': 'TurnStarted', 'player_id': playerId},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 16, 'multiplier': 2, 'score': 32},
         {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
@@ -101,7 +106,8 @@ void main() {
         gameType: GameType.checkoutPractice,
       );
 
-      expect(stats.checkoutAttempts, 3);
+      expect(stats.checkoutAttempts, 3,
+          reason: '2 checkouts + 1 reached-a-double miss');
       expect(stats.checkoutSuccesses, 2);
       expect(stats.checkoutSuccessRate, closeTo(2 / 3, 0.001));
     });
