@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_padding.dart';
 
 /// Tracks best single-leg PPR and best single-leg First 9 PPR across all legs.
 ///
@@ -40,6 +41,7 @@ class X01BestLegPprProjection extends ProjectionEngine {
   int _turnIndex = 0;
   int _firstNineScore = 0;
   int _currentTurnScore = 0;
+  int _currentTurnDarts = 0;
 
   // Career bests.
   double? _bestLegPpr;
@@ -59,6 +61,7 @@ class X01BestLegPprProjection extends ProjectionEngine {
     _turnIndex = 0;
     _firstNineScore = 0;
     _currentTurnScore = 0;
+    _currentTurnDarts = 0;
   }
 
   @override
@@ -69,10 +72,12 @@ class X01BestLegPprProjection extends ProjectionEngine {
         if (playerId != _context?.playerId) return;
         _turnIndex++;
         _currentTurnScore = 0;
+        _currentTurnDarts = 0;
       case 'DartThrown':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
         _legDartsCount++;
+        _currentTurnDarts++;
         final seg = (event.payload['segment'] as num?)?.toInt();
         final mult = (event.payload['multiplier'] as num?)?.toInt();
         final score = (seg != null && mult != null)
@@ -91,7 +96,13 @@ class X01BestLegPprProjection extends ProjectionEngine {
         if (_turnIndex <= 3) {
           _firstNineScore += delta;
         }
+        // PDC convention (#634): a busted visit counts as a full 3-dart visit
+        // in the leg PPR denominator. (firstNinePpr uses a fixed /9, so it is
+        // already consistent and needs no padding.)
+        _legDartsCount +=
+            bustDartPadding(event.payload['reason'] as String?, _currentTurnDarts);
         _currentTurnScore = 0;
+        _currentTurnDarts = 0;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
         if (winnerId == _context?.playerId && _legDartsCount > 0) {

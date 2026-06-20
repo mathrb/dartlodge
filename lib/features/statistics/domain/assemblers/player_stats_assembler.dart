@@ -36,6 +36,7 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_average_pr
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_avg_checkout_score_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_game_checkout_percentage_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_padding.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
@@ -1044,6 +1045,11 @@ class PlayerStatsAssembler {
     final bool isX01Leg = gameType == GameType.x01;
     int legX01Score = 0;
     int currentTurnScore = 0;
+    // X01 PPR denominator pads busted visits to a full 3-dart visit (#634);
+    // kept separate from `legDartCount` (the raw dart count). `currentTurnDarts`
+    // tracks darts in the current turn to size the bust padding.
+    int legBustPadDarts = 0;
+    int currentTurnDarts = 0;
     int legTotalMarks = 0;
     int legTotalTurns = 0;
     int currentTurnMarks = 0;
@@ -1105,6 +1111,7 @@ class PlayerStatsAssembler {
           // — e.g. after a cross-turn undo strips the TurnEnded — can't bleed
           // the prior turn's darts into this one (#610).
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           atcInPlayerTurn = true;
           lastPlayerTurnStartingScore =
               (payload['starting_score'] as num?)?.toInt();
@@ -1112,6 +1119,7 @@ class PlayerStatsAssembler {
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
           legDartCount++;
+          currentTurnDarts++;
           final rawSeg = payload['segment'];
           final segInt = rawSeg is num ? rawSeg.toInt() : null;
           final mult = (payload['multiplier'] as num?)?.toInt();
@@ -1167,7 +1175,14 @@ class PlayerStatsAssembler {
           // the per-turn dart-sum for legacy events (#610).
           legX01Score +=
               (payload['turn_score'] as num?)?.toInt() ?? currentTurnScore;
+          // X01 PPR denominator pads a busted visit to a full 3-dart visit
+          // (#634); raw `legDartCount` is untouched.
+          if (isX01Leg) {
+            legBustPadDarts +=
+                bustDartPadding(payload['reason'] as String?, currentTurnDarts);
+          }
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           legTotalMarks += currentTurnMarks;
           legTotalTurns++;
           currentTurnMarks = 0;
@@ -1177,8 +1192,12 @@ class PlayerStatsAssembler {
           // X01 PPR uses the bust-aware turn_score sum; other types keep the
           // raw dart sum (count-up has no busts). (#610)
           final pprNumerator = isX01Leg ? legX01Score : legScoreTotal;
+          // X01 pads busted visits to 3 darts in the denominator (#634);
+          // other types use the raw dart count.
+          final pprDenominator =
+              legDartCount + (isX01Leg ? legBustPadDarts : 0);
           final ppr =
-              legDartCount > 0 ? (pprNumerator / legDartCount) * 3 : 0.0;
+              pprDenominator > 0 ? (pprNumerator / pprDenominator) * 3 : 0.0;
           final mpt =
               legTotalTurns > 0 ? legTotalMarks / legTotalTurns : null;
 
@@ -1254,7 +1273,9 @@ class PlayerStatsAssembler {
           legDartCount = 0;
           legScoreTotal = 0;
           legX01Score = 0;
+          legBustPadDarts = 0;
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           legTotalMarks = 0;
           legTotalTurns = 0;
           currentTurnMarks = 0;

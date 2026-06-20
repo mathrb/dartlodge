@@ -335,10 +335,12 @@ void main() {
     expect(engine.snapshot()['bestFirstNinePpr'], closeTo(60.0, 0.001));
   });
 
-  test('GS4 — turn_score present: a busted turn scores 0 (§5.2 / #610)', () {
+  test('GS4 — busted turn scores 0 and counts as a full 3-dart visit (#634)',
+      () {
     // Real #318+ games stamp `turn_score` on TurnEnded; a busted turn carries
-    // turn_score: 0, so its darts do not inflate PPR — consistent with the
-    // career AVERAGE.
+    // turn_score: 0 (numerator). Per the PDC convention (#634, supersedes
+    // #610), a busted visit also counts as a full 3-dart visit in the PPR
+    // denominator — so a bust on dart 1 contributes 3 darts, not 1.
     engine.init(_makeContext());
     int seq = 1;
     // Turn 1: T20 then bust → turn_score 0.
@@ -356,9 +358,11 @@ void main() {
     engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: seq++));
 
     final snap = engine.snapshot();
-    // firstNineScore = 0 (bust) + 60 + 60 = 120 → 120/9*3 = 40.0.
+    // firstNineScore = 0 (bust) + 60 + 60 = 120 → 120/9*3 = 40.0 (fixed /9,
+    // already consistent — unaffected by the padding).
     expect(snap['bestFirstNinePpr'], closeTo(40.0, 0.001));
-    // legScore = 0 + 60 + 60 = 120 over 3 darts → 120/3*3 = 120.0.
-    expect(snap['bestLegPpr'], closeTo(120.0, 0.001));
+    // legScore = 0 + 60 + 60 = 120. Darts: bust padded to 3 + 1 + 1 = 5 →
+    // 120/5*3 = 72.0 (#634; was 120 under the old actual-darts denominator).
+    expect(snap['bestLegPpr'], closeTo(72.0, 0.001));
   });
 }
