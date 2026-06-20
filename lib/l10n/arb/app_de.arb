@@ -243,8 +243,6 @@
   "gameNotFound": "Spiel nicht gefunden",
   "gameDrillLoadFailed": "Übung konnte nicht geladen werden.",
   "gameCheckoutHint": "Vorschläge erscheinen im Checkout-Bereich",
-  "gameAdvanceTurnTitle": "Aufnahme weitergeben?",
-  "gameAdvanceTurnBody": "Du hast erst {count, plural, one{1 Dart} other{{count} Darts}} geworfen. Trotzdem weitergeben?",
   "gameRoundLimitReached": "Rundenlimit erreicht",
   "gameNoAutoWinner": "Kein automatischer Sieger — wähle, wer dieses Leg gewinnt.",
   "gameSetWinner": "Sieger festlegen",

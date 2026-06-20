@@ -153,7 +153,10 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
         final canUndo = dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
-        final canNext = !gameState.isComplete;
+        // #627: NEXT gated on ≥1 dart (mis-tap guard, consistent across boards);
+        // 1–2 darts advance silently with MISS-fill, no confirmation.
+        final canNext =
+            !gameState.isComplete && gameState.dartsThrownInTurn > 0;
 
         // Current turn darts: trailing dartsThrownInTurn entries from the
         // active competitor's full throw list.

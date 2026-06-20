@@ -243,8 +243,6 @@
   "gameNotFound": "Partida no encontrada",
   "gameDrillLoadFailed": "Error al cargar el ejercicio.",
   "gameCheckoutHint": "Las sugerencias aparecen en rango de checkout",
-  "gameAdvanceTurnTitle": "¿Avanzar turno?",
-  "gameAdvanceTurnBody": "Solo has lanzado {count, plural, one{1 dardo} other{{count} dardos}}. ¿Avanzar igualmente?",
   "gameRoundLimitReached": "Límite de rondas alcanzado",
   "gameNoAutoWinner": "Sin ganador automático: elige quién gana este leg.",
   "gameSetWinner": "Establecer ganador",

@@ -31,7 +31,9 @@ class _FakeAutoScoringEnabled extends AutoScoringEnabled {
   Future<bool> build() async => true;
 }
 
-GameState _countUpState({List<CompetitorState>? competitors}) => GameState(
+GameState _countUpState(
+        {List<CompetitorState>? competitors, int dartsThrownInTurn = 1}) =>
+    GameState(
       gameId: 'game-1',
       gameType: GameType.countUp,
       competitors: competitors ??
@@ -44,7 +46,7 @@ GameState _countUpState({List<CompetitorState>? competitors}) => GameState(
             ),
           ],
       currentTurnIndex: 0,
-      dartsThrownInTurn: 1,
+      dartsThrownInTurn: dartsThrownInTurn,
       isComplete: false,
       turnActive: true,
       countUpTotalRounds: 8,
@@ -150,6 +152,39 @@ void main() {
       expect(find.text('Paramètres'), findsOneWidget);
       expect(find.text('End Game'), findsNothing);
       expect(find.text('Settings'), findsNothing);
+    });
+
+    testWidgets('NEXT ROUND disabled with 0 darts (mis-tap guard, #627)',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(_FakeActiveCountUpNotifier(
+        ActiveCountUpState(gameState: _countUpState(dartsThrownInTurn: 0)),
+      )));
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('NEXT ROUND'),
+          matching: find.byType(FilledButton),
+        ).first,
+      );
+      expect(button.onPressed, isNull,
+          reason: '0-dart NEXT is gated to prevent accidental forfeit (#627)');
+    });
+
+    testWidgets('NEXT ROUND enabled with 1 dart (silent MISS-fill, #627)',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(_FakeActiveCountUpNotifier(
+        ActiveCountUpState(gameState: _countUpState(dartsThrownInTurn: 1)),
+      )));
+      await tester.pumpAndSettle();
+
+      final button = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('NEXT ROUND'),
+          matching: find.byType(FilledButton),
+        ).first,
+      );
+      expect(button.onPressed, isNotNull);
     });
   });
 }

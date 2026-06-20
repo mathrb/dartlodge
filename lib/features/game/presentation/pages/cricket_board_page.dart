@@ -561,19 +561,10 @@ class _BottomActionBar extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    Future<void> handleAdvance() async {
-      if (dartsThrownInTurn >= 3) {
-        onNextRound();
-      } else {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (_) => _AdvanceTurnConfirmDialog(
-            dartsThrownInTurn: dartsThrownInTurn,
-          ),
-        );
-        if (confirmed == true) onNextRound();
-      }
-    }
+    // #627: NEXT is gated on ≥1 dart (mis-tap guard, consistent across all
+    // boards) and advances with no confirmation — `nextPlayer()` silently
+    // fills the unthrown darts with MISS. A deliberate pass = throw a MISS.
+    final canAdvance = canNext && dartsThrownInTurn > 0;
 
     return SafeArea(
       child: Container(
@@ -620,7 +611,7 @@ class _BottomActionBar extends StatelessWidget {
             Expanded(
               child: PulsingNextButtonWidget(
                 label: isMultiplayer ? l10n.gameNextPlayer : l10n.gameNextRound,
-                onPressed: canNext ? handleAdvance : null,
+                onPressed: canAdvance ? onNextRound : null,
                 pulse: pulseNext,
               ),
             ),
@@ -631,35 +622,3 @@ class _BottomActionBar extends StatelessWidget {
   }
 }
 
-class _AdvanceTurnConfirmDialog extends StatelessWidget {
-  const _AdvanceTurnConfirmDialog({required this.dartsThrownInTurn});
-  final int dartsThrownInTurn;
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: Text(l10n.gameAdvanceTurnTitle),
-      content: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: [screenWidth - 48, 320.0].reduce((a, b) => a < b ? a : b),
-        ),
-        child: Text(
-          l10n.gameAdvanceTurnBody(dartsThrownInTurn),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(l10n.commonCancel),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: Text(l10n.commonConfirm),
-        ),
-      ],
-    );
-  }
-}

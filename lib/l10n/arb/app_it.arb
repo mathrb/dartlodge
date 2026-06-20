@@ -243,8 +243,6 @@
   "gameNotFound": "Partita non trovata",
   "gameDrillLoadFailed": "Impossibile caricare l'esercizio.",
   "gameCheckoutHint": "I suggerimenti compaiono nel range di checkout",
-  "gameAdvanceTurnTitle": "Avanzare il turno?",
-  "gameAdvanceTurnBody": "Hai lanciato solo {count, plural, one{1 freccetta} other{{count} freccette}}. Avanzare comunque?",
   "gameRoundLimitReached": "Limite di round raggiunto",
   "gameNoAutoWinner": "Nessun vincitore automatico — scegli chi vince questo leg.",
   "gameSetWinner": "Imposta vincitore",

@@ -243,8 +243,6 @@
   "gameNotFound": "Partie introuvable",
   "gameDrillLoadFailed": "Échec du chargement de l'entraînement.",
   "gameCheckoutHint": "Les suggestions apparaissent à portée de checkout",
-  "gameAdvanceTurnTitle": "Passer la volée ?",
-  "gameAdvanceTurnBody": "Vous n'avez lancé {count, plural, one{qu'une fléchette} other{que {count} fléchettes}}. Passer quand même ?",
   "gameRoundLimitReached": "Limite de tours atteinte",
   "gameNoAutoWinner": "Aucun vainqueur automatique — choisissez qui gagne ce leg.",
   "gameSetWinner": "Définir le vainqueur",
