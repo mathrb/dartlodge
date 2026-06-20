@@ -106,9 +106,11 @@ class PracticeSummaryWidget extends StatelessWidget {
   }) {
     final isSingleAttempt = attempts <= 1;
     final anySuccess = successes > 0;
-    // Completion = the configured quota was met (#603). The old
+    // Completion badge = the configured quota was met (#603). The old
     // `successes == attempts` failed when a quota was met with some busted
-    // turns (then successes < attempts), so the badge never showed.
+    // turns (then successes < attempts), so the badge never showed. ∞ mode
+    // (no quota) intentionally shows no completion badge — there is no goal to
+    // complete; the headline ("Checked out!" / "N checkouts") conveys the result.
     final quotaMet = targetSuccesses != null && successes >= targetSuccesses;
 
     // Header denominator is the configured quota, not the attempt count (#603):
