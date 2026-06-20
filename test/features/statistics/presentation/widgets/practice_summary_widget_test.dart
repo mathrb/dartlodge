@@ -300,8 +300,11 @@ void main() {
       expect(find.text('CHECKED OUT'), findsNothing);
     });
 
-    testWidgets('170 Checkout multi-attempt mixed shows success ratio',
+    testWidgets(
+        '170 Checkout quota not met: header denominator is the quota (#603)',
         (tester) async {
+      // quota 2, 1 success over 3 turns → "1 OF 2" (quota), not "1 OF 3"
+      // (attempts). The SUCCESS RATE side-stat stays successes/attempts.
       await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
         result: GameResult.checkoutPractice(
           competitorName: 'Alice',
@@ -309,10 +312,12 @@ void main() {
           successes: 1,
           dartsThrown: 9,
           fromScore: 170,
+          targetSuccesses: 2,
         ),
       )));
 
-      expect(find.text('1 OF 3 CHECKOUTS'), findsOneWidget);
+      expect(find.text('1 OF 2 CHECKOUTS'), findsOneWidget);
+      expect(find.text('1 OF 3 CHECKOUTS'), findsNothing);
       expect(find.text('SUCCESS RATE'), findsOneWidget);
       expect(find.text('33%'), findsOneWidget);
       expect(find.text('DARTS'), findsOneWidget);
@@ -320,21 +325,59 @@ void main() {
       expect(find.text('CHECKED OUT'), findsNothing);
     });
 
-    testWidgets('170 Checkout multi-attempt all succeed shows badge',
+    testWidgets(
+        '170 Checkout quota met with a busted turn still shows the badge (#603)',
         (tester) async {
+      // quota 2 met (2 successes) but 3 turns (one busted), so successes <
+      // attempts — the old `successes == attempts` badge condition wrongly
+      // hid the badge. New condition is "quota met".
       await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
         result: GameResult.checkoutPractice(
           competitorName: 'Alice',
           attempts: 3,
-          successes: 3,
+          successes: 2,
           dartsThrown: 9,
           fromScore: 170,
+          targetSuccesses: 2,
         ),
       )));
 
       expect(find.text('CHECKED OUT'), findsOneWidget);
-      expect(find.text('3 OF 3 CHECKOUTS'), findsOneWidget);
-      expect(find.text('100%'), findsOneWidget);
+      expect(find.text('2 OF 2 CHECKOUTS'), findsOneWidget);
+    });
+
+    testWidgets('170 Checkout ∞ mode shows a plain checkout count (#603)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.checkoutPractice(
+          competitorName: 'Alice',
+          attempts: 5,
+          successes: 3,
+          dartsThrown: 15,
+          fromScore: 170,
+          targetSuccesses: null,
+        ),
+      )));
+
+      expect(find.text('3 CHECKOUTS'), findsOneWidget);
+      expect(find.text('CHECKED OUT'), findsNothing);
+    });
+
+    testWidgets('170 Checkout no success shows "Not checked out" (#603)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+        result: GameResult.checkoutPractice(
+          competitorName: 'Alice',
+          attempts: 2,
+          successes: 0,
+          dartsThrown: 6,
+          fromScore: 170,
+          targetSuccesses: 2,
+        ),
+      )));
+
+      expect(find.text('NOT CHECKED OUT'), findsOneWidget);
+      expect(find.text('CHECKED OUT'), findsNothing);
     });
   });
 }

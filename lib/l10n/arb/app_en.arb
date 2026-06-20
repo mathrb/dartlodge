@@ -708,13 +708,21 @@
   "summarySuccessRate": "Success rate",
   "summaryCheckedOut": "Checked out!",
   "summaryNotCheckedOut": "Not checked out",
-  "summaryNOfMCheckouts": "{successes} of {attempts} checkouts",
-  "@summaryNOfMCheckouts": {
+  "summaryCheckoutQuotaProgress": "{successes} of {target} checkouts",
+  "@summaryCheckoutQuotaProgress": {
     "placeholders": {
       "successes": {
         "type": "int"
       },
-      "attempts": {
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "summaryCheckoutCount": "{count} checkouts",
+  "@summaryCheckoutCount": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }

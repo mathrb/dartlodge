@@ -595,7 +595,7 @@ void main() {
       await seedGame(
         gameId: gameId,
         gameType: GameType.checkoutPractice,
-        config: const GameConfig.checkoutPractice(),
+        config: const GameConfig.checkoutPractice(targetSuccesses: 1),
         playerId: playerId,
         playerName: 'Dave',
         competitorId: competitorId,
@@ -631,6 +631,7 @@ void main() {
       expect(co.successes, 1);
       expect(co.dartsThrown, 3);
       expect(co.fromScore, 170);
+      expect(co.targetSuccesses, 1, reason: 'quota carried from config (#603)');
     }));
 
     test('checkoutPractice: manual end before checkout reports 1 attempt / 0 successes',
@@ -766,6 +767,8 @@ void main() {
               "round's darts (#598: busts void the score, not the throw — "
               'aligned with the #634 three-dart-average convention)');
       expect(result.fromScore, 170);
+      expect(result.targetSuccesses, isNull,
+          reason: '∞ config (no quota) → null target (#603)');
     }));
 
     test('shanghai: bestRound observes max single-round score', (() async {

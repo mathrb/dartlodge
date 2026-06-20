@@ -131,6 +131,8 @@ class GetGameResultUseCase {
           successes: subject.practiceSuccesses,
           dartsThrown: _countDarts(events, subject.competitorId),
           fromScore: subject.startingScore,
+          // Quota from state (GameState.initial copies it from config); null = ∞.
+          targetSuccesses: finalState.checkoutTargetSuccesses,
         ),
       _ => null,
     };

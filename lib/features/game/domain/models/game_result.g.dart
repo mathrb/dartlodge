@@ -67,6 +67,7 @@ CheckoutPracticeResult _$CheckoutPracticeResultFromJson(
   successes: (json['successes'] as num).toInt(),
   dartsThrown: (json['dartsThrown'] as num).toInt(),
   fromScore: (json['fromScore'] as num).toInt(),
+  targetSuccesses: (json['targetSuccesses'] as num?)?.toInt(),
   $type: json['runtimeType'] as String?,
 );
 
@@ -78,6 +79,7 @@ Map<String, dynamic> _$CheckoutPracticeResultToJson(
   'successes': instance.successes,
   'dartsThrown': instance.dartsThrown,
   'fromScore': instance.fromScore,
+  'targetSuccesses': instance.targetSuccesses,
   'runtimeType': instance.$type,
 };
 

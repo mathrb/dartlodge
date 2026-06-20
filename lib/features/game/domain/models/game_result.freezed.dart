@@ -166,13 +166,13 @@ return shanghai(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)?  aroundTheClock,TResult Function( String competitorName,  int score,  int targetsCleared)?  catch40,TResult Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)?  bobs27,TResult Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore)?  checkoutPractice,TResult Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)?  shanghai,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)?  aroundTheClock,TResult Function( String competitorName,  int score,  int targetsCleared)?  catch40,TResult Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)?  bobs27,TResult Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore,  int? targetSuccesses)?  checkoutPractice,TResult Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)?  shanghai,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case AroundTheClockResult() when aroundTheClock != null:
 return aroundTheClock(_that.competitors,_that.winnerCompetitorId,_that.doublesOnly);case Catch40Result() when catch40 != null:
 return catch40(_that.competitorName,_that.score,_that.targetsCleared);case Bobs27Result() when bobs27 != null:
 return bobs27(_that.competitorName,_that.finalScore,_that.roundReached,_that.bustedToZero);case CheckoutPracticeResult() when checkoutPractice != null:
-return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore);case ShanghaiResult() when shanghai != null:
+return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore,_that.targetSuccesses);case ShanghaiResult() when shanghai != null:
 return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);case _:
   return orElse();
 
@@ -191,13 +191,13 @@ return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);ca
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)  aroundTheClock,required TResult Function( String competitorName,  int score,  int targetsCleared)  catch40,required TResult Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)  bobs27,required TResult Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore)  checkoutPractice,required TResult Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)  shanghai,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)  aroundTheClock,required TResult Function( String competitorName,  int score,  int targetsCleared)  catch40,required TResult Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)  bobs27,required TResult Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore,  int? targetSuccesses)  checkoutPractice,required TResult Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)  shanghai,}) {final _that = this;
 switch (_that) {
 case AroundTheClockResult():
 return aroundTheClock(_that.competitors,_that.winnerCompetitorId,_that.doublesOnly);case Catch40Result():
 return catch40(_that.competitorName,_that.score,_that.targetsCleared);case Bobs27Result():
 return bobs27(_that.competitorName,_that.finalScore,_that.roundReached,_that.bustedToZero);case CheckoutPracticeResult():
-return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore);case ShanghaiResult():
+return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore,_that.targetSuccesses);case ShanghaiResult():
 return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -212,13 +212,13 @@ return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)?  aroundTheClock,TResult? Function( String competitorName,  int score,  int targetsCleared)?  catch40,TResult? Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)?  bobs27,TResult? Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore)?  checkoutPractice,TResult? Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)?  shanghai,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( List<AtcCompetitorResult> competitors,  String? winnerCompetitorId,  bool doublesOnly)?  aroundTheClock,TResult? Function( String competitorName,  int score,  int targetsCleared)?  catch40,TResult? Function( String competitorName,  int finalScore,  int roundReached,  bool bustedToZero)?  bobs27,TResult? Function( String competitorName,  int attempts,  int successes,  int dartsThrown,  int fromScore,  int? targetSuccesses)?  checkoutPractice,TResult? Function( List<ShanghaiCompetitorResult> competitors,  String? winnerCompetitorId,  int totalRounds)?  shanghai,}) {final _that = this;
 switch (_that) {
 case AroundTheClockResult() when aroundTheClock != null:
 return aroundTheClock(_that.competitors,_that.winnerCompetitorId,_that.doublesOnly);case Catch40Result() when catch40 != null:
 return catch40(_that.competitorName,_that.score,_that.targetsCleared);case Bobs27Result() when bobs27 != null:
 return bobs27(_that.competitorName,_that.finalScore,_that.roundReached,_that.bustedToZero);case CheckoutPracticeResult() when checkoutPractice != null:
-return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore);case ShanghaiResult() when shanghai != null:
+return checkoutPractice(_that.competitorName,_that.attempts,_that.successes,_that.dartsThrown,_that.fromScore,_that.targetSuccesses);case ShanghaiResult() when shanghai != null:
 return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);case _:
   return null;
 
@@ -470,7 +470,7 @@ as bool,
 @JsonSerializable()
 
 class CheckoutPracticeResult implements GameResult {
-  const CheckoutPracticeResult({required this.competitorName, required this.attempts, required this.successes, required this.dartsThrown, required this.fromScore, final  String? $type}): $type = $type ?? 'checkoutPractice';
+  const CheckoutPracticeResult({required this.competitorName, required this.attempts, required this.successes, required this.dartsThrown, required this.fromScore, this.targetSuccesses, final  String? $type}): $type = $type ?? 'checkoutPractice';
   factory CheckoutPracticeResult.fromJson(Map<String, dynamic> json) => _$CheckoutPracticeResultFromJson(json);
 
  final  String competitorName;
@@ -478,6 +478,7 @@ class CheckoutPracticeResult implements GameResult {
  final  int successes;
  final  int dartsThrown;
  final  int fromScore;
+ final  int? targetSuccesses;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -496,16 +497,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeResult&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.successes, successes) || other.successes == successes)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown)&&(identical(other.fromScore, fromScore) || other.fromScore == fromScore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeResult&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.successes, successes) || other.successes == successes)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown)&&(identical(other.fromScore, fromScore) || other.fromScore == fromScore)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorName,attempts,successes,dartsThrown,fromScore);
+int get hashCode => Object.hash(runtimeType,competitorName,attempts,successes,dartsThrown,fromScore,targetSuccesses);
 
 @override
 String toString() {
-  return 'GameResult.checkoutPractice(competitorName: $competitorName, attempts: $attempts, successes: $successes, dartsThrown: $dartsThrown, fromScore: $fromScore)';
+  return 'GameResult.checkoutPractice(competitorName: $competitorName, attempts: $attempts, successes: $successes, dartsThrown: $dartsThrown, fromScore: $fromScore, targetSuccesses: $targetSuccesses)';
 }
 
 
@@ -516,7 +517,7 @@ abstract mixin class $CheckoutPracticeResultCopyWith<$Res> implements $GameResul
   factory $CheckoutPracticeResultCopyWith(CheckoutPracticeResult value, $Res Function(CheckoutPracticeResult) _then) = _$CheckoutPracticeResultCopyWithImpl;
 @useResult
 $Res call({
- String competitorName, int attempts, int successes, int dartsThrown, int fromScore
+ String competitorName, int attempts, int successes, int dartsThrown, int fromScore, int? targetSuccesses
 });
 
 
@@ -533,14 +534,15 @@ class _$CheckoutPracticeResultCopyWithImpl<$Res>
 
 /// Create a copy of GameResult
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? competitorName = null,Object? attempts = null,Object? successes = null,Object? dartsThrown = null,Object? fromScore = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? competitorName = null,Object? attempts = null,Object? successes = null,Object? dartsThrown = null,Object? fromScore = null,Object? targetSuccesses = freezed,}) {
   return _then(CheckoutPracticeResult(
 competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
 as String,attempts: null == attempts ? _self.attempts : attempts // ignore: cast_nullable_to_non_nullable
 as int,successes: null == successes ? _self.successes : successes // ignore: cast_nullable_to_non_nullable
 as int,dartsThrown: null == dartsThrown ? _self.dartsThrown : dartsThrown // ignore: cast_nullable_to_non_nullable
 as int,fromScore: null == fromScore ? _self.fromScore : fromScore // ignore: cast_nullable_to_non_nullable
-as int,
+as int,targetSuccesses: freezed == targetSuccesses ? _self.targetSuccesses : targetSuccesses // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
