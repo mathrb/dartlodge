@@ -187,7 +187,44 @@ void main() {
     expect(s['totalScoredPoints'], 0,
         reason: 'spec §5.2: bust turn contributes 0 points');
     expect(s['totalDartsThrown'], 2,
-        reason: 'partial turns still count their darts in the denominator');
+        reason: 'totalDartsThrown is the RAW count of darts actually thrown');
+  });
+
+  test(
+      'F3b — busted visit pads to a full 3-dart visit in the AVG denominator (#634)',
+      () {
+    // Turn 1: a clean 180 (3 darts). Turn 2: a bust on the 1st dart (only 1
+    // DartThrown emitted). Per the PDC convention the busted visit counts as a
+    // full 3-dart visit in the denominator, so AVG = 180 / (3 + 3) * 3 = 90
+    // (not 180 / 4 * 3 = 135). The raw totalDartsThrown stays 4.
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 1));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 2));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 3));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'normal', 'turn_score': 180}, seq: 4));
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 5));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'bust', 'turn_score': 0}, seq: 6));
+    final s = engine.snapshot();
+    expect(s['threeDartAverage'], closeTo(90.0, 0.001),
+        reason: 'busted visit padded to 3 darts → 180 / 6 * 3 = 90');
+    expect(s['totalDartsThrown'], 4,
+        reason: 'raw dart count must NOT be inflated by the padding');
+  });
+
+  test('F3c — a leg-winning checkout on <3 darts counts only actual darts (#634)',
+      () {
+    // A sub-3-dart turn that is NOT a bust (reason != bust) gets no padding —
+    // 60 points over 1 actual dart → 60 / 1 * 3 = 180.
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 60}, seq: 1));
+    engine.apply(_makeEvent('TurnEnded',
+        {'player_id': 'p1', 'reason': 'normal', 'turn_score': 60}, seq: 2));
+    final s = engine.snapshot();
+    expect(s['threeDartAverage'], closeTo(180.0, 0.001),
+        reason: 'non-bust sub-3-dart visit is not padded');
+    expect(s['totalDartsThrown'], 1);
   });
 
   test(

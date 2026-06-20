@@ -36,6 +36,7 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_average_pr
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_avg_checkout_score_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_game_checkout_percentage_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_best_leg_ppr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_padding.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_bust_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
@@ -503,6 +504,10 @@ class PlayerStatsAssembler {
       final x01AvgByPlayer = <String, double>{};
       int x01CompetitorPoints = 0;
       int x01CompetitorDarts = 0;
+      // Padded denominator for the competitor-level three-dart average (#634):
+      // busted visits count as 3 darts. Separate from x01CompetitorDarts, which
+      // stays the raw actual-darts count.
+      int x01CompetitorAvgDarts = 0;
 
       // Legs won — count LegCompleted events with this competitor as winner.
       final legsWon = events.where((e) {
@@ -565,6 +570,9 @@ class PlayerStatsAssembler {
               (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0;
           x01CompetitorPoints += (avgSnap['totalScoredPoints'] as int? ?? 0);
           x01CompetitorDarts += (avgSnap['totalDartsThrown'] as int? ?? 0);
+          x01CompetitorAvgDarts += (avgSnap['avgDartsDenominator'] as int? ??
+              avgSnap['totalDartsThrown'] as int? ??
+              0);
 
           final buckets = snap['x01.highScoreBuckets'] ?? const {};
           totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
@@ -674,8 +682,8 @@ class PlayerStatsAssembler {
         ));
       }
       final competitorAvg = useX01Projection
-          ? (x01CompetitorDarts > 0
-              ? (x01CompetitorPoints / x01CompetitorDarts) * 3
+          ? (x01CompetitorAvgDarts > 0
+              ? (x01CompetitorPoints / x01CompetitorAvgDarts) * 3
               : 0.0)
           : (competitorDarts > 0
               ? (competitorDartSum / competitorDarts) * 3
@@ -850,7 +858,10 @@ class PlayerStatsAssembler {
 
     if (gameType == GameType.x01) {
       var scoredPoints = 0;
-      var scoringDarts = 0;
+      // Three-dart-average denominator with busted visits padded to 3 darts
+      // (#634). Uses the projection's padded `avgDartsDenominator`, not the raw
+      // dart count. (The leg's raw dart count for display is `darts` below.)
+      var scoringAvgDarts = 0;
       var checkoutAttempts = 0;
       var successfulCheckouts = 0;
       int? highestCheckout;
@@ -881,7 +892,9 @@ class PlayerStatsAssembler {
         };
         final avg = snap['x01_average'] ?? const {};
         scoredPoints += (avg['totalScoredPoints'] as int? ?? 0);
-        scoringDarts += (avg['totalDartsThrown'] as int? ?? 0);
+        scoringAvgDarts += (avg['avgDartsDenominator'] as int? ??
+            avg['totalDartsThrown'] as int? ??
+            0);
 
         final ch = snap['x01_checkout'] ?? const {};
         checkoutAttempts += (ch['checkoutAttempts'] as int? ?? 0);
@@ -905,7 +918,7 @@ class PlayerStatsAssembler {
         competitorName: competitor.name,
         dartsThrown: darts,
         threeDartAverage:
-            scoringDarts > 0 ? (scoredPoints / scoringDarts) * 3 : null,
+            scoringAvgDarts > 0 ? (scoredPoints / scoringAvgDarts) * 3 : null,
         checkoutPercentage: checkoutAttempts > 0
             ? (successfulCheckouts / checkoutAttempts) * 100
             : null,
@@ -1044,6 +1057,11 @@ class PlayerStatsAssembler {
     final bool isX01Leg = gameType == GameType.x01;
     int legX01Score = 0;
     int currentTurnScore = 0;
+    // X01 PPR denominator pads busted visits to a full 3-dart visit (#634);
+    // kept separate from `legDartCount` (the raw dart count). `currentTurnDarts`
+    // tracks darts in the current turn to size the bust padding.
+    int legBustPadDarts = 0;
+    int currentTurnDarts = 0;
     int legTotalMarks = 0;
     int legTotalTurns = 0;
     int currentTurnMarks = 0;
@@ -1105,6 +1123,7 @@ class PlayerStatsAssembler {
           // — e.g. after a cross-turn undo strips the TurnEnded — can't bleed
           // the prior turn's darts into this one (#610).
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           atcInPlayerTurn = true;
           lastPlayerTurnStartingScore =
               (payload['starting_score'] as num?)?.toInt();
@@ -1112,6 +1131,7 @@ class PlayerStatsAssembler {
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
           legDartCount++;
+          currentTurnDarts++;
           final rawSeg = payload['segment'];
           final segInt = rawSeg is num ? rawSeg.toInt() : null;
           final mult = (payload['multiplier'] as num?)?.toInt();
@@ -1167,7 +1187,14 @@ class PlayerStatsAssembler {
           // the per-turn dart-sum for legacy events (#610).
           legX01Score +=
               (payload['turn_score'] as num?)?.toInt() ?? currentTurnScore;
+          // X01 PPR denominator pads a busted visit to a full 3-dart visit
+          // (#634); raw `legDartCount` is untouched.
+          if (isX01Leg) {
+            legBustPadDarts +=
+                bustDartPadding(payload['reason'] as String?, currentTurnDarts);
+          }
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           legTotalMarks += currentTurnMarks;
           legTotalTurns++;
           currentTurnMarks = 0;
@@ -1177,8 +1204,12 @@ class PlayerStatsAssembler {
           // X01 PPR uses the bust-aware turn_score sum; other types keep the
           // raw dart sum (count-up has no busts). (#610)
           final pprNumerator = isX01Leg ? legX01Score : legScoreTotal;
+          // X01 pads busted visits to 3 darts in the denominator (#634);
+          // other types use the raw dart count.
+          final pprDenominator =
+              legDartCount + (isX01Leg ? legBustPadDarts : 0);
           final ppr =
-              legDartCount > 0 ? (pprNumerator / legDartCount) * 3 : 0.0;
+              pprDenominator > 0 ? (pprNumerator / pprDenominator) * 3 : 0.0;
           final mpt =
               legTotalTurns > 0 ? legTotalMarks / legTotalTurns : null;
 
@@ -1254,7 +1285,9 @@ class PlayerStatsAssembler {
           legDartCount = 0;
           legScoreTotal = 0;
           legX01Score = 0;
+          legBustPadDarts = 0;
           currentTurnScore = 0;
+          currentTurnDarts = 0;
           legTotalMarks = 0;
           legTotalTurns = 0;
           currentTurnMarks = 0;
