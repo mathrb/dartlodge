@@ -9,9 +9,14 @@ import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/cricket_unified_table_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(theme: AppTheme.light(), home: Scaffold(body: child));
+Widget _wrap(Widget child) => MaterialApp(
+      theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: child),
+    );
 
 CompetitorState _competitor({
   required String name,
@@ -121,6 +126,70 @@ void main() {
 
       // T20(3) + T19(3) + T15(3) = 9 marks / 1 round → MPR = 9.
       expect(find.text('9'), findsOneWidget);
+    });
+  });
+
+  group('CricketUnifiedTableWidget — closed-row input gate (#590)', () {
+    // A competitor who has closed 20 (3 marks) so row 20 reads as closed.
+    GameState closedTwentyState() => GameState(
+          gameId: 'g1',
+          gameType: GameType.cricket,
+          competitors: const [
+            CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: ['p1'],
+              score: 0,
+              startingScore: 0,
+              marksPerNumber: {'20': 3},
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 0,
+          isComplete: false,
+          cricketTargets: const [15, 16, 17, 18, 19, 20],
+          cricketTargetMode: 'fixed',
+          cricketScoring: 'standard',
+        );
+
+    // The single-20 input cell's InkWell, located via its Semantics label.
+    Finder singleTwentyCell() => find.descendant(
+          of: find.byWidgetPredicate(
+              (w) => w is Semantics && w.properties.label == 'Single 20'),
+          matching: find.byType(InkWell),
+        );
+
+    testWidgets('live input (default): a closed row is NOT tappable',
+        (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(_wrap(CricketUnifiedTableWidget(
+        gameState: closedTwentyState(),
+        onMiss: () {},
+        onSegmentTapped: tapped.add,
+      )));
+
+      await tester.tap(singleTwentyCell());
+      await tester.pump();
+
+      expect(tapped, isEmpty,
+          reason: 'closed-row cells stay non-tappable during live input');
+    });
+
+    testWidgets('correction (allowClosedRows): a closed row IS tappable',
+        (tester) async {
+      final tapped = <String>[];
+      await tester.pumpWidget(_wrap(CricketUnifiedTableWidget(
+        gameState: closedTwentyState(),
+        allowClosedRows: true,
+        onMiss: () {},
+        onSegmentTapped: tapped.add,
+      )));
+
+      await tester.tap(singleTwentyCell());
+      await tester.pump();
+
+      expect(tapped, ['20'],
+          reason: 'a dart that closed 20 must be re-targetable in correction');
     });
   });
 }
