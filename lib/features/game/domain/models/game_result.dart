@@ -50,6 +50,10 @@ sealed class GameResult with _$GameResult {
     required int successes,
     required int dartsThrown,
     required int fromScore,
+    // Configured checkout quota (`target_successes`); null = ∞ (manual end).
+    // Drives the post-game header denominator (#603) — quota progress, not the
+    // attempt count.
+    int? targetSuccesses,
   }) = CheckoutPracticeResult;
 
   const factory GameResult.shanghai({

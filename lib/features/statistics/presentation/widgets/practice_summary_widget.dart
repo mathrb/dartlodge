@@ -72,6 +72,7 @@ class PracticeSummaryWidget extends StatelessWidget {
         :final successes,
         :final dartsThrown,
         :final fromScore,
+        :final targetSuccesses,
       ) =>
         _buildCheckoutHero(
           l10n: l10n,
@@ -80,6 +81,7 @@ class PracticeSummaryWidget extends StatelessWidget {
           successes: successes,
           dartsThrown: dartsThrown,
           fromScore: fromScore,
+          targetSuccesses: targetSuccesses,
         ),
       ShanghaiResult() => const SizedBox.shrink(),
     };
@@ -100,15 +102,33 @@ class PracticeSummaryWidget extends StatelessWidget {
     required int successes,
     required int dartsThrown,
     required int fromScore,
+    required int? targetSuccesses,
   }) {
     final isSingleAttempt = attempts <= 1;
-    final allCheckedOut = successes > 0 && successes == attempts;
     final anySuccess = successes > 0;
+    // Completion badge = the configured quota was met (#603). The old
+    // `successes == attempts` failed when a quota was met with some busted
+    // turns (then successes < attempts), so the badge never showed. ∞ mode
+    // (no quota) intentionally shows no completion badge — there is no goal to
+    // complete; the headline ("Checked out!" / "N checkouts") conveys the result.
+    final quotaMet = targetSuccesses != null && successes >= targetSuccesses;
 
-    final headline = isSingleAttempt
-        ? (anySuccess ? l10n.summaryCheckedOut : l10n.summaryNotCheckedOut)
-        : l10n.summaryNOfMCheckouts(successes, attempts);
-    final badge = allCheckedOut ? 'CHECKED OUT' : null;
+    // Header denominator is the configured quota, not the attempt count (#603):
+    //  - no success            → "Not checked out"
+    //  - quota > 1             → "N of <quota> checkouts" (progress toward goal)
+    //  - single attempt / q..1 → "Checked out!" (friendly single-checkout)
+    //  - ∞ (no quota), multi   → "N checkouts" (plain count)
+    final String headline;
+    if (!anySuccess) {
+      headline = l10n.summaryNotCheckedOut;
+    } else if (targetSuccesses != null && targetSuccesses > 1) {
+      headline = l10n.summaryCheckoutQuotaProgress(successes, targetSuccesses);
+    } else if (isSingleAttempt || targetSuccesses == 1) {
+      headline = l10n.summaryCheckedOut;
+    } else {
+      headline = l10n.summaryCheckoutCount(successes);
+    }
+    final badge = quotaMet ? 'CHECKED OUT' : null;
     final rate = attempts == 0
         ? null
         : StatFormatter.fmtPct(successes / attempts, decimals: 0);
