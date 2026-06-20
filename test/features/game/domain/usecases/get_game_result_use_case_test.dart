@@ -762,7 +762,9 @@ void main() {
       expect(result.successes, 1,
           reason: 'round 1 checked out; rounds 2 and 3 did not');
       expect(result.dartsThrown, 9,
-          reason: 'three darts thrown per round, all three rounds');
+          reason: 'all darts physically thrown count, including the busted '
+              "round's darts (#598: busts void the score, not the throw — "
+              'aligned with the #634 three-dart-average convention)');
       expect(result.fromScore, 170);
     }));
 
