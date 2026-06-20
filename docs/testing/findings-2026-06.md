@@ -55,6 +55,33 @@ dans `e2e/`.
 > F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
 
 **Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 infirmé, pas d'issue.)_
+
+### Résolution — boucle de correction sérielle (2026-06-19/20)
+
+Toutes les issues traitées de bout en bout (branche → /plan → impl → revue → CI → squash-merge), une PR à la fois.
+
+| Finding | Issue | PR | Disposition |
+|---|---|---|---|
+| F-012 (P0) | #595 | #618 | **Fixed** — Shanghai TurnEnded renvoie `LegOutcome.gameCompleted` (mirroir Catch 40) + régression e2e |
+| F-010 | #597 | #619 | **Fixed** — Turn Breakdown strippe DartCorrected via le helper partagé `stripSupersededEvents` |
+| F-006 | #596 | #620 | **Fixed** — board Count-Up localisé (clés existantes) |
+| F-001 | #588 | #621 | **Fixed (décision : ajouter la manche bull)** — round 21 Double Bull, 1437 atteignable, règles 7 langues |
+| F-020 | #610 | #622 | **Fixed (décision : bust = 0 partout)** — per-game/BEST/first-9/trend PPR alignés sur §5.2 |
+| F-023/24/26 | #614 | #623 | **Fixed** — terminologie fr (tour/leg/qu'une) |
+| F-021 (+F-007/F-008) | #612 | #624 | **Fixed** — Home/Retry/stats labels localisés (7 langues) |
+| F-018 | #605 | #625 | **Fixed** — règles Shanghai multi-joueurs (7 langues) |
+| F-002 | #616 | #626 | **Fixed** — surface DB-error stylée + localisée (ErrorRetryWidget) |
+| F-005 | #617 | #628 | **Won't-fix (décision : amender la spec)** — DESIGN_SYSTEM §7.6 « pas de légende par design » |
+| F-011 | #600 | #629 | **Déjà adressé** (badge BUSTED existant) → badge localisé + correction round-total /21 |
+| F-009 | #599 | #630 | **Fixed (décision : titrer Stats)** — `AppHeader.title` optionnel |
+| F-017 | #604 | #631 | **Fixed (décision : 0 sur bust)** — `turnBusted` → readout 0 |
+| F-013 | #601 | #632 | **Fixed (décision : binder le sink)** — Count-Up DartInputSink + layout camera-first + e2e sim |
+| F-022 | #613 | — | **Won't-fix (décision)** — nl « Win N games » déjà correct (loanword « games », « Win » impératif ; vérifié) |
+| F-014 | #602 | — | **Superseded par #627** — l'UX de passage de tour <3 fléchettes à revoir sur **tous** les plateaux (confirmation indésirable même en X01/Cricket) |
+| F-015 | #598 | — | **Différé** — décision mainteneur en cours (DARTS sur tour busté : 6 = tour entier vs 8 = fléchette bustante seule) |
+| F-016 | #603 | — | **Différé** — décision mainteneur en cours (dénominateur headline) |
+
+_(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
 | F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
