@@ -107,6 +107,206 @@ void main() {
     return container.read(activeCricketGameProvider('g1').notifier);
   }
 
+  // Seeds a solo CRAZY cricket game: opening TurnStarted + a CrazyTargetsRolled
+  // whose open_targets include 12, so the engine accepts hits on 12 and locks
+  // it globally on close (#590 repro). Mirrors the live emission order.
+  Future<ActiveCricketGameNotifier> seedAndLoadCrazy() async {
+    final playerRepo = await base.createPlayerRepository();
+    final gameRepo = await base.createGameRepository();
+    final dartRepo = await base.createDartThrowRepository();
+    final eventRepo = await base.createGameEventRepository();
+
+    await playerRepo.createPlayer(Player(
+        playerId: 'p1',
+        name: 'P1',
+        createdAt: DateTime.now(),
+        lastActive: DateTime.now()));
+
+    await gameRepo.createGame(
+      Game(
+        gameId: 'g1',
+        gameType: GameType.cricket,
+        config: GameConfig.cricket(
+          scoring: 'standard',
+          targetMode: 'crazy',
+          numbers: const ['15', '16', '17', '18', '19', '20', 'bull'],
+          legsToWin: 1,
+        ),
+        startTime: DateTime.now(),
+        isComplete: false,
+      ),
+      const [
+        Competitor(
+          competitorId: 'c1',
+          gameId: 'g1',
+          type: CompetitorType.solo,
+          name: 'P1',
+          players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+        ),
+      ],
+    );
+    await eventRepo.appendEvent(GameEvent(
+      eventId: 'g1-ts0',
+      gameId: 'g1',
+      eventType: 'TurnStarted',
+      localSequence: 1,
+      occurredAt: DateTime.now(),
+      payload: const {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'turn_index': 0,
+        'leg_index': 0,
+      },
+      synced: false,
+      actorId: 'system',
+      source: EventSource.client,
+    ));
+    await eventRepo.appendEvent(GameEvent(
+      eventId: 'g1-roll0',
+      gameId: 'g1',
+      eventType: 'CrazyTargetsRolled',
+      localSequence: 2,
+      occurredAt: DateTime.now(),
+      payload: const {
+        'competitor_id': 'c1',
+        'round': 0,
+        'open_targets': [10, 11, 12, 13, 14, 16],
+      },
+      synced: false,
+      actorId: 'system',
+      source: EventSource.client,
+    ));
+
+    container = ProviderContainer(overrides: [
+      gameRepositoryProvider.overrideWithValue(gameRepo),
+      gameEventRepositoryProvider.overrideWithValue(eventRepo),
+      dartThrowRepositoryProvider.overrideWithValue(dartRepo),
+    ]);
+    await container.read(activeCricketGameProvider('g1').future);
+    return container.read(activeCricketGameProvider('g1').notifier);
+  }
+
+  // Seeds a solo RANDOM cricket game: the once-per-game CricketTargetsAssigned
+  // (includes 12) then an opening TurnStarted. Guards the #590 _buildInitialState
+  // change for random mode — replay must re-derive the assigned targets rather
+  // than relying on the (now empty) seed.
+  Future<ActiveCricketGameNotifier> seedAndLoadRandom() async {
+    final playerRepo = await base.createPlayerRepository();
+    final gameRepo = await base.createGameRepository();
+    final dartRepo = await base.createDartThrowRepository();
+    final eventRepo = await base.createGameEventRepository();
+
+    await playerRepo.createPlayer(Player(
+        playerId: 'p1',
+        name: 'P1',
+        createdAt: DateTime.now(),
+        lastActive: DateTime.now()));
+
+    await gameRepo.createGame(
+      Game(
+        gameId: 'g1',
+        gameType: GameType.cricket,
+        config: GameConfig.cricket(
+          scoring: 'standard',
+          targetMode: 'random',
+          numbers: const ['15', '16', '17', '18', '19', '20', 'bull'],
+          legsToWin: 1,
+        ),
+        startTime: DateTime.now(),
+        isComplete: false,
+      ),
+      const [
+        Competitor(
+          competitorId: 'c1',
+          gameId: 'g1',
+          type: CompetitorType.solo,
+          name: 'P1',
+          players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+        ),
+      ],
+    );
+    await eventRepo.appendEvent(GameEvent(
+      eventId: 'g1-assign',
+      gameId: 'g1',
+      eventType: 'CricketTargetsAssigned',
+      localSequence: 1,
+      occurredAt: DateTime.now(),
+      payload: const {
+        'competitor_id': 'c1',
+        'targets': [10, 11, 12, 13, 14, 16],
+      },
+      synced: false,
+      actorId: 'system',
+      source: EventSource.client,
+    ));
+    await eventRepo.appendEvent(GameEvent(
+      eventId: 'g1-ts0',
+      gameId: 'g1',
+      eventType: 'TurnStarted',
+      localSequence: 2,
+      occurredAt: DateTime.now(),
+      payload: const {
+        'competitor_id': 'c1',
+        'player_id': 'p1',
+        'turn_index': 0,
+        'leg_index': 0,
+      },
+      synced: false,
+      actorId: 'system',
+      source: EventSource.client,
+    ));
+
+    container = ProviderContainer(overrides: [
+      gameRepositoryProvider.overrideWithValue(gameRepo),
+      gameEventRepositoryProvider.overrideWithValue(eventRepo),
+      dartThrowRepositoryProvider.overrideWithValue(dartRepo),
+    ]);
+    await container.read(activeCricketGameProvider('g1').future);
+    return container.read(activeCricketGameProvider('g1').notifier);
+  }
+
+  test('random: correcting a dart keeps the assigned target set (#590)',
+      () async {
+    final notifier = await seedAndLoadRandom();
+
+    await notifier.processDart('T12', inputMethod: 'camera');
+    await notifier.correctTurnDart(0, '12'); // T12 → single 12
+
+    final gs = container.read(activeCricketGameProvider('g1')).value!.gameState;
+    // Replay re-derives the assigned set from CricketTargetsAssigned — the
+    // empty _buildInitialState seed must NOT leave targets blank.
+    expect(gs.cricketTargets, [10, 11, 12, 13, 14, 16]);
+    expect(gs.competitors[0].marksPerNumber['12'], 1);
+  });
+
+  test('crazy: correcting a closed target to single drops the lock (#590)',
+      () async {
+    final notifier = await seedAndLoadCrazy();
+
+    await notifier.processDart('T12', inputMethod: 'camera'); // closes & locks 12
+    final before = container.read(activeCricketGameProvider('g1')).value!;
+    expect(before.gameState.competitors[0].marksPerNumber['12'], 3);
+    expect(before.gameState.cricketLockedTargets, contains(12));
+
+    await notifier.correctTurnDart(0, '12'); // T12 → single 12
+
+    final gs = container.read(activeCricketGameProvider('g1')).value!.gameState;
+    expect(gs.competitors[0].marksPerNumber['12'], 1);
+    expect(gs.cricketLockedTargets, isNot(contains(12)));
+  });
+
+  test('crazy: correcting the sole T12 to MISS reverts 12 to zero (#590)',
+      () async {
+    final notifier = await seedAndLoadCrazy();
+
+    await notifier.processDart('T12', inputMethod: 'camera'); // closes & locks 12
+    await notifier.correctTurnDart(0, 'MISS'); // T12 → MISS, no tail darts
+
+    final gs = container.read(activeCricketGameProvider('g1')).value!.gameState;
+    expect(gs.competitors[0].marksPerNumber['12'] ?? 0, 0);
+    expect(gs.cricketLockedTargets, isNot(contains(12)));
+  });
+
   test('correctTurnDart re-targets the resolved dart and recomputes marks',
       () async {
     final notifier = await seedAndLoad();

@@ -29,11 +29,18 @@ class CricketUnifiedTableWidget extends StatelessWidget {
     required this.gameState,
     required this.onSegmentTapped,
     required this.onMiss,
+    this.allowClosedRows = false,
   });
 
   final GameState gameState;
   final ValueChanged<String> onSegmentTapped;
   final VoidCallback onMiss;
+
+  /// Correction mode (#590): keep closed-row input cells tappable so a dart
+  /// that itself closed the number can be re-targeted. Live input leaves this
+  /// false (you cannot score an already-closed number). The closed *styling*
+  /// is unaffected; only tappability (and the "closed" tooltip) relax.
+  final bool allowClosedRows;
 
   /// Render order: the active 6 numbers descending, then Bull (25) last.
   /// Driven by `state.cricketTargets` so all target modes (fixed, random,
@@ -60,6 +67,7 @@ class CricketUnifiedTableWidget extends StatelessWidget {
               currentTurnIndex: gameState.currentTurnIndex,
               isRowClosed: _isRowClosed(n, gameState),
               isLocked: n != 25 && gameState.cricketLockedTargets.contains(n),
+              allowClosedRows: allowClosedRows,
               onSegmentTapped: onSegmentTapped,
             ),
           ),
@@ -263,6 +271,7 @@ class _CricketNumberRow extends StatelessWidget {
     required this.isRowClosed,
     required this.onSegmentTapped,
     this.isLocked = false,
+    this.allowClosedRows = false,
   });
 
   final int target;
@@ -270,6 +279,9 @@ class _CricketNumberRow extends StatelessWidget {
   final int currentTurnIndex;
   final bool isRowClosed;
   final ValueChanged<String> onSegmentTapped;
+  // Correction mode (#590): closed rows stay tappable so a dart that closed the
+  // number can be re-targeted. The "closed" tooltip is also suppressed.
+  final bool allowClosedRows;
   // Crazy Cricket only: number is globally locked to the board (closed by
   // at least one player, never re-rolled again). Renders a token-based
   // "locked" affordance and treats the row the same as Standard for input
@@ -279,6 +291,10 @@ class _CricketNumberRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    // In correction mode (#590) closed rows stay tappable; the "closed" tooltip
+    // is suppressed. The closed background styling below is unaffected.
+    final inputEnabled = allowClosedRows || !isRowClosed;
+    final showClosedTooltip = isRowClosed && !allowClosedRows;
     return Container(
       decoration: BoxDecoration(
         color: isRowClosed
@@ -324,10 +340,10 @@ class _CricketNumberRow extends StatelessWidget {
                 displayLabel: '$target',
                 dotCount: 1,
                 semanticLabel: 'Single $target',
-                onTap: isRowClosed
-                    ? null
-                    : () => onSegmentTapped(_singleSegment(target)),
-                isRowClosed: isRowClosed,
+                onTap: inputEnabled
+                    ? () => onSegmentTapped(_singleSegment(target))
+                    : null,
+                isRowClosed: showClosedTooltip,
                 hasBorderRight: true,
               ),
             ),
@@ -337,10 +353,10 @@ class _CricketNumberRow extends StatelessWidget {
                 displayLabel: '$target',
                 dotCount: 2,
                 semanticLabel: 'Double $target',
-                onTap: isRowClosed
-                    ? null
-                    : () => onSegmentTapped(_doubleSegment(target)),
-                isRowClosed: isRowClosed,
+                onTap: inputEnabled
+                    ? () => onSegmentTapped(_doubleSegment(target))
+                    : null,
+                isRowClosed: showClosedTooltip,
                 hasBorderRight: true,
               ),
             ),
@@ -350,10 +366,10 @@ class _CricketNumberRow extends StatelessWidget {
                 displayLabel: '$target',
                 dotCount: 3,
                 semanticLabel: 'Triple $target',
-                onTap: isRowClosed
-                    ? null
-                    : () => onSegmentTapped(_tripleSegment(target)),
-                isRowClosed: isRowClosed,
+                onTap: inputEnabled
+                    ? () => onSegmentTapped(_tripleSegment(target))
+                    : null,
+                isRowClosed: showClosedTooltip,
                 hasBorderRight: false,
               ),
             ),
@@ -365,8 +381,8 @@ class _CricketNumberRow extends StatelessWidget {
                 displayLabel: 'SB',
                 dotCount: 1,
                 semanticLabel: 'Single Bull',
-                onTap: isRowClosed ? null : () => onSegmentTapped('SB'),
-                isRowClosed: isRowClosed,
+                onTap: inputEnabled ? () => onSegmentTapped('SB') : null,
+                isRowClosed: showClosedTooltip,
                 hasBorderRight: true,
               ),
             ),
@@ -376,8 +392,8 @@ class _CricketNumberRow extends StatelessWidget {
                 displayLabel: 'DB',
                 dotCount: 2,
                 semanticLabel: 'Double Bull',
-                onTap: isRowClosed ? null : () => onSegmentTapped('DB'),
-                isRowClosed: isRowClosed,
+                onTap: inputEnabled ? () => onSegmentTapped('DB') : null,
+                isRowClosed: showClosedTooltip,
                 hasBorderRight: false,
               ),
             ),

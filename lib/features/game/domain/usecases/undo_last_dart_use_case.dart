@@ -221,8 +221,16 @@ class UndoLastDartUseCase {
       startingScore: source.startingScore,
       cricketScoring: source.cricketScoring,
       cricketTargetMode: source.cricketTargetMode,
-      cricketTargets: source.cricketTargets,
-      cricketLockedTargets: source.cricketLockedTargets,
+      // Mirror GameState.initial exactly (#590): fixed seeds 15–20, random/crazy
+      // seed empty and re-derive their targets from the replayed
+      // CricketTargetsAssigned / CrazyTargetsRolled events; locks start empty
+      // and are re-added by replay as numbers close. Seeding these from the
+      // (post-correction) source instead diverged from cold load and left a
+      // crazy number erroneously locked after correcting away its closing dart.
+      cricketTargets: source.cricketTargetMode == 'fixed'
+          ? const <int>[15, 16, 17, 18, 19, 20]
+          : const <int>[],
+      cricketLockedTargets: const <int>{},
       aroundTheClockVariant: source.aroundTheClockVariant,
       shanghaiTotalRounds: source.shanghaiTotalRounds,
       catch40TargetRemaining:

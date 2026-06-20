@@ -419,6 +419,10 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               height: MediaQuery.of(sheetContext).size.height * 0.6,
               child: CricketUnifiedTableWidget(
                 gameState: gameState,
+                // Correction sheet (#590): keep closed rows tappable so a dart
+                // that closed the number can be re-targeted (e.g. T12 → single
+                // 12). The correction re-applies through the engine.
+                allowClosedRows: true,
                 onSegmentTapped: (segment) {
                   notifier.correctTurnDart(dartIndex, segment);
                   Navigator.of(sheetContext).pop();
