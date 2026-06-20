@@ -1978,6 +1978,8 @@ class PlayerStatsAssembler {
       if (event.gameId != lastGameId) {
         lastGameId = event.gameId;
         remaining = 170;
+        visitStart = 170;
+        threwAtDouble = false;
       }
       final epid = event.payload['player_id'] as String?;
       if (epid != playerId) continue;
