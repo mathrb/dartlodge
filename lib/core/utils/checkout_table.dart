@@ -555,3 +555,15 @@ int minCheckoutScore(String outStrategy) => _configFor(outStrategy).min;
 /// (e.g. `'T20 · D20'` is 2 darts; `'D20'` is 1; `'T20 · T20 · DB'` is 3).
 int dartsRequiredForCheckout(String suggestion) =>
     suggestion.split(' · ').length;
+
+/// True when [remaining] can be checked out with a single dart at a double —
+/// i.e. the thrower is "at a double" (the PDC darts-at-a-double position): an
+/// even score 2..40 (D1..D20) or 50 (DB).
+///
+/// Used to define a checkout ATTEMPT: a visit counts as an attempt only if the
+/// player threw at least one dart from such a position (#635 Checkout Practice;
+/// reused by #637 X01 checkout %). Pure setup/scoring visits — and bogey
+/// numbers like 169/168/166/165/163/162/159 that can never reach a double in a
+/// single visit's last dart — never satisfy this for their non-finishing darts.
+bool isOnADoubleFinish(int remaining) =>
+    remaining == 50 || (remaining >= 2 && remaining <= 40 && remaining.isEven);

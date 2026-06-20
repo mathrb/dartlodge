@@ -12,6 +12,7 @@
 //   - leg-limit event trimming (caller passes already-trimmed events)
 //   - reactivity / streams (platform repo job)
 
+import 'package:dart_lodge/core/utils/checkout_table.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
@@ -1958,17 +1959,45 @@ class PlayerStatsAssembler {
     int totalGames,
     int totalDartsThrown,
   ) {
+    // #635: a checkout ATTEMPT is a visit in which the player threw at a
+    // finishing double (the running score reached a single-dart double-out
+    // position), not every visit. Setup/scoring visits don't count, so a 170
+    // completed over several visits reads as 1/1, not 1/N. The drill always
+    // starts at 170 and resets to 170 on checkout, reverting to the visit's
+    // start on a bust — so `remaining` is reconstructable from events with no
+    // producer change. Reset at each game boundary (career stats span games).
+    // #636: revisit the hardcoded 170 when varied checkout targets land.
     int attempts = 0;
     int successes = 0;
+    var remaining = 170;
+    var visitStart = 170;
+    var threwAtDouble = false;
+    String? lastGameId;
 
     for (final event in events) {
+      if (event.gameId != lastGameId) {
+        lastGameId = event.gameId;
+        remaining = 170;
+      }
       final epid = event.payload['player_id'] as String?;
       if (epid != playerId) continue;
       switch (event.eventType) {
+        case 'TurnStarted':
+          visitStart = remaining;
+          threwAtDouble = false;
+        case 'DartThrown':
+          if (isOnADoubleFinish(remaining)) threwAtDouble = true;
+          remaining -= (event.payload['score'] as num?)?.toInt() ?? 0;
         case 'TurnEnded':
-          attempts++;
           final reason = event.payload['reason'] as String?;
-          if (reason == 'checkout') successes++;
+          if (reason == 'checkout') {
+            successes++;
+            attempts++; // a checkout always finished on a double
+            remaining = 170;
+          } else {
+            if (remaining < 2) remaining = visitStart; // bust → revert
+            if (threwAtDouble) attempts++;
+          }
         default:
           break;
       }

@@ -151,4 +151,22 @@ void main() {
       }
     });
   });
+
+  group('isOnADoubleFinish (#635)', () {
+    test('even 2..40 are single-dart double finishes', () {
+      for (final r in [2, 4, 16, 32, 40]) {
+        expect(isOnADoubleFinish(r), isTrue, reason: 'D${r ~/ 2} finishes $r');
+      }
+    });
+
+    test('50 (DB) is a single-dart double finish', () {
+      expect(isOnADoubleFinish(50), isTrue);
+    });
+
+    test('odd, >40 (non-50), and 0/1 are not single-dart double finishes', () {
+      for (final r in [1, 3, 41, 42, 49, 51, 60, 100, 170, 0]) {
+        expect(isOnADoubleFinish(r), isFalse, reason: '$r is not on a double');
+      }
+    });
+  });
 }

@@ -143,6 +143,8 @@ Stats are shown at the end of the drill.
 |---|---|
 | Darts thrown | Total darts physically thrown (`darts_thrown`), **including** busted darts (a bust voids the score, not the throw — see §4 and #634). Excludes only the un-thrown darts forfeited when a turn ends early on a checkout or bust. |
 | Successes | Running count of completed checkouts (`practice_successes`) — the quota progress toward `target_successes`. |
+| Checkout attempt | A **visit in which the player threw at a finishing double** — i.e. the visit's running score reached a single-dart double-out position (an even score 2..40, or 50/DB; see `isOnADoubleFinish`). Pure setup/scoring visits, where the player never got to a double, are **not** attempts (#635). A checkout visit is always an attempt (it finished on a double). So a 170 completed over several visits counts as 1 attempt, not N — it is not diluted by the scoring visits. (This is the same convention X01 checkout % uses — #637.) |
+| Success rate | `successes / attempts` (per the attempt definition above), not `successes / visits`. |
 | Checkout score | The score at the **start of the finishing turn** (`turn_start_score` when `GameCompleted` fires on a checkout). Indicates the checkout value the player actually executed. |
 
 > Example: player reaches 40 before the final turn, then checks out D20. Checkout score = 40; darts thrown = total across all turns.

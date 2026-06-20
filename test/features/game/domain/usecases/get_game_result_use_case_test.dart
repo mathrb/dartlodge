@@ -614,10 +614,19 @@ void main() {
         dart(gameId, competitorId, playerId, 2, 20, 3),
         dart(gameId, competitorId, playerId, 3, 20, 3),
         dart(gameId, competitorId, playerId, 4, 25, 2),
+        // Real #254 flow: DartThrown → TurnEnded(reason='checkout') →
+        // GameCompleted. The DB dart was thrown at a double, so it's an attempt.
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: 5,
+          reason: 'checkout',
+        ),
         buildGameCompletedEvent(
           gameId: gameId,
           winnerCompetitorId: competitorId,
-          localSequence: 5,
+          localSequence: 6,
         ),
       ];
 
@@ -627,14 +636,14 @@ void main() {
       expect(result, isA<CheckoutPracticeResult>());
       final co = result as CheckoutPracticeResult;
       expect(co.competitorName, 'Dave');
-      expect(co.attempts, 1);
+      expect(co.attempts, 1, reason: 'checkout visit threw at a double (#635)');
       expect(co.successes, 1);
       expect(co.dartsThrown, 3);
       expect(co.fromScore, 170);
       expect(co.targetSuccesses, 1, reason: 'quota carried from config (#603)');
     }));
 
-    test('checkoutPractice: manual end before checkout reports 1 attempt / 0 successes',
+    test('checkoutPractice: a setup-only visit (no dart at a double) is 0 attempts (#635)',
         (() async {
       const gameId = 'g-co-fail';
       const competitorId = 'c1';
@@ -657,7 +666,7 @@ void main() {
           turnIndex: 0,
           legIndex: 0,
         ),
-        dart(gameId, competitorId, playerId, 2, 20, 1), // 170-20 = 150
+        dart(gameId, competitorId, playerId, 2, 20, 1), // 170-20 = 150 (setup)
         buildGameCompletedEvent(
           gameId: gameId,
           winnerCompetitorId: null,
@@ -668,7 +677,8 @@ void main() {
       await completeWithEvents(gameId, null, events);
 
       final result = await useCase.execute(gameId) as CheckoutPracticeResult;
-      expect(result.attempts, 1);
+      expect(result.attempts, 0,
+          reason: 'one setup dart at 170 never reached a double (#635)');
       expect(result.successes, 0);
       expect(result.dartsThrown, 1);
       expect(result.fromScore, 170);
@@ -758,8 +768,10 @@ void main() {
 
       final result = await useCase.execute(gameId) as CheckoutPracticeResult;
       expect(result.competitorName, 'Frank');
-      expect(result.attempts, 3,
-          reason: 'three TurnStarted events → three attempts at checkout');
+      expect(result.attempts, 2,
+          reason: 'round 1 checked out (DB) and round 2 reached 50/DB before '
+              'busting — both threw at a double; round 3 (three misses from '
+              '170) never reached a double, so it is not an attempt (#635)');
       expect(result.successes, 1,
           reason: 'round 1 checked out; rounds 2 and 3 did not');
       expect(result.dartsThrown, 9,
