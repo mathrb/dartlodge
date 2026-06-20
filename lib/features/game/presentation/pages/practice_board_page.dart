@@ -451,22 +451,15 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                 canUndo: !gs.isComplete &&
                     (gs.dartsThrownInTurn > 0 ||
                         gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
-                // Shanghai rounds are tied to the round-number target —
-                // tapping NEXT ROUND with 0 darts thrown silently skips
-                // that round, which reads as a mis-tap rather than an
-                // intentional pass (#289 / #303).
-                //
-                // #303 left ATC ungated because its strategic-skip was
-                // judged intentional at the time. The audit (#336) later
-                // flagged the resulting asymmetry, and we're choosing the
-                // mis-tap protection over strategic-skip: a deliberate
-                // pass remains available by throwing a MISS, while the
-                // accidental 0-dart NEXT ROUND tap that hands the turn
-                // over silently is now blocked. Other practice modes
-                // (Bob's 27 / Catch 40 / Checkout) keep their existing
-                // behaviour.
-                showNextRound: !gs.isComplete &&
-                    !((isShanghai || isAtc) && gs.dartsThrownInTurn == 0),
+                // #627: NEXT ROUND is gated on ≥1 dart on every board (the
+                // mis-tap guard first added for Shanghai/ATC in #289/#336 is
+                // now consistent everywhere). Tapping with 0 darts would
+                // silently hand the turn over (filling 3 MISS), which reads as
+                // an accidental forfeit; a deliberate pass remains available by
+                // throwing a MISS, then NEXT. 1–2 darts advance silently with
+                // MISS-fill, no confirmation. Catch 40 uses NEXT TARGET
+                // (`showNextTarget`) below, so this gate doesn't apply to it.
+                showNextRound: !gs.isComplete && gs.dartsThrownInTurn > 0,
                 showNextTarget: isCatch40 &&
                     (gs.catch40TargetRemaining == 0 ||
                         gs.catch40DartsOnTarget >= 6) &&

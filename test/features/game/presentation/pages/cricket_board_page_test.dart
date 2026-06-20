@@ -571,31 +571,10 @@ void main() {
     expect(find.text('Advance turn?'), findsNothing);
   });
 
-  // ── 15. NEXT PLAYER with < 3 darts → shows AlertDialog ───────────────────
+  // ── 15. NEXT PLAYER with 1–2 darts advances directly, no dialog (#627) ────
 
-  testWidgets('15. NEXT PLAYER with < 3 darts shows confirm dialog',
+  testWidgets('15. NEXT PLAYER with <3 darts calls nextPlayer() directly (#627)',
       (tester) async {
-    final gs = _cricketState(dartsThrownInTurn: 1);
-    final notifier =
-        _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
-    await tester.pumpWidget(_buildApp(notifier));
-    await tester.pumpAndSettle();
-
-    final nextPlayerBtn = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.text('NEXT PLAYER'),
-    );
-    await tester.ensureVisible(nextPlayerBtn.first);
-    await tester.tap(nextPlayerBtn.first);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Advance turn?'), findsOneWidget);
-    expect(find.textContaining("1 dart"), findsOneWidget);
-  });
-
-  // ── 16. Confirm dialog → nextPlayer() called ─────────────────────────────
-
-  testWidgets('16. Confirming dialog calls nextPlayer()', (tester) async {
     final gs = _cricketState(dartsThrownInTurn: 1);
     final fakeNotifier =
         _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
@@ -615,21 +594,20 @@ void main() {
     );
     await tester.ensureVisible(nextPlayerBtn.first);
     await tester.tap(nextPlayerBtn.first);
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.widgetWithText(FilledButton, 'Confirm'));
     await tester.pumpAndSettle();
 
     final notifier =
         container.read(activeCricketGameProvider('game-1').notifier)
             as _FakeActiveCricketGameNotifier;
     expect(notifier.nextPlayerCalls, 1);
+    // No confirmation dialog (#627 removed it).
+    expect(find.text('Advance turn?'), findsNothing);
   });
 
-  // ── 17. Cancel dialog → nextPlayer() NOT called ──────────────────────────
+  // ── 16. NEXT PLAYER disabled with 0 darts (mis-tap guard, #627) ───────────
 
-  testWidgets('17. Cancelling dialog does not call nextPlayer()', (tester) async {
-    final gs = _cricketState(dartsThrownInTurn: 1);
+  testWidgets('16. NEXT PLAYER with 0 darts is disabled (#627)', (tester) async {
+    final gs = _cricketState(dartsThrownInTurn: 0);
     final fakeNotifier =
         _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
     final container = ProviderContainer(
@@ -650,13 +628,11 @@ void main() {
     await tester.tap(nextPlayerBtn.first);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Cancel'));
-    await tester.pumpAndSettle();
-
     final notifier =
         container.read(activeCricketGameProvider('game-1').notifier)
             as _FakeActiveCricketGameNotifier;
-    expect(notifier.nextPlayerCalls, 0);
+    expect(notifier.nextPlayerCalls, 0,
+        reason: '0-dart NEXT is gated to prevent accidental forfeit');
   });
 
   // ── 18. Active player header has primary tint ─────────────────────────────

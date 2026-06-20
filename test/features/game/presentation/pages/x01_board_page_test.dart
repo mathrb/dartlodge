@@ -748,7 +748,7 @@ void main() {
     await tester.pumpWidget(_buildApp(notifier));
     await tester.pumpAndSettle();
 
-    // New design allows ending turn early - button is enabled as long as game is not complete
+    // 1–2 darts: NEXT enabled (advancing silently MISS-fills, no dialog).
     final button = tester.widget<FilledButton>(
       find.ancestor(
         of: find.text('NEXT ROUND'),
@@ -756,6 +756,26 @@ void main() {
       ).first,
     );
     expect(button.onPressed, isNotNull);
+  });
+
+  // ── 19b. NEXT ROUND disabled with 0 darts (mis-tap guard, #627) ──────────────
+
+  testWidgets('19b. NEXT ROUND disabled when 0 darts thrown (#627)',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(dartsThrownInTurn: 0, turnActive: true);
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final button = tester.widget<FilledButton>(
+      find.ancestor(
+        of: find.text('NEXT ROUND'),
+        matching: find.byType(FilledButton),
+      ).first,
+    );
+    expect(button.onPressed, isNull,
+        reason: '0-dart NEXT is gated to prevent accidental forfeit (#627)');
   });
 
   // ── 20. NEXT ROUND enabled when 3 darts thrown ───────────────────────────────

@@ -21,10 +21,6 @@ void main() {
     expect(fr.achievementNineDarterDescription, isNot(contains('manche')));
   });
 
-  test('F-026 — advance-turn body elides: "qu\'une fléchette" for 1 dart', () {
-    expect(fr.gameAdvanceTurnBody(1), contains("qu'une fléchette"));
-    expect(fr.gameAdvanceTurnBody(1), isNot(contains('que 1')));
-    // The plural branch stays "que N fléchettes".
-    expect(fr.gameAdvanceTurnBody(2), contains('que 2 fléchettes'));
-  });
+  // F-026 removed: the advance-turn confirmation dialog (gameAdvanceTurnBody)
+  // was dropped in #627 — turn-pass no longer prompts.
 }

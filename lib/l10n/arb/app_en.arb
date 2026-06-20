@@ -799,19 +799,6 @@
   "@gameCheckoutHint": {
     "description": "Placeholder hint in the checkout banner when no checkout is available"
   },
-  "gameAdvanceTurnTitle": "Advance turn?",
-  "@gameAdvanceTurnTitle": {
-    "description": "Title of the cricket confirm dialog when advancing with <3 darts"
-  },
-  "gameAdvanceTurnBody": "You've only thrown {count, plural, one{1 dart} other{{count} darts}}. Advance anyway?",
-  "@gameAdvanceTurnBody": {
-    "description": "Body of the advance-turn confirm dialog; count is darts thrown so far",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "gameRoundLimitReached": "Round limit reached",
   "@gameRoundLimitReached": {
     "description": "Title of the cap-winner dialog shown at the per-leg round limit"

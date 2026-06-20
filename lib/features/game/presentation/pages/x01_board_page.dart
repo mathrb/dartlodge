@@ -246,7 +246,10 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
         final canUndo = dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
-        final canNext = !gameState.isComplete;
+        // #627: NEXT gated on ≥1 dart (mis-tap guard, consistent across boards);
+        // 1–2 darts advance silently with MISS-fill, no confirmation.
+        final canNext =
+            !gameState.isComplete && gameState.dartsThrownInTurn > 0;
         final currentScore = activeCompetitor.score;
 
         // Current turn darts: last dartsThrownInTurn items from active

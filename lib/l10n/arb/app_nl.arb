@@ -243,8 +243,6 @@
   "gameNotFound": "Spel niet gevonden",
   "gameDrillLoadFailed": "Oefening laden mislukt.",
   "gameCheckoutHint": "Suggesties verschijnen binnen checkout-bereik",
-  "gameAdvanceTurnTitle": "Beurt doorgeven?",
-  "gameAdvanceTurnBody": "Je hebt pas {count, plural, one{1 dart} other{{count} darts}} gegooid. Toch doorgaan?",
   "gameRoundLimitReached": "Rondelimiet bereikt",
   "gameNoAutoWinner": "Geen automatische winnaar — kies wie deze leg wint.",
   "gameSetWinner": "Winnaar instellen",
