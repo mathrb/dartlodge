@@ -92,7 +92,12 @@ class X01AverageProjection extends ProjectionEngine {
     return {
       'threeDartAverage': avg,
       'totalScoredPoints': _totalScoredPoints,
+      // RAW darts actually thrown (consumers use this as an actual-darts count).
       'totalDartsThrown': _totalDartsThrown,
+      // Average denominator: raw darts + busted-visit padding (#634). Callers
+      // that recompute a three-dart average across players (per-game competitor
+      // rollup, per-leg competitor) must divide by THIS, not the raw count.
+      'avgDartsDenominator': avgDenominator,
     };
   }
 }

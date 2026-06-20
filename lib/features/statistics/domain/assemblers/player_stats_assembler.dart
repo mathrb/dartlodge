@@ -504,6 +504,10 @@ class PlayerStatsAssembler {
       final x01AvgByPlayer = <String, double>{};
       int x01CompetitorPoints = 0;
       int x01CompetitorDarts = 0;
+      // Padded denominator for the competitor-level three-dart average (#634):
+      // busted visits count as 3 darts. Separate from x01CompetitorDarts, which
+      // stays the raw actual-darts count.
+      int x01CompetitorAvgDarts = 0;
 
       // Legs won — count LegCompleted events with this competitor as winner.
       final legsWon = events.where((e) {
@@ -566,6 +570,9 @@ class PlayerStatsAssembler {
               (avgSnap['threeDartAverage'] as num?)?.toDouble() ?? 0.0;
           x01CompetitorPoints += (avgSnap['totalScoredPoints'] as int? ?? 0);
           x01CompetitorDarts += (avgSnap['totalDartsThrown'] as int? ?? 0);
+          x01CompetitorAvgDarts += (avgSnap['avgDartsDenominator'] as int? ??
+              avgSnap['totalDartsThrown'] as int? ??
+              0);
 
           final buckets = snap['x01.highScoreBuckets'] ?? const {};
           totalOneEighty += (buckets['oneEightyTurns'] as int? ?? 0);
@@ -675,8 +682,8 @@ class PlayerStatsAssembler {
         ));
       }
       final competitorAvg = useX01Projection
-          ? (x01CompetitorDarts > 0
-              ? (x01CompetitorPoints / x01CompetitorDarts) * 3
+          ? (x01CompetitorAvgDarts > 0
+              ? (x01CompetitorPoints / x01CompetitorAvgDarts) * 3
               : 0.0)
           : (competitorDarts > 0
               ? (competitorDartSum / competitorDarts) * 3
@@ -851,7 +858,10 @@ class PlayerStatsAssembler {
 
     if (gameType == GameType.x01) {
       var scoredPoints = 0;
-      var scoringDarts = 0;
+      // Three-dart-average denominator with busted visits padded to 3 darts
+      // (#634). Uses the projection's padded `avgDartsDenominator`, not the raw
+      // dart count. (The leg's raw dart count for display is `darts` below.)
+      var scoringAvgDarts = 0;
       var checkoutAttempts = 0;
       var successfulCheckouts = 0;
       int? highestCheckout;
@@ -882,7 +892,9 @@ class PlayerStatsAssembler {
         };
         final avg = snap['x01_average'] ?? const {};
         scoredPoints += (avg['totalScoredPoints'] as int? ?? 0);
-        scoringDarts += (avg['totalDartsThrown'] as int? ?? 0);
+        scoringAvgDarts += (avg['avgDartsDenominator'] as int? ??
+            avg['totalDartsThrown'] as int? ??
+            0);
 
         final ch = snap['x01_checkout'] ?? const {};
         checkoutAttempts += (ch['checkoutAttempts'] as int? ?? 0);
@@ -906,7 +918,7 @@ class PlayerStatsAssembler {
         competitorName: competitor.name,
         dartsThrown: darts,
         threeDartAverage:
-            scoringDarts > 0 ? (scoredPoints / scoringDarts) * 3 : null,
+            scoringAvgDarts > 0 ? (scoredPoints / scoringAvgDarts) * 3 : null,
         checkoutPercentage: checkoutAttempts > 0
             ? (successfulCheckouts / checkoutAttempts) * 100
             : null,

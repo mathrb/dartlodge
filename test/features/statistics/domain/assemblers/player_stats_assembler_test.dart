@@ -1241,6 +1241,43 @@ void main() {
       expect(c.oneEightyTurns, 1);
     });
 
+    test(
+        'X01 — per-game AVG pads a sub-3-dart busted visit to 3 darts (#634)',
+        () {
+      // Turn 1: clean 180 (3 darts). Turn 2: bust on the FIRST dart (only 1
+      // DartThrown emitted). The busted visit counts as a full 3-dart visit in
+      // the denominator: AVG = 180 / (3 + 3) * 3 = 90 (was 180 / 4 * 3 = 135
+      // under the old actual-darts rule). Raw totalDartsThrown stays 4.
+      final events = [
+        turnStarted(turnNumber: 1, startingScore: 200),
+        dart(20, 3),
+        dart(20, 3),
+        dart(20, 3),
+        turnEnded(turnScore: 180),
+        turnStarted(turnNumber: 2, startingScore: 20),
+        dart(20, 3), // overshoots 20 → bust on dart 1
+        turnEnded(reason: 'bust', turnScore: 0),
+      ];
+      final throws = [
+        for (var i = 0; i < 4; i++)
+          (competitorId: 'c1', playerId: playerId, score: 60),
+      ];
+
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: throws,
+        competitorNames: const {'c1': 'Alice'},
+        events: events,
+      );
+
+      final c = stats.byCompetitor.single;
+      expect(c.totalDartsThrown, 4, reason: 'raw count is not padded');
+      expect(c.threeDartAverage, 90.0,
+          reason: 'busted visit padded to 3 darts → 180 / 6 * 3');
+      expect(c.byPlayer.single.threeDartAverage, 90.0);
+    });
+
     test('legsWon counted from LegCompleted events with matching competitor',
         () {
       final events = [
