@@ -32,7 +32,7 @@ There is no "in" strategy — the player is always "in" from the first dart.
 ### Per Session
 
 * `score` — current score; starts at 170
-* `darts_thrown` — total dart throws recorded across all turns
+* `darts_thrown` — total darts physically thrown across all turns (including busted darts; a bust voids the score, not the throw — see §4)
 * `target_successes` — configured checkout quota (int) or `null` for ∞; immutable for the session
 * `practice_successes` — running count of successful checkouts; starts at 0, increments on each checkout
 * `game_complete` — boolean
@@ -85,12 +85,22 @@ darts_thrown_in_turn = 3            // remaining slots padded; turn is full
 **Bust** — `new_score < 0`, OR `new_score == 1`, OR (`new_score == 0` AND dart is NOT a double):
 
 ```
-score = turn_start_score            // revert
+score = turn_start_score            // revert SCORE only
+darts_thrown += 1                   // the bust dart was physically thrown — it counts
 turn_active = false
 → emit TurnEnded                    // turn ends immediately; remaining darts forfeited
 ```
 
-> Note: a busted dart does **not** increment `darts_thrown` or `darts_thrown_in_turn`.
+> Note: a bust reverts the **score** to `turn_start_score`, but the darts were still physically
+> thrown, so they **count** toward `darts_thrown` (the bust-causing dart included). The rule is
+> simply: a dart physically thrown counts; a bust voids the score, not the throw. Only the turn's
+> *un-thrown* darts (forfeited when the turn ends early) are not counted.
+>
+> This is consistent with the broader three-dart-average convention (a busted visit's darts are
+> darts thrown — see #634, which applies it to the X01 average). Note that #634's *padding* of a
+> busted visit up to a full 3-dart visit is an **averaging-denominator** convention and does **not**
+> apply here: this is a raw count of darts actually thrown, so a bust on the 1st or 2nd dart counts
+> 1 or 2, not 3.
 
 **Normal** — `new_score > 1`:
 
@@ -131,7 +141,7 @@ Stats are shown at the end of the drill.
 
 | Metric | Definition |
 |---|---|
-| Darts thrown | Total dart throws recorded (`darts_thrown`). Only counts darts that were **not** busted. |
+| Darts thrown | Total darts physically thrown (`darts_thrown`), **including** busted darts (a bust voids the score, not the throw — see §4 and #634). Excludes only the un-thrown darts forfeited when a turn ends early on a checkout or bust. |
 | Successes | Running count of completed checkouts (`practice_successes`) — the quota progress toward `target_successes`. |
 | Checkout score | The score at the **start of the finishing turn** (`turn_start_score` when `GameCompleted` fires on a checkout). Indicates the checkout value the player actually executed. |
 
