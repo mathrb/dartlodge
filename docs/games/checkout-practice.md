@@ -32,7 +32,7 @@ There is no "in" strategy — the player is always "in" from the first dart.
 ### Per Session
 
 * `score` — current score; starts at 170
-* `darts_thrown` — total dart throws recorded across all turns
+* `darts_thrown` — total darts physically thrown across all turns (including busted darts; a bust voids the score, not the throw — see §4)
 * `target_successes` — configured checkout quota (int) or `null` for ∞; immutable for the session
 * `practice_successes` — running count of successful checkouts; starts at 0, increments on each checkout
 * `game_complete` — boolean
@@ -92,11 +92,15 @@ turn_active = false
 ```
 
 > Note: a bust reverts the **score** to `turn_start_score`, but the darts were still physically
-> thrown, so they **count** toward `darts_thrown` (the bust-causing dart included). This follows
-> the three-dart-average convention adopted in #634 — busted darts are darts thrown. The remaining
-> *un-thrown* darts of the turn are forfeited (they are not counted). #634's separate rule of
-> *padding* a busted visit up to a full 3-dart visit is an **averaging-denominator** convention; it
-> does not apply to this raw darts-thrown count, which reflects darts actually thrown.
+> thrown, so they **count** toward `darts_thrown` (the bust-causing dart included). The rule is
+> simply: a dart physically thrown counts; a bust voids the score, not the throw. Only the turn's
+> *un-thrown* darts (forfeited when the turn ends early) are not counted.
+>
+> This is consistent with the broader three-dart-average convention (a busted visit's darts are
+> darts thrown — see #634, which applies it to the X01 average). Note that #634's *padding* of a
+> busted visit up to a full 3-dart visit is an **averaging-denominator** convention and does **not**
+> apply here: this is a raw count of darts actually thrown, so a bust on the 1st or 2nd dart counts
+> 1 or 2, not 3.
 
 **Normal** — `new_score > 1`:
 
