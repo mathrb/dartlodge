@@ -534,6 +534,33 @@ void main() {
   });
 
   testWidgets(
+      '6f-checkout. Checkout Practice NEXT ROUND also gated on ≥1 dart (#627)',
+      (tester) async {
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final gs = GameState(
+      gameId: 'game-1',
+      gameType: GameType.checkoutPractice,
+      competitors: [_practiceCompetitor()],
+      currentTurnIndex: 0,
+      dartsThrownInTurn: 0,
+      isComplete: false,
+      turnActive: true,
+    );
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final btn = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'NEXT ROUND'),
+    );
+    expect(btn.onPressed, isNull,
+        reason: 'Checkout Practice 0-dart NEXT now gated alongside the others (#627)');
+  });
+
+  testWidgets(
       '6g. Shanghai NEXT ROUND enables once a dart is thrown',
       (tester) async {
     tester.view.physicalSize = const Size(800, 1600);

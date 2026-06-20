@@ -738,7 +738,7 @@ void main() {
     expect(notifier.processedDarts, contains('T20'));
   });
 
-  // ── 19. NEXT ROUND disabled when < 3 darts ───────────────────────────────────
+  // ── 19. NEXT ROUND enabled mid-turn (1–2 darts), disabled at 0 (#627) ────────
 
   testWidgets('19. NEXT ROUND enabled even mid-turn (new design)',
       (tester) async {
