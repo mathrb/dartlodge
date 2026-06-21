@@ -1101,10 +1101,11 @@ void main() {
     test(
         'TurnStarted-consuming projections survive when DartCorrected exists '
         '(regression #164)', () {
-      // X01CheckoutProjection counts a "checkout attempt" on every TurnStarted
-      // event whose starting_score <= 170. Pre-fix, PlayerStatsAssembler ran
-      // a second `replayFrom(filteredEvents, fromSequencePerGame)` pass after
-      // the initial `run` — that second pass re-initialised every engine and
+      // X01CheckoutProjection counts a "checkout attempt" for a visit that
+      // threw at a finish position (#637), tallied on the player's TurnEnded.
+      // Pre-fix, PlayerStatsAssembler ran a second
+      // `replayFrom(filteredEvents, fromSequencePerGame)` pass after the
+      // initial `run` — that second pass re-initialised every engine and
       // applied only events with localSequence >= DartCorrected.localSequence,
       // silently dropping the seq=1 TurnStarted and resetting the checkout
       // counter to zero.
@@ -1113,10 +1114,11 @@ void main() {
       //   seq=1  TurnStarted        starting_score=170
       //   seq=2  DartThrown T20
       //   seq=3  DartThrown T20
-      //   seq=4  DartThrown DB      (170 → 0)
-      //   seq=5  LegCompleted       winner_player_id=p1
-      //   seq=6  GameCompleted
-      //   seq=7  DartCorrected → original_event_id='phantom'
+      //   seq=4  DartThrown DB      (170 → 0, thrown from 50 = a finish)
+      //   seq=5  TurnEnded          reason=checkout
+      //   seq=6  LegCompleted       winner_player_id=p1
+      //   seq=7  GameCompleted
+      //   seq=8  DartCorrected → original_event_id='phantom'
       //
       // The DartCorrected references no real event in this fixture — its
       // sole job is to populate fromSequencePerGame and trigger the buggy
@@ -1164,18 +1166,24 @@ void main() {
         rawEvent(
           gameId: 'g-co',
           seq: 5,
+          type: 'TurnEnded',
+          payload: {'player_id': playerId, 'reason': 'checkout'},
+        ),
+        rawEvent(
+          gameId: 'g-co',
+          seq: 6,
           type: 'LegCompleted',
           payload: {'winner_player_id': playerId},
         ),
         rawEvent(
           gameId: 'g-co',
-          seq: 6,
+          seq: 7,
           type: 'GameCompleted',
           payload: {'winner_player_id': playerId},
         ),
         rawEvent(
           gameId: 'g-co',
-          seq: 7,
+          seq: 8,
           type: 'DartCorrected',
           payload: {'original_event_id': 'phantom'},
         ),
@@ -1189,7 +1197,8 @@ void main() {
         totalDartsThrown: 3,
       );
 
-      // 1 turn at <=170 → 1 attempt, leg won → 1 success → 100% checkout.
+      // 1 visit that threw from a finish → 1 attempt, leg won → 1 success →
+      // 100% checkout.
       expect(stats.checkoutPercentage, 100.0,
           reason:
               'TurnStarted at seq=1 must reach X01CheckoutProjection even '

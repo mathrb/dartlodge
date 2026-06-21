@@ -169,4 +169,44 @@ void main() {
       }
     });
   });
+
+  group('isOnAFinish (#637 — strategy-aware single-dart finish)', () {
+    test('double: only double finishes (even 2..40, 50)', () {
+      for (final r in [2, 40, 50]) {
+        expect(isOnAFinish(r, 'double'), isTrue, reason: '$r');
+      }
+      for (final r in [17, 57, 25, 1, 41]) {
+        expect(isOnAFinish(r, 'double'), isFalse, reason: '$r');
+      }
+    });
+
+    test('master: doubles + triples + double bull', () {
+      // doubles
+      expect(isOnAFinish(40, 'master'), isTrue);
+      expect(isOnAFinish(50, 'master'), isTrue);
+      // triples 3..60
+      for (final r in [3, 27, 57, 60]) {
+        expect(isOnAFinish(r, 'master'), isTrue, reason: 'T finishes $r');
+      }
+      // single bull (25) and plain singles are NOT master finishes
+      expect(isOnAFinish(25, 'master'), isFalse);
+      expect(isOnAFinish(17, 'master'), isFalse);
+      expect(isOnAFinish(61, 'master'), isFalse);
+    });
+
+    test('straight: any single dart (singles, bulls, doubles, triples)', () {
+      for (final r in [1, 17, 20, 25, 40, 50, 57, 60]) {
+        expect(isOnAFinish(r, 'straight'), isTrue, reason: '$r');
+      }
+      // 23 is not reachable by any single dart; >60 never is
+      for (final r in [23, 61, 100, 170]) {
+        expect(isOnAFinish(r, 'straight'), isFalse, reason: '$r');
+      }
+    });
+
+    test('unknown strategy falls back to double-out', () {
+      expect(isOnAFinish(40, 'weird'), isTrue);
+      expect(isOnAFinish(17, 'weird'), isFalse);
+    });
+  });
 }

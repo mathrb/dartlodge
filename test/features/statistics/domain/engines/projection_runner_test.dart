@@ -61,11 +61,16 @@ void main() {
     final runner = ProjectionRunner([X01CheckoutProjection()]);
     runner.init(_makeContext());
 
-    // TurnStarted: starting_score=50 ≤ 170 → checkoutAttempts=1
-    runner.run([_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 50}, seq: 1)]);
+    // A visit that throws a dart from 50 (DB, a finish position) → 1 attempt,
+    // tallied on the player's TurnEnded (#637).
+    runner.run([
+      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 50}, seq: 1),
+      _makeEvent('DartThrown', {'player_id': 'p1', 'score': 50}, seq: 2),
+      _makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'checkout'}, seq: 3),
+    ]);
 
     // LegCompleted: apply → successfulCheckouts=1; reset(leg) is a no-op (cumulative)
-    runner.run([_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 2)]);
+    runner.run([_makeEvent('LegCompleted', {'winner_player_id': 'p1'}, seq: 4)]);
 
     final snap = runner.snapshot()['x01_checkout']!;
     // Cumulative — counters are retained across legs

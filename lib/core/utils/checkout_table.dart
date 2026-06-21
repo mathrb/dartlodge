@@ -567,3 +567,40 @@ int dartsRequiredForCheckout(String suggestion) =>
 /// single visit's last dart — never satisfy this for their non-finishing darts.
 bool isOnADoubleFinish(int remaining) =>
     remaining == 50 || (remaining >= 2 && remaining <= 40 && remaining.isEven);
+
+/// True when [remaining] can be finished with a single TRIPLE (T1..T20).
+bool _isOnATripleFinish(int remaining) =>
+    remaining >= 3 && remaining <= 60 && remaining % 3 == 0;
+
+/// True when [remaining] can be finished with ANY single dart — a single
+/// (1..20 or single bull), a double (incl. the double bull) or a triple.
+bool _isOnASingleDartFinish(int remaining) =>
+    (remaining >= 1 && remaining <= 20) ||
+    remaining == 25 ||
+    isOnADoubleFinish(remaining) ||
+    _isOnATripleFinish(remaining);
+
+/// True when the thrower is "at a finish" under [outStrategy] — i.e. [remaining]
+/// is reachable with one dart that satisfies the game's out rule. Generalises
+/// [isOnADoubleFinish] across out strategies to define a checkout ATTEMPT for
+/// X01 checkout % (#637): a visit counts as an attempt only if the player threw
+/// at least one dart from such a position.
+///
+/// - `'double'` (default): a single double D1..D20, or the double bull (50).
+/// - `'master'`: a single double, triple, or the double bull.
+/// - `'straight'`: any single dart.
+///
+/// The finishing dart of a successful checkout is, by definition, thrown from a
+/// position satisfying the game's out rule, so a leg-winning visit always
+/// registers as an attempt under the matching strategy.
+bool isOnAFinish(int remaining, String outStrategy) {
+  switch (outStrategy) {
+    case 'straight':
+      return _isOnASingleDartFinish(remaining);
+    case 'master':
+      return isOnADoubleFinish(remaining) || _isOnATripleFinish(remaining);
+    case 'double':
+    default:
+      return isOnADoubleFinish(remaining);
+  }
+}

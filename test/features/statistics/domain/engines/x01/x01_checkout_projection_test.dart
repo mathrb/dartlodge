@@ -4,16 +4,19 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_projection.dart';
 
-GameEvent _makeEvent(
-  String type,
-  Map<String, dynamic> payload, {
-  int seq = 1,
-}) =>
-    GameEvent(
-      eventId: 'evt-$seq-$type',
+// #637: an ATTEMPT is a visit in which the player threw ≥1 dart from a
+// single-dart finish position (isOnAFinish for the out strategy); a SUCCESS is a
+// LegCompleted won by the player. The attempt is tallied on the player's
+// TurnEnded. These tests drive full visits (TurnStarted → DartThrown… →
+// TurnEnded) rather than bare TurnStarted events.
+
+int _seq = 0;
+
+GameEvent _makeEvent(String type, Map<String, dynamic> payload) => GameEvent(
+      eventId: 'evt-${_seq}-$type',
       gameId: 'game-1',
       eventType: type,
-      localSequence: seq,
+      localSequence: _seq++,
       occurredAt: DateTime(2024),
       payload: payload,
       synced: false,
@@ -32,14 +35,35 @@ ProjectionContext _makeContext({
       outStrategy: outStrategy,
     );
 
+/// Applies one full visit for [playerId]: TurnStarted(startingScore) → a
+/// DartThrown per entry in [dartScores] → TurnEnded(reason).
+void _visit(
+  X01CheckoutProjection e,
+  int startingScore,
+  List<int> dartScores, {
+  String playerId = 'p1',
+  String reason = 'normal',
+}) {
+  e.apply(_makeEvent(
+      'TurnStarted', {'player_id': playerId, 'starting_score': startingScore}));
+  for (final d in dartScores) {
+    e.apply(_makeEvent('DartThrown', {'player_id': playerId, 'score': d}));
+  }
+  e.apply(_makeEvent('TurnEnded', {'player_id': playerId, 'reason': reason}));
+}
+
+void _legCompleted(X01CheckoutProjection e, String winner) =>
+    e.apply(_makeEvent('LegCompleted', {'winner_player_id': winner}));
+
 void main() {
   late X01CheckoutProjection engine;
 
   setUp(() {
+    _seq = 0;
     engine = X01CheckoutProjection();
   });
 
-  // ── Category A ─────────────────────────────────────────────────────────────
+  // ── Category A — init ───────────────────────────────────────────────────────
 
   test('A1 — init produces null checkoutPercentage and zero counters', () {
     engine.init(_makeContext());
@@ -54,121 +78,117 @@ void main() {
     expect(engine.snapshot(), engine.snapshot());
   });
 
-  // ── Category B ─────────────────────────────────────────────────────────────
+  // ── Category B — basic attempt / success ────────────────────────────────────
 
-  test('B1 — TurnStarted with score ≤ 170 increments attempts', () {
+  test('B1 — a visit that throws from a double-finish counts as an attempt', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'TurnStarted', {'player_id': 'p1', 'starting_score': 170}));
+    // 40 (D20) is a finish: the dart is thrown from a finish position.
+    _visit(engine, 40, [40], reason: 'normal');
     expect(engine.snapshot()['checkoutAttempts'], 1);
   });
 
-  test('B1 — TurnStarted with score > 170 does not increment', () {
+  test('B1 — leg-winning visit is an attempt + a success', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'TurnStarted', {'player_id': 'p1', 'starting_score': 171}));
+    _visit(engine, 40, [40]); // checkout
+    _legCompleted(engine, 'p1');
+    final s = engine.snapshot();
+    expect(s['checkoutAttempts'], 1);
+    expect(s['successfulCheckouts'], 1);
+    expect(s['checkoutPercentage'], closeTo(100.0, 0.001));
+  });
+
+  test('B2 — setup-only visit (no dart from a finish) is NOT an attempt', () {
+    engine.init(_makeContext());
+    // 170 → T19(57), T18(54) leaves 59; neither 170 nor 113 is a finish.
+    _visit(engine, 170, [57, 54], reason: 'normal');
     expect(engine.snapshot()['checkoutAttempts'], 0);
   });
 
-  test('B1 — LegCompleted with matching winner increments successes', () {
+  test('B2 — bogey-number visit (169) with setup darts is NOT an attempt', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
-    engine.apply(_makeEvent(
-        'LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2));
-    expect(engine.snapshot()['successfulCheckouts'], 1);
-  });
-
-  test('B2 — DartThrown ignored', () {
-    engine.init(_makeContext());
-    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 40}));
+    // 169 → 3,3,3 leaves 160; never reaches a single-dart finish.
+    _visit(engine, 169, [3, 3, 3], reason: 'normal');
     expect(engine.snapshot()['checkoutAttempts'], 0);
   });
 
-  test('B2 — other player TurnStarted ignored', () {
+  test('B2 — other player\'s visit is ignored', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'TurnStarted', {'player_id': 'p2', 'starting_score': 40}));
-    expect(engine.snapshot()['checkoutAttempts'], 0);
+    _visit(engine, 40, [40], playerId: 'p2');
+    _legCompleted(engine, 'p2');
+    final s = engine.snapshot();
+    expect(s['checkoutAttempts'], 0);
+    expect(s['successfulCheckouts'], 0);
   });
 
-  test('B2 — other player LegCompleted does not count success', () {
+  // ── Category C — multi-visit leg / percentage ───────────────────────────────
+
+  test('C1 — multi-visit leg counts ONE attempt, not three', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent(
-        'TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
-    engine.apply(_makeEvent(
-        'LegCompleted', {'winner_player_id': 'p2', 'checkout_score': 40}, seq: 2));
-    expect(engine.snapshot()['successfulCheckouts'], 0);
-    expect(engine.snapshot()['checkoutAttempts'], 1);
+    // 170 → setup, leaves 59 (no finish dart).
+    _visit(engine, 170, [57, 54]);
+    // 59 → S19(19) leaves 40 (no finish dart: 59 not a finish).
+    _visit(engine, 59, [19]);
+    // 40 → D20 checkout (finish dart).
+    _visit(engine, 40, [40]);
+    _legCompleted(engine, 'p1');
+    final s = engine.snapshot();
+    expect(s['checkoutAttempts'], 1, reason: 'only the final visit threw at a finish');
+    expect(s['successfulCheckouts'], 1);
+    expect(s['checkoutPercentage'], closeTo(100.0, 0.001));
   });
 
-  // ── Category C ─────────────────────────────────────────────────────────────
-
-  test('C1 — checkout percentage is correct', () {
+  test('C2 — two finishing visits, one win → 50%', () {
     engine.init(_makeContext());
-    // 2 attempts, 1 success
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 2));
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 3));
+    _visit(engine, 40, [60], reason: 'bust'); // threw at 40, busted → attempt, no win
+    _visit(engine, 40, [40]); // checkout
+    _legCompleted(engine, 'p1');
     expect(engine.snapshot()['checkoutPercentage'], closeTo(50.0, 0.001));
   });
 
-  test('C3 — parallel engines converge', () {
-    final e2 = X01CheckoutProjection();
+  // ── Bust handling ───────────────────────────────────────────────────────────
+
+  test('Bust1 — busting FROM a finish position counts as an attempt', () {
     engine.init(_makeContext());
-    e2.init(_makeContext());
-    final events = [
-      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1),
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2),
-    ];
-    for (final e in events) {
-      engine.apply(e);
-      e2.apply(e);
-    }
-    expect(engine.snapshot(), e2.snapshot());
+    // 40 (finish) → T20(60) busts; the dart was thrown from a finish position.
+    _visit(engine, 40, [60], reason: 'bust');
+    final s = engine.snapshot();
+    expect(s['checkoutAttempts'], 1);
+    expect(s['successfulCheckouts'], 0);
   });
 
-  // ── Category D ─────────────────────────────────────────────────────────────
+  // ── Category D — reset ──────────────────────────────────────────────────────
 
-  test('D2 — reset(leg) is a no-op (cumulative career stat)', () {
+  test('D1/D2 — reset(turn/leg) keeps cumulative counters', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
-    engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2));
+    _visit(engine, 40, [40]);
+    _legCompleted(engine, 'p1');
+    engine.reset(ProjectionScope.turn);
     engine.reset(ProjectionScope.leg);
     final s = engine.snapshot();
     expect(s['checkoutAttempts'], 1);
     expect(s['successfulCheckouts'], 1);
-    expect(s['checkoutPercentage'], 100.0);
   });
 
-  test('D1 — reset(turn) is a no-op', () {
-    engine.init(_makeContext());
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
-    engine.reset(ProjectionScope.turn);
-    expect(engine.snapshot()['checkoutAttempts'], 1);
-  });
-
-  // ── Category E ─────────────────────────────────────────────────────────────
+  // ── Category E — replay determinism ─────────────────────────────────────────
 
   test('E1 — replay from zero yields same result', () {
-    engine.init(_makeContext());
-    final events = [
-      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1),
-      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 2),
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 3),
-    ];
-    for (final e in events) engine.apply(e);
-    final first = engine.snapshot();
-    engine.init(_makeContext());
-    for (final e in events) engine.apply(e);
-    expect(engine.snapshot(), first);
+    Map<String, dynamic> run() {
+      _seq = 0;
+      final e = X01CheckoutProjection()..init(_makeContext());
+      _visit(e, 170, [57, 54]);
+      _visit(e, 40, [40]);
+      _legCompleted(e, 'p1');
+      return e.snapshot();
+    }
+
+    expect(run(), run());
   });
 
-  // ── Category F ─────────────────────────────────────────────────────────────
+  // ── Category F — partial stream ─────────────────────────────────────────────
 
   test('F1 — partial stream without LegCompleted is valid', () {
     engine.init(_makeContext());
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1));
+    _visit(engine, 40, [40]); // attempt, no win yet
     final s = engine.snapshot();
     expect(s['checkoutAttempts'], 1);
     expect(s['successfulCheckouts'], 0);
@@ -180,61 +200,76 @@ void main() {
     expect(engine.snapshot()['checkoutPercentage'], isNull);
   });
 
-  // ── Category G ─────────────────────────────────────────────────────────────
+  test('Seed1 — DartThrown with no TurnStarted seed is skipped', () {
+    engine.init(_makeContext());
+    engine.apply(_makeEvent('DartThrown', {'player_id': 'p1', 'score': 40}));
+    engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'reason': 'normal'}));
+    expect(engine.snapshot()['checkoutAttempts'], 0);
+  });
+
+  // ── Category G — isolation ──────────────────────────────────────────────────
 
   test('G2 — two instances do not share state', () {
-    final e2 = X01CheckoutProjection();
+    final e2 = X01CheckoutProjection()..init(_makeContext());
     engine.init(_makeContext());
-    e2.init(_makeContext());
-    engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}));
+    _visit(engine, 40, [40]);
     expect(e2.snapshot()['checkoutAttempts'], 0);
   });
 
-  // ── Category H ─────────────────────────────────────────────────────────────
+  // ── Category H — scale ──────────────────────────────────────────────────────
 
   test('H1 — 1000 legs processed without issue', () {
     engine.init(_makeContext());
     for (int i = 0; i < 1000; i++) {
-      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: i * 2));
-      engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: i * 2 + 1));
+      _visit(engine, 40, [40]);
+      _legCompleted(engine, 'p1');
     }
-    // Cumulative — all 1000 attempts and successes are retained
-    expect(engine.snapshot()['checkoutAttempts'], 1000);
-    expect(engine.snapshot()['successfulCheckouts'], 1000);
+    final s = engine.snapshot();
+    expect(s['checkoutAttempts'], 1000);
+    expect(s['successfulCheckouts'], 1000);
   });
 
-  // ── GS1/GS2/GS3 ───────────────────────────────────────────────────────────
+  // ── Out-strategy aware finish (#637) ────────────────────────────────────────
 
-  test('GS1 — descriptor declares only x01', () {
-    engine.init(_makeContext());
+  test('GS3 — straight-out counts a single finish that double-out ignores', () {
+    final dbl = X01CheckoutProjection()..init(_makeContext(outStrategy: 'double'));
+    final str =
+        X01CheckoutProjection()..init(_makeContext(outStrategy: 'straight'));
+    // 17 is a single-dart finish (S17) but NOT a double finish.
+    void scenario(X01CheckoutProjection e) => _visit(e, 17, [17]);
+    _seq = 0;
+    scenario(dbl);
+    _seq = 0;
+    scenario(str);
+    expect(dbl.snapshot()['checkoutAttempts'], 0);
+    expect(str.snapshot()['checkoutAttempts'], 1);
+  });
+
+  test('GS3b — master-out counts a triple finish that double-out ignores', () {
+    final dbl = X01CheckoutProjection()..init(_makeContext(outStrategy: 'double'));
+    final mas =
+        X01CheckoutProjection()..init(_makeContext(outStrategy: 'master'));
+    // 57 (T19) is a triple finish but NOT a double finish.
+    void scenario(X01CheckoutProjection e) => _visit(e, 57, [57]);
+    _seq = 0;
+    scenario(dbl);
+    _seq = 0;
+    scenario(mas);
+    expect(dbl.snapshot()['checkoutAttempts'], 0);
+    expect(mas.snapshot()['checkoutAttempts'], 1);
+  });
+
+  // ── Descriptor ──────────────────────────────────────────────────────────────
+
+  test('GS1 — descriptor declares only x01 and consumes the visit events', () {
     expect(engine.descriptor.supportedGameTypes, equals({GameType.x01}));
+    expect(
+      engine.descriptor.consumedEventTypes,
+      containsAll(<String>{'TurnStarted', 'DartThrown', 'TurnEnded', 'LegCompleted'}),
+    );
   });
 
   test('GS2 — cricket not in supported game types', () {
-    engine.init(_makeContext());
     expect(engine.descriptor.supportedGameTypes.contains(GameType.cricket), isFalse);
-  });
-
-  test('GS3 — same events with different outStrategy context yields valid snapshot', () {
-    // The checkout projection counts attempts regardless of outStrategy;
-    // the outStrategy affects the game engine's validation, not the projection counting.
-    // Both contexts should show same attempt/success counts.
-    final engine1 = X01CheckoutProjection();
-    final engine2 = X01CheckoutProjection();
-    engine1.init(_makeContext(outStrategy: 'double'));
-    engine2.init(_makeContext(outStrategy: 'straight'));
-    final events = [
-      _makeEvent('TurnStarted', {'player_id': 'p1', 'starting_score': 40}, seq: 1),
-      _makeEvent('LegCompleted', {'winner_player_id': 'p1', 'checkout_score': 40}, seq: 2),
-    ];
-    for (final e in events) {
-      engine1.apply(e);
-      engine2.apply(e);
-    }
-    // Both record the same checkout attempt and success
-    expect(engine1.snapshot()['checkoutAttempts'],
-        engine2.snapshot()['checkoutAttempts']);
-    expect(engine1.snapshot()['successfulCheckouts'],
-        engine2.snapshot()['successfulCheckouts']);
   });
 }
