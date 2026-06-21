@@ -1,7 +1,6 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
-import 'cricket_segment_utils.dart';
 import 'cricket_targets_mixin.dart';
 
 /// Counts high-mark turns. Emits both ≥-N counters (`fiveMarkTurns` /
@@ -62,11 +61,9 @@ class CricketMarkBucketsProjection extends ProjectionEngine
     if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'DartThrown':
-        final playerId = event.payload['player_id'] as String?;
-        if (playerId != _context?.playerId) return;
-        final s = readSegmentFromPayload(event.payload);
-        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
-            targets: activeCricketTargets);
+        // #638: dead-number-aware (records all competitors' hits, 0 marks on a
+        // number closed by all). No player early-return.
+        _turnMarks += cricketScopedMarksForDart(event, _context?.playerId);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
@@ -92,6 +89,9 @@ class CricketMarkBucketsProjection extends ProjectionEngine
   void reset(ProjectionScope scope) {
     if (scope == ProjectionScope.turn) {
       _turnMarks = 0;
+    }
+    if (scope == ProjectionScope.leg) {
+      resetCricketClosureForLeg(); // #638
     }
   }
 

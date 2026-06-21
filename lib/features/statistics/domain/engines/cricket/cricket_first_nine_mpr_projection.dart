@@ -1,7 +1,6 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
-import 'cricket_segment_utils.dart';
 import 'cricket_targets_mixin.dart';
 
 /// Computes Marks Per Round (MPR) for the first 9 darts (first 3 turns) of each leg.
@@ -55,12 +54,12 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         _inFirstNine = _turnIndexInLeg <= 3;
         _currentTurnMarks = 0;
       case 'DartThrown':
-        if (!_inFirstNine) return;
-        final playerId = event.payload['player_id'] as String?;
-        if (playerId != _context?.playerId) return;
-        final s = readSegmentFromPayload(event.payload);
-        _currentTurnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
-            targets: activeCricketTargets);
+        // #638: record closure for EVERY dart (keeps the cross-competitor
+        // accumulator complete), but credit dead-aware marks only inside the
+        // first-nine window. cricketScopedMarksForDart returns 0 for other
+        // players and for hits on a number already closed by all.
+        final marks = cricketScopedMarksForDart(event, _context?.playerId);
+        if (_inFirstNine) _currentTurnMarks += marks;
       case 'TurnEnded':
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
@@ -94,6 +93,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
       _turnIndexInLeg = 0;
       _inFirstNine = false;
       _currentTurnMarks = 0;
+      resetCricketClosureForLeg(); // #638
     }
   }
 
