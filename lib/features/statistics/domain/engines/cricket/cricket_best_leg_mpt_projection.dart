@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
-import 'cricket_segment_utils.dart';
 import 'cricket_targets_mixin.dart';
 
 /// Tracks the best single-leg MPT (Marks Per Turn) across all legs.
@@ -51,11 +50,9 @@ class CricketBestLegMptProjection extends ProjectionEngine
     if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'DartThrown':
-        final playerId = event.payload['player_id'] as String?;
-        if (playerId != _context?.playerId) return;
-        final s = readSegmentFromPayload(event.payload);
-        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
-            targets: activeCricketTargets);
+        // #638: dead-number-aware (records all competitors' hits, 0 marks on a
+        // number closed by all). No player early-return.
+        _turnMarks += cricketScopedMarksForDart(event, _context?.playerId);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
@@ -81,6 +78,7 @@ class CricketBestLegMptProjection extends ProjectionEngine
       _legMarks = 0;
       _legTurns = 0;
       _turnMarks = 0;
+      resetCricketClosureForLeg(); // #638
     }
   }
 

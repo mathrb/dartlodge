@@ -24,7 +24,10 @@ import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_
 import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_first_nine_ppr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/count_up/count_up_high_score_buckets_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_game_hit_rate_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_closure_tracker.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/segment_utils.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_targets_mixin.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_best_leg_mpt_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_hit_rate_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_legs_projection.dart';
@@ -792,6 +795,11 @@ class PlayerStatsAssembler {
     required List<String> allPlayerIds,
     required GameType gameType,
     String outStrategy = 'double',
+    // #638: full competitor roster, used to seed dead-number detection for
+    // per-leg slices that carry no `GameCreated` (leg 2+). Empty → the closure
+    // tracker falls back to never-suppress (safe), or auto-captures from
+    // `GameCreated` when the slice includes it (leg 1).
+    Set<String> allCompetitorIds = const {},
   }) {
     final playerIds = competitor.players.map((p) => p.playerId).toList();
 
@@ -962,6 +970,10 @@ class PlayerStatsAssembler {
           inStrategy: 'straight',
           outStrategy: 'straight',
         ));
+        // #638: seed the dead-number roster for leg slices lacking GameCreated.
+        if (engine is CricketTargetsTracker && allCompetitorIds.isNotEmpty) {
+          (engine as CricketTargetsTracker).seedCricketRoster(allCompetitorIds);
+        }
       }
       perPlayer[playerId] = engines;
     }
@@ -1073,6 +1085,10 @@ class PlayerStatsAssembler {
     int legTotalMarks = 0;
     int legTotalTurns = 0;
     int currentTurnMarks = 0;
+    // #638: forward per-competitor closure tracking for dead-number mark
+    // suppression in cricket MPR. Mirrors the projection mixin's accumulator.
+    final bool isCricketLeg = gameType == GameType.cricket;
+    final cricketClosure = CricketClosureTracker();
 
     // ATC hit-rate tracking (player-scoped). Target progression mirrors
     // `StatelessAroundTheClockEngine`:
@@ -1104,6 +1120,7 @@ class PlayerStatsAssembler {
       switch (event.eventType) {
         case 'GameCreated':
           activeCricketTargets = kCricketTargets;
+          cricketClosure.onGameCreated(payload['competitors']); // #638
         case 'CricketTargetsAssigned':
           final raw = payload['targets'] as List<dynamic>;
           activeCricketTargets = {
@@ -1122,6 +1139,7 @@ class PlayerStatsAssembler {
             for (final t in raw) (t as num).toInt(),
             25,
           };
+          cricketClosure.onCrazyRoll(); // #638 discard-on-rotate
         case 'TurnStarted':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
@@ -1137,6 +1155,16 @@ class PlayerStatsAssembler {
               (payload['starting_score'] as num?)?.toInt();
         case 'DartThrown':
           final pid = payload['player_id'] as String?;
+          // #638: record EVERY competitor's cricket hit for dead-number
+          // detection before the player filter skips opponents' darts.
+          if (isCricketLeg && pid != playerId) {
+            final os = readSegmentFromPayload(payload);
+            if (isCricketTargetNumeric(os.segment,
+                targets: activeCricketTargets)) {
+              cricketClosure.recordHit(
+                  payload['competitor_id'] as String?, os.segment, os.multiplier);
+            }
+          }
           if (pid != playerId) break;
           legDartCount++;
           currentTurnDarts++;
@@ -1149,9 +1177,18 @@ class PlayerStatsAssembler {
           legScoreTotal += score;
           currentTurnScore += score;
 
-          // Cricket marks (numeric or canonical-string segment). Uses the
-          // active target set so Random Cricket marks land correctly.
-          if (rawSeg is String) {
+          // Cricket marks. For cricket games use the dead-number-aware path
+          // (#638): records the player's own hit and credits 0 for a hit on a
+          // number already closed by all. For non-cricket games keep the legacy
+          // additive count (unused in the snapshot, but preserves behaviour).
+          if (isCricketLeg) {
+            currentTurnMarks += scopedCricketMarksForDart(
+              payload: payload,
+              closure: cricketClosure,
+              activeTargets: activeCricketTargets,
+              scopedPlayerId: playerId,
+            );
+          } else if (rawSeg is String) {
             currentTurnMarks +=
                 cricketMarksForSegment(rawSeg, targets: activeCricketTargets);
           } else if (segInt != null) {
@@ -1306,6 +1343,7 @@ class PlayerStatsAssembler {
           atcInPlayerTurn = false;
           lastPlayerTurnStartingScore = null;
           currentLegEvents.clear();
+          cricketClosure.onLegReset(); // #638 board resets each leg
       }
     }
 

@@ -213,6 +213,9 @@ Game-specific projections must additionally prove:
 Example:
 
 * X01 checkout % invalid under Cricket
+* Cricket MPR: a hit on a number closed by ALL competitors counts 0 marks
+  (#638); overflow on a number still open for an opponent, and the dart that
+  closes for the last competitor, still count. See `cricket.projections.md` §2.1.
 
 ---
 

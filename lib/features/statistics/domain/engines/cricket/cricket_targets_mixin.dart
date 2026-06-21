@@ -1,5 +1,6 @@
 import 'package:dart_lodge/core/utils/cricket_segment_utils.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_closure_tracker.dart';
 
 /// Tracks the active cricket target set for a projection by consuming
 /// `CricketTargetsAssigned` events.
@@ -17,6 +18,12 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 mixin CricketTargetsTracker {
   Set<int> _activeTargets = kCricketTargets;
 
+  /// Forward per-competitor closure state for dead-number mark suppression
+  /// (#638). Mark-counting projections credit a dart's marks via
+  /// [cricketScopedMarksForDart], which records every competitor's hit here and
+  /// returns 0 for a hit on a number already closed by all.
+  final CricketClosureTracker _closure = CricketClosureTracker();
+
   /// The cricket target set currently in effect.
   /// Mixers must pass this to mark-counting helpers.
   Set<int> get activeCricketTargets => _activeTargets;
@@ -25,6 +32,33 @@ mixin CricketTargetsTracker {
   /// (the runner builds a fresh projection per game).
   void resetCricketTargets() {
     _activeTargets = kCricketTargets;
+    _closure.reset();
+  }
+
+  /// Seed the closure roster for slices that carry no `GameCreated` event
+  /// (e.g. a per-leg slice after leg 1). A `GameCreated`, when present,
+  /// overrides this with the authoritative competitor list.
+  void seedCricketRoster(Iterable<String> competitorIds) {
+    _closure.seedRoster(competitorIds);
+  }
+
+  /// Call from the mixer's `reset(ProjectionScope.leg)` so the closure board
+  /// resets each leg, mirroring the engine's per-leg mark reset.
+  void resetCricketClosureForLeg() {
+    _closure.onLegReset();
+  }
+
+  /// Dead-number-aware marks for one `DartThrown`, scoped to [scopedPlayerId].
+  /// Records the thrower's hit (keeping the accumulator complete) and returns
+  /// the marks to credit toward the scoped player (0 for non-targets, other
+  /// players, or hits on a dead number). See [scopedCricketMarksForDart].
+  int cricketScopedMarksForDart(GameEvent event, String? scopedPlayerId) {
+    return scopedCricketMarksForDart(
+      payload: event.payload,
+      closure: _closure,
+      activeTargets: _activeTargets,
+      scopedPlayerId: scopedPlayerId,
+    );
   }
 
   /// Returns `true` when [event] handles a target-set lifecycle event:
@@ -47,6 +81,9 @@ mixin CricketTargetsTracker {
   bool maybeApplyCricketTargets(GameEvent event) {
     if (event.eventType == 'GameCreated') {
       _activeTargets = kCricketTargets;
+      // Capture the authoritative competitor roster + reset the closure board
+      // for dead-number detection (#638).
+      _closure.onGameCreated(event.payload['competitors']);
       return true;
     }
     if (event.eventType == 'CricketTargetsAssigned') {
@@ -63,6 +100,9 @@ mixin CricketTargetsTracker {
         for (final t in raw) (t as num).toInt(),
         25,
       };
+      // Wipe non-locked closure marks, mirroring the engine's discard-on-rotate
+      // so dead-number detection stays correct under Crazy Cricket (#638).
+      _closure.onCrazyRoll();
       return true;
     }
     return false;

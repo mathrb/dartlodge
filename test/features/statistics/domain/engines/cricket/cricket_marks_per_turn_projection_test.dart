@@ -296,4 +296,110 @@ void main() {
     expect(engine.snapshot()['totalMarks'], 1);
     expect(engine.snapshot()['totalTurns'], 2);
   });
+
+  // ── #638: dead-number mark suppression ──────────────────────────────────────
+
+  group('dead numbers (#638)', () {
+    test('a hit on a number closed by ALL competitors counts 0 marks', () {
+      engine.init(_makeContext()); // scoped to p1 (competitor c1)
+      engine.apply(_makeEvent('GameCreated', {
+        'competitors': ['c1', 'c2'],
+      }, seq: 1));
+      // c1 closes 20 (live → 3 marks credited).
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 2));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 3));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 4));
+      // c2 closes 20 too → 20 is now dead for everyone.
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p2', 'competitor_id': 'c2'}, seq: 5));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p2', 'competitor_id': 'c2', 'segment': 20, 'multiplier': 3}, seq: 6));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p2', 'competitor_id': 'c2'}, seq: 7));
+      // c1 throws a wasted T20 at the dead number → 0 marks.
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 8));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 9));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 10));
+
+      final s = engine.snapshot();
+      expect(s['totalMarks'], 3,
+          reason: 'only the closing turn counts; dead-number turn is 0');
+      expect(s['totalTurns'], 2);
+      expect(s['marksPerTurn'], closeTo(1.5, 0.001));
+    });
+
+    test('the dart that closes for the LAST competitor still counts', () {
+      // p1 is the last to close 20. At its throw, 20 is still live for p1
+      // (pre-throw), so the closing dart counts.
+      engine.init(_makeContext());
+      engine.apply(_makeEvent('GameCreated', {
+        'competitors': ['c1', 'c2'],
+      }, seq: 1));
+      // c2 closes 20 first.
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p2', 'competitor_id': 'c2', 'segment': 20, 'multiplier': 3}, seq: 2));
+      // c1 (the player) closes 20 last → still counts (3 marks).
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 3));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 4));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 5));
+
+      expect(engine.snapshot()['totalMarks'], 3);
+    });
+
+    test('overflow on a number still open for an opponent still counts', () {
+      engine.init(_makeContext());
+      engine.apply(_makeEvent('GameCreated', {
+        'competitors': ['c1', 'c2'],
+      }, seq: 1));
+      // c1 closes 20 (3 marks) then overflows with another T20 (3 marks).
+      // c2 has NOT closed 20, so it is live → overflow counts.
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 2));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 3));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 4));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 5));
+
+      final s = engine.snapshot();
+      expect(s['totalMarks'], 6, reason: 'overflow on a live number counts');
+      expect(s['totalTurns'], 1);
+    });
+
+    test('no roster (no GameCreated) → marks not suppressed (safe fallback)', () {
+      engine.init(_makeContext());
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 1));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 2));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 3));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 4));
+
+      expect(engine.snapshot()['totalMarks'], 6);
+    });
+
+    test('per-leg reset revives a number dead in the previous leg', () {
+      engine.init(_makeContext());
+      engine.apply(_makeEvent('GameCreated', {
+        'competitors': ['c1', 'c2'],
+      }, seq: 1));
+      // Leg 1: both close 20.
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 2));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 3));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 4));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p2', 'competitor_id': 'c2', 'segment': 20, 'multiplier': 3}, seq: 5));
+      engine.apply(_makeEvent('LegCompleted', {'winner_player_id': 'p2'}, seq: 6));
+      engine.reset(ProjectionScope.leg); // runner fires this after LegCompleted
+      // Leg 2: 20 is fresh again → c1's T20 counts.
+      engine.apply(_makeEvent('TurnStarted', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 7));
+      engine.apply(_makeEvent('DartThrown',
+          {'player_id': 'p1', 'competitor_id': 'c1', 'segment': 20, 'multiplier': 3}, seq: 8));
+      engine.apply(_makeEvent('TurnEnded', {'player_id': 'p1', 'competitor_id': 'c1'}, seq: 9));
+
+      // Leg 1 closing turn (3) + leg 2 fresh close (3) = 6.
+      expect(engine.snapshot()['totalMarks'], 6);
+    });
+  });
 }

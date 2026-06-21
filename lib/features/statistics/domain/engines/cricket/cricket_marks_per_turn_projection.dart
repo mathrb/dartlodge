@@ -1,7 +1,6 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
-import 'cricket_segment_utils.dart';
 import 'cricket_targets_mixin.dart';
 
 /// Computes Marks Per Turn (MPT) — the primary cricket metric.
@@ -46,11 +45,10 @@ class CricketMarksPerTurnProjection extends ProjectionEngine
     if (maybeApplyCricketTargets(event)) return;
     switch (event.eventType) {
       case 'DartThrown':
-        final playerId = event.payload['player_id'] as String?;
-        if (playerId != _context?.playerId) return;
-        final s = readSegmentFromPayload(event.payload);
-        _turnMarks += cricketMarksFromPayload(s.segment, s.multiplier,
-            targets: activeCricketTargets);
+        // #638: dead-number-aware. Records every competitor's hit (kept
+        // complete across players) and credits 0 for a hit on a number already
+        // closed by all. Must run for ALL darts, so no player early-return.
+        _turnMarks += cricketScopedMarksForDart(event, _context?.playerId);
       case 'TurnEnded':
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
@@ -64,6 +62,10 @@ class CricketMarksPerTurnProjection extends ProjectionEngine
   void reset(ProjectionScope scope) {
     if (scope == ProjectionScope.turn) {
       _turnMarks = 0;
+    }
+    if (scope == ProjectionScope.leg) {
+      // Board resets each leg → reset the dead-number closure accumulator (#638).
+      resetCricketClosureForLeg();
     }
   }
 

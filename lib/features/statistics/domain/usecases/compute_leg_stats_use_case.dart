@@ -32,6 +32,9 @@ class ComputeLegStatsUseCase {
       for (final c in competitors)
         for (final p in c.players) p.playerId,
     ];
+    // #638: full competitor roster for dead-number detection in per-leg slices
+    // (leg 2+ slices carry no GameCreated to auto-capture it).
+    final allCompetitorIds = {for (final c in competitors) c.competitorId};
 
     final legs = <LegStatsBreakdown>[];
     var legNumber = 1;
@@ -66,6 +69,7 @@ class ComputeLegStatsUseCase {
                     allPlayerIds: allPlayerIds,
                     gameType: gameType,
                     outStrategy: outStrategy,
+                    allCompetitorIds: allCompetitorIds,
                   )
                 : LegCompetitorStats(
                     competitorId: competitor.competitorId,
