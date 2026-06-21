@@ -3,6 +3,7 @@ import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/game_stats.dart';
 import 'package:dart_lodge/features/history/presentation/state/game_detail_state.dart';
 
@@ -34,10 +35,17 @@ class GameDetailNotifier extends _$GameDetailNotifier {
     final sortedEvents = [...events]
       ..sort((a, b) => a.localSequence.compareTo(b.localSequence));
 
+    // #637: per-leg checkout % is out-strategy-aware.
+    final outStrategy = game!.config.maybeMap(
+      x01: (c) => c.outStrategy,
+      orElse: () => 'double',
+    );
+
     final legStats = computeLegStats.execute(
       events: sortedEvents,
       competitors: competitors,
       gameType: game!.gameType,
+      outStrategy: outStrategy,
     );
 
     return GameDetailState(

@@ -23,6 +23,20 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
   StatisticsRepositoryDrift(this._db, {PlayerStatsAssembler? assembler})
       : _assembler = assembler ?? const PlayerStatsAssembler();
 
+  /// Reads the `outStrategy` from a game's opaque `config_json`, defaulting to
+  /// `'double'` for missing/legacy/unparseable configs. The X01 checkout-%
+  /// projection is out-strategy-aware (#637), so per-game and per-leg stats
+  /// must thread the game's real out strategy, not assume double-out.
+  static String _outStrategyFromConfig(String? configJson) {
+    if (configJson == null) return 'double';
+    try {
+      final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+      return cfg['outStrategy'] as String? ?? 'double';
+    } catch (_) {
+      return 'double';
+    }
+  }
+
   @override
   Future<GameStats> getGameStats(String gameId) async {
     try {
@@ -98,6 +112,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         throws: throws,
         competitorNames: competitorNames,
         events: events,
+        outStrategy: _outStrategyFromConfig(gameRow.configJson),
       );
     } on RepositoryException {
       rethrow;
@@ -482,6 +497,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         playerDartsInGame: playerDartsInGame,
         playerScoreInGame: playerScoreInGame,
         events: events,
+        outStrategy: _outStrategyFromConfig(game.configJson),
       );
     } on RepositoryException {
       rethrow;
@@ -740,10 +756,12 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
             DateTime.tryParse(gameRow.startTime) ?? DateTime.now();
         int? gamStartingScore;
         String gameAtcVariant = 'standard';
+        String gameOutStrategy = 'double';
         try {
           final cfg = jsonDecode(gameRow.configJson) as Map<String, dynamic>;
           gamStartingScore = cfg['startingScore'] as int?;
           gameAtcVariant = cfg['variant'] as String? ?? gameAtcVariant;
+          gameOutStrategy = cfg['outStrategy'] as String? ?? gameOutStrategy;
         } catch (_) {}
 
         final domainEvents =
@@ -758,6 +776,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           events: domainEvents,
           startingLegIndex: legIndex,
           atcVariant: gameAtcVariant,
+          outStrategy: gameOutStrategy,
         );
         snapshots.addAll(gameSnapshots);
         legIndex += gameSnapshots.length;

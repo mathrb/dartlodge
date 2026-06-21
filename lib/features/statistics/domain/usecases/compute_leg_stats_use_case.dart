@@ -22,6 +22,7 @@ class ComputeLegStatsUseCase {
     required List<GameEvent> events,
     required List<Competitor> competitors,
     required GameType gameType,
+    String outStrategy = 'double',
   }) {
     if (competitors.isEmpty) return const [];
 
@@ -64,6 +65,7 @@ class ComputeLegStatsUseCase {
                     competitor: competitor,
                     allPlayerIds: allPlayerIds,
                     gameType: gameType,
+                    outStrategy: outStrategy,
                   )
                 : LegCompetitorStats(
                     competitorId: competitor.competitorId,

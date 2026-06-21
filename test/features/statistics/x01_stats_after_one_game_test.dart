@@ -523,11 +523,15 @@ void main() {
     // returned percentage is the real successes ÷ attempts × 100 per leg.
     //
     // Discriminating fixture: a 2-leg X01 game where the player wins leg 1
-    // (1 success / 3 attempts → 33.33%) and LOSES leg 2 (0 successes / 2
-    // attempts → 0%). The losing leg is the key discriminator — on `main`
-    // it would either return null (production payloads omit
-    // `checkout_attempts`/`checkout_score`) or, with those keys populated,
-    // the bogus `(1/2)*100 = 50%`. Either way, never 0%.
+    // and LOSES leg 2. Under the #637 per-visit "reached-a-finish" convention,
+    // a visit counts as an attempt only if the player threw a dart from a
+    // single-dart finish position (isOnAFinish). The first visit of each leg
+    // (three S20s from 170/130 → never at a finish) is therefore NOT an
+    // attempt. Leg 1: 1 success / 2 attempts → 50%. Leg 2: 0 success /
+    // 1 attempt → 0%. The losing leg is the key discriminator — on `main` it
+    // would either return null (production payloads omit
+    // `checkout_attempts`/`checkout_score`) or the bogus `(1/2)*100 = 50%`.
+    // Either way, never 0%.
     test(
       'getPlayerLegHistory checkout % uses real successes ÷ attempts per leg',
       () async {
@@ -631,9 +635,10 @@ void main() {
           });
         }
 
-        // ── Leg 1: player has 3 checkout attempts and WINS the leg ──────
-        // Three TurnStarted events with starting_score ≤ 170 → 3 attempts.
-        // Player wins → 1 success. Expected checkoutPct = 100/3 ≈ 33.33%.
+        // ── Leg 1: player has 2 checkout attempts and WINS the leg ──────
+        // Visit 1 (S20 S20 S20 from 170) never reaches a finish → 0 attempts.
+        // Visit 2 throws from 50/40 (finish) → 1 attempt. Visit 3 checks out
+        // from 20 → 1 attempt. Player wins → 1 success. checkoutPct = 50%.
 
         // Setup: pretend the player is already at 170 (use starting_score
         // 170 directly on the first relevant turn; pre-game dart history
@@ -694,11 +699,10 @@ void main() {
           'winner_player_id': playerId,
         });
 
-        // ── Leg 2: player has 2 checkout attempts and LOSES the leg ─────
-        // Two TurnStarted events ≤ 170 → 2 attempts. Player doesn't win →
-        // 0 successes. Expected checkoutPct = 0/2 = 0.0%.
-        // Pre-checkout turns (starting_score > 170) are recorded but don't
-        // count as attempts. We jump straight to the ≤170 territory.
+        // ── Leg 2: player has 1 checkout attempt and LOSES the leg ──────
+        // Visit 1 (S20 S20 S20 from 130) never reaches a finish → 0 attempts.
+        // Visit 2 throws from 50/40 (finish) → 1 attempt. Player doesn't win →
+        // 0 successes. Expected checkoutPct = 0/1 = 0.0%.
         await appendEvent('TurnStarted', {
           'competitor_id': competitorId,
           'player_id': playerId,
@@ -759,17 +763,16 @@ void main() {
 
         expect(history, hasLength(2));
 
-        // Leg 1: 1 success / 3 attempts = 33.33%
+        // Leg 1: 1 success / 2 attempts = 50%
         expect(history[0].checkoutPct, isNotNull,
-            reason: 'Leg 1 had 3 attempts — % must not be null');
-        expect(history[0].checkoutPct!, closeTo(100 / 3, 0.01));
+            reason: 'Leg 1 had 2 attempts — % must not be null');
+        expect(history[0].checkoutPct!, closeTo(50.0, 0.01));
 
-        // Leg 2: the discriminator. Truth is 0/2 = 0%. Old buggy formula
+        // Leg 2: the discriminator. Truth is 0/1 = 0%. Old buggy formula
         // would have returned null (production payload omits the keys) or
-        // 50% (if the dead `checkout_attempts` payload key was wired up).
-        // Either way, never 0%.
+        // a non-zero value. Either way, never 0%.
         expect(history[1].checkoutPct, isNotNull,
-            reason: 'Leg 2 had 2 attempts — % must not be null');
+            reason: 'Leg 2 had 1 attempt — % must not be null');
         expect(history[1].checkoutPct!, closeTo(0.0, 0.01));
       },
     );
