@@ -6,6 +6,7 @@ import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_around_the_clock_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_checkout_practice_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_cricket_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
@@ -1012,6 +1013,115 @@ void main() {
 
       // Post-undo, cricketTargets must be A's set, not B's.
       expect(newState.cricketTargets, [3, 7, 11, 14, 18, 20]);
+    });
+  });
+
+  group('Checkout Practice — undo across a checkout in a varied drill (#636)',
+      () {
+    // A varied (random) drill stamps each run's target as `from_score` on the
+    // run-start TurnStarted. Undoing a dart in a later run must (a) restore the
+    // score to that run's target (read off the replayed `from_score`), and
+    // (b) preserve the target-mode/range config so the provider's next
+    // `from_score` stamp still uses the drill's settings rather than falling
+    // back to fixed/170.
+    GameEvent _ev(
+      String id,
+      String type,
+      int seq, [
+      Map<String, dynamic> payload = const {},
+    ]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'cp',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, int segment, int multiplier) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': 'cA',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        });
+
+    GameState _cpState() => GameState(
+          gameId: 'cp',
+          gameType: GameType.checkoutPractice,
+          competitors: [
+            const CompetitorState(
+              competitorId: 'cA',
+              name: 'A',
+              playerIds: ['pA'],
+              score: 20,
+              startingScore: 100,
+              isIn: true,
+              practiceSuccesses: 1,
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 1,
+          isComplete: false,
+          status: GameEngineStatus.inProgress,
+          turnActive: true,
+          legsToWin: 1,
+          startingScore: 100,
+          checkoutTargetMode: 'random',
+          checkoutFixedTarget: 100,
+          checkoutMinTarget: 40,
+          checkoutMaxTarget: 170,
+          checkoutProgressionStep: 10,
+        );
+
+    test('restores the run target and preserves the varied-target config',
+        () async {
+      final cpEngine = StatelessCheckoutPracticeEngine();
+      final cpUseCase =
+          UndoLastDartUseCase(mockEventRepo, mockDartRepo, cpEngine);
+
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'checkoutPractice',
+          'rules_payload': {
+            'targetMode': 'random',
+            'fixedTarget': 100,
+            'minTarget': 40,
+            'maxTarget': 170,
+            'progressionStep': 10,
+          },
+          'competitors': ['cA'],
+        }),
+        // Run 0: target 100 → T20 (60) + D20 (40) = checkout.
+        _ev('ts0', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'from_score': 100}),
+        _dart('d0a', 3, 20, 3),
+        _dart('d0b', 4, 20, 2),
+        _ev('te0', 'TurnEnded', 5,
+            {'competitor_id': 'cA', 'reason': 'checkout'}),
+        // Run 1: target 80 → one T20 (60) thrown, to be undone.
+        _ev('ts1', 'TurnStarted', 6,
+            {'competitor_id': 'cA', 'turn_index': 0, 'from_score': 80}),
+        _dart('d1a', 7, 20, 3),
+      ];
+      when(mockEventRepo.getEventsForGame('cp'))
+          .thenAnswer((_) async => events);
+      when(mockEventRepo.getLatestSequence('cp')).thenAnswer((_) async => 7);
+
+      final newState = await cpUseCase.execute(_cpState());
+
+      // Score reverts to run 1's target (80) — read off the replayed
+      // `from_score`, not the run-0 target (100) or the legacy 170.
+      expect(newState.competitors[0].score, 80);
+      expect(newState.dartsThrownInTurn, 0);
+      // The varied-target config survived the rebuild (#636 _buildInitialState).
+      expect(newState.checkoutTargetMode, 'random');
+      expect(newState.checkoutMinTarget, 40);
+      expect(newState.checkoutMaxTarget, 170);
     });
   });
 }

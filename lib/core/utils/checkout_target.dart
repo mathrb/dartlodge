@@ -46,7 +46,13 @@ int _stableHash(String gameId, int runIndex) {
   var hash = 0x811c9dc5; // FNV offset basis (32-bit)
   void mix(int byte) {
     hash ^= byte & 0xff;
-    hash = (hash * 0x01000193) & 0xffffffff; // FNV prime
+    // 32-bit FNV-prime multiply done with hash split into 16-bit halves so no
+    // intermediate exceeds 2^53 — a plain `hash * 0x01000193` overflows the
+    // dart2js IEEE-754 double on the web target and would yield a different
+    // (wrong) hash there, breaking replay-stability of random-mode targets.
+    final lo = (hash & 0xffff) * 0x01000193;
+    final hi = ((hash >> 16) & 0xffff) * 0x01000193;
+    hash = (lo + ((hi & 0xffff) << 16)) & 0xffffffff;
   }
 
   for (final code in gameId.codeUnits) {
@@ -75,8 +81,9 @@ int _stableHash(String gameId, int runIndex) {
 ///   chosen by `Random(_stableHash(gameId, runIndex))` so it varies per run yet
 ///   is stable on replay.
 ///
-/// Malformed config (no checkoutable value in range, out-of-bounds fixed) falls
-/// back to [fixedTarget] clamped into 2..170, else 170.
+/// Malformed config (no checkoutable value in range, bogey/out-of-bounds fixed)
+/// falls back to [fixedTarget] snapped to the nearest checkoutable score, else
+/// 170.
 int checkoutTargetForRun({
   required String mode,
   required int fixedTarget,

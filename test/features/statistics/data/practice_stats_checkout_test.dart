@@ -112,6 +112,38 @@ void main() {
       expect(stats.checkoutSuccessRate, closeTo(2 / 3, 0.001));
     });
 
+    // #636: varied-target drills stamp the run's checkout target as `from_score`
+    // on the run-start TurnStarted. The career scan must reset `remaining` to
+    // that value (not the legacy hardcoded 170) so reached-a-double detection is
+    // correct. This case is discriminating: with the legacy 170 default, run 1
+    // would NOT register an attempt (170 is not a single-dart finish), so the
+    // assertions below only hold if `from_score` is read.
+    test('resets the per-run target from from_score (#636 varied targets)',
+        () async {
+      await _setupGame([
+        // Run 1: target 50 (DB). One single-bull dart reaches the DB double
+        // finish then misses ⇒ a reached-a-double attempt, no success.
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 50},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 'SB', 'multiplier': 1, 'score': 25},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'miss'},
+        // Run 2: target 40 (D20) ⇒ a checkout (attempt + success).
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 40},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 'D20', 'multiplier': 2, 'score': 40},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
+        {'__type': 'GameCompleted', 'winner_competitor_id': competitorId},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.checkoutPractice,
+      );
+
+      expect(stats.checkoutAttempts, 2,
+          reason: 'run 1 reached DB(50) + run 2 checkout');
+      expect(stats.checkoutSuccesses, 1);
+      expect(stats.checkoutSuccessRate, closeTo(0.5, 0.001));
+    });
+
     test('does not count other players TurnEnded events', () async {
       await _setupGame([
         {'__type': 'TurnStarted', 'player_id': 'other-player'},

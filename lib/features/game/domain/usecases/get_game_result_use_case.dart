@@ -314,9 +314,9 @@ class GetGameResultUseCase {
   /// position), not every visit (#635). Mirrors `_computeCheckoutStats` in
   /// PlayerStatsAssembler — kept in sync (the no-cross-feature-import rule
   /// prevents sharing the scan; both use the core `isOnADoubleFinish`
-  /// predicate). The drill starts at 170, resets on checkout, reverts on a
-  /// bust, so `remaining` is reconstructable from events.
-  /// #636: revisit the hardcoded 170 when varied checkout targets land.
+  /// predicate). Each run starts at that run's checkout target (the `from_score`
+  /// stamp; 170 for legacy fixed games), resets on checkout, reverts on a bust,
+  /// so `remaining` is reconstructable from events (#636).
   int _countCheckoutAttempts(List<GameEvent> events, String competitorId) {
     var attempts = 0;
     var remaining = 170;
