@@ -448,6 +448,7 @@ class PlayerStatsAssembler {
     required List<({String competitorId, String playerId, int score})> throws,
     required Map<String, String> competitorNames,
     required List<GameEvent> events,
+    String outStrategy = 'double',
   }) {
     if (throws.isEmpty) {
       return GameStats(
@@ -553,7 +554,8 @@ class PlayerStatsAssembler {
               playerId: playerId,
               gameType: GameType.x01,
               inStrategy: 'straight',
-              outStrategy: 'double',
+              // #637: checkout-attempt detection is out-strategy-aware.
+              outStrategy: outStrategy,
             ));
           }
           perPlayer[playerId] = engines;
@@ -746,13 +748,15 @@ class PlayerStatsAssembler {
       legCheckoutStatsFromEvents({
     required String playerId,
     required List<GameEvent> legEvents,
+    String outStrategy = 'double',
   }) {
     final projection = X01CheckoutProjection();
     projection.init(ProjectionContext(
       playerId: playerId,
       gameType: GameType.x01,
       inStrategy: 'straight',
-      outStrategy: 'double',
+      // #637: checkout-attempt detection is out-strategy-aware.
+      outStrategy: outStrategy,
     ));
     // Strip corrected darts so an undo inside the leg doesn't double-count
     // the corrected DartThrown and its replacement (#187).
@@ -787,6 +791,7 @@ class PlayerStatsAssembler {
     required Competitor competitor,
     required List<String> allPlayerIds,
     required GameType gameType,
+    String outStrategy = 'double',
   }) {
     final playerIds = competitor.players.map((p) => p.playerId).toList();
 
@@ -881,7 +886,8 @@ class PlayerStatsAssembler {
             playerId: playerId,
             gameType: GameType.x01,
             inStrategy: 'straight',
-            outStrategy: 'double',
+            // #637: checkout-attempt detection is out-strategy-aware.
+            outStrategy: outStrategy,
           ));
         }
         perPlayer[playerId] = engines;
@@ -1039,6 +1045,7 @@ class PlayerStatsAssembler {
     required List<GameEvent> events,
     int startingLegIndex = 0,
     String atcVariant = 'standard',
+    String outStrategy = 'double',
   }) {
     // Strip corrected darts so leg-history reflects post-undo state (#187).
     events = _stripCorrectedDarts(events);
@@ -1221,6 +1228,7 @@ class PlayerStatsAssembler {
           final checkoutStats = legCheckoutStatsFromEvents(
             playerId: playerId,
             legEvents: currentLegEvents,
+            outStrategy: outStrategy,
           );
 
           final winnerPlayerId = payload['winner_player_id'] as String?;
@@ -1319,6 +1327,7 @@ class PlayerStatsAssembler {
     required int playerDartsInGame,
     required int playerScoreInGame,
     required List<GameEvent> events,
+    String outStrategy = 'double',
   }) {
     // Strip corrected darts so per-player-per-game stats reflect post-undo
     // state (#187). Note: AVG uses caller-supplied dart aggregates, so an
@@ -1445,7 +1454,8 @@ class PlayerStatsAssembler {
       playerId: playerId,
       gameType: gameType,
       inStrategy: 'straight',
-      outStrategy: 'double',
+      // #637: checkout-attempt detection is out-strategy-aware.
+      outStrategy: outStrategy,
     ));
     runner.run(events);
     final snap = runner.snapshot();

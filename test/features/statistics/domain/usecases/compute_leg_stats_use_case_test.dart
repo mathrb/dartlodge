@@ -278,6 +278,50 @@ void main() {
       final l1p2 = result[0].byCompetitor.firstWhere((c) => c.competitorId == 'c2');
       expect(l1p2.dartsThrown, 0);
     });
+
+    // #637: per-leg checkout % is out-strategy-aware. A visit that finishes from
+    // 57 throws a triple (T19) — a finish under master-out but NOT under
+    // double-out. The use case must thread outStrategy so the per-leg stat
+    // matches the game's rules.
+    test('checkout attempt respects outStrategy (master-out triple finish)', () {
+      List<GameEvent> events() => <GameEvent>[
+            ..._turn(
+              competitorId: 'c1',
+              playerId: 'p1',
+              startingScore: 57,
+              darts: [(segment: 19, multiplier: 3)], // T19 → checkout from 57
+              reason: 'checkout',
+            ),
+            _legCompleted(winnerCompetitorId: 'c1', winnerPlayerId: 'p1'),
+          ];
+
+      // Default double-out: 57 is not a double finish → no attempt recorded.
+      _resetSeq();
+      final dbl = useCase.execute(
+        events: events(),
+        competitors: [c1, c2],
+        gameType: GameType.x01,
+      );
+      expect(
+        dbl[0].byCompetitor.firstWhere((c) => c.competitorId == 'c1').checkoutPercentage,
+        isNull,
+        reason: '57 is not a double-out finish',
+      );
+
+      // Master-out: 57 is a triple finish → 1 attempt, leg won → 100%.
+      _resetSeq();
+      final mas = useCase.execute(
+        events: events(),
+        competitors: [c1, c2],
+        gameType: GameType.x01,
+        outStrategy: 'master',
+      );
+      expect(
+        mas[0].byCompetitor.firstWhere((c) => c.competitorId == 'c1').checkoutPercentage,
+        closeTo(100.0, 0.001),
+        reason: '57 is a master-out (triple) finish',
+      );
+    });
   });
 
   group('cricket game', () {
