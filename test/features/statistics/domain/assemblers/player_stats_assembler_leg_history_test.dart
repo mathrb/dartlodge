@@ -268,6 +268,52 @@ void main() {
       expect(snaps.single.mpt, isNull);
       expect(snaps.single.ppr, 0.0);
     });
+
+    test('dead-number marks are suppressed (#638)', () {
+      // The inline legHistoryFromEvents tracker mirrors the projection: a hit on
+      // a number closed by ALL competitors counts 0 marks. p1 (c1) closes 20,
+      // p2 (c2) closes 20 → 20 dead; p1's wasted T20 then counts 0.
+      // p1 turns: turn 1 = 3 marks, turn 3 = 0 → 3 marks / 2 turns = 1.5.
+      GameEvent cdart(int seg, int mult, {required String cid, required String pid}) =>
+          event('DartThrown', {
+            'player_id': pid,
+            'competitor_id': cid,
+            'segment': seg,
+            'multiplier': mult,
+            'score': seg * mult,
+          }, pid: pid);
+
+      final events = [
+        event('GameCreated', {
+          'competitors': ['c1', 'c2'],
+        }),
+        // p1 closes 20 (live → 3 marks).
+        turnStarted(),
+        cdart(20, 3, cid: 'c1', pid: 'p1'),
+        turnEnded(),
+        // p2 closes 20 → 20 now dead for all.
+        turnStarted(pid: 'p2'),
+        cdart(20, 3, cid: 'c2', pid: 'p2'),
+        turnEnded(pid: 'p2'),
+        // p1 wastes a T20 on the dead number → 0 marks.
+        turnStarted(),
+        cdart(20, 3, cid: 'c1', pid: 'p1'),
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.cricket,
+        startingScore: null,
+        events: events,
+      );
+
+      expect(snaps.single.mpt, closeTo(1.5, 0.001),
+          reason: 'wasted dart on a dead number counts 0 marks');
+    });
   });
 
   group('legHistoryFromEvents — ATC hit-rate practice score', () {
