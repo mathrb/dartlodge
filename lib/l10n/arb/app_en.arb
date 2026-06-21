@@ -706,6 +706,7 @@
   },
   "summaryFrom": "From",
   "summarySuccessRate": "Success rate",
+  "summaryDartsPerCheckout": "Darts/checkout",
   "summaryCheckedOut": "Checked out!",
   "summaryNotCheckedOut": "Not checked out",
   "summaryCheckoutQuotaProgress": "{successes} of {target} checkouts",
@@ -1002,6 +1003,14 @@
     "description": "Config field label: Around the Clock variant"
   },
   "setupSectionTargetSuccesses": "TARGET SUCCESSES",
+  "setupSectionCheckoutMode": "TARGET MODE",
+  "checkoutModeFixed": "FIXED",
+  "checkoutModeRandom": "RANDOM",
+  "checkoutModeProgressive": "PROGRESSIVE",
+  "setupSectionCheckout": "CHECKOUT",
+  "setupSectionFrom": "FROM",
+  "setupSectionTo": "TO",
+  "setupSectionStep": "STEP",
   "@setupSectionTargetSuccesses": {
     "description": "Config field label: checkout-practice target successes"
   },
@@ -1436,11 +1445,11 @@
   "@rulesCheckoutTagline": {
     "description": "Game rules text"
   },
-  "rulesCheckoutObjectiveBody": "Start on 170 and reduce your score to exactly zero on a double. This is a solo drill for grooving the classic 170 finish — typically triple 20, triple 20, double bull.",
+  "rulesCheckoutObjectiveBody": "Reduce your score to exactly zero, finishing on a double. A solo finishing drill — practise a fixed checkout (the classic 170 by default), a random spread, or a climbing pyramid.",
   "@rulesCheckoutObjectiveBody": {
     "description": "Game rules text"
   },
-  "rulesCheckoutHowB1": "You begin with a score of 170 and are always \"in\" — every dart counts from the first throw.",
+  "rulesCheckoutHowB1": "Each run starts on the chosen checkout target and you are always \"in\" — every dart counts from the first throw.",
   "@rulesCheckoutHowB1": {
     "description": "Game rules text"
   },

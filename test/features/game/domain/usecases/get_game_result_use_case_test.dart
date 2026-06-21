@@ -783,6 +783,70 @@ void main() {
           reason: '∞ config (no quota) → null target (#603)');
     }));
 
+    test('checkoutPractice: varied target — attempts read the run\'s from_score (#636)',
+        (() async {
+      const gameId = 'g-co-varied';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.checkoutPractice,
+        config: const GameConfig.checkoutPractice(
+          targetMode: 'fixed',
+          fixedTarget: 50,
+        ),
+        playerId: playerId,
+        playerName: 'Gus',
+        competitorId: competitorId,
+      );
+
+      // Run starts FROM 50 (stamped on TurnStarted). One dart T16 (48) leaves 2
+      // — the dart was thrown from 50 (on DB), so it's an attempt even though
+      // the visit didn't check out. If the reconstruction wrongly used 170 the
+      // dart would be at 170 (not a double) → 0 attempts.
+      final events = <GameEvent>[
+        GameEvent(
+          eventId: 'g-co-varied-ts',
+          gameId: gameId,
+          eventType: 'TurnStarted',
+          localSequence: 1,
+          occurredAt: DateTime.utc(2026, 1, 1),
+          payload: const {
+            'competitor_id': competitorId,
+            'player_id': playerId,
+            'from_score': 50,
+            'turn_index': 0,
+            'leg_index': 0,
+          },
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        ),
+        dart(gameId, competitorId, playerId, 2, 16, 3), // 50 → 2 (missed DB)
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: 3,
+          reason: 'normal',
+        ),
+        buildGameCompletedEvent(
+          gameId: gameId,
+          winnerCompetitorId: null,
+          localSequence: 4,
+        ),
+      ];
+
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as CheckoutPracticeResult;
+      expect(result.attempts, 1,
+          reason: 'the dart was thrown from 50 (on a double) per from_score');
+      expect(result.successes, 0);
+      expect(result.targetMode, 'fixed');
+      expect(result.fixedTarget, 50);
+    }));
+
     test('shanghai: bestRound observes max single-round score', (() async {
       const gameId = 'g-sh';
       const competitorId = 'c1';

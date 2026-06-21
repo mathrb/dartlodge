@@ -333,6 +333,78 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
   List<Widget> _buildCheckoutPracticeFields(
       AppLocalizations l10n, CheckoutPracticeGameConfig c) {
     return [
+      // Target mode (#636): fixed value / random range / progressive pyramid.
+      _FieldSection(
+        label: l10n.setupSectionCheckoutMode,
+        child: _SegmentedOptionGroup<String>(
+          values: const ['fixed', 'random', 'progressive'],
+          labels: [
+            l10n.checkoutModeFixed,
+            l10n.checkoutModeRandom,
+            l10n.checkoutModeProgressive,
+          ],
+          selected: c.targetMode,
+          onSelected: (v) =>
+              setState(() => _draftConfig = c.copyWith(targetMode: v)),
+        ),
+      ),
+      if (c.targetMode == 'fixed')
+        _FieldSection(
+          label: l10n.setupSectionCheckout,
+          child: _RoundsDropdown(
+            value: c.fixedTarget,
+            items: const [40, 60, 80, 100, 120, 140, 160, 170],
+            onChanged: (v) {
+              if (v == null) return;
+              setState(() => _draftConfig = c.copyWith(fixedTarget: v));
+            },
+          ),
+        )
+      else ...[
+        Row(
+          children: [
+            Expanded(
+              child: _FieldSection(
+                label: l10n.setupSectionFrom,
+                child: _RoundsDropdown(
+                  value: c.minTarget,
+                  items: const [2, 40, 60, 80, 100],
+                  onChanged: (v) {
+                    if (v == null) return;
+                    setState(() => _draftConfig = c.copyWith(minTarget: v));
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.space2),
+            Expanded(
+              child: _FieldSection(
+                label: l10n.setupSectionTo,
+                child: _RoundsDropdown(
+                  value: c.maxTarget,
+                  items: const [100, 120, 140, 160, 170],
+                  onChanged: (v) {
+                    if (v == null) return;
+                    setState(() => _draftConfig = c.copyWith(maxTarget: v));
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (c.targetMode == 'progressive')
+          _FieldSection(
+            label: l10n.setupSectionStep,
+            child: _RoundsDropdown(
+              value: c.progressionStep,
+              items: const [5, 10, 15, 20],
+              onChanged: (v) {
+                if (v == null) return;
+                setState(() => _draftConfig = c.copyWith(progressionStep: v));
+              },
+            ),
+          ),
+      ],
       _FieldSection(
         label: l10n.setupSectionTargetSuccesses,
         child: _RoundsDropdown(

@@ -119,6 +119,11 @@ CheckoutPracticeGameConfig _$CheckoutPracticeGameConfigFromJson(
   startingPlayerId: json['startingPlayerId'] as String? ?? null,
   randomOrder: json['randomOrder'] as bool? ?? false,
   targetSuccesses: (json['targetSuccesses'] as num?)?.toInt() ?? null,
+  targetMode: _readCheckoutTargetMode(json, 'targetMode') as String? ?? 'fixed',
+  fixedTarget: (json['fixedTarget'] as num?)?.toInt() ?? 170,
+  minTarget: (json['minTarget'] as num?)?.toInt() ?? 40,
+  maxTarget: (json['maxTarget'] as num?)?.toInt() ?? 170,
+  progressionStep: (json['progressionStep'] as num?)?.toInt() ?? 10,
   $type: json['runtimeType'] as String?,
 );
 
@@ -128,6 +133,11 @@ Map<String, dynamic> _$CheckoutPracticeGameConfigToJson(
   'startingPlayerId': instance.startingPlayerId,
   'randomOrder': instance.randomOrder,
   'targetSuccesses': instance.targetSuccesses,
+  'targetMode': instance.targetMode,
+  'fixedTarget': instance.fixedTarget,
+  'minTarget': instance.minTarget,
+  'maxTarget': instance.maxTarget,
+  'progressionStep': instance.progressionStep,
   'runtimeType': instance.$type,
 };
 

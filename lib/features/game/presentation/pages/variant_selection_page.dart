@@ -244,7 +244,7 @@ class VariantSelectionPage extends ConsumerWidget {
           config: GameConfig.bobs27(),
         ),
         _VariantEntry(
-          label: '170 Checkout',
+          label: 'Checkout',
           rulesSlug: 'practice-170-checkout',
           config: GameConfig.checkoutPractice(),
         ),

@@ -9,6 +9,7 @@ import '../repositories/game_repository.dart';
 import '../repositories/game_event_repository.dart';
 import '../../../players/domain/repositories/player_repository.dart';
 import '../../../../core/error/repository_exception.dart';
+import '../../../../core/utils/checkout_target.dart';
 import '../../../../core/utils/constants.dart';
 import 'game_use_case_helpers.dart';
 import 'dart:math' as math;
@@ -98,6 +99,20 @@ class CreateGameUseCase {
       x01: (c) => c.startingScore,
       orElse: () => null,
     );
+    // #636: stamp the first run's checkout target on the opening TurnStarted so
+    // the engine and stats read it (run-start = first-of-game). Run index 0.
+    final checkoutFromScore = game.config.maybeMap(
+      checkoutPractice: (c) => checkoutTargetForRun(
+        mode: c.targetMode,
+        fixedTarget: c.fixedTarget,
+        minTarget: c.minTarget,
+        maxTarget: c.maxTarget,
+        step: c.progressionStep,
+        gameId: game.gameId,
+        runIndex: 0,
+      ),
+      orElse: () => null,
+    );
     sequenceCursor += 1;
     final turnStartedEvent = GameEvent(
       eventId: const Uuid().v4(),
@@ -110,6 +125,7 @@ class CreateGameUseCase {
         'competitor_id': competitors.first.competitorId,
         'player_id': firstPlayerId,
         if (startingScore != null) 'starting_score': startingScore,
+        if (checkoutFromScore != null) 'from_score': checkoutFromScore,
         'turn_index': 0,
         'leg_index': 0,
       },

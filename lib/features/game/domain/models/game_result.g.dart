@@ -68,6 +68,10 @@ CheckoutPracticeResult _$CheckoutPracticeResultFromJson(
   dartsThrown: (json['dartsThrown'] as num).toInt(),
   fromScore: (json['fromScore'] as num).toInt(),
   targetSuccesses: (json['targetSuccesses'] as num?)?.toInt(),
+  targetMode: json['targetMode'] as String? ?? 'fixed',
+  fixedTarget: (json['fixedTarget'] as num?)?.toInt() ?? 170,
+  minTarget: (json['minTarget'] as num?)?.toInt() ?? 40,
+  maxTarget: (json['maxTarget'] as num?)?.toInt() ?? 170,
   $type: json['runtimeType'] as String?,
 );
 
@@ -80,6 +84,10 @@ Map<String, dynamic> _$CheckoutPracticeResultToJson(
   'dartsThrown': instance.dartsThrown,
   'fromScore': instance.fromScore,
   'targetSuccesses': instance.targetSuccesses,
+  'targetMode': instance.targetMode,
+  'fixedTarget': instance.fixedTarget,
+  'minTarget': instance.minTarget,
+  'maxTarget': instance.maxTarget,
   'runtimeType': instance.$type,
 };
 

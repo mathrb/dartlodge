@@ -53,7 +53,7 @@ String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
     bobs27: (_) => "Bob's 27",
     shanghai: (c) => 'Shanghai · ${_roundsLabel(l10n, c.totalRounds)}',
     countUp: (c) => 'Count-Up · ${_roundsLabel(l10n, c.totalRounds)}',
-    checkoutPractice: (_) => '170 Checkout',
+    checkoutPractice: (_) => 'Checkout',
     orElse: () => 'Game',
   );
 }

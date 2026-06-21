@@ -2,7 +2,7 @@ import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../game_rules.dart';
 
 GameRules checkoutPracticeRules(AppLocalizations l10n) => GameRules(
-      title: '170 Checkout',
+      title: 'Checkout',
       tagline: l10n.rulesCheckoutTagline,
       sections: [
         RulesSection(

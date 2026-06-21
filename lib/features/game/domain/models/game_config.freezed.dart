@@ -221,7 +221,7 @@ return countUp(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)?  x01,TResult Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)?  cricket,TResult Function( String variant,  String? startingPlayerId)?  aroundTheClock,TResult Function( int totalRounds,  String? startingPlayerId)?  shanghai,TResult Function( String? startingPlayerId)?  catch40,TResult Function( String? startingPlayerId)?  bobs27,TResult Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses)?  checkoutPractice,TResult Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)?  countUp,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)?  x01,TResult Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)?  cricket,TResult Function( String variant,  String? startingPlayerId)?  aroundTheClock,TResult Function( int totalRounds,  String? startingPlayerId)?  shanghai,TResult Function( String? startingPlayerId)?  catch40,TResult Function( String? startingPlayerId)?  bobs27,TResult Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses, @JsonKey(readValue: _readCheckoutTargetMode)  String targetMode,  int fixedTarget,  int minTarget,  int maxTarget,  int progressionStep)?  checkoutPractice,TResult Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)?  countUp,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case X01GameConfig() when x01 != null:
 return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.totalRounds,_that.startingPlayerId,_that.handicaps);case CricketGameConfig() when cricket != null:
@@ -230,7 +230,7 @@ return aroundTheClock(_that.variant,_that.startingPlayerId);case ShanghaiGameCon
 return shanghai(_that.totalRounds,_that.startingPlayerId);case Catch40GameConfig() when catch40 != null:
 return catch40(_that.startingPlayerId);case Bobs27GameConfig() when bobs27 != null:
 return bobs27(_that.startingPlayerId);case CheckoutPracticeGameConfig() when checkoutPractice != null:
-return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses);case CountUpGameConfig() when countUp != null:
+return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses,_that.targetMode,_that.fixedTarget,_that.minTarget,_that.maxTarget,_that.progressionStep);case CountUpGameConfig() when countUp != null:
 return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
   return orElse();
 
@@ -249,7 +249,7 @@ return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)  x01,required TResult Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)  cricket,required TResult Function( String variant,  String? startingPlayerId)  aroundTheClock,required TResult Function( int totalRounds,  String? startingPlayerId)  shanghai,required TResult Function( String? startingPlayerId)  catch40,required TResult Function( String? startingPlayerId)  bobs27,required TResult Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses)  checkoutPractice,required TResult Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)  countUp,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)  x01,required TResult Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)  cricket,required TResult Function( String variant,  String? startingPlayerId)  aroundTheClock,required TResult Function( int totalRounds,  String? startingPlayerId)  shanghai,required TResult Function( String? startingPlayerId)  catch40,required TResult Function( String? startingPlayerId)  bobs27,required TResult Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses, @JsonKey(readValue: _readCheckoutTargetMode)  String targetMode,  int fixedTarget,  int minTarget,  int maxTarget,  int progressionStep)  checkoutPractice,required TResult Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)  countUp,}) {final _that = this;
 switch (_that) {
 case X01GameConfig():
 return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.totalRounds,_that.startingPlayerId,_that.handicaps);case CricketGameConfig():
@@ -258,7 +258,7 @@ return aroundTheClock(_that.variant,_that.startingPlayerId);case ShanghaiGameCon
 return shanghai(_that.totalRounds,_that.startingPlayerId);case Catch40GameConfig():
 return catch40(_that.startingPlayerId);case Bobs27GameConfig():
 return bobs27(_that.startingPlayerId);case CheckoutPracticeGameConfig():
-return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses);case CountUpGameConfig():
+return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses,_that.targetMode,_that.fixedTarget,_that.minTarget,_that.maxTarget,_that.progressionStep);case CountUpGameConfig():
 return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
   throw StateError('Unexpected subclass');
 
@@ -276,7 +276,7 @@ return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)?  x01,TResult? Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)?  cricket,TResult? Function( String variant,  String? startingPlayerId)?  aroundTheClock,TResult? Function( int totalRounds,  String? startingPlayerId)?  shanghai,TResult? Function( String? startingPlayerId)?  catch40,TResult? Function( String? startingPlayerId)?  bobs27,TResult? Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses)?  checkoutPractice,TResult? Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)?  countUp,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( int startingScore,  String inStrategy,  String outStrategy,  int legsToWin,  int? totalRounds,  String? startingPlayerId,  Map<String, int> handicaps)?  x01,TResult? Function(@JsonKey(readValue: _readCricketScoring)  String scoring, @JsonKey(readValue: _readCricketTargetMode)  String targetMode,  List<String> numbers,  int legsToWin,  int? totalRounds,  String? startingPlayerId)?  cricket,TResult? Function( String variant,  String? startingPlayerId)?  aroundTheClock,TResult? Function( int totalRounds,  String? startingPlayerId)?  shanghai,TResult? Function( String? startingPlayerId)?  catch40,TResult? Function( String? startingPlayerId)?  bobs27,TResult? Function( String? startingPlayerId,  bool randomOrder,  int? targetSuccesses, @JsonKey(readValue: _readCheckoutTargetMode)  String targetMode,  int fixedTarget,  int minTarget,  int maxTarget,  int progressionStep)?  checkoutPractice,TResult? Function( int totalRounds,  Map<String, int> handicaps,  String? startingPlayerId)?  countUp,}) {final _that = this;
 switch (_that) {
 case X01GameConfig() when x01 != null:
 return x01(_that.startingScore,_that.inStrategy,_that.outStrategy,_that.legsToWin,_that.totalRounds,_that.startingPlayerId,_that.handicaps);case CricketGameConfig() when cricket != null:
@@ -285,7 +285,7 @@ return aroundTheClock(_that.variant,_that.startingPlayerId);case ShanghaiGameCon
 return shanghai(_that.totalRounds,_that.startingPlayerId);case Catch40GameConfig() when catch40 != null:
 return catch40(_that.startingPlayerId);case Bobs27GameConfig() when bobs27 != null:
 return bobs27(_that.startingPlayerId);case CheckoutPracticeGameConfig() when checkoutPractice != null:
-return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses);case CountUpGameConfig() when countUp != null:
+return checkoutPractice(_that.startingPlayerId,_that.randomOrder,_that.targetSuccesses,_that.targetMode,_that.fixedTarget,_that.minTarget,_that.maxTarget,_that.progressionStep);case CountUpGameConfig() when countUp != null:
 return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
   return null;
 
@@ -774,12 +774,17 @@ as String?,
 @JsonSerializable()
 
 class CheckoutPracticeGameConfig implements GameConfig {
-  const CheckoutPracticeGameConfig({this.startingPlayerId = null, this.randomOrder = false, this.targetSuccesses = null, final  String? $type}): $type = $type ?? 'checkoutPractice';
+  const CheckoutPracticeGameConfig({this.startingPlayerId = null, this.randomOrder = false, this.targetSuccesses = null, @JsonKey(readValue: _readCheckoutTargetMode) this.targetMode = 'fixed', this.fixedTarget = 170, this.minTarget = 40, this.maxTarget = 170, this.progressionStep = 10, final  String? $type}): $type = $type ?? 'checkoutPractice';
   factory CheckoutPracticeGameConfig.fromJson(Map<String, dynamic> json) => _$CheckoutPracticeGameConfigFromJson(json);
 
 @override@JsonKey() final  String? startingPlayerId;
 @JsonKey() final  bool randomOrder;
 @JsonKey() final  int? targetSuccesses;
+@JsonKey(readValue: _readCheckoutTargetMode) final  String targetMode;
+@JsonKey() final  int fixedTarget;
+@JsonKey() final  int minTarget;
+@JsonKey() final  int maxTarget;
+@JsonKey() final  int progressionStep;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -798,16 +803,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&(identical(other.randomOrder, randomOrder) || other.randomOrder == randomOrder)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&(identical(other.randomOrder, randomOrder) || other.randomOrder == randomOrder)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&(identical(other.fixedTarget, fixedTarget) || other.fixedTarget == fixedTarget)&&(identical(other.minTarget, minTarget) || other.minTarget == minTarget)&&(identical(other.maxTarget, maxTarget) || other.maxTarget == maxTarget)&&(identical(other.progressionStep, progressionStep) || other.progressionStep == progressionStep));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingPlayerId,randomOrder,targetSuccesses);
+int get hashCode => Object.hash(runtimeType,startingPlayerId,randomOrder,targetSuccesses,targetMode,fixedTarget,minTarget,maxTarget,progressionStep);
 
 @override
 String toString() {
-  return 'GameConfig.checkoutPractice(startingPlayerId: $startingPlayerId, randomOrder: $randomOrder, targetSuccesses: $targetSuccesses)';
+  return 'GameConfig.checkoutPractice(startingPlayerId: $startingPlayerId, randomOrder: $randomOrder, targetSuccesses: $targetSuccesses, targetMode: $targetMode, fixedTarget: $fixedTarget, minTarget: $minTarget, maxTarget: $maxTarget, progressionStep: $progressionStep)';
 }
 
 
@@ -818,7 +823,7 @@ abstract mixin class $CheckoutPracticeGameConfigCopyWith<$Res> implements $GameC
   factory $CheckoutPracticeGameConfigCopyWith(CheckoutPracticeGameConfig value, $Res Function(CheckoutPracticeGameConfig) _then) = _$CheckoutPracticeGameConfigCopyWithImpl;
 @override @useResult
 $Res call({
- String? startingPlayerId, bool randomOrder, int? targetSuccesses
+ String? startingPlayerId, bool randomOrder, int? targetSuccesses,@JsonKey(readValue: _readCheckoutTargetMode) String targetMode, int fixedTarget, int minTarget, int maxTarget, int progressionStep
 });
 
 
@@ -835,12 +840,17 @@ class _$CheckoutPracticeGameConfigCopyWithImpl<$Res>
 
 /// Create a copy of GameConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,Object? randomOrder = null,Object? targetSuccesses = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? startingPlayerId = freezed,Object? randomOrder = null,Object? targetSuccesses = freezed,Object? targetMode = null,Object? fixedTarget = null,Object? minTarget = null,Object? maxTarget = null,Object? progressionStep = null,}) {
   return _then(CheckoutPracticeGameConfig(
 startingPlayerId: freezed == startingPlayerId ? _self.startingPlayerId : startingPlayerId // ignore: cast_nullable_to_non_nullable
 as String?,randomOrder: null == randomOrder ? _self.randomOrder : randomOrder // ignore: cast_nullable_to_non_nullable
 as bool,targetSuccesses: freezed == targetSuccesses ? _self.targetSuccesses : targetSuccesses // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,targetMode: null == targetMode ? _self.targetMode : targetMode // ignore: cast_nullable_to_non_nullable
+as String,fixedTarget: null == fixedTarget ? _self.fixedTarget : fixedTarget // ignore: cast_nullable_to_non_nullable
+as int,minTarget: null == minTarget ? _self.minTarget : minTarget // ignore: cast_nullable_to_non_nullable
+as int,maxTarget: null == maxTarget ? _self.maxTarget : maxTarget // ignore: cast_nullable_to_non_nullable
+as int,progressionStep: null == progressionStep ? _self.progressionStep : progressionStep // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

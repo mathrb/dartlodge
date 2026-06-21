@@ -57,10 +57,23 @@ abstract class GameConfig with _$GameConfig {
     @Default(null) String? startingPlayerId,
   }) = Bobs27GameConfig;
 
+  /// Checkout Practice with a target-mode axis (#636):
+  /// - [targetMode] ∈ {`fixed`, `random`, `progressive`} — how the per-run
+  ///   checkout target is chosen. Legacy payloads (no `targetMode`) → `fixed`.
+  /// - [fixedTarget]: the single checkout for `fixed` mode (2..170, default 170).
+  /// - [minTarget]/[maxTarget]: range for `random`, start/end for `progressive`.
+  /// - [progressionStep]: climb per checkout for `progressive`.
   const factory GameConfig.checkoutPractice({
     @Default(null) String? startingPlayerId,
     @Default(false) bool randomOrder,
     @Default(null) int? targetSuccesses,
+    @JsonKey(readValue: _readCheckoutTargetMode)
+    @Default('fixed')
+        String targetMode,
+    @Default(170) int fixedTarget,
+    @Default(40) int minTarget,
+    @Default(170) int maxTarget,
+    @Default(10) int progressionStep,
   }) = CheckoutPracticeGameConfig;
 
   /// Count-Up: multi-player score-accumulation game.
@@ -87,6 +100,11 @@ Object? _readCricketScoring(Map<dynamic, dynamic> json, String key) =>
 /// Backward-compat reader for cricket target mode: absent on legacy payloads,
 /// which all map to `fixed`.
 Object? _readCricketTargetMode(Map<dynamic, dynamic> json, String key) =>
+    json['targetMode'] ?? 'fixed';
+
+/// Backward-compat reader for checkout-practice target mode (#636): absent on
+/// legacy payloads (the fixed-170 drill), which all map to `fixed`.
+Object? _readCheckoutTargetMode(Map<dynamic, dynamic> json, String key) =>
     json['targetMode'] ?? 'fixed';
 
 /// Canonical Segment Representation
