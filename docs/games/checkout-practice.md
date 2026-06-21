@@ -1,4 +1,4 @@
-# 170 Checkout Practice – Game Rules & State Transitions
+# Checkout Practice – Game Rules & State Transitions
 
 **Status:** Authoritative (engine + server validation)
 
@@ -6,9 +6,28 @@
 
 ## 1. Overview
 
-The 170 Checkout Practice game is a solo drill where the player starts at 170 and tries to reach 0 using standard X01 double-out rules. The goal is to practice executing the 170 checkout sequence from a full dart input grid.
+Checkout Practice is a solo drill where the player starts on a checkout **target** and tries to
+reach 0 using standard X01 double-out rules, grooving finishing sequences from a full dart input grid.
 
-It is a **multi-success quota drill**, not a single-checkout one. Each successful checkout increments a `practice_successes` counter, and the player re-attempts the 170 checkout repeatedly. The drill completes only when `practice_successes` reaches the configured `target_successes` quota. When `target_successes` is unset (∞), the drill never auto-completes and runs until the player manually ends the session.
+It is a **multi-success quota drill**, not a single-checkout one. Each successful checkout increments a `practice_successes` counter, and the player re-attempts the checkout repeatedly. The drill completes only when `practice_successes` reaches the configured `target_successes` quota. When `target_successes` is unset (∞), the drill never auto-completes and runs until the player manually ends the session.
+
+### 1.1 Target modes (#636)
+
+Each **run** (one attempt at a target, possibly spanning several visits, ending on a checkout) starts
+from a checkout target chosen by `targetMode`:
+
+| Mode | Target per run (`runIndex` = completed checkouts so far) |
+|---|---|
+| `fixed` | `fixedTarget` every run (default **170** — the classic drill). |
+| `random` | a checkoutable value in `[minTarget, maxTarget]`, re-chosen each run. |
+| `progressive` | a pyramid: `minTarget + step·runIndex`, **clamped at `maxTarget`** (sits at the top once reached) and snapped to the nearest checkoutable score. |
+
+The target is **deterministic and replay-pure**: `checkoutTargetForRun(mode, …, gameId, runIndex)`
+(`lib/core/utils/checkout_target.dart`). Random uses a stable hash of `gameId`+`runIndex` (not
+`String.hashCode`) so a replay months later picks the same targets; undo is safe because `runIndex`
+(= `practiceSuccesses`) is recomputed. The run's target is stamped as **`from_score`** on the
+run-start `TurnStarted` (game-start + each post-checkout TurnStarted) so the engine and all stats
+read one agreed value. Legacy games (no `from_score`/`targetMode`) → `fixed` 170.
 
 ---
 
@@ -145,6 +164,8 @@ Stats are shown at the end of the drill.
 | Successes | Running count of completed checkouts (`practice_successes`) — the quota progress toward `target_successes`. |
 | Checkout attempt | A **visit in which the player threw at a finishing double** — i.e. the visit's running score reached a single-dart double-out position (an even score 2..40, or 50/DB; see `isOnADoubleFinish`). Pure setup/scoring visits, where the player never got to a double, are **not** attempts (#635). A checkout visit is always an attempt (it finished on a double). So a 170 completed over several visits counts as 1 attempt, not N — it is not diluted by the scoring visits. (This is the same convention X01 checkout % uses — #637.) |
 | Success rate | `successes / attempts` (per the attempt definition above), not `successes / visits`. |
+| Darts per checkout | `darts_thrown / successes` (#636) — the headline efficiency metric for a varied-target drill. |
+| FROM | The target the player checks out from: a single value (`fixed`) or a range — `min–max` (`random`) / `min→max` (`progressive`) (#636). |
 | Checkout score | The score at the **start of the finishing turn** (`turn_start_score` when `GameCompleted` fires on a checkout). Indicates the checkout value the player actually executed. |
 
 > Example: player reaches 40 before the final turn, then checks out D20. Checkout score = 40; darts thrown = total across all turns.

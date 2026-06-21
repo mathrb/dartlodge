@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../../../../core/utils/checkout_target.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/post_game_hero_card_widget.dart';
 import '../../../../core/widgets/post_game_stats_breakdown_widget.dart';
@@ -73,6 +74,10 @@ class PracticeSummaryWidget extends StatelessWidget {
         :final dartsThrown,
         :final fromScore,
         :final targetSuccesses,
+        :final targetMode,
+        :final fixedTarget,
+        :final minTarget,
+        :final maxTarget,
       ) =>
         _buildCheckoutHero(
           l10n: l10n,
@@ -82,6 +87,10 @@ class PracticeSummaryWidget extends StatelessWidget {
           dartsThrown: dartsThrown,
           fromScore: fromScore,
           targetSuccesses: targetSuccesses,
+          targetMode: targetMode,
+          fixedTarget: fixedTarget,
+          minTarget: minTarget,
+          maxTarget: maxTarget,
         ),
       ShanghaiResult() => const SizedBox.shrink(),
     };
@@ -103,6 +112,10 @@ class PracticeSummaryWidget extends StatelessWidget {
     required int dartsThrown,
     required int fromScore,
     required int? targetSuccesses,
+    required String targetMode,
+    required int fixedTarget,
+    required int minTarget,
+    required int maxTarget,
   }) {
     final isSingleAttempt = attempts <= 1;
     final anySuccess = successes > 0;
@@ -133,6 +146,20 @@ class PracticeSummaryWidget extends StatelessWidget {
         ? null
         : StatFormatter.fmtPct(successes / attempts, decimals: 0);
 
+    // FROM shows the target (fixed) or the range (random/progressive) (#636).
+    final String fromLabel;
+    switch (targetMode) {
+      case kCheckoutModeRandom:
+        fromLabel = '$minTarget–$maxTarget';
+      case kCheckoutModeProgressive:
+        fromLabel = '$minTarget→$maxTarget';
+      case kCheckoutModeFixed:
+      default:
+        // Fixed mode: prefer the configured value; legacy results without the
+        // mode plumbing fall back to the per-run fromScore.
+        fromLabel = '${fixedTarget != 0 ? fixedTarget : fromScore}';
+    }
+
     return PostGameHeroCard(
       badge: badge,
       headline: headline,
@@ -144,16 +171,21 @@ class PracticeSummaryWidget extends StatelessWidget {
           value: '$dartsThrown',
           emphasize: anySuccess,
         ),
-        if (isSingleAttempt)
-          PostGameHeroStat(
-            label: l10n.summaryFrom.toUpperCase(),
-            value: '$fromScore',
-          )
-        else
+        PostGameHeroStat(
+          label: l10n.summaryFrom.toUpperCase(),
+          value: fromLabel,
+        ),
+        if (!isSingleAttempt)
           PostGameHeroStat(
             label: l10n.summarySuccessRate.toUpperCase(),
             value: rate ?? '—',
             emphasize: anySuccess,
+          ),
+        if (anySuccess)
+          PostGameHeroStat(
+            label: l10n.summaryDartsPerCheckout.toUpperCase(),
+            value: StatFormatter.fmtDouble(dartsThrown / successes),
+            emphasize: true,
           ),
       ],
     );

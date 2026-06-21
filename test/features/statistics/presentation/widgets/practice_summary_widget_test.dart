@@ -278,9 +278,12 @@ void main() {
       expect(find.text('CHECKED OUT!'), findsOneWidget);
       expect(find.text('Alice'), findsOneWidget);
       expect(find.text('DARTS'), findsOneWidget);
-      expect(find.text('9'), findsOneWidget);
       expect(find.text('FROM'), findsOneWidget);
       expect(find.text('170'), findsOneWidget);
+      // #636: darts-per-checkout side-stat (9 darts / 1 checkout = 9), so "9"
+      // now appears twice (DARTS total + DARTS/CHECKOUT).
+      expect(find.text('DARTS/CHECKOUT'), findsOneWidget);
+      expect(find.text('9'), findsNWidgets(2));
     });
 
     testWidgets('170 Checkout single attempt failure shows "Not checked out"',
@@ -321,7 +324,9 @@ void main() {
       expect(find.text('SUCCESS RATE'), findsOneWidget);
       expect(find.text('33%'), findsOneWidget);
       expect(find.text('DARTS'), findsOneWidget);
-      expect(find.text('9'), findsOneWidget);
+      // #636: DARTS/CHECKOUT side-stat (9 / 1 = 9) → "9" appears twice.
+      expect(find.text('DARTS/CHECKOUT'), findsOneWidget);
+      expect(find.text('9'), findsNWidgets(2));
       expect(find.text('CHECKED OUT'), findsNothing);
     });
 

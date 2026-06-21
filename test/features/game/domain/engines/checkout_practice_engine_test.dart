@@ -474,6 +474,41 @@ void main() {
       expect(result.state.turnActive, isTrue);
     });
 
+    test('TurnStarted with a from_score stamp resets to that target (#636)', () {
+      // A run-start TurnStarted carries the run's checkout target. The engine
+      // resets to it regardless of the previous run's startingScore (random /
+      // progressive / configurable-fixed targets).
+      final state = _makeState(
+        score: 0, // post-checkout
+        startingScore: 170,
+        practiceSuccesses: 1,
+        checkoutTargetSuccesses: null,
+      );
+      final event = _event(
+        type: 'TurnStarted',
+        payload: {'competitor_id': 'c1', 'from_score': 121},
+      );
+      final result = engine.apply(state, event);
+      expect(result.state.competitors[0].score, 121);
+      expect(result.state.competitors[0].turnStartScore, 121);
+      // startingScore (the run-0 anchor / undo seed) is NOT mutated.
+      expect(result.state.competitors[0].startingScore, 170);
+    });
+
+    test('mid-run TurnStarted (no from_score, score>0) keeps the carried score (#636)',
+        () {
+      // A run that spans visits: the second visit's TurnStarted has no stamp
+      // and a non-zero score → resume where the run left off.
+      final state = _makeState(
+        score: 40,
+        startingScore: 170,
+        practiceSuccesses: 0,
+      );
+      final result = engine.apply(state, _turnStarted('c1'));
+      expect(result.state.competitors[0].score, 40);
+      expect(result.state.competitors[0].turnStartScore, 40);
+    });
+
     test(
         'TurnStarted with non-zero score (fresh game) leaves it untouched',
         () {

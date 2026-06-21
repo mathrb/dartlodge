@@ -1961,17 +1961,20 @@ class PlayerStatsAssembler {
   ) {
     // #635: a checkout ATTEMPT is a visit in which the player threw at a
     // finishing double (the running score reached a single-dart double-out
-    // position), not every visit. Setup/scoring visits don't count, so a 170
-    // completed over several visits reads as 1/1, not 1/N. The drill always
-    // starts at 170 and resets to 170 on checkout, reverting to the visit's
-    // start on a bust — so `remaining` is reconstructable from events with no
-    // producer change. Reset at each game boundary (career stats span games).
-    // #636: revisit the hardcoded 170 when varied checkout targets land.
+    // position), not every visit. Setup/scoring visits don't count, so one
+    // checkout completed over several visits reads as 1/1, not 1/N.
+    // #636: each run's checkout target (the score you finish FROM) is read from
+    // the run-start TurnStarted's `from_score` stamp (varied fixed/random/
+    // progressive targets); legacy fixed-170 games carry no stamp → default 170.
+    // A run starts at the first turn of a game or the turn after a checkout;
+    // mid-run turns keep `remaining`. Reset at each game boundary (career stats
+    // span games). `remaining` is reconstructed from events — no stored stat.
     int attempts = 0;
     int successes = 0;
     var remaining = 170;
     var visitStart = 170;
     var threwAtDouble = false;
+    var prevWasCheckout = true; // first turn of a game is a run-start
     String? lastGameId;
 
     for (final event in events) {
@@ -1980,11 +1983,16 @@ class PlayerStatsAssembler {
         remaining = 170;
         visitStart = 170;
         threwAtDouble = false;
+        prevWasCheckout = true; // first turn of the new game starts a run
       }
       final epid = event.payload['player_id'] as String?;
       if (epid != playerId) continue;
       switch (event.eventType) {
         case 'TurnStarted':
+          if (prevWasCheckout) {
+            remaining = (event.payload['from_score'] as num?)?.toInt() ?? 170;
+          }
+          prevWasCheckout = false;
           visitStart = remaining;
           threwAtDouble = false;
         case 'DartThrown':
@@ -1995,7 +2003,7 @@ class PlayerStatsAssembler {
           if (reason == 'checkout') {
             successes++;
             attempts++; // a checkout always finished on a double
-            remaining = 170;
+            prevWasCheckout = true; // next turn starts a new run
           } else {
             if (remaining < 2) remaining = visitStart; // bust → revert
             if (threwAtDouble) attempts++;

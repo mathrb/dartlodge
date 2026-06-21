@@ -65,8 +65,15 @@ class StatelessCheckoutPracticeEngine implements GameEngine {
     // `startingScore` (170) — otherwise `turnStartScore` would lock in 0
     // and any bust on the new attempt would revert score to 0, blocking
     // future checkouts.
-    final freshScore =
-        competitor.score == 0 ? competitor.startingScore : competitor.score;
+    // #636: a run-start TurnStarted carries the run's checkout target as
+    // `from_score` (stamped by CreateGameUseCase / the provider via
+    // checkoutTargetForRun). When present it sets the score for the new run
+    // (fixed/random/progressive). When absent — a mid-run resume, or a legacy
+    // fixed-170 game — fall back to the historical behaviour: reset to
+    // startingScore after a checkout (score == 0), else keep the carried score.
+    final fromScore = (event.payload['from_score'] as num?)?.toInt();
+    final freshScore = fromScore ??
+        (competitor.score == 0 ? competitor.startingScore : competitor.score);
     final updatedCompetitor = competitor.copyWith(
       score: freshScore,
       turnStartScore: freshScore,

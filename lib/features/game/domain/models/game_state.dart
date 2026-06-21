@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../../core/utils/checkout_target.dart';
 import '../../../../core/utils/constants.dart';
 import '../engines/base_game_engine.dart';
 import '../entities/game.dart';
@@ -37,6 +38,14 @@ abstract class GameState with _$GameState {
     @Default(0) int catch40TargetRemaining,
     @Default(0) int catch40DartsOnTarget,
     int? checkoutTargetSuccesses,
+    // Checkout-Practice target mode (#636): how each run's checkout target is
+    // chosen. Mirrors CheckoutPracticeGameConfig; read by the engine + stats
+    // via checkoutTargetForRun. Defaults reproduce the legacy fixed-170 drill.
+    @Default('fixed') String checkoutTargetMode,
+    @Default(170) int checkoutFixedTarget,
+    @Default(40) int checkoutMinTarget,
+    @Default(170) int checkoutMaxTarget,
+    @Default(10) int checkoutProgressionStep,
     int? countUpTotalRounds,
   }) = _GameState;
 
@@ -85,8 +94,24 @@ abstract class GameState with _$GameState {
       ),
       bobs27: (c) => const _GameStateInit(startingScore: 27),
       checkoutPractice: (c) => _GameStateInit(
-        startingScore: 170,
+        // First run's target FROM which the player checks out (runIndex 0).
+        // Subsequent runs are resolved by the engine via checkoutTargetForRun
+        // off the run-start TurnStarted's `from_score` stamp (#636).
+        startingScore: checkoutTargetForRun(
+          mode: c.targetMode,
+          fixedTarget: c.fixedTarget,
+          minTarget: c.minTarget,
+          maxTarget: c.maxTarget,
+          step: c.progressionStep,
+          gameId: game.gameId,
+          runIndex: 0,
+        ),
         checkoutTargetSuccesses: c.targetSuccesses,
+        checkoutTargetMode: c.targetMode,
+        checkoutFixedTarget: c.fixedTarget,
+        checkoutMinTarget: c.minTarget,
+        checkoutMaxTarget: c.maxTarget,
+        checkoutProgressionStep: c.progressionStep,
       ),
       countUp: (c) => _GameStateInit(
         startingScore: 0,
@@ -146,6 +171,11 @@ abstract class GameState with _$GameState {
       catch40TargetRemaining: init.catch40TargetRemaining,
       catch40DartsOnTarget: 0,
       checkoutTargetSuccesses: init.checkoutTargetSuccesses,
+      checkoutTargetMode: init.checkoutTargetMode,
+      checkoutFixedTarget: init.checkoutFixedTarget,
+      checkoutMinTarget: init.checkoutMinTarget,
+      checkoutMaxTarget: init.checkoutMaxTarget,
+      checkoutProgressionStep: init.checkoutProgressionStep,
       countUpTotalRounds: init.countUpTotalRounds,
     );
   }
@@ -167,6 +197,11 @@ class _GameStateInit {
   final int shanghaiTotalRounds;
   final int catch40TargetRemaining;
   final int? checkoutTargetSuccesses;
+  final String checkoutTargetMode;
+  final int checkoutFixedTarget;
+  final int checkoutMinTarget;
+  final int checkoutMaxTarget;
+  final int checkoutProgressionStep;
   final int? countUpTotalRounds;
   final int? initialTarget;
   final Map<String, int> handicaps;
@@ -184,6 +219,11 @@ class _GameStateInit {
     this.shanghaiTotalRounds = 7,
     this.catch40TargetRemaining = 0,
     this.checkoutTargetSuccesses,
+    this.checkoutTargetMode = 'fixed',
+    this.checkoutFixedTarget = 170,
+    this.checkoutMinTarget = 40,
+    this.checkoutMaxTarget = 170,
+    this.checkoutProgressionStep = 10,
     this.countUpTotalRounds,
     this.initialTarget,
     this.handicaps = const {},

@@ -46,6 +46,12 @@ _GameState _$GameStateFromJson(Map<String, dynamic> json) => _GameState(
       (json['catch40TargetRemaining'] as num?)?.toInt() ?? 0,
   catch40DartsOnTarget: (json['catch40DartsOnTarget'] as num?)?.toInt() ?? 0,
   checkoutTargetSuccesses: (json['checkoutTargetSuccesses'] as num?)?.toInt(),
+  checkoutTargetMode: json['checkoutTargetMode'] as String? ?? 'fixed',
+  checkoutFixedTarget: (json['checkoutFixedTarget'] as num?)?.toInt() ?? 170,
+  checkoutMinTarget: (json['checkoutMinTarget'] as num?)?.toInt() ?? 40,
+  checkoutMaxTarget: (json['checkoutMaxTarget'] as num?)?.toInt() ?? 170,
+  checkoutProgressionStep:
+      (json['checkoutProgressionStep'] as num?)?.toInt() ?? 10,
   countUpTotalRounds: (json['countUpTotalRounds'] as num?)?.toInt(),
 );
 
@@ -77,6 +83,11 @@ Map<String, dynamic> _$GameStateToJson(_GameState instance) =>
       'catch40TargetRemaining': instance.catch40TargetRemaining,
       'catch40DartsOnTarget': instance.catch40DartsOnTarget,
       'checkoutTargetSuccesses': instance.checkoutTargetSuccesses,
+      'checkoutTargetMode': instance.checkoutTargetMode,
+      'checkoutFixedTarget': instance.checkoutFixedTarget,
+      'checkoutMinTarget': instance.checkoutMinTarget,
+      'checkoutMaxTarget': instance.checkoutMaxTarget,
+      'checkoutProgressionStep': instance.checkoutProgressionStep,
       'countUpTotalRounds': instance.countUpTotalRounds,
     };
 

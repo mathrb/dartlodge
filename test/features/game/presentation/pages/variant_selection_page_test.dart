@@ -179,7 +179,7 @@ void main() {
       expect(find.text('AROUND THE CLOCK'), findsOneWidget);
       expect(find.text('CATCH 40', skipOffstage: false), findsOneWidget);
       expect(find.text("BOB'S 27", skipOffstage: false), findsOneWidget);
-      expect(find.text('170 CHECKOUT', skipOffstage: false), findsOneWidget);
+      expect(find.text('CHECKOUT', skipOffstage: false), findsOneWidget);
 
       // Shanghai and Count-Up moved to the Casual category.
       expect(find.text('SHANGHAI', skipOffstage: false), findsNothing);

@@ -54,6 +54,12 @@ sealed class GameResult with _$GameResult {
     // Drives the post-game header denominator (#603) — quota progress, not the
     // attempt count.
     int? targetSuccesses,
+    // Target mode + range (#636) so the post-game "FROM" can show a single
+    // value (fixed) or a range ("40–170" random / "60→170" progressive).
+    @Default('fixed') String targetMode,
+    @Default(170) int fixedTarget,
+    @Default(40) int minTarget,
+    @Default(170) int maxTarget,
   }) = CheckoutPracticeResult;
 
   const factory GameResult.shanghai({

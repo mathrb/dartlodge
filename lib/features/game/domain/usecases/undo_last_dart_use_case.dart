@@ -237,6 +237,16 @@ class UndoLastDartUseCase {
           source.gameType == GameType.catch40 ? 61 : 0,
       x01TotalRounds: source.x01TotalRounds,
       cricketTotalRounds: source.cricketTotalRounds,
+      // Static config-derived fields — copy from source so post-undo live play
+      // resolves the right values. Checkout-Practice target mode/range (#636)
+      // and the success quota drive the next run's `from_score` stamp; without
+      // them the next stamp after an undo would fall back to fixed/170.
+      checkoutTargetSuccesses: source.checkoutTargetSuccesses,
+      checkoutTargetMode: source.checkoutTargetMode,
+      checkoutFixedTarget: source.checkoutFixedTarget,
+      checkoutMinTarget: source.checkoutMinTarget,
+      checkoutMaxTarget: source.checkoutMaxTarget,
+      checkoutProgressionStep: source.checkoutProgressionStep,
       countUpTotalRounds: source.countUpTotalRounds,
     );
   }

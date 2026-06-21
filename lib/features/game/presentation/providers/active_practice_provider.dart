@@ -10,6 +10,7 @@ import '../../domain/turn_dart_resolver.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_practice_state.dart';
 import '../../../../core/persistence/database_provider.dart';
+import '../../../../core/utils/checkout_target.dart';
 import '../../../../core/utils/constants.dart';
 import 'action_serializer.dart';
 import 'game_replay_provider.dart';
@@ -372,6 +373,23 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
         ? nextCompetitor.playerIds.first
         : 'system';
 
+    // #636: after a Checkout-Practice checkout, the next TurnStarted begins a
+    // NEW run — stamp its checkout target (`from_score`) so the engine resets to
+    // it and the stats reconstruct from it. Run index = the post-checkout
+    // practiceSuccesses. Non-checkout advances carry no stamp (the run resumes
+    // at the carried score).
+    final int? checkoutFromScore =
+        (gs.gameType == GameType.checkoutPractice && reason == 'checkout')
+            ? checkoutTargetForRun(
+                mode: gs.checkoutTargetMode,
+                fixedTarget: gs.checkoutFixedTarget,
+                minTarget: gs.checkoutMinTarget,
+                maxTarget: gs.checkoutMaxTarget,
+                step: gs.checkoutProgressionStep,
+                gameId: gs.gameId,
+                runIndex: nextCompetitor.practiceSuccesses,
+              )
+            : null;
     final turnStartedEvent = buildGameEvent(
       gameId: gs.gameId,
       eventType: 'TurnStarted',
@@ -380,6 +398,7 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
       payload: {
         'competitor_id': nextCompetitor.competitorId,
         'player_id': nextPlayerId,
+        if (checkoutFromScore != null) 'from_score': checkoutFromScore,
       },
     );
 

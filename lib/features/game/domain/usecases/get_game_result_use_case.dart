@@ -134,6 +134,11 @@ class GetGameResultUseCase {
           fromScore: subject.startingScore,
           // Quota from state (GameState.initial copies it from config); null = ∞.
           targetSuccesses: finalState.checkoutTargetSuccesses,
+          // Target mode + range (#636) for the post-game FROM label.
+          targetMode: finalState.checkoutTargetMode,
+          fixedTarget: finalState.checkoutFixedTarget,
+          minTarget: finalState.checkoutMinTarget,
+          maxTarget: finalState.checkoutMaxTarget,
         ),
       _ => null,
     };
@@ -309,18 +314,26 @@ class GetGameResultUseCase {
   /// position), not every visit (#635). Mirrors `_computeCheckoutStats` in
   /// PlayerStatsAssembler — kept in sync (the no-cross-feature-import rule
   /// prevents sharing the scan; both use the core `isOnADoubleFinish`
-  /// predicate). The drill starts at 170, resets on checkout, reverts on a
-  /// bust, so `remaining` is reconstructable from events.
-  /// #636: revisit the hardcoded 170 when varied checkout targets land.
+  /// predicate). Each run starts at that run's checkout target (the `from_score`
+  /// stamp; 170 for legacy fixed games), resets on checkout, reverts on a bust,
+  /// so `remaining` is reconstructable from events (#636).
   int _countCheckoutAttempts(List<GameEvent> events, String competitorId) {
     var attempts = 0;
     var remaining = 170;
     var visitStart = 170;
     var threwAtDouble = false;
+    // A run-start TurnStarted resets `remaining` to that run's checkout target,
+    // read from its `from_score` stamp (#636); defaults to 170 for legacy
+    // fixed-170 games. Run-start = first turn, or the turn after a checkout.
+    var prevWasCheckout = true;
     for (final e in stripSupersededEvents(events)) {
       if (e.payload['competitor_id'] != competitorId) continue;
       switch (e.eventType) {
         case 'TurnStarted':
+          if (prevWasCheckout) {
+            remaining = (e.payload['from_score'] as num?)?.toInt() ?? 170;
+          }
+          prevWasCheckout = false;
           visitStart = remaining;
           threwAtDouble = false;
         case 'DartThrown':
@@ -329,7 +342,7 @@ class GetGameResultUseCase {
         case 'TurnEnded':
           if (e.payload['reason'] == 'checkout') {
             attempts++;
-            remaining = 170;
+            prevWasCheckout = true; // next TurnStarted starts a new run
           } else {
             if (remaining < 2) remaining = visitStart;
             if (threwAtDouble) attempts++;
