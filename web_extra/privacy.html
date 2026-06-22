@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<!--
+  Canonical published privacy policy for DartLodge, served at
+  https://mathrb.github.io/dartlodge/privacy.html (Google Play "Privacy policy" URL).
+
+  Source of truth is docs/legal/privacy-policy.md — KEEP THIS FILE IN SYNC with
+  that document when either changes. This HTML is the human-published version;
+  the markdown is the repo-readable version. pages.yml copies this file into the
+  Pages build output (build/web/privacy.html) on every deploy.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow">
+  <title>DartLodge — Privacy Policy</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      color: #1a1a1a;
+      background: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e6e6e6; background: #121212; }
+      a { color: #8ab4f8; }
+      code { background: #2a2a2a; }
+    }
+    h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+    h2 { font-size: 1.25rem; margin-top: 2rem; border-bottom: 1px solid rgba(128,128,128,0.3); padding-bottom: 0.25rem; }
+    .effective { color: #777; font-size: 0.95rem; margin-top: 0; }
+    ul { padding-left: 1.4rem; }
+    li { margin: 0.3rem 0; }
+    code { padding: 0.1rem 0.3rem; border-radius: 4px; background: #f0f0f0; font-size: 0.9em; }
+    a { color: #1a56db; }
+    strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>DartLodge — Privacy Policy</h1>
+  <p class="effective"><strong>Effective date:</strong> 2026-06-22</p>
+
+  <p>DartLodge is a local-first, open-source darts scoring and statistics app.
+  This policy explains what data the app handles and what (very little) leaves
+  your device. It is written to be read, not to cover lawyers — if anything here
+  is unclear, contact us (below).</p>
+
+  <h2>Summary</h2>
+  <ul>
+    <li>DartLodge has <strong>no user accounts</strong> and <strong>no cloud sync</strong>. Your games, players, statistics, and achievements stay <strong>on your device</strong>.</li>
+    <li>We <strong>do not</strong> show ads, run third-party analytics, or sell or share your data.</li>
+    <li>The <strong>only</strong> information that leaves your device by default is <strong>anonymous crash and error diagnostics</strong> (via Sentry), used solely to find and fix bugs.</li>
+    <li>The optional <strong>camera auto-scoring</strong> feature processes images <strong>on your device</strong>. Saving images for model improvement is <strong>off by default</strong> and opt-in; saved images <strong>never leave your device</strong> unless you explicitly export them yourself.</li>
+  </ul>
+
+  <h2>Data stored on your device</h2>
+  <p>The app stores the following locally, in an on-device database (SQLite on
+  mobile/desktop, IndexedDB on web):</p>
+  <ul>
+    <li>Players you create (names you choose) and per-player activity.</li>
+    <li>Games you play, their configuration, and the individual scoring events.</li>
+    <li>Statistics, computed from your game history, and achievements, stored once you earn them.</li>
+    <li>App settings and preferences.</li>
+  </ul>
+  <p>This data is never transmitted to us or any third party. Uninstalling the
+  app, or using the app's own delete/clear functions, removes it.</p>
+
+  <h2>Crash and error diagnostics (Sentry)</h2>
+  <p>To keep the app stable, DartLodge sends <strong>crash reports and unhandled
+  error diagnostics</strong> to <a href="https://sentry.io">Sentry</a>, a
+  crash-reporting service. These reports may include:</p>
+  <ul>
+    <li>The error and its stack trace.</li>
+    <li>Basic device and app information (e.g. app version, operating-system version, device model).</li>
+  </ul>
+  <p>These diagnostics are used <strong>only</strong> to diagnose and fix crashes
+  and bugs. They do <strong>not</strong> include your players' names, your game
+  data, your statistics, or any images. We do not use them for advertising or
+  profiling.</p>
+  <p>DartLodge also includes an optional <strong>"Report a Bug"</strong> feature
+  in Settings. If you choose to use it, the description you type is sent to Sentry
+  so we can investigate the problem. Please avoid including personal information
+  in that text.</p>
+
+  <h2>Camera and auto-scoring (optional, beta)</h2>
+  <p>DartLodge includes an <strong>optional, experimental (beta)</strong>
+  auto-scoring feature that uses your device camera to detect darts on the board.
+  The detection model is still learning, and you can choose to help improve it.
+  If you enable the feature:</p>
+  <ul>
+    <li>The camera is used <strong>only</strong> while auto-scoring is active, and only after you enable it (it is <strong>off by default</strong>).</li>
+    <li>Image processing and dart detection happen <strong>entirely on your device</strong>. Camera frames are <strong>not</strong> uploaded.</li>
+  </ul>
+  <p>Separately, a <strong>"Collect training data"</strong> option (also
+  <strong>off by default</strong>) lets you save board images and your scoring
+  corrections <strong>on your device</strong> to help train and improve the
+  detection model. These saved images:</p>
+  <ul>
+    <li>Stay on your device.</li>
+    <li>Are <strong>never</strong> uploaded automatically.</li>
+    <li>Can be <strong>exported by you</strong>, manually, via your device's share sheet — for example to share them with the project to train the model. Exporting is entirely your choice and under your control. You can also clear all saved images at any time.</li>
+  </ul>
+
+  <h2>What we do NOT collect</h2>
+  <ul>
+    <li>No account, email, phone number, or login.</li>
+    <li>No advertising identifiers, location, contacts, or device fingerprinting.</li>
+    <li>No third-party advertising or analytics SDKs.</li>
+    <li>No selling or sharing of personal data.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>DartLodge is not directed at children under 13 and does not knowingly
+  collect personal information from children.</p>
+
+  <h2>Network access</h2>
+  <p>In normal use the app works fully offline. The app contacts the network only
+  to send the crash diagnostics described above. There is no DartLodge backend
+  server that your game data is sent to.</p>
+
+  <h2>Open source</h2>
+  <p>DartLodge is open source. You can review exactly how data is handled in the
+  source code, including the crash-reporting setup and the on-device-only capture
+  pipeline.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If this policy changes, the updated version will be published at the same URL
+  with a new effective date.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy or your data:
+  <a href="mailto:mathrb@gmail.com">mathrb@gmail.com</a></p>
+</body>
+</html>

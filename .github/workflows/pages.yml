@@ -106,6 +106,13 @@ jobs:
       - name: Add SPA 404 fallback
         run: cp build/web/index.html build/web/404.html
 
+      # Publish the standalone privacy policy as a real static file. GitHub Pages
+      # serves /dartlodge/privacy.html directly (a real file takes precedence
+      # over the SPA 404 fallback), giving Google Play a stable, crawlable URL
+      # that bypasses the Flutter app. Source of truth: docs/legal/privacy-policy.md.
+      - name: Add static privacy policy page
+        run: cp web_extra/privacy.html build/web/privacy.html
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
