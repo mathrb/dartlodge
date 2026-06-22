@@ -26,7 +26,8 @@ mobile/desktop, IndexedDB on web):
 
 - Players you create (names you choose) and per-player activity.
 - Games you play, their configuration, and the individual scoring events.
-- Statistics and achievements, which are computed from your game history.
+- Statistics, computed from your game history, and achievements, stored once
+  you earn them.
 - App settings and preferences.
 
 This data is never transmitted to us or any third party. Uninstalling the app,
@@ -45,6 +46,11 @@ reports may include:
 These diagnostics are used **only** to diagnose and fix crashes and bugs. They
 do **not** include your players' names, your game data, your statistics, or any
 images. We do not use them for advertising or profiling.
+
+DartLodge also includes an optional **"Report a Bug"** feature in Settings. If
+you choose to use it, the description you type is sent to Sentry so we can
+investigate the problem. Please avoid including personal information in that
+text.
 
 ## Camera and auto-scoring (optional, beta)
 

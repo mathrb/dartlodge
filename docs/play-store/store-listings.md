@@ -15,7 +15,8 @@ nl). Paste into Play Console → *Main store listing* (per locale).
   es / de / pt / it / nl idiom. The text below is a faithful, plain draft.
 - **Portuguese** is drafted as **European Portuguese (pt-PT)**. If you target
   Brazil (pt-BR), a few words change (e.g. *aplicação* → *aplicativo*,
-  *câmara* → *câmera*, *registo* → *registro*) — confirm the target locale.
+  *câmara* → *câmera*, *registo* → *registro*, *rastreio* → *rastreamento*) —
+  confirm the target locale.
 
 ---
 
@@ -41,6 +42,7 @@ GAMES
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Checkout Practice
 
 STATISTICS
@@ -55,7 +57,7 @@ STATISTICS
 PRIVATE BY DESIGN
 • Everything is stored locally on your device
 • No account, no sign-up, no cloud
-• No ads and no third-party tracking
+• No ads and no ad tracking
 • Works fully offline
 
 MORE
@@ -93,6 +95,7 @@ JEUX
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Entraînement au checkout
 
 STATISTIQUES
@@ -107,7 +110,7 @@ STATISTIQUES
 CONFIDENTIEL PAR CONCEPTION
 • Tout est stocké localement sur votre appareil
 • Sans compte, sans inscription, sans cloud
-• Sans publicité ni suivi tiers
+• Sans publicité ni pistage publicitaire
 • Fonctionne entièrement hors ligne
 
 EN PLUS
@@ -145,6 +148,7 @@ JUEGOS
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Práctica de checkout
 
 ESTADÍSTICAS
@@ -159,7 +163,7 @@ ESTADÍSTICAS
 PRIVADO POR DISEÑO
 • Todo se guarda localmente en tu dispositivo
 • Sin cuenta, sin registro, sin nube
-• Sin anuncios ni rastreo de terceros
+• Sin anuncios ni rastreo publicitario
 • Funciona totalmente sin conexión
 
 ADEMÁS
@@ -197,6 +201,7 @@ SPIELE
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Checkout-Training
 
 STATISTIKEN
@@ -211,7 +216,7 @@ STATISTIKEN
 PRIVAT VON GRUND AUF
 • Alles wird lokal auf deinem Gerät gespeichert
 • Kein Konto, keine Anmeldung, keine Cloud
-• Keine Werbung, kein Tracking durch Dritte
+• Keine Werbung, kein Werbe-Tracking
 • Funktioniert vollständig offline
 
 MEHR
@@ -238,7 +243,7 @@ Pontuação e estatísticas de dardos, grátis e offline — X01, Cricket e mais
 **Full description**
 
 ```
-O DartLodge é uma aplicação de pontuação de dardos gratuita e de código aberto que mantém tudo no seu dispositivo — sem conta, sem anúncios e sem rastreamento.
+O DartLodge é uma aplicação de pontuação de dardos gratuita e de código aberto que mantém tudo no seu dispositivo — sem conta, sem anúncios e sem rastreio.
 
 Marque a pontuação de todos os jogos clássicos e modos de treino e veja estatísticas detalhadas que se atualizam automaticamente.
 
@@ -249,6 +254,7 @@ JOGOS
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Treino de checkout
 
 ESTATÍSTICAS
@@ -263,7 +269,7 @@ ESTATÍSTICAS
 PRIVADO POR CONCEÇÃO
 • Tudo é guardado localmente no seu dispositivo
 • Sem conta, sem registo, sem nuvem
-• Sem anúncios nem rastreamento de terceiros
+• Sem anúncios nem rastreio publicitário
 • Funciona totalmente offline
 
 MAIS
@@ -301,6 +307,7 @@ GIOCHI
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Allenamento al checkout
 
 STATISTICHE
@@ -315,7 +322,7 @@ STATISTICHE
 PRIVATO PER PROGETTAZIONE
 • Tutto è salvato localmente sul tuo dispositivo
 • Niente account, niente registrazione, niente cloud
-• Niente pubblicità né tracciamento di terze parti
+• Niente pubblicità né tracciamento pubblicitario
 • Funziona completamente offline
 
 INOLTRE
@@ -353,6 +360,7 @@ SPELLEN
 • Bob's 27
 • Catch 40
 • Shanghai
+• Count-Up
 • Checkout-oefening
 
 STATISTIEKEN
@@ -367,7 +375,7 @@ STATISTIEKEN
 PRIVÉ VAN NATURE
 • Alles wordt lokaal op je apparaat opgeslagen
 • Geen account, geen registratie, geen cloud
-• Geen advertenties of tracking door derden
+• Geen advertenties of advertentietracking
 • Werkt volledig offline
 
 MEER
