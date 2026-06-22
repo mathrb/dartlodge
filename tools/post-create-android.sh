@@ -22,6 +22,17 @@ sed -i 's/app\.dart_lodge/app.dartlodge/g' "$GRADLE"
 # fails. Pin the floor to 23 (works for both the Groovy and Kotlin DSL).
 sed -i 's/flutter\.minSdkVersion/23/g' "$GRADLE"
 
+# targetSdk / compileSdk are deliberately NOT pinned here. The scaffold leaves
+# them as the `flutter.targetSdkVersion` / `flutter.compileSdkVersion`
+# placeholders, which Flutter resolves to its default — "always the latest
+# available stable version" (FlutterExtension.kt). On the pinned Flutter 3.44.2
+# that is API 36, which already satisfies Google Play's target-API floor
+# (API 35 today, API 36 from 2026-08-31 for new apps/updates). Leaving it
+# floating means it auto-tracks future Play floors when Flutter is bumped;
+# pinning a literal here would freeze it and require manual maintenance. Only
+# minSdk is pinned (above), because that is a hard *lower* bound (LiteRT 23 +
+# our older-Android support) that Flutter's default would otherwise override.
+
 OLD_KOTLIN_DIR="android/app/src/main/kotlin/app/dart_lodge"
 NEW_KOTLIN_DIR="android/app/src/main/kotlin/app/dartlodge"
 if [[ -d $OLD_KOTLIN_DIR ]]; then
