@@ -92,7 +92,7 @@ Every push to `main` (i.e. every squash-merged PR) triggers `auto-rc.yml`, which
 1. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
 2. Scans existing `v<version>-rc*` tags and computes the next-available rc number (highest existing + 1). This avoids collisions with rc tags pushed before the workflow shipped — early in the project lifecycle `v0.1.0-rc1` through `v0.1.0-rc8` were created by hand.
 3. Creates the tag `v<version>-rc<N>` (e.g. `v0.1.0-rc9`) on the merge commit.
-4. Dispatches `release.yml` against the new tag, producing a signed pre-release APK + checksum.
+4. Dispatches `release.yml` against the new tag, producing a signed pre-release APK and AAB + checksums.
 
 Concurrent pushes to `main` are serialized via the workflow's `concurrency: auto-rc` group so two quick merges can't compute the same next-N before either has pushed.
 
@@ -136,7 +136,7 @@ git commit -am "chore: bump version to 0.2.0"
 gh pr create --fill && gh pr merge --squash
 ```
 
-After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK ~5 min later at:
+After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK + AAB ~5 min later at:
 
 ```
 https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc<N>
