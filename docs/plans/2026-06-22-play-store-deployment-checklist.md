@@ -31,7 +31,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 ## 2. Build output (APK → AAB)
 
 - [ ] **🤝 BOTH** — Add `flutter build appbundle --release` output. `release.yml` currently builds APK only; Play needs `.aab`. I write the workflow change.
-- [ ] **🤝 BOTH** — **Target API level 36** (Android 16) — required for new apps/updates from 2026-08-31; API 35 is today's floor. Verify what Flutter 3.44.2 scaffolds; bump `targetSdk` in `tools/post-create-android.sh` if below 36.
+- [x] **🤝 BOTH** — ~~**Target API level 36**~~ → **already satisfied, no change needed.** Flutter 3.44.2 defaults `compileSdk = 36` and `targetSdk = 36` (FlutterExtension.kt), and the scaffold uses the floating `flutter.targetSdkVersion` placeholder ("always the latest available stable version"). That already meets Play's floor (API 35 today, API 36 from 2026-08-31) and auto-tracks future floors when Flutter is bumped. Pinning a literal would freeze it and create maintenance debt — so we leave it floating and document the rationale in `tools/post-create-android.sh`. Only `minSdk` is pinned (to 23, a hard lower bound).
 - [ ] **🤝 BOTH** — (Optional, pre-prod polish) Re-enable R8 with a tested `android/app/proguard-rules.pro` keeping Room/WorkManager, replacing the current `shrink=false` workaround. Not a blocker.
 
 ## 3. Signing strategy
