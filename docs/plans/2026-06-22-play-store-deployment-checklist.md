@@ -50,7 +50,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 
 ## 5. Compliance forms (Play Console)
 
-- [ ] **🤝 BOTH** — Data safety form. I prepare answers (camera = on-device, no account, crash diagnostics via Sentry); you enter + attest.
+- [ ] **🤝 BOTH** — Data safety form. I prepare answers (camera = on-device, no account, crash diagnostics via Sentry); you enter + attest. **Must NOT be set to "no data collected/shared":** declare (1) **Crash logs / Diagnostics** — collected, for app functionality, via Sentry (incl. the optional "Report a Bug" free-text); (2) **Photos** — *optional, user-initiated* sharing, since the listing's beta block invites users to export board photos to train the model. Leaving these blank would contradict the listing/policy and risk a review rejection.
 - [ ] **🧍 YOU** — Content rating questionnaire (IARC) — likely Everyone.
 - [ ] **🧍 YOU** — Target audience & content (not directed at children).
 - [ ] **🧍 YOU** — App access declaration ("no login required" — true, local-first).
