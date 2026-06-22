@@ -1,5 +1,10 @@
 # DartLodge — Privacy Policy
 
+> This Markdown is the repo-readable source. The **published** version is
+> `web_extra/privacy.html`, deployed by `pages.yml` to
+> <https://mathrb.github.io/dartlodge/privacy.html> (the Google Play privacy
+> policy URL). **Keep the two in sync** when either changes.
+
 **Effective date:** 2026-06-22
 
 DartLodge is a local-first, open-source darts scoring and statistics app. This

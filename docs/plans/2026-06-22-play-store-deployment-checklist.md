@@ -25,7 +25,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 ## 1. Account & legal prerequisites
 
 - [ ] **🧍 YOU** — Create Google Play Developer account, **Personal** ($25 one-time, non-refundable, no prepaid cards). Identity verification can take days. → triggers the 12-tester / 14-day closed-test gate (§6).
-- [ ] **🤝 BOTH** — Privacy policy (mandatory; camera + Sentry usage). I draft the content; you host it (GitHub Pages via `pages.yml`) and own the legal sign-off.
+- [x] **🤝 BOTH** — Privacy policy (mandatory; camera + Sentry usage). Drafted (`docs/legal/privacy-policy.md`) and **hosted**: `pages.yml` publishes `web_extra/privacy.html` to **`https://mathrb.github.io/dartlodge/privacy.html`** — paste that URL into Play Console. (You still own the legal sign-off.)
 - [ ] **🧍 YOU** — Accept that `app.dartlodge` is the permanent, unchangeable package name (already set by `tools/post-create-android.sh`).
 
 ## 2. Build output (APK → AAB)
