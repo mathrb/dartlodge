@@ -65,7 +65,7 @@ Four workflows in `.github/workflows/`:
 | `test.yml` | PR + push to `main` | `flutter analyze` + `flutter test --coverage`. Matrix is ubuntu-only on PRs; ubuntu + macos on push to main. Codecov upload on push only. |
 | `build-apk.yml` | PR + push to `main` + manual | PRs build a debug APK as a compile check (no upload). Push to main builds a release APK and uploads it as a 7-day artifact for internal testing. |
 | `auto-rc.yml` | Push to `main` | Creates tag `v<pubspec-version>-rc<N>` (N = next-available rc number for the current version) on the merge commit and dispatches `release.yml` to publish a pre-release. |
-| `release.yml` | Tag push `v*` + manual | Builds a signed release APK from the tag and publishes it to GitHub Releases with auto-generated notes. |
+| `release.yml` | Tag push `v*` + manual | Builds a signed release APK **and AAB** from the tag and publishes both to GitHub Releases with auto-generated notes. The AAB is the artifact uploaded to Google Play. |
 
 **Required checks for merge:** `Test (ubuntu-latest)` and `Build APK`. macos tests run post-merge but don't block PRs.
 
@@ -219,7 +219,7 @@ After both the keystore is backed up and these secrets are set, `release.yml` wo
 1. `flutter create --platforms=android --org app .` — scaffolds the gitignored `android/` folder
 2. `tools/post-create-android.sh` — applicationId/namespace overrides
 3. `tools/configure-android-signing.sh` — decodes the base64 keystore from `ANDROID_KEYSTORE_BASE64` to `android/app/release.keystore`, writes `android/key.properties`, patches `android/app/build.gradle.kts` to add a `release` `signingConfig` and switch `buildTypes.release` to use it
-4. `flutter build apk --release` — produces a signed APK at `build/app/outputs/flutter-apk/app-release.apk`
+4. `flutter build apk --release` and `flutter build appbundle --release` — produce a signed APK at `build/app/outputs/flutter-apk/app-release.apk` and a signed AAB at `build/app/outputs/bundle/release/app-release.aab` (same `release` signingConfig applies to both)
 
 The signing config is regenerated every CI run since `android/` is gitignored.
 
