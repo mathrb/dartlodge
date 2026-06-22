@@ -62,7 +62,9 @@ MORE
 • Achievements to chase
 • Multiple players
 • Available in 7 languages: English, French, Spanish, German, Portuguese, Italian, Dutch
-• Optional, experimental on-device camera auto-scoring
+
+CAMERA AUTO-SCORING (BETA)
+DartLodge can use your camera to score darts automatically — an experimental, on-device feature that's still learning. Want to help it improve? You can optionally share board photos and your corrections to train the model. It's off by default, runs entirely on your device, and nothing is shared unless you choose to.
 
 DartLodge is open source. Found a bug or have an idea? Get in touch.
 ```
@@ -112,7 +114,9 @@ EN PLUS
 • Des succès à débloquer
 • Plusieurs joueurs
 • Disponible en 7 langues : anglais, français, espagnol, allemand, portugais, italien, néerlandais
-• Score automatique par caméra, optionnel et expérimental (sur l'appareil)
+
+SCORE AUTOMATIQUE PAR CAMÉRA (BÊTA)
+DartLodge peut utiliser votre caméra pour compter les points automatiquement — une fonction expérimentale, sur l'appareil, encore en apprentissage. Envie d'aider à l'améliorer ? Vous pouvez, si vous le souhaitez, partager des photos de la cible et vos corrections pour entraîner le modèle. Désactivée par défaut, elle fonctionne entièrement sur votre appareil et rien n'est partagé sans votre accord.
 
 DartLodge est open-source. Un bug ou une idée ? Contactez-nous.
 ```
@@ -162,7 +166,9 @@ ADEMÁS
 • Logros por conseguir
 • Varios jugadores
 • Disponible en 7 idiomas: inglés, francés, español, alemán, portugués, italiano y neerlandés
-• Puntuación automática por cámara, opcional y experimental (en el dispositivo)
+
+PUNTUACIÓN AUTOMÁTICA POR CÁMARA (BETA)
+DartLodge puede usar tu cámara para anotar los dardos automáticamente: una función experimental, en el dispositivo, que todavía está aprendiendo. ¿Quieres ayudar a mejorarla? Si quieres, puedes compartir fotos de la diana y tus correcciones para entrenar el modelo. Está desactivada por defecto, funciona enteramente en tu dispositivo y no se comparte nada sin tu consentimiento.
 
 DartLodge es de código abierto. ¿Un error o una idea? Escríbenos.
 ```
@@ -212,7 +218,9 @@ MEHR
 • Erfolge zum Freischalten
 • Mehrere Spieler
 • In 7 Sprachen verfügbar: Englisch, Französisch, Spanisch, Deutsch, Portugiesisch, Italienisch, Niederländisch
-• Optionale, experimentelle Kamera-Erkennung (auf dem Gerät)
+
+KAMERA-AUTO-ERKENNUNG (BETA)
+DartLodge kann deine Kamera nutzen, um Darts automatisch zu zählen – eine experimentelle Funktion, die direkt auf dem Gerät läuft und noch dazulernt. Möchtest du helfen, sie zu verbessern? Du kannst optional Fotos des Boards und deine Korrekturen teilen, um das Modell zu trainieren. Sie ist standardmäßig ausgeschaltet, läuft vollständig auf deinem Gerät, und es wird nichts geteilt, sofern du es nicht selbst möchtest.
 
 DartLodge ist quelloffen. Fehler gefunden oder eine Idee? Melde dich.
 ```
@@ -262,7 +270,9 @@ MAIS
 • Conquistas para desbloquear
 • Vários jogadores
 • Disponível em 7 idiomas: inglês, francês, espanhol, alemão, português, italiano e neerlandês
-• Pontuação automática por câmara, opcional e experimental (no dispositivo)
+
+PONTUAÇÃO AUTOMÁTICA POR CÂMARA (BETA)
+O DartLodge pode usar a sua câmara para marcar os dardos automaticamente — uma funcionalidade experimental, no dispositivo, que ainda está a aprender. Quer ajudar a melhorá-la? Se quiser, pode partilhar fotografias do alvo e as suas correções para treinar o modelo. Está desativada por predefinição, funciona inteiramente no seu dispositivo e nada é partilhado sem o seu consentimento.
 
 O DartLodge é de código aberto. Encontrou um erro ou tem uma ideia? Fale connosco.
 ```
@@ -312,7 +322,9 @@ INOLTRE
 • Obiettivi da sbloccare
 • Più giocatori
 • Disponibile in 7 lingue: inglese, francese, spagnolo, tedesco, portoghese, italiano e olandese
-• Punteggio automatico tramite fotocamera, opzionale e sperimentale (sul dispositivo)
+
+PUNTEGGIO AUTOMATICO TRAMITE FOTOCAMERA (BETA)
+DartLodge può usare la fotocamera per segnare le freccette automaticamente: una funzione sperimentale, sul dispositivo, che sta ancora imparando. Vuoi aiutare a migliorarla? Se vuoi, puoi condividere foto del bersaglio e le tue correzioni per addestrare il modello. È disattivata per impostazione predefinita, funziona interamente sul tuo dispositivo e niente viene condiviso senza il tuo consenso.
 
 DartLodge è open-source. Hai trovato un bug o hai un'idea? Contattaci.
 ```
@@ -362,7 +374,9 @@ MEER
 • Prestaties om te ontgrendelen
 • Meerdere spelers
 • Beschikbaar in 7 talen: Engels, Frans, Spaans, Duits, Portugees, Italiaans, Nederlands
-• Optionele, experimentele camera-score (op het apparaat)
+
+CAMERA-AUTO-SCORE (BÈTA)
+DartLodge kan je camera gebruiken om darts automatisch te scoren — een experimentele functie die op het apparaat draait en nog aan het leren is. Wil je helpen verbeteren? Je kunt optioneel foto's van het bord en je correcties delen om het model te trainen. Standaard uitgeschakeld, draait volledig op je apparaat, en er wordt niets gedeeld tenzij je daarvoor kiest.
 
 DartLodge is open-source. Bug gevonden of een idee? Neem contact op.
 ```

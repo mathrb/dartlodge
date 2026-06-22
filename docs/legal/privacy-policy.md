@@ -46,10 +46,12 @@ These diagnostics are used **only** to diagnose and fix crashes and bugs. They
 do **not** include your players' names, your game data, your statistics, or any
 images. We do not use them for advertising or profiling.
 
-## Camera and auto-scoring (optional)
+## Camera and auto-scoring (optional, beta)
 
-DartLodge includes an **optional, experimental** auto-scoring feature that uses
-your device camera to detect darts on the board. If you choose to enable it:
+DartLodge includes an **optional, experimental (beta)** auto-scoring feature
+that uses your device camera to detect darts on the board. The detection model
+is still learning, and you can choose to help improve it. If you enable the
+feature:
 
 - The camera is used **only** while auto-scoring is active, and only after you
   enable it (it is **off by default**).
@@ -58,14 +60,14 @@ your device camera to detect darts on the board. If you choose to enable it:
 
 Separately, a **"Collect training data"** option (also **off by default**) lets
 you save board images and your scoring corrections **on your device** to help
-improve detection. These saved images:
+train and improve the detection model. These saved images:
 
 - Stay on your device.
 - Are **never** uploaded automatically.
 - Can be **exported by you**, manually, via your device's share sheet — for
-  example to send them to the project for model training. Exporting is entirely
-  your choice and under your control. You can also clear all saved images at any
-  time.
+  example to share them with the project to train the model. Exporting is
+  entirely your choice and under your control. You can also clear all saved
+  images at any time.
 
 ## What we do NOT collect
 
