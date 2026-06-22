@@ -65,7 +65,7 @@ Four workflows in `.github/workflows/`:
 | `test.yml` | PR + push to `main` | `flutter analyze` + `flutter test --coverage`. Matrix is ubuntu-only on PRs; ubuntu + macos on push to main. Codecov upload on push only. |
 | `build-apk.yml` | PR + push to `main` + manual | PRs build a debug APK as a compile check (no upload). Push to main builds a release APK and uploads it as a 7-day artifact for internal testing. |
 | `auto-rc.yml` | Push to `main` | Creates tag `v<pubspec-version>-rc<N>` (N = next-available rc number for the current version) on the merge commit and dispatches `release.yml` to publish a pre-release. |
-| `release.yml` | Tag push `v*` + manual | Builds a signed release APK from the tag and publishes it to GitHub Releases with auto-generated notes. |
+| `release.yml` | Tag push `v*` + manual | Builds a signed release APK **and AAB** from the tag and publishes both to GitHub Releases with auto-generated notes. The AAB is the artifact uploaded to Google Play. |
 
 **Required checks for merge:** `Test (ubuntu-latest)` and `Build APK`. macos tests run post-merge but don't block PRs.
 
@@ -92,7 +92,7 @@ Every push to `main` (i.e. every squash-merged PR) triggers `auto-rc.yml`, which
 1. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
 2. Scans existing `v<version>-rc*` tags and computes the next-available rc number (highest existing + 1). This avoids collisions with rc tags pushed before the workflow shipped — early in the project lifecycle `v0.1.0-rc1` through `v0.1.0-rc8` were created by hand.
 3. Creates the tag `v<version>-rc<N>` (e.g. `v0.1.0-rc9`) on the merge commit.
-4. Dispatches `release.yml` against the new tag, producing a signed pre-release APK + checksum.
+4. Dispatches `release.yml` against the new tag, producing a signed pre-release APK and AAB + checksums.
 
 Concurrent pushes to `main` are serialized via the workflow's `concurrency: auto-rc` group so two quick merges can't compute the same next-N before either has pushed.
 
@@ -136,7 +136,7 @@ git commit -am "chore: bump version to 0.2.0"
 gh pr create --fill && gh pr merge --squash
 ```
 
-After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK ~5 min later at:
+After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK + AAB ~5 min later at:
 
 ```
 https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc<N>
@@ -219,7 +219,7 @@ After both the keystore is backed up and these secrets are set, `release.yml` wo
 1. `flutter create --platforms=android --org app .` — scaffolds the gitignored `android/` folder
 2. `tools/post-create-android.sh` — applicationId/namespace overrides
 3. `tools/configure-android-signing.sh` — decodes the base64 keystore from `ANDROID_KEYSTORE_BASE64` to `android/app/release.keystore`, writes `android/key.properties`, patches `android/app/build.gradle.kts` to add a `release` `signingConfig` and switch `buildTypes.release` to use it
-4. `flutter build apk --release` — produces a signed APK at `build/app/outputs/flutter-apk/app-release.apk`
+4. `flutter build apk --release` and `flutter build appbundle --release` — produce a signed APK at `build/app/outputs/flutter-apk/app-release.apk` and a signed AAB at `build/app/outputs/bundle/release/app-release.aab` (same `release` signingConfig applies to both)
 
 The signing config is regenerated every CI run since `android/` is gitignored.
 

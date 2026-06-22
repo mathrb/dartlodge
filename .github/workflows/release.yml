@@ -107,7 +107,12 @@ jobs:
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: bash tools/configure-android-signing.sh
 
-      - name: Build signed release APK
+      # Build both artifacts from the same signing config:
+      #   - APK  → sideloaded from GitHub Releases (existing channel)
+      #   - AAB  → uploaded to Google Play (Play's required publishing format)
+      # The release signingConfig patched in by configure-android-signing.sh
+      # applies to both `build apk` and `build appbundle`.
+      - name: Build signed release APK + AAB
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
@@ -117,16 +122,28 @@ jobs:
             --build-number="${{ steps.tag.outputs.version_code }}" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
+          flutter build appbundle --release \
+            --build-name="${{ steps.tag.outputs.version_name }}" \
+            --build-number="${{ steps.tag.outputs.version_code }}" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
 
-      - name: Rename and checksum APK
+      - name: Rename and checksum artifacts
         id: artifacts
         run: |
-          OUT_DIR=build/app/outputs/flutter-apk
-          APK_NAME="dartlodge-${{ steps.tag.outputs.version_name }}.apk"
-          mv "$OUT_DIR/app-release.apk" "$OUT_DIR/$APK_NAME"
-          (cd "$OUT_DIR" && sha256sum "$APK_NAME" > "$APK_NAME.sha256")
-          echo "apk_path=$OUT_DIR/$APK_NAME" >> "$GITHUB_OUTPUT"
-          echo "sha_path=$OUT_DIR/$APK_NAME.sha256" >> "$GITHUB_OUTPUT"
+          APK_DIR=build/app/outputs/flutter-apk
+          AAB_DIR=build/app/outputs/bundle/release
+          VERSION="${{ steps.tag.outputs.version_name }}"
+          APK_NAME="dartlodge-$VERSION.apk"
+          AAB_NAME="dartlodge-$VERSION.aab"
+          mv "$APK_DIR/app-release.apk" "$APK_DIR/$APK_NAME"
+          mv "$AAB_DIR/app-release.aab" "$AAB_DIR/$AAB_NAME"
+          (cd "$APK_DIR" && sha256sum "$APK_NAME" > "$APK_NAME.sha256")
+          (cd "$AAB_DIR" && sha256sum "$AAB_NAME" > "$AAB_NAME.sha256")
+          echo "apk_path=$APK_DIR/$APK_NAME" >> "$GITHUB_OUTPUT"
+          echo "sha_path=$APK_DIR/$APK_NAME.sha256" >> "$GITHUB_OUTPUT"
+          echo "aab_path=$AAB_DIR/$AAB_NAME" >> "$GITHUB_OUTPUT"
+          echo "aab_sha_path=$AAB_DIR/$AAB_NAME.sha256" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         env:
@@ -141,4 +158,6 @@ jobs:
             --generate-notes \
             $PRERELEASE_FLAG \
             "${{ steps.artifacts.outputs.apk_path }}" \
-            "${{ steps.artifacts.outputs.sha_path }}"
+            "${{ steps.artifacts.outputs.sha_path }}" \
+            "${{ steps.artifacts.outputs.aab_path }}" \
+            "${{ steps.artifacts.outputs.aab_sha_path }}"
