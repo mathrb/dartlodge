@@ -37,7 +37,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 ## 3. Signing strategy
 
 - [ ] **🧍 YOU** — Enroll in **Play App Signing** during first upload (Google holds the app key; existing keystore becomes the upload key).
-- [ ] **🧍 YOU** — Back up the upload keystore offline (already in GitHub Secrets per `docs/RELEASES.md`).
+- [ ] **🧍 YOU** — Back up the upload keystore to a **true offline location** (password manager / encrypted backup outside the repo, per `docs/RELEASES.md`). Note: the keystore in GitHub Secrets (`ANDROID_KEYSTORE_BASE64`) is a CI *injection* mechanism, **not** an offline backup — RELEASES.md requires a separate offline copy. (Under Play App Signing this existing release keystore becomes the *upload* key.)
 - [x] **🧍 YOU** — ~~Communicate uninstall to sideload users~~ → **non-issue**: only you + a few testers run the sideloaded build. Just uninstall/reinstall from Play. No migration path or comms needed.
 
 ## 4. Store listing assets
@@ -67,7 +67,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 
 - [ ] **🧍 YOU** — **MANDATORY GATE (Google policy, not optional):** because this is a new **personal** account (created after 2023-11-13), you must run a **closed testing** track with **≥12 testers opted-in continuously for ≥14 days**, *then* the "Apply for production access" button unlocks (~7-day review follows). Internal testing does **NOT** count toward this gate — the opt-ins must be on a **closed test**. This is the critical-path long pole: ~3 weeks calendar time, gated on account creation. Exempt only via an Organization account (D-U-N-S).
 - [ ] **🧍 YOU** — *(optional, my recommendation)* Use an internal testing track for your own quick smoke-tests, but remember it does not count toward the gate above.
-- [ ] **🤝 BOTH** — Bump `pubspec.yaml` from `0.1.0` to `1.0.0`. I do the `chore: bump version to 1.0.0` PR.
+- [ ] **🤝 BOTH** — Bump `pubspec.yaml` `version:` from `0.1.0+0` to `1.0.0+0` (keep the `+N` build suffix — CLAUDE.md requires the full `major.minor.patch+build` form). I do the `chore: bump version to 1.0.0` PR.
 - [ ] **🧍 YOU** — First upload (to the **closed testing** track) is a **manual** Console step that enrolls App Signing. Production comes only after the gate above clears.
 - [ ] **🤝 BOTH** — (After first upload) Automate AAB upload via `r0adkll/upload-google-play` + a Google service-account JSON secret. I write the workflow; you create the service account + secret.
 - [ ] **✅ DONE-BY-CI** — `versionCode` strictly increasing — `release.yml` already uses `github.run_number`.
