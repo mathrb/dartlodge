@@ -270,6 +270,8 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **UI refactors:** After any widget redesign or UI refactor, update the corresponding test expectations in the same session before committing.
 
+**E2E regression reminders:** The committed Playwright suite (`e2e/*.spec.ts`) is tag-sliced and **run manually** — Flutter-web CanvasKit can't render in headless CI, so there is no gate. After changing a game engine, scoring/stats projection, correction/undo flow, localized strings, or the auto-scorer sink, consult the coverage map in `docs/E2E_REGRESSION.md` and remind the user which `npx playwright test --grep @tag` slice to run before merging. Never assume the suite ran. When adding a game/feature, add a tagged spec (and a coverage-map row) in the same PR.
+
 **Navigation — `context.go()` vs `context.push()`:** `context.go()` REPLACES the entire route stack — Android's physical back button then has nothing to pop and exits the app. Use `context.push()` for any forward navigation that should be back-poppable (Home → Stats/History/Players/Settings, list → detail, etc.). Reserve `context.go()` for intentional stack resets: game completion → home, post-deletion redirects, deep-link landing pages. If a screen MUST be reached via `go()` (e.g. the variant selection flow), wrap its body in `PopScope(canPop: false, onPopInvokedWithResult: (didPop, _) { if (!didPop) context.go(GameRoutes.home); })` like `variant_selection_page.dart` does, so the Android back button still works.
 
 **Branch naming:** All work goes on a branch off `main` named `<type>/<slug>` where type ∈ {`feat`, `fix`, `docs`, `chore`, `hotfix`}. Slugs are short and dash-separated (`feat/cricket-stats-export`). Never commit directly to `main`.

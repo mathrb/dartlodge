@@ -41,7 +41,7 @@ async function emit(page: Page, seg: string) {
   await page.waitForTimeout(200);
 }
 
-test.describe('Cricket history reflects corrected darts (#597)', () => {
+test.describe('Cricket history reflects corrected darts (#597)', { tag: ['@cricket', '@correction', '@history'] }, () => {
   // Scaffold: navigates correctly to the game detail, but the turn breakdown
   // only renders for COMPLETED legs (see header). Unblock by completing a full
   // cricket leg, then switch to the BREAKDOWN tab before asserting.
