@@ -29,3 +29,13 @@ lcov.info
 
 # Generated localizations (gen_l10n regenerates on `flutter pub get`)
 lib/l10n/gen/
+
+# Playwright / e2e scratch — accessibility-snapshot dumps and tool state.
+# Pin snapshots into .snapshots/ (see PLAYWRIGHT_FLUTTER_WEB.md §4) so they
+# never pollute `git status`. Committed @playwright/test specs (e2e/*.spec.ts)
+# stay tracked; only generated scratch and tool output is ignored here.
+.snapshots/
+.playwright-cli/
+.playwright-mcp/
+e2e/node_modules/
+e2e/test-results/
