@@ -6,8 +6,11 @@ import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_around_the_clock_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_catch_40_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_checkout_practice_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_count_up_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_cricket_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_shanghai_engine.dart';
 import 'package:dart_lodge/features/game/domain/engines/stateless_x01_engine.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
@@ -1122,6 +1125,354 @@ void main() {
       expect(newState.checkoutTargetMode, 'random');
       expect(newState.checkoutMinTarget, 40);
       expect(newState.checkoutMaxTarget, 170);
+    });
+  });
+
+  // ── regression: issue #656 ────────────────────────────────────────────────
+  //
+  // Round-based engines (Count Up / Shanghai / Catch 40 / Around the Clock)
+  // advance their round/target counter inside _applyTurnEnded. Before the fix
+  // the undo replay skipped ALL TurnEnded events, so the counter collapsed back
+  // to round 1 and — for Shanghai — surviving darts were re-scored against the
+  // wrong target. Each group asserts that a NON-superseded TurnEnded is now
+  // replayed so the round/target/score survive an undo.
+
+  group('Issue #656 — Shanghai undo preserves round and re-scores correctly',
+      () {
+    GameEvent _ev(String id, String type, int seq,
+            [Map<String, dynamic> payload = const {}]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'sh',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, int segment, int multiplier) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': 'cA',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        });
+
+    GameState _shState() => GameState(
+          gameId: 'sh',
+          gameType: GameType.shanghai,
+          competitors: const [
+            CompetitorState(
+              competitorId: 'cA',
+              name: 'A',
+              playerIds: ['pA'],
+              score: 7,
+              startingScore: 0,
+              isIn: true,
+              practiceRound: 2,
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 2,
+          isComplete: false,
+          status: GameEngineStatus.inProgress,
+          turnActive: true,
+          legsToWin: 1,
+          startingScore: 0,
+          shanghaiTotalRounds: 7,
+        );
+
+    // Round 1 (target 1): T1 scores 3, two MISS. TurnEnded → round 2.
+    // Round 2 (target 2): two D2 (each 2×2 = 4). Undo the 2nd D2 — the survivor
+    // must still be scored against round 2 (→ +4), and the round stays 2.
+    List<GameEvent> _log() => <GameEvent>[
+          _ev('gc', 'GameCreated', 1, {
+            'ruleset': 'shanghai',
+            'rules_payload': {'totalRounds': 7},
+            'competitors': ['cA'],
+          }),
+          _ev('ts1', 'TurnStarted', 2,
+              {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+          _dart('r1a', 3, 1, 3), // T1 → +3 (segment == round 1)
+          _dart('r1b', 4, 0, 1), // MISS
+          _dart('r1c', 5, 0, 1), // MISS
+          _ev('te1', 'TurnEnded', 6,
+              {'competitor_id': 'cA', 'reason': 'normal'}),
+          _ev('ts2', 'TurnStarted', 7,
+              {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+          _dart('r2a', 8, 2, 2), // D2 → +4 (segment == round 2)
+          _dart('r2b', 9, 2, 2), // D2 → +4 (to be undone)
+        ];
+
+    test('cross-turn: surviving round-2 dart keeps round 2 and its score',
+        () async {
+      final engine = StatelessShanghaiEngine();
+      final shUseCase = UndoLastDartUseCase(mockEventRepo, mockDartRepo, engine);
+      when(mockEventRepo.getEventsForGame('sh'))
+          .thenAnswer((_) async => _log());
+      when(mockEventRepo.getLatestSequence('sh')).thenAnswer((_) async => 9);
+
+      final newState = await shUseCase.execute(_shState());
+
+      // Round survives the undo (was collapsing to 1 pre-fix).
+      expect(newState.competitors[0].practiceRound, 2);
+      // Score = round-1 T1 (3) + surviving round-2 D2 (4) = 7. Pre-fix the
+      // surviving D2 was scored against round 1 (segment 2 ≠ 1 → 0) → 3.
+      expect(newState.competitors[0].score, 7);
+      expect(newState.dartsThrownInTurn, 1);
+    });
+  });
+
+  group('Issue #656 — Count Up undo preserves currentRoundInLeg', () {
+    GameEvent _ev(String id, String type, int seq,
+            [Map<String, dynamic> payload = const {}]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'cu',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, int segment, int multiplier) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': 'cA',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        });
+
+    GameState _cuState() => GameState(
+          gameId: 'cu',
+          gameType: GameType.countUp,
+          competitors: const [
+            CompetitorState(
+              competitorId: 'cA',
+              name: 'A',
+              playerIds: ['pA'],
+              score: 240,
+              startingScore: 0,
+              isIn: true,
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 1,
+          isComplete: false,
+          status: GameEngineStatus.inProgress,
+          turnActive: true,
+          legsToWin: 1,
+          startingScore: 0,
+          currentRoundInLeg: 2,
+          countUpTotalRounds: 8,
+        );
+
+    test('cross-turn: round stays 2 and score reflects only round 1', () async {
+      final engine = StatelessCountUpEngine();
+      final cuUseCase = UndoLastDartUseCase(mockEventRepo, mockDartRepo, engine);
+
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'countUp',
+          'rules_payload': {'totalRounds': 8},
+          'competitors': ['cA'],
+        }),
+        _ev('ts1', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('r1a', 3, 20, 3), // 60
+        _dart('r1b', 4, 20, 3), // 60
+        _dart('r1c', 5, 20, 3), // 60 → round-1 total 180
+        _ev('te1', 'TurnEnded', 6,
+            {'competitor_id': 'cA', 'reason': 'normal'}),
+        _ev('ts2', 'TurnStarted', 7,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('r2a', 8, 20, 3), // 60 (to be undone)
+      ];
+      when(mockEventRepo.getEventsForGame('cu'))
+          .thenAnswer((_) async => events);
+      when(mockEventRepo.getLatestSequence('cu')).thenAnswer((_) async => 8);
+
+      final newState = await cuUseCase.execute(_cuState());
+
+      // Round survives (was collapsing to 1 pre-fix → game would run extra rounds).
+      expect(newState.currentRoundInLeg, 2);
+      expect(newState.competitors[0].score, 180);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+  });
+
+  group('Issue #656 — Catch 40 undo preserves target/round and score', () {
+    GameEvent _ev(String id, String type, int seq,
+            [Map<String, dynamic> payload = const {}]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'c40',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, int segment, int multiplier) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': 'cA',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        });
+
+    GameState _c40State() => GameState(
+          gameId: 'c40',
+          gameType: GameType.catch40,
+          competitors: const [
+            CompetitorState(
+              competitorId: 'cA',
+              name: 'A',
+              playerIds: ['pA'],
+              score: 3,
+              startingScore: 0,
+              isIn: true,
+              practiceRound: 2,
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 1,
+          isComplete: false,
+          status: GameEngineStatus.inProgress,
+          turnActive: true,
+          legsToWin: 1,
+          startingScore: 0,
+          catch40TargetRemaining: 62,
+        );
+
+    test('cross-target: checkout of target 61 survives undo on target 62',
+        () async {
+      final engine = StatelessCatch40Engine();
+      final c40UseCase =
+          UndoLastDartUseCase(mockEventRepo, mockDartRepo, engine);
+
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'catch40',
+          'rules_payload': {},
+          'competitors': ['cA'],
+        }),
+        _ev('ts1', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        // Target 61: T19 (57) leaves 4, D2 (4) checks out in 2 darts → +3 pts.
+        _dart('t61a', 3, 19, 3),
+        _dart('t61b', 4, 2, 2),
+        _ev('te1', 'TurnEnded', 5,
+            {'competitor_id': 'cA', 'reason': 'checkout'}),
+        // Target 62 begins; one dart thrown, to be undone.
+        _ev('ts2', 'TurnStarted', 6,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('t62a', 7, 20, 1), // S20 on target 62 (to be undone)
+      ];
+      when(mockEventRepo.getEventsForGame('c40'))
+          .thenAnswer((_) async => events);
+      when(mockEventRepo.getLatestSequence('c40')).thenAnswer((_) async => 7);
+
+      final newState = await c40UseCase.execute(_c40State());
+
+      // The target-61 completion (round + score + next target) survives.
+      expect(newState.competitors[0].practiceRound, 2);
+      expect(newState.competitors[0].score, 3);
+      expect(newState.catch40TargetRemaining, 62);
+      expect(newState.dartsThrownInTurn, 0);
+    });
+  });
+
+  group('Issue #656 — Around the Clock undo preserves practiceRound', () {
+    GameEvent _ev(String id, String type, int seq,
+            [Map<String, dynamic> payload = const {}]) =>
+        GameEvent(
+          eventId: id,
+          gameId: 'atc6',
+          eventType: type,
+          localSequence: seq,
+          occurredAt: DateTime(2024),
+          payload: payload,
+          synced: false,
+          actorId: 'system',
+          source: EventSource.client,
+        );
+
+    GameEvent _dart(String id, int seq, int segment, int multiplier) =>
+        _ev(id, 'DartThrown', seq, {
+          'competitor_id': 'cA',
+          'segment': segment,
+          'multiplier': multiplier,
+          'input_method': 'manual',
+        });
+
+    GameState _atcState() => GameState(
+          gameId: 'atc6',
+          gameType: GameType.aroundTheClock,
+          competitors: const [
+            CompetitorState(
+              competitorId: 'cA',
+              name: 'A',
+              playerIds: ['pA'],
+              score: 0,
+              startingScore: 0,
+              isIn: true,
+              currentTarget: 5,
+              practiceRound: 2,
+            ),
+          ],
+          currentTurnIndex: 0,
+          dartsThrownInTurn: 1,
+          isComplete: false,
+          status: GameEngineStatus.inProgress,
+          turnActive: true,
+          legsToWin: 1,
+          startingScore: 0,
+          aroundTheClockVariant: 'standard',
+        );
+
+    test('cross-turn: round counter and target progression both survive',
+        () async {
+      final engine = StatelessAroundTheClockEngine();
+      final atcUseCase =
+          UndoLastDartUseCase(mockEventRepo, mockDartRepo, engine);
+
+      final events = <GameEvent>[
+        _ev('gc', 'GameCreated', 1, {
+          'ruleset': 'aroundTheClock',
+          'rules_payload': {'variant': 'standard'},
+          'competitors': ['cA'],
+        }),
+        _ev('ts1', 'TurnStarted', 2,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('r1a', 3, 1, 1), // hit 1 → target 2
+        _dart('r1b', 4, 2, 1), // hit 2 → target 3
+        _dart('r1c', 5, 3, 1), // hit 3 → target 4
+        _ev('te1', 'TurnEnded', 6,
+            {'competitor_id': 'cA', 'reason': 'normal'}),
+        _ev('ts2', 'TurnStarted', 7,
+            {'competitor_id': 'cA', 'turn_index': 0, 'leg_index': 0}),
+        _dart('r2a', 8, 4, 1), // hit 4 → target 5 (to be undone)
+      ];
+      when(mockEventRepo.getEventsForGame('atc6'))
+          .thenAnswer((_) async => events);
+      when(mockEventRepo.getLatestSequence('atc6')).thenAnswer((_) async => 8);
+
+      final newState = await atcUseCase.execute(_atcState());
+
+      // practiceRound was collapsing to 1 pre-fix; target progression survives.
+      expect(newState.competitors[0].practiceRound, 2);
+      expect(newState.competitors[0].currentTarget, 4);
+      expect(newState.dartsThrownInTurn, 0);
     });
   });
 }

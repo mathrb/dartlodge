@@ -238,7 +238,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         // to 3), and we step to the next attempt only after the user taps
         // NEXT ROUND (`dartsThrownInTurn == 0` with `len > 0`) (#261).
         // Shanghai and Catch 40 advance round state inside
-        // `_applyTurnEnded` and don't need this adjustment.
+        // `_applyTurnEnded` and don't need this display adjustment: undo now
+        // replays their non-superseded TurnEnded events, so `practiceRound`
+        // stays authoritative across an undo (#656). Do not re-introduce a
+        // skip-all-TurnEnded undo replay for these engines.
         final int displayedRound;
         if (isBobs27 && gs.dartsThrownInTurn >= 3) {
           displayedRound = competitor.practiceRound - 1;
