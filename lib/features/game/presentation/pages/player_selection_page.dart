@@ -40,11 +40,11 @@ String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
       // the straight default — Double-In / Master-In materially change
       // the leg's opening and shouldn't get hidden from the setup chip
       // (#329). In/Out and the strategy names stay fixed English (darts
-      // jargon); only the rounds label is localized.
+      // jargon); the rounds and legs labels are localized (#667).
       final inLabel = c.inStrategy == 'straight'
           ? ''
           : '${_strategyLabel(c.inStrategy)} In · ';
-      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)}';
+      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}';
     },
     cricket: (c) =>
         '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}',
