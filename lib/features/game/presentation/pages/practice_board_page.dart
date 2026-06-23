@@ -231,14 +231,21 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         // just-played round until the user explicitly advances.
         //
         // Checkout Practice doesn't track attempts in `practiceRound` (the
-        // engine never bumps it — undo replays skip TurnEnded and would
-        // de-sync the counter), so we derive the attempt number purely
-        // from `dartThrows.length` + `dartsThrownInTurn`: every completed
-        // attempt fills 3 slots (the engine pads bust/checkout dart sets
-        // to 3), and we step to the next attempt only after the user taps
-        // NEXT ROUND (`dartsThrownInTurn == 0` with `len > 0`) (#261).
-        // Shanghai and Catch 40 advance round state inside
-        // `_applyTurnEnded` and don't need this adjustment.
+        // engine never bumps it — and Checkout Practice is NOT in the undo
+        // use case's `_roundAdvancesOnTurnEnded` set, so its undo replay still
+        // skips TurnEnded and would de-sync a `practiceRound`-derived counter),
+        // so we derive the attempt number purely from `dartThrows.length` +
+        // `dartsThrownInTurn`: every completed attempt fills 3 slots (the
+        // engine pads bust/checkout dart sets to 3), and we step to the next
+        // attempt only after the user taps NEXT ROUND
+        // (`dartsThrownInTurn == 0` with `len > 0`) (#261).
+        // The round-based engines (Shanghai, Catch 40, Count Up, Around the
+        // Clock) advance round state inside `_applyTurnEnded` and don't need
+        // this display adjustment: undo now replays their non-superseded
+        // TurnEnded events, so `practiceRound`/`currentRoundInLeg` stays
+        // authoritative across an undo (#656). Do not re-introduce a
+        // skip-all-TurnEnded undo replay for those engines (see
+        // `_roundAdvancesOnTurnEnded` in undo_last_dart_use_case.dart).
         final int displayedRound;
         if (isBobs27 && gs.dartsThrownInTurn >= 3) {
           displayedRound = competitor.practiceRound - 1;

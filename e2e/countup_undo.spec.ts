@@ -26,11 +26,8 @@ test.describe('Count Up undo preserves round (#656)', { tag: ['@countup', '@corr
     browser,
   }) => {
     test.setTimeout(120000);
-    // #656 is OPEN: undo collapses the round counter back to 1. This spec
-    // asserts the CORRECT invariant and is marked expected-to-fail, so it
-    // passes as an expected failure today and flags ("unexpectedly passed")
-    // once #656 is fixed — at which point remove this annotation.
-    test.fail();
+    // #656 fixed: undo now replays the non-superseded TurnEnded so the round
+    // counter survives. This spec asserts the correct invariant and must pass.
     const context = await browser.newContext(PIXEL_6A);
     const page = await context.newPage();
 

@@ -30,12 +30,9 @@ test.describe('Shanghai undo preserves round and score (#656)', { tag: ['@shangh
     browser,
   }) => {
     test.setTimeout(120000);
-    // #656 is OPEN: undo collapses the round back to 1 (and re-scores the
-    // surviving round-2 darts against round 1's target, dropping points). This
-    // spec asserts the CORRECT invariant and is marked expected-to-fail, so it
-    // passes as an expected failure today and flags ("unexpectedly passed")
-    // once #656 is fixed — at which point remove this annotation.
-    test.fail();
+    // #656 fixed: undo now replays the non-superseded TurnEnded, so the round
+    // counter survives and surviving round-2 darts keep scoring against round
+    // 2's target. This spec asserts the correct invariant and must pass.
     const context = await browser.newContext(PIXEL_6A);
     const page = await context.newPage();
 
