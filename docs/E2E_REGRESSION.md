@@ -134,9 +134,9 @@ on the left → run the tag(s) on the right before merging.
 | Spec | Tags |
 |---|---|
 | `smoke.spec.ts` | `@smoke` |
-| `cricket_solo_standard.spec.ts` | `@cricket @autoscorer` |
+| `cricket_solo_standard.spec.ts` | `@cricket @autoscorer @stats` |
 | `cricket_scoring_modes.spec.ts` | `@cricket @autoscorer` |
-| `cricket_structure.spec.ts` | `@cricket` |
+| `cricket_structure.spec.ts` | `@cricket @autoscorer` (manual-entry test is `@cricket` only) |
 | `cricket_correction.spec.ts` | `@cricket @autoscorer @correction` |
 | `cricket_correction_history.spec.ts` | `@cricket @correction @history` *(scaffold — `test.fixme`)* |
 | `shanghai_multiplayer_completion.spec.ts` | `@shanghai` |

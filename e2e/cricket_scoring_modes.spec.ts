@@ -135,9 +135,12 @@ test.describe('Cricket scoring modes', { tag: ['@cricket', '@autoscorer'] }, () 
     await sim(page, "emit('T20')");
     await sim(page, "emit('T20')");
 
-    await page.waitForTimeout(1000);
+    // Positive anchor first: the darts registered (the prominent band shows
+    // them), THEN assert no points were banked — instead of a bare timeout
+    // before a negative count, which can pass before the score even renders.
+    // (The Standard/Cut-throat tests prove these same emits bank 60.)
+    await expect(page.getByText('T20').first()).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('60', { exact: true })).toHaveCount(0);
-    // Board is still live (no crash, dart accepted).
     await expect(page.getByText(/Wade/i).first()).toBeVisible();
 
     await page.context().close();

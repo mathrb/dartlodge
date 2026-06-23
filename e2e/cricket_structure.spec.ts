@@ -84,9 +84,9 @@ test.describe('Cricket structure & target modes', { tag: ['@cricket'] }, () => {
   // avoided — they drive only the legs stepper by geometry). Tracked as a gap
   // in docs/E2E_REGRESSION.md rather than shipped as a flaky test.
 
-  test('Random target mode launches with a playable target set', async ({
-    browser,
-  }) => {
+  test('Random target mode launches with a playable target set', {
+    tag: '@autoscorer',
+  }, async ({ browser }) => {
     test.setTimeout(120000);
     const page = await boot(browser);
     await sim(page, 'enableAutoScoring()');
@@ -106,9 +106,9 @@ test.describe('Cricket structure & target modes', { tag: ['@cricket'] }, () => {
     await page.context().close();
   });
 
-  test('Crazy target mode launches without crashing the board', async ({
-    browser,
-  }) => {
+  test('Crazy target mode launches without crashing the board', {
+    tag: '@autoscorer',
+  }, async ({ browser }) => {
     test.setTimeout(120000);
     const page = await boot(browser);
     await sim(page, 'enableAutoScoring()');

@@ -9,9 +9,11 @@
  * solo game wins the single leg → the board auto-navigates to the post-game
  * summary, which is the deterministic completion proof.
  *
- * Unlike X01's camera-first board, the Cricket camera-first board has no
- * "Start camera" affordance, so we gate "board mounted / sink bound" on the
- * player name appearing in the marks strip before the first emit.
+ * The Cricket camera-first board renders the same "Start camera" affordance as
+ * X01 (it comes from the shared AutoScorerBoardOverlay), so we gate "board
+ * mounted / sink bound" on that button before the first emit. Gating on the
+ * player name alone fires a frame too early (before the postFrame sink-bind),
+ * which silently drops the first darts.
  *
  * Serve a sim-enabled web build on :6780 (see docs/E2E_REGRESSION.md).
  */
@@ -39,7 +41,7 @@ async function boot(browser: Browser): Promise<Page> {
   return page;
 }
 
-test.describe('Cricket solo standard playthrough (#661)', { tag: ['@cricket', '@autoscorer'] }, () => {
+test.describe('Cricket solo standard playthrough (#661)', { tag: ['@cricket', '@autoscorer', '@stats'] }, () => {
   test('closing all targets completes the leg and reaches the summary', async ({
     browser,
   }) => {
