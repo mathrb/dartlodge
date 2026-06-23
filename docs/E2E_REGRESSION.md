@@ -41,6 +41,44 @@ full Chromium that `npx playwright install` provides.)
 
 ---
 
+## Authoring specs
+
+Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
+`auto_scorer_sim` specs for working examples):
+
+- **Expose the widget tree first.** CanvasKit only populates accessible
+  roles/text after the `flt-semantics-placeholder` receives a *dispatched*
+  click (a real Playwright click is intercepted by `<flutter-view>`), then
+  `await page.waitForFunction(() => !!window.dartlodgeSim)`.
+- **Auto-scoring via the sim bridge:** `window.dartlodgeSim.emit('T20')` (a
+  segment string), `advance()` (= `sink.advanceTurn()` — the turn boundary,
+  bypasses the NEXT button), `enableAutoScoring()` (call before START so boards
+  mount camera-first).
+- **Await the `Start camera` button before the first `emit`.** It signals the
+  camera-first board has mounted and the sink is bound; emits before that are
+  fire-and-forget and silently dropped. The board stays mounted across legs, so
+  no re-await is needed after dismissing a Next Leg modal.
+- **Manual entry:** the segment grid renders only when auto-scoring is OFF.
+  Buttons carry semantic + visible label, e.g. `'Triple 20 20'`, `'Single 11 11'`,
+  `'Double Bull'`, `'Miss MISS'`. The board UNDO button has a `semanticLabel`
+  (match `/Undo/i`); tag undo tests `@correction` (the coverage map maps
+  `UndoLastDartUseCase` → `@correction`).
+- **Force-click pulsing buttons** — NEXT ROUND / NEXT PLAYER, APPLY, Next Leg:
+  `click({ force: true })`, they otherwise fail Playwright's stability gate.
+- **Avoid a bare `getByText('<number>')`** — score numerals collide (the
+  remaining score vs a dart-slot value vs a stepper value). Use `{ exact: true }`,
+  `.first()`, or a scoped locator.
+- **Game config (in/out strategy, legs-to-win, starting score)** is edited via
+  the config-summary chip on the player-selection screen → bottom sheet → fields
+  → `APPLY`. There is no routed config page, and the X01 "Custom" variant tile is
+  disabled. The `LEGS TO WIN` stepper's +/- icon buttons have no accessible name
+  (#666) — locate the "+" by geometry (rightmost small button on the sheet).
+- **Fresh worktree:** scaffold `web/` (copy from another checkout), build a sim
+  build (`flutter build web --dart-define=AUTOSCORER_SIM=true`) served on `:6780`,
+  and `npm install` in `e2e/`.
+
+---
+
 ## Tag taxonomy
 
 **Game-type tags** (one per game family):
