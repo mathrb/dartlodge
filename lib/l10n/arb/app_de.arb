@@ -271,6 +271,8 @@
   "setupSectionOutStrategy": "AUSSTIEGSREGEL",
   "setupSectionRounds": "RUNDEN",
   "setupSectionLegsToWin": "LEGS ZUM SIEG",
+  "setupLegsIncrement": "Legs zum Sieg erhöhen",
+  "setupLegsDecrement": "Legs zum Sieg verringern",
   "setupSectionScoring": "WERTUNG",
   "setupSectionTargets": "ZIELE",
   "setupSectionVariant": "VARIANTE",

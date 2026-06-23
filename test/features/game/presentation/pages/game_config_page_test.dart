@@ -167,4 +167,31 @@ void main() {
       );
     });
   });
+
+  group('LEGS TO WIN stepper accessible names (#666)', () {
+    testWidgets('X01 +/- buttons expose increment/decrement semantic labels',
+        (tester) async {
+      await _openPanel(
+        tester,
+        initial: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+        ),
+      );
+
+      expect(find.text('LEGS TO WIN'), findsOneWidget);
+      expect(find.bySemanticsLabel('Increase legs to win'), findsOneWidget);
+      expect(find.bySemanticsLabel('Decrease legs to win'), findsOneWidget);
+    });
+
+    testWidgets('Cricket +/- buttons expose increment/decrement semantic labels',
+        (tester) async {
+      await _openPanel(tester, initial: const GameConfig.cricket());
+
+      expect(find.text('LEGS TO WIN'), findsOneWidget);
+      expect(find.bySemanticsLabel('Increase legs to win'), findsOneWidget);
+      expect(find.bySemanticsLabel('Decrease legs to win'), findsOneWidget);
+    });
+  });
 }

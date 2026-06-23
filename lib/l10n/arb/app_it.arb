@@ -271,6 +271,8 @@
   "setupSectionOutStrategy": "STRATEGIA D'USCITA",
   "setupSectionRounds": "ROUND",
   "setupSectionLegsToWin": "LEG DA VINCERE",
+  "setupLegsIncrement": "Aumenta i leg da vincere",
+  "setupLegsDecrement": "Riduci i leg da vincere",
   "setupSectionScoring": "PUNTEGGIO",
   "setupSectionTargets": "BERSAGLI",
   "setupSectionVariant": "VARIANTE",

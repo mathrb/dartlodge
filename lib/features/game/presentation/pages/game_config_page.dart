@@ -233,6 +233,8 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                   value: c.legsToWin,
                   min: 1,
                   max: 9,
+                  incrementSemanticLabel: l10n.setupLegsIncrement,
+                  decrementSemanticLabel: l10n.setupLegsDecrement,
                   onDecrement: () => setState(
                     () =>
                         _draftConfig = c.copyWith(legsToWin: c.legsToWin - 1),
@@ -297,6 +299,8 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                   value: c.legsToWin,
                   min: 1,
                   max: 9,
+                  incrementSemanticLabel: l10n.setupLegsIncrement,
+                  decrementSemanticLabel: l10n.setupLegsDecrement,
                   onDecrement: () => setState(
                     () => _draftConfig =
                         c.copyWith(legsToWin: c.legsToWin - 1),

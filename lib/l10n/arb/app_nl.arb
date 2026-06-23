@@ -271,6 +271,8 @@
   "setupSectionOutStrategy": "UITWORPREGEL",
   "setupSectionRounds": "RONDES",
   "setupSectionLegsToWin": "LEGS OM TE WINNEN",
+  "setupLegsIncrement": "Legs om te winnen verhogen",
+  "setupLegsDecrement": "Legs om te winnen verlagen",
   "setupSectionScoring": "TELLING",
   "setupSectionTargets": "DOELEN",
   "setupSectionVariant": "VARIANT",
