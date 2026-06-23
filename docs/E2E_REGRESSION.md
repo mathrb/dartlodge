@@ -114,6 +114,7 @@ on the left → run the tag(s) on the right before merging.
 | If you change… | Run |
 |---|---|
 | X01 engine / use cases / projections (`stateless_x01_engine*`, `ProcessDartUseCase`, X01 projections) | `@x01` (+ `@stats` if scoring/projection) |
+| Cold-load / resume replay (`event_replay.dart`, `loadedGameState`) | `@x01` (resume leg count) + `@cricket` |
 | Cricket engine / use cases / projections (`stateless_cricket_engine*`, `ProcessCricketDartUseCase`) | `@cricket` |
 | Shanghai engine / use cases | `@shanghai` |
 | Bob's 27 engine / use cases | `@bobs27` |
@@ -150,6 +151,7 @@ on the left → run the tag(s) on the right before merging.
 | `x01_checkout.spec.ts` | `@x01 @stats @autoscorer` |
 | `x01_strategy.spec.ts` | `@x01 @autoscorer` |
 | `x01_match.spec.ts` | `@x01 @autoscorer` |
+| `x01_resume_leg_count.spec.ts` | `@x01 @autoscorer` |
 | `x01_manual_entry.spec.ts` | `@x01 @correction` |
 | `x01_auto_score_correction.spec.ts` | `@x01 @autoscorer @correction` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
