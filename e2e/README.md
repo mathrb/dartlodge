@@ -2,9 +2,14 @@
 
 Specs drive the Flutter **web** build served on `http://localhost:6780`
 (`playwright.config.ts` `baseURL`; the server is started separately —
-`reuseExistingServer`). Tests need a browser that can render Flutter CanvasKit
-(a real/GPU browser or the deployed build); Flutter web does not render in a
-GPU-less headless sandbox.
+`reuseExistingServer`). The suite runs green **headless** via Playwright's
+bundled Chromium, which renders CanvasKit through software GL — a full Chromium
+install (what `npx playwright install` provides), not a bare
+`chromium_headless_shell` / GL-less browser, which renders nothing.
+
+This is a committed, tag-sliced **manual** regression suite — run it with
+`--grep @tag`. See `docs/E2E_REGRESSION.md` for the tag taxonomy, the
+`code-area → tag` coverage map, and run instructions.
 
 ```bash
 cd e2e

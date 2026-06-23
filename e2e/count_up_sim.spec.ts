@@ -20,7 +20,7 @@ const PIXEL_6A = { viewport: { width: 412, height: 915 } };
 const sim = (page: Page, call: string) =>
   page.evaluate(`window.dartlodgeSim.${call}`);
 
-test.describe('Count-Up sim bridge (#601)', () => {
+test.describe('Count-Up sim bridge (#601)', { tag: ['@countup'] }, () => {
   test('emitted darts score on the Count-Up board', async ({ browser }) => {
     test.setTimeout(120000);
     const context = await browser.newContext(PIXEL_6A);

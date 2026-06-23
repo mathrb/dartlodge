@@ -39,3 +39,5 @@ lib/l10n/gen/
 .playwright-mcp/
 e2e/node_modules/
 e2e/test-results/
+# Scratch screenshots captured during manual Playwright runs (not assertions).
+e2e/*.png

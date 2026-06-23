@@ -26,7 +26,7 @@ const PIXEL_6A_FR = { viewport: { width: 412, height: 915 }, locale: 'fr-FR' };
 const sim = (page: Page, call: string) =>
   page.evaluate(`window.dartlodgeSim.${call}`);
 
-test.describe('Count-Up board is localized (#596)', () => {
+test.describe('Count-Up board is localized (#596)', { tag: ['@countup', '@i18n'] }, () => {
   test('French locale → board NEXT button reads "TOUR SUIVANT"', async ({
     browser,
   }) => {

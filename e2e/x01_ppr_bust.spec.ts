@@ -53,7 +53,7 @@ async function emit(page: Page, seg: string) {
   await page.waitForTimeout(180);
 }
 
-test.describe('X01 PPR busts as a 3-dart visit (#634)', () => {
+test.describe('X01 PPR busts as a 3-dart visit (#634)', { tag: ['@x01', '@stats'] }, () => {
   test('post-game Avg PPR pads a 2-dart bust to a full visit', async ({
     browser,
   }) => {

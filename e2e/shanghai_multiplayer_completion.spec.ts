@@ -37,7 +37,7 @@ const PIXEL_6A = {
 const sim = (page: Page, call: string) =>
   page.evaluate(`window.dartlodgeSim.${call}`);
 
-test.describe('Shanghai multi-player natural completion (#595)', () => {
+test.describe('Shanghai multi-player natural completion (#595)', { tag: ['@shanghai'] }, () => {
   test('2-player, 7-round game reaches the post-game summary', async ({
     browser,
   }) => {

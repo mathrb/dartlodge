@@ -28,7 +28,7 @@ const PLAYER = 'Alice';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sim = (page: Page, call: string) => page.evaluate(`window.dartlodgeSim.${call}`);
 
-test.describe('Auto-scorer camera-first (sim bridge)', () => {
+test.describe('Auto-scorer camera-first (sim bridge)', { tag: ['@autoscorer'] }, () => {
   test('emitting darts updates the camera-first X01 board', async ({ browser }) => {
     const page = await browser.newPage();
     test.setTimeout(120000);

@@ -44,7 +44,7 @@ async function boot(page: Page) {
   );
 }
 
-test.describe("Bob's 27 Double-Bull finale (#588)", () => {
+test.describe("Bob's 27 Double-Bull finale (#588)", { tag: ['@bobs27'] }, () => {
   test('solo drill reaches round 21 (DB) and completes', async ({ browser }) => {
     test.setTimeout(180000);
     const context = await browser.newContext(PIXEL_6A);
