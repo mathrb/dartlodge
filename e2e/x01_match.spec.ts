@@ -9,7 +9,7 @@
  *     player 1 checks out while player 2 misses → player 1 wins.
  *
  * The LEGS TO WIN stepper's +/- buttons carry accessible names (#666), so we
- * target the "+" by its name. The default e2e locale resolves to English.
+ * target the "+" by its English name (the context pins `locale: 'en-US'`).
  *
  * Serve sim-enabled web on :6780 (see docs/E2E_REGRESSION.md).
  */
@@ -17,7 +17,10 @@
 import { test, expect, Browser, Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:6780';
-const PIXEL_6A = { viewport: { width: 412, height: 915 } };
+// locale pinned: `incrementLegs` targets the "+" by its English accessible
+// name, and the app follows the browser locale — without this an unpinned
+// runner would render another language and the selector would fail.
+const PIXEL_6A = { viewport: { width: 412, height: 915 }, locale: 'en-US' };
 
 const sim = (page: Page, call: string) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
