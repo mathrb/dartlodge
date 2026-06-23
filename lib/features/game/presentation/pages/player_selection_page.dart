@@ -44,7 +44,7 @@ String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
       final inLabel = c.inStrategy == 'straight'
           ? ''
           : '${_strategyLabel(c.inStrategy)} In · ';
-      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)}';
+      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}';
     },
     cricket: (c) =>
         '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}',

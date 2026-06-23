@@ -150,14 +150,14 @@ GameSetupState _selectingPlayersState({
 void main() {
   // ── 1. Config chip X01 ────────────────────────────────────────────────────
 
-  testWidgets('1. Config chip shows "501 · Double Out · ∞ Rounds" for X01 with no totalRounds',
+  testWidgets('1. Config chip shows "501 · Double Out · ∞ Rounds · 1 leg" for X01 with no totalRounds',
       (tester) async {
     await tester.pumpWidget(_buildApp(
       setupState: _selectingPlayersState(),
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('501 · Double Out · ∞ Rounds'), findsOneWidget);
+    expect(find.text('501 · Double Out · ∞ Rounds · 1 leg'), findsOneWidget);
   });
 
   // ── 1b. Config chip surfaces non-default in-strategy (#329) ───────────────
@@ -177,7 +177,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('501 · Double In · Double Out · ∞ Rounds'),
+    expect(find.text('501 · Double In · Double Out · ∞ Rounds · 1 leg'),
         findsOneWidget);
   });
 
@@ -196,7 +196,28 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('501 · Master In · Double Out · ∞ Rounds'),
+    expect(find.text('501 · Master In · Double Out · ∞ Rounds · 1 leg'),
+        findsOneWidget);
+  });
+
+  // ── 1d. Config chip surfaces best-of legs, pluralized (#667) ──────────────
+
+  testWidgets(
+      '1d. Config chip shows pluralized legs for X01 best-of-N (#667)',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+          legsToWin: 3,
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('501 · Double Out · ∞ Rounds · 3 legs'),
         findsOneWidget);
   });
 
