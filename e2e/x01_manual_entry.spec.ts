@@ -59,9 +59,9 @@ test.describe('X01 manual entry', { tag: ['@x01'] }, () => {
     await page.context().close();
   });
 
-  test('the board UNDO button removes the last dart and restores the score', async ({
-    browser,
-  }) => {
+  test('the board UNDO button removes the last dart and restores the score', {
+    tag: '@correction',
+  }, async ({ browser }) => {
     test.setTimeout(120000);
     const page = await boot(browser);
     await startManualSolo301(page, 'Wade');
