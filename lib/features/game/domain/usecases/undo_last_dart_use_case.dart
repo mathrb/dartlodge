@@ -20,7 +20,7 @@ import 'package:dart_lodge/core/utils/constants.dart';
 /// against the wrong target (#656).
 ///
 /// X01 and Cricket are deliberately absent: they advance the round on
-/// `TurnStarted` (always replayed) and fold leg/game completion into
+/// `TurnStarted` (replayed unless superseded) and fold leg/game completion into
 /// `_applyDartThrown`, while the dart-processing path ALSO persists
 /// `LegCompleted`/`GameCompleted`. Replaying `TurnEnded`/`LegCompleted`/
 /// `GameCompleted` for them double-counts `legsWon` (verified empirically:
