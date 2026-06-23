@@ -85,7 +85,7 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
     });
   }
 
-  /// Fills the current turn with MISS darts (if needed) then emits TurnEnded.
+  /// Fills the current turn with MISS darts (if needed) then advances the turn.
   /// If the engine reports gameCompleted, persist LegCompleted + GameCompleted
   /// and finalize the game; otherwise emit TurnStarted for the next competitor.
   Future<void> advanceTurn() => _serializer.run(_advanceTurnImpl);
@@ -116,18 +116,27 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
           ? currentCompetitor.playerIds.first
           : 'system';
 
-      final turnEndedEvent = buildTurnEndedEvent(
+      // The TurnEnded that closes this turn was ALREADY persisted by
+      // ProcessDartUseCase when the 3rd dart landed (turnActive went false) —
+      // count-up reuses that X01-shaped use case. Re-apply a TRANSIENT copy
+      // (localSequence -1, NOT appended) so the engine computes the post-turn
+      // state — round advance + game-completion — without writing a SECOND
+      // TurnEnded. A duplicate persisted TurnEnded is replayed by both
+      // cold-load and undo, double-advancing currentRoundInLeg (#656 / the
+      // undo regression that surfaced it). Mirrors ActiveGameNotifier
+      // (X01) _startNextTurn.
+      final transientTurnEnded = buildTurnEndedEvent(
         gameId: gs.gameId,
         competitorId: currentCompetitor.competitorId,
         playerId: actorId,
-        localSequence: nextSeq++,
+        localSequence: -1,
         actorId: actorId,
       );
 
       final engine = ref.read(countUpEngineProvider);
-      final result = engine.apply(gs, turnEndedEvent);
+      final result = engine.apply(gs, transientTurnEnded);
       var newGs = result.state;
-      final eventsToStore = <GameEvent>[turnEndedEvent];
+      final eventsToStore = <GameEvent>[];
 
       if (result.outcome == LegOutcome.gameCompleted) {
         final winnerId = result.winnerCompetitorId;
