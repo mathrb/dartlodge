@@ -134,6 +134,7 @@ on the left → run the tag(s) on the right before merging.
 | Spec | Tags |
 |---|---|
 | `smoke.spec.ts` | `@smoke` |
+| `cricket_solo_standard.spec.ts` | `@cricket @autoscorer` |
 | `cricket_correction_history.spec.ts` | `@cricket @correction @history` *(scaffold — `test.fixme`)* |
 | `shanghai_multiplayer_completion.spec.ts` | `@shanghai` |
 | `shanghai_undo.spec.ts` | `@shanghai @correction` |
@@ -169,10 +170,10 @@ on the left → run the tag(s) on the right before merging.
 
 ## Known coverage gaps (backlog)
 
-- `@cricket` — no *passing* runtime spec. `cricket_correction_history` is a
-  `test.fixme` scaffold (blocked on completing a full cricket leg before the
-  breakdown renders); the old `cricket_3players` playthrough was deleted as stale
-  (manual-tap gameplay + player-setup that no longer match the UI). Cricket is
-  unit-covered; a sim-bridge-driven cricket regression spec is the gap to fill.
+- `@cricket` — runtime playthrough now covered by `cricket_solo_standard.spec.ts`
+  (sim-bridge-driven, closes all targets → post-game summary, #661). Still open:
+  `cricket_correction_history` remains a `test.fixme` scaffold (blocked on
+  rendering the turn breakdown before the leg completes), so correction/history
+  in cricket is not yet runtime-covered.
 - `@atc` — Around the Clock has an engine but no e2e spec.
 - `@checkout` — Checkout Practice has an engine but no e2e spec.
