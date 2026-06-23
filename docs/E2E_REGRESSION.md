@@ -105,6 +105,10 @@ on the left → run the tag(s) on the right before merging.
 | `countup_undo.spec.ts` | `@countup @correction` |
 | `countup_no_correction.spec.ts` | `@countup @correction` |
 | `x01_ppr_bust.spec.ts` | `@x01 @stats` |
+| `x01_checkout.spec.ts` | `@x01 @stats` (+`@autoscorer` on the auto leg) |
+| `x01_strategy.spec.ts` | `@x01` (+`@autoscorer` on the auto legs) |
+| `x01_match.spec.ts` | `@x01` (+`@autoscorer` on the multi-leg test) |
+| `x01_manual_entry.spec.ts` | `@x01` |
 | `x01_auto_score_correction.spec.ts` | `@x01 @autoscorer @correction` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
 
