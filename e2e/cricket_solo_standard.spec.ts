@@ -84,6 +84,14 @@ test.describe('Cricket solo standard playthrough (#661)', { tag: ['@cricket', '@
     await expect(page.getByText('STATISTICS BREAKDOWN')).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('button', { name: /DONE/i })).toBeVisible();
 
+    // Cricket stats render on the summary: Avg MPR (22 marks over 3 rounds =
+    // 7.33), the first-nine MPR, and the mark-count buckets — the two perfect
+    // 9-mark turns (T20·T19·T18 and T17·T16·T15) land in the "9 Marks" bucket.
+    await expect(page.getByText(/AVG MPR/i).first()).toBeVisible();
+    await expect(page.getByText('7.33').first()).toBeVisible();
+    await expect(page.getByText(/FIRST 9 MPR/i)).toBeVisible();
+    await expect(page.getByText(/9 MARKS/i)).toBeVisible();
+
     await page.context().close();
   });
 });
