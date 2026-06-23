@@ -10,7 +10,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 
+import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
@@ -20,6 +22,24 @@ import 'package:dart_lodge/features/game/presentation/providers/active_count_up_
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 
 import '../../../../drift_test_base.dart';
+
+/// Records `correctDart` so a test can assert the camera-only correction-capture
+/// propagation (#658).
+class _FakeCorrectionSink implements CaptureCorrectionSink {
+  final List<({int cameraDartOrdinal, String segment})> corrections = [];
+  @override
+  void captureManualEntry({required String segment}) {}
+  @override
+  void correctDart({required int cameraDartOrdinal, required String segment}) =>
+      corrections.add((cameraDartOrdinal: cameraDartOrdinal, segment: segment));
+}
+
+class _BoundCorrectionSink extends ActiveCaptureCorrectionSink {
+  _BoundCorrectionSink(this._sink);
+  final CaptureCorrectionSink _sink;
+  @override
+  CaptureCorrectionSink? build() => _sink;
+}
 
 void main() {
   late DriftTestBase base;
@@ -37,7 +57,8 @@ void main() {
 
   // Seeds a solo count-up game + an opening TurnStarted, builds a container that
   // routes the notifier through in-memory drift, and returns the loaded notifier.
-  Future<ActiveCountUpNotifier> seedAndLoad() async {
+  Future<ActiveCountUpNotifier> seedAndLoad(
+      {CaptureCorrectionSink? sink}) async {
     final playerRepo = await base.createPlayerRepository();
     final gameRepo = await base.createGameRepository();
     final dartRepo = await base.createDartThrowRepository();
@@ -89,6 +110,9 @@ void main() {
       gameRepositoryProvider.overrideWithValue(gameRepo),
       gameEventRepositoryProvider.overrideWithValue(eventRepo),
       dartThrowRepositoryProvider.overrideWithValue(dartRepo),
+      if (sink != null)
+        activeCaptureCorrectionSinkProvider
+            .overrideWith(() => _BoundCorrectionSink(sink)),
     ]);
     await container.read(activeCountUpProvider('g1').future);
     return container.read(activeCountUpProvider('g1').notifier);
@@ -140,5 +164,29 @@ void main() {
     final gs = container.read(activeCountUpProvider('g1')).value!.gameState;
     expect(gs.competitors[0].score, 20); // unchanged
     expect(gs.dartsThrownInTurn, 1);
+  });
+
+  test('correcting a camera dart propagates correctDart to the capture (#658)',
+      () async {
+    final sink = _FakeCorrectionSink();
+    final notifier = await seedAndLoad(sink: sink);
+
+    await notifier.processDart('20', inputMethod: 'camera'); // camera dart 1
+    await notifier.correctTurnDart(0, 'T20');
+
+    // The 1-based camera ordinal re-labels the original captured frame.
+    expect(sink.corrections, [(cameraDartOrdinal: 1, segment: 'T20')]);
+  });
+
+  test('correcting a manual dart does NOT propagate correctDart (#469/#658)',
+      () async {
+    final sink = _FakeCorrectionSink();
+    final notifier = await seedAndLoad(sink: sink);
+
+    await notifier.processDart('20'); // manual (default) → no camera capture
+    await notifier.correctTurnDart(0, 'T20');
+
+    // Manual darts have no camera ordinal, so no capture is touched.
+    expect(sink.corrections, isEmpty);
   });
 }

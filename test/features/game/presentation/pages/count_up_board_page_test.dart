@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:dart_lodge/core/game/capture_correction_sink.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
@@ -24,13 +25,41 @@ class _FakeActiveCountUpNotifier extends ActiveCountUpNotifier {
   _FakeActiveCountUpNotifier(this._state);
   final ActiveCountUpState? _state;
   final correctedDarts = <({int index, String segment})>[];
+  final processedDarts = <String>[];
 
   @override
   Future<ActiveCountUpState?> build(String gameId) async => _state;
 
   @override
+  Future<void> processDart(String segment,
+          {String inputMethod = 'manual'}) async =>
+      processedDarts.add(segment);
+
+  @override
   Future<void> correctTurnDart(int turnDartIndex, String newSegment) async =>
       correctedDarts.add((index: turnDartIndex, segment: newSegment));
+}
+
+/// Records sink calls so a test can assert the board routed a manual entry
+/// (vs a correction) into the capture seam (#658).
+class _FakeCorrectionSink implements CaptureCorrectionSink {
+  final List<String> manualEntries = [];
+  final List<({int cameraDartOrdinal, String segment})> corrections = [];
+  @override
+  void captureManualEntry({required String segment}) =>
+      manualEntries.add(segment);
+  @override
+  void correctDart({required int cameraDartOrdinal, required String segment}) =>
+      corrections.add((cameraDartOrdinal: cameraDartOrdinal, segment: segment));
+}
+
+/// Binds a fixed [CaptureCorrectionSink] so the board's
+/// `activeCaptureCorrectionSinkProvider` reads return it.
+class _BoundCorrectionSink extends ActiveCaptureCorrectionSink {
+  _BoundCorrectionSink(this._sink);
+  final CaptureCorrectionSink _sink;
+  @override
+  CaptureCorrectionSink? build() => _sink;
 }
 
 /// Forces auto-scoring on without touching SharedPreferences.
@@ -61,7 +90,9 @@ GameState _countUpState(
     );
 
 Widget _buildApp(_FakeActiveCountUpNotifier notifier,
-    {Locale? locale, bool cameraFirst = false}) {
+    {Locale? locale,
+    bool cameraFirst = false,
+    CaptureCorrectionSink? correctionSink}) {
   final router = GoRouter(
     initialLocation: '/game/active/count-up/game-1',
     routes: [
@@ -81,6 +112,9 @@ Widget _buildApp(_FakeActiveCountUpNotifier notifier,
           (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
         ),
       ],
+      if (correctionSink != null)
+        activeCaptureCorrectionSinkProvider
+            .overrideWith(() => _BoundCorrectionSink(correctionSink)),
     ],
     child: MaterialApp.router(
       locale: locale,
@@ -270,6 +304,93 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(find.text('Correct dart 1'), findsOneWidget);
+    });
+  });
+
+  group('CountUpBoardPage manual-entry capture (#658)', () {
+    testWidgets(
+        'camera-first manual entry fires captureManualEntry AND processDart',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final sink = _FakeCorrectionSink();
+      // Empty turn → all three band slots are tappable manual-entry slots.
+      final notifier = _FakeActiveCountUpNotifier(ActiveCountUpState(
+        gameState: _countUpState(
+          competitors: const [
+            CompetitorState(
+                competitorId: 'c1', name: 'Alice', playerIds: [], score: 0),
+          ],
+          dartsThrownInTurn: 0,
+        ),
+      ));
+      await tester.pumpWidget(
+          _buildApp(notifier, cameraFirst: true, correctionSink: sink));
+      await tester.pumpAndSettle();
+
+      // An empty tappable slot renders an add-circle icon; tap the first to
+      // open the manual-entry sheet.
+      final emptySlots = find.byIcon(Icons.add_circle_outline);
+      expect(emptySlots, findsNWidgets(3));
+      await tester.tap(emptySlots.first);
+      await tester.pumpAndSettle();
+
+      // Drive the sheet's input grid callback directly (robust against the
+      // grid's exact button labels).
+      final grid =
+          tester.widget<DartInputGridWidget>(find.byType(DartInputGridWidget));
+      grid.onSegmentTapped('20');
+      await tester.pumpAndSettle();
+
+      // The board both scored the dart AND captured the frame as a labelled
+      // mistake — the entered segment is the ground truth.
+      expect(notifier.processedDarts, contains('20'));
+      expect(sink.manualEntries, ['20']);
+    });
+
+    testWidgets('camera-first correction does not call captureManualEntry',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final sink = _FakeCorrectionSink();
+      // One dart thrown → slot 0 is a filled (correction) slot.
+      final notifier = _FakeActiveCountUpNotifier(ActiveCountUpState(
+        gameState: _countUpState(
+          competitors: const [
+            CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: [],
+              score: 140,
+              dartThrows: ['20'],
+            ),
+          ],
+          dartsThrownInTurn: 1,
+        ),
+      ));
+      await tester.pumpWidget(
+          _buildApp(notifier, cameraFirst: true, correctionSink: sink));
+      await tester.pumpAndSettle();
+
+      // Tap the filled slot (its segment text '20') to open the correction
+      // sheet.
+      await tester.tap(find.text('20'));
+      await tester.pumpAndSettle();
+
+      final grid =
+          tester.widget<DartInputGridWidget>(find.byType(DartInputGridWidget));
+      grid.onSegmentTapped('T20');
+      await tester.pumpAndSettle();
+
+      // Correction path → correctTurnDart, never the manual-entry capture seam.
+      expect(notifier.correctedDarts, isNotEmpty);
+      expect(sink.manualEntries, isEmpty);
     });
   });
 }

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../domain/engines/base_game_engine.dart';
 import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
@@ -31,10 +32,12 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
     return ActiveCountUpState(gameState: gs);
   }
 
-  Future<void> processDart(String segment) =>
-      _serializer.run(() => _processDartImpl(segment));
+  Future<void> processDart(String segment,
+          {String inputMethod = 'manual'}) =>
+      _serializer.run(() => _processDartImpl(segment, inputMethod: inputMethod));
 
-  Future<void> _processDartImpl(String segment) async {
+  Future<void> _processDartImpl(String segment,
+      {String inputMethod = 'manual'}) async {
     final current = state.value;
     if (current == null) return;
 
@@ -55,8 +58,9 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
     );
 
     state = await AsyncValue.guard(() async {
-      final newGs =
-          await ref.read(processCountUpDartUseCaseProvider).execute(gs, dart);
+      final newGs = await ref
+          .read(processCountUpDartUseCaseProvider)
+          .execute(gs, dart, inputMethod: inputMethod);
       return ActiveCountUpState(
         gameState: newGs,
         pendingGameWinnerId:
@@ -97,10 +101,20 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
           );
       return ActiveCountUpState(gameState: newGs);
     });
-    // Capture-label propagation is not wired for count-up: its darts never carry
-    // a cameraDartOrdinal (see _processDartImpl / the sink dropping x/y), so the
-    // auto-scorer capture correction X01 performs would always no-op here. The
-    // linked frames ticket covers count-up capture work.
+
+    // Propagate the correction into the auto-scorer's training capture (#658):
+    // re-label the original captured frame for a camera-detected dart. The
+    // ordinal counts only camera-sourced darts and is null for a manual entry
+    // (which has no capture), so manual darts are skipped (#469). Best-effort —
+    // a no-op when no auto-scoring session is bound. Mirrors X01's
+    // ActiveGameNotifier._correctTurnDartImpl.
+    final cameraOrdinal = turnDart.cameraDartOrdinal;
+    if (!state.hasError && cameraOrdinal != null) {
+      ref.read(activeCaptureCorrectionSinkProvider)?.correctDart(
+            cameraDartOrdinal: cameraOrdinal,
+            segment: newSegment,
+          );
+    }
   }
 
   /// Resolves the live current-turn dart at [turnDartIndex] (0-based, throw
