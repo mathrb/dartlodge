@@ -271,6 +271,8 @@
   "setupSectionOutStrategy": "ESTRATÉGIA DE SAÍDA",
   "setupSectionRounds": "RODADAS",
   "setupSectionLegsToWin": "LEGS PARA VENCER",
+  "setupLegsIncrement": "Aumentar legs para vencer",
+  "setupLegsDecrement": "Diminuir legs para vencer",
   "setupSectionScoring": "PONTUAÇÃO",
   "setupSectionTargets": "ALVOS",
   "setupSectionVariant": "VARIANTE",

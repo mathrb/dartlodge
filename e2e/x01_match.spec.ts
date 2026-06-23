@@ -8,13 +8,13 @@
  *   - Multiplayer (manual entry): two players, turn rotation via NEXT PLAYER,
  *     player 1 checks out while player 2 misses → player 1 wins.
  *
- * The LEGS TO WIN stepper's +/- are unlabeled icon buttons (Icons.add/remove,
- * no semantics), so we click the rightmost small (≤40px) button — the "+".
+ * The LEGS TO WIN stepper's +/- buttons carry accessible names (#666), so we
+ * target the "+" by its name. The default e2e locale resolves to English.
  *
  * Serve sim-enabled web on :6780 (see docs/E2E_REGRESSION.md).
  */
 
-import { test, expect, Browser, Page, Locator } from '@playwright/test';
+import { test, expect, Browser, Page } from '@playwright/test';
 
 const BASE_URL = 'http://localhost:6780';
 const PIXEL_6A = { viewport: { width: 412, height: 915 } };
@@ -37,21 +37,11 @@ async function boot(browser: Browser): Promise<Page> {
   return page;
 }
 
-/** Click the LEGS TO WIN "+" — the rightmost small (≤40px) unlabeled button. */
+/** Click the LEGS TO WIN "+" — targeted by its accessible name (#666). */
 async function incrementLegs(page: Page): Promise<void> {
-  const buttons = page.getByRole('button');
-  const n = await buttons.count();
-  let plus: Locator | null = null;
-  let plusX = -1;
-  for (let i = 0; i < n; i++) {
-    const box = await buttons.nth(i).boundingBox();
-    if (box && box.width <= 40 && box.height <= 40 && box.x > plusX) {
-      plusX = box.x;
-      plus = buttons.nth(i);
-    }
-  }
-  if (!plus) throw new Error('LEGS TO WIN "+" button not found');
-  await plus.click({ force: true });
+  await page
+    .getByRole('button', { name: 'Increase legs to win' })
+    .click({ force: true });
 }
 
 /** Solo 301 checkout (180 then T20+T11+D14) through the sim bridge. */

@@ -271,6 +271,8 @@
   "setupSectionOutStrategy": "STRATÉGIE DE SORTIE",
   "setupSectionRounds": "TOURS",
   "setupSectionLegsToWin": "LEGS À GAGNER",
+  "setupLegsIncrement": "Augmenter les legs à gagner",
+  "setupLegsDecrement": "Diminuer les legs à gagner",
   "setupSectionScoring": "DÉCOMPTE",
   "setupSectionTargets": "CIBLES",
   "setupSectionVariant": "VARIANTE",

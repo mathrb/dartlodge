@@ -10,6 +10,8 @@ class ConfigStepperWidget extends StatelessWidget {
     required this.max,
     required this.onDecrement,
     required this.onIncrement,
+    this.incrementSemanticLabel,
+    this.decrementSemanticLabel,
   });
 
   final int value;
@@ -17,6 +19,14 @@ class ConfigStepperWidget extends StatelessWidget {
   final int max;
   final VoidCallback onDecrement;
   final VoidCallback onIncrement;
+
+  /// Accessible name for the increment (+) button. When null the button has no
+  /// accessible name (legacy behaviour).
+  final String? incrementSemanticLabel;
+
+  /// Accessible name for the decrement (−) button. When null the button has no
+  /// accessible name (legacy behaviour).
+  final String? decrementSemanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +53,7 @@ class ConfigStepperWidget extends StatelessWidget {
         OutlinedButton(
           onPressed: value > min ? onDecrement : null,
           style: buttonStyle(value > min),
-          child: const Icon(Icons.remove),
+          child: Icon(Icons.remove, semanticLabel: decrementSemanticLabel),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -52,7 +62,7 @@ class ConfigStepperWidget extends StatelessWidget {
         OutlinedButton(
           onPressed: value < max ? onIncrement : null,
           style: buttonStyle(value < max),
-          child: const Icon(Icons.add),
+          child: Icon(Icons.add, semanticLabel: incrementSemanticLabel),
         ),
       ],
     );

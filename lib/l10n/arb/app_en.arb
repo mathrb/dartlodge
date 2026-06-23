@@ -990,6 +990,14 @@
   "@setupSectionLegsToWin": {
     "description": "Config field label: legs to win"
   },
+  "setupLegsIncrement": "Increase legs to win",
+  "@setupLegsIncrement": {
+    "description": "Accessible name for the legs-to-win stepper increment (+) button"
+  },
+  "setupLegsDecrement": "Decrease legs to win",
+  "@setupLegsDecrement": {
+    "description": "Accessible name for the legs-to-win stepper decrement (−) button"
+  },
   "setupSectionScoring": "SCORING",
   "@setupSectionScoring": {
     "description": "Config field label: cricket scoring"
