@@ -48,6 +48,11 @@ revisit if the manual cadence proves insufficient.
 | **One-shot bug repros** | `repro_656_countup_undo`, `repro_656_shanghai_undo`, `repro_657_countup_no_correction` | **Keep + absorb** — rename into the suite and tag them; a surviving repro is the cheapest regression guard |
 | **Regression candidates** | `cricket_3players`, `shanghai_multiplayer_completion`, `bobs27_bull_round`, `count_up_sim`, `count_up_i18n`, `x01_ppr_bust`, `x01_auto_score_correction`, `cricket_correction_history`, `auto_scorer_sim` | **Keep** — these become the tagged suite |
 
+> **Outcome update:** the first real suite run showed `cricket_3players` was stale
+> at every layer (home nav skipped semantics activation, player-setup via
+> `getByLabel`, manual-tap gameplay), so it was **deleted** rather than kept; see
+> `docs/E2E_REGRESSION.md`. Cricket runtime coverage is now a documented gap.
+
 ## 4. Slicing: Playwright tags (decided)
 
 One flat `e2e/` folder. Each spec carries one or more `@tag`s in its
@@ -84,7 +89,7 @@ A spec can carry several tags (a cricket-correction test is both `@cricket` and
 
 | Spec | Tags |
 |---|---|
-| `cricket_3players` | `@cricket` |
+| `cricket_3players` | `@cricket` *(later deleted as stale — see §3 outcome update)* |
 | `cricket_correction_history` | `@cricket @correction @history` |
 | `shanghai_multiplayer_completion` | `@shanghai` |
 | `bobs27_bull_round` | `@bobs27` |
@@ -142,7 +147,8 @@ npx playwright test --grep @cricket            # one area
 npx playwright test --grep "@cricket|@x01"     # several areas
 ```
 
-CanvasKit needs a real/GPU browser — see `e2e/README.md`.
+Runs headless via Playwright's bundled Chromium (software GL) — see §2 and
+`docs/E2E_REGRESSION.md`. A bare `chromium_headless_shell` renders nothing.
 
 ## 7. Maintenance discipline
 
@@ -150,6 +156,10 @@ CanvasKit needs a real/GPU browser — see `e2e/README.md`.
   if it introduces a new area.
 - **Bug fix → a spec that fails before the fix and passes after**, tagged by area
   (the repro-as-permanent-guard pattern). Name it by behaviour, not issue number.
+  For a bug that is **not yet fixed**, assert the *correct* invariant and mark the
+  test `test.fail()` — it passes as an expected failure today and flags
+  ("unexpectedly passed") once the bug is fixed, prompting removal of the
+  annotation. (`countup_undo` / `shanghai_undo` do this for the open #656.)
 - **New tag → add it to the taxonomy and the coverage map** in `docs/E2E_REGRESSION.md`.
 - Scratch probing during development is fine, but **scratch never gets committed** —
   the `.gitignore` already excludes `e2e/test-results/`, `.playwright-*`, and the
@@ -163,7 +173,11 @@ Add one behavioural rule under the testing section, e.g.:
 > projections, correction/undo flows, localized strings, or the auto-scorer
 > sink, consult the coverage map in `docs/E2E_REGRESSION.md` and remind the user
 > which `npx playwright test --grep @tag` suite to run before merging. The suite
-> is manual (Flutter-web CanvasKit can't run in headless CI) — never assume it ran.
+> is manual by choice (it runs green headless, but the value is the reminder, not
+> a gate) — never assume it ran.
+
+*(Implemented as written, with the rationale corrected per §2 — see the final
+rule in `CLAUDE.md`.)*
 
 ## 9. Implementation steps
 

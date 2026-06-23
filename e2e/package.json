@@ -1,0 +1,28 @@
+{
+  "name": "dartlodge-e2e",
+  "version": "1.0.0",
+  "description": "End-to-end tests for DartLodge using Playwright",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:ui": "npx playwright test --ui",
+    "test:debug": "npx playwright test --debug",
+    "test:smoke": "npx playwright test --grep @smoke",
+    "test:tag": "npx playwright test --grep",
+    "codegen": "npx playwright codegen",
+    "show-report": "npx playwright show-report .playwright-cli/test-results"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "flutter"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  }
+}

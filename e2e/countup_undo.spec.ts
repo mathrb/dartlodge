@@ -22,10 +22,15 @@ const sim = (page: Page, call: string) =>
   page.evaluate(`window.dartlodgeSim.${call}`);
 
 test.describe('Count Up undo preserves round (#656)', { tag: ['@countup', '@correction'] }, () => {
-  test('round counter reverts to 1 after undoing a dart in round 2', async ({
+  test('undo of a round-2 dart keeps the round at 2', async ({
     browser,
   }) => {
     test.setTimeout(120000);
+    // #656 is OPEN: undo collapses the round counter back to 1. This spec
+    // asserts the CORRECT invariant and is marked expected-to-fail, so it
+    // passes as an expected failure today and flags ("unexpectedly passed")
+    // once #656 is fixed — at which point remove this annotation.
+    test.fail();
     const context = await browser.newContext(PIXEL_6A);
     const page = await context.newPage();
 
@@ -74,10 +79,11 @@ test.describe('Count Up undo preserves round (#656)', { tag: ['@countup', '@corr
     await page.getByRole('button', { name: /Undo last dart/i }).click();
     await page.waitForTimeout(500);
 
-    // CORRECT behaviour: still ROUND 2 (we only removed one dart).
-    // BUG #656: the round collapses back to ROUND 1.
-    await expect(page.getByText(/ROUND 1 \//)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText(/ROUND 2 \//)).toHaveCount(0);
+    // Correct behaviour: removing one dart keeps us in ROUND 2.
+    // (Under bug #656 the round collapses to ROUND 1, so this assertion fails
+    // today — which is exactly what the expected-to-fail annotation captures.)
+    await expect(page.getByText(/ROUND 2 \//)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/ROUND 1 \//)).toHaveCount(0);
 
     await context.close();
   });

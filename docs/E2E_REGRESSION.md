@@ -116,7 +116,10 @@ on the left → run the tag(s) on the right before merging.
   if it introduces a new area.
 - **Bug fix → a spec that fails before the fix and passes after**, tagged by area.
   Name it by behaviour, not issue number; reference the issue in a comment / the
-  `describe` title (`(#NNN)`).
+  `describe` title (`(#NNN)`). For a bug that is **not yet fixed**, assert the
+  *correct* invariant and mark the test `test.fail()` — it passes as an expected
+  failure today and flags ("unexpectedly passed") once the bug is fixed, prompting
+  removal of the annotation (`countup_undo` / `shanghai_undo` do this for #656).
 - **New tag → add it to the taxonomy and the coverage map here** (and the CLAUDE.md
   rule's area list if it's a new code area).
 - **Scratch never gets committed.** `.gitignore` excludes `e2e/test-results/`,
