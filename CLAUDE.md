@@ -200,7 +200,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **GameConfig dispatch:** Use `maybeMap` (not `maybeWhen`) — callbacks receive typed subclass instances: `config.maybeMap(x01: (c) => c.startingScore, orElse: () => '')`. Requires explicit `import 'game_config.dart'`; not available via transitive import.
 
-**Game config is edited in a bottom sheet, not a page:** X01/Cricket in/out strategy, legs-to-win, and starting score are set via the config-summary chip → `GameConfigPanel` bottom sheet on the player-selection screen (`APPLY` commits). `GameConfigPage` exists but is unwired, and the X01 "Custom" variant tile is disabled. The `LEGS TO WIN` `ConfigStepperWidget` +/- icon buttons carry localized `semanticLabel`s (`setupLegsIncrement`/`setupLegsDecrement`, #666 fixed); the X01 config-summary chip omits `legsToWin` (#667). (E2E driving notes: `docs/E2E_REGRESSION.md` § Authoring specs.)
+**Game config is edited in a bottom sheet, not a page:** X01/Cricket in/out strategy, legs-to-win, and starting score are set via the config-summary chip → `GameConfigPanel` bottom sheet on the player-selection screen (`APPLY` commits). `GameConfigPage` exists but is unwired, and the X01 "Custom" variant tile is disabled. The `LEGS TO WIN` `ConfigStepperWidget` +/- icon buttons carry localized `semanticLabel`s (`setupLegsIncrement`/`setupLegsDecrement`, #666 fixed); the X01 config-summary chip surfaces `legsToWin` as a localized `setupLegsCount` segment, matching Cricket (#667 fixed). (E2E driving notes: `docs/E2E_REGRESSION.md` § Authoring specs.)
 
 **Repository exceptions:** All exceptions extend `RepositoryException` (`lib/core/error/repository_exception.dart`). Never throw raw `Exception` from a repository implementation.
 
