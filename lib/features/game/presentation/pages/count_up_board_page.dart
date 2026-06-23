@@ -27,8 +27,9 @@ import '../widgets/x01_other_players_strip_widget.dart';
 
 /// Auto-scorer → Count-Up emit sink (#601). Mirrors the X01/practice boards so
 /// the camera (and the Playwright sim bridge) can drive a Count-Up game.
-/// Count-Up's `processDart` doesn't take x/y, so impact positions aren't
-/// captured here (no Count-Up heatmap yet) — a follow-up if wanted.
+/// Camera darts are tagged `inputMethod: 'camera'` so a later correction can
+/// re-label the captured training frame (#658). Count-Up's `processDart` still
+/// drops x/y — impact positions aren't tracked (no Count-Up heatmap yet, #571).
 class _CountUpDartInputSink implements DartInputSink {
   _CountUpDartInputSink(this._ref, this._gameId);
   final WidgetRef _ref;
@@ -43,7 +44,9 @@ class _CountUpDartInputSink implements DartInputSink {
     // X01 camera guard (#538). The manual grid is already turnActive-gated.
     final s = _ref.read(activeCountUpProvider(_gameId)).value;
     if (s == null || s.gameState.isComplete || !s.gameState.turnActive) return;
-    _ref.read(activeCountUpProvider(_gameId).notifier).processDart(segment);
+    _ref
+        .read(activeCountUpProvider(_gameId).notifier)
+        .processDart(segment, inputMethod: 'camera');
   }
 
   @override
@@ -393,6 +396,11 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                   return DartInputGridWidget(
                     enabled: enabled,
                     onSegmentTapped: (segment) {
+                      // A manual entry means the camera missed this dart —
+                      // capture the frame as labelled training data (#658).
+                      ref
+                          .read(activeCaptureCorrectionSinkProvider)
+                          ?.captureManualEntry(segment: segment);
                       ref
                           .read(activeCountUpProvider(widget.gameId).notifier)
                           .processDart(segment);
