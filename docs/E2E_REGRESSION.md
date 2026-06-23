@@ -103,7 +103,7 @@ on the left → run the tag(s) on the right before merging.
 | `count_up_sim.spec.ts` | `@countup` |
 | `count_up_i18n.spec.ts` | `@countup @i18n` |
 | `countup_undo.spec.ts` | `@countup @correction` |
-| `countup_no_correction.spec.ts` | `@countup @correction` |
+| `countup_correction.spec.ts` | `@countup @correction` |
 | `x01_ppr_bust.spec.ts` | `@x01 @stats` |
 | `x01_checkout.spec.ts` | `@x01 @stats @autoscorer` |
 | `x01_strategy.spec.ts` | `@x01 @autoscorer` |

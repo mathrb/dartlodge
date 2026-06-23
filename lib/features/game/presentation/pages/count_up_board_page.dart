@@ -9,6 +9,7 @@ import '../../../../app/app_router.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
+import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
@@ -219,7 +220,12 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                   roundInLeg: gameState.currentRoundInLeg,
                   totalRounds: gameState.countUpTotalRounds,
                   currentTurnDarts: currentTurnDarts,
-                  // Camera-first moves the darts to the prominent band below.
+                  // Manual mode: tap a thrown dart to correct it (#657).
+                  // Camera-first hides the darts here — they move to the
+                  // prominent dart band below.
+                  onDartTapped: gameState.isComplete || cameraFirst
+                      ? null
+                      : (index) => _showCorrectionSheet(context, index),
                   showDarts: !cameraFirst,
                 ),
                 if (cameraFirst) ...[
@@ -313,34 +319,90 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
     );
   }
 
-  /// Camera-first manual entry (#601): tapping an empty dart slot opens the
-  /// standard input grid in a modal to record a dart the camera missed.
-  /// Count-Up has no per-dart correction, so already-thrown slots are inert.
+  /// Camera-first dart-indicator tap (#657): a thrown slot opens correction; an
+  /// empty slot opens manual entry for a dart the camera missed.
   void _onSlotTapped(BuildContext context, int index, int dartsThrownInTurn) {
-    if (index < dartsThrownInTurn) return;
+    if (index < dartsThrownInTurn) {
+      _showCorrectionSheet(context, index);
+    } else {
+      _showEntrySheet(context);
+    }
+  }
+
+  /// Per-dart correction (#657): tapping dart [dartIndex] of the current turn
+  /// opens the input grid; picking a segment replaces that dart and closes the
+  /// sheet. The notifier resolves the dart's event id and recomputes state.
+  void _showCorrectionSheet(BuildContext context, int dartIndex) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.of(sheetContext).size.height * 0.55,
-          child: Consumer(
-            builder: (ctx, ref, _) {
-              final s = ref.watch(activeCountUpProvider(widget.gameId)).value;
-              final enabled = s != null &&
-                  !s.gameState.isComplete &&
-                  s.gameState.turnActive;
-              return DartInputGridWidget(
-                enabled: enabled,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(
+                AppLocalizations.of(context).gameCorrectDart(dartIndex + 1),
+                style: AppTextStyles.titleMedium,
+              ),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.55,
+              child: DartInputGridWidget(
                 onSegmentTapped: (segment) {
                   ref
                       .read(activeCountUpProvider(widget.gameId).notifier)
-                      .processDart(segment);
+                      .correctTurnDart(dartIndex, segment);
                   Navigator.of(sheetContext).pop();
                 },
-              );
-            },
-          ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Manual entry for a dart the camera missed: opens the standard input grid in
+  /// a modal and submits the picked segment as the next dart of the turn.
+  void _showEntrySheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Text(AppLocalizations.of(context).gameEnterDart,
+                  style: AppTextStyles.titleMedium),
+            ),
+            SizedBox(
+              height: MediaQuery.of(sheetContext).size.height * 0.55,
+              // Watch the live turn so the grid disables if the turn ends while
+              // the sheet is open (e.g. the camera fills the 3rd dart).
+              child: Consumer(
+                builder: (ctx, ref, _) {
+                  final s =
+                      ref.watch(activeCountUpProvider(widget.gameId)).value;
+                  final enabled = s != null &&
+                      !s.gameState.isComplete &&
+                      s.gameState.turnActive;
+                  return DartInputGridWidget(
+                    enabled: enabled,
+                    onSegmentTapped: (segment) {
+                      ref
+                          .read(activeCountUpProvider(widget.gameId).notifier)
+                          .processDart(segment);
+                      Navigator.of(sheetContext).pop();
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
