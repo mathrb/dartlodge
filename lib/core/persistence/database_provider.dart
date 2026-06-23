@@ -243,6 +243,18 @@ UndoLastDartUseCase undoCountUpLastDartUseCase(Ref ref) => UndoLastDartUseCase(
       ref.watch(countUpEngineProvider),
     );
 
+// Count-up per-dart correction (#657): CorrectDartUseCase is engine-agnostic —
+// it rewinds via the injected undo and re-throws via the injected process fn,
+// so count-up reuses the same shape as X01/Cricket/practice. The count-up undo
+// already replays non-superseded TurnEnded (#656) so the round counter survives
+// the rewind.
+@Riverpod(keepAlive: true)
+CorrectDartUseCase correctCountUpDartUseCase(Ref ref) => CorrectDartUseCase(
+      ref.watch(undoCountUpLastDartUseCaseProvider),
+      ref.watch(processCountUpDartUseCaseProvider).execute,
+      ref.watch(gameEventRepositoryProvider),
+    );
+
 // ProcessPracticeDartUseCase providers — one per practice game type
 @Riverpod(keepAlive: true)
 ProcessPracticeDartUseCase processAroundTheClockDartUseCase(Ref ref) =>

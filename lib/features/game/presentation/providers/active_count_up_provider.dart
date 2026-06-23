@@ -4,6 +4,8 @@ import '../../domain/engines/base_game_engine.dart';
 import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
 import '../../domain/models/game_config.dart';
+import '../../domain/models/game_state.dart';
+import '../../domain/turn_dart_resolver.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_count_up_state.dart';
 import '../../../../core/persistence/database_provider.dart';
@@ -61,6 +63,59 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
             newGs.isComplete ? newGs.winnerCompetitorId : null,
       );
     });
+  }
+
+  /// Per-dart correction (#657): replaces dart [turnDartIndex] of the active
+  /// turn (0-based, throw order) with [newSegment]. Resolves the dart's
+  /// `DartThrown` event id on demand from the log, then delegates to
+  /// `CorrectDartUseCase`. No-op on a completed game or an out-of-range index.
+  ///
+  /// Count-up is the simplest correction case: no bust, single leg, and game
+  /// completion happens only on `TurnEnded` (never on `DartThrown`), so a
+  /// correction can never end a leg or complete the game — there is no modal
+  /// state to recompute beyond the score.
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) =>
+      _serializer.run(() => _correctTurnDartImpl(turnDartIndex, newSegment));
+
+  Future<void> _correctTurnDartImpl(
+      int turnDartIndex, String newSegment) async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+
+    final turnDart = await _resolveTurnDart(gs, turnDartIndex);
+    if (turnDart == null) return;
+
+    final parsed = Segment.parse(newSegment);
+    state = await AsyncValue.guard(() async {
+      final newGs = await ref.read(correctCountUpDartUseCaseProvider).execute(
+            gs,
+            originalEventId: turnDart.eventId,
+            segment: parsed.baseNumber,
+            multiplier: parsed.multiplier,
+          );
+      return ActiveCountUpState(gameState: newGs);
+    });
+    // Capture-label propagation is not wired for count-up: its darts never carry
+    // a cameraDartOrdinal (see _processDartImpl / the sink dropping x/y), so the
+    // auto-scorer capture correction X01 performs would always no-op here. The
+    // linked frames ticket covers count-up capture work.
+  }
+
+  /// Resolves the live current-turn dart at [turnDartIndex] (0-based, throw
+  /// order) — its event id plus the camera-only ordinal. See [resolveTurnDart].
+  Future<TurnDartRef?> _resolveTurnDart(
+      GameState gs, int turnDartIndex) async {
+    final events = await ref
+        .read(gameEventRepositoryProvider)
+        .getEventsForGame(gs.gameId);
+    return resolveTurnDart(
+      events: events,
+      competitorId: gs.competitors[gs.currentTurnIndex].competitorId,
+      dartsThrownInTurn: gs.dartsThrownInTurn,
+      turnDartIndex: turnDartIndex,
+    );
   }
 
   bool get canUndo {

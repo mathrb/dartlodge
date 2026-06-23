@@ -12,17 +12,25 @@ import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_count_up_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 
 /// Fake notifier that returns a fixed state so the board renders without a DB.
+/// Records `correctTurnDart` calls so correction-sheet wiring can be asserted
+/// without hitting the use-case path.
 class _FakeActiveCountUpNotifier extends ActiveCountUpNotifier {
   _FakeActiveCountUpNotifier(this._state);
   final ActiveCountUpState? _state;
+  final correctedDarts = <({int index, String segment})>[];
 
   @override
   Future<ActiveCountUpState?> build(String gameId) async => _state;
+
+  @override
+  Future<void> correctTurnDart(int turnDartIndex, String newSegment) async =>
+      correctedDarts.add((index: turnDartIndex, segment: newSegment));
 }
 
 /// Forces auto-scoring on without touching SharedPreferences.
@@ -185,6 +193,83 @@ void main() {
         ).first,
       );
       expect(button.onPressed, isNotNull);
+    });
+  });
+
+  group('CountUpBoardPage per-dart correction (#657)', () {
+    testWidgets('camera-first: tapping a thrown dart opens the correction sheet',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = _FakeActiveCountUpNotifier(ActiveCountUpState(
+        gameState: _countUpState(
+          competitors: const [
+            CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: [],
+              score: 140,
+              dartThrows: ['20'],
+            ),
+          ],
+          dartsThrownInTurn: 1,
+        ),
+      ));
+      await tester.pumpWidget(_buildApp(notifier, cameraFirst: true));
+      await tester.pumpAndSettle();
+
+      // The single thrown dart shows '20' in the prominent band; tapping it
+      // opens the correction sheet (title "Correct dart 1").
+      await tester.tap(find.text('20'));
+      await tester.pumpAndSettle();
+      expect(find.text('Correct dart 1'), findsOneWidget);
+
+      // Picking a segment routes to correctTurnDart(index 0, …).
+      final grid =
+          tester.widget<DartInputGridWidget>(find.byType(DartInputGridWidget));
+      grid.onSegmentTapped('T20');
+      await tester.pumpAndSettle();
+      expect(notifier.correctedDarts, [(index: 0, segment: 'T20')]);
+    });
+
+    testWidgets('manual mode: tapping a status-bar dart opens correction',
+        (tester) async {
+      // Wide viewport so the manual status bar's full cluster (label · round ·
+      // sum · 3 badges) lays out without overflow.
+      tester.view.physicalSize = const Size(1400, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = _FakeActiveCountUpNotifier(ActiveCountUpState(
+        gameState: _countUpState(
+          competitors: const [
+            CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: [],
+              score: 60,
+              dartThrows: ['T20'],
+            ),
+          ],
+          dartsThrownInTurn: 1,
+        ),
+      ));
+      await tester.pumpWidget(_buildApp(notifier));
+      await tester.pumpAndSettle();
+
+      // The status-bar dart badge shows 'T20' (the turn-sum readout shows '60',
+      // so 'T20' uniquely targets the badge). Tap it to open the correction
+      // sheet.
+      await tester.tap(find.descendant(
+        of: find.byType(GameStatusBarWidget),
+        matching: find.text('T20'),
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Correct dart 1'), findsOneWidget);
     });
   });
 }

@@ -1537,6 +1537,54 @@ final class UndoCountUpLastDartUseCaseProvider
 String _$undoCountUpLastDartUseCaseHash() =>
     r'e9438e4d3a09881708cbc112a7e451f7d93a04c1';
 
+@ProviderFor(correctCountUpDartUseCase)
+final correctCountUpDartUseCaseProvider = CorrectCountUpDartUseCaseProvider._();
+
+final class CorrectCountUpDartUseCaseProvider
+    extends
+        $FunctionalProvider<
+          CorrectDartUseCase,
+          CorrectDartUseCase,
+          CorrectDartUseCase
+        >
+    with $Provider<CorrectDartUseCase> {
+  CorrectCountUpDartUseCaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'correctCountUpDartUseCaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$correctCountUpDartUseCaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CorrectDartUseCase> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CorrectDartUseCase create(Ref ref) {
+    return correctCountUpDartUseCase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CorrectDartUseCase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CorrectDartUseCase>(value),
+    );
+  }
+}
+
+String _$correctCountUpDartUseCaseHash() =>
+    r'64d28fac9405d9104b7da831f98d9899edfd546d';
+
 @ProviderFor(processAroundTheClockDartUseCase)
 final processAroundTheClockDartUseCaseProvider =
     ProcessAroundTheClockDartUseCaseProvider._();
