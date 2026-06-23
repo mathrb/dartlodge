@@ -85,6 +85,34 @@ async function startSolo501(browser: Browser, player: string): Promise<Page> {
   return page;
 }
 
+/** As startSolo501 but a 301 game — fewer darts to reach a checkout. */
+async function startSolo301(browser: Browser, player: string): Promise<Page> {
+  const context = await browser.newContext(PIXEL_6A);
+  const page = await context.newPage();
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('flutter-view, flt-glass-pane', { timeout: 60000 });
+  await page.evaluate(() =>
+    document
+      .querySelector('flt-semantics-placeholder')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+  await page.waitForFunction(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    () => !!(window as any).dartlodgeSim,
+    { timeout: 60000 },
+  );
+  await sim(page, 'enableAutoScoring()');
+  await page.getByRole('button', { name: /X01/i }).click();
+  await page.getByRole('button', { name: /Select 301/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('textbox', { name: /Player name/i }).fill(player);
+  await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
+  await page.getByRole('button', { name: /START GAME/i }).click();
+  await expect(page.getByRole('button', { name: /Start camera/i }))
+    .toBeVisible({ timeout: 15000 });
+  await expect(page.getByText('301').first()).toBeVisible({ timeout: 10000 });
+  return page;
+}
+
 /**
  * Tap a dart slot in the prominent dart band, then pick a segment from the
  * correction bottom sheet. [segmentName] is the grid button's FULL accessible
@@ -201,6 +229,41 @@ test.describe('X01 auto-scorer dart correction (Pixel 6a, sim bridge)', { tag: [
     // 501 - 60 - 7 - 54 = 380, with the band reading T20 / 7 / T18.
     await expect(page.getByText('380')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('T18', { exact: true }).first()).toBeVisible();
+
+    await page.context().close();
+  });
+
+  test('E. correcting an under-read final dart into a double completes the leg', async ({
+    browser,
+  }) => {
+    test.setTimeout(120000);
+    const page = await startSolo301(browser, 'EveE');
+
+    // Visit 1: three T20s → 121, advance.
+    await sim(page, "emit('T20')");
+    await sim(page, "emit('T20')");
+    await sim(page, "emit('T20')");
+    await expect(page.getByText('121').first()).toBeVisible({ timeout: 10000 });
+    await sim(page, 'advance()');
+
+    // Visit 2: T20 (→61) T7 (→40), then the camera under-reads the checkout
+    // dart as a single 18 → 40 - 18 = 22. Not a win (and not on a double). We
+    // read it as 18 (not 20) so the band slot doesn't collide with the 20-ish
+    // remaining/hero metrics.
+    await sim(page, "emit('T20')");
+    await sim(page, "emit('T7')");
+    await sim(page, "emit('18')");
+    await expect(page.getByText('22').first()).toBeVisible({ timeout: 10000 });
+    // Still mid-game: no summary yet.
+    await expect(page.getByRole('button', { name: /DONE/i })).toHaveCount(0);
+
+    // It was actually a Double 20: fix dart #3 → 40 - 40 = 0 on a double, which
+    // must complete the leg and navigate to the post-game summary.
+    await correctDart(page, '18', 0, 3, 'Double 20 20');
+
+    await expect(page.getByRole('button', { name: /DONE/i }))
+      .toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('STATISTICS BREAKDOWN')).toBeVisible();
 
     await page.context().close();
   });
