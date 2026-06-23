@@ -7,17 +7,38 @@
 // the stats assembler, the history turn-breakdown builder) recovers identical
 // results from the same events.
 
+import '../../../../core/utils/constants.dart';
 import '../entities/game_event.dart';
 import '../models/game_state.dart';
 import 'base_game_engine.dart';
+
+/// Game types whose engines fold leg/game completion into the deciding
+/// `DartThrown` (and round-cap `TurnEnded`) AND separately persist
+/// `LegCompleted`/`GameCompleted`. Re-applying those persisted events during
+/// replay double-counts `legsWon` and `currentLegIndex` (#663), so the shared
+/// cold-load replay skips them — exactly as `UndoLastDartUseCase` already does
+/// (see `_roundAdvancesOnTurnEnded` there). Practice/round-based engines (ATC,
+/// Shanghai, Catch 40, Count Up) instead RELY on `LegCompleted` to increment
+/// `legsWon`, so they are deliberately absent.
+///
+/// Note the asymmetry with the undo loop: undo also skips `TurnEnded` for these
+/// games, but replay must NOT — a round-cap leg win is produced by
+/// `TurnEnded`→`_resolveRoundCap`, which has to run exactly once here.
+const _foldsLegCompletionIntoTurn = {GameType.x01, GameType.cricket};
 
 GameState replayEvents({
   required GameState initial,
   required List<GameEvent> events,
   required GameEngine engine,
 }) {
+  final skipLegEvents = _foldsLegCompletionIntoTurn.contains(initial.gameType);
   var gs = initial;
   for (final event in stripSupersededEvents(events)) {
+    if (skipLegEvents &&
+        (event.eventType == 'LegCompleted' ||
+            event.eventType == 'GameCompleted')) {
+      continue;
+    }
     gs = engine.apply(gs, event).state;
   }
   return gs;
