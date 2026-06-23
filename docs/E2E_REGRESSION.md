@@ -1,9 +1,11 @@
 # E2E Regression Suite
 
 A committed, tag-sliced Playwright suite over the Flutter **web** build. It is
-**run manually, with discipline** — not a CI gate (Flutter-web CanvasKit can't
-render in a GPU-less headless sandbox; see `e2e/README.md`). Claude reminds you
-which slice to run when a session touches a mapped area (§ Coverage map).
+**run manually, with discipline** — manual by choice, not a CI gate. (The suite
+*does* run green fully headless via Playwright's bundled Chromium / software GL;
+the value we want is the reminder, not a merge gate. CI gating is a viable future
+option — see the design doc's "Why not CI-gated".) Claude reminds you which slice
+to run when a session touches a mapped area (§ Coverage map).
 
 Strategy rationale: `docs/plans/2026-06-23-e2e-regression-strategy-design.md`.
 
@@ -33,7 +35,9 @@ npx playwright test --grep "@cricket|@x01"    # several areas
 npx playwright test --grep @smoke             # fastest sanity check
 ```
 
-CanvasKit needs a real/GPU browser — a GPU-less headless sandbox renders nothing.
+Runs headless: Playwright's bundled Chromium renders CanvasKit via software GL.
+(A bare `chromium_headless_shell` or GL-less browser renders nothing — use the
+full Chromium that `npx playwright install` provides.)
 
 ---
 

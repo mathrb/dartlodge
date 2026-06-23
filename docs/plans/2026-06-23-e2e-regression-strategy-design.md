@@ -28,11 +28,17 @@ with discipline** — not a CI gate.
 
 ### Why not CI-gated
 
-Flutter web renders via CanvasKit, which needs a real/GPU browser. It does **not**
-render in a GPU-less headless CI sandbox (documented in `e2e/README.md`). Gating
-CI would mean provisioning a GPU runner or switching renderers — out of scope for
-"run from time to time". This is an accepted, documented limitation, not an
-oversight. Revisit only if the manual cadence proves insufficient.
+Not a rendering blocker — **manual is a deliberate choice**. The suite *does* run
+green fully headless: Playwright's bundled Chromium renders CanvasKit via software
+GL (demonstrated 2026-06-23 — 14 passed in ~1.6 min on a headless Linux box). The
+older "needs a real/GPU browser" lore (still in `e2e/README.md`) holds for
+`chromium_headless_shell` / GL-less browsers, but not for a full Chromium install.
+
+We stay manual because (a) the value we want is the *reminder* — Claude telling
+you which slice to run when you touch a mapped area — not a merge gate, and (b) a
+gate adds a ~75s sim-enabled `flutter build web` step plus unverified GitHub-runner
+GL support. CI gating is therefore a viable **future** option, not a blocked one;
+revisit if the manual cadence proves insufficient.
 
 ## 3. Triage of existing specs (decided)
 
