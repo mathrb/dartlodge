@@ -134,6 +134,10 @@ on the left → run the tag(s) on the right before merging.
 | Spec | Tags |
 |---|---|
 | `smoke.spec.ts` | `@smoke` |
+| `cricket_solo_standard.spec.ts` | `@cricket @autoscorer @stats` |
+| `cricket_scoring_modes.spec.ts` | `@cricket @autoscorer` |
+| `cricket_structure.spec.ts` | `@cricket @autoscorer` (manual-entry test is `@cricket` only) |
+| `cricket_correction.spec.ts` | `@cricket @autoscorer @correction` |
 | `cricket_correction_history.spec.ts` | `@cricket @correction @history` *(scaffold — `test.fixme`)* |
 | `shanghai_multiplayer_completion.spec.ts` | `@shanghai` |
 | `shanghai_undo.spec.ts` | `@shanghai @correction` |
@@ -169,10 +173,19 @@ on the left → run the tag(s) on the right before merging.
 
 ## Known coverage gaps (backlog)
 
-- `@cricket` — no *passing* runtime spec. `cricket_correction_history` is a
-  `test.fixme` scaffold (blocked on completing a full cricket leg before the
-  breakdown renders); the old `cricket_3players` playthrough was deleted as stale
-  (manual-tap gameplay + player-setup that no longer match the UI). Cricket is
-  unit-covered; a sim-bridge-driven cricket regression spec is the gap to fill.
+- `@cricket` — broadly covered now (#661): solo close-all → summary
+  (`cricket_solo_standard`, with cricket MPR/mark-bucket stats), the three
+  scoring modes (`cricket_scoring_modes`: standard/cut-throat/no-score points
+  attribution), manual entry + Random/Crazy launch (`cricket_structure`), and
+  undo (`cricket_correction`). Remaining cricket gaps:
+  - **Round cap → cap-winner dialog** — not automated: setting a finite cap
+    needs the ROUNDS dropdown in the config sheet, whose Flutter menu options
+    don't surface as reliably-clickable nodes in CanvasKit (the X01 specs avoid
+    the same dropdown). Engine/UI is unit-tested.
+  - **Crazy full playthrough** — only launch is asserted; Crazy re-rolls open
+    targets every turn, so closing all is non-deterministic without seeding.
+  - **Band→sheet dart correction** (incl. the #590 crazy closed-target case) —
+    tied to the `cricket_correction_history` `test.fixme` scaffold, which is
+    still blocked on rendering the turn breakdown before the leg completes.
 - `@atc` — Around the Clock has an engine but no e2e spec.
 - `@checkout` — Checkout Practice has an engine but no e2e spec.
