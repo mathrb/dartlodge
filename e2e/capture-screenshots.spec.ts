@@ -191,8 +191,9 @@ test.describe('Store screenshots — stats page', { tag: '@screenshots' }, () =>
         await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
         await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       }
-      // For games 2-10, Luke is already in the ACTIVE LINEUP from the previous
-      // game (the lineup + config persist), so go straight to START GAME.
+      // For games 2-10 Luke is already in the ACTIVE LINEUP: GameSetupNotifier
+      // re-seeds the lineup from the most-recently-active player on rebuild, so
+      // the player we just played auto-selects. Go straight to START GAME.
       await page.getByRole('button', { name: /START GAME/i }).click();
       await expect(page.getByRole('button', { name: /Start camera/i }))
         .toBeVisible({ timeout: 15000 });
