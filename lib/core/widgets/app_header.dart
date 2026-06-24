@@ -58,6 +58,8 @@ class AppHeader extends StatelessWidget {
                 // (#692): DART in brand neon, LODGE in the neutral on-surface
                 // colour (theme-adaptive — light text on dark, dark on light).
                 : Text.rich(
+                    // Read as one word by screen readers despite the two spans.
+                    semanticsLabel: 'DARTLODGE',
                     TextSpan(
                       children: [
                         TextSpan(
