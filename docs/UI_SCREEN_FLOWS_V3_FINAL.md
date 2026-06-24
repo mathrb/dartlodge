@@ -496,11 +496,8 @@ Edits an existing player's name. Reached from Player Detail (the name is the edi
 │   [Camera auto-scoring  →]  │  → Auto-Scorer Settings
 │  ABOUT                      │
 │   [Version]                 │
-│   [Open Source Licenses]    │
 │  FEEDBACK                   │
 │   [Report a Bug]            │  → Sentry feedback dialog
-│  DEBUG                      │
-│   [Download database]       │
 │  DANGER ZONE                │
 │   [Erase all data]          │  ← destructive (colorError)
 └─────────────────────────────┘
@@ -511,9 +508,8 @@ Edits an existing player's name. Reached from Player Detail (the name is the edi
 - **Language** — locale selector (`null` = system locale); part of the i18n epic.
 - **Sound effects** — `SwitchListTile` toggling the sound-effects opt-in.
 - **Auto-Scoring** — a `ListTile` that `context.push`es Auto-Scorer Settings (Screen 19).
-- **About** — Version (read from `appVersionProvider`) + "Open Source Licenses" → Flutter's built-in `LicensePage`.
+- **About** — Version (read from `appVersionProvider`).
 - **Feedback** — "Report a Bug" opens a text dialog and submits via `Sentry.captureFeedback`.
-- **Debug** — "Download database" exports the Drift DB (shows inline progress).
 - **Danger Zone** — "Erase all data" (destructive, `colorError`); confirms, clears all data, then `context.go(home)`.
 
 ---

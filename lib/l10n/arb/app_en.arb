@@ -60,10 +60,6 @@
   "@settingsVersion": {
     "description": "App version row label"
   },
-  "settingsOpenSourceLicenses": "Open Source Licenses",
-  "@settingsOpenSourceLicenses": {
-    "description": "Row opening the open-source licenses page"
-  },
   "settingsFeedbackSection": "Feedback",
   "@settingsFeedbackSection": {
     "description": "Settings section header for feedback"
@@ -99,27 +95,6 @@
   "settingsReportBugDisabled": "Enable crash reporting and restart the app to report bugs",
   "@settingsReportBugDisabled": {
     "description": "Report-a-bug row subtitle shown when crash reporting is off this session"
-  },
-  "settingsDebugSection": "Debug",
-  "@settingsDebugSection": {
-    "description": "Settings section header for debug tools"
-  },
-  "settingsDownloadDatabase": "Download Database",
-  "@settingsDownloadDatabase": {
-    "description": "Row that exports the SQLite database"
-  },
-  "settingsDownloadDatabaseSubtitle": "Export SQLite file for debugging",
-  "@settingsDownloadDatabaseSubtitle": {
-    "description": "Download-database row subtitle"
-  },
-  "settingsExportFailed": "Export failed: {error}",
-  "@settingsExportFailed": {
-    "description": "Snackbar shown when the database export fails",
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
   },
   "settingsDangerZoneSection": "Danger Zone",
   "@settingsDangerZoneSection": {
