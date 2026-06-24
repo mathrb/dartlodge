@@ -11,11 +11,12 @@ part 'session_recording_provider.g.dart';
 
 const _kSessionRecordingKey = 'auto_scorer_record_sessions';
 
-/// The "Record sessions (debug)" opt-in (#490) — distinct from the training
-/// "Collect data" toggle. Default **off**: recording is a debugging aid the user
-/// turns on before reproducing a bug; off means zero trace files are written.
-/// The trace is lightweight (detection boxes, no photos), so this is a separate,
-/// lighter-footprint switch.
+/// The session-recording opt-in (#490): persist the detection trace (detection
+/// boxes, no photos) so a scoring bug can be replayed off-device. Default
+/// **off** — off means zero trace files are written. A distinct provider from
+/// [DataCollectionEnabled] (different pipeline), but since #686 a single
+/// "Record for debugging & training" Settings toggle drives both together (see
+/// `_setRecording`), so enabling recording also enables photo capture.
 @Riverpod(keepAlive: true)
 class SessionRecordingEnabled extends _$SessionRecordingEnabled {
   @override

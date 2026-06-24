@@ -93,7 +93,9 @@ class FileCaptureStore implements CaptureStore {
 
   @override
   Future<void> writeExportZip(String destPath,
-      {void Function(double)? onProgress}) async {
+      {void Function(double)? onProgress,
+      List<({String archivePath, String content})> extraFiles =
+          const []}) async {
     // Stream each capture file straight to the zip on disk (#468). The archive
     // package's ZipFileEncoder reads via InputFileStream and writes via
     // OutputFileStream, so peak memory is bounded by chunk buffers — never the
@@ -108,7 +110,7 @@ class FileCaptureStore implements CaptureStore {
         }
       }
     }
-    final total = files.length;
+    final total = files.length + extraFiles.length;
     final encoder = ZipFileEncoder()..create(destPath);
     try {
       var done = 0;
@@ -117,6 +119,15 @@ class FileCaptureStore implements CaptureStore {
         // wastes CPU for ~no size gain; sidecars are tiny. Flat basenames keep
         // the probe's `dartlodge-export-*.zip` ingest contract.
         await encoder.addFile(file, p.basename(file.path), ZipFileEncoder.STORE);
+        onProgress?.call(++done / total);
+      }
+      // In-memory extras (#686): recorded session bundles under `sessions/`.
+      // Tiny JSON, so DEFLATE is fine. They live in a subfolder, leaving the
+      // root flat-name capture contract untouched.
+      for (final extra in extraFiles) {
+        final bytes = utf8.encode(extra.content);
+        encoder.addArchiveFile(
+            ArchiveFile(extra.archivePath, bytes.length, bytes));
         onProgress?.call(++done / total);
       }
     } finally {

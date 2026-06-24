@@ -13,16 +13,16 @@ const _kCollectTrainingDataKey = 'auto_scorer_collect_training_data';
 const _kCaptureModeKey = 'auto_scorer_capture_mode';
 
 /// Which frames the capture pipeline persists when data collection is on (#457):
-/// [all] captures every dart emission (default, current behaviour); [partial]
-/// saves only frames the user corrected — the model's mistakes — so the dataset
-/// isn't flooded with easy/correct examples.
+/// [all] captures every dart emission; [partial] (the default since #686) saves
+/// only frames the user corrected — the model's mistakes — so the dataset isn't
+/// flooded with easy/correct examples.
 enum CaptureMode { all, partial }
 
-/// The "Collect training data" opt-in (#381 §6) — distinct from the "Use
+/// The training-photo capture opt-in (#381 §6) — distinct from the "Use
 /// auto-scoring" switch (#382). Default **off**: we never silently hoard board
-/// photos. The Settings UI row that toggles this is added with the rest of the
-/// auto-scorer Settings integration in #382; this is the persisted state +
-/// gating the capture pipeline consults.
+/// photos. Since #686 the single "Record for debugging & training" Settings
+/// toggle drives this together with [SessionRecordingEnabled]; this is the
+/// persisted state + gating the capture pipeline consults.
 @Riverpod(keepAlive: true)
 class DataCollectionEnabled extends _$DataCollectionEnabled {
   @override
@@ -38,8 +38,10 @@ class DataCollectionEnabled extends _$DataCollectionEnabled {
   }
 }
 
-/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-/// behaviour is unchanged. Only meaningful while data collection is on.
+/// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+/// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+/// not a flood of easy/correct examples — so "Mistakes only" is the sane
+/// default. Only meaningful while data collection is on.
 @Riverpod(keepAlive: true)
 class CaptureModeSetting extends _$CaptureModeSetting {
   @override
@@ -48,7 +50,7 @@ class CaptureModeSetting extends _$CaptureModeSetting {
     final stored = prefs.getString(_kCaptureModeKey);
     return CaptureMode.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => CaptureMode.all,
+      orElse: () => CaptureMode.partial,
     );
   }
 

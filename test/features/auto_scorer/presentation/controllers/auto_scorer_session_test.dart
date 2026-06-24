@@ -76,7 +76,9 @@ class _FakeCaptureStore implements CaptureStore {
       retentionCalls++;
   @override
   Future<void> writeExportZip(String destPath,
-      {void Function(double)? onProgress}) async {}
+      {void Function(double)? onProgress,
+      List<({String archivePath, String content})> extraFiles =
+          const []}) async {}
   @override
   Future<void> clear() async => saved.clear();
 }

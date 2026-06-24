@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -89,6 +90,35 @@ void main() {
       'g1_t2-d1.json',
     }));
     expect(progress, isNotEmpty);
+    expect(progress.last, 1.0);
+  });
+
+  test('writeExportZip embeds extraFiles under their archivePath (#686)',
+      () async {
+    await store.save(record(1), frame(10));
+    final dest = p.join(dir.path, 'export.zip');
+    await store.writeExportZip(dest, extraFiles: [
+      (archivePath: 'sessions/s1.json', content: '{"hello":"world"}'),
+    ]);
+    final archive = ZipDecoder().decodeBytes(await File(dest).readAsBytes());
+    final byName = {for (final f in archive.files) f.name: f};
+    // Capture frame/sidecar stay flat at the root (ingest contract unchanged).
+    expect(byName.keys, containsAll(<String>{'g1_t1-d1.jpg', 'g1_t1-d1.json'}));
+    // The session bundle lands under sessions/ with its verbatim content.
+    expect(byName.containsKey('sessions/s1.json'), isTrue);
+    expect(utf8.decode(byName['sessions/s1.json']!.content as List<int>),
+        '{"hello":"world"}');
+  });
+
+  test('writeExportZip with only extraFiles and no captures still writes',
+      () async {
+    final dest = p.join(dir.path, 'export.zip');
+    final progress = <double>[];
+    await store.writeExportZip(dest,
+        onProgress: progress.add,
+        extraFiles: [(archivePath: 'sessions/s1.json', content: '{}')]);
+    final archive = ZipDecoder().decodeBytes(await File(dest).readAsBytes());
+    expect(archive.files.map((f) => f.name), contains('sessions/s1.json'));
     expect(progress.last, 1.0);
   });
 
