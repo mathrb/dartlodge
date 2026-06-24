@@ -5,7 +5,7 @@
 > <https://mathrb.github.io/dartlodge/privacy.html> (the Google Play privacy
 > policy URL). **Keep the two in sync** when either changes.
 
-**Effective date:** 2026-06-22
+**Effective date:** 2026-06-24
 
 DartLodge is a local-first, open-source darts scoring and statistics app. This
 policy explains what data the app handles and what (very little) leaves your
@@ -56,6 +56,13 @@ DartLodge also includes an optional **"Report a Bug"** feature in Settings. If
 you choose to use it, the description you type is sent to Sentry so we can
 investigate the problem. Please avoid including personal information in that
 text.
+
+**Data retention.** Crash and error diagnostics (including any "Report a Bug"
+text) are retained by Sentry for **up to 90 days**, after which they are
+automatically and permanently deleted. We keep them only this long because their
+sole purpose is to diagnose and fix recent crashes — once an issue is understood
+and a release has stabilised, older reports serve no purpose, so we do not retain
+them beyond this window.
 
 ## Camera and auto-scoring (optional, beta)
 
