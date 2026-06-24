@@ -146,7 +146,7 @@ All state classes use `freezed`. Never mutate state in place. Always use `copyWi
 | Navigation | `go_router` |
 | UUID generation | `uuid` |
 | Code generation runner | `build_runner` |
-| Crash reporting | `sentry_flutter` (initialized in `lib/main.dart`; do not remove `SentryFlutter.init`) |
+| Crash reporting | `sentry_flutter` (conditionally initialized in `lib/main.dart` — opt-out, see Sentry note below; do not remove the `SentryFlutter.init` call) |
 
 Platform selection (native SQLite vs WASM) happens once in the Drift factory. Everywhere else sees only the repository interface.
 
@@ -310,7 +310,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 **Stage explicit paths — never `git add -A` / `git add .`:** the working tree carries many untracked scratch files (`*.png` / `*.yml` / exported capture `*.jpg` at the repo root, `e2e/node_modules`, `.playwright-*`). A blanket add stages hundreds of junk files — always `git add <specific paths>`.
 
-**Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin `^9.16.1`). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment.
+**Sentry error handlers:** `SentryFlutter.init` auto-installs `FlutterError.onError` and `PlatformDispatcher.instance.onError` via `FlutterErrorIntegration` and `OnErrorIntegration` (sentry_flutter ≥ ~7.x; current pin `^9.16.1`). Do NOT add manual handlers in `main.dart` — they would override Sentry's wiring and silence the crash pipeline. See the `lib/main.dart` header comment. **Crash reporting is opt-out (default on):** `main.dart` reads `kCrashReportingPrefKey` from SharedPreferences *before* `SentryFlutter.init` and skips init entirely when disabled (so the handlers are installed only when enabled), surfacing the toggle via the `CrashReportingEnabled` provider in Settings → Feedback. A clean runtime re-init isn't supported and native crashes bypass `beforeSend`, so the toggle takes effect on the next launch — do NOT "fix" the conditional wrapper into an unconditional call. The `Report a Bug` action gates on `Sentry.isEnabled` (a safe `NoOpHub` no-op when off) so feedback is never silently dropped.
 
 **`endGame()` / `endDrill()` write `is_complete=true` to the DB but do NOT mutate `state.value.gameState.isComplete`** — the post-game-navigation listener (`practice_board_page` / `x01_board_page` etc.) watches that flag and would otherwise route every menu-driven exit through post-game instead of home. When you need an authoritative "is this game complete?" signal outside the active-game provider (e.g. from the router's `onExit`), read it from `GameRepository.getGame(id)`, not the notifier state. See `app_router.dart`'s `_gameIsComplete` helper for the pattern.
 
