@@ -1,14 +1,20 @@
 /**
  * Screenshot generator for the Play Store listing (NOT a regression test).
  *
- * Drives the sim-enabled web build to capture representative phone screenshots
- * in BOTH light and dark themes (the app follows the system colorScheme).
- * Serve the sim build on :6780 first (see docs/E2E_REGRESSION.md), then:
- *   npx playwright test capture-screenshots --project=chromium --workers=1
+ * Tagged `@screenshots` so it is EXCLUDED from regression slices and only runs
+ * when explicitly selected — it needs a separately-running sim server, so a bare
+ * `npx playwright test` should not pick it up. Serve the sim build on :6780
+ * first (see docs/E2E_REGRESSION.md), then:
+ *   npx playwright test --grep @screenshots --workers=1
  *
- * Output: e2e/screenshots/<theme>-*.png. Each screen is an isolated test so one
- * failure doesn't block the rest. deviceScaleFactor:2 → crisp 824x1830 captures
- * while keeping the phone (412 logical) layout.
+ * Output: e2e/screenshots/<theme>-*.png (gitignored). Each screen is an isolated
+ * test so one failure doesn't block the rest.
+ *
+ * deviceScaleFactor:2 intentionally DEVIATES from playwright.config.ts's "DPR 1"
+ * rule: that rule exists because a 2.6× CanvasKit render blows the regression
+ * suite's 10s actionTimeout. This generator is not a regression spec — it uses a
+ * 180s per-test timeout and DPR 2 gives crisp 824x1830 store captures while
+ * keeping the phone (412 logical) layout. Do not "fix" it back to DPR 1.
  */
 
 import { test, expect, Browser, Page } from '@playwright/test';
@@ -42,7 +48,7 @@ async function boot(browser: Browser, theme: 'light' | 'dark'): Promise<Page> {
 }
 
 for (const theme of ['light', 'dark'] as const) {
-  test.describe(`Store screenshots — ${theme}`, () => {
+  test.describe(`Store screenshots — ${theme}`, { tag: '@screenshots' }, () => {
     test.describe.configure({ timeout: 180000 });
 
     const shot = async (page: Page, name: string) => {

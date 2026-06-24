@@ -106,16 +106,21 @@ jobs:
       #   /privacy.html → standalone privacy policy — URL UNCHANGED (it is on the
       #                   Play Console Data Safety form). Source of truth:
       #                   docs/legal/privacy-policy.md.
-      #   /404.html     → the app's index, so deep /app/ client routes (go_router)
-      #                   survive a hard refresh and fall through to the SPA.
+      #   /404.html     → the app's index (base-href /dartlodge/app/). GitHub Pages
+      #                   serves it for ANY unmatched path under /dartlodge/; its
+      #                   purpose is to let deep /app/ go_router routes survive a
+      #                   hard refresh (a typo'd root path just boots the app).
       - name: Assemble Pages site
         run: |
           rm -rf _site
           mkdir -p _site/app
           cp -r build/web/. _site/app/
           cp -r web_extra/landing/. _site/
+          # Guard against locally-generated render-verify previews being published.
           rm -f _site/_preview-*.png
-          cp web/favicon.png _site/favicon.png
+          # Favicon comes from the built app bundle (build/web copies web/favicon.png),
+          # so we don't depend on the gitignored web/ dir directly here.
+          cp _site/app/favicon.png _site/favicon.png
           cp web_extra/privacy.html _site/privacy.html
           cp build/web/index.html _site/404.html
 

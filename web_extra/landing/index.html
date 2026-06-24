@@ -9,10 +9,18 @@
   <meta property="og:description" content="Score every classic game and practice mode, then dive into stats and impact heatmaps. Private by design — everything stays on your device." />
   <meta property="og:type" content="website" />
   <link rel="icon" href="favicon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
+    /* Space Grotesk is self-hosted (variable woff2, latin subset) — NOT loaded
+       from the Google Fonts CDN. The page advertises "no tracking", and a CDN
+       font request would leak the visitor's IP/User-Agent to a third party
+       (and raise GDPR questions in the EU). Keep it local. */
+    @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+      src: url('fonts/space-grotesk.woff2') format('woff2');
+    }
     :root {
       --bg: #0C0E10;
       --bg-1: #111416;
