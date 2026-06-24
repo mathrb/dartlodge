@@ -30,7 +30,7 @@ void main() {
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
       rows: [
-        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 0, isActive: true),
+        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 0, isActive: true, mpr: '0'),
       ],
     )));
 
@@ -49,6 +49,7 @@ void main() {
           marks: [1, 2, 3, 0, 0, 0, 0],
           score: 41,
           isActive: true,
+          mpr: '0',
         ),
       ],
     )));
@@ -64,7 +65,7 @@ void main() {
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
       rows: [
-        (name: 'Alice', marks: [3, 1, 0, 0, 0, 0, 0], score: 0, isActive: true),
+        (name: 'Alice', marks: [3, 1, 0, 0, 0, 0, 0], score: 0, isActive: true, mpr: '0'),
       ],
     )));
 
@@ -81,8 +82,8 @@ void main() {
       targets: _targets,
       rows: [
         // 20 closed by BOTH (dead); 19 closed by Alice only (live closed).
-        (name: 'Alice', marks: [3, 3, 0, 0, 0, 0, 0], score: 0, isActive: true),
-        (name: 'Bob', marks: [3, 0, 0, 0, 0, 0, 0], score: 0, isActive: false),
+        (name: 'Alice', marks: [3, 3, 0, 0, 0, 0, 0], score: 0, isActive: true, mpr: '0'),
+        (name: 'Bob', marks: [3, 0, 0, 0, 0, 0, 0], score: 0, isActive: false, mpr: '0'),
       ],
     )));
 
@@ -107,8 +108,8 @@ void main() {
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
       rows: [
-        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 41, isActive: true),
-        (name: 'Bob', marks: [0, 0, 0, 0, 0, 0, 0], score: 88, isActive: false),
+        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 41, isActive: true, mpr: '0'),
+        (name: 'Bob', marks: [0, 0, 0, 0, 0, 0, 0], score: 88, isActive: false, mpr: '0'),
       ],
     )));
 
@@ -125,6 +126,7 @@ void main() {
       marks: [0, 0, 0, 0, 0, 0, 0],
       score: 0,
       isActive: false,
+      mpr: '0',
     );
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
@@ -148,7 +150,7 @@ void main() {
       targets: _targets,
       showScore: false,
       rows: [
-        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 41, isActive: true),
+        (name: 'Alice', marks: [0, 0, 0, 0, 0, 0, 0], score: 41, isActive: true, mpr: '0'),
       ],
     )));
 
@@ -174,8 +176,8 @@ void main() {
     await tester.pumpWidget(_wrap(const CricketMarksStripWidget(
       targets: _targets,
       rows: [
-        (name: 'Annabelle', marks: [3, 2, 1, 0, 0, 0, 0], score: 120, isActive: true),
-        (name: 'Bob', marks: [1, 0, 0, 0, 0, 0, 0], score: 85, isActive: false),
+        (name: 'Annabelle', marks: [3, 2, 1, 0, 0, 0, 0], score: 120, isActive: true, mpr: '0'),
+        (name: 'Bob', marks: [1, 0, 0, 0, 0, 0, 0], score: 85, isActive: false, mpr: '0'),
       ],
     )));
 

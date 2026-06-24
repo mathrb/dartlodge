@@ -18,6 +18,7 @@ class HeroMetricWidget extends StatelessWidget {
   const HeroMetricWidget({
     required this.value,
     this.label,
+    this.secondary,
     this.valueColor,
     super.key,
   });
@@ -28,6 +29,11 @@ class HeroMetricWidget extends StatelessWidget {
 
   /// Optional caption shown above the value; rendered uppercased.
   final String? label;
+
+  /// Optional secondary line shown below the value, already formatted by the
+  /// caller (e.g. the active player's `'PPR 60.2'` in camera-first X01, #696).
+  /// Kept small so the hero numeral stays the dominant element.
+  final String? secondary;
 
   /// Optional tint for the value; defaults to `colorScheme.onSurface`.
   final Color? valueColor;
@@ -62,6 +68,19 @@ class HeroMetricWidget extends StatelessWidget {
             color: valueColor ?? cs.onSurface,
           ),
         ),
+        if (secondary != null) ...[
+          const SizedBox(height: 4),
+          // Secondary metric (e.g. PPR) — deliberately small and muted
+          // (onSurfaceVariant) so the hero numeral stays the dominant element.
+          Text(
+            secondary!,
+            maxLines: 1,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.labelMedium.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
       ],
     );
   }

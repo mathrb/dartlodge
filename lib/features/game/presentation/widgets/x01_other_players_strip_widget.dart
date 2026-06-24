@@ -8,13 +8,14 @@ import '../../../../core/utils/app_theme.dart';
 /// is the hero metric. Keeps every opponent visible at a glance without the
 /// full multi-card score section.
 ///
-/// Game-state-free: the board passes a pre-filtered list of `(name, score)` for
-/// the players whose turn it is NOT, so the widget is testable in isolation.
+/// Game-state-free: the board passes a pre-filtered list of `(name, score, ppr)`
+/// for the players whose turn it is NOT, so the widget is testable in isolation.
 class X01OtherPlayersStripWidget extends StatelessWidget {
   const X01OtherPlayersStripWidget({required this.players, super.key});
 
-  /// The non-active competitors: their display name and remaining score.
-  final List<({String name, int score})> players;
+  /// The non-active competitors: display name, remaining score, and the
+  /// pre-formatted live PPR string (#696, e.g. `'58.4'` or `'—'`).
+  final List<({String name, int score, String ppr})> players;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +58,16 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
                     // in the inactive `onSurfaceVariant` colour, dimmer than the
                     // active hero, preserving the active/inactive hierarchy.
                     style: AppTextStyles.scoreSmall.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Live PPR (#696) — small "PPR <v>" caption, muted and smaller
+                  // than the opponent's score numeral so it stays secondary.
+                  Text(
+                    'PPR ${p.ppr}',
+                    maxLines: 1,
+                    style: AppTextStyles.labelSmall.copyWith(
                       color: cs.onSurfaceVariant,
                     ),
                   ),

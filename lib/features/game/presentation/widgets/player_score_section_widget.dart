@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
-import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import 'live_average.dart';
 
 class PlayerScoreSectionWidget extends StatelessWidget {
   const PlayerScoreSectionWidget({
@@ -16,17 +16,8 @@ class PlayerScoreSectionWidget extends StatelessWidget {
   final GameState gameState;
   final Animation<double> bustFlashAnim;
 
-  String _pprDisplay(CompetitorState cs) {
-    if (cs.dartThrows.length < 3) return '—';
-    // Sum dart values directly — independent of starting score and of
-    // game type, and naturally includes busted darts (matching the
-    // projection convention from #247). The earlier `startingScore -
-    // currentScore` shortcut leaked the X01 handicap into PPR (#246).
-    final pointsScored = cs.dartThrows
-        .map((d) => Segment.parse(d).scoreValue)
-        .fold<int>(0, (a, b) => a + b);
-    return StatFormatter.fmtDouble((pointsScored / cs.dartThrows.length) * 3);
-  }
+  // Live PPR shared with the camera-first layout (#696, #246/#247).
+  String _pprDisplay(CompetitorState cs) => x01LivePprDisplay(cs);
 
   TextStyle _activeScoreStyle(BuildContext context) {
     final n = gameState.competitors.length;

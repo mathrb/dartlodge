@@ -11,6 +11,7 @@ typedef CricketMarksRow = ({
   List<int> marks,
   int score,
   bool isActive,
+  String mpr,
 });
 
 /// At-distance marks grid shown in the camera-first Cricket layout (#444,
@@ -144,19 +145,34 @@ class CricketMarksStripWidget extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: _nameWidth,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        r.name.toUpperCase(),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: r.isActive
-                              ? cs.primaryFixed
-                              : cs.onSurfaceVariant,
-                          letterSpacing: 1.2,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          r.name.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.labelMedium.copyWith(
+                            color: r.isActive
+                                ? cs.primaryFixed
+                                : cs.onSurfaceVariant,
+                            letterSpacing: 1.2,
+                          ),
                         ),
-                      ),
+                        // Live MPR (#696) under the name — small, so the marks
+                        // grid stays dominant. Active player tinted `primary`
+                        // like the manual table's MPR; inactive muted.
+                        Text(
+                          'MPR ${r.mpr}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color:
+                                r.isActive ? cs.primary : cs.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   for (var i = 0; i < targets.length; i++)

@@ -19,8 +19,8 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
       players: [
-        (name: 'Bob', score: 280),
-        (name: 'Carol', score: 412),
+        (name: 'Bob', score: 280, ppr: '0'),
+        (name: 'Carol', score: 412, ppr: '0'),
       ],
     )));
 

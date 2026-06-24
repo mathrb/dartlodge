@@ -1105,6 +1105,38 @@ void main() {
     expect(find.text('301'), findsOneWidget);
   });
 
+  // ── 36b. Camera-first shows live PPR for active + opponents (#696) ────────────
+
+  testWidgets('36b. Camera-first shows live PPR for the hero and opponents',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [
+        // 60+20+5 = 85 over 3 darts → PPR 85.
+        _competitor(
+            id: 'c1',
+            name: 'Alice',
+            score: 301,
+            dartThrows: const ['T20', '20', '5']),
+        // 20+20+20 = 60 → PPR 60.
+        _competitor(
+            id: 'c2',
+            name: 'Bob',
+            score: 280,
+            dartThrows: const ['20', '20', '20']),
+      ],
+      currentTurnIndex: 0,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // Active player's PPR rides under the hero numeral; the opponent's shows in
+    // the strip — both visible in camera-first, as in the manual layout (#696).
+    expect(find.text('PPR 85'), findsOneWidget);
+    expect(find.text('PPR 60'), findsOneWidget);
+  });
+
   // ── 37. Camera-first solo: no other-players strip ────────────────────────────
 
   testWidgets('37. Camera-first solo shows no other-players strip',

@@ -23,6 +23,7 @@ import '../widgets/cricket_unified_table_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
+import '../widgets/live_average.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
@@ -247,6 +248,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   ],
                   score: gameState.competitors[i].score,
                   isActive: i == gameState.currentTurnIndex,
+                  // Live MPR (#696) on the game's actual target set (+ Bull),
+                  // matching the manual table's per-player MPR.
+                  mpr: cricketLiveMprDisplay(
+                    gameState.competitors[i],
+                    targets: {...gameState.cricketTargets, 25},
+                  ),
                 ),
             ];
 

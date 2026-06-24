@@ -792,6 +792,30 @@ void main() {
     expect(find.byIcon(Icons.navigation), findsNothing);
   });
 
+  testWidgets('Camera-first shows live MPR per player in the marks strip (#696)',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _cricketState(
+      competitors: [
+        // 3× T20 = 9 marks over 1 round → MPR 9.
+        _competitor(
+            id: 'c1',
+            name: 'Alice',
+            score: 0,
+            dartThrows: const ['T20', 'T20', 'T20']),
+        _competitor(id: 'c2', name: 'Bob', score: 0), // no darts → MPR 0
+      ],
+    );
+    final notifier = _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildAppCameraFirst(notifier));
+    await tester.pumpAndSettle();
+
+    // MPR rendered under each player's name in the camera-first strip (#696),
+    // matching the manual table's per-player MPR.
+    expect(find.text('MPR 9'), findsOneWidget);
+    expect(find.text('MPR 0'), findsOneWidget);
+  });
+
   testWidgets('Manual mode still shows the full unified table', (tester) async {
     final notifier = _FakeActiveCricketGameNotifier(_activeState());
     await tester.pumpWidget(_buildApp(notifier));
