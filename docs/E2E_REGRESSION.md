@@ -93,7 +93,7 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 | `@bobs27` | Bob's 27 |
 | `@countup` | Catch 40 / Count Up |
 | `@atc` | Around the Clock (Standard / Reverse / Doubles Only) |
-| `@checkout` | Checkout Practice *(no spec yet — gap)* |
+| `@checkout` | Checkout Practice (170 / target modes) |
 
 **Cross-cutting tags:**
 
@@ -122,7 +122,7 @@ on the left → run the tag(s) on the right before merging.
 | Bob's 27 engine / use cases | `@bobs27` |
 | Catch 40 / Count Up engine / use cases | `@countup` |
 | Around the Clock engine / use cases | `@atc` |
-| Checkout Practice engine / use cases | `@checkout` *(gap — no spec)* |
+| Checkout Practice engine / use cases | `@checkout` |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
 | `statistics/` assemblers, projections, stats pages | `@stats` |
 | `history/` pages / providers | `@history` |
@@ -159,6 +159,9 @@ on the left → run the tag(s) on the right before merging.
 | `atc_standard.spec.ts` | `@atc @autoscorer` |
 | `atc_variants.spec.ts` | `@atc @autoscorer` |
 | `atc_manual_entry.spec.ts` | `@atc` |
+| `checkout_practice_fixed.spec.ts` | `@checkout @autoscorer` |
+| `checkout_practice_target_modes.spec.ts` | `@checkout @autoscorer` |
+| `checkout_practice_manual.spec.ts` | `@checkout` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
 
 ---
@@ -194,4 +197,11 @@ on the left → run the tag(s) on the right before merging.
   - **Band→sheet dart correction** (incl. the #590 crazy closed-target case) —
     tied to the `cricket_correction_history` `test.fixme` scaffold, which is
     still blocked on rendering the turn breakdown before the leg completes.
-- `@checkout` — Checkout Practice has an engine but no e2e spec.
+- `@checkout` — covered (`checkout_practice_*`): double-out checkout (score → 0)
+  + multi-attempt reset, bust revert, target-mode launch (fixed/progressive/
+  random), and manual entry. Remaining gap: **quota-based completion → post-game
+  summary** is not automated — setting a finite `target_successes` needs the
+  TARGET SUCCESSES dropdown, and the Flutter dropdown menu (like the board
+  "Show menu" overlay) resets the CanvasKit semantics tree and isn't drivable by
+  Playwright (the same wall as cricket's round-cap dropdown). The on-board score
+  (0 vs reverted-170) distinguishes a checkout from a bust without it.
