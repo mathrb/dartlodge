@@ -86,7 +86,7 @@ class GameDetailPage extends ConsumerWidget {
       child: Column(
         // Stretch so the cards/sections/breakdown fill the phone width instead
         // of hugging the left with a wide empty band on the right (#693). The
-        // wide multi-column tables keep their own horizontal scroll (#309).
+        // wide multi-column turn tables keep their own horizontal scroll.
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildMatchHeader(context, game, sortedCompetitors, winner, theme),

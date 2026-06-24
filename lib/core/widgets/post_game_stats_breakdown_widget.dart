@@ -105,7 +105,8 @@ class PostGameStatsBreakdown extends StatelessWidget {
           // viewport (~desktop) or whenever the column count needs no more than
           // the available width (the common 1–3 player case on a phone). Only a
           // genuinely too-wide table (many players) keeps the horizontal-scroll
-          // fallback so columns never get cramped (#309).
+          // fallback so columns never get cramped (this widget's scroll
+          // fallback dates to #334/#241).
           child: LayoutBuilder(
             builder: (context, constraints) {
               // +1 for the leading category column.
