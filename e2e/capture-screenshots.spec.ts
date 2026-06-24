@@ -161,3 +161,80 @@ for (const theme of ['light', 'dark'] as const) {
     });
   });
 }
+
+// Statistics page — needs a populated career, so seed ~10 X01 games for one
+// player via the sim, then open the per-player stats. Dark only (chosen theme).
+test.describe('Store screenshots — stats page', { tag: '@screenshots' }, () => {
+  test.describe.configure({ timeout: 600000 });
+
+  test('player statistics over 10 X01 games', async ({ browser }) => {
+    const page = await boot(browser, 'dark');
+    await sim(page, 'enableAutoScoring()');
+
+    // Varied 301 double-out games (turns of segments) so the career stats look
+    // alive: different averages, all four score buckets, a 180, varied checkouts
+    // (24→161), and one missed-double dart (checkout % < 100%). Each verified to
+    // sum to 301 and finish on a double.
+    const RECIPES: string[][][] = [
+      [['T20', 'T20', 'T20'], ['T20', 'T11', 'D14']],                       // 180; out 121
+      [['T20', 'T20', '20'], ['T20', 'T17', 'DB']],                         // out 161 (highest)
+      [['T20', '20', '20'], ['T20', 'T20', '20'], ['T11', 'D14']],          // out 61
+      [['20', '20', '20'], ['20', '20', '20'], ['T20', 'T20', '20'], ['9', 'D16']], // low avg; out 41
+      [['T20', 'T19', '20'], ['T20', 'T20', '20'], ['MISS', 'D12']],        // missed double; out 24
+    ];
+
+    async function playOne(recipe: string[][], create: boolean) {
+      await page.getByRole('button', { name: /X01/i }).click();
+      await page.getByRole('button', { name: /Select 301/i }).click();
+      if (create) {
+        await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+        await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
+        await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
+      }
+      // For games 2-10, Luke is already in the ACTIVE LINEUP from the previous
+      // game (the lineup + config persist), so go straight to START GAME.
+      await page.getByRole('button', { name: /START GAME/i }).click();
+      await expect(page.getByRole('button', { name: /Start camera/i }))
+        .toBeVisible({ timeout: 15000 });
+      for (let t = 0; t < recipe.length; t++) {
+        for (const seg of recipe[t]) await sim(page, `emit('${seg}')`);
+        if (t < recipe.length - 1) await sim(page, 'advance()');
+      }
+      await expect(page.getByRole('button', { name: /DONE/i }))
+        .toBeVisible({ timeout: 15000 });
+      await page.getByRole('button', { name: /DONE/i }).click({ force: true });
+      await expect(page.getByRole('button', { name: /X01/i }))
+        .toBeVisible({ timeout: 15000 });
+    }
+
+    // 10 games = the 5 recipes played twice.
+    for (let i = 0; i < 10; i++) {
+      await playOne(RECIPES[i % RECIPES.length], i === 0);
+    }
+
+    // Re-activate the CanvasKit semantics tree (it can go stale after many
+    // navigations) so getByText sees the home rows again.
+    await page.evaluate(() =>
+      document.querySelector('flt-semantics-placeholder')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    await page.waitForTimeout(600);
+
+    // Open statistics from the home "STATISTICS" row (the a11y label also
+    // includes "ANALYZE DATA", so match non-exact).
+    await page.getByText(/STATISTICS/i).first().click({ force: true });
+    await page.waitForTimeout(1200);
+
+    // /stats is a "SELECT A PLAYER" list → re-activate semantics on this fresh
+    // page (CanvasKit drops it per navigation), then open Luke's stats.
+    await page.evaluate(() =>
+      document.querySelector('flt-semantics-placeholder')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    await page.waitForTimeout(600);
+    // The player-row a11y label combines "Luke" + "Last active: Today", so match
+    // non-exact (same reason STATISTICS is matched non-exact).
+    await page.getByText(/Luke/).first().click({ force: true });
+    await page.waitForTimeout(1800);
+    await page.screenshot({ path: 'screenshots/dark-06-stats.png' });
+    await page.context().close();
+  });
+});
