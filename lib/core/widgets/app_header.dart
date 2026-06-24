@@ -46,13 +46,34 @@ class AppHeader extends StatelessWidget {
               onPressed: onBack ?? () => Navigator.of(context).maybePop(),
             ),
           Expanded(
-            child: Text(
-              isTitled ? title! : 'DARTLODGE',
-              style: AppTextStyles.headlineMedium.copyWith(
-                color: isTitled ? cs.onSurface : cs.primaryFixed,
-                letterSpacing: 1.5,
-              ),
-            ),
+            child: isTitled
+                ? Text(
+                    title!,
+                    style: AppTextStyles.headlineMedium.copyWith(
+                      color: cs.onSurface,
+                      letterSpacing: 1.5,
+                    ),
+                  )
+                // Two-tone brand wordmark matching the marketing landing page
+                // (#692): DART in brand neon, LODGE in the neutral on-surface
+                // colour (theme-adaptive — light text on dark, dark on light).
+                : Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'DART',
+                          style: TextStyle(color: cs.primaryFixed),
+                        ),
+                        TextSpan(
+                          text: 'LODGE',
+                          style: TextStyle(color: cs.onSurface),
+                        ),
+                      ],
+                    ),
+                    style: AppTextStyles.headlineMedium.copyWith(
+                      letterSpacing: 1.5,
+                    ),
+                  ),
           ),
           if (trailing != null) trailing!,
         ],
