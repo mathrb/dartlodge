@@ -70,8 +70,8 @@ class HeroMetricWidget extends StatelessWidget {
         ),
         if (secondary != null) ...[
           const SizedBox(height: 4),
-          // Secondary metric (e.g. PPR) — small so the hero numeral stays
-          // dominant; onSurfaceVariant per the manual layout's average styling.
+          // Secondary metric (e.g. PPR) — deliberately small and muted
+          // (onSurfaceVariant) so the hero numeral stays the dominant element.
           Text(
             secondary!,
             maxLines: 1,

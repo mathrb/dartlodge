@@ -62,8 +62,8 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Live PPR (#696) — small "PPR <v>" caption, consistent with
-                  // the manual card's PPR and smaller than the score numeral.
+                  // Live PPR (#696) — small "PPR <v>" caption, muted and smaller
+                  // than the opponent's score numeral so it stays secondary.
                   Text(
                     'PPR ${p.ppr}',
                     maxLines: 1,

@@ -161,14 +161,15 @@ class CricketMarksStripWidget extends StatelessWidget {
                           ),
                         ),
                         // Live MPR (#696) under the name — small, so the marks
-                        // grid stays dominant; same column as the manual table's
-                        // MPR (which pairs it with the name).
+                        // grid stays dominant. Active player tinted `primary`
+                        // like the manual table's MPR; inactive muted.
                         Text(
                           'MPR ${r.mpr}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTextStyles.labelSmall.copyWith(
-                            color: cs.onSurfaceVariant,
+                            color:
+                                r.isActive ? cs.primary : cs.onSurfaceVariant,
                           ),
                         ),
                       ],

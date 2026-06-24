@@ -246,6 +246,9 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                   HeroMetricWidget(
                     value: '${activeCompetitor.score}',
                     label: activeCompetitor.name,
+                    // Active player's live per-round average (#696), in parity
+                    // with the opponents' strip and the manual layout.
+                    secondary: 'PPR ${x01LivePprDisplay(activeCompetitor)}',
                   ),
                   if (gameState.competitors.length > 1)
                     X01OtherPlayersStripWidget(
