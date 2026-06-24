@@ -13,8 +13,14 @@ import 'package:flutter/material.dart';
 
 /// A normalised dart position in the canonical board frame.
 ///
-/// `(0,0)` = bull centre, radius `1.0` = outer edge of the double ring,
-/// "20 at the top". A miss outside the double ring has `r > 1.0`.
+/// `(0,0)` = bull centre, radius `1.0` = outer edge of the double ring. A miss
+/// outside the double ring has `r > 1.0`.
+///
+/// Orientation is the auto-scorer's scoring frame, which anchors the **5/20
+/// calibration wire at the top** (`cal1 → top`); segment 20's centre therefore
+/// sits ~9° clockwise of vertical, not on it. `HeatmapDartboardWidget` rotates
+/// the whole rendering by `kHeatmapDisplayRotation` so the user still sees a
+/// standard "20 at the top" board (#697) — the stored positions are unchanged.
 typedef HeatPoint = ({double x, double y});
 
 /// The square domain the density grid covers, in canonical units.

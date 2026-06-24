@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'heatmap_density.dart';
 
-/// Clockwise segment order starting from 20 at the top.
+/// Clockwise segment order beginning with 20 (index 0).
+///
+/// This is the wedge ORDER, not a positional claim — in the stored frame index
+/// 0's wedge starts at the top wire, not centred on it; see
+/// [heatmapSegmentStartAngle] and [kHeatmapDisplayRotation].
 ///
 /// Mirrors `kDartboardClockOrder` in
 /// `lib/features/game/presentation/widgets/dartboard_highlight_widget.dart`.
@@ -19,11 +23,43 @@ const List<int> kHeatmapClockOrder = [
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
 ];
 
+/// Angular width of one segment wedge: 18° (2π / 20).
+const double kHeatmapSegmentSweep = math.pi / 10;
+
+/// Canvas start angle (radians) of the wedge for the segment at [index] in
+/// [kHeatmapClockOrder], expressed in the **stored canonical frame**.
+///
+/// That frame is the auto-scorer's scoring frame (`canonicalTransform` /
+/// `dartboard_scorer`), which anchors on the detectable **5/20 calibration
+/// wire at the top** (`cal1 → top`). Consequently segment 20 spans the bin just
+/// clockwise of vertical (`[-π/2, -π/2 + sweep]`, centre at `-π/2 + π/20`), not
+/// centred on the top. Index 0 (segment 20) therefore starts at `-π/2` and each
+/// subsequent index advances one sweep clockwise (canvas angles increase
+/// clockwise, y-down). The density image is plotted in this same frame, so the
+/// wedges and the impacts are mutually aligned here — they are rotated together
+/// for display by [kHeatmapDisplayRotation] so a standard "20 at the top" board
+/// is what the user sees. The position data / homography are never touched.
+double heatmapSegmentStartAngle(int index) =>
+    -math.pi / 2 + index * kHeatmapSegmentSweep;
+
+/// Display-only rotation applied to the whole heatmap (board wedges + density
+/// image together) so the stored canonical frame — which puts the 5/20 wire at
+/// the top — renders as a standard board with **segment 20 centred at the top**
+/// and the 5/20 wire ~9° left of vertical (#697).
+///
+/// It is exactly minus half a segment: the scorer's segment-20 centre sits at
+/// `-π/2 + π/20` (9° clockwise of vertical), and rotating by `-π/20` brings it
+/// to straight up. Applying it to BOTH layers keeps every impact inside its
+/// wedge; it changes nothing about the stored positions or the scoring frame.
+const double kHeatmapDisplayRotation = -kHeatmapSegmentSweep / 2;
+
 /// Renders a density heatmap of dart impacts over a dartboard face.
 ///
-/// Input is a list of normalised positions in the canonical board frame
-/// (`(0,0)` = bull centre, radius `1.0` = outer edge of the double ring, "20 at
-/// the top"). Drive it from a passed-in list — this widget does NO data wiring.
+/// Input is a list of normalised positions in the canonical board frame (see
+/// [HeatPoint] for the exact orientation: `(0,0)` = bull centre, radius `1.0` =
+/// outer edge of the double ring, 5/20 wire at top — rendered as a standard
+/// "20 at top" board via [kHeatmapDisplayRotation]). Drive it from a passed-in
+/// list — this widget does NO data wiring.
 ///
 /// Empty input renders nothing (a [SizedBox.shrink]) so callers can place it
 /// unconditionally and have it disappear for manual-only games.
@@ -171,12 +207,19 @@ class _HeatmapDartboardPainter extends CustomPainter {
   static final Color _bullSingle = Colors.green[600]!;
   static final Color _bullDouble = Colors.red[700]!;
 
-  double _segmentStartAngle(int index) => -math.pi / 2 + index * math.pi / 10;
-
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
+
+    // Rotate the whole rendering (wedges + density image, drawn in the stored
+    // canonical frame) so a standard "20 at the top" board is shown (#697). Both
+    // layers share the rotation, so every impact stays inside its wedge; the
+    // centred bull/outline circles are rotation-invariant.
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(kHeatmapDisplayRotation);
+    canvas.translate(-center.dx, -center.dy);
 
     _paintBoard(canvas, center, radius);
 
@@ -208,10 +251,12 @@ class _HeatmapDartboardPainter extends CustomPainter {
       canvas.drawImageRect(img, src, dst, paint);
       canvas.restore();
     }
+
+    canvas.restore(); // display rotation
   }
 
   void _paintBoard(Canvas canvas, Offset center, double radius) {
-    const sweep = math.pi / 10; // 18°
+    const sweep = kHeatmapSegmentSweep; // 18°
 
     // 1. Outer single areas (full pie under everything).
     for (var i = 0; i < 20; i++) {
@@ -220,7 +265,7 @@ class _HeatmapDartboardPainter extends CustomPainter {
         canvas,
         center,
         radius,
-        _segmentStartAngle(i),
+        heatmapSegmentStartAngle(i),
         sweep,
         isDark ? _darkBase : _lightBase,
       );
@@ -234,7 +279,7 @@ class _HeatmapDartboardPainter extends CustomPainter {
         center,
         radius * _rTripleInner,
         radius * _rTripleOuter,
-        _segmentStartAngle(i),
+        heatmapSegmentStartAngle(i),
         sweep,
         isDark ? _darkColored : _lightColored,
       );
@@ -248,7 +293,7 @@ class _HeatmapDartboardPainter extends CustomPainter {
         center,
         radius * _rDoubleInner,
         radius * _rDoubleOuter,
-        _segmentStartAngle(i),
+        heatmapSegmentStartAngle(i),
         sweep,
         isDark ? _darkColored : _lightColored,
       );
