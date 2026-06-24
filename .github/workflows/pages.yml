@@ -86,37 +86,49 @@ jobs:
           curl -fL -o web/sqlite3.wasm \
             "https://github.com/simolus3/sqlite3.dart/releases/download/sqlite3-${SQLITE_VERSION}/sqlite3.wasm"
 
-      # --base-href must match the GitHub Pages project subpath
-      # (https://mathrb.github.io/dartlodge/) or asset URLs and go_router
-      # routes resolve to the wrong path and the app 404s on reload.
+      # The live web app now lives under the /app/ subpath so the marketing
+      # landing page can own the project root. --base-href must match that
+      # subpath (https://mathrb.github.io/dartlodge/app/) or asset URLs and
+      # go_router routes resolve to the wrong path and the app 404s on reload.
       - name: Build web bundle
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
         run: |
           flutter build web --release \
-            --base-href "/dartlodge/" \
+            --base-href "/dartlodge/app/" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
 
-      # GitHub Pages serves /<path> and /<path>/ but not arbitrary deep links
-      # without a fallback. Copying index.html → 404.html makes any unknown
-      # URL fall through to the SPA so go_router can resolve client-side
-      # routes after a hard refresh.
-      - name: Add SPA 404 fallback
-        run: cp build/web/index.html build/web/404.html
-
-      # Publish the standalone privacy policy as a real static file. GitHub Pages
-      # serves /dartlodge/privacy.html directly (a real file takes precedence
-      # over the SPA 404 fallback), giving Google Play a stable, crawlable URL
-      # that bypasses the Flutter app. Source of truth: docs/legal/privacy-policy.md.
-      - name: Add static privacy policy page
-        run: cp web_extra/privacy.html build/web/privacy.html
+      # Assemble the published site:
+      #   /             → marketing landing page (web_extra/landing/)
+      #   /app/         → the live Flutter web app (base-href /dartlodge/app/)
+      #   /privacy.html → standalone privacy policy — URL UNCHANGED (it is on the
+      #                   Play Console Data Safety form). Source of truth:
+      #                   docs/legal/privacy-policy.md.
+      #   /404.html     → the app's index (base-href /dartlodge/app/). GitHub Pages
+      #                   serves it for ANY unmatched path under /dartlodge/; its
+      #                   purpose is to let deep /app/ go_router routes survive a
+      #                   hard refresh (a typo'd root path just boots the app).
+      - name: Assemble Pages site
+        run: |
+          rm -rf _site
+          mkdir -p _site/app
+          cp -r build/web/. _site/app/
+          cp -r web_extra/landing/. _site/
+          # Guard against locally-generated render-verify previews being published.
+          rm -f _site/_preview-*.png
+          # Favicon: copy from the scaffolded web/ dir — the authoritative source
+          # (created earlier this job by `flutter create --platforms=web` +
+          # `flutter_launcher_icons`), always present since the build step needs it.
+          cp web/favicon.png _site/favicon.png
+          cp web_extra/privacy.html _site/privacy.html
+          cp build/web/index.html _site/404.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: build/web
+          path: _site
 
   deploy:
     name: Deploy to GitHub Pages

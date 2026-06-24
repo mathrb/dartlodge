@@ -115,6 +115,7 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 | `@i18n` | localized-string rendering |
 | `@autoscorer` | camera-first board + `DartInputSink` sim path |
 | `@smoke` | app boots + home renders (always cheap to run) |
+| `@screenshots` | **generator, not a regression spec** — `capture-screenshots.spec.ts` drives the sim build to produce Play-Store / landing-page screenshots (boards in light + dark; the player-stats screen is dark-only, seeded from 10 X01 games). Needs the sim server on `:6780`; run only via `npx playwright test --grep @screenshots`. Excluded from regression slices. |
 
 ---
 

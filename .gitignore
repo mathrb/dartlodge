@@ -41,3 +41,8 @@ e2e/node_modules/
 e2e/test-results/
 # Scratch screenshots captured during manual Playwright runs (not assertions).
 e2e/*.png
+# Store-screenshot generator output (capture-screenshots.spec.ts) + landing render-verify previews.
+e2e/screenshots/
+web_extra/landing/_preview-*.png
+# Local assembly of the GitHub Pages site (replicates pages.yml for local preview).
+/_site/
