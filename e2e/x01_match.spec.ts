@@ -71,7 +71,7 @@ test.describe('X01 match structure', { tag: ['@x01'] }, () => {
 
     // Config sheet → LEGS TO WIN 1 → 2 → APPLY.
     await page.getByText(/Double Out/i).first().click({ force: true });
-    await expect(page.getByText('LEGS TO WIN')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('LEGS TO WIN', { exact: true })).toBeVisible({ timeout: 10000 });
     await incrementLegs(page);
     await expect(page.getByText('2', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: /APPLY/i }).click({ force: true });
