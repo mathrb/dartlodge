@@ -277,9 +277,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     onBack: () => _confirmBack(context),
                     // Three-dot menu (was a settings cog) because the icon
                     // convention strongly implied Settings while the action
-                    // opened the End Game dialog (#331). Menu now exposes
-                    // both End Game and Settings entries so users can reach
-                    // either without abandoning their current state.
+                    // opened the End Game dialog (#331). Menu exposes End Game,
+                    // Settings, and (when crash reporting is active) Report a
+                    // Bug — all reachable without abandoning the current game.
                     trailing: PopupMenuButton<_BoardMenuAction>(
                       icon: Icon(
                         Icons.more_vert,
