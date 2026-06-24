@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/feedback/report_bug.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
@@ -31,52 +31,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.settingsCrashReportingRestartNote)),
       );
-    }
-  }
-
-  Future<void> _reportBug() async {
-    final l10n = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    final messenger = ScaffoldMessenger.of(context);
-    try {
-      final submitted = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(l10n.settingsReportBug),
-          content: TextField(
-            controller: controller,
-            maxLines: 4,
-            textCapitalization: TextCapitalization.sentences,
-            decoration: InputDecoration(
-              hintText: l10n.settingsReportBugHint,
-              border: const OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.commonCancel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.commonSend),
-            ),
-          ],
-        ),
-      );
-
-      final message = controller.text.trim();
-      if (submitted != true || message.isEmpty) return;
-
-      Sentry.captureFeedback(SentryFeedback(message: message));
-
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.settingsReportBugThanks)),
-        );
-      }
-    } finally {
-      controller.dispose();
     }
   }
 
@@ -130,7 +84,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     // next launch). Report-a-Bug gates on the latter so feedback is never lost.
     final crashReportingEnabled =
         ref.watch(crashReportingEnabledProvider).value ?? true;
-    final sentryActive = Sentry.isEnabled;
+    final sentryActive = isBugReportingAvailable();
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -205,7 +159,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   : l10n.settingsReportBugDisabled,
             ),
             enabled: sentryActive,
-            onTap: sentryActive ? _reportBug : null,
+            onTap: sentryActive ? () => showReportBugDialog(context) : null,
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsDangerZoneSection, cs: cs, tt: tt),
