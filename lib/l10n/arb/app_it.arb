@@ -491,6 +491,7 @@
   "autoScorerExpandPreview": "ingrandisci l'anteprima della fotocamera",
   "autoScorerRemoveDarts": "Togli le freccette",
   "autoScorerStop": "Ferma il punteggio automatico",
+  "autoScorerReAim": "Riallinea la fotocamera",
   "autoScorerStartCamera": "Avvia fotocamera",
   "autoScorerStatusAim": "Mira al bersaglio",
   "autoScorerStatusNeedsCal": "La fotocamera va calibrata",

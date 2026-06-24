@@ -491,6 +491,7 @@
   "autoScorerExpandPreview": "agrandir l'aperçu de la caméra",
   "autoScorerRemoveDarts": "Retirer les fléchettes",
   "autoScorerStop": "Arrêter le score automatique",
+  "autoScorerReAim": "Réaligner la caméra",
   "autoScorerStartCamera": "Démarrer la caméra",
   "autoScorerStatusAim": "Visez la cible",
   "autoScorerStatusNeedsCal": "La caméra doit être calibrée",

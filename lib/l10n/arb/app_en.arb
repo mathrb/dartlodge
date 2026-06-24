@@ -1889,6 +1889,10 @@
   "@autoScorerStop": {
     "description": "Tooltip: stop auto-scoring"
   },
+  "autoScorerReAim": "Re-aim camera",
+  "@autoScorerReAim": {
+    "description": "Tooltip: re-run the camera aim/setup step from the running preview"
+  },
   "autoScorerStartCamera": "Start camera",
   "@autoScorerStartCamera": {
     "description": "Button: start the camera"
