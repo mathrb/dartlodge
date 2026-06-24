@@ -64,7 +64,10 @@ test.describe('Around the Clock — Standard', { tag: ['@atc', '@autoscorer'] },
       if (n < 20) {
         await expect(page.getByText(`${n + 1}`, { exact: true }).first())
           .toBeVisible({ timeout: 8000 });
-        if (n % 3 === 0) await sim(page, 'advance()');
+        if (n % 3 === 0) {
+          await sim(page, 'advance()');
+          await page.waitForTimeout(600); // let the async TurnStarted settle
+        }
       }
     }
 

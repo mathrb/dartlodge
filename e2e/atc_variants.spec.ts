@@ -96,8 +96,11 @@ test.describe('Around the Clock variants', { tag: ['@atc', '@autoscorer'] }, () 
       .toBeVisible({ timeout: 8000 });
     await expect(page.getByText('2', { exact: true })).toHaveCount(0);
 
-    // Next turn: a DOUBLE of 1 advances the target to 2.
+    // Next turn: a DOUBLE of 1 advances the target to 2. Wait out the async
+    // TurnStarted after advancing before emitting (the bobs27 / cricket pattern)
+    // — otherwise the emit can race the new turn and be dropped.
     await sim(page, 'advance()');
+    await page.waitForTimeout(600);
     await sim(page, "emit('D1')");
     await expect(page.getByText('2', { exact: true }).first())
       .toBeVisible({ timeout: 8000 });

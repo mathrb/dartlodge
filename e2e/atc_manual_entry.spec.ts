@@ -52,6 +52,7 @@ test.describe('Around the Clock — manual entry', { tag: ['@atc'] }, () => {
         // Solo = 3 darts/turn; advance after every 3rd before tapping again.
         if (n % 3 === 0) {
           await page.getByRole('button', { name: /NEXT ROUND/i }).click({ force: true });
+          await page.waitForTimeout(600); // let the new turn (async TurnStarted) settle
         }
       }
     }
