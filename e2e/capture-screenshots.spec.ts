@@ -106,6 +106,43 @@ for (const theme of ['light', 'dark'] as const) {
       await page.context().close();
     });
 
+    test('game-detail (history breakdown width #693)', async ({ browser }) => {
+      const page = await boot(browser, theme);
+      await sim(page, 'enableAutoScoring()');
+      // Play a quick 301 double-out checkout so a completed game lands in
+      // history, then open its detail page.
+      await page.getByRole('button', { name: /X01/i }).click();
+      await page.getByRole('button', { name: /Select 301/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
+      await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
+      await page.getByRole('button', { name: /START GAME/i }).click();
+      await expect(page.getByRole('button', { name: /Start camera/i }))
+        .toBeVisible({ timeout: 15000 });
+      for (const seg of ['T20', 'T20', 'T20']) await sim(page, `emit('${seg}')`);
+      await sim(page, 'advance()');
+      for (const seg of ['T20', 'T11', 'D14']) await sim(page, `emit('${seg}')`);
+      await expect(page.getByRole('button', { name: /DONE/i }))
+        .toBeVisible({ timeout: 15000 });
+      await page.getByRole('button', { name: /DONE/i }).click({ force: true });
+
+      // Home → Sessions (history) → first game card → detail.
+      await page.evaluate(() =>
+        document.querySelector('flt-semantics-placeholder')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      await page.waitForTimeout(600);
+      await page.getByText(/Sessions/i).first().click({ force: true });
+      await page.waitForTimeout(1000);
+      await page.evaluate(() =>
+        document.querySelector('flt-semantics-placeholder')
+          ?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      await page.waitForTimeout(600);
+      await page.getByText(/Luke/).first().click({ force: true });
+      await page.waitForTimeout(1200);
+      await shot(page, '07-game-detail');
+      await page.context().close();
+    });
+
     test('post-game summary + impact heatmap', async ({ browser }) => {
       const page = await boot(browser, theme);
       await sim(page, 'enableAutoScoring()');

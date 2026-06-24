@@ -84,7 +84,10 @@ class GameDetailPage extends ConsumerWidget {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // Stretch so the cards/sections/breakdown fill the phone width instead
+        // of hugging the left with a wide empty band on the right (#693). The
+        // wide multi-column tables keep their own horizontal scroll (#309).
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildMatchHeader(context, game, sortedCompetitors, winner, theme),
           const SizedBox(height: 16),
