@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
+import '../../../../core/feedback/report_bug.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
@@ -28,7 +29,7 @@ import '../widgets/pulsing_next_button_widget.dart';
 /// Trailing-menu actions on the active-game board (#331). Mirrors the
 /// X01 board's enum; kept local to each board so the menu shape can
 /// diverge per-game without coupling.
-enum _BoardMenuAction { endGame, settings }
+enum _BoardMenuAction { endGame, settings, reportBug }
 
 /// Routes camera-detected darts into the active Cricket game (#382). Bound in
 /// the core [activeDartInputSinkProvider] while the capture page is open, so the
@@ -275,6 +276,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                         _showEndGameDialog(context);
                       case _BoardMenuAction.settings:
                         context.push(GameRoutes.settings);
+                      case _BoardMenuAction.reportBug:
+                        showReportBugDialog(context);
                     }
                   },
                   itemBuilder: (_) => [
@@ -286,6 +289,13 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                       value: _BoardMenuAction.settings,
                       child: Text(l10n.settingsTitle),
                     ),
+                    // Report a Bug without leaving the game (#688). Gated on
+                    // crash reporting being active this run, like Settings.
+                    if (isBugReportingAvailable())
+                      PopupMenuItem(
+                        value: _BoardMenuAction.reportBug,
+                        child: Text(l10n.settingsReportBug),
+                      ),
                   ],
                 ),
               ),

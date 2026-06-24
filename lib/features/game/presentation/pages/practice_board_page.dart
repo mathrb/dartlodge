@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
+import '../../../../core/feedback/report_bug.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
@@ -27,7 +28,7 @@ import '../widgets/practice_target_display_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
-enum _DrillAction { endDrill, settings }
+enum _DrillAction { endDrill, settings, reportBug }
 
 /// Routes auto-scorer-detected darts into the active practice game (#427).
 /// `advanceTurn` backs the opt-in board-clear auto-advance; it no-ops when the
@@ -314,6 +315,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                         if (context.mounted) {
                           context.push(GameRoutes.settings);
                         }
+                      case _DrillAction.reportBug:
+                        if (context.mounted) {
+                          showReportBugDialog(context);
+                        }
                     }
                   },
                   itemBuilder: (_) => [
@@ -335,6 +340,13 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       value: _DrillAction.settings,
                       child: Text(l10n.settingsTitle),
                     ),
+                    // Report a Bug without leaving the drill (#688). Gated on
+                    // crash reporting being active this run, like Settings.
+                    if (isBugReportingAvailable())
+                      PopupMenuItem(
+                        value: _DrillAction.reportBug,
+                        child: Text(l10n.settingsReportBug),
+                      ),
                   ],
                 ),
               ),

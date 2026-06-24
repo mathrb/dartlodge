@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../app/app_router.dart';
+import '../../../../core/feedback/report_bug.dart';
 import '../../../../core/game/dart_input_sink.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
@@ -30,7 +31,7 @@ import '../widgets/x01_other_players_strip_widget.dart';
 /// Trailing-menu actions on the active-game board (#331). End Game keeps
 /// the original gear-icon behaviour; Settings is a new sibling so users
 /// can reach Settings without abandoning their game.
-enum _BoardMenuAction { endGame, settings }
+enum _BoardMenuAction { endGame, settings, reportBug }
 
 /// Routes camera-detected darts into the active X01 game (#382). Registered in
 /// the core [activeDartInputSinkProvider] while the capture page is open, so the
@@ -276,9 +277,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     onBack: () => _confirmBack(context),
                     // Three-dot menu (was a settings cog) because the icon
                     // convention strongly implied Settings while the action
-                    // opened the End Game dialog (#331). Menu now exposes
-                    // both End Game and Settings entries so users can reach
-                    // either without abandoning their current state.
+                    // opened the End Game dialog (#331). Menu exposes End Game,
+                    // Settings, and (when crash reporting is active) Report a
+                    // Bug — all reachable without abandoning the current game.
                     trailing: PopupMenuButton<_BoardMenuAction>(
                       icon: Icon(
                         Icons.more_vert,
@@ -291,6 +292,8 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                             _showEndGameDialog(context);
                           case _BoardMenuAction.settings:
                             context.push(GameRoutes.settings);
+                          case _BoardMenuAction.reportBug:
+                            showReportBugDialog(context);
                         }
                       },
                       itemBuilder: (_) => [
@@ -302,6 +305,13 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                           value: _BoardMenuAction.settings,
                           child: Text(l10n.settingsTitle),
                         ),
+                        // Report a Bug without leaving the game (#688). Gated on
+                        // crash reporting being active this run, like Settings.
+                        if (isBugReportingAvailable())
+                          PopupMenuItem(
+                            value: _BoardMenuAction.reportBug,
+                            child: Text(l10n.settingsReportBug),
+                          ),
                       ],
                     ),
                   ),
