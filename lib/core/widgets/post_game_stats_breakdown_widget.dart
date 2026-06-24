@@ -53,7 +53,14 @@ class PostGameStatsBreakdown extends StatelessWidget {
     required this.rows,
     this.title,
     this.categoryHeader,
+    this.showHeader = true,
   });
+
+  /// When false, only the bordered table is rendered — the accent-rule section
+  /// title is dropped. Used when the table is embedded under an existing
+  /// heading (e.g. one breakdown per leg in the history leg breakdown), where
+  /// repeating "STATISTICS BREAKDOWN" above every leg would be redundant.
+  final bool showHeader;
 
   /// Defaults to the localized "Statistics Breakdown" (upper-cased) when null.
   final String? title;
@@ -75,21 +82,23 @@ class PostGameStatsBreakdown extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(width: 32, height: 1, color: cs.primaryFixed),
-            const SizedBox(width: 12),
-            Text(
-              resolvedTitle,
-              style: tt.labelSmall?.copyWith(
-                color: cs.onSurfaceVariant,
-                letterSpacing: 3,
-                fontWeight: FontWeight.w900,
+        if (showHeader) ...[
+          Row(
+            children: [
+              Container(width: 32, height: 1, color: cs.primaryFixed),
+              const SizedBox(width: 12),
+              Text(
+                resolvedTitle,
+                style: tt.labelSmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  letterSpacing: 3,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
         Container(
           decoration: BoxDecoration(
             color: cs.surfaceContainer,

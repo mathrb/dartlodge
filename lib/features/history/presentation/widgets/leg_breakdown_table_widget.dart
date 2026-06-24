@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/name_formatter.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
@@ -9,6 +10,12 @@ import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+
+/// Summary-row column widths. The middle "winner" column flexes; the rest are
+/// fixed so every leg row lines up under the header.
+const double _kLegColWidth = 48;
+const double _kDartsColWidth = 60;
+const double _kChevronColWidth = 40;
 
 class LegBreakdownTableWidget extends StatefulWidget {
   final List<LegStatsBreakdown> legs;
@@ -75,36 +82,38 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
       );
     }
 
-    return Table(
-      columnWidths: {
-        0: const FixedColumnWidth(48),
-        1: const FlexColumnWidth(),
-        2: const FixedColumnWidth(60),
-        if (_expandable) 3: const FixedColumnWidth(40),
-      },
+    // A Column of per-leg blocks rather than one global Table: the expanded
+    // detail (stats breakdown + turn breakdown) renders full-width below its
+    // summary row instead of being trapped inside the "winner" column cell of
+    // a shared table (Flutter's Table has no colspan), which squeezed it to a
+    // fraction of the screen (#693 fixed the top breakdown; this matches it).
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _headerRow(theme, l10n),
         for (final leg in widget.legs) ...[
           _legRow(leg, theme),
           if (_expandedLegs.contains(leg.legNumber))
-            _expandedRow(leg, theme, l10n),
+            _expandedSection(leg, theme, l10n),
         ],
       ],
     );
   }
 
-  TableRow _headerRow(ThemeData theme, AppLocalizations l10n) {
-    final cells = <Widget>[
-      _headerCell(l10n.historyColLeg),
-      _headerCell(l10n.historyWinner),
-      _headerCell(l10n.historyColDarts),
-      if (_expandable) const SizedBox.shrink(),
-    ];
-    return TableRow(
+  Widget _headerRow(ThemeData theme, AppLocalizations l10n) {
+    return Container(
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
-      children: cells,
+      child: Row(
+        children: [
+          SizedBox(width: _kLegColWidth, child: _headerCell(l10n.historyColLeg)),
+          Expanded(child: _headerCell(l10n.historyWinner)),
+          SizedBox(
+              width: _kDartsColWidth, child: _headerCell(l10n.historyColDarts)),
+          if (_expandable) const SizedBox(width: _kChevronColWidth),
+        ],
+      ),
     );
   }
 
@@ -116,214 +125,120 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
         ),
       );
 
-  TableRow _legRow(LegStatsBreakdown leg, ThemeData theme) {
+  Widget _legRow(LegStatsBreakdown leg, ThemeData theme) {
     final isExpanded = _expandedLegs.contains(leg.legNumber);
     final totalDarts =
         leg.byCompetitor.fold<int>(0, (s, c) => s + c.dartsThrown);
-    final cells = <Widget>[
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Text('${leg.legNumber}'),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Text(leg.winnerName),
-      ),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Text('$totalDarts'),
-      ),
-      if (_expandable)
-        GestureDetector(
-          onTap: () => setState(() {
-            if (isExpanded) {
-              _expandedLegs.remove(leg.legNumber);
-            } else {
-              _expandedLegs.add(leg.legNumber);
-            }
-          }),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Icon(
-              isExpanded ? Icons.expand_less : Icons.expand_more,
-              size: 20,
-            ),
-          ),
-        ),
-    ];
-    return TableRow(
+    final row = Container(
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
         ),
       ),
-      children: cells,
+      child: Row(
+        children: [
+          SizedBox(width: _kLegColWidth, child: _cell('${leg.legNumber}')),
+          Expanded(child: _cell(leg.winnerName)),
+          SizedBox(width: _kDartsColWidth, child: _cell('$totalDarts')),
+          if (_expandable)
+            SizedBox(
+              width: _kChevronColWidth,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                child: Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 20,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (!_expandable) return row;
+    return InkWell(
+      onTap: () => setState(() {
+        if (isExpanded) {
+          _expandedLegs.remove(leg.legNumber);
+        } else {
+          _expandedLegs.add(leg.legNumber);
+        }
+      }),
+      child: row,
     );
   }
 
-  TableRow _expandedRow(
+  Widget _cell(String text) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Text(text),
+      );
+
+  Widget _expandedSection(
       LegStatsBreakdown leg, ThemeData theme, AppLocalizations l10n) {
     final showStatsTable = widget.gameType == GameType.x01 ||
         widget.gameType == GameType.cricket;
     final breakdown = _turnBreakdownByLeg[leg.legNumber];
-    return TableRow(
-      children: [
-        const SizedBox.shrink(),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12, left: 4, right: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (showStatsTable)
-                _LegStatsTable(
-                  leg: leg,
-                  gameType: widget.gameType,
-                ),
-              if (breakdown != null && !breakdown.isEmpty) ...[
-                if (showStatsTable) const SizedBox(height: 12),
-                Text(
-                  l10n.historyTurnBreakdown,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.6,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                TurnBreakdownTableWidget(
-                  gameType: widget.gameType,
-                  breakdown: breakdown,
-                  singleCompetitor: widget.competitors.length <= 1,
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox.shrink(),
-        if (_expandable) const SizedBox.shrink(),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 12, left: 4, right: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showStatsTable) _legStatsBreakdown(leg, l10n),
+          if (breakdown != null && !breakdown.isEmpty) ...[
+            if (showStatsTable) const SizedBox(height: 12),
+            Text(
+              l10n.historyTurnBreakdown,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.6,
+              ),
+            ),
+            const SizedBox(height: 6),
+            TurnBreakdownTableWidget(
+              gameType: widget.gameType,
+              breakdown: breakdown,
+              singleCompetitor: widget.competitors.length <= 1,
+            ),
+          ],
+        ],
+      ),
     );
   }
-}
 
-class _LegStatsTable extends StatelessWidget {
-  const _LegStatsTable({required this.leg, required this.gameType});
-
-  final LegStatsBreakdown leg;
-  final GameType gameType;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context);
+  /// Renders the per-leg stats on the same fill-width-or-scroll shell as the
+  /// top "Statistics Breakdown" (#693), with its section title suppressed.
+  Widget _legStatsBreakdown(LegStatsBreakdown leg, AppLocalizations l10n) {
     final competitors = leg.byCompetitor;
     if (competitors.isEmpty) return const SizedBox.shrink();
 
-    final isCricket = gameType == GameType.cricket;
-    final rows =
+    final isCricket = widget.gameType == GameType.cricket;
+    final columns = competitors.map((c) {
+      final isWinner = c.competitorId == leg.winnerCompetitorId;
+      return PostGameBreakdownColumn(
+        name: NameFormatter.shortName(c.competitorName),
+        subtitle:
+            (isWinner ? l10n.historyWinner : l10n.historyOpponent).toUpperCase(),
+        emphasize: isWinner,
+      );
+    }).toList();
+
+    final statRows =
         isCricket ? _cricketRows(l10n, competitors) : _x01Rows(l10n, competitors);
-
-    const cellPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 8);
-    final headerStyle = tt.labelSmall?.copyWith(
-      color: cs.onSurfaceVariant,
-      letterSpacing: 1.2,
-      fontWeight: FontWeight.w900,
-    );
-    final categoryStyle = tt.labelSmall?.copyWith(
-      color: cs.onSurfaceVariant,
-      letterSpacing: 1.2,
-      fontWeight: FontWeight.w700,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border:
-            Border.all(color: cs.outlineVariant.withValues(alpha: 0.18)),
-      ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Table(
-          defaultColumnWidth: const IntrinsicColumnWidth(),
-          border: TableBorder(
-            horizontalInside:
-                BorderSide(color: cs.outlineVariant.withValues(alpha: 0.08)),
-          ),
-          children: [
-            TableRow(
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerLow,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-              ),
-              children: [
-                Padding(
-                  padding: cellPadding,
-                  child: Text(l10n.historyCategory.toUpperCase(),
-                      style: headerStyle),
-                ),
-                ...competitors.map((c) {
-                  final isWinner = c.competitorId == leg.winnerCompetitorId;
-                  return Padding(
-                    padding: cellPadding,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          NameFormatter.shortName(c.competitorName),
-                          style: tt.labelMedium?.copyWith(
-                            color: isWinner ? cs.primaryFixed : cs.onSurface,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          (isWinner ? l10n.historyWinner : l10n.historyOpponent)
-                              .toUpperCase(),
-                          style: tt.labelSmall?.copyWith(
-                            color: isWinner
-                                ? cs.primaryFixed.withValues(alpha: 0.7)
-                                : cs.onSurfaceVariant,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+    final rows = statRows
+        .map((r) => PostGameBreakdownRow(
+              category: r.category,
+              values: r.values,
+              highlights: [
+                for (final c in competitors)
+                  r.highlightWinner &&
+                      c.competitorId == leg.winnerCompetitorId,
               ],
-            ),
-            ...rows.map((row) => TableRow(
-                  children: [
-                    Padding(
-                      padding: cellPadding,
-                      child: Text(
-                        row.category.toUpperCase(),
-                        style: categoryStyle,
-                      ),
-                    ),
-                    ...List.generate(competitors.length, (i) {
-                      final highlight = row.highlightWinner &&
-                          competitors[i].competitorId ==
-                              leg.winnerCompetitorId;
-                      return Padding(
-                        padding: cellPadding,
-                        child: Text(
-                          row.values[i],
-                          style: tt.titleMedium?.copyWith(
-                            color:
-                                highlight ? cs.primaryFixed : cs.onSurface,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                )),
-          ],
-        ),
-      ),
+            ))
+        .toList();
+
+    return PostGameStatsBreakdown(
+      showHeader: false,
+      columns: columns,
+      rows: rows,
     );
   }
 
@@ -418,7 +333,6 @@ class _LegStatsTable extends StatelessWidget {
       ),
     ];
   }
-
 }
 
 class _StatRow {
