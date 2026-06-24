@@ -21,6 +21,7 @@ import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
+import '../widgets/live_average.dart';
 import '../widgets/player_score_section_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
@@ -254,6 +255,9 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                             (
                               name: gameState.competitors[i].name,
                               score: gameState.competitors[i].score,
+                              // Live per-round average (#696), same helper as
+                              // X01; for Count-Up it reads as the points/round.
+                              ppr: x01LivePprDisplay(gameState.competitors[i]),
                             ),
                       ],
                     ),

@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
-import '../../../../core/utils/cricket_segment_utils.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_state.dart';
 import 'cricket_mark_painter.dart';
+import 'live_average.dart';
 
 // ── File-private helpers ──────────────────────────────────────────────────────
 
@@ -146,16 +146,10 @@ class _PlayerHeaderCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // `activeTargets` is the game's actual target set (+ Bull 25). Without
-    // this override, `cricketMarksForSegment` falls back to the fixed 15–20
-    // set, so Random and Crazy Cricket hits on assigned targets count as
-    // zero marks and MPR collapses (#320).
-    final totalMarks = competitor.dartThrows.fold(
-        0,
-        (sum, s) =>
-            sum + cricketMarksForSegment(s, targets: activeTargets));
-    final rounds = competitor.dartThrows.length ~/ 3;
-    final mpr = rounds > 0 ? totalMarks / rounds : 0.0;
+    // Live MPR shared with the camera-first layout (#696). `activeTargets` is
+    // the game's actual target set (+ Bull 25) so Random/Crazy hits count
+    // (#320).
+    final mpr = cricketLiveMpr(competitor, targets: activeTargets);
 
     final cell = Container(
       decoration: BoxDecoration(
