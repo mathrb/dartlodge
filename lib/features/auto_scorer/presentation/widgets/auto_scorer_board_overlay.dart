@@ -5,6 +5,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.d
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/aim_confirmed_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/camera_zoom_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
@@ -183,47 +184,27 @@ class _AutoScorerBoardOverlayState
       await session.start();
       if (!mounted) return;
       _session = session;
-      final calConf =
-          ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
-      final dartConf = ref.read(autoScorerDartConfidenceProvider).value ??
-          kDefaultConfidence;
-      final initialZoom =
-          (ref.read(autoScorerCameraZoomProvider).value ?? kDefaultCameraZoom)
-              .clamp(1.0, 5.0);
+      // Skip the one-time aim step if it was already completed this app run
+      // (#687): the running preview re-derives the board transform live from
+      // every frame's calibration points, so the aim view is only a positioning
+      // confidence gate — scoring is unaffected by skipping it. The "Re-aim"
+      // button in the running preview re-runs it if the phone/board moved. No
+      // prior camera session to drain here (the aim view didn't bind), so the
+      // running preview can mount immediately — no handoff delay needed.
+      if (ref.read(autoScorerAimConfirmedProvider)) {
+        setState(() {
+          _mode = _Mode.running;
+          _starting = false;
+        });
+        return;
+      }
       setState(() => _mode = _Mode.aim);
-      final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => AutoScorerYoloAimView(
-          session: session,
-          gameId: widget.gameId,
-          calConfidence: calConf,
-          dartConfidence: dartConf,
-          initialZoom: initialZoom,
-          onZoomChanged: (z) =>
-              ref.read(autoScorerCameraZoomProvider.notifier).set(z),
-        ),
-      ));
+      final done = await _runAimView(session);
       if (!mounted) return;
-      if (done == true) {
-        // Serialise the camera handoff before mounting the running preview's
-        // YOLOView. `AutoScorerYoloAimView._finish()` already calls
-        // `await _controller.stop()` before its `Navigator.pop` (#419), but that
-        // only requests the unbind: the native CameraX teardown (surface release
-        // + the aim platform-view's own dispose(), which runs only once the route
-        // leaves the tree at the END of the ~300ms reverse transition) is
-        // asynchronous and not complete when `pop` resolves this push future.
-        // Mounting the preview's YOLOView now means its bind races that teardown;
-        // at the opt-in 1280×960 analysis resolution (#464) the two sessions'
-        // combined surfaces exceed the device's guaranteed CameraX
-        // surface-combination budget, so the preview's bindToLifecycle fails
-        // (black preview, no detection). At the old ~640×480 default the smaller
-        // surfaces tolerated the transient overlap. Wait out the exit transition
-        // + native teardown so only one session is ever bound.
+      if (done) {
+        ref.read(autoScorerAimConfirmedProvider.notifier).set(true);
         await Future<void>.delayed(_kAimToRunningHandoffDelay);
         if (!mounted) return;
-        // The inline preview binds the correction bridge itself (#456/#457) —
-        // it owns the camera controller needed to capture-at-correction. This
-        // overlay only clears the binding on stop (_stop/_fail).
         setState(() {
           _mode = _Mode.running;
           _starting = false;
@@ -234,6 +215,52 @@ class _AutoScorerBoardOverlayState
     } catch (e) {
       _fail(l10n.autoScorerSetupFailed('$e'));
     }
+  }
+
+  /// Push the fullscreen aim step and return whether the user confirmed it.
+  /// Shared by the initial [_start] flow and the in-preview [_reAim] button.
+  Future<bool> _runAimView(AutoScorerSession session) async {
+    final calConf =
+        ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
+    final dartConf =
+        ref.read(autoScorerDartConfidenceProvider).value ?? kDefaultConfidence;
+    final initialZoom =
+        (ref.read(autoScorerCameraZoomProvider).value ?? kDefaultCameraZoom)
+            .clamp(1.0, 5.0);
+    final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
+      fullscreenDialog: true,
+      builder: (_) => AutoScorerYoloAimView(
+        session: session,
+        gameId: widget.gameId,
+        calConfidence: calConf,
+        dartConfidence: dartConf,
+        initialZoom: initialZoom,
+        onZoomChanged: (z) =>
+            ref.read(autoScorerCameraZoomProvider.notifier).set(z),
+      ),
+    ));
+    return done == true;
+  }
+
+  /// Re-run the aim step from the running preview (#687) — for when the phone or
+  /// board has moved. Drop to aim (this unmounts the running preview, releasing
+  /// the camera), wait out the native CameraX teardown so only one session is
+  /// ever bound (the aim→running handoff comment applies in reverse here), then
+  /// re-show the aim view. Cancelling resumes the existing session.
+  Future<void> _reAim() async {
+    final session = _session;
+    if (session == null || _mode != _Mode.running) return;
+    setState(() => _mode = _Mode.aim);
+    await Future<void>.delayed(_kAimToRunningHandoffDelay);
+    if (!mounted) return;
+    final done = await _runAimView(session);
+    if (!mounted) return;
+    if (done) ref.read(autoScorerAimConfirmedProvider.notifier).set(true);
+    // Confirmed or cancelled, resume the live preview after the handoff drain;
+    // a cancelled re-aim must not abort the game.
+    await Future<void>.delayed(_kAimToRunningHandoffDelay);
+    if (!mounted) return;
+    setState(() => _mode = _Mode.running);
   }
 
   void _fail(String message) {
@@ -430,6 +457,12 @@ class _AutoScorerBoardOverlayState
                     AutoScorerStatusChip(status: status),
               ),
             ),
+          ),
+          IconButton(
+            tooltip: l10n.autoScorerReAim,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.center_focus_strong),
+            onPressed: _reAim,
           ),
           IconButton(
             tooltip: l10n.autoScorerRemoveDarts,

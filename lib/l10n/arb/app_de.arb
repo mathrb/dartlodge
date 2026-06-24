@@ -491,6 +491,7 @@
   "autoScorerExpandPreview": "Kameravorschau vergrößern",
   "autoScorerRemoveDarts": "Darts entfernen",
   "autoScorerStop": "Automatische Zählung stoppen",
+  "autoScorerReAim": "Kamera neu ausrichten",
   "autoScorerStartCamera": "Kamera starten",
   "autoScorerStatusAim": "Auf das Board zielen",
   "autoScorerStatusNeedsCal": "Kamera muss kalibriert werden",

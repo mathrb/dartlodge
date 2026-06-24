@@ -491,6 +491,7 @@
   "autoScorerExpandPreview": "ampliar la vista previa de la cámara",
   "autoScorerRemoveDarts": "Retirar dardos",
   "autoScorerStop": "Detener la puntuación automática",
+  "autoScorerReAim": "Realinear la cámara",
   "autoScorerStartCamera": "Iniciar cámara",
   "autoScorerStatusAim": "Apunta a la diana",
   "autoScorerStatusNeedsCal": "La cámara necesita calibración",

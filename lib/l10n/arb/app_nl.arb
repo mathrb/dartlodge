@@ -491,6 +491,7 @@
   "autoScorerExpandPreview": "cameravoorbeeld vergroten",
   "autoScorerRemoveDarts": "Darts verwijderen",
   "autoScorerStop": "Automatisch scoren stoppen",
+  "autoScorerReAim": "Camera opnieuw richten",
   "autoScorerStartCamera": "Camera starten",
   "autoScorerStatusAim": "Richt op het bord",
   "autoScorerStatusNeedsCal": "Camera moet gekalibreerd worden",
