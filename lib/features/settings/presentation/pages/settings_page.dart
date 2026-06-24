@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
-import 'package:dart_lodge/core/persistence/drift/drift_helper.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
@@ -23,24 +22,6 @@ class SettingsPage extends ConsumerStatefulWidget {
 
 class _SettingsPageState extends ConsumerState<SettingsPage> {
   bool _erasing = false;
-  bool _downloading = false;
-
-  Future<void> _downloadDatabase() async {
-    final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    setState(() => _downloading = true);
-    try {
-      await DriftHelper.instance.downloadDatabase();
-    } catch (e) {
-      if (mounted) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.settingsExportFailed(e.toString()))),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _downloading = false);
-    }
-  }
 
   Future<void> _setCrashReporting(bool enabled) async {
     final l10n = AppLocalizations.of(context);
@@ -206,13 +187,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             cs: cs,
             tt: tt,
           ),
-          _TapRow(
-            title: l10n.settingsOpenSourceLicenses,
-            onTap: () => showLicensePage(
-              context: context,
-              applicationName: 'DartLodge',
-            ),
-          ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsFeedbackSection, cs: cs, tt: tt),
           SwitchListTile(
@@ -232,21 +206,6 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             enabled: sentryActive,
             onTap: sentryActive ? _reportBug : null,
-          ),
-          const Divider(height: 1),
-          _SectionHeader(label: l10n.settingsDebugSection, cs: cs, tt: tt),
-          ListTile(
-            leading: _downloading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.download_outlined),
-            title: Text(l10n.settingsDownloadDatabase),
-            subtitle: Text(l10n.settingsDownloadDatabaseSubtitle),
-            enabled: !_downloading,
-            onTap: _downloadDatabase,
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsDangerZoneSection, cs: cs, tt: tt),
@@ -371,14 +330,3 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _TapRow extends StatelessWidget {
-  final String title;
-  final VoidCallback onTap;
-
-  const _TapRow({required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(title: Text(title), onTap: onTap);
-  }
-}

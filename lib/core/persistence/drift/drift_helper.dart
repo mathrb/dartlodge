@@ -7,9 +7,6 @@
 import 'database_factory_stub.dart'
     if (dart.library.ffi) 'database_factory_native.dart'
     if (dart.library.html) 'database_factory_web.dart';
-import 'database_export_stub.dart'
-    if (dart.library.ffi) 'database_export_native.dart'
-    if (dart.library.html) 'database_export_web.dart';
 import 'database.dart';
 
 class DriftHelper {
@@ -36,6 +33,4 @@ class DriftHelper {
     final db = await database;
     await db.clearAllData();
   }
-
-  Future<void> downloadDatabase() => platformDownloadDatabase();
 }
