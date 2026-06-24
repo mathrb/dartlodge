@@ -1195,10 +1195,6 @@
   "@setupChipLegs": {
     "description": "Metadata chip label: legs (darts loanword)"
   },
-  "setupCustomComingSoon": "Custom configuration coming soon",
-  "@setupCustomComingSoon": {
-    "description": "Tooltip on the disabled Custom variant row"
-  },
   "setupHowToPlay": "How to play {title}",
   "@setupHowToPlay": {
     "description": "Info-icon tooltip; title is the variant name",

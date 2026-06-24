@@ -120,7 +120,7 @@ heuristiques, pas d'étapes figées.
 
 **Charte exploratoire** — *Missions*
 
-1. **Atteindre une partie démarrable par catégorie.** X01 (501/301/701/901), Cricket (Standard/No Score/Cut Throat/Random/Crazy), Casual (Shanghai/Count-Up), Practice (ATC/Catch 40/Bob's 27/170 Checkout) : chaque variante mène à un board démarrable ; « Custom » (désactivé X01/Cricket) communique son indispo (opacité 0.38 + tooltip), jamais faussement navigable.
+1. **Atteindre une partie démarrable par catégorie.** X01 (501/301/701/901), Cricket (Standard/No Score/Cut Throat/Random/Crazy), Casual (Shanghai/Count-Up), Practice (ATC/Catch 40/Bob's 27/170 Checkout) : chaque variante mène à un board démarrable. (La tuile « Custom », auparavant désactivée X01/Cricket, a été retirée pré-1.0 — #684.)
 2. **Sélection joueurs = passerelle vers `canStart`.** Roster vide (« tap to add »), NEW PLAYER (nom vide, limite 24 car., doublons/erreurs repo remontés au champ), add/remove du lineup, auto-sélection du plus récent, plafond `maxPlayers` (≤6). Chasser tout START GAME désactivé sans raison visible, ou activé avec sélection invalide.
 3. **Lineup actif : réordonnancement & handicap.** Drag-to-reorder (poignée, badge position), cohérence après add/remove, chip handicap (X01 négatif, Count-Up positif, masqué ailleurs) ; ordre + handicaps survivent jusqu'au board.
 4. **Bottom sheet de config (pas une route).** Éditer selon le type (In/Out + legs/rounds X01 ; scoring×targetMode Cricket ; variante ATC ; rounds Shanghai/Count-Up ; target successes Checkout ; SET custom X01). Pattern draft copy-on-open (APPLY désactivé sans changement, dismiss = abandon) ; chip masqué quand rien d'éditable (Catch 40, Bob's 27) ; résumé fidèle.

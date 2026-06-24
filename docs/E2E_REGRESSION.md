@@ -75,8 +75,8 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
   `getByText` specs — grep `e2e/*.spec.ts` for that string when you add one.
 - **Game config (in/out strategy, legs-to-win, starting score)** is edited via
   the config-summary chip on the player-selection screen → bottom sheet → fields
-  → `APPLY`. There is no routed config page, and the X01 "Custom" variant tile is
-  disabled. The `LEGS TO WIN` stepper's +/- icon buttons carry accessible names
+  → `APPLY`. There is no routed config page, and there is no "Custom" variant
+  tile (removed pre-1.0). The `LEGS TO WIN` stepper's +/- icon buttons carry accessible names
   (#666) — target the "+" by name, e.g. `getByRole('button', { name: 'Increase
   legs to win' })` (English; pin `locale: 'en-US'` on the context, as
   `x01_match.spec.ts` does).

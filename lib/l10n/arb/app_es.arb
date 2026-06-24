@@ -320,7 +320,6 @@
   "setupChipIn": "ENTRADA",
   "setupChipOut": "SALIDA",
   "setupChipLegs": "LEGS",
-  "setupCustomComingSoon": "Configuración personalizada próximamente",
   "setupHowToPlay": "Cómo jugar a {title}",
   "setupSelectVariant": "Seleccionar {title}",
   "rulesHeadingObjective": "Objetivo",

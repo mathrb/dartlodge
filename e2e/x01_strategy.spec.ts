@@ -9,8 +9,8 @@
  *     to its starting score (the default out-strategy is double-out).
  *
  * The in-strategy is set through the config bottom sheet opened from the config
- * summary chip on the player-selection screen (the "Custom" variant tile is
- * disabled; the chip is the only path). The sheet lists IN STRATEGY then OUT
+ * summary chip on the player-selection screen (the chip is the only path; there
+ * is no Custom variant tile). The sheet lists IN STRATEGY then OUT
  * STRATEGY, each STRAIGHT/DOUBLE/MASTER — so the IN-strategy DOUBLE is the first
  * of the two "DOUBLE" buttons (nth(0)).
  *
