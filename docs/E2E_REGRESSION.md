@@ -68,6 +68,11 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 - **Avoid a bare `getByText('<number>')`** — score numerals collide (the
   remaining score vs a dart-slot value vs a stepper value). Use `{ exact: true }`,
   `.first()`, or a scoped locator.
+- **`getByText('<label>')` substring-matches accessible button names too** —
+  `getByText('LEGS TO WIN')` now resolves to 3 nodes (the `<span>` + the stepper's
+  "Increase/Decrease legs to win" buttons) → strict-mode violation. Use
+  `{ exact: true }`. Corollary: adding a `semanticLabel` can break existing
+  `getByText` specs — grep `e2e/*.spec.ts` for that string when you add one.
 - **Game config (in/out strategy, legs-to-win, starting score)** is edited via
   the config-summary chip on the player-selection screen → bottom sheet → fields
   → `APPLY`. There is no routed config page, and the X01 "Custom" variant tile is
@@ -78,6 +83,11 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 - **Fresh worktree:** scaffold `web/` (copy from another checkout), build a sim
   build (`flutter build web --dart-define=AUTOSCORER_SIM=true`) served on `:6780`,
   and `npm install` in `e2e/`.
+- **Triage flakes before calling a red a regression.** A full-suite run can
+  flake transiently — a 60s boot timeout on the *first* test (cold compile), or
+  timing in correction specs. Re-run reds with
+  `npx playwright test --last-failed`; only a *deterministic* second failure is a
+  real regression.
 
 ---
 
