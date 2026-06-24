@@ -4,6 +4,11 @@ import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
 
+/// Minimum comfortable width per breakdown column (category + each player).
+/// Below this the columns would be cramped, so the table falls back to a
+/// horizontal scroll instead of flexing to fill the width (#693).
+const double _kMinBreakdownColWidth = 92.0;
+
 /// One column header in [PostGameStatsBreakdown]. A column has a primary
 /// name (e.g. competitor name in multi-player games, or `Total score`/`Round`
 /// for solo drills) and an optional smaller subtitle (e.g. `WINNER`).
@@ -94,15 +99,21 @@ class PostGameStatsBreakdown extends StatelessWidget {
                   .withValues(alpha: AppTheme.opacityGhostBorderLight),
             ),
           ),
-          // On wide viewports (≥ 600px, ~desktop) the intrinsic-width
-          // table rendered at ~250px with a large empty area to its right
-          // (#334). Flex-column-widths over a SizedBox sized to the
-          // available width make the table fill the container on desktop.
-          // Narrow viewports keep the horizontal scroll fallback so the
-          // table never overflows on mobile.
+          // Fill the available width with flex columns whenever the table fits
+          // — an intrinsic-width table left a large empty band on its right
+          // (#334 desktop, #693 phone with few players). It "fits" on a wide
+          // viewport (~desktop) or whenever the column count needs no more than
+          // the available width (the common 1–3 player case on a phone). Only a
+          // genuinely too-wide table (many players) keeps the horizontal-scroll
+          // fallback so columns never get cramped (this widget's scroll
+          // fallback dates to #334/#241).
           child: LayoutBuilder(
             builder: (context, constraints) {
-              if (constraints.maxWidth >= 600) {
+              // +1 for the leading category column.
+              final minWidth = (columns.length + 1) * _kMinBreakdownColWidth;
+              final fillsWidth =
+                  constraints.maxWidth >= 600 || minWidth <= constraints.maxWidth;
+              if (fillsWidth) {
                 return SizedBox(
                   width: constraints.maxWidth,
                   child: _BreakdownTable(
