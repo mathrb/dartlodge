@@ -48,7 +48,7 @@ placeholders intacts — cf. `doc-drift-audit-2026-06-19.md`) → l'axe 5 cible 
 4. **Confirmer par recherche web l'usage réel** (glossaires/fédérations) avant de trancher — mémoire `feedback_translate_via_web_search`.
 
 **Termes/clés à risque par langue (point de départ)**
-- **de** : `commonName='Name'`, `settingsThemeSystem='System'` (ambigus EN/DE), `settingsDebugSection='Debug'` / `summaryDarts='Darts'` (loanwords tech/jargon probables) ; + `leg`/Aus, `statCheckout`, `stat180s`.
+- **de** : `commonName='Name'`, `settingsThemeSystem='System'` (ambigus EN/DE), `summaryDarts='Darts'` (loanword tech/jargon probable) ; + `leg`/Aus, `statCheckout`, `stat180s`.
 - **nl** : `achievementWins10/50/100Description='Win N games'` (phrase complète → présomption bug), `rulesHeadingTips='Tips'` / `setupSectionVariant='VARIANT'` (plausibles) ; + `leg`/`checkout`/`marks`.
 - **it** : `summaryRound='Round'` (vs turno/giro — vérifier cohérence), `settingsFeedbackSection` (prestito).
 - **es** : `commonError='Error'` (homographe légitime) ; + `leg`/manga, `checkout`/cierre, `bust`/pasarse, `marks`/marcas, `bull`/diana.
