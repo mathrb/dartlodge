@@ -320,7 +320,6 @@
   "setupChipIn": "INGANG",
   "setupChipOut": "UITGANG",
   "setupChipLegs": "LEGS",
-  "setupCustomComingSoon": "Aangepaste configuratie komt binnenkort",
   "setupHowToPlay": "Hoe speel je {title}",
   "setupSelectVariant": "{title} selecteren",
   "rulesHeadingObjective": "Doel",

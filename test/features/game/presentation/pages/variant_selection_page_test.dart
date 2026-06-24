@@ -83,8 +83,7 @@ Widget _buildApp(
 
 void main() {
   group('VariantSelectionPage — X01', () {
-    testWidgets('renders 4 enabled rows and 1 disabled Custom row',
-        (tester) async {
+    testWidgets('renders 4 enabled rows and no Custom row', (tester) async {
       await tester.pumpWidget(_buildApp('x01'));
       await tester.pumpAndSettle();
 
@@ -92,11 +91,7 @@ void main() {
       expect(find.text('301'), findsOneWidget);
       expect(find.text('701'), findsOneWidget);
       expect(find.text('901'), findsOneWidget);
-      expect(find.text('CUSTOM', skipOffstage: false), findsOneWidget);
-
-      // Custom row wrapped in Opacity(0.38)
-      final opacityWidgets = tester.widgetList<Opacity>(find.byType(Opacity, skipOffstage: false));
-      expect(opacityWidgets.any((o) => o.opacity == 0.38), isTrue);
+      expect(find.text('CUSTOM', skipOffstage: false), findsNothing);
     });
 
     testWidgets('page title "X01" is displayed', (tester) async {
@@ -117,50 +112,17 @@ void main() {
 
       expect(find.text('player-selection'), findsOneWidget);
     });
-
-    testWidgets('Custom row shows Tooltip "Custom configuration coming soon"',
-        (tester) async {
-      await tester.pumpWidget(_buildApp('x01'));
-      await tester.pumpAndSettle();
-
-      final tooltip = find.byWidgetPredicate(
-        (w) => w is Tooltip && w.message == 'Custom configuration coming soon',
-        skipOffstage: false,
-      );
-      expect(tooltip, findsOneWidget);
-    });
-
-    testWidgets('disabled row has 38% opacity', (tester) async {
-      await tester.pumpWidget(_buildApp('x01'));
-      await tester.pumpAndSettle();
-
-      final opacities = tester.widgetList<Opacity>(find.byType(Opacity, skipOffstage: false));
-      expect(opacities.where((o) => o.opacity == 0.38), hasLength(1));
-    });
-
-    testWidgets('tapping disabled Custom row does not navigate', (tester) async {
-      // Use a physically tall window so CUSTOM is on screen and tappable.
-      tester.view.physicalSize = const Size(2400, 6000);
-      addTearDown(tester.view.resetPhysicalSize);
-      await tester.pumpWidget(_buildApp('x01'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('CUSTOM'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('player-selection'), findsNothing);
-    });
   });
 
   group('VariantSelectionPage — Cricket', () {
-    testWidgets('renders 3 enabled rows and 1 disabled Custom', (tester) async {
+    testWidgets('renders enabled rows and no Custom row', (tester) async {
       await tester.pumpWidget(_buildApp('cricket'));
       await tester.pumpAndSettle();
 
       expect(find.text('STANDARD'), findsOneWidget);
       expect(find.text('NO SCORE'), findsOneWidget);
       expect(find.text('CUT THROAT', skipOffstage: false), findsOneWidget);
-      expect(find.text('CUSTOM', skipOffstage: false), findsOneWidget);
+      expect(find.text('CUSTOM', skipOffstage: false), findsNothing);
     });
 
     testWidgets('page title "Cricket" is displayed', (tester) async {
@@ -256,19 +218,6 @@ void main() {
 
       // 4 enabled X01 rows × 1 info_outline each.
       expect(find.byIcon(Icons.info_outline), findsNWidgets(4));
-    });
-
-    testWidgets('disabled Custom row has no info icon', (tester) async {
-      await tester.pumpWidget(_buildApp('x01'));
-      await tester.pumpAndSettle();
-
-      // The 501/301/701/901 row pile has tooltips "How to play 501" etc.
-      // Custom has no info icon at all — its tooltip is the disabled hint.
-      expect(
-        find.byWidgetPredicate(
-            (w) => w is Tooltip && w.message == 'How to play Custom'),
-        findsNothing,
-      );
     });
 
     testWidgets('tapping info icon opens rules sheet without navigating',

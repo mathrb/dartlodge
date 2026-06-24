@@ -105,7 +105,6 @@ class VariantSelectionPage extends ConsumerWidget {
         title: v.label,
         rulesSlug: v.rulesSlug,
         isSelected: v.config != null && v.config == selectedConfig,
-        isEnabled: v.isEnabled,
         onTap: v.config == null
             ? null
             : () {
@@ -158,7 +157,6 @@ class VariantSelectionPage extends ConsumerWidget {
             legsToWin: 1,
           ),
         ),
-        _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
   static List<_VariantEntry> _cricketVariants() => [
@@ -209,7 +207,6 @@ class VariantSelectionPage extends ConsumerWidget {
             legsToWin: 1,
           ),
         ),
-        const _VariantEntry(label: 'Custom', isEnabled: false),
       ];
 
   static List<_VariantEntry> _casualVariants() => const [
@@ -483,14 +480,12 @@ class _VariantRow extends StatelessWidget {
     required this.title,
     this.rulesSlug,
     this.isSelected = false,
-    this.isEnabled = true,
     this.onTap,
   });
 
   final String title;
   final String? rulesSlug;
   final bool isSelected;
-  final bool isEnabled;
   final VoidCallback? onTap;
 
   @override
@@ -498,16 +493,15 @@ class _VariantRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
-    Widget row = Semantics(
+    final row = Semantics(
       label: title,
       button: true,
-      enabled: isEnabled,
       child: Material(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: isEnabled ? onTap : null,
+          onTap: onTap,
           splashColor: AppTheme.kineticSplashColor,
           highlightColor: AppTheme.kineticSplashColor,
           child: Container(
@@ -532,7 +526,7 @@ class _VariantRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (isEnabled && rulesSlug != null)
+                if (rulesSlug != null)
                   IconButton(
                     icon: Icon(Icons.info_outline, color: cs.onSurfaceVariant),
                     tooltip: l10n.setupHowToPlay(title),
@@ -550,15 +544,6 @@ class _VariantRow extends StatelessWidget {
       ),
     );
 
-    if (!isEnabled) row = Opacity(opacity: 0.38, child: row);
-
-    if (!isEnabled) {
-      row = Tooltip(
-        message: l10n.setupCustomComingSoon,
-        child: row,
-      );
-    }
-
     return row;
   }
 }
@@ -570,11 +555,9 @@ class _VariantEntry {
     required this.label,
     this.config,
     this.rulesSlug,
-    this.isEnabled = true,
   });
 
   final String label;
   final GameConfig? config;
   final String? rulesSlug;
-  final bool isEnabled;
 }
