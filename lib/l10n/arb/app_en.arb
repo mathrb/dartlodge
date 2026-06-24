@@ -84,6 +84,22 @@
   "@settingsReportBugThanks": {
     "description": "Confirmation shown after sending bug feedback"
   },
+  "settingsCrashReportingTitle": "Crash reporting",
+  "@settingsCrashReportingTitle": {
+    "description": "Title of the crash-reporting (Sentry) opt-out switch"
+  },
+  "settingsCrashReportingSubtitle": "Send anonymous crash diagnostics to help fix bugs",
+  "@settingsCrashReportingSubtitle": {
+    "description": "Subtitle of the crash-reporting switch"
+  },
+  "settingsCrashReportingRestartNote": "Takes effect after restarting the app",
+  "@settingsCrashReportingRestartNote": {
+    "description": "Snackbar shown when the crash-reporting switch is toggled; the change applies on next launch"
+  },
+  "settingsReportBugDisabled": "Enable crash reporting and restart the app to report bugs",
+  "@settingsReportBugDisabled": {
+    "description": "Report-a-bug row subtitle shown when crash reporting is off this session"
+  },
   "settingsDebugSection": "Debug",
   "@settingsDebugSection": {
     "description": "Settings section header for debug tools"

@@ -9,6 +9,7 @@ import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../providers/crash_reporting_provider.dart';
 import '../providers/locale_provider.dart';
 import '../providers/settings_provider.dart';
 import '../widgets/language_selector.dart';
@@ -38,6 +39,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       }
     } finally {
       if (mounted) setState(() => _downloading = false);
+    }
+  }
+
+  Future<void> _setCrashReporting(bool enabled) async {
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    await ref.read(crashReportingEnabledProvider.notifier).setEnabled(enabled);
+    if (mounted) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.settingsCrashReportingRestartNote)),
+      );
     }
   }
 
@@ -132,6 +144,12 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final locale = ref.watch(localeSettingProvider).value; // Locale? — null = system
     final localeNotifier = ref.read(localeSettingProvider.notifier);
     final soundEnabled = ref.watch(soundEnabledProvider).value ?? true;
+    // Toggle reflects the persisted preference; sentryActive reflects whether
+    // Sentry was actually initialized this session (opt-out takes effect on the
+    // next launch). Report-a-Bug gates on the latter so feedback is never lost.
+    final crashReportingEnabled =
+        ref.watch(crashReportingEnabledProvider).value ?? true;
+    final sentryActive = Sentry.isEnabled;
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
@@ -197,11 +215,23 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsFeedbackSection, cs: cs, tt: tt),
+          SwitchListTile(
+            secondary: const Icon(Icons.analytics_outlined),
+            title: Text(l10n.settingsCrashReportingTitle),
+            subtitle: Text(l10n.settingsCrashReportingSubtitle),
+            value: crashReportingEnabled,
+            onChanged: _setCrashReporting,
+          ),
           ListTile(
             leading: const Icon(Icons.bug_report_outlined),
             title: Text(l10n.settingsReportBug),
-            subtitle: Text(l10n.settingsReportBugSubtitle),
-            onTap: _reportBug,
+            subtitle: Text(
+              sentryActive
+                  ? l10n.settingsReportBugSubtitle
+                  : l10n.settingsReportBugDisabled,
+            ),
+            enabled: sentryActive,
+            onTap: sentryActive ? _reportBug : null,
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsDebugSection, cs: cs, tt: tt),
