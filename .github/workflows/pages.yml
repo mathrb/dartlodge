@@ -118,9 +118,10 @@ jobs:
           cp -r web_extra/landing/. _site/
           # Guard against locally-generated render-verify previews being published.
           rm -f _site/_preview-*.png
-          # Favicon comes from the built app bundle (build/web copies web/favicon.png),
-          # so we don't depend on the gitignored web/ dir directly here.
-          cp _site/app/favicon.png _site/favicon.png
+          # Favicon: `flutter build web` does NOT emit favicon.png into build/web,
+          # so copy it from the scaffolded web/ dir (created earlier this job by
+          # `flutter create --platforms=web` + `flutter_launcher_icons`).
+          cp web/favicon.png _site/favicon.png
           cp web_extra/privacy.html _site/privacy.html
           cp build/web/index.html _site/404.html
 
