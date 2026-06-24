@@ -15,10 +15,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dart_lodge/features/auto_scorer/data/capture/capture_stub.dart'
     if (dart.library.io) 'package:dart_lodge/features/auto_scorer/data/capture/capture_io.dart';
 
-/// Auto-scoring settings (#382 §5.1 + #381 §6): the two independent opt-ins
-/// ("use auto-scoring" and "collect training data") plus the training-data
-/// export. Lives in the auto_scorer feature; the main Settings page links here
-/// by route, so neither feature imports the other.
+/// Auto-scoring settings (#382 §5.1 + #381 §6, streamlined in #686): the
+/// "use auto-scoring" opt-in, a single "Record for debugging & training" toggle
+/// (drives both the session-trace and training-photo pipelines), the unified
+/// export, and the detection thresholds. Lives in the auto_scorer feature; the
+/// main Settings page links here by route, so neither feature imports the other.
 class AutoScorerSettingsPage extends ConsumerStatefulWidget {
   const AutoScorerSettingsPage({super.key});
 
