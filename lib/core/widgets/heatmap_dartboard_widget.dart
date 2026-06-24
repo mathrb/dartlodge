@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'heatmap_density.dart';
 
-/// Clockwise segment order starting from 20 at the top.
+/// Clockwise segment order beginning with 20 (index 0).
+///
+/// This is the wedge ORDER, not a positional claim — in the stored frame index
+/// 0's wedge starts at the top wire, not centred on it; see
+/// [heatmapSegmentStartAngle] and [kHeatmapDisplayRotation].
 ///
 /// Mirrors `kDartboardClockOrder` in
 /// `lib/features/game/presentation/widgets/dartboard_highlight_widget.dart`.
@@ -51,9 +55,11 @@ const double kHeatmapDisplayRotation = -kHeatmapSegmentSweep / 2;
 
 /// Renders a density heatmap of dart impacts over a dartboard face.
 ///
-/// Input is a list of normalised positions in the canonical board frame
-/// (`(0,0)` = bull centre, radius `1.0` = outer edge of the double ring, "20 at
-/// the top"). Drive it from a passed-in list — this widget does NO data wiring.
+/// Input is a list of normalised positions in the canonical board frame (see
+/// [HeatPoint] for the exact orientation: `(0,0)` = bull centre, radius `1.0` =
+/// outer edge of the double ring, 5/20 wire at top — rendered as a standard
+/// "20 at top" board via [kHeatmapDisplayRotation]). Drive it from a passed-in
+/// list — this widget does NO data wiring.
 ///
 /// Empty input renders nothing (a [SizedBox.shrink]) so callers can place it
 /// unconditionally and have it disappear for manual-only games.
