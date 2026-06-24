@@ -51,19 +51,64 @@ void main() {
       (tester) async {
     await pump(tester, const Locale('en'));
 
+    final soundSwitch = find.ancestor(
+      of: find.text('Sound effects'),
+      matching: find.byType(SwitchListTile),
+    );
+
     expect(
-      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
+      tester.widget<SwitchListTile>(soundSwitch).value,
       isTrue, // default ON
     );
 
-    await tester.tap(find.byType(SwitchListTile));
+    await tester.tap(soundSwitch);
     await tester.pumpAndSettle();
 
-    expect(
-      tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value,
-      isFalse,
-    );
+    expect(tester.widget<SwitchListTile>(soundSwitch).value, isFalse);
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getBool('sound_enabled'), isFalse);
+  });
+
+  testWidgets(
+      'crash-reporting toggle is on by default and persists when turned off',
+      (tester) async {
+    await pump(tester, const Locale('en'));
+
+    final crashSwitch = find.ancestor(
+      of: find.text('Crash reporting'),
+      matching: find.byType(SwitchListTile),
+    );
+
+    expect(
+      tester.widget<SwitchListTile>(crashSwitch).value,
+      isTrue, // opt-out: default ON
+    );
+
+    await tester.tap(crashSwitch);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<SwitchListTile>(crashSwitch).value, isFalse);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('crash_reporting_enabled'), isFalse);
+    // Toggling surfaces the "takes effect after restart" note.
+    expect(find.text('Takes effect after restarting the app'), findsOneWidget);
+  });
+
+  testWidgets(
+      'Report a Bug is disabled when Sentry is inactive this session',
+      (tester) async {
+    // Sentry is never initialized in flutter test, so Sentry.isEnabled is false
+    // and the Report-a-Bug row must be disabled with the explanatory subtitle.
+    await pump(tester, const Locale('en'));
+
+    final reportBugTile = find.ancestor(
+      of: find.text('Report a Bug'),
+      matching: find.byType(ListTile),
+    );
+    expect(tester.widget<ListTile>(reportBugTile).enabled, isFalse);
+    expect(
+      find.text('Enable crash reporting and restart the app to report bugs'),
+      findsOneWidget,
+    );
   });
 }

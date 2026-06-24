@@ -52,6 +52,10 @@ These diagnostics are used **only** to diagnose and fix crashes and bugs. They
 do **not** include your players' names, your game data, your statistics, or any
 images. We do not use them for advertising or profiling.
 
+**You can turn crash reporting off** at any time in Settings → Feedback. It is on
+by default; once you disable it the change takes effect the next time you open
+the app, after which no crash or error diagnostics are sent.
+
 DartLodge also includes an optional **"Report a Bug"** feature in Settings. If
 you choose to use it, the description you type is sent to Sentry so we can
 investigate the problem. Please avoid including personal information in that
