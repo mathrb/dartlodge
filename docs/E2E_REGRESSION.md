@@ -92,7 +92,7 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 | `@shanghai` | Shanghai |
 | `@bobs27` | Bob's 27 |
 | `@countup` | Catch 40 / Count Up |
-| `@atc` | Around the Clock *(no spec yet — gap)* |
+| `@atc` | Around the Clock (Standard / Reverse / Doubles Only) |
 | `@checkout` | Checkout Practice *(no spec yet — gap)* |
 
 **Cross-cutting tags:**
@@ -121,7 +121,7 @@ on the left → run the tag(s) on the right before merging.
 | Shanghai engine / use cases | `@shanghai` |
 | Bob's 27 engine / use cases | `@bobs27` |
 | Catch 40 / Count Up engine / use cases | `@countup` |
-| Around the Clock engine / use cases | `@atc` *(gap — no spec)* |
+| Around the Clock engine / use cases | `@atc` |
 | Checkout Practice engine / use cases | `@checkout` *(gap — no spec)* |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
 | `statistics/` assemblers, projections, stats pages | `@stats` |
@@ -156,6 +156,9 @@ on the left → run the tag(s) on the right before merging.
 | `x01_resume_leg_count.spec.ts` | `@x01 @autoscorer` |
 | `x01_manual_entry.spec.ts` | `@x01 @correction` |
 | `x01_auto_score_correction.spec.ts` | `@x01 @autoscorer @correction` |
+| `atc_standard.spec.ts` | `@atc @autoscorer` |
+| `atc_variants.spec.ts` | `@atc @autoscorer` |
+| `atc_manual_entry.spec.ts` | `@atc` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
 
 ---
@@ -191,5 +194,4 @@ on the left → run the tag(s) on the right before merging.
   - **Band→sheet dart correction** (incl. the #590 crazy closed-target case) —
     tied to the `cricket_correction_history` `test.fixme` scaffold, which is
     still blocked on rendering the turn breakdown before the leg completes.
-- `@atc` — Around the Clock has an engine but no e2e spec.
 - `@checkout` — Checkout Practice has an engine but no e2e spec.
