@@ -33,48 +33,55 @@ void main() {
       tester.widget<SegmentedButton<CaptureMode>>(
           find.byType(SegmentedButton<CaptureMode>));
 
-  testWidgets('capture-mode defaults to All and switches to Mistakes only',
+  testWidgets('capture-mode defaults to Mistakes only and switches to All',
       (tester) async {
     SharedPreferences.setMockInitialValues(
         {'auto_scorer_collect_training_data': true});
     await pump(tester);
 
-    expect(modeButton(tester).selected, {CaptureMode.all});
+    expect(modeButton(tester).selected, {CaptureMode.partial});
     expect(modeButton(tester).onSelectionChanged, isNotNull);
 
     // The control sits below the fold on the test viewport; scroll it in first.
-    await tester.ensureVisible(find.text('Mistakes only'));
-    await tester.tap(find.text('Mistakes only'));
+    await tester.ensureVisible(find.text('All'));
+    await tester.tap(find.text('All'));
     await tester.pumpAndSettle();
 
-    expect(modeButton(tester).selected, {CaptureMode.partial});
+    expect(modeButton(tester).selected, {CaptureMode.all});
   });
 
-  testWidgets('session recording toggle defaults off and switches on',
+  testWidgets('single record toggle defaults off and enables capture when on',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
     await pump(tester);
 
-    final tile = find.widgetWithText(SwitchListTile, 'Record sessions (debug)');
+    final tile =
+        find.widgetWithText(SwitchListTile, 'Record for debugging & training');
     expect(tile, findsOneWidget);
     expect(tester.widget<SwitchListTile>(tile).value, isFalse);
+    // While recording is off, the capture-mode control is disabled.
+    expect(modeButton(tester).onSelectionChanged, isNull);
 
     await tester.ensureVisible(tile);
     await tester.tap(tile);
     await tester.pumpAndSettle();
 
     expect(tester.widget<SwitchListTile>(tile).value, isTrue);
+    // Enabling recording turns data collection on, so capture-mode is now live.
+    expect(modeButton(tester).onSelectionChanged, isNotNull);
   });
 
-  testWidgets('shows the export-latest-recording tile', (tester) async {
+  testWidgets('shows a single export tile (no separate session export)',
+      (tester) async {
     SharedPreferences.setMockInitialValues({});
     await pump(tester);
-    expect(find.text('Export latest recording'), findsOneWidget);
+    expect(find.text('Export recordings'), findsOneWidget);
+    expect(find.text('Export latest recording'), findsNothing);
+    expect(find.text('Export training data'), findsNothing);
   });
 
-  testWidgets('capture-mode is disabled when data collection is off',
-      (tester) async {
-    SharedPreferences.setMockInitialValues({}); // collect off (default)
+  testWidgets('capture-mode is disabled when recording is off', (tester) async {
+    SharedPreferences.setMockInitialValues({}); // recording off (default)
     await pump(tester);
 
     expect(modeButton(tester).onSelectionChanged, isNull);

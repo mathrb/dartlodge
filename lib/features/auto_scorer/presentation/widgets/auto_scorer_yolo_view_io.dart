@@ -425,7 +425,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     // user opted out of (the store is non-null even when collection is off).
     if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) return;
     final mode =
-        ref.read(captureModeSettingProvider).value ?? CaptureMode.all;
+        ref.read(captureModeSettingProvider).value ?? CaptureMode.partial;
     if (mode == CaptureMode.all) {
       unawaited(widget.session.applyDartCorrection(
         gameId: widget.gameId,
@@ -516,7 +516,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     // happen only at correction time (#457, see [correctDart]).
     if (result.emittedDarts.isNotEmpty &&
         (ref.read(dataCollectionEnabledProvider).value ?? false) &&
-        (ref.read(captureModeSettingProvider).value ?? CaptureMode.all) ==
+        (ref.read(captureModeSettingProvider).value ?? CaptureMode.partial) ==
             CaptureMode.all) {
       unawaited(_captureEmitted(frame, result.firstEmittedDartOrdinal!,
           result.emittedDarts.length));

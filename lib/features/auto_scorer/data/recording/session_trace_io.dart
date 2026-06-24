@@ -4,7 +4,6 @@ import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.d
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 /// File-backed [SessionTraceStore] for mobile/desktop (#490). Conditionally
 /// imported in place of the web stub; only ever loaded where `dart:io` exists.
@@ -79,22 +78,4 @@ Future<SessionTraceStore> openDefaultSessionTraceStore() async {
   final support = await getApplicationSupportDirectory();
   return FileSessionTraceStore(
       Directory(p.join(support.path, 'auto_scorer', 'sessions')));
-}
-
-/// Write a session export bundle [json] to a temp file named for [sessionId]
-/// (a uuid → unique, no timestamp needed) and return its path, for sharing a
-/// recorded session off the device (#492).
-Future<String> writeSessionExport(String sessionId, String json) async {
-  final tmp = await getTemporaryDirectory();
-  final path = p.join(tmp.path, 'dartlodge-session-$sessionId.json');
-  await File(path).writeAsString(json, flush: true);
-  return path;
-}
-
-/// Hand an exported session file at [path] to the OS share sheet.
-Future<void> shareSessionFile(String path) async {
-  await SharePlus.instance.share(ShareParams(
-    files: [XFile(path, mimeType: 'application/json')],
-    subject: 'DartLodge session recording',
-  ));
 }

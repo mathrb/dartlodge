@@ -14,8 +14,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Web-guarded share helpers (no-op stubs on web).
 import 'package:dart_lodge/features/auto_scorer/data/capture/capture_stub.dart'
     if (dart.library.io) 'package:dart_lodge/features/auto_scorer/data/capture/capture_io.dart';
-import 'package:dart_lodge/features/auto_scorer/data/recording/session_trace_stub.dart'
-    if (dart.library.io) 'package:dart_lodge/features/auto_scorer/data/recording/session_trace_io.dart';
 
 /// Auto-scoring settings (#382 §5.1 + #381 §6): the two independent opt-ins
 /// ("use auto-scoring" and "collect training data") plus the training-data
@@ -32,13 +30,19 @@ class AutoScorerSettingsPage extends ConsumerStatefulWidget {
 class _AutoScorerSettingsPageState
     extends ConsumerState<AutoScorerSettingsPage> {
   // Inline export progress (#468). While exporting, the Export tile shows a
-  // determinate bar (fraction of capture files zipped) and disables its tap.
+  // determinate bar (fraction of capture files + session bundles zipped) and
+  // disables its tap.
   bool _exporting = false;
   double _exportProgress = 0;
 
-  // Session-recording export (#492): small bundle (no streaming), so just a
-  // busy flag that disables the tile while building/sharing.
-  bool _exportingSession = false;
+  /// The single "Record" toggle (#686) drives both opt-ins together: the
+  /// lightweight session trace and the board-photo training capture. Both
+  /// pipelines still gate on their own provider, so this just keeps them in
+  /// lockstep from one control.
+  void _setRecording(bool enabled) {
+    ref.read(sessionRecordingEnabledProvider.notifier).setEnabled(enabled);
+    ref.read(dataCollectionEnabledProvider.notifier).setEnabled(enabled);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +52,10 @@ class _AutoScorerSettingsPageState
     final collect = ref.watch(dataCollectionEnabledProvider);
     final captureMode = ref.watch(captureModeSettingProvider);
     final collectOn = collect.value ?? false;
+    // The single "Record" toggle (#686) reflects either underlying opt-in being
+    // on, and drives both together via _setRecording.
+    final recordingOn = collectOn || (recordSessions.value ?? false);
+    final recordingBusy = collect.isLoading || recordSessions.isLoading;
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
     final l10n = AppLocalizations.of(context);
@@ -56,6 +64,18 @@ class _AutoScorerSettingsPageState
       appBar: AppBar(title: Text(l10n.autoScorerTitle)),
       body: ListView(
         children: [
+          // Camera setup tips first (#686): the first thing a new user should
+          // read before turning auto-scoring on. Review-only — see the tile's
+          // note below; the one-time prompt lives on the game-flow path.
+          ListTile(
+            leading: const Icon(Icons.tips_and_updates_outlined),
+            title: Text(l10n.autoScorerSetupTipsTile),
+            subtitle: Text(l10n.autoScorerSetupTipsTileSubtitle),
+            onTap: () => Navigator.of(context).push<void>(MaterialPageRoute(
+                builder: (_) =>
+                    const AutoScorerSetupTipsView(reviewOnly: true))),
+          ),
+          const Divider(),
           SwitchListTile(
             secondary: const Icon(Icons.center_focus_strong),
             title: Text(l10n.autoScorerUseTitle),
@@ -77,57 +97,20 @@ class _AutoScorerSettingsPageState
                     .read(autoAdvanceOnClearEnabledProvider.notifier)
                     .setEnabled(v),
           ),
-          SwitchListTile(
-            secondary: const Icon(Icons.bug_report_outlined),
-            title: const Text('Record sessions (debug)'),
-            subtitle: const Text(
-                'Log the camera detection stream so a scoring bug can be '
-                'replayed off-device. Lightweight (no photos); the last few '
-                'sessions are kept on this device.'),
-            value: recordSessions.value ?? false,
-            onChanged: recordSessions.isLoading
-                ? null
-                : (v) => ref
-                    .read(sessionRecordingEnabledProvider.notifier)
-                    .setEnabled(v),
-          ),
-          ListTile(
-            leading: const Icon(Icons.upload_file_outlined),
-            title: const Text('Export latest recording'),
-            subtitle: _exportingSession
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: LinearProgressIndicator())
-                : const Text(
-                    'Share the most recent session (detections + game events) '
-                    'to replay a bug off-device.'),
-            onTap: _exportingSession ? null : () => _exportSession(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.tips_and_updates_outlined),
-            title: Text(l10n.autoScorerSetupTipsTile),
-            subtitle: Text(l10n.autoScorerSetupTipsTileSubtitle),
-            // Review-only: opened just to re-read the tips, so the "don't show
-            // again" checkbox and "Continue to camera" button are hidden and we
-            // never touch the "seen" pref. The one-time prompt + dismissal live
-            // on the game-flow path (board overlay's _start()).
-            onTap: () => Navigator.of(context).push<void>(MaterialPageRoute(
-                builder: (_) =>
-                    const AutoScorerSetupTipsView(reviewOnly: true))),
-          ),
           const Divider(),
+          // Single "Record (debug)" opt-in (#686): one toggle drives BOTH the
+          // lightweight session trace (detections + game events, to replay a
+          // scoring bug off-device) AND the board-photo training capture (to
+          // improve detection). Off by default — we never silently store photos.
           SwitchListTile(
-            secondary: const Icon(Icons.dataset),
-            title: const Text('Collect training data'),
+            secondary: const Icon(Icons.fiber_manual_record_outlined),
+            title: const Text('Record for debugging & training'),
             subtitle: const Text(
-                'Store board photos + corrections to improve detection. Stays '
-                'on this device until you export.'),
-            value: collectOn,
-            onChanged: collect.isLoading
-                ? null
-                : (v) => ref
-                    .read(dataCollectionEnabledProvider.notifier)
-                    .setEnabled(v),
+                'Store board photos and the detection stream so scoring bugs '
+                'can be replayed off-device and the model improved. Stays on '
+                'this device until you export.'),
+            value: recordingOn,
+            onChanged: recordingBusy ? null : _setRecording,
           ),
           // Capture mode (#457): "All" saves every detected dart; "Mistakes
           // only" saves just the frames you correct (the model's errors), so the
@@ -144,7 +127,7 @@ class _AutoScorerSettingsPageState
                   ButtonSegment(
                       value: CaptureMode.partial, label: Text('Mistakes only')),
                 ],
-                selected: {captureMode.value ?? CaptureMode.all},
+                selected: {captureMode.value ?? CaptureMode.partial},
                 onSelectionChanged: (!collectOn || captureMode.isLoading)
                     ? null
                     : (selection) => ref
@@ -155,7 +138,7 @@ class _AutoScorerSettingsPageState
           ),
           ListTile(
             leading: const Icon(Icons.ios_share),
-            title: const Text('Export training data'),
+            title: const Text('Export recordings'),
             subtitle: _exporting
                 ? Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -169,7 +152,8 @@ class _AutoScorerSettingsPageState
                       ],
                     ),
                   )
-                : const Text('Share a zip of captured frames.'),
+                : const Text(
+                    'Share one zip of captured frames and recorded sessions.'),
             onTap: _exporting ? null : () => _export(context),
           ),
           const Divider(),
@@ -181,6 +165,17 @@ class _AutoScorerSettingsPageState
             padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: Text('Detection thresholds',
                 style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          // Plain-language help (#686 4a): orient a non-expert before they touch
+          // the sliders, framed as the recall/false-positive trade-off.
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(
+                'How sure the camera must be before it counts a detection. '
+                'Lower = catches more darts/calibration points but risks false '
+                'hits; higher = only confident detections but may miss some. '
+                'Leave at the default unless detection is consistently missing '
+                'or over-counting.'),
           ),
           _ConfidenceSlider(
             icon: Icons.crop_free,
@@ -203,6 +198,11 @@ class _AutoScorerSettingsPageState
     );
   }
 
+  /// Single export (#686): one `dartlodge-export-*.zip` holding the captured
+  /// training frames (flat at the root — unchanged ingest contract) plus every
+  /// recorded session as a self-contained bundle under `sessions/` (detection
+  /// trace + correlated game events + game/competitors). Then offer to clear
+  /// both stores.
   Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     final store = await ref.read(captureStoreProvider.future);
@@ -212,12 +212,36 @@ class _AutoScorerSettingsPageState
       return;
     }
     final captures = await store.list();
-    if (captures.isEmpty) {
+
+    // Bundle each recorded session into an in-memory JSON under sessions/.
+    final sessionStore = await ref.read(sessionTraceStoreProvider.future);
+    final sessionFiles = <({String archivePath, String content})>[];
+    if (sessionStore.isSupported) {
+      final ids = await sessionStore.list();
+      final gameRepo = ref.read(gameRepositoryProvider);
+      final eventRepo = ref.read(gameEventRepositoryProvider);
+      for (final id in ids) {
+        final trace = await sessionStore.read(id);
+        if (trace == null) continue;
+        final gameId = trace.header.gameId;
+        final game = await gameRepo.getGame(gameId);
+        if (game == null) continue; // game pruned — skip, don't fail the export
+        final events = await eventRepo.getEventsForGame(gameId);
+        final competitors = await gameRepo.getCompetitors(gameId);
+        final bundle = SessionBundle(
+            trace: trace, events: events, game: game, competitors: competitors);
+        sessionFiles.add(
+            (archivePath: 'sessions/$id.json', content: bundle.toJsonString()));
+      }
+    }
+
+    if (captures.isEmpty && sessionFiles.isEmpty) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('No captured frames to export yet.')));
+          const SnackBar(content: Text('Nothing to export yet.')));
       return;
     }
-    final count = captures.length;
+    final frameCount = captures.length;
+    final sessionCount = sessionFiles.length;
     final dest = await reserveExportZipPath();
     if (!mounted) return;
     setState(() {
@@ -225,7 +249,8 @@ class _AutoScorerSettingsPageState
       _exportProgress = 0;
     });
     try {
-      await store.writeExportZip(dest, onProgress: (p) {
+      await store.writeExportZip(dest, extraFiles: sessionFiles,
+          onProgress: (p) {
         if (mounted) setState(() => _exportProgress = p);
       });
     } catch (_) {
@@ -239,18 +264,19 @@ class _AutoScorerSettingsPageState
       if (mounted) setState(() => _exporting = false);
     }
     await shareCaptureZipFile(dest);
-    // The export zips every stored capture, so re-exporting re-includes ones
-    // already shared. Offer to clear them after the share sheet closes so they
-    // don't pile up / re-export. Prompt (not auto-clear) because the share
-    // result isn't reliable on Android — a cancelled share shouldn't wipe data.
+    // The export zips everything stored, so re-exporting re-includes what was
+    // already shared. Offer to clear after the share sheet closes so it doesn't
+    // pile up / re-export. Prompt (not auto-clear) because the share result
+    // isn't reliable on Android — a cancelled share shouldn't wipe data.
     if (!context.mounted) return;
     final clear = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear exported frames?'),
+        title: const Text('Clear exported data?'),
         content: Text(
-            'Exported $count frame${count == 1 ? '' : 's'}. Clear all captured '
-            'frames from this device so they are not exported again?'),
+            'Exported $frameCount frame${frameCount == 1 ? '' : 's'} and '
+            '$sessionCount session${sessionCount == 1 ? '' : 's'}. Clear them '
+            'from this device so they are not exported again?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -263,81 +289,9 @@ class _AutoScorerSettingsPageState
     );
     if (clear == true) {
       await store.clear();
-      messenger.showSnackBar(SnackBar(
-          content: Text('Cleared $count exported frame${count == 1 ? '' : 's'}')));
-    }
-  }
-
-  /// Export the most recent recorded session as a self-contained bundle
-  /// (detection trace + correlated game events + game/competitors), then offer
-  /// to clear recordings (#492).
-  Future<void> _exportSession(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final store = await ref.read(sessionTraceStoreProvider.future);
-    if (!store.isSupported) {
+      if (sessionStore.isSupported) await sessionStore.clear();
       messenger.showSnackBar(
-          const SnackBar(content: Text('Export is not available here.')));
-      return;
-    }
-    final ids = await store.list();
-    if (ids.isEmpty) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text('No recordings to export yet.')));
-      return;
-    }
-    if (!mounted) return;
-    setState(() => _exportingSession = true);
-    try {
-      final sessionId = ids.first; // most recent
-      final trace = await store.read(sessionId);
-      if (trace == null) {
-        messenger.showSnackBar(
-            const SnackBar(content: Text('Recording not found.')));
-        return;
-      }
-      final gameId = trace.header.gameId;
-      final gameRepo = ref.read(gameRepositoryProvider);
-      final game = await gameRepo.getGame(gameId);
-      if (game == null) {
-        messenger.showSnackBar(const SnackBar(
-            content: Text('The game for this recording is no longer stored.')));
-        return;
-      }
-      final events =
-          await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
-      final competitors = await gameRepo.getCompetitors(gameId);
-      final bundle = SessionBundle(
-          trace: trace, events: events, game: game, competitors: competitors);
-      final dest = await writeSessionExport(sessionId, bundle.toJsonString());
-      await shareSessionFile(dest);
-    } catch (_) {
-      messenger.showSnackBar(
-          const SnackBar(content: Text('Export failed. Please try again.')));
-      return;
-    } finally {
-      if (mounted) setState(() => _exportingSession = false);
-    }
-    if (!context.mounted) return;
-    final clear = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear recordings?'),
-        content:
-            const Text('Clear all recorded sessions stored on this device?'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Keep')),
-          FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Clear')),
-        ],
-      ),
-    );
-    if (clear == true) {
-      await store.clear();
-      messenger.showSnackBar(
-          const SnackBar(content: Text('Cleared recorded sessions')));
+          const SnackBar(content: Text('Cleared exported recordings')));
     }
   }
 }

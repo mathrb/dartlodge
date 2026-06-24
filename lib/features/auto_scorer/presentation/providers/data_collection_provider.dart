@@ -38,8 +38,10 @@ class DataCollectionEnabled extends _$DataCollectionEnabled {
   }
 }
 
-/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-/// behaviour is unchanged. Only meaningful while data collection is on.
+/// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+/// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+/// not a flood of easy/correct examples — so "Mistakes only" is the sane
+/// default. Only meaningful while data collection is on.
 @Riverpod(keepAlive: true)
 class CaptureModeSetting extends _$CaptureModeSetting {
   @override
@@ -48,7 +50,7 @@ class CaptureModeSetting extends _$CaptureModeSetting {
     final stored = prefs.getString(_kCaptureModeKey);
     return CaptureMode.values.firstWhere(
       (m) => m.name == stored,
-      orElse: () => CaptureMode.all,
+      orElse: () => CaptureMode.partial,
     );
   }
 

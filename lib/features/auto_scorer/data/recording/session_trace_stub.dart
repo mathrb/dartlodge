@@ -29,7 +29,3 @@ class _UnsupportedSessionTraceStore implements SessionTraceStore {
 
 Future<SessionTraceStore> openDefaultSessionTraceStore() async =>
     const _UnsupportedSessionTraceStore();
-
-Future<String> writeSessionExport(String sessionId, String json) async => '';
-
-Future<void> shareSessionFile(String path) async {}

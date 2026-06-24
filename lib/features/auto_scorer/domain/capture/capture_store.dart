@@ -36,8 +36,15 @@ abstract class CaptureStore {
   /// as files are added. Bounded memory — does not assemble the archive in RAM
   /// (#468) — so it stays within the heap regardless of capture-folder size. The
   /// caller hands [destPath] to the OS share sheet.
+  ///
+  /// [extraFiles] are in-memory text entries embedded verbatim at their given
+  /// `archivePath` (#686 single-zip export — used to add recorded session
+  /// bundles under `sessions/`). The capture frames/sidecars stay at the zip
+  /// root with flat names, so the `dartlodge-export-*.zip` ingest contract is
+  /// unchanged; consumers that only read root `*.jpg`/`*.json` ignore the extras.
   Future<void> writeExportZip(String destPath,
-      {void Function(double)? onProgress});
+      {void Function(double)? onProgress,
+      List<({String archivePath, String content})> extraFiles = const []});
 
   /// Remove all stored captures.
   Future<void> clear();

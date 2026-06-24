@@ -37,21 +37,22 @@ void main() {
   });
 
   group('CaptureModeSetting (#457)', () {
-    test('defaults to all when nothing stored', () async {
+    test('defaults to partial (Mistakes only) when nothing stored (#686)',
+        () async {
       SharedPreferences.setMockInitialValues({});
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(await container.read(captureModeSettingProvider.future),
-          CaptureMode.all);
+          CaptureMode.partial);
     });
 
     test('reads a stored mode', () async {
       SharedPreferences.setMockInitialValues(
-          {'auto_scorer_capture_mode': 'partial'});
+          {'auto_scorer_capture_mode': 'all'});
       final container = ProviderContainer();
       addTearDown(container.dispose);
       expect(await container.read(captureModeSettingProvider.future),
-          CaptureMode.partial);
+          CaptureMode.all);
     });
 
     test('setMode persists and survives a fresh container', () async {

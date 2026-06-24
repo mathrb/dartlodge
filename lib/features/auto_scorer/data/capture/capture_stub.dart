@@ -31,7 +31,9 @@ class _UnsupportedCaptureStore implements CaptureStore {
 
   @override
   Future<void> writeExportZip(String destPath,
-          {void Function(double)? onProgress}) async =>
+          {void Function(double)? onProgress,
+          List<({String archivePath, String content})> extraFiles =
+              const []}) async =>
       throw UnsupportedError('Capture export is not available on web.');
 
   @override
