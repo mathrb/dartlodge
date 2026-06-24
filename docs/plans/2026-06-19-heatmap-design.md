@@ -54,6 +54,14 @@ territoire du probe), pas un nouveau mode de défaillance introduit par la heatm
 On ne réoriente rien nous-mêmes : on stocke la position canonique que le scorer calcule
 déjà, normalisée par le rayon `radius` du `CanonicalTransform`.
 
+**Orientation d'affichage (#697).** Le repère de scoring ancre le **fil 5/20 en haut**
+(`cal1 → top`), donc le centre du segment 20 tombe à ~9° dans le sens horaire de la
+verticale, pas dessus. `HeatmapDartboardWidget` applique une **rotation d'affichage**
+(`kHeatmapDisplayRotation = -π/20`, soit −½ segment) à l'ensemble — wedges **et** image de
+densité ensemble — pour montrer un tableau standard « 20 en haut » (fil 5/20 ~9° à gauche de
+la verticale). Données stockées et homographie inchangées ; les impacts restent dans leur
+wedge puisque les deux couches tournent ensemble.
+
 ## Phase 1 — Pipeline de capture
 
 Faire transiter le `(x,y)` normalisé du tracker jusqu'à l'événement et la table.

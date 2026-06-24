@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:dart_lodge/core/widgets/heatmap_dartboard_widget.dart';
 import 'package:dart_lodge/core/widgets/heatmap_density.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,35 @@ Widget _host(Widget child) => MaterialApp(
     );
 
 void main() {
+  group('heatmap orientation (#697)', () {
+    // Centre angle of the wedge at [index] in the stored canonical frame.
+    double centreAngle(int index) =>
+        heatmapSegmentStartAngle(index) + kHeatmapSegmentSweep / 2;
+
+    test('stored frame: segment 20 sits just clockwise of vertical (5/20 wire '
+        'at top)', () {
+      // The scorer anchors cal1 (5/20 wire) at the top (-π/2), so the 20 wedge
+      // starts there and its centre is half a sweep clockwise.
+      expect(heatmapSegmentStartAngle(0), closeTo(-math.pi / 2, 1e-9));
+      expect(centreAngle(0), closeTo(-math.pi / 2 + kHeatmapSegmentSweep / 2,
+          1e-9));
+    });
+
+    test('display rotation brings segment 20 to the vertical top', () {
+      // Rotating the wedge layout by the display rotation must put the 20
+      // centre straight up (-π/2) — a standard "20 at the top" board.
+      expect(centreAngle(0) + kHeatmapDisplayRotation,
+          closeTo(-math.pi / 2, 1e-9));
+    });
+
+    test('display rotation is minus half a segment (~9° CCW)', () {
+      expect(kHeatmapDisplayRotation, closeTo(-kHeatmapSegmentSweep / 2, 1e-12));
+      // After rotation the 5/20 wire (stored at top) sits ~9° left of vertical.
+      expect(heatmapSegmentStartAngle(0) + kHeatmapDisplayRotation,
+          closeTo(-math.pi / 2 - kHeatmapSegmentSweep / 2, 1e-9));
+    });
+  });
+
   testWidgets('empty input renders nothing (SizedBox.shrink)', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
