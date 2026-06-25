@@ -158,7 +158,6 @@ class _TurnTable extends StatelessWidget {
             style: theme.textTheme.labelSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.w900,
-              fontSize: 10,
               letterSpacing: 0.2,
             ),
           ),
@@ -256,7 +255,8 @@ class _TurnTable extends StatelessWidget {
   /// Column indices (within [_columns], BEFORE the optional leading PLAYER
   /// column) that should flex to absorb leftover width: the dart-chip column
   /// (chips wrap onto extra lines) and any wide free-text column (X01 /
-  /// Checkout Practice's "turn score · BUST/CHECKOUT"). Every other column is
+  /// Checkout Practice's turn score + BUST/CHECKOUT flag, stacked on two lines
+  /// by turnScoreCell). Every other column is
   /// a short number or label and sizes to its content. Making only these flex
   /// keeps the whole table within the parent width — no horizontal scroll, and
   /// no empty band on narrow tables like Cricket (replaces the old
@@ -303,7 +303,7 @@ class _TurnTable extends StatelessWidget {
                 // Favor the text column over the chips column so "CHECKOUT"
                 // fits on one line even in the tight multi-player layout
                 // (chips just wrap onto more rows when their column shrinks).
-                ? const FlexColumnWidth(2.3)
+                ? const FlexColumnWidth(2.6)
                 : const IntrinsicColumnWidth(),
     };
 
@@ -399,8 +399,8 @@ class _AtcSegmentTable extends StatelessWidget {
         ),
       ),
       clipBehavior: Clip.antiAlias,
-      // Four short columns flex to fill the parent width evenly — fits without
-      // a horizontal scroll, matching the turn table.
+      // Four short columns flex to fill the parent width (segment a little
+      // wider) — fits without a horizontal scroll, matching the turn table.
       child: Table(
         columnWidths: const {
           0: FlexColumnWidth(1.4),
