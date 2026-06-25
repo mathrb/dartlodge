@@ -146,7 +146,7 @@ All state classes use `freezed`. Never mutate state in place. Always use `copyWi
 | Navigation | `go_router` |
 | UUID generation | `uuid` |
 | Code generation runner | `build_runner` |
-| Crash reporting | `sentry_flutter` (conditionally initialized in `lib/main.dart` — opt-out, see Sentry note below; do not remove the `SentryFlutter.init` call) |
+| Crash reporting | `sentry_flutter` (conditionally initialized in `lib/main.dart` — opt-out, see the Sentry rule in `docs/rules/git-ci-release.md`; do not remove the `SentryFlutter.init` call) |
 
 Platform selection (native SQLite vs WASM) happens once in the Drift factory. Everywhere else sees only the repository interface.
 
@@ -209,7 +209,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 - **CI does not run `build_runner`.** Generated `.g.dart` / `.freezed.dart` / `.mocks.dart` are committed — after editing any `@freezed` / `@riverpod` / `@GenerateMocks`, regenerate locally and commit in the same PR.
 - **Run `flutter analyze --no-fatal-infos` as the LAST step before push** (project-wide, not per-path). Quick CI-clean check: `flutter analyze --no-fatal-infos 2>&1 | grep -E '^\s*(warning|error) •'` → empty = clean. Detail → `docs/rules/git-ci-release.md`.
 - **Stage explicit paths — never `git add -A` / `git add .`.** The tree carries many untracked scratch files (`*.png`/`*.jpg`/`*.yml` at the repo root, `e2e/node_modules`, `.playwright-*`); a blanket add stages junk.
-- **Never commit `pubspec.lock` / `.flutter-plugins-dependencies`** unless the dep set actually changed (`git checkout` them before staging).
+- **Never commit `pubspec.lock` / `.flutter-plugins-dependencies`** unless the dep set actually changed — they regenerate on every `flutter pub get` / `flutter run` / `build_runner build` and commonly show `M`. Run `git checkout pubspec.lock .flutter-plugins-dependencies` before staging to keep PR diffs clean.
 - **Route every displayed number through `StatFormatter`** (`lib/core/utils/stat_formatter.dart`) — `test.yml` greps `lib/features/*/presentation/` for `toStringAsFixed` and fails CI on ANY match. Detail → `docs/rules/statistics.md`.
 - **Spec edits touch only the spec** — never code, unless explicitly asked.
 - **After any UI refactor, update the test expectations in the same session** before committing.
@@ -220,7 +220,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 |---|---|---|
 | Cricket scoring / variants / labels | `docs/rules/cricket.md` | Variant labels live in **3 aligned places**; adding a variant = **4 edits incl. a registry test**; scoring × targetMode are orthogonal — **never hardcode `[15..20]`** |
 | X01 scoring / strategy / turn_score | `docs/rules/x01.md` | Strategy values are lowercase (`'straight'`/`'double'`/`'master'`); `TurnEnded` must carry `turn_score` |
-| Game events / rounds / payloads / RNG | `docs/rules/game-engine.md` | `local_sequence` is **per-game** — sort by `(game_id, local_sequence)`; a "round" = full rotation (`totalRounds`); `DartCorrected` key is `original_event_id`; `endGame/endDrill` don't mutate `gameState.isComplete` |
+| Game events / config dispatch / rounds / payloads / RNG | `docs/rules/game-engine.md` | `GameConfig` dispatch uses `maybeMap`, **not** `maybeWhen`; `local_sequence` is **per-game** — sort by `(game_id, local_sequence)`; a "round" = full rotation (`totalRounds`); `DartCorrected` key is `original_event_id`; `endGame/endDrill` don't mutate `gameState.isComplete` |
 | Stats / projections / formatters | `docs/rules/statistics.md` | All projection wiring lives in `PlayerStatsAssembler`; `GameStats.gameType` is load-bearing; snapshots are two-level |
 | Drift schema / DB / test fixtures | `docs/rules/database.md` | **Completed games are read-only** — create incomplete → insert → `completeGame()`; after any schema change bump `databaseVersion` + `onUpgrade` + regen snapshots; FKs need explicit `.references()` |
 | Auto-scorer / camera / capture | `docs/rules/auto-scorer.md` | Don't wrap `CameraPreview` in your own `AspectRatio`; **every capture write gates on `dataCollectionEnabledProvider`**; camera changes aren't widget-testable |

@@ -169,10 +169,11 @@ event · Cricket scoring × target mode orthogonal · Cricket variant labels in 
 Per-leg round cap · `DartCorrected` payload key (`original_event_id`) ·
 `endGame()/endDrill()` don't mutate `isComplete`.
 
-**`statistics.md` (8):** Statistics scope resets · Computing stats over an event slice
+**`statistics.md` (9):** Statistics scope resets · Computing stats over an event slice
 (`PlayerStatsAssembler`) · `GameStats.gameType` load-bearing · Statistics loader vs
 computation · Cricket mark-bucket field overload · Statistics scope required
-(`gameType`) · Projection snapshots two-level.
+(`gameType`) · Projection snapshots two-level · Widget test finders · Number
+formatting (also a short inline pointer in Workflow essentials).
 
 **`database.md` (8):** Repository exceptions · Contract tests · Database
 (versions/migrations) · Drift foreign keys · Test database setup · Test game setup
@@ -188,12 +189,17 @@ Navigation `go()` vs `push()`.
 
 **`testing.md` (1):** Notifier tests. *(Widget test finders → `statistics.md`.)*
 
-**`git-ci-release.md` (5):** Releases tag-driven · Version bumps · `flutter create`
-stray `widget_test.dart` · "Unused" in `lib/` may be wiring · Sentry error handlers.
+**`git-ci-release.md` (7):** Releases tag-driven · Version bumps · `flutter create`
+stray `widget_test.dart` · "Unused" in `lib/` may be wiring · Sentry error handlers ·
+PR reviews (full pipeline) · Analyze in CI (full detail) — the last two also have
+short inline pointers in Workflow essentials.
 
 **`e2e.md` (1):** E2E regression reminders.
 
-Total: 11 inline + 49 in files = **60** (lossless).
+Total: **60 distinct rules** (lossless) = 8 inline-only + 49 file-only + 3
+double-placed. The 3 double-placed (Number formatting, PR reviews, Analyze in CI)
+each have a short inline pointer in Workflow essentials *and* a full entry in their
+domain file, so file entries sum to 52 (49 + 3).
 
 ---
 
