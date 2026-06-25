@@ -190,6 +190,11 @@ for (const theme of ['light', 'dark'] as const) {
 
       await expect(page.getByRole('button', { name: /DONE/i }))
         .toBeVisible({ timeout: 15000 });
+      // Completing the game unlocks achievements (here first_180 + first_win),
+      // each shown as a self-dismissing 3s snackbar queued one-at-a-time. Wait
+      // out the queue so the toast doesn't slice across the bottom of these
+      // marketing shots (≈6s for two; 9s leaves margin).
+      await page.waitForTimeout(9000);
       await shot(page, '04-post-game');
       await page.mouse.wheel(0, 1400);
       await page.waitForTimeout(900);
