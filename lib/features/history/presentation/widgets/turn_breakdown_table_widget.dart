@@ -45,7 +45,7 @@ class TurnBreakdownTableWidget extends StatelessWidget {
   }
 }
 
-class _TurnTable extends StatefulWidget {
+class _TurnTable extends StatelessWidget {
   const _TurnTable({
     required this.gameType,
     required this.turns,
@@ -56,28 +56,9 @@ class _TurnTable extends StatefulWidget {
   final List<TurnRow> turns;
   final bool singleCompetitor;
 
-  @override
-  State<_TurnTable> createState() => _TurnTableState();
-}
-
-class _TurnTableState extends State<_TurnTable> {
-  late final ScrollController _hController;
-
-  @override
-  void initState() {
-    super.initState();
-    _hController = ScrollController();
-  }
-
-  @override
-  void dispose() {
-    _hController.dispose();
-    super.dispose();
-  }
-
   List<String> _columns(AppLocalizations l10n) {
     // 'Shanghai' (column header) stays fixed — it is a game-type proper noun.
-    switch (widget.gameType) {
+    switch (gameType) {
       case GameType.x01:
         return [
           l10n.historyColRound,
@@ -154,24 +135,44 @@ class _TurnTableState extends State<_TurnTable> {
       );
     }
 
-    switch (widget.gameType) {
+    // X01 / Checkout Practice turn cell: the score, with a BUST/CHECKOUT flag
+    // on its OWN line (the two are mutually exclusive). Stacking them avoids
+    // the narrow flex column breaking "CHECKOUT" mid-word, which a single
+    // "121 · CHECKOUT" string did once the table was made to fit the width.
+    Widget turnScoreCell() {
+      final flag = row.bust
+          ? 'BUST'
+          : row.checkout
+              ? 'CHECKOUT'
+              : null;
+      if (flag == null) return txt(StatFormatter.fmtInt(row.turnScore));
+      final color = row.bust ? cs.error : cs.primary;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          txt(StatFormatter.fmtInt(row.turnScore),
+              color: color, weight: FontWeight.bold),
+          Text(
+            flag,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
+              letterSpacing: 0.2,
+            ),
+          ),
+        ],
+      );
+    }
+
+    switch (gameType) {
       case GameType.x01:
-        final flags = <String>[];
-        if (row.bust) flags.add('BUST');
-        if (row.checkout) flags.add('CHECKOUT');
         return [
           txt(StatFormatter.fmtInt(row.round)),
           txt(StatFormatter.fmtInt(row.startingScore)),
           dartsCell(),
-          txt(
-            '${row.turnScore}${flags.isEmpty ? '' : ' · ${flags.join(' / ')}'}',
-            color: row.bust
-                ? cs.error
-                : row.checkout
-                    ? cs.primary
-                    : null,
-            weight: row.bust || row.checkout ? FontWeight.bold : null,
-          ),
+          turnScoreCell(),
           txt(StatFormatter.fmtInt(row.remainingScore)),
         ];
       case GameType.cricket:
@@ -229,22 +230,11 @@ class _TurnTableState extends State<_TurnTable> {
           txt(StatFormatter.fmtInt(row.runningTotal)),
         ];
       case GameType.checkoutPractice:
-        final flags = <String>[];
-        if (row.bust) flags.add('BUST');
-        if (row.checkout) flags.add('CHECKOUT');
         return [
           txt(StatFormatter.fmtInt(row.round)),
           txt(StatFormatter.fmtInt(row.startingScore)),
           dartsCell(),
-          txt(
-            '${row.turnScore}${flags.isEmpty ? '' : ' · ${flags.join(' / ')}'}',
-            color: row.bust
-                ? cs.error
-                : row.checkout
-                    ? cs.primary
-                    : null,
-            weight: row.bust || row.checkout ? FontWeight.bold : null,
-          ),
+          turnScoreCell(),
           txt(StatFormatter.fmtInt(row.endingScore)),
         ];
       case GameType.countUp:
@@ -263,18 +253,67 @@ class _TurnTableState extends State<_TurnTable> {
     }
   }
 
+  /// Column indices (within [_columns], BEFORE the optional leading PLAYER
+  /// column) that should flex to absorb leftover width: the dart-chip column
+  /// (chips wrap onto extra lines) and any wide free-text column (X01 /
+  /// Checkout Practice's "turn score · BUST/CHECKOUT"). Every other column is
+  /// a short number or label and sizes to its content. Making only these flex
+  /// keeps the whole table within the parent width — no horizontal scroll, and
+  /// no empty band on narrow tables like Cricket (replaces the old
+  /// scroll-when-cut-off behavior, #309).
+  ({int darts, int? wideText}) _flexColumns() {
+    switch (gameType) {
+      case GameType.x01:
+        return (darts: 2, wideText: 3);
+      case GameType.checkoutPractice:
+        return (darts: 2, wideText: 3);
+      case GameType.cricket:
+      case GameType.bobs27:
+      case GameType.catch40:
+        return (darts: 2, wideText: null);
+      case GameType.shanghai:
+      case GameType.countUp:
+        return (darts: 1, wideText: null);
+      case GameType.aroundTheClock:
+        return (darts: 1, wideText: null); // unused — ATC uses _AtcSegmentTable
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
     final columns = _columns(l10n);
-    final showCompetitor = !widget.singleCompetitor;
+    final showCompetitor = !singleCompetitor;
     final headers = [
       if (showCompetitor) l10n.historyColPlayer,
       ...columns,
     ];
 
+    final offset = showCompetitor ? 1 : 0;
+    final flex = _flexColumns();
+    final dartsIdx = flex.darts + offset;
+    final wideIdx = flex.wideText == null ? null : flex.wideText! + offset;
+    final columnWidths = <int, TableColumnWidth>{
+      for (var i = 0; i < headers.length; i++)
+        i: i == dartsIdx
+            ? const FlexColumnWidth(1.7)
+            : i == wideIdx
+                // Favor the text column over the chips column so "CHECKOUT"
+                // fits on one line even in the tight multi-player layout
+                // (chips just wrap onto more rows when their column shrinks).
+                ? const FlexColumnWidth(2.3)
+                : const IntrinsicColumnWidth(),
+    };
+
+    const cellPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
+    final headingStyle = theme.textTheme.labelSmall?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1.1,
+    );
+
     return Container(
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
@@ -283,82 +322,73 @@ class _TurnTableState extends State<_TurnTable> {
           color: cs.outlineVariant.withValues(alpha: 0.18),
         ),
       ),
-      // Scrollbar with thumbVisibility: true gives users a visible affordance
-      // that the table can scroll horizontally — needed at narrow widths
-      // (≤412px) where columns like X01's "Left" are cut off (#309).
-      child: Scrollbar(
-        controller: _hController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          controller: _hController,
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columnSpacing: 12,
-            horizontalMargin: 12,
-            headingRowHeight: 36,
-            dataRowMinHeight: 36,
-            dataRowMaxHeight: 64,
-            headingTextStyle: theme.textTheme.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
-            ),
-            columns: [
-              for (final h in headers) DataColumn(label: Text(h.toUpperCase())),
-            ],
-            rows: [
-              for (final row in widget.turns)
-                DataRow(
-                  cells: [
-                    if (showCompetitor)
-                      DataCell(Text(
-                        NameFormatter.shortName(row.competitorName),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      )),
-                    for (final cell in _cellsFor(row, theme, l10n))
-                      DataCell(cell),
-                  ],
+      clipBehavior: Clip.antiAlias,
+      // A width-bounded Table (chips column + wide-text column flex; the rest
+      // intrinsic) fits within the parent — no horizontal scroll (#309 was
+      // solved by scrolling; we now fit instead, per the at-a-glance UX goal).
+      child: Table(
+        columnWidths: columnWidths,
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        border: TableBorder(
+          horizontalInside:
+              BorderSide(color: cs.outlineVariant.withValues(alpha: 0.08)),
+        ),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(color: cs.surfaceContainerLow),
+            children: [
+              for (final h in headers)
+                Padding(
+                  padding: cellPadding,
+                  child: Text(h.toUpperCase(), style: headingStyle),
                 ),
             ],
           ),
-        ),
+          for (final row in turns)
+            TableRow(
+              children: [
+                if (showCompetitor)
+                  Padding(
+                    padding: cellPadding,
+                    child: Text(
+                      NameFormatter.shortName(row.competitorName),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                for (final cell in _cellsFor(row, theme, l10n))
+                  Padding(padding: cellPadding, child: cell),
+              ],
+            ),
+        ],
       ),
     );
   }
 }
 
-class _AtcSegmentTable extends StatefulWidget {
+class _AtcSegmentTable extends StatelessWidget {
   const _AtcSegmentTable({required this.segments});
 
   final List<SegmentHitRate> segments;
 
   @override
-  State<_AtcSegmentTable> createState() => _AtcSegmentTableState();
-}
-
-class _AtcSegmentTableState extends State<_AtcSegmentTable> {
-  late final ScrollController _hController;
-
-  @override
-  void initState() {
-    super.initState();
-    _hController = ScrollController();
-  }
-
-  @override
-  void dispose() {
-    _hController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (widget.segments.isEmpty) return const SizedBox.shrink();
+    if (segments.isEmpty) return const SizedBox.shrink();
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final l10n = AppLocalizations.of(context);
+
+    const cellPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 8);
+    final headingStyle = theme.textTheme.labelSmall?.copyWith(
+      color: cs.onSurfaceVariant,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1.1,
+    );
+    Widget headCell(String s) =>
+        Padding(padding: cellPadding, child: Text(s.toUpperCase(), style: headingStyle));
+    Widget cell(String s) =>
+        Padding(padding: cellPadding, child: Text(s, style: theme.textTheme.bodyMedium));
 
     return Container(
       decoration: BoxDecoration(
@@ -368,44 +398,43 @@ class _AtcSegmentTableState extends State<_AtcSegmentTable> {
           color: cs.outlineVariant.withValues(alpha: 0.18),
         ),
       ),
-      child: Scrollbar(
-        controller: _hController,
-        thumbVisibility: true,
-        child: SingleChildScrollView(
-          controller: _hController,
-          scrollDirection: Axis.horizontal,
-          child: DataTable(
-            columnSpacing: 24,
-            horizontalMargin: 12,
-            headingRowHeight: 36,
-            headingTextStyle: theme.textTheme.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.1,
-            ),
-            columns: [
-              DataColumn(label: Text(l10n.historyColSegment.toUpperCase())),
-              DataColumn(label: Text(l10n.historyColHits.toUpperCase())),
-              DataColumn(label: Text(l10n.historyColAttempts.toUpperCase())),
-              DataColumn(label: Text(l10n.historyColRate.toUpperCase())),
-            ],
-            rows: [
-              for (final s in widget.segments)
-                DataRow(
-                  cells: [
-                    DataCell(Text(s.segmentLabel)),
-                    DataCell(Text('${s.hits}')),
-                    DataCell(Text('${s.attempts}')),
-                    DataCell(Text(
-                      s.attempts == 0
-                          ? '—'
-                          : StatFormatter.fmtPct(s.hitRate, isRatio: true),
-                    )),
-                  ],
-                ),
+      clipBehavior: Clip.antiAlias,
+      // Four short columns flex to fill the parent width evenly — fits without
+      // a horizontal scroll, matching the turn table.
+      child: Table(
+        columnWidths: const {
+          0: FlexColumnWidth(1.4),
+          1: FlexColumnWidth(),
+          2: FlexColumnWidth(),
+          3: FlexColumnWidth(),
+        },
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        border: TableBorder(
+          horizontalInside:
+              BorderSide(color: cs.outlineVariant.withValues(alpha: 0.08)),
+        ),
+        children: [
+          TableRow(
+            decoration: BoxDecoration(color: cs.surfaceContainerLow),
+            children: [
+              headCell(l10n.historyColSegment),
+              headCell(l10n.historyColHits),
+              headCell(l10n.historyColAttempts),
+              headCell(l10n.historyColRate),
             ],
           ),
-        ),
+          for (final s in segments)
+            TableRow(
+              children: [
+                cell(s.segmentLabel),
+                cell('${s.hits}'),
+                cell('${s.attempts}'),
+                cell(s.attempts == 0
+                    ? '—'
+                    : StatFormatter.fmtPct(s.hitRate, isRatio: true)),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -443,12 +472,10 @@ class _DartChip extends StatelessWidget {
       ),
       child: Text(
         canonical,
-        // Never wrap or ellipsize the chip text — at 412px the parent
-        // DataCell can squeeze the column and Flutter would otherwise
-        // render "MISS" as "MI…". The DataTable already wraps in a
-        // horizontal SingleChildScrollView, so letting the chip overflow
-        // its column lets the user scroll to it rather than seeing it
-        // chopped (#285).
+        // Never ellipsize the chip label itself — a chip is sized to its
+        // text, and the chips live in a `Wrap` inside the flexible DARTS
+        // column, so they reflow onto extra lines instead of being chopped
+        // to "MI…" (#285).
         softWrap: false,
         overflow: TextOverflow.visible,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
