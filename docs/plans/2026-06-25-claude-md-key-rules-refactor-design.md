@@ -1,21 +1,27 @@
 # Design: Refactor CLAUDE.md "Key Rules" into a tiered rules index
 
 **Date:** 2026-06-25
-**Status:** Approved design (not yet implemented)
+**Status:** Implemented (CLAUDE.md 42 KB → 18 KB; Key Rules 29.5 KB → 5.4 KB inline)
 **Scope:** Documentation only — no code changes.
+
+> **Build note (as-built):** the live file had **60** rules, not 62 — the original
+> count came from a stale snapshot that included two rules ("Stats breakdown tables"
+> and "Driving Playwright locally") not present on `main`. Counts below are corrected
+> to 60. `Widget test finders` landed in `statistics.md` (stat-literal collisions),
+> so `testing.md` holds one rule.
 
 ---
 
 ## Problem
 
-`CLAUDE.md` is 363 lines / ~42 KB. The `## Key Rules` section alone is **62 dense
+`CLAUDE.md` is 363 lines / ~42 KB. The `## Key Rules` section alone is **60 dense
 prose rules, ~29.5 KB — roughly 70% of the whole file** — and all of it loads into
 *every* session's context.
 
 This hurts on four axes at once (all four flagged as goals):
 
 - **Token cost** — ~7K tokens of always-on text taxes every conversation.
-- **Readability** — 62 unsorted paragraphs are hard to scan; the relevant rule is
+- **Readability** — 60 unsorted paragraphs are hard to scan; the relevant rule is
   hard to find.
 - **Reliability** — past the ~150–200 instruction ceiling that frontier models
   reliably follow, rules dilute ("context rot") and adherence quietly drops.
@@ -43,9 +49,9 @@ layer. The refactor must not duplicate the invariants already stated above.
 
 Considered three options:
 
-- **A. Group in place** — cluster the 62 rules under domain subheads. Readability
+- **A. Group in place** — cluster the 60 rules under domain subheads. Readability
   only; zero token savings; stays over the line ceiling. Rejected.
-- **B. Full extraction** — move every rule to `.claude/rules/*.md`, leave only an
+- **B. Full extraction** — move every rule to `docs/rules/*.md`, leave only an
   index. Max token savings, but gotchas become *unknown unknowns* — the agent won't
   open `cricket.md` unless something cues it. Reliability dip. Rejected.
 - **C. Tiered (chosen)** — keep a short inline *Workflow essentials* block + a
@@ -56,8 +62,10 @@ Considered three options:
 
 ### Defaults
 
-- **Location:** `.claude/rules/` (idiomatic agent-rules home; keeps these out of the
-  published `docs/` tree). Referenced — **not** `@import`-ed — so they load on demand.
+- **Location:** `docs/rules/` — a **tracked** home alongside the existing spec docs
+  the Spec Document Index already points into. (`.claude/rules/` was the first choice
+  but `.claude/` is gitignored here, so those files would never reach the repo or CI.)
+  Referenced — **not** `@import`-ed — so they load on demand.
 - **Granularity:** 10 domain files (below). X01 keeps its own file (flagship game,
   room to grow) rather than folding into `game-engine.md`.
 
@@ -65,7 +73,7 @@ Considered three options:
 
 ## New shape of the `## Key Rules` section
 
-Three parts replace the 62-rule wall:
+Three parts replace the 60-rule wall:
 
 ### 1. Workflow essentials (stays fully inline, ~11 short lines)
 
@@ -89,16 +97,16 @@ would just cost a round-trip every session:
 
 | Before you touch… | Read first |
 |---|---|
-| Cricket scoring / variants / labels | `.claude/rules/cricket.md` |
-| X01 scoring / strategy / turn_score | `.claude/rules/x01.md` |
-| Game events / rounds / payloads / RNG | `.claude/rules/game-engine.md` |
-| Stats / projections / formatters | `.claude/rules/statistics.md` |
-| Drift schema / DB / test fixtures | `.claude/rules/database.md` |
-| Auto-scorer / camera / capture | `.claude/rules/auto-scorer.md` |
-| UI / design tokens / navigation | `.claude/rules/ui-design.md` |
-| Notifier / widget tests | `.claude/rules/testing.md` |
-| Releases / version / CI / build tooling | `.claude/rules/git-ci-release.md` |
-| E2E / Playwright | `.claude/rules/e2e.md` |
+| Cricket scoring / variants / labels | `docs/rules/cricket.md` |
+| X01 scoring / strategy / turn_score | `docs/rules/x01.md` |
+| Game events / rounds / payloads / RNG | `docs/rules/game-engine.md` |
+| Stats / projections / formatters | `docs/rules/statistics.md` |
+| Drift schema / DB / test fixtures | `docs/rules/database.md` |
+| Auto-scorer / camera / capture | `docs/rules/auto-scorer.md` |
+| UI / design tokens / navigation | `docs/rules/ui-design.md` |
+| Notifier / widget tests | `docs/rules/testing.md` |
+| Releases / version / CI / build tooling | `docs/rules/git-ci-release.md` |
+| E2E / Playwright | `docs/rules/e2e.md` |
 
 ### 3. Tripwire headlines (1–3 per domain, bare one-liners)
 
@@ -116,7 +124,7 @@ opened; the *explanation* is on-demand. Examples:
 
 ## Domain-file format
 
-`.claude/rules/<domain>.md` — flat list, one `###` heading per rule (greppable),
+`docs/rules/<domain>.md` — flat list, one `###` heading per rule (greppable),
 consistent `**Rule:** / **Why:**` body (mirrors the repo's memory-file convention):
 
 ```markdown
@@ -144,7 +152,7 @@ random/crazy + non-standard → `mode · scoring`.
 
 ## Rule → file mapping (lossless move checklist)
 
-All 62 current Key Rules, by destination. (Numbered in current top-to-bottom order.)
+All 60 current Key Rules, by destination. (Numbered in current top-to-bottom order.)
 
 **Inline — Workflow essentials (11):** GameConfig-edited-in-bottom-sheet stays UI;
 these are the process rules → Branch naming, PR titles, Squash-merge, PR reviews,
@@ -161,7 +169,7 @@ event · Cricket scoring × target mode orthogonal · Cricket variant labels in 
 Per-leg round cap · `DartCorrected` payload key (`original_event_id`) ·
 `endGame()/endDrill()` don't mutate `isComplete`.
 
-**`statistics.md` (7):** Statistics scope resets · Computing stats over an event slice
+**`statistics.md` (8):** Statistics scope resets · Computing stats over an event slice
 (`PlayerStatsAssembler`) · `GameStats.gameType` load-bearing · Statistics loader vs
 computation · Cricket mark-bucket field overload · Statistics scope required
 (`gameType`) · Projection snapshots two-level.
@@ -175,24 +183,24 @@ Device-session regression fixtures · Capture writes respect opt-in · `DartInpu
 (submitDart/advanceTurn) · Camera/device-only not widget-testable · Camera-first
 board layout + tests.
 
-**`ui-design.md` (5):** Game config bottom sheet · Colors · DESIGN_SYSTEM specifics ·
-Stats breakdown tables reuse `PostGameStatsBreakdown` · Navigation `go()` vs `push()`.
+**`ui-design.md` (4):** Game config bottom sheet · Colors · DESIGN_SYSTEM specifics ·
+Navigation `go()` vs `push()`.
 
-**`testing.md` (2):** Notifier tests · Widget test finders.
+**`testing.md` (1):** Notifier tests. *(Widget test finders → `statistics.md`.)*
 
 **`git-ci-release.md` (5):** Releases tag-driven · Version bumps · `flutter create`
 stray `widget_test.dart` · "Unused" in `lib/` may be wiring · Sentry error handlers.
 
-**`e2e.md` (2):** E2E regression reminders · Driving Playwright against local builds.
+**`e2e.md` (1):** E2E regression reminders.
 
-Total: 11 inline + 51 in files = **62** (lossless).
+Total: 11 inline + 49 in files = **60** (lossless).
 
 ---
 
 ## Maintenance convention (added to CLAUDE.md so the structure self-perpetuates)
 
 - **New rule → domain file, not CLAUDE.md.** Add a `###` entry to the matching
-  `.claude/rules/*.md`. Add to the inline blocks only if truly cross-cutting (applies
+  `docs/rules/*.md`. Add to the inline blocks only if truly cross-cutting (applies
   to every change) *and* short.
 - **Tripwire only when surprising/destructive.** Routine rules get an index row, not
   a headline — over-adding headlines is what causes re-bloat.
@@ -201,7 +209,7 @@ Total: 11 inline + 51 in files = **62** (lossless).
   gate is the source of truth.
 - **Revise like code; be specific.** "Use X" not "prefer X when possible." If an
   agent gets something wrong twice, that's a missing/weak rule.
-- **Index ↔ files stay in sync** — every `.claude/rules/*.md` has exactly one Rules
+- **Index ↔ files stay in sync** — every `docs/rules/*.md` has exactly one Rules
   Index row.
 
 ---
@@ -209,11 +217,11 @@ Total: 11 inline + 51 in files = **62** (lossless).
 ## Migration plan
 
 1. Branch `docs/refactor-claude-md-key-rules` off `main`. *(done — this design lives here.)*
-2. Create the 10 `.claude/rules/*.md` files, moving each rule's **full current text
+2. Create the 10 `docs/rules/*.md` files, moving each rule's **full current text
    verbatim** (lossless move first — no rewriting).
 3. Rewrite the `## Key Rules` section to the new shape (Workflow essentials + Rules
    Index + tripwires), and add the Maintenance convention block.
-4. Verify nothing dropped against the 62-rule mapping table above (reproduce it in the
+4. Verify nothing dropped against the 60-rule mapping table above (reproduce it in the
    PR description with a ✓ per rule).
 5. *(Optional second pass)* tighten verbose entries to the `Rule:/Why:` format.
 6. Open PR; review via the `code-review:code-review` skill; report before/after
