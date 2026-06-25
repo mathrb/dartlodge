@@ -11,6 +11,7 @@ import 'package:dart_lodge/features/game/presentation/pages/home_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/player_selection_page.dart';
 import 'package:dart_lodge/features/game/presentation/pages/variant_selection_page.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_practice_provider.dart';
@@ -223,6 +224,17 @@ FutureOr<bool> _activePracticeExit(BuildContext context, GoRouterState state) {
   );
 }
 
+FutureOr<bool> _activeCountUpExit(BuildContext context, GoRouterState state) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final gameId = state.pathParameters['gameId']!;
+  return _confirmActiveExit(
+    context: context,
+    isComplete: () => _gameIsComplete(container, gameId),
+    endGame: () =>
+        container.read(activeCountUpProvider(gameId).notifier).endGame(),
+  );
+}
+
 // ── Route tree ────────────────────────────────────────────────────────────────
 
 List<RouteBase> _buildRoutes() => [
@@ -273,7 +285,8 @@ List<RouteBase> _buildRoutes() => [
           onExit: _activePracticeExit),
       GoRoute(
           path: '${GameRoutes.activeCountUp}/:gameId',
-          builder: _countUpBoardPage),
+          builder: _countUpBoardPage,
+          onExit: _activeCountUpExit),
       GoRoute(
           path: '/stats/player/:playerId',
           builder: _playerStatsPage),

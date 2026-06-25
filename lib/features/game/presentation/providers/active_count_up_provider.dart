@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
+import '../../../../core/error/repository_exception.dart';
 import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../domain/engines/base_game_engine.dart';
 import '../../domain/entities/dart_throw.dart';
@@ -264,5 +265,43 @@ class ActiveCountUpNotifier extends _$ActiveCountUpNotifier {
 
   void dismissGameModal() {
     state = state.whenData((s) => s?.copyWith(pendingGameWinnerId: null));
+  }
+
+  /// Abandons the active count-up game from the End Game dialog.
+  ///
+  /// Emits `GameCompleted(winner=null)` and atomically marks the game complete
+  /// via `appendEventsAndCompleteGame` — mirrors [ActiveGameNotifier.endGame]
+  /// (X01). Without this, the back → End Game flow navigated home while the
+  /// game stayed `is_complete=0`, so the route's `onExit` guard re-raised the
+  /// End Game dialog (the multi-click exit bug, #706). Deliberately does NOT
+  /// mutate `state.value.gameState.isComplete` so the board's post-game-
+  /// navigation listener does not hijack the exit to the post-game summary.
+  Future<void> endGame() => _serializer.run(_endGameImpl);
+
+  Future<void> _endGameImpl() async {
+    final current = state.value;
+    if (current == null) return;
+    final gs = current.gameState;
+    if (gs.isComplete) return;
+    try {
+      final nextSeq = await ref
+              .read(gameEventRepositoryProvider)
+              .getLatestSequence(gs.gameId) +
+          1;
+      final gameCompleted = buildGameCompletedEvent(
+        gameId: gs.gameId,
+        winnerCompetitorId: null,
+        localSequence: nextSeq,
+      );
+      await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
+            events: [gameCompleted],
+            gameId: gs.gameId,
+            winnerCompetitorId: null,
+            endTime: DateTime.now(),
+          );
+    } on GameAlreadyCompleteException {
+      // Idempotent — another path (e.g. concurrent navigation) already
+      // abandoned the game.
+    }
   }
 }

@@ -69,7 +69,7 @@ final class ActiveCountUpNotifierProvider
 }
 
 String _$activeCountUpNotifierHash() =>
-    r'17894ac9b86b539df7bc64b682753a753e8832a4';
+    r'2804ac67a7c8aa262f25e47f005f71e2f59787f5';
 
 /// Active-game notifier for count-up.
 ///

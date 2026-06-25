@@ -171,6 +171,12 @@ void main() {
       winnerCompetitorId: anyNamed('winnerCompetitorId'),
       endTime: anyNamed('endTime'),
     )).thenAnswer((_) async {});
+    when(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    )).thenAnswer((_) async {});
 
     container = ProviderContainer(
       overrides: [
@@ -388,5 +394,64 @@ void main() {
 
     expect(container.read(activeCountUpProvider('g1')).value!.pendingGameWinnerId,
         isNull);
+  });
+
+  // ── 9. endGame abandons the game (winner=null) without mutating state ──────
+
+  test('endGame persists GameCompleted(winner=null) and completes the game',
+      () async {
+    stubBuild(
+      game: makeGame(),
+      competitors: makeCompetitors(),
+      events: [turnStarted('c1', seq: 1)],
+    );
+    await container.read(activeCountUpProvider('g1').future);
+
+    await container.read(activeCountUpProvider('g1').notifier).endGame();
+
+    final captured = verify(mockGameRepo.appendEventsAndCompleteGame(
+      events: captureAnyNamed('events'),
+      gameId: 'g1',
+      winnerCompetitorId: null,
+      endTime: anyNamed('endTime'),
+    )).captured;
+    final events = captured.single as List<GameEvent>;
+    expect(events, hasLength(1));
+    expect(events.single.eventType, 'GameCompleted');
+    expect(events.single.payload['winner_competitor_id'], isNull);
+
+    // Deliberately does NOT mutate notifier state — the post-game-navigation
+    // listener watches isComplete and would otherwise hijack the exit (#706).
+    expect(
+        container.read(activeCountUpProvider('g1')).value!.gameState.isComplete,
+        isFalse);
+  });
+
+  test('endGame is a no-op when the game is already complete', () async {
+    // 1-round game already at completion via advanceTurn.
+    final r1c1 = fullTurn('c1', startSeq: 1, segment: 20, multiplier: 3);
+    final r1c2 = turnPendingEnd('c2', startSeq: r1c1.nextSeq);
+    final events = [...r1c1.events, ...r1c2.events];
+    stubBuild(
+      game: makeGame(totalRounds: 1),
+      competitors: makeCompetitors(),
+      events: events,
+    );
+    await container.read(activeCountUpProvider('g1').future);
+    when(mockEventRepo.getLatestSequence(any))
+        .thenAnswer((_) async => events.length);
+    await container.read(activeCountUpProvider('g1').notifier).advanceTurn();
+    expect(container.read(activeCountUpProvider('g1')).value!.gameState.isComplete,
+        isTrue);
+
+    await container.read(activeCountUpProvider('g1').notifier).endGame();
+
+    // Already complete → endGame short-circuits, no abandon write.
+    verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+      events: anyNamed('events'),
+      gameId: anyNamed('gameId'),
+      winnerCompetitorId: anyNamed('winnerCompetitorId'),
+      endTime: anyNamed('endTime'),
+    ));
   });
 }

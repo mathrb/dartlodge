@@ -19,6 +19,7 @@ import 'package:dart_lodge/features/game/presentation/providers/active_practice_
 import 'package:dart_lodge/features/game/presentation/state/active_practice_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dartboard_highlight_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_input_buttons_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_players_strip_widget.dart';
@@ -150,11 +151,41 @@ ActivePracticeState _activeState({
 
 // ── Test app builders ──────────────────────────────────────────────────────────
 
-List<RouteBase> _testRoutes({String gameId = 'game-1'}) => [
+List<RouteBase> _testRoutes({
+  String gameId = 'game-1',
+  _FakeActivePracticeNotifier? notifier,
+}) => [
       GoRoute(
         path: '/practice-board/:gameId',
         builder: (ctx, s) =>
             PracticeBoardPage(gameId: s.pathParameters['gameId']!),
+        // Mirror app_router's `_activePracticeExit` so exit tests exercise the
+        // real double-prompt scenario (#706): the guard re-raises End Game
+        // unless the drill is already abandoned. Proxy "DB complete" with the
+        // fake's endDrill() having run — what the board's local dialog must
+        // trigger before navigating to avoid the second prompt.
+        onExit: notifier == null
+            ? null
+            : (context, state) async {
+                if (notifier.endDrillCalls > 0) return true;
+                final completer = Completer<bool>();
+                await showDialog<void>(
+                  context: context,
+                  builder: (dc) => EndGameDialogWidget(
+                    onConfirm: () async {
+                      Navigator.of(dc).pop();
+                      await notifier.endDrill();
+                      if (!completer.isCompleted) completer.complete(true);
+                    },
+                    onCancel: () {
+                      Navigator.of(dc).pop();
+                      if (!completer.isCompleted) completer.complete(false);
+                    },
+                  ),
+                );
+                if (!completer.isCompleted) completer.complete(false);
+                return completer.future;
+              },
       ),
       GoRoute(
         path: '/',
@@ -170,10 +201,14 @@ List<RouteBase> _testRoutes({String gameId = 'game-1'}) => [
 Widget _buildApp(
   _FakeActivePracticeNotifier notifier, {
   String gameId = 'game-1',
+  // Wire the route's onExit guard (mirrors app_router) — only the exit-flow
+  // test needs it; other tests navigate freely without the confirmation gate.
+  bool withExitGuard = false,
 }) {
   final router = GoRouter(
     initialLocation: '/practice-board/$gameId',
-    routes: _testRoutes(gameId: gameId),
+    routes:
+        _testRoutes(gameId: gameId, notifier: withExitGuard ? notifier : null),
   );
   return ProviderScope(
     overrides: [
@@ -821,10 +856,10 @@ void main() {
 
   // ── 18. Back button navigates to home ─────────────────────────────────────
 
-  testWidgets('18. Back button shows confirmation dialog then navigates to home',
+  testWidgets('18. Back → End Game abandons and lands home in one pass (#706)',
       (tester) async {
     final notifier = _FakeActivePracticeNotifier(_activeState());
-    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpWidget(_buildApp(notifier, withExitGuard: true));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.arrow_back));
@@ -833,17 +868,23 @@ void main() {
     // Confirmation dialog should appear
     expect(find.text('End Game?'), findsOneWidget);
 
-    // Tapping Cancel keeps the game
+    // Tapping Cancel keeps the game on the board — no abandon, no navigation.
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(find.text('End Game?'), findsNothing);
+    expect(notifier.endDrillCalls, 0);
+    expect(find.text('home'), findsNothing);
 
-    // Tapping back again and confirming navigates home
+    // Tapping back again and confirming abandons the drill (endDrill) and,
+    // because the route guard then sees the game complete, lands home with NO
+    // second dialog — the single-pass exit (#706).
     await tester.tap(find.byIcon(Icons.arrow_back));
     await tester.pumpAndSettle();
     await tester.tap(find.text('End Game'));
     await tester.pumpAndSettle();
 
+    expect(notifier.endDrillCalls, 1);
+    expect(find.text('End Game?'), findsNothing);
     expect(find.text('home'), findsOneWidget);
   });
 
