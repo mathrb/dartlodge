@@ -140,6 +140,7 @@ on the left → run the tag(s) on the right before merging.
 | `lib/l10n/` ARB files, localized UI strings | `@i18n` |
 | auto-scorer sink, camera-first board, `DartInputSink`, sim bridge | `@autoscorer` |
 | `main.dart`, router (`app_router.dart`), app shell, home | `@smoke` |
+| Board exit / End Game flow (`onExit` guards, board `_confirmBack`, `endGame`/`endDrill`) | `@atc` + `@countup` (`exit_end_game.spec.ts`) |
 
 ---
 
@@ -174,6 +175,7 @@ on the left → run the tag(s) on the right before merging.
 | `checkout_practice_target_modes.spec.ts` | `@checkout @autoscorer` |
 | `checkout_practice_manual.spec.ts` | `@checkout` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
+| `exit_end_game.spec.ts` | `@atc @countup` |
 
 ---
 

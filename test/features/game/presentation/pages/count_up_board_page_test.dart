@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +15,7 @@ import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_count_up_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -26,6 +29,7 @@ class _FakeActiveCountUpNotifier extends ActiveCountUpNotifier {
   final ActiveCountUpState? _state;
   final correctedDarts = <({int index, String segment})>[];
   final processedDarts = <String>[];
+  int endGameCalls = 0;
 
   @override
   Future<ActiveCountUpState?> build(String gameId) async => _state;
@@ -38,6 +42,9 @@ class _FakeActiveCountUpNotifier extends ActiveCountUpNotifier {
   @override
   Future<void> correctTurnDart(int turnDartIndex, String newSegment) async =>
       correctedDarts.add((index: turnDartIndex, segment: newSegment));
+
+  @override
+  Future<void> endGame() async => endGameCalls++;
 }
 
 /// Records sink calls so a test can assert the board routed a manual entry
@@ -99,6 +106,31 @@ Widget _buildApp(_FakeActiveCountUpNotifier notifier,
       GoRoute(
         path: '/game/active/count-up/:gameId',
         builder: (_, s) => CountUpBoardPage(gameId: s.pathParameters['gameId']!),
+        // Mirror app_router's `_activeCountUpExit` so the test exercises the
+        // real double-prompt scenario (#706): the guard re-raises End Game
+        // unless the game is already abandoned. Proxy "DB complete" with the
+        // fake's endGame() having run — exactly what the board's local dialog
+        // must trigger before navigating to avoid the second prompt.
+        onExit: (context, state) async {
+          if (notifier.endGameCalls > 0) return true;
+          final completer = Completer<bool>();
+          await showDialog<void>(
+            context: context,
+            builder: (dc) => EndGameDialogWidget(
+              onConfirm: () async {
+                Navigator.of(dc).pop();
+                await notifier.endGame();
+                if (!completer.isCompleted) completer.complete(true);
+              },
+              onCancel: () {
+                Navigator.of(dc).pop();
+                if (!completer.isCompleted) completer.complete(false);
+              },
+            ),
+          );
+          if (!completer.isCompleted) completer.complete(false);
+          return completer.future;
+        },
       ),
       GoRoute(path: '/', builder: (_, __) => const Scaffold(body: Text('home'))),
     ],
@@ -391,6 +423,66 @@ void main() {
       // Correction path → correctTurnDart, never the manual-entry capture seam.
       expect(notifier.correctedDarts, isNotEmpty);
       expect(sink.manualEntries, isEmpty);
+    });
+  });
+
+  group('CountUpBoardPage exit flow (#706)', () {
+    _FakeActiveCountUpNotifier freshNotifier() =>
+        _FakeActiveCountUpNotifier(ActiveCountUpState(gameState: _countUpState()));
+
+    testWidgets('AppBar back → End Game abandons and lands Home in one pass',
+        (tester) async {
+      final notifier = freshNotifier();
+      await tester.pumpWidget(_buildApp(notifier, locale: const Locale('en')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      expect(find.text('End Game?'), findsOneWidget);
+
+      // A SINGLE confirm: abandons the game, the route guard short-circuits
+      // (no second dialog), and we land Home.
+      await tester.tap(find.text('End Game'));
+      await tester.pumpAndSettle();
+
+      expect(notifier.endGameCalls, 1);
+      expect(find.text('End Game?'), findsNothing);
+      expect(find.text('home'), findsOneWidget);
+    });
+
+    testWidgets('overflow-menu End Game abandons and lands Home in one pass',
+        (tester) async {
+      final notifier = freshNotifier();
+      await tester.pumpWidget(_buildApp(notifier, locale: const Locale('en')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('End Game').last);
+      await tester.pumpAndSettle();
+      expect(find.text('End Game?'), findsOneWidget);
+
+      await tester.tap(find.text('End Game'));
+      await tester.pumpAndSettle();
+
+      expect(notifier.endGameCalls, 1);
+      expect(find.text('End Game?'), findsNothing);
+      expect(find.text('home'), findsOneWidget);
+    });
+
+    testWidgets('Cancel keeps the player on the board', (tester) async {
+      final notifier = freshNotifier();
+      await tester.pumpWidget(_buildApp(notifier, locale: const Locale('en')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.arrow_back));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(notifier.endGameCalls, 0);
+      expect(find.text('home'), findsNothing);
+      expect(find.byType(CountUpBoardPage), findsOneWidget);
     });
   });
 }
