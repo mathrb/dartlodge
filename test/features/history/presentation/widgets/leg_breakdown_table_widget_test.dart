@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -188,6 +189,32 @@ void main() {
     expect(find.text('AVG MPR'), findsOneWidget);
     expect(find.text('FIRST 9 MPR'), findsOneWidget);
     expect(find.text('9 MARKS'), findsOneWidget);
+  });
+
+  testWidgets(
+      'per-leg stats render via the shared PostGameStatsBreakdown shell '
+      '(full-width, not trapped in a table column) (#693)', (tester) async {
+    await tester.pumpWidget(_wrap(LegBreakdownTableWidget(
+      legs: [
+        _leg(
+          number: 1,
+          winnerId: 'c1',
+          winnerName: 'Alice',
+          aliceDarts: 9,
+          bobDarts: 6,
+          aliceAvg: 100.0,
+        ),
+      ],
+      game: _game(GameType.x01),
+    )));
+
+    // Single leg auto-expands → the stats breakdown reuses the same shell as
+    // the top "Statistics Breakdown" so it fills the width identically,
+    // instead of the old bespoke table nested in the winner column.
+    expect(find.byType(PostGameStatsBreakdown), findsOneWidget);
+    // Column subtitles distinguish winner / opponent.
+    expect(find.text('WINNER'), findsOneWidget);
+    expect(find.text('OPPONENT'), findsOneWidget);
   });
 
   testWidgets('empty legs shows placeholder', (tester) async {
