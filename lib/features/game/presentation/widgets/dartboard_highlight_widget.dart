@@ -6,6 +6,14 @@ const List<int> kDartboardClockOrder = [
   20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
 ];
 
+/// Canvas start angle (radians) of the wedge for the segment at [index] in
+/// [kDartboardClockOrder]. Segment 20 (index 0) is **centred** at the top
+/// (−π/2); each 18° (π/10) wedge starts half a segment (π/20) before its
+/// centre, so the board renders with 20 at the top and the 5/20 wire ~9° left
+/// of vertical — a standard board (#700). Canvas angles increase clockwise.
+double dartboardSegmentStartAngle(int index) =>
+    -pi / 2 - pi / 20 + index * pi / 10;
+
 class DartboardHighlightWidget extends StatelessWidget {
   const DartboardHighlightWidget({
     super.key,
@@ -370,10 +378,7 @@ class _DartboardPainter extends CustomPainter {
     }
   }
 
-  double _segmentStartAngle(int index) {
-    // Top = -90° in canvas coords, each segment = 18° = pi/10
-    return -pi / 2 + index * pi / 10;
-  }
+  double _segmentStartAngle(int index) => dartboardSegmentStartAngle(index);
 
   void _drawRingSegment(
     Canvas canvas,

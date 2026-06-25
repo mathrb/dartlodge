@@ -70,7 +70,9 @@ class _AtcLabelPainter extends CustomPainter {
 
     for (int i = 0; i < 20; i++) {
       final number = kDartboardClockOrder[i];
-      final midAngle = -pi / 2 + (i + 0.5) * pi / 10;
+      // Centre of the wedge for segment [i] — must track the board's geometry
+      // (#700) so the % labels stay over their segments.
+      final midAngle = dartboardSegmentStartAngle(i) + pi / 20;
       final x = center.dx + labelRadius * cos(midAngle);
       final y = center.dy + labelRadius * sin(midAngle);
 
