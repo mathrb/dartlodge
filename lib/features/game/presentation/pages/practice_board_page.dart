@@ -608,9 +608,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           // Mark the drill abandoned (winner=null) BEFORE navigating so the
           // route's `onExit` guard (_activePracticeExit) sees the game complete
           // in the DB and short-circuits instead of raising a second End Game
-          // dialog (#706). Mirrors X01/Cricket. endDrill() does not mutate the
-          // notifier's isComplete, so the post-game-navigation listener above
-          // does not hijack this exit to the post-game summary.
+          // dialog (#706). Mirrors X01/Cricket. endDrill() sets
+          // `wasEndedManually: true` in state, which the post-game-navigation
+          // listener above checks (line 128) and no-ops on — so this exit goes
+          // home, not to the post-game summary.
           await ref
               .read(activePracticeProvider(widget.gameId).notifier)
               .endDrill();
