@@ -82,18 +82,18 @@ Toutes les issues traitées de bout en bout (branche → /plan → impl → revu
 | F-016 | #603 | — | **Différé** — décision mainteneur en cours (dénominateur headline) |
 
 _(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
-| F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
+| F-002 | Design | P2 | Surface DB-error = string brut non stylé | issue #616 — Fixed (PR #626) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
-| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | **confirmé (live)** |
+| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | issue #617 — Won't-fix (PR #628) |
 | F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
 | F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | issue #610 |
-| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | confirmé (live DE+NL) |
-| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | confirmé |
-| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | confirmé |
-| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | confirmé |
+| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | issue #612 (englobe F-007/F-008) — Fixed (PR #624) |
+| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | issue #613 — Won't-fix |
+| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | issue #614 — Fixed (PR #623) |
+| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | issue #614 — Fixed (PR #623) |
 | F-025 | i18n | P2 | es/pt : split « Puntos/Pontos » vs « Puntuación/Pontuação » (intentionnel ?) | à confirmer (conf. basse) |
-| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | confirmé (cosmétique) |
+| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | issue #614 — Fixed (PR #623) |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
@@ -223,7 +223,7 @@ _(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
 - Observé : `Center(child: Text('Database failed to open: $e'))` — pas d'icône, pas de thème, pas de retry ; `$e` brut exposé. (Vu sur device pendant la validation résolution Pixel 6a.)
 - Attendu : surface d'erreur stylée (icône + message borné + thème), cf. dimension « états transitoires ».
 - Preuve : capture de la validation résolution (DB stale) — string brut centré, sans icône/thème/retry ; `lib/app/app.dart:~38`.
-- Statut : **confirmé (vu live)** — candidat issue P2 (recoupe l'i18n F-006/DB-error)
+- Statut : **issue #616** — **Fixed** (PR #626 : surface DB-error stylée + localisée via `ErrorRetryWidget`)
 
 ### F-003 — Incohérence visuelle des empty-states
 - Axe : Design
@@ -253,7 +253,7 @@ _(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
 - Observé : le widget ne dessine ni légende/échelle ni numéros de segments, alors que `DESIGN_SYSTEM.md` §7.6 mentionne une « légende lisible ».
 - Attendu : trancher — ajouter la légende OU corriger l'oracle.
 - Preuve : `heatmap_dartboard_widget.dart` ; DESIGN_SYSTEM §7.6 ; **vu live** (`hm-postgame-scrolled.png` — heatmap rendue sans légende ni numéros).
-- Statut : **confirmé (live)**
+- Statut : **issue #617** — **Won't-fix** (PR #628 : décision d'amender la spec, DESIGN_SYSTEM §7.6 « pas de légende par design »)
 
 ### F-019 — Heatmap : faible densité tinte tout le plateau en bleu
 - Axe : Design
@@ -298,24 +298,24 @@ _(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
 - Observé (en DE et NL) : sous-titres des cartes Home (« STRATEGIC PLAY », « SHANGHAI, COUNT-UP », « IMPROVE SKILLS », « ANALYZE DATA », « SESSIONS », « ROSTER ») non traduits ; « STATISTICS BREAKDOWN », « CATEGORY » (alors que le tableau detail utilise « CATEGORIE » en nl → incohérent), « Need ≥2 games for a trend », onglet « Practice », chip config « Double Out » restent EN.
 - Attendu : localiser ces chaînes (non-jargon). Superset de F-007 (`Retry`) / F-008 (home Settings).
 - Preuve : `de-home.png`, `nl-settings.png`, `de-statsdetail.png`.
-- Statut : confirmé (live DE+NL)
+- Statut : **issue #612** (englobe F-007/F-008) — **Fixed** (PR #624 : Home/Retry/stats labels localisés, 7 langues)
 
 ### F-022 — nl : descriptions de succès « Win N games » non traduites
 - Axe : i18n · Surface : Achievements (nl) · Sévérité : P2
 - Observé : `achievementWins10/50/100Description` = « Win 10/50/100 games » (phrase anglaise) ; les 5 autres locales le traduisent (de « Gewinne 10 Spiele », fr « Gagner 10 parties »…). nl seul outlier.
 - Attendu : « Win 10 spellen/potjes ».
-- Statut : confirmé
+- Statut : **issue #613** — **Won't-fix** (décision : nl « Win N games » déjà correct — loanword « games » + « Win » impératif, vérifié)
 
 ### F-023 / F-024 — fr : « manche » au lieu de « tour » / « leg »
 - Axe : i18n · Surface : history detail / achievements (fr) · Sévérité : P2
 - Observé : `historyRoundBreakdown` = « Détail des **manches** » (tout le reste fr utilise « tour » pour round ; « manche » = un set de legs, sémantiquement faux) ; `achievementNineDarterDescription` = « Gagner une **manche** de 501 » (tout le reste fr utilise le loanword « leg »).
 - Attendu : « Détail des tours » ; « Gagner un leg de 501 ».
 - Preuve : `app_fr.arb`. Source : darts-nerd.com/glossaire.
-- Statut : confirmé (drift terminologique intra-langue)
+- Statut : **issue #614** (avec F-026) — **Fixed** (PR #623 : terminologie fr tour/leg/qu'une)
 
 ### F-025 / F-026 — low-confidence (es/pt score split ; fr idiome)
-- **F-025** : es/pt `historyColScore` = « Puntos »/« Pontos » vs « Puntuación »/« Pontuação » ailleurs — possiblement intentionnel (points-par-tour vs métrique agrégée). À confirmer.
-- **F-026** (cosmétique) : fr `gameAdvanceTurnBody` branche `one` code « que 1 fléchette » au lieu de « qu'une fléchette ».
+- **F-025** : es/pt `historyColScore` = « Puntos »/« Pontos » vs « Puntuación »/« Pontuação » ailleurs — possiblement intentionnel (points-par-tour vs métrique agrégée). **À confirmer** — gardé au carnet, pas d'issue.
+- **F-026** (cosmétique) : fr `gameAdvanceTurnBody` branche `one` code « que 1 fléchette » au lieu de « qu'une fléchette ». **issue #614** (avec F-023/F-024) — **Fixed** (PR #623).
 
 ### Confirmations positives — Axe 5
 - **Débordement DE+NL : AUCUN** sur toutes les surfaces atteintes (Settings, variant selection dont la **rangée 4-chips** EINSTIEG/AUSSTIEG/LEGS/RUNDEN, board, config, modals, stats, history). Ellipse checkout = gracieuse ; turn-breakdown = scroll horizontal by-design. *(Post-game/turn-breakdown DE non atteints — abandon route home.)*
