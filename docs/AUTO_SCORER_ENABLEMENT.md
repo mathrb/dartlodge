@@ -80,10 +80,10 @@ Detected darts are emitted into the game with `input_method: 'camera'`.
 **There is no code-enforced accuracy gate.** When the toggle is on and a model
 is loaded, every detected dart is emitted. Per `#377` §2 the ship signal is the
 model's real-board accuracy, not "the code works". The probe ranks rounds by
-per-dart segment accuracy on the raw serve golden; the current
-`dart_round11b_withcal` scores ~86.5% (R7-independent subset) vs the 88.9% ship
-bar at 720p, so treat it as **assist / data-collection only** — don't trust the
-emitted scores yet.
+per-dart segment accuracy on the raw serve golden; the bundled round's score
+(see `kAutoScorerModelVersion` in `dart_detector.dart`, then the probe for that
+round's metrics) has not cleared the **88.9%** ship bar at 720p, so treat it as
+**assist / data-collection only** — don't trust the emitted scores yet.
 
 ## Known gaps (deferred)
 
