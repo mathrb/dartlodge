@@ -82,18 +82,18 @@ Toutes les issues traitées de bout en bout (branche → /plan → impl → revu
 | F-016 | #603 | — | **Différé** — décision mainteneur en cours (dénominateur headline) |
 
 _(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
-| F-002 | Design | P2 | Surface DB-error = string brut non stylé | confirmé (live) |
+| F-002 | Design | P2 | Surface DB-error = string brut non stylé | issue #616 — Fixed (PR #626) |
 | F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
 | F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
-| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | **confirmé (live)** |
+| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | issue #617 — Won't-fix (PR #628) |
 | F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
 | F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | issue #610 |
-| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | confirmé (live DE+NL) |
-| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | confirmé |
-| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | confirmé |
-| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | confirmé |
+| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | issue #612 (englobe F-007/F-008) — Fixed (PR #624) |
+| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | issue #613 — Won't-fix |
+| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | issue #614 — Fixed (PR #623) |
+| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | issue #614 — Fixed (PR #623) |
 | F-025 | i18n | P2 | es/pt : split « Puntos/Pontos » vs « Puntuación/Pontuação » (intentionnel ?) | à confirmer (conf. basse) |
-| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | confirmé (cosmétique) |
+| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | issue #614 — Fixed (PR #623) |
 | F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
 | F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
 | F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
