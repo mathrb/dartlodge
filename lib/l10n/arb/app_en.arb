@@ -1955,6 +1955,18 @@
   "@autoScorerDoneAiming": {
     "description": "Aim view: confirm/done button"
   },
+  "autoScorerContinueWithoutAutoScoring": "Continue without auto-scoring",
+  "@autoScorerContinueWithoutAutoScoring": {
+    "description": "Aim view: confirm button when the 4 calibration markers aren't detected — proceeds without auto-scoring (manual scoring)"
+  },
+  "autoScorerCalibratedSteadyHint": "Calibrated — tap Done aiming when steady",
+  "@autoScorerCalibratedSteadyHint": {
+    "description": "Aim view hint: 4 markers found, button already enabled, steadiness is advisory"
+  },
+  "autoScorerUncalibratedNotice": "The board markers weren't detected, so automatic scoring is off in this setup. You can still play and score by hand — and if data collection is on, your throws help train the camera (BETA).",
+  "@autoScorerUncalibratedNotice": {
+    "description": "One-time note shown when proceeding past aiming without calibration"
+  },
   "achievementFirst180Title": "First 180",
   "@achievementFirst180Title": {
     "description": "Achievement label"

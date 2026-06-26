@@ -541,6 +541,10 @@ class AutoScorerSession {
         frameSpace: capture.space,
         frameWidth: capture.width,
         frameHeight: capture.height,
+        // Stamp every capture path (emitted / manual / corrected / manual-entry
+        // all funnel through here) with whether THIS frame had the full 4-marker
+        // calibration — so the probe can single out unsupported-config frames.
+        uncalibrated: !frame.hasCalibration,
       );
 
   /// Build the emission list from the tracker's newly-confirmed darts (#572):

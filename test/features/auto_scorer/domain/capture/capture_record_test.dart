@@ -38,6 +38,7 @@ void main() {
       'frame_width',
       'frame_height',
       'trigger',
+      'uncalibrated',
     }));
     expect(json['capture_handle'], 't3-d2');
     expect(json['was_corrected'], isFalse);
@@ -155,6 +156,38 @@ void main() {
         CaptureTrigger.auto);
   });
 
+  test('round-trips the uncalibrated flag, defaulting false', () {
+    // A capture from a frame that lacked the 4 markers (unsupported config).
+    final uncal = CaptureRecord(
+      predictedDarts: const [],
+      calPoints: const [],
+      modelVersion: 'm',
+      gameId: 'g',
+      handle: const CaptureHandle.manual(turnOrdinal: 2, sequence: 1),
+      timestamp: DateTime.utc(2026, 6, 26),
+      uncalibrated: true,
+    );
+    expect(uncal.toJson()['uncalibrated'], isTrue);
+    expect(CaptureRecord.fromJson(uncal.toJson()).uncalibrated, isTrue);
+    // A record left at its default serialises as calibrated (false).
+    expect(sample().toJson()['uncalibrated'], isFalse);
+    expect(CaptureRecord.fromJson(sample().toJson()).uncalibrated, isFalse);
+  });
+
+  test('pre-flag sidecars default to calibrated (uncalibrated false)', () {
+    final legacy = <String, dynamic>{
+      'predicted_darts': const [],
+      'cal_points': const [],
+      'corrected_darts': const [],
+      'model_version': 'old',
+      'game_id': 'g',
+      'capture_handle': 't1-d1',
+      'timestamp': DateTime.utc(2026, 5, 1).toIso8601String(),
+      'was_corrected': false,
+    };
+    expect(CaptureRecord.fromJson(legacy).uncalibrated, isFalse);
+  });
+
   test('withCorrection sets corrected darts and flips was_corrected', () {
     final raw = CaptureRecord(
       predictedDarts: const [],
@@ -167,16 +200,18 @@ void main() {
       frameWidth: 1280,
       frameHeight: 720,
       trigger: CaptureTrigger.manual,
+      uncalibrated: true,
     );
     final corrected = raw.withCorrection(const [
       CorrectedDart(x: 0.55, y: 0.45, segment: 'T20'),
     ]);
     expect(corrected.wasCorrected, isTrue);
-    // Frame space + dims + trigger survive a correction (re-attached by handle).
+    // Frame space + dims + trigger + uncalibrated survive a correction.
     expect(corrected.frameSpace, FrameSpace.raw);
     expect(corrected.frameWidth, 1280);
     expect(corrected.frameHeight, 720);
     expect(corrected.trigger, CaptureTrigger.manual);
+    expect(corrected.uncalibrated, isTrue);
     expect(corrected.correctedDarts.single.segment, 'T20');
     // The handle is unchanged — corrections re-attach by handle, not event id.
     expect(corrected.handle, const CaptureHandle(turnOrdinal: 3, dartInTurnOrdinal: 2));
