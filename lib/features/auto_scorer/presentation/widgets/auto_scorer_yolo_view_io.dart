@@ -106,8 +106,11 @@ Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
 
 /// Fullscreen one-time aim/calibration view backed by `YOLOView` (native
 /// streaming inference) instead of CameraController + takePicture. Feeds each
-/// `onResult` to the [CalibrationStabilityGate]; "Done aiming" enables once the
-/// four cals have held steady. Zoom drives the native `setZoomLevel`; native
+/// `onResult` to the [CalibrationStabilityGate], which drives the steadiness
+/// hint. The confirm button is always clickable: with the four cals present it
+/// reads "Done aiming"; otherwise it reads "Continue without auto-scoring" and
+/// proceeds uncalibrated (manual scoring) after a one-time note. Zoom drives the
+/// native `setZoomLevel`; native
 /// overlays draw the detection boxes (no Dart-side coord mapping) — but the
 /// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
 /// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
@@ -282,9 +285,11 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
         ? l10n.autoScorerAimHint
         : !calibrated
             ? l10n.autoScorerMarkersReframe(found)
-            // Stability counter stays English (diagnostic readout).
+            // Calibrated: the button already reads "Done aiming" and is enabled,
+            // so the steadiness nudge must NOT imply it's blocked (hint↔button
+            // agreement, #411). Advisory "tap when steady" while not-yet-stable.
             : !ready
-                ? 'Hold steady… ${_stability.stableFrames}/${_gate.requiredStableFrames}'
+                ? l10n.autoScorerCalibratedSteadyHint
                 : fill < kGoodFillRatio
                     ? l10n.autoScorerReadyZoomHint
                     : l10n.autoScorerReadyDone;
