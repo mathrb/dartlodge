@@ -15,6 +15,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.d
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -234,6 +235,42 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     if (Navigator.of(context).canPop()) Navigator.of(context).pop(done);
   }
 
+  /// Proceed past aiming WITHOUT a full calibration (markers not detected).
+  /// Auto-scoring can't run, so the player scores by hand and each manual entry
+  /// captures a labelled frame (the point of this path). Shows a one-time note
+  /// explaining that, then finishes; once acknowledged it never interrupts again.
+  Future<void> _confirmContinueWithoutCals() async {
+    final seen =
+        ref.read(autoScorerUncalibratedNoticeSeenProvider).value ?? false;
+    if (seen) {
+      await _finish(true);
+      return;
+    }
+    final l10n = AppLocalizations.of(context);
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(l10n.autoScorerUncalibratedNotice),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.autoScorerContinueWithoutAutoScoring),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || proceed != true) return;
+    await ref
+        .read(autoScorerUncalibratedNoticeSeenProvider.notifier)
+        .setSeen(true);
+    if (!mounted) return;
+    await _finish(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -306,10 +343,24 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                         FilledButton.tonal(
                             onPressed: () => _finish(false),
                             child: Text(l10n.commonCancel)),
+                        // Always clickable so an unsupported setup (markers
+                        // never resolve) can still proceed and contribute
+                        // frames. Calibrated → normal "Done aiming"; otherwise
+                        // proceed uncalibrated (manual scoring) after a one-time
+                        // note. Discriminate on `calibrated` (4 cals present),
+                        // not `ready` (stable 3 frames): the running preview
+                        // re-derives the transform live (#687), so the stability
+                        // wait is only the advisory "Hold steady…" hint now.
                         FilledButton.icon(
-                          onPressed: ready ? () => _finish(true) : null,
-                          icon: const Icon(Icons.check),
-                          label: Text(l10n.autoScorerDoneAiming),
+                          onPressed: calibrated
+                              ? () => _finish(true)
+                              : _confirmContinueWithoutCals,
+                          icon: Icon(calibrated
+                              ? Icons.check
+                              : Icons.videocam_off_outlined),
+                          label: Text(calibrated
+                              ? l10n.autoScorerDoneAiming
+                              : l10n.autoScorerContinueWithoutAutoScoring),
                         ),
                       ],
                     ),

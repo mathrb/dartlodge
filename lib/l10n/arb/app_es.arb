@@ -505,6 +505,8 @@
   "autoScorerReadyZoomHint": "Listo — acércate o usa el zoom para más precisión, o Apuntado",
   "autoScorerReadyDone": "Listo — Apuntado",
   "autoScorerDoneAiming": "Apuntado",
+  "autoScorerContinueWithoutAutoScoring": "Continuar sin puntuación automática",
+  "autoScorerUncalibratedNotice": "No se detectaron los marcadores de la diana, así que la puntuación automática está desactivada en esta configuración. Puedes seguir jugando y anotar a mano — tus lanzamientos se guardan para ayudar a entrenar la cámara (BETA).",
   "achievementFirst180Title": "Primer 180",
   "achievementBigFishTitle": "Big Fish",
   "achievementFirstWinTitle": "Primera victoria",

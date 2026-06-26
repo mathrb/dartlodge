@@ -505,6 +505,8 @@
   "autoScorerReadyZoomHint": "Pronto — avvicinati o zooma per più precisione, oppure Mira completata",
   "autoScorerReadyDone": "Pronto — Mira completata",
   "autoScorerDoneAiming": "Mira completata",
+  "autoScorerContinueWithoutAutoScoring": "Continua senza punteggio automatico",
+  "autoScorerUncalibratedNotice": "I marcatori del bersaglio non sono stati rilevati, quindi il punteggio automatico è disattivato in questa configurazione. Puoi comunque giocare e segnare a mano — i tuoi tiri vengono salvati per aiutare ad addestrare la fotocamera (BETA).",
   "achievementFirst180Title": "Primo 180",
   "achievementBigFishTitle": "Big Fish",
   "achievementFirstWinTitle": "Prima vittoria",

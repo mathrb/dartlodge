@@ -54,8 +54,8 @@ enum CaptureTrigger {
 /// (The `frame_space` / `frame_width` / `frame_height` keys added by the
 /// raw-capture brief are load-bearing for ingest — the probe needs them to
 /// align coords — and stay blocked on that reciprocal change. The `trigger`
-/// key added by #455 is an optional curation filter: the probe can safely
-/// ignore it until it chooses to consume it.)
+/// key added by #455 and the `uncalibrated` key are optional curation filters:
+/// the probe can safely ignore them until it chooses to consume them.)
 class CaptureRecord {
   final List<PredictedDart> predictedDarts;
   final List<BoardPoint> calPoints;
@@ -77,6 +77,13 @@ class CaptureRecord {
   /// manual capture button (#455).
   final CaptureTrigger trigger;
 
+  /// Whether this frame was captured WITHOUT a full board calibration — i.e. the
+  /// model didn't find all 4 calibration markers, so `calPoints` has fewer than
+  /// four entries. Lets the probe single out unsupported-config frames (the
+  /// player proceeded past aiming uncalibrated and scored by hand) without
+  /// re-deriving the condition from `calPoints.length`. Defaults false.
+  final bool uncalibrated;
+
   const CaptureRecord({
     required this.predictedDarts,
     required this.calPoints,
@@ -90,6 +97,7 @@ class CaptureRecord {
     this.frameWidth = 800,
     this.frameHeight = 800,
     this.trigger = CaptureTrigger.auto,
+    this.uncalibrated = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -107,6 +115,7 @@ class CaptureRecord {
         'frame_width': frameWidth,
         'frame_height': frameHeight,
         'trigger': trigger.wire,
+        'uncalibrated': uncalibrated,
       };
 
   factory CaptureRecord.fromJson(Map<String, dynamic> json) {
@@ -140,6 +149,8 @@ class CaptureRecord {
           (handle.manualSequence != null
               ? CaptureTrigger.manual
               : CaptureTrigger.auto),
+      // Pre-existing sidecars carry no `uncalibrated` flag → false.
+      uncalibrated: json['uncalibrated'] as bool? ?? false,
     );
   }
 
@@ -159,5 +170,6 @@ class CaptureRecord {
         frameWidth: frameWidth,
         frameHeight: frameHeight,
         trigger: trigger,
+        uncalibrated: uncalibrated,
       );
 }

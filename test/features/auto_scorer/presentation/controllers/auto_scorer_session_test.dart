@@ -274,6 +274,26 @@ void main() {
     expect(store.saved, isEmpty);
   });
 
+  test('stamps uncalibrated from the frame: no 4 cals → true, full cals → false',
+      () async {
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(oneDartFrame),
+        captureStore: store);
+    // A frame the model couldn't fully calibrate (unsupported config): the
+    // manual-entry capture is stamped uncalibrated.
+    const uncalFrame =
+        DetectionFrame(calPoints: [], dartCandidates: [(x: 0.5, y: 0.35)]);
+    await session.persistManualEntry(uncalFrame, bytes,
+        turnOrdinal: 1, gameId: 'g', segment: 'T20');
+    expect(store.saved.single.uncalibrated, isTrue);
+    // A fully-calibrated frame (4 cals) is not flagged.
+    await session.persistManualEntry(oneDartFrame, bytes,
+        turnOrdinal: 1, gameId: 'g', segment: 'T20');
+    expect(store.saved.last.uncalibrated, isFalse);
+  });
+
   test('captureCurrentFrame stores a manual-handle 800×800 frame (missed dart)', () async {
     final raw = img.encodePng(img.Image(width: 1200, height: 800));
     final store = _FakeCaptureStore();
