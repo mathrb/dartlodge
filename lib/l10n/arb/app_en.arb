@@ -1792,6 +1792,99 @@
   "@autoScorerAutoAdvanceSubtitle": {
     "description": "Subtitle for the auto-advance toggle"
   },
+  "autoScorerRecordTitle": "Record for debugging & training",
+  "@autoScorerRecordTitle": {
+    "description": "Toggle: record board photos + detection stream for debugging and model training"
+  },
+  "autoScorerRecordSubtitle": "Store board photos and the detection stream so scoring bugs can be replayed off-device and the model improved. Stays on this device until you export.",
+  "@autoScorerRecordSubtitle": {
+    "description": "Subtitle for the record-for-debugging toggle"
+  },
+  "autoScorerCaptureModeTitle": "What to capture",
+  "@autoScorerCaptureModeTitle": {
+    "description": "Label for the capture-mode selector (which frames to store)"
+  },
+  "autoScorerCaptureModeAll": "All",
+  "@autoScorerCaptureModeAll": {
+    "description": "Capture-mode option: store every detected dart frame"
+  },
+  "autoScorerCaptureModeMistakes": "Mistakes only",
+  "@autoScorerCaptureModeMistakes": {
+    "description": "Capture-mode option: store only frames the user corrects"
+  },
+  "autoScorerExportTitle": "Export recordings",
+  "@autoScorerExportTitle": {
+    "description": "Tile: export captured frames and recorded sessions as a zip"
+  },
+  "autoScorerExportSubtitle": "Share one zip of captured frames and recorded sessions.",
+  "@autoScorerExportSubtitle": {
+    "description": "Subtitle for the export tile"
+  },
+  "autoScorerExportProgress": "Building zip… {pct}",
+  "@autoScorerExportProgress": {
+    "description": "Inline progress on the export tile while the zip is being built; pct is an already-formatted percentage",
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
+  },
+  "autoScorerThresholdsTitle": "Detection thresholds",
+  "@autoScorerThresholdsTitle": {
+    "description": "Section header for the detection-confidence sliders"
+  },
+  "autoScorerThresholdsHelp": "How sure the camera must be before it counts a detection. Lower = catches more darts/calibration points but risks false hits; higher = only confident detections but may miss some. Leave at the default unless detection is consistently missing or over-counting.",
+  "@autoScorerThresholdsHelp": {
+    "description": "Plain-language help under the detection-thresholds header"
+  },
+  "autoScorerCalConfidenceLabel": "Calibration confidence",
+  "@autoScorerCalConfidenceLabel": {
+    "description": "Slider label: calibration-point detection confidence threshold"
+  },
+  "autoScorerDartConfidenceLabel": "Dart confidence",
+  "@autoScorerDartConfidenceLabel": {
+    "description": "Slider label: dart detection confidence threshold"
+  },
+  "autoScorerExportUnavailable": "Export is not available here.",
+  "@autoScorerExportUnavailable": {
+    "description": "Snackbar: export not supported on this platform"
+  },
+  "autoScorerExportNothing": "Nothing to export yet.",
+  "@autoScorerExportNothing": {
+    "description": "Snackbar: no captured frames or sessions to export"
+  },
+  "autoScorerExportFailed": "Export failed. Please try again.",
+  "@autoScorerExportFailed": {
+    "description": "Snackbar: the export zip could not be written"
+  },
+  "autoScorerClearTitle": "Clear exported data?",
+  "@autoScorerClearTitle": {
+    "description": "Dialog title: offer to clear data after a successful export"
+  },
+  "autoScorerClearBody": "Exported {frameCount, plural, one{1 frame} other{{frameCount} frames}} and {sessionCount, plural, one{1 session} other{{sessionCount} sessions}}. Clear them from this device so they are not exported again?",
+  "@autoScorerClearBody": {
+    "description": "Dialog body after export: how many frames/sessions were exported, offering to clear them",
+    "placeholders": {
+      "frameCount": {
+        "type": "int"
+      },
+      "sessionCount": {
+        "type": "int"
+      }
+    }
+  },
+  "autoScorerClearKeep": "Keep",
+  "@autoScorerClearKeep": {
+    "description": "Dialog action: keep exported data on device"
+  },
+  "autoScorerClearConfirm": "Clear",
+  "@autoScorerClearConfirm": {
+    "description": "Dialog action: clear exported data from device"
+  },
+  "autoScorerClearedToast": "Cleared exported recordings",
+  "@autoScorerClearedToast": {
+    "description": "Snackbar: exported recordings were cleared from the device"
+  },
   "autoScorerSetupTipsTile": "Camera setup tips",
   "@autoScorerSetupTipsTile": {
     "description": "Tile/title: camera setup tips"
