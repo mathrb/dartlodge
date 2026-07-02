@@ -105,11 +105,8 @@ class _AutoScorerSettingsPageState
           // improve detection). Off by default — we never silently store photos.
           SwitchListTile(
             secondary: const Icon(Icons.fiber_manual_record_outlined),
-            title: const Text('Record for debugging & training'),
-            subtitle: const Text(
-                'Store board photos and the detection stream so scoring bugs '
-                'can be replayed off-device and the model improved. Stays on '
-                'this device until you export.'),
+            title: Text(l10n.autoScorerRecordTitle),
+            subtitle: Text(l10n.autoScorerRecordSubtitle),
             value: recordingOn,
             onChanged: recordingBusy ? null : _setRecording,
           ),
@@ -119,14 +116,17 @@ class _AutoScorerSettingsPageState
           // and only enabled — while data collection is on.
           ListTile(
             leading: const Icon(Icons.filter_alt_outlined),
-            title: const Text('What to capture'),
+            title: Text(l10n.autoScorerCaptureModeTitle),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: 8),
               child: SegmentedButton<CaptureMode>(
-                segments: const [
-                  ButtonSegment(value: CaptureMode.all, label: Text('All')),
+                segments: [
                   ButtonSegment(
-                      value: CaptureMode.partial, label: Text('Mistakes only')),
+                      value: CaptureMode.all,
+                      label: Text(l10n.autoScorerCaptureModeAll)),
+                  ButtonSegment(
+                      value: CaptureMode.partial,
+                      label: Text(l10n.autoScorerCaptureModeMistakes)),
                 ],
                 selected: {captureMode.value ?? CaptureMode.partial},
                 onSelectionChanged: (!collectOn || captureMode.isLoading)
@@ -139,7 +139,7 @@ class _AutoScorerSettingsPageState
           ),
           ListTile(
             leading: const Icon(Icons.ios_share),
-            title: const Text('Export recordings'),
+            title: Text(l10n.autoScorerExportTitle),
             subtitle: _exporting
                 ? Padding(
                     padding: const EdgeInsets.only(top: 8),
@@ -148,13 +148,13 @@ class _AutoScorerSettingsPageState
                       children: [
                         LinearProgressIndicator(value: _exportProgress),
                         const SizedBox(height: 4),
-                        Text(
-                            'Building zip… ${StatFormatter.fmtPct(_exportProgress, decimals: 0)}'),
+                        Text(l10n.autoScorerExportProgress(
+                            StatFormatter.fmtPct(_exportProgress,
+                                decimals: 0))),
                       ],
                     ),
                   )
-                : const Text(
-                    'Share one zip of captured frames and recorded sessions.'),
+                : Text(l10n.autoScorerExportSubtitle),
             onTap: _exporting ? null : () => _export(context),
           ),
           const Divider(),
@@ -162,25 +162,20 @@ class _AutoScorerSettingsPageState
           // near-zero eval threshold, so a lower operating threshold recovers
           // borderline cal points / darts; expose both so they can be tuned
           // against the calibration overlay's per-cal confidence readout.
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Text('Detection thresholds',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(l10n.autoScorerThresholdsTitle,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
           // Plain-language help (#686 4a): orient a non-expert before they touch
           // the sliders, framed as the recall/false-positive trade-off.
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text(
-                'How sure the camera must be before it counts a detection. '
-                'Lower = catches more darts/calibration points but risks false '
-                'hits; higher = only confident detections but may miss some. '
-                'Leave at the default unless detection is consistently missing '
-                'or over-counting.'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text(l10n.autoScorerThresholdsHelp),
           ),
           _ConfidenceSlider(
             icon: Icons.crop_free,
-            label: 'Calibration confidence',
+            label: l10n.autoScorerCalConfidenceLabel,
             value: calConf.value ?? kDefaultConfidence,
             enabled: !calConf.isLoading,
             onChanged: (v) =>
@@ -188,7 +183,7 @@ class _AutoScorerSettingsPageState
           ),
           _ConfidenceSlider(
             icon: Icons.my_location,
-            label: 'Dart confidence',
+            label: l10n.autoScorerDartConfidenceLabel,
             value: dartConf.value ?? kDefaultConfidence,
             enabled: !dartConf.isLoading,
             onChanged: (v) =>
@@ -206,10 +201,11 @@ class _AutoScorerSettingsPageState
   /// both stores.
   Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     final store = await ref.read(captureStoreProvider.future);
     if (!store.isSupported) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('Export is not available here.')));
+          SnackBar(content: Text(l10n.autoScorerExportUnavailable)));
       return;
     }
     final captures = await store.list();
@@ -238,7 +234,7 @@ class _AutoScorerSettingsPageState
 
     if (captures.isEmpty && sessionFiles.isEmpty) {
       messenger.showSnackBar(
-          const SnackBar(content: Text('Nothing to export yet.')));
+          SnackBar(content: Text(l10n.autoScorerExportNothing)));
       return;
     }
     final frameCount = captures.length;
@@ -259,7 +255,7 @@ class _AutoScorerSettingsPageState
       // letting it crash to a red screen — #468 wants the export to fail
       // gracefully with a message — and don't share a partial/missing zip.
       messenger.showSnackBar(
-          const SnackBar(content: Text('Export failed. Please try again.')));
+          SnackBar(content: Text(l10n.autoScorerExportFailed)));
       return;
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -273,18 +269,15 @@ class _AutoScorerSettingsPageState
     final clear = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Clear exported data?'),
-        content: Text(
-            'Exported $frameCount frame${frameCount == 1 ? '' : 's'} and '
-            '$sessionCount session${sessionCount == 1 ? '' : 's'}. Clear them '
-            'from this device so they are not exported again?'),
+        title: Text(l10n.autoScorerClearTitle),
+        content: Text(l10n.autoScorerClearBody(frameCount, sessionCount)),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Keep')),
+              child: Text(l10n.autoScorerClearKeep)),
           FilledButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Clear')),
+              child: Text(l10n.autoScorerClearConfirm)),
         ],
       ),
     );
@@ -292,7 +285,7 @@ class _AutoScorerSettingsPageState
       await store.clear();
       if (sessionStore.isSupported) await sessionStore.clear();
       messenger.showSnackBar(
-          const SnackBar(content: Text('Cleared exported recordings')));
+          SnackBar(content: Text(l10n.autoScorerClearedToast)));
     }
   }
 }
