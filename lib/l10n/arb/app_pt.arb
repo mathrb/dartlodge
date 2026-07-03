@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Desbloqueado em {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Falha ao carregar as conquistas: {error}",
-  "achievementUnlockedBanner": "🏆 Conquista desbloqueada: {title}"
+  "achievementUnlockedBanner": "🏆 Conquista desbloqueada: {title}",
+  "glossaryPprTitle": "PPR — Pontos por ronda",
+  "glossaryPprBody": "A tua média de três dardos: os pontos médios que fazes por ronda completa de 3 dardos. Quanto mais alto, melhor — um bom amador anda pelos 40–60.",
+  "glossaryMprTitle": "MPR — Marcas por ronda",
+  "glossaryMprBody": "Uma estatística do Cricket: o número médio de marcas (acertos em 15–20 e no bull) por ronda de 3 dardos. Um triplo conta como 3 marcas, por isso o máximo por ronda é 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "A frequência com que fechas o leg quando tens hipótese a um duplo: checkouts conseguidos a dividir pelo número de oportunidades.",
+  "glossaryCheckoutScoreTitle": "Pontuação de checkout",
+  "glossaryCheckoutScoreBody": "A pontuação com que terminaste um leg — o total que eliminaste na tua jogada vencedora. Um checkout mais alto é um remate mais difícil."
 }

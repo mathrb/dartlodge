@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../../../../core/glossary/stat_term.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/stats_table_widget.dart';
 import '../../domain/entities/player_stats.dart';
@@ -17,17 +18,19 @@ class StatsDetailTableWidget extends StatelessWidget {
       StatsTableHeader(l10n.statsColAverage, col2: l10n.statsColBest),
       StatsTableDataRow('PPR',
           StatFormatter.fmtDouble(stats.threeDartAverage),
-          StatFormatter.fmtDouble(stats.bestLegPpr)),
+          StatFormatter.fmtDouble(stats.bestLegPpr), StatTerm.ppr),
       StatsTableDataRow(l10n.statsFirst9Ppr,
           StatFormatter.fmtDouble(stats.firstNinePpr),
           StatFormatter.fmtDouble(stats.bestFirstNinePpr)),
       StatsTableDataRow(l10n.statsCheckoutPct,
           StatFormatter.fmtPct(stats.checkoutPercentage, isRatio: false),
-          StatFormatter.fmtPct(stats.bestGameCheckoutPercentage, isRatio: false)),
+          StatFormatter.fmtPct(stats.bestGameCheckoutPercentage, isRatio: false),
+          StatTerm.checkoutPct),
       StatsTableDataRow(
         l10n.statsCheckoutPoints,
         StatFormatter.fmtDouble(stats.avgCheckoutScore),
         StatFormatter.fmtInt(stats.highestCheckout),
+        StatTerm.checkoutScore,
       ),
       StatsTableDataRow(l10n.statsWinPct, StatFormatter.fmtPct(stats.winRate), '—'),
       StatsTableHeader(l10n.statsColTotal, col2: l10n.statsColPerLeg),

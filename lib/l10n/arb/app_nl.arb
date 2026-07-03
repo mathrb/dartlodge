@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Ontgrendeld op {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Laden van prestaties mislukt: {error}",
-  "achievementUnlockedBanner": "🏆 Prestatie ontgrendeld: {title}"
+  "achievementUnlockedBanner": "🏆 Prestatie ontgrendeld: {title}",
+  "glossaryPprTitle": "PPR — Punten per ronde",
+  "glossaryPprBody": "Je drie-darts-gemiddelde: het gemiddelde aantal punten dat je per volledige beurt van 3 darts scoort. Hoger is beter — een goede amateur zit rond de 40–60.",
+  "glossaryMprTitle": "MPR — Marks per ronde",
+  "glossaryMprBody": "Een cricketstatistiek: het gemiddelde aantal marks (treffers op 15–20 en de bull) dat je per beurt van 3 darts scoort. Een triple telt als 3 marks, dus het maximum per beurt is 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "Hoe vaak je de leg uitgooit als je een kans op een dubbel hebt: geraakte checkouts gedeeld door het aantal kansen.",
+  "glossaryCheckoutScoreTitle": "Checkoutscore",
+  "glossaryCheckoutScoreBody": "De score waarmee je een leg hebt uitgegooid — het totaal dat je met je winnende beurt wegwerkte. Een hogere checkout is een moeilijkere finish."
 }

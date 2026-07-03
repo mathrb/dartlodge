@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:dart_lodge/core/glossary/stat_term.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/name_formatter.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
@@ -226,6 +227,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
     final rows = statRows
         .map((r) => PostGameBreakdownRow(
               category: r.category,
+              term: r.term,
               values: r.values,
               highlights: [
                 for (final c in competitors)
@@ -247,6 +249,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
     return [
       _StatRow(
         category: l10n.statAvgPpr,
+        term: StatTerm.ppr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
             .toList(),
@@ -254,6 +257,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
       ),
       _StatRow(
         category: l10n.statCheckout,
+        term: StatTerm.checkoutPct,
         values: competitors
             .map((c) =>
                 StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))
@@ -299,6 +303,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
     return [
       _StatRow(
         category: l10n.statAvgMpr,
+        term: StatTerm.mpr,
         values: competitors
             .map((c) => StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
             .toList(),
@@ -339,10 +344,12 @@ class _StatRow {
   final String category;
   final List<String> values;
   final bool highlightWinner;
+  final StatTerm? term;
 
   _StatRow({
     required this.category,
     required this.values,
     this.highlightWinner = false,
+    this.term,
   });
 }

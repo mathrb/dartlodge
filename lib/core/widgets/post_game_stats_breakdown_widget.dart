@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../glossary/stat_term.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
+import 'glossary_term_label.dart';
 
 /// Minimum comfortable width per breakdown column (category + each player).
 /// Below this the columns would be cramped, so the table falls back to a
@@ -34,11 +36,16 @@ class PostGameBreakdownRow {
     required this.category,
     required this.values,
     required this.highlights,
+    this.term,
   });
 
   final String category;
   final List<String> values;
   final List<bool> highlights;
+
+  /// When set, [category] renders as a tappable glossary term (info glyph +
+  /// definition dialog) instead of plain text (#719).
+  final StatTerm? term;
 }
 
 /// Reusable "STATISTICS BREAKDOWN" table shell — section title with a short
@@ -241,10 +248,16 @@ class _BreakdownTable extends StatelessWidget {
               children: [
                 Padding(
                   padding: cellPadding,
-                  child: Text(
-                    row.category.toUpperCase(),
-                    style: categoryStyle,
-                  ),
+                  child: row.term != null
+                      ? GlossaryTermLabel(
+                          label: row.category.toUpperCase(),
+                          term: row.term!,
+                          style: categoryStyle,
+                        )
+                      : Text(
+                          row.category.toUpperCase(),
+                          style: categoryStyle,
+                        ),
                 ),
                 ...List.generate(columns.length, (i) {
                   final isHighlight = row.highlights[i];

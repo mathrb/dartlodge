@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Desbloqueado el {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Error al cargar los logros: {error}",
-  "achievementUnlockedBanner": "🏆 Logro desbloqueado: {title}"
+  "achievementUnlockedBanner": "🏆 Logro desbloqueado: {title}",
+  "glossaryPprTitle": "PPR — Puntos por ronda",
+  "glossaryPprBody": "Tu promedio de tres dardos: los puntos medios que consigues en cada tanda completa de 3 dardos. Cuanto más alto, mejor: un buen aficionado ronda los 40–60.",
+  "glossaryMprTitle": "MPR — Marcas por ronda",
+  "glossaryMprBody": "Una estadística del Cricket: el número medio de marcas (impactos en 15–20 y el bull) que consigues por tanda de 3 dardos. Un triple cuenta como 3 marcas, así que el máximo por tanda es 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "Con qué frecuencia cierras la manga cuando tienes opción a un doble: cierres logrados divididos entre las oportunidades que tuviste.",
+  "glossaryCheckoutScoreTitle": "Puntuación de cierre",
+  "glossaryCheckoutScoreBody": "La puntuación con la que cerraste una manga: el total que eliminaste en tu tanda ganadora. Un cierre más alto es un final más difícil."
 }

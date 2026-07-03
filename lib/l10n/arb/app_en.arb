@@ -2222,5 +2222,37 @@
         "type": "String"
       }
     }
+  },
+  "glossaryPprTitle": "PPR — Points Per Round",
+  "@glossaryPprTitle": {
+    "description": "Glossary dialog title for the PPR statistic"
+  },
+  "glossaryPprBody": "Your three-dart average: the average points you score per full turn of 3 darts. Higher is better — a solid amateur sits around 40–60.",
+  "@glossaryPprBody": {
+    "description": "Plain-language definition of the PPR statistic"
+  },
+  "glossaryMprTitle": "MPR — Marks Per Round",
+  "@glossaryMprTitle": {
+    "description": "Glossary dialog title for the Cricket MPR statistic"
+  },
+  "glossaryMprBody": "A Cricket stat: the average number of marks (hits on 15–20 and the bull) you score per turn of 3 darts. A triple counts as 3 marks, so the most you can score in a turn is 9.",
+  "@glossaryMprBody": {
+    "description": "Plain-language definition of the Cricket MPR statistic"
+  },
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "@glossaryCheckoutPctTitle": {
+    "description": "Glossary dialog title for the checkout percentage statistic"
+  },
+  "glossaryCheckoutPctBody": "How often you finish the leg when you get a shot at a double: checkouts hit divided by the number of chances you had.",
+  "@glossaryCheckoutPctBody": {
+    "description": "Plain-language definition of the checkout percentage statistic"
+  },
+  "glossaryCheckoutScoreTitle": "Checkout score",
+  "@glossaryCheckoutScoreTitle": {
+    "description": "Glossary dialog title for the checkout score statistic"
+  },
+  "glossaryCheckoutScoreBody": "The score you finished a leg on — the total you took out with your winning turn. A higher checkout is a harder finish.",
+  "@glossaryCheckoutScoreBody": {
+    "description": "Plain-language definition of the checkout score statistic"
   }
 }

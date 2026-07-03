@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../../../../core/glossary/stat_term.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/stats_table_widget.dart';
 import '../../domain/entities/player_stats.dart';
@@ -17,7 +18,7 @@ class CricketStatsDetailTableWidget extends StatelessWidget {
       StatsTableHeader(l10n.statsColAverage, col2: l10n.statsColBest),
       StatsTableDataRow('MPR',
           StatFormatter.fmtDouble(stats.marksPerTurn, decimals: 2),
-          StatFormatter.fmtDouble(stats.bestLegMpt, decimals: 2)),
+          StatFormatter.fmtDouble(stats.bestLegMpt, decimals: 2), StatTerm.mpr),
       StatsTableDataRow(l10n.statFirst9Mpr,
           StatFormatter.fmtDouble(stats.firstNineMpr, decimals: 2),
           '—'),

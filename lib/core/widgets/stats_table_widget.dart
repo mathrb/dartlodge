@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../glossary/stat_term.dart';
 import '../utils/app_spacing.dart';
+import 'glossary_term_label.dart';
 
 sealed class StatsTableRow {}
 
@@ -27,7 +29,11 @@ class StatsTableDataRow extends StatsTableRow {
   final String label;
   final String col1;
   final String? col2;
-  StatsTableDataRow(this.label, this.col1, [this.col2]);
+
+  /// When set, [label] renders as a tappable glossary term (info glyph +
+  /// definition dialog) instead of plain text (#719).
+  final StatTerm? term;
+  StatsTableDataRow(this.label, this.col1, [this.col2, this.term]);
 }
 
 class StatsTableWidget extends StatelessWidget {
@@ -130,10 +136,18 @@ class StatsTableWidget extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              row.label,
-              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurface),
-            ),
+            child: Builder(builder: (_) {
+              final labelStyle =
+                  theme.textTheme.bodyMedium?.copyWith(color: cs.onSurface);
+              if (row.term != null) {
+                return GlossaryTermLabel(
+                  label: row.label,
+                  term: row.term!,
+                  style: labelStyle,
+                );
+              }
+              return Text(row.label, style: labelStyle);
+            }),
           ),
           SizedBox(
             width: valueColumnWidth,
