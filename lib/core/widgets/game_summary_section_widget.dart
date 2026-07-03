@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import '../glossary/stat_term.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
 import '../utils/constants.dart';
@@ -159,6 +160,7 @@ class GameSummarySectionWidget extends StatelessWidget {
       return [
         PostGameBreakdownRow(
           category: l10n.statAvgPpr,
+          term: StatTerm.ppr,
           values: allCompetitors
               .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
               .toList(),
@@ -200,6 +202,7 @@ class GameSummarySectionWidget extends StatelessWidget {
       return [
         PostGameBreakdownRow(
           category: l10n.statAvgMpr,
+          term: StatTerm.mpr,
           values: allCompetitors
               .map((c) =>
                   StatFormatter.fmtDouble(c.marksPerRound, decimals: 2))
@@ -255,6 +258,7 @@ class GameSummarySectionWidget extends StatelessWidget {
     return [
       PostGameBreakdownRow(
         category: l10n.statAvgPpr,
+        term: StatTerm.ppr,
         values: allCompetitors
             .map((c) => StatFormatter.fmtDouble(c.threeDartAverage))
             .toList(),
@@ -262,6 +266,7 @@ class GameSummarySectionWidget extends StatelessWidget {
       ),
       PostGameBreakdownRow(
         category: l10n.statCheckout,
+        term: StatTerm.checkoutPct,
         values: allCompetitors
             .map((c) =>
                 StatFormatter.fmtPct(c.checkoutPercentage, isRatio: false))

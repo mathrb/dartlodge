@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Sbloccato il {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Caricamento degli obiettivi non riuscito: {error}",
-  "achievementUnlockedBanner": "🏆 Obiettivo sbloccato: {title}"
+  "achievementUnlockedBanner": "🏆 Obiettivo sbloccato: {title}",
+  "glossaryPprTitle": "PPR — Punti per round",
+  "glossaryPprBody": "La tua media a tre freccette: i punti medi che segni per ogni turno completo di 3 freccette. Più è alto, meglio è — un buon amatore si aggira sui 40–60.",
+  "glossaryMprTitle": "MPR — Marcature per round",
+  "glossaryMprBody": "Una statistica del Cricket: il numero medio di marcature (colpi su 15–20 e il bull) per turno di 3 freccette. Un triplo vale 3 marcature, quindi il massimo per turno è 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "Quanto spesso chiudi il leg quando hai un tiro utile a un doppio: checkout riusciti divisi per le occasioni avute.",
+  "glossaryCheckoutScoreTitle": "Punteggio di checkout",
+  "glossaryCheckoutScoreBody": "Il punteggio con cui hai chiuso un leg — il totale che hai eliminato nel turno vincente. Un checkout più alto è una chiusura più difficile."
 }

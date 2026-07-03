@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Freigeschaltet am {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Erfolge konnten nicht geladen werden: {error}",
-  "achievementUnlockedBanner": "🏆 Erfolg freigeschaltet: {title}"
+  "achievementUnlockedBanner": "🏆 Erfolg freigeschaltet: {title}",
+  "glossaryPprTitle": "PPR — Punkte pro Runde",
+  "glossaryPprBody": "Dein Drei-Dart-Average: die durchschnittlichen Punkte pro kompletter Aufnahme von 3 Darts. Höher ist besser — ein solider Amateur liegt bei etwa 40–60.",
+  "glossaryMprTitle": "MPR — Marks pro Runde",
+  "glossaryMprBody": "Eine Cricket-Statistik: die durchschnittliche Anzahl an Marks (Treffer auf 15–20 und das Bull) pro Aufnahme von 3 Darts. Ein Triple zählt als 3 Marks, das Maximum pro Aufnahme ist also 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "Wie oft du das Leg beendest, wenn du eine Chance auf ein Doppel hast: getroffene Checkouts geteilt durch die Anzahl deiner Chancen.",
+  "glossaryCheckoutScoreTitle": "Checkout-Score",
+  "glossaryCheckoutScoreBody": "Der Punktestand, mit dem du ein Leg beendet hast — die Summe, die du mit deiner Gewinn-Aufnahme ausgecheckt hast. Ein höherer Checkout ist ein schwierigeres Finish."
 }

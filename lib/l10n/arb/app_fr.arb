@@ -562,5 +562,13 @@
   "achievementUnlockedOn": "Débloqué le {date}",
   "achievementProgress": "{current} / {target}",
   "achievementsLoadFailed": "Échec du chargement des succès : {error}",
-  "achievementUnlockedBanner": "🏆 Succès débloqué : {title}"
+  "achievementUnlockedBanner": "🏆 Succès débloqué : {title}",
+  "glossaryPprTitle": "PPR — Points par volée",
+  "glossaryPprBody": "Votre moyenne à trois fléchettes : le nombre moyen de points marqués par volée complète de 3 fléchettes. Plus c'est élevé, mieux c'est — un bon amateur tourne autour de 40 à 60.",
+  "glossaryMprTitle": "MPR — Marques par volée",
+  "glossaryMprBody": "Une statistique du Cricket : le nombre moyen de marques (touches sur 15–20 et le bull) réalisées par volée de 3 fléchettes. Un triple compte pour 3 marques, le maximum par volée est donc de 9.",
+  "glossaryCheckoutPctTitle": "Checkout %",
+  "glossaryCheckoutPctBody": "La fréquence à laquelle vous terminez la manche lorsque vous avez une occasion sur un double : checkouts réussis divisés par le nombre d'occasions.",
+  "glossaryCheckoutScoreTitle": "Score de checkout",
+  "glossaryCheckoutScoreBody": "Le score sur lequel vous avez terminé une manche — le total sorti lors de votre volée gagnante. Un checkout élevé est une fin plus difficile."
 }
