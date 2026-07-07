@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/model_update/model_compatibility.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/model_update/resolved_model.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_update_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/aim_confirmed_provider.dart';
@@ -77,6 +79,11 @@ class _AutoScorerBoardOverlayState
   _Mode _mode = _Mode.idle;
   bool _starting = false;
   AutoScorerSession? _session;
+
+  /// The model resolved once at [_start] (bundled or a staged OTA file, #715),
+  /// passed as a prop into the `YOLOView` views + used for the session's
+  /// `modelVersion`. Snapshotted so the model never hot-swaps mid-session.
+  ResolvedModel? _resolvedModel;
   int _turnOrdinal = 1;
   String? _error;
 
@@ -172,11 +179,17 @@ class _AutoScorerBoardOverlayState
         }
       }
       if (!mounted) return;
+      // Resolve the effective model once (#715): a staged OTA download if valid,
+      // else the bundled asset. Snapshotted here so the whole session uses one
+      // consistent (path, version) pair and the model never hot-swaps mid-game.
+      final resolved = await ref.read(resolvedModelProvider.future);
+      if (!mounted) return;
+      _resolvedModel = resolved;
       // No predict detector: YOLOView loads its own model. The session just
       // wires the tracker + capture; start() prunes captures to the cap.
       final session = AutoScorerSession(
         captureStore: store,
-        modelVersion: kAutoScorerModelVersion,
+        modelVersion: resolved.version,
         traceStore: traceStore,
         recordingSessionId: recordingSessionId,
         recordingGameId: widget.gameId,
@@ -217,6 +230,23 @@ class _AutoScorerBoardOverlayState
     }
   }
 
+  /// A staged OTA model failed to load natively (#715). The view already fell
+  /// back to the bundled asset for this session; persist the quarantine (delete
+  /// + clear staged state) so future sessions also use bundled, and refresh the
+  /// resolver. No-op unless a staged model was in play.
+  Future<void> _onModelLoadFailed() async {
+    final resolved = _resolvedModel;
+    if (resolved == null || resolved.origin != ModelOrigin.staged) return;
+    // Refresh the snapshot so any later mount this session (e.g. the preview
+    // after an aim-view failure, or a re-aim) uses the bundled path/version —
+    // otherwise it would re-point at the just-quarantined staged file.
+    if (mounted) setState(() => _resolvedModel = kBundledResolvedModel);
+    final service = await ref.read(modelUpdateServiceProvider.future);
+    await service.quarantine(resolved.version);
+    if (!mounted) return;
+    ref.invalidate(resolvedModelProvider);
+  }
+
   /// Push the fullscreen aim step and return whether the user confirmed it.
   /// Shared by the initial [_start] flow and the in-preview [_reAim] button.
   Future<bool> _runAimView(AutoScorerSession session) async {
@@ -232,11 +262,13 @@ class _AutoScorerBoardOverlayState
       builder: (_) => AutoScorerYoloAimView(
         session: session,
         gameId: widget.gameId,
+        modelPath: _resolvedModel!.path,
         calConfidence: calConf,
         dartConfidence: dartConf,
         initialZoom: initialZoom,
         onZoomChanged: (z) =>
             ref.read(autoScorerCameraZoomProvider.notifier).set(z),
+        onModelLoadFailed: _onModelLoadFailed,
       ),
     ));
     return done == true;
@@ -321,6 +353,8 @@ class _AutoScorerBoardOverlayState
               key: _previewKey,
               session: _session!,
               gameId: widget.gameId,
+              modelPath: _resolvedModel!.path,
+              onModelLoadFailed: _onModelLoadFailed,
               expand: widget.expand,
               currentTurnOrdinal: () => _turnOrdinal,
               calConfidence:

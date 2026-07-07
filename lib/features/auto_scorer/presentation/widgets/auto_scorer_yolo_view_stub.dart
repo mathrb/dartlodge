@@ -16,18 +16,22 @@ class AutoScorerYoloAimView extends StatelessWidget {
     super.key,
     required this.session,
     required this.gameId,
+    required this.modelPath,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
     required this.onZoomChanged,
+    this.onModelLoadFailed,
   });
 
   final AutoScorerSession session;
   final String gameId;
+  final String modelPath;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<double> onZoomChanged;
+  final VoidCallback? onModelLoadFailed;
 
   @override
   Widget build(BuildContext context) => const Scaffold(
@@ -40,21 +44,25 @@ class AutoScorerYoloPreview extends StatelessWidget {
     super.key,
     required this.session,
     required this.gameId,
+    required this.modelPath,
     required this.currentTurnOrdinal,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
     required this.onStatus,
+    this.onModelLoadFailed,
     this.expand = false,
   });
 
   final AutoScorerSession session;
   final String gameId;
+  final String modelPath;
   final int Function() currentTurnOrdinal;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<TrackerStatus> onStatus;
+  final VoidCallback? onModelLoadFailed;
   final bool expand;
 
   @override

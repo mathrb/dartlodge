@@ -4,7 +4,9 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_bundle.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_service.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_update_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -43,6 +45,49 @@ class _AutoScorerSettingsPageState
   void _setRecording(bool enabled) {
     ref.read(sessionRecordingEnabledProvider.notifier).setEnabled(enabled);
     ref.read(dataCollectionEnabledProvider.notifier).setEnabled(enabled);
+  }
+
+  /// Status row for the out-of-band detection-model update channel (#715):
+  /// active model version + state, with a "Check now" button. Hidden where OTA
+  /// is unsupported (web/iOS) — the service reports `isSupported == false`.
+  Widget _buildModelUpdateTile(AppLocalizations l10n) {
+    final supported =
+        ref.watch(modelUpdateServiceProvider).value?.isSupported ?? false;
+    if (!supported) return const SizedBox.shrink();
+    final version = ref.watch(resolvedModelProvider).value?.version ?? '…';
+    final status =
+        ref.watch(modelUpdateControllerProvider).value ??
+            ModelUpdateStatus.upToDate;
+    final downloading = status == ModelUpdateStatus.downloading;
+    return ListTile(
+      leading: const Icon(Icons.model_training),
+      title: Text(l10n.autoScorerModelTitle),
+      subtitle: Text(
+        l10n.autoScorerModelStatus(version, _modelStateLabel(l10n, status)),
+      ),
+      trailing: downloading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : TextButton(
+              onPressed: () =>
+                  ref.read(modelUpdateControllerProvider.notifier).checkNow(),
+              child: Text(l10n.autoScorerModelCheckNow),
+            ),
+    );
+  }
+
+  String _modelStateLabel(AppLocalizations l10n, ModelUpdateStatus status) {
+    switch (status) {
+      case ModelUpdateStatus.upToDate:
+        return l10n.autoScorerModelUpToDate;
+      case ModelUpdateStatus.downloading:
+        return l10n.autoScorerModelDownloading;
+      case ModelUpdateStatus.updateReady:
+        return l10n.autoScorerModelUpdateReady;
+    }
   }
 
   @override
@@ -87,6 +132,7 @@ class _AutoScorerSettingsPageState
                 : (v) =>
                     ref.read(autoScoringEnabledProvider.notifier).setEnabled(v),
           ),
+          _buildModelUpdateTile(l10n),
           SwitchListTile(
             secondary: const Icon(Icons.skip_next),
             title: Text(l10n.autoScorerAutoAdvanceTitle),
