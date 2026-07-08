@@ -10,6 +10,11 @@
 /// JSON is hand-parsed (mirroring [CaptureRecord]) with back-compat-tolerant
 /// defaults and stable snake_case wire keys, so adding fields later (e.g. an iOS
 /// `.mlpackage` channel) stays additive.
+///
+/// The wire keys are **snake_case** (`model_version`, `size_bytes`, `input_size`,
+/// `class_count`) — this is the canonical contract the publishing script must
+/// emit, and it supersedes the camelCase example in the #715 design comment. The
+/// committed `model_manifest.json` at the repo root is the reference document.
 class AutoScorerModelManifest {
   /// Manifest envelope version — lets the parser evolve the shape itself.
   final int schema;
