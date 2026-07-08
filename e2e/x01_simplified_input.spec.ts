@@ -48,7 +48,7 @@ async function startSimplifiedSolo301(page: Page, player: string): Promise<void>
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();
   // The simplified keypad exposes a "Triple" arm button (the full grid does not).
-  await expect(page.getByRole('button', { name: 'Triple', exact: true }))
+  await expect(page.getByRole('button', { name: 'Triple TRIPLE', exact: true }))
     .toBeVisible({ timeout: 15000 });
 }
 
@@ -61,12 +61,12 @@ test.describe('X01 simplified keypad (#720)', { tag: ['@x01'] }, () => {
       await startSimplifiedSolo301(page, 'Tara');
 
       // Arm Triple, tap 20 → T20 = 60. 301 → 241. Arm then disarms.
-      await page.getByRole('button', { name: 'Triple', exact: true }).click();
-      await page.getByRole('button', { name: '20', exact: true }).click();
+      await page.getByRole('button', { name: 'Triple TRIPLE', exact: true }).click();
+      await page.getByRole('button', { name: '20 20', exact: true }).click();
       await expect(page.getByText('241').first()).toBeVisible({ timeout: 10000 });
 
       // With nothing armed, tapping 20 scores a single. 241 → 221.
-      await page.getByRole('button', { name: '20', exact: true }).click();
+      await page.getByRole('button', { name: '20 20', exact: true }).click();
       await expect(page.getByText('221').first()).toBeVisible({ timeout: 10000 });
 
       // Single Bull (25) special is unaffected by the multiplier. 221 → 196.

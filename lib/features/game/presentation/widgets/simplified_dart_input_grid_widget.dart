@@ -63,6 +63,18 @@ class _SimplifiedDartInputGridWidgetState
   }
 
   @override
+  void didUpdateWidget(SimplifiedDartInputGridWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Clear any armed multiplier when the keypad becomes disabled (turn ended
+    // or bust). Otherwise the arm would silently carry into the next turn and
+    // double/triple the player's first dart. A rebuild is already in flight, so
+    // no setState is needed.
+    if (!widget.enabled && _armed != _Armed.none) {
+      _armed = _Armed.none;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Padding(

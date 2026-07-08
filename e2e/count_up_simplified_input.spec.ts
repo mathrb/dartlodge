@@ -53,13 +53,13 @@ test.describe('Count-Up simplified keypad (#720)', { tag: ['@countup'] }, () => 
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();
 
-      await expect(page.getByRole('button', { name: 'Triple', exact: true }))
+      await expect(page.getByRole('button', { name: 'Triple TRIPLE', exact: true }))
         .toBeVisible({ timeout: 15000 });
 
       // Arm Triple, tap 20 → T20 = 60 (Count-Up accumulates). 0 → 60.
-      await page.getByRole('button', { name: 'Triple', exact: true }).click();
-      await page.getByRole('button', { name: '20', exact: true }).click();
-      await expect(page.getByText('60').first()).toBeVisible({ timeout: 10000 });
+      await page.getByRole('button', { name: 'Triple TRIPLE', exact: true }).click();
+      await page.getByRole('button', { name: '20 20', exact: true }).click();
+      await expect(page.getByText('60', { exact: true }).first()).toBeVisible({ timeout: 10000 });
 
       await page.context().close();
     });

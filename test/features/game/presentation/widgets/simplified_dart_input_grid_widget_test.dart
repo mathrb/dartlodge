@@ -106,6 +106,30 @@ void main() {
       expect(thrown, ['MISS', '20']);
     });
 
+    testWidgets('an armed multiplier is cleared when the keypad is disabled',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
+
+      // Arm Double but never throw, then the turn ends (enabled → false)…
+      await tester.tap(find.text('DOUBLE'));
+      await tester.pump();
+      await tester.pumpWidget(_wrap(SimplifiedDartInputGridWidget(
+        onSegmentTapped: thrown.add,
+        enabled: false,
+      )));
+      // …and the next turn begins (enabled → true).
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
+
+      // The stale arm must not carry over: the first number is a plain single.
+      await tester.tap(find.text('20'));
+      await tester.pump();
+
+      expect(thrown, ['20']);
+    });
+
     testWidgets('disabled swallows all taps', (tester) async {
       final thrown = <String>[];
       await tester.pumpWidget(_wrap(SimplifiedDartInputGridWidget(
