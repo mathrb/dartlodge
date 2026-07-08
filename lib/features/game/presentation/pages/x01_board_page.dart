@@ -19,6 +19,7 @@ import '../providers/active_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
+import '../widgets/manual_scoring_input.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
@@ -389,7 +390,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       dartsThrownInTurn: dartsThrownInTurn,
                     ),
                     Expanded(
-                      child: DartInputGridWidget(
+                      child: ManualScoringInput(
                         onSegmentTapped: (segment) => ref
                             .read(activeGameProvider(widget.gameId).notifier)
                             .processDart(segment),

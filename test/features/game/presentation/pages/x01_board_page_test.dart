@@ -19,7 +19,9 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/x01_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_game_state.dart';
+import 'package:dart_lodge/core/settings/simplified_input_provider.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/x01_other_players_strip_widget.dart';
@@ -98,6 +100,12 @@ class _LoadingActiveGameNotifier extends ActiveGameNotifier {
 
 /// Forces auto-scoring on without touching SharedPreferences.
 class _FakeAutoScoringEnabled extends AutoScoringEnabled {
+  @override
+  Future<bool> build() async => true;
+}
+
+/// Forces the simplified keypad on without touching SharedPreferences.
+class _FakeSimplifiedInputEnabled extends SimplifiedInputEnabled {
   @override
   Future<bool> build() async => true;
 }
@@ -238,6 +246,30 @@ Widget _buildAppCameraFirst(
       if (correctionSink != null)
         activeCaptureCorrectionSinkProvider
             .overrideWith(() => _BoundCorrectionSink(correctionSink)),
+    ],
+    child: MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      theme: AppTheme.light(),
+      routerConfig: router,
+    ),
+  );
+}
+
+/// Builder with the simplified-input setting forced on (#720).
+Widget _buildAppSimplified(
+  _FakeActiveGameNotifier notifier, {
+  String gameId = 'game-1',
+}) {
+  final router = GoRouter(
+    initialLocation: '/game/active/x01/$gameId',
+    routes: _testRoutes(gameId: gameId),
+  );
+  return ProviderScope(
+    overrides: [
+      activeGameProvider.overrideWith(() => notifier),
+      simplifiedInputEnabledProvider
+          .overrideWith(() => _FakeSimplifiedInputEnabled()),
     ],
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -1323,5 +1355,28 @@ void main() {
 
     // Advance past the bust-dismissal timer to avoid a pending-timer warning.
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  // ── #720: simplified keypad selection ───────────────────────────────────────
+
+  testWidgets('renders the full grid by default', (tester) async {
+    _setPhoneViewport(tester);
+    final notifier = _FakeActiveGameNotifier(_activeState());
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(DartInputGridWidget), findsOneWidget);
+    expect(find.byType(SimplifiedDartInputGridWidget), findsNothing);
+  });
+
+  testWidgets('renders the simplified keypad when the setting is on',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final notifier = _FakeActiveGameNotifier(_activeState());
+    await tester.pumpWidget(_buildAppSimplified(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+    expect(find.byType(DartInputGridWidget), findsNothing);
   });
 }

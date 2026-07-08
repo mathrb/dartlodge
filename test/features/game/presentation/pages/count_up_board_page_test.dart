@@ -14,7 +14,9 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_count_up_state.dart';
+import 'package:dart_lodge/core/settings/simplified_input_provider.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
@@ -75,6 +77,12 @@ class _FakeAutoScoringEnabled extends AutoScoringEnabled {
   Future<bool> build() async => true;
 }
 
+/// Forces the simplified keypad on without touching SharedPreferences.
+class _FakeSimplifiedInputEnabled extends SimplifiedInputEnabled {
+  @override
+  Future<bool> build() async => true;
+}
+
 GameState _countUpState(
         {List<CompetitorState>? competitors, int dartsThrownInTurn = 1}) =>
     GameState(
@@ -99,6 +107,7 @@ GameState _countUpState(
 Widget _buildApp(_FakeActiveCountUpNotifier notifier,
     {Locale? locale,
     bool cameraFirst = false,
+    bool simplified = false,
     CaptureCorrectionSink? correctionSink}) {
   final router = GoRouter(
     initialLocation: '/game/active/count-up/game-1',
@@ -144,6 +153,9 @@ Widget _buildApp(_FakeActiveCountUpNotifier notifier,
           (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
         ),
       ],
+      if (simplified)
+        simplifiedInputEnabledProvider
+            .overrideWith(() => _FakeSimplifiedInputEnabled()),
       if (correctionSink != null)
         activeCaptureCorrectionSinkProvider
             .overrideWith(() => _BoundCorrectionSink(correctionSink)),
@@ -208,6 +220,28 @@ void main() {
       expect(find.byType(HeroMetricWidget), findsOneWidget);
       expect(find.text('140'), findsOneWidget);
       expect(find.byKey(const ValueKey('camera-stub')), findsOneWidget);
+      expect(find.byType(DartInputGridWidget), findsNothing);
+    });
+
+    testWidgets('renders the full grid by default (#720)', (tester) async {
+      await tester.pumpWidget(_buildApp(
+        _FakeActiveCountUpNotifier(ActiveCountUpState(gameState: _countUpState())),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DartInputGridWidget), findsOneWidget);
+      expect(find.byType(SimplifiedDartInputGridWidget), findsNothing);
+    });
+
+    testWidgets('renders the simplified keypad when the setting is on (#720)',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(
+        _FakeActiveCountUpNotifier(ActiveCountUpState(gameState: _countUpState())),
+        simplified: true,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
       expect(find.byType(DartInputGridWidget), findsNothing);
     });
 
