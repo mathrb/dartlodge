@@ -5,6 +5,7 @@ import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/feedback/report_bug.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/settings/simplified_input_provider.dart';
 import 'package:dart_lodge/core/sound/sound_settings_provider.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -79,6 +80,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final locale = ref.watch(localeSettingProvider).value; // Locale? — null = system
     final localeNotifier = ref.read(localeSettingProvider.notifier);
     final soundEnabled = ref.watch(soundEnabledProvider).value ?? true;
+    final simplifiedInput =
+        ref.watch(simplifiedInputEnabledProvider).value ?? false;
     // Toggle reflects the persisted preference; sentryActive reflects whether
     // Sentry was actually initialized this session (opt-out takes effect on the
     // next launch). Report-a-Bug gates on the latter so feedback is never lost.
@@ -123,6 +126,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             value: soundEnabled,
             onChanged: (v) =>
                 ref.read(soundEnabledProvider.notifier).setEnabled(v),
+          ),
+          const Divider(height: 1),
+          _SectionHeader(label: l10n.settingsScoringSection, cs: cs, tt: tt),
+          SwitchListTile(
+            secondary: const Icon(Icons.grid_view_outlined),
+            title: Text(l10n.settingsSimplifiedInputTitle),
+            subtitle: Text(l10n.settingsSimplifiedInputSubtitle),
+            value: simplifiedInput,
+            onChanged: (v) =>
+                ref.read(simplifiedInputEnabledProvider.notifier).setEnabled(v),
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsAutoScoringSection, cs: cs, tt: tt),

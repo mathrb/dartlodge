@@ -52,6 +52,18 @@
   "@settingsSoundEffectsSubtitle": {
     "description": "Sound effects toggle row subtitle"
   },
+  "settingsScoringSection": "Scoring",
+  "@settingsScoringSection": {
+    "description": "Settings section header for manual scoring options"
+  },
+  "settingsSimplifiedInputTitle": "Simplified scoring keypad",
+  "@settingsSimplifiedInputTitle": {
+    "description": "Simplified scoring layout toggle row title"
+  },
+  "settingsSimplifiedInputSubtitle": "Larger buttons: numbers with Double/Triple. Used in X01 and Count-Up.",
+  "@settingsSimplifiedInputSubtitle": {
+    "description": "Simplified scoring layout toggle row subtitle"
+  },
   "settingsAboutSection": "About",
   "@settingsAboutSection": {
     "description": "Settings section header for app information"

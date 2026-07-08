@@ -70,6 +70,29 @@ void main() {
   });
 
   testWidgets(
+      'simplified-input toggle is off by default and persists when turned on',
+      (tester) async {
+    await pump(tester, const Locale('en'));
+
+    final simplifiedSwitch = find.ancestor(
+      of: find.text('Simplified scoring keypad'),
+      matching: find.byType(SwitchListTile),
+    );
+
+    expect(
+      tester.widget<SwitchListTile>(simplifiedSwitch).value,
+      isFalse, // dense grid stays the default
+    );
+
+    await tester.tap(simplifiedSwitch);
+    await tester.pumpAndSettle();
+
+    expect(tester.widget<SwitchListTile>(simplifiedSwitch).value, isTrue);
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('simplified_scoring_layout'), isTrue);
+  });
+
+  testWidgets(
       'crash-reporting toggle is on by default and persists when turned off',
       (tester) async {
     await pump(tester, const Locale('en'));

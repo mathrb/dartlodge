@@ -18,6 +18,7 @@ import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_count_up_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/dart_input_grid_widget.dart';
+import '../widgets/manual_scoring_input.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
@@ -280,7 +281,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                     bustFlashAnim: const AlwaysStoppedAnimation<double>(0.0),
                   ),
                   Expanded(
-                    child: DartInputGridWidget(
+                    child: ManualScoringInput(
                       onSegmentTapped: (segment) => ref
                           .read(activeCountUpProvider(widget.gameId).notifier)
                           .processDart(segment),
