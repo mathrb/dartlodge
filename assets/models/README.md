@@ -37,3 +37,44 @@ filled the frame — see #377 §3.) The probe trained at `imgsz 800`; for best
 results training should letterbox to match (#393). A "Skip preprocessing" toggle
 in settings bypasses our step to feed raw frames to the plugin's own native
 letterbox (faster, near-equivalent input).
+
+## Out-of-band model updates (#715)
+
+On **Android**, the app can fetch an improved model at runtime and use it in
+place of the bundled asset — no Play release — while staying safe: a downloaded
+model is used only after a strict compatibility + integrity gate, and the
+bundled asset is never deleted, so scoring can never break.
+
+- **Manifest** — `model_manifest.json` at the repo root, committed on `main`,
+  served over HTTPS from `raw.githubusercontent.com/mathrb/dartlodge/main/`. It
+  points at the latest model and carries (snake_case keys) `contract`, `sha256`,
+  `size_bytes`, `input_size`, `class_count`, `format`. The baseline commit
+  points at the current
+  bundled `dart_round25_withcal`, so an app on the shipped model is a clean
+  no-op.
+- **Binaries** — GitHub Releases of `mathrb/dartlodge` under a dedicated
+  `model-*` tag prefix (e.g. `model-round26`), **never committed to git**. These
+  tags do NOT trigger `release.yml` (it fires on `v*` only), so publishing a
+  model never builds an APK/AAB.
+- **Compatibility contract** — `kAutoScorerModelContract` (in `dart_detector.dart`).
+  A model is accepted only when `manifest.contract == kAutoScorerModelContract`
+  (strict), plus the sanity gate `inputSize == 800 && classCount == 5 &&
+  format == 'tflite'`. **Bump the contract** whenever the class set/count, input
+  size, preprocessing, or threshold semantics change — this forces a real Play
+  release for those users and auto-invalidates any already-staged model (its
+  persisted contract no longer matches → the resolver falls back to bundled and
+  the stale file is quarantined).
+- **Integrity + provenance** — the downloaded bytes must match `sha256` and
+  `sizeBytes`, and `manifest.url` must live under the app-repo release prefix.
+- **Lifecycle** — a silent background check at launch when auto-scoring is
+  enabled, download only on an unmetered connection, applied at the **next**
+  session (never a hot swap mid-game). A staged model that fails to load
+  natively is quarantined (deleted) and the bundled model is used.
+- **iOS** — OTA is Android-only: iOS uses a CoreML `.mlpackage` (in
+  `ios/Runner/`), so a `.tflite` can't be swapped in there. The manifest's
+  `format` field keeps a future iOS `.mlpackage` channel additive.
+
+**Publishing a new model** (from the private `deep-darts-probe`, same boundary as
+#393): export/bundle the `.tflite`, create a `model-<round>` release with it,
+compute its SHA-256, then update `model_manifest.json` on `main`. The publishing
+script lives in the probe repo (out of scope here).

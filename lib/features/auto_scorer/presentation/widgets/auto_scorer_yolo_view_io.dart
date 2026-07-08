@@ -123,18 +123,28 @@ class AutoScorerYoloAimView extends ConsumerStatefulWidget {
     super.key,
     required this.session,
     required this.gameId,
+    required this.modelPath,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
     required this.onZoomChanged,
+    this.onModelLoadFailed,
   });
 
   final AutoScorerSession session;
   final String gameId;
+
+  /// The resolved model to load — the bundled asset or a staged OTA file (#715).
+  /// Snapshotted at session start and passed in so the model never hot-swaps.
+  final String modelPath;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<double> onZoomChanged;
+
+  /// Fired when a *staged* OTA model fails to load natively (#715). The view has
+  /// already reset itself to the bundled asset; the host persists the quarantine.
+  final VoidCallback? onModelLoadFailed;
 
   @override
   ConsumerState<AutoScorerYoloAimView> createState() =>
@@ -151,6 +161,10 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
   late double _zoom = widget.initialZoom.clamp(_zoomMin, _zoomMax);
 
+  /// Model path currently fed to `YOLOView`. Seeded from the resolved prop; a
+  /// native load failure of a staged model resets it to the bundled asset (#715).
+  late String _effectivePath = widget.modelPath;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -162,6 +176,17 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     _nativePushed = true;
     _controller.setShowOverlays(true);
     if (_zoom != 1.0) _controller.setZoomLevel(_zoom);
+  }
+
+  /// A staged OTA model failed to load natively (#715): immediately reload the
+  /// bundled asset so scoring can't be bricked by a bad-but-hash-valid model,
+  /// and notify the host to persist the quarantine. Ignores failures once we're
+  /// already on the bundled asset (nothing left to fall back to).
+  void _onModelError(Object error, String failedPath, YOLOTask? task) {
+    if (_effectivePath == kAutoScorerModelAsset) return;
+    if (!mounted) return;
+    setState(() => _effectivePath = kAutoScorerModelAsset);
+    widget.onModelLoadFailed?.call();
   }
 
   void _onResults(List<YOLOResult> results) {
@@ -299,7 +324,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
         fit: StackFit.expand,
         children: [
           YOLOView(
-            modelPath: kAutoScorerModelAsset,
+            modelPath: _effectivePath,
             task: YOLOTask.detect,
             controller: _controller,
             confidenceThreshold:
@@ -310,6 +335,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                 inferenceFrequency: kAutoScorerInferenceHz,
                 analysisResolution: kAutoScorerAnalysisResolution),
             onResult: _onResults,
+            onModelError: _onModelError,
           ),
           Align(
             alignment: Alignment.topCenter,
@@ -408,21 +434,30 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     super.key,
     required this.session,
     required this.gameId,
+    required this.modelPath,
     required this.currentTurnOrdinal,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
     required this.onStatus,
+    this.onModelLoadFailed,
     this.expand = false,
   });
 
   final AutoScorerSession session;
   final String gameId;
+
+  /// The resolved model to load — bundled asset or staged OTA file (#715).
+  final String modelPath;
   final int Function() currentTurnOrdinal;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
   final ValueChanged<TrackerStatus> onStatus;
+
+  /// Fired when a *staged* OTA model fails to load natively (#715). The view has
+  /// already reset itself to the bundled asset; the host persists the quarantine.
+  final VoidCallback? onModelLoadFailed;
 
   /// Camera-first layout (#427): fill the parent's height (the board places this
   /// in an `Expanded`) instead of the fixed ~140px band.
@@ -439,6 +474,10 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   bool _nativePushed = false;
   bool _capturing = false;
   DetectionFrame _latest = _emptyFrame;
+
+  /// Model path currently fed to `YOLOView`. Seeded from the resolved prop; a
+  /// native load failure of a staged model resets it to the bundled asset (#715).
+  late String _effectivePath = widget.modelPath;
 
   /// Whether any dart has been seen on the board since the last turn advance —
   /// the guard for auto-advance-on-clear, so a `rebaselined` frame from a board
@@ -553,6 +592,16 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     if (z != 1.0) _controller.setZoomLevel(z);
   }
 
+  /// A staged OTA model failed to load natively (#715): fall back to the bundled
+  /// asset immediately and notify the host to persist the quarantine. No-op once
+  /// already on the bundled asset.
+  void _onModelError(Object error, String failedPath, YOLOTask? task) {
+    if (_effectivePath == kAutoScorerModelAsset) return;
+    if (!mounted) return;
+    setState(() => _effectivePath = kAutoScorerModelAsset);
+    widget.onModelLoadFailed?.call();
+  }
+
   void _onResults(List<YOLOResult> results) {
     _ensureNative();
     final (:frame, :raw) = _detectionFrameFrom(
@@ -652,7 +701,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
       fit: StackFit.expand,
       children: [
         YOLOView(
-          modelPath: kAutoScorerModelAsset,
+          modelPath: _effectivePath,
           task: YOLOTask.detect,
           controller: _controller,
           confidenceThreshold:
@@ -663,6 +712,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
               inferenceFrequency: kAutoScorerInferenceHz,
               analysisResolution: kAutoScorerAnalysisResolution),
           onResult: _onResults,
+          onModelError: _onModelError,
         ),
         Positioned(
           top: 4,

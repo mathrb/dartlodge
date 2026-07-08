@@ -78,6 +78,13 @@ dependencies:
   json_annotation: ^4.12.0
   audioplayers: ^6.7.1
 
+  # Out-of-band auto-scorer model updates (#715). crypto: SHA-256 of the
+  # downloaded model bytes (pure Dart, no native). connectivity_plus: gate the
+  # silent background download to an unmetered (wifi/ethernet) connection. The
+  # download itself uses dart:io HttpClient — no http/dio dependency.
+  crypto: ^3.0.0
+  connectivity_plus: ^6.1.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

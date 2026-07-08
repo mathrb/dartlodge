@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "contract": 1,
+  "model_version": "dart_round25_withcal",
+  "url": "https://github.com/mathrb/dartlodge/releases/download/model-round25/dart_auto_scorer.tflite",
+  "sha256": "592003e781859a260d5ed31e4ea761b97aaf7b8f8538ddbedc8fc54de3dd97ba",
+  "size_bytes": 10727799,
+  "input_size": 800,
+  "class_count": 5,
+  "format": "tflite"
+}

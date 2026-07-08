@@ -8,6 +8,7 @@ import '../core/persistence/database_provider.dart';
 import '../core/utils/app_theme.dart';
 import '../core/widgets/error_retry_widget.dart';
 import '../features/achievements/presentation/widgets/achievement_notification_host.dart';
+import '../features/auto_scorer/presentation/widgets/auto_scorer_model_update_host.dart';
 import '../features/settings/presentation/providers/locale_provider.dart';
 import '../features/settings/presentation/providers/settings_provider.dart';
 import '../l10n/locale_resolution.dart';
@@ -70,7 +71,11 @@ class DartsApp extends ConsumerWidget {
           // keepAlive watcher for the app lifetime (#525/#527).
           builder: (context, child) => AchievementNotificationHost(
             messengerKey: _achievementMessengerKey,
-            child: child ?? const SizedBox.shrink(),
+            // Nested host (#715): kicks off the one-time launch check for an OTA
+            // auto-scorer model update (gated on the master switch + unmetered).
+            child: AutoScorerModelUpdateHost(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

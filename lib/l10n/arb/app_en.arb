@@ -1845,6 +1845,38 @@
   "@autoScorerDartConfidenceLabel": {
     "description": "Slider label: dart detection confidence threshold"
   },
+  "autoScorerModelTitle": "Detection model",
+  "@autoScorerModelTitle": {
+    "description": "Settings row title: the on-device auto-scorer detection model + its update status"
+  },
+  "autoScorerModelStatus": "{version} · {state}",
+  "@autoScorerModelStatus": {
+    "description": "Settings row subtitle composing the active model version and its update state",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "autoScorerModelUpToDate": "Up to date",
+  "@autoScorerModelUpToDate": {
+    "description": "Model update state: the active model is the latest available"
+  },
+  "autoScorerModelDownloading": "Checking for an update…",
+  "@autoScorerModelDownloading": {
+    "description": "Model update state: a background check/download is in progress"
+  },
+  "autoScorerModelUpdateReady": "Update ready — applies next session",
+  "@autoScorerModelUpdateReady": {
+    "description": "Model update state: a newer model was downloaded and takes effect at the next scoring session"
+  },
+  "autoScorerModelCheckNow": "Check now",
+  "@autoScorerModelCheckNow": {
+    "description": "Button: trigger an immediate check for a newer detection model"
+  },
   "autoScorerExportUnavailable": "Export is not available here.",
   "@autoScorerExportUnavailable": {
     "description": "Snackbar: export not supported on this platform"
