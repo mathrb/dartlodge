@@ -1,7 +1,8 @@
-// Tests for the opt-in simplified scoring keypad (#720): numbers plus an
-// "armed" Double/Triple multiplier, keeping the MISS / 25 / 50 specials. The
-// widget must emit the same segment strings as the full grid so the engine is
-// unchanged.
+// Tests for the opt-in simplified scoring keypad (#720): four rows (1–7, 8–14,
+// 15–20 + an arm-aware Bull cell, then MISS / Double / Triple). The Bull cell
+// follows the armed multiplier — single bull by default, double bull when
+// Double is armed, non-selectable when Triple is armed. The widget must emit the
+// same segment strings as the full grid so the engine is unchanged.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -74,19 +75,74 @@ void main() {
       expect(thrown, ['20']);
     });
 
-    testWidgets('specials emit MISS / SB / DB', (tester) async {
+    testWidgets('all three number rows are present (1–7, 8–14, 15–20)',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: (_) {})));
+
+      // One representative number from each row plus the Bull cell.
+      expect(find.text('1'), findsOneWidget);
+      expect(find.text('8'), findsOneWidget);
+      expect(find.text('15'), findsOneWidget);
+      expect(find.text('25'), findsOneWidget); // Bull, single by default
+    });
+
+    testWidgets('MISS emits MISS', (tester) async {
       final thrown = <String>[];
       await tester.pumpWidget(_wrap(
           SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
 
       await tester.tap(find.text('MISS'));
       await tester.pump();
+
+      expect(thrown, ['MISS']);
+    });
+
+    testWidgets('Bull with nothing armed emits single bull', (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
+
       await tester.tap(find.text('25'));
       await tester.pump();
+
+      expect(thrown, ['SB']);
+    });
+
+    testWidgets('Double armed, Bull emits double bull then disarms',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
+
+      await tester.tap(find.text('DOUBLE'));
+      await tester.pump();
+      // The Bull cell now reads 50; tapping it scores a double bull.
       await tester.tap(find.text('50'));
       await tester.pump();
+      // Arm should have cleared: the next number is a plain single.
+      await tester.tap(find.text('20'));
+      await tester.pump();
 
-      expect(thrown, ['MISS', 'SB', 'DB']);
+      expect(thrown, ['DB', '20']);
+    });
+
+    testWidgets('Triple armed makes the Bull cell non-selectable',
+        (tester) async {
+      final thrown = <String>[];
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: thrown.add)));
+
+      await tester.tap(find.text('TRIPLE'));
+      await tester.pump();
+      // Bull is disabled (there is no triple bull): the tap does nothing…
+      await tester.tap(find.text('BULL'), warnIfMissed: false);
+      await tester.pump();
+      // …and the arm is still set, so the next number is a triple.
+      await tester.tap(find.text('20'));
+      await tester.pump();
+
+      expect(thrown, ['T20']);
     });
 
     testWidgets('tapping a special while armed emits the special and clears arm',

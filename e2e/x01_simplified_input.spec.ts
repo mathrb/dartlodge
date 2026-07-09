@@ -2,9 +2,9 @@
  * End-to-End: the opt-in simplified scoring keypad (#720) on the X01 board.
  *
  * With the "Simplified scoring keypad" setting on, the X01 board swaps its dense
- * full grid for numbers + armed Double/Triple multiplier buttons (keeping the
- * MISS / 25 / 50 specials). This spec enables the setting via the Settings page,
- * then drives the keypad: arm Triple → tap 20 → -60, and confirms a special
+ * full grid for four rows (1–7, 8–14, 15–20 + an arm-aware Bull cell, then
+ * MISS / Double / Triple). This spec enables the setting via the Settings page,
+ * then drives the keypad: arm Triple → tap 20 → -60, and confirms the Bull cell
  * still scores.
  *
  * Serve sim-enabled web on :6780 (see docs/E2E_REGRESSION.md).
@@ -69,8 +69,8 @@ test.describe('X01 simplified keypad (#720)', { tag: ['@x01'] }, () => {
       await page.getByRole('button', { name: '20 20', exact: true }).click();
       await expect(page.getByText('221').first()).toBeVisible({ timeout: 10000 });
 
-      // Single Bull (25) special is unaffected by the multiplier. 221 → 196.
-      await page.getByRole('button', { name: /Single Bull/ }).click();
+      // Bull with nothing armed scores a single bull (25). 221 → 196.
+      await page.getByRole('button', { name: /Bull/ }).click();
       await expect(page.getByText('196').first()).toBeVisible({ timeout: 10000 });
 
       await page.context().close();

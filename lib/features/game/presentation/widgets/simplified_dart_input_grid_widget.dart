@@ -4,22 +4,26 @@ import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 
-const _row1 = [20, 19, 18, 17, 16, 15, 14, 13, 12, 11];
-const _row2 = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+const _row1 = [1, 2, 3, 4, 5, 6, 7];
+const _row2 = [8, 9, 10, 11, 12, 13, 14];
+const _row3 = [15, 16, 17, 18, 19, 20];
 
 /// Which multiplier the next number tap will apply.
 enum _Armed { none, double, triple }
 
-/// A forgiving alternative to [DartInputGridWidget] with fewer, larger targets:
-/// the 20 numbers plus "armed" **Double** / **Triple** multiplier buttons and
-/// the same MISS / 25 / 50 specials. Opt-in via the simplified-input setting;
-/// used on the X01 and Count-up board pages only. Emits the identical segment
-/// strings (`'20'`, `'D20'`, `'T20'`, `'SB'`, `'DB'`, `'MISS'`) as the full grid,
-/// so the scoring engine is unchanged.
+/// A forgiving alternative to [DartInputGridWidget] with fewer, larger targets,
+/// laid out as four rows: `1–7`, `8–14`, `15–20` + an arm-aware **Bull** cell,
+/// then **MISS** / **Double** / **Triple**. Opt-in via the simplified-input
+/// setting; used on the X01 and Count-up board pages only. Emits the identical
+/// segment strings (`'20'`, `'D20'`, `'T20'`, `'SB'`, `'DB'`, `'MISS'`) as the
+/// full grid, so the scoring engine is unchanged.
 ///
 /// Interaction: tapping Double/Triple arms that multiplier (highlighted); the
 /// next number tap yields the double/triple and disarms. With nothing armed a
-/// number tap scores a single. Specials always emit directly and clear any arm.
+/// number tap scores a single. The Bull cell follows the armed multiplier —
+/// single bull (`'SB'`, 25) by default, double bull (`'DB'`, 50) when Double is
+/// armed, and non-selectable when Triple is armed (there is no triple bull).
+/// MISS always emits directly and clears any arm.
 class SimplifiedDartInputGridWidget extends StatefulWidget {
   const SimplifiedDartInputGridWidget({
     required this.onSegmentTapped,
@@ -81,23 +85,38 @@ class _SimplifiedDartInputGridWidgetState
       padding: const EdgeInsets.all(2),
       child: Column(
         children: [
-          // Numbers 20–11 then 10–1 (two tall rows of 10).
+          // Numbers 1–7, 8–14, then 15–20 + Bull (three rows of seven).
           Expanded(
             child: Column(
               children: [
                 Expanded(child: _numberRow(_row1, cs)),
                 const SizedBox(height: 4),
                 Expanded(child: _numberRow(_row2, cs)),
+                const SizedBox(height: 4),
+                Expanded(child: _numberRow(_row3, cs, trailing: _bullCell(cs))),
               ],
             ),
           ),
-          // Armed multiplier toggles.
+          // MISS + armed multiplier toggles (equal thirds).
           const SizedBox(height: 8),
           SizedBox(
             height: 48,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Expanded(
+                  child: _specialButton(
+                    semanticLabel: 'Miss',
+                    bgColor: cs.surfaceContainerLowest,
+                    onTap: () => _tapSpecial('MISS'),
+                    child: Text(
+                      'MISS',
+                      style: AppTextStyles.segmentButton
+                          .copyWith(color: cs.onSurface),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
                 Expanded(
                   child: _multiplierButton(
                     label: 'Double',
@@ -118,69 +137,22 @@ class _SimplifiedDartInputGridWidgetState
               ],
             ),
           ),
-          // Specials — identical to the full grid.
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: _specialButton(
-                    semanticLabel: 'Miss',
-                    bgColor: cs.surfaceContainerLowest,
-                    onTap: () => _tapSpecial('MISS'),
-                    child: Text(
-                      'MISS',
-                      style: AppTextStyles.segmentButton
-                          .copyWith(color: cs.onSurface),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  flex: 3,
-                  child: _specialButton(
-                    semanticLabel: 'Single Bull',
-                    bgColor: cs.surfaceContainerHighest,
-                    onTap: () => _tapSpecial('SB'),
-                    child: _bullLabel(
-                      '25',
-                      cs.onSurface,
-                      cs.primaryFixed.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  flex: 3,
-                  child: _specialButton(
-                    semanticLabel: 'Double Bull',
-                    bgColor: cs.primaryFixed,
-                    onTap: () => _tapSpecial('DB'),
-                    child: _bullLabel(
-                      '50',
-                      AppColors.onPrimaryFixed,
-                      AppColors.onPrimaryFixed,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _numberRow(List<int> numbers, ColorScheme cs) {
+  Widget _numberRow(List<int> numbers, ColorScheme cs, {Widget? trailing}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (int i = 0; i < numbers.length; i++) ...[
           if (i > 0) const SizedBox(width: 4),
           Expanded(child: _numberCell(numbers[i], cs)),
+        ],
+        if (trailing != null) ...[
+          const SizedBox(width: 4),
+          Expanded(child: trailing),
         ],
       ],
     );
@@ -237,6 +209,63 @@ class _SimplifiedDartInputGridWidgetState
               color: armed ? cs.onPrimary : cs.onSurfaceVariant,
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// The Bull cell on the third number row, arm-aware like a number: single
+  /// bull by default, double bull when Double is armed, and non-selectable
+  /// (greyed) when Triple is armed — there is no triple bull.
+  Widget _bullCell(ColorScheme cs) {
+    final disabled = _armed == _Armed.triple;
+
+    final Color bgColor;
+    final Widget child;
+    switch (_armed) {
+      case _Armed.double:
+        bgColor = cs.primaryFixed;
+        child = _bullLabel(
+          '50',
+          AppColors.onPrimaryFixed,
+          AppColors.onPrimaryFixed,
+        );
+      case _Armed.triple:
+        // No triple bull exists — the cell is greyed out and inert.
+        bgColor = cs.surfaceContainerHighest;
+        child = Text(
+          'BULL',
+          style: AppTextStyles.segmentButton
+              .copyWith(color: cs.onSurface.withValues(alpha: 0.38)),
+        );
+      case _Armed.none:
+        bgColor = cs.surfaceContainerHighest;
+        child = _bullLabel(
+          '25',
+          cs.onSurface,
+          cs.primaryFixed.withValues(alpha: 0.7),
+        );
+    }
+
+    return Semantics(
+      label: 'Bull',
+      button: true,
+      selected: _armed == _Armed.double,
+      enabled: widget.enabled && !disabled,
+      child: InkWell(
+        onTap: widget.enabled && !disabled
+            ? () => _tapSpecial(_armed == _Armed.double ? 'DB' : 'SB')
+            : null,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        splashColor: AppTheme.kineticSplashColor,
+        highlightColor: AppTheme.kineticSplashColor,
+        child: Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+          ),
+          alignment: Alignment.center,
+          child: child,
         ),
       ),
     );
