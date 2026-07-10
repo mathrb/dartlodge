@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import 'dot_row_widget.dart';
 
 const _row1 = [20, 19, 18, 17, 16, 15, 14, 13, 12, 11];
 const _row2 = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
@@ -326,37 +327,9 @@ class _GridCell extends StatelessWidget {
               ),
               if (dots > 0) ...[
                 const SizedBox(height: 4),
-                _DotRow(count: dots, color: dotColor),
+                DotRow(count: dots, color: dotColor),
               ],
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DotRow extends StatelessWidget {
-  const _DotRow({required this.count, required this.color});
-
-  final int count;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(
-        count,
-        (_) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 1),
-          child: Container(
-            width: 4,
-            height: 4,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color,
-            ),
           ),
         ),
       ),

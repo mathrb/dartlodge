@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import 'dot_row_widget.dart';
 
 const _row1 = [1, 2, 3, 4, 5, 6, 7];
 const _row2 = [8, 9, 10, 11, 12, 13, 14];
@@ -42,6 +43,16 @@ class SimplifiedDartInputGridWidget extends StatefulWidget {
 class _SimplifiedDartInputGridWidgetState
     extends State<SimplifiedDartInputGridWidget> {
   _Armed _armed = _Armed.none;
+
+  /// Number of multiplier dots to draw under each number cell, reflecting the
+  /// armed multiplier live: 1 for a single (default), 2 for double, 3 for
+  /// triple. Diverges from the full grid (0 dots for singles) on purpose — the
+  /// simplified cell is mode-dependent, so the single dot confirms "single mode".
+  int get _dotCount => switch (_armed) {
+        _Armed.none => 1,
+        _Armed.double => 2,
+        _Armed.triple => 3,
+      };
 
   void _tapNumber(int n) {
     final prefix = switch (_armed) {
@@ -172,9 +183,21 @@ class _SimplifiedDartInputGridWidgetState
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           alignment: Alignment.center,
-          child: Text(
-            '$n',
-            style: AppTextStyles.segmentButton.copyWith(color: cs.onSurface),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$n',
+                style:
+                    AppTextStyles.segmentButton.copyWith(color: cs.onSurface),
+              ),
+              const SizedBox(height: 4),
+              DotRow(
+                count: _dotCount,
+                color: cs.primaryFixed.withValues(alpha: 0.7),
+              ),
+            ],
           ),
         ),
       ),
@@ -229,6 +252,7 @@ class _SimplifiedDartInputGridWidgetState
           '50',
           AppColors.onPrimaryFixed,
           AppColors.onPrimaryFixed,
+          dots: 2,
         );
       case _Armed.triple:
         // No triple bull exists — the cell is greyed out and inert.
@@ -244,6 +268,7 @@ class _SimplifiedDartInputGridWidgetState
           '25',
           cs.onSurface,
           cs.primaryFixed.withValues(alpha: 0.7),
+          dots: 1,
         );
     }
 
@@ -296,9 +321,15 @@ class _SimplifiedDartInputGridWidgetState
     );
   }
 
-  Widget _bullLabel(String value, Color valueColor, Color subColor) {
+  Widget _bullLabel(
+    String value,
+    Color valueColor,
+    Color subColor, {
+    int dots = 0,
+  }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           value,
@@ -308,6 +339,10 @@ class _SimplifiedDartInputGridWidgetState
           'BULL',
           style: AppTextStyles.multiplierLabel.copyWith(color: subColor),
         ),
+        if (dots > 0) ...[
+          const SizedBox(height: 4),
+          DotRow(count: dots, color: subColor),
+        ],
       ],
     );
   }
