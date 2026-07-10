@@ -32,7 +32,11 @@ class _CreatePlayerPageState extends ConsumerState<CreatePlayerPage> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
-    ref.invalidate(createPlayerProvider);
+    // Do NOT touch `ref` here: `ref.invalidate` reaches through the
+    // already-disposing ConsumerStatefulElement and throws while the
+    // widget tree is finalized (Sentry MY-DARTS-9). `createPlayerProvider`
+    // is autoDispose, so it resets to PlayerFormState.initial() on its own
+    // once this page unmounts.
     super.dispose();
   }
 

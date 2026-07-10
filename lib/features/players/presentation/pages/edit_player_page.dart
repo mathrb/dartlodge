@@ -43,7 +43,11 @@ class _EditPlayerPageState extends ConsumerState<EditPlayerPage> {
   void dispose() {
     _controller.dispose();
     _focusNode.dispose();
-    ref.invalidate(editPlayerProvider);
+    // Do NOT touch `ref` here: `ref.invalidate` reaches through the
+    // already-disposing ConsumerStatefulElement and throws while the
+    // widget tree is finalized (Sentry MY-DARTS-G). `editPlayerProvider`
+    // is autoDispose, so it resets to PlayerFormState.initial() on its own
+    // once this page unmounts.
     super.dispose();
   }
 
