@@ -91,7 +91,9 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
               child: AppHeader(
                 showBack: true,
-                onBack: () => context.pop(),
+                onBack: () {
+                  if (context.canPop()) context.pop();
+                },
                 trailing: IconButton(
                   icon: const Icon(Icons.emoji_events_outlined),
                   color: cs.onSurface,
