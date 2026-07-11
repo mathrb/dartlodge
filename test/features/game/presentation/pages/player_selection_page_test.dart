@@ -857,6 +857,28 @@ void main() {
     // The ref.listen guard fires go('/') via postFrameCallback
     expect(find.text('home'), findsOneWidget);
   });
+
+  // ── 23. Header back falls back to home when the stack is empty ─────────────
+
+  testWidgets(
+      '23. Header back routes to home when reached via go() (empty stack)',
+      (tester) async {
+    // _buildApp uses initialLocation '/game/player-selection', so the page is
+    // the root and canPop() is false — the "Play Again" go() scenario. The back
+    // button must fall back to home, not silently no-op (MY-DARTS-J follow-up).
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ACTIVE LINEUP'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('home'), findsOneWidget);
+  });
 }
 
 // ── Stub notifiers for startGame scenarios ────────────────────────────────────

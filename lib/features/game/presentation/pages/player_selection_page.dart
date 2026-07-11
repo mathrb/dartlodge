@@ -165,8 +165,16 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
               child: AppHeader(
                 showBack: true,
+                // Reachable via go() from the "Play Again" flow, which wipes
+                // the stack — so fall back to home rather than leaving a dead
+                // back button (guard also absorbs a rapid multi-tap:
+                // MY-DARTS-J).
                 onBack: () {
-                  if (context.canPop()) context.pop();
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go(GameRoutes.home);
+                  }
                 },
                 trailing: IconButton(
                   icon: Icon(
