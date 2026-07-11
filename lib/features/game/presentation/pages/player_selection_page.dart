@@ -165,7 +165,9 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
               child: AppHeader(
                 showBack: true,
-                onBack: () => context.pop(),
+                onBack: () {
+                  if (context.canPop()) context.pop();
+                },
                 trailing: IconButton(
                   icon: Icon(
                     Icons.settings,

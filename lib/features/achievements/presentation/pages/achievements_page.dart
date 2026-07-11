@@ -41,7 +41,15 @@ class AchievementsPage extends ConsumerWidget {
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-              child: AppHeader(showBack: true, onBack: () => context.pop()),
+              child: AppHeader(
+                showBack: true,
+                // Guard against popping below the root route: a rapid back
+                // multi-tap otherwise dispatches an extra pop → "nothing to
+                // pop" (MY-DARTS-J).
+                onBack: () {
+                  if (context.canPop()) context.pop();
+                },
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.space4,
