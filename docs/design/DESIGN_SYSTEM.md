@@ -199,10 +199,18 @@ new identity component appears, add it here and link from this section.
 
 | Family | Weight used | Source | Purpose |
 |---|---|---|---|
-| **Space Grotesk** | Medium (500), Bold (700) | `google_fonts` | Display, headlines, labels, scores — geometric, technical ("Oche Precision") |
-| **Inter** | Regular (400), SemiBold (600), Medium (500) | `google_fonts` | Body text, titles, game segment buttons — neutral clarity |
+| **Space Grotesk** | Medium (500), SemiBold (600), Bold (700) | `google_fonts` | Display, headlines, labels, scores — geometric, technical ("Oche Precision") |
+| **Inter** | Regular (400), Medium (500), SemiBold (600) | `google_fonts` | Body text, titles, game segment buttons — neutral clarity |
 
 Fallback stack: `system-ui, sans-serif`
+
+Both families are **bundled as assets** (`assets/fonts/google_fonts/`, SIL OFL 1.1
+licences alongside) and `main.dart` sets `GoogleFonts.config.allowRuntimeFetching =
+false`. Nothing is fetched from `fonts.gstatic.com` at runtime: the app renders its
+typography offline, and no user IP reaches Google's CDN on launch. **Adding a weight
+to the tables below means downloading that `.ttf` into the asset folder too** —
+`test/core/utils/app_text_styles_assets_test.dart` fails otherwise, because with
+runtime fetching off a missing variant crashes the app instead of falling back.
 
 ### 3.2 Type Scale
 

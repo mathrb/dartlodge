@@ -15,6 +15,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
@@ -33,6 +34,13 @@ const _kAutoScorerSim = bool.fromEnvironment('AUTOSCORER_SIM');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Space Grotesk / Inter ship as assets (assets/fonts/google_fonts/), so
+  // google_fonts must never reach fonts.gstatic.com: a failed fetch rethrows
+  // out of an unawaited future and lands as a fatal crash (Sentry MY-DARTS-N),
+  // and a local-first app has no business needing the network to draw text.
+  // Adding a new AppTextStyles weight requires bundling its .ttf too — the
+  // app_text_styles_assets_test guards that.
+  GoogleFonts.config.allowRuntimeFetching = false;
   final prefs = await SharedPreferences.getInstance();
   final crashReportingEnabled = prefs.getBool(kCrashReportingPrefKey) ?? true;
 

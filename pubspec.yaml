@@ -129,6 +129,12 @@ flutter:
   # Assets configuration
   assets:
     - assets/images/
+    # App typefaces bundled as assets (Space Grotesk 500/600/700, Inter
+    # 400/500/600 — exactly the variants AppTextStyles uses). google_fonts
+    # prefers a matching bundled asset over the network, so nothing is
+    # fetched from fonts.gstatic.com at runtime (Sentry MY-DARTS-N). The
+    # OFL licence files ship alongside, as SIL OFL 1.1 requires.
+    - assets/fonts/google_fonts/
     # Sound effects (#516): dartHit / dartMiss / bust, played via SoundService.
     - assets/sounds/
     # On-device auto-scorer model (#377/#378). Produced from the trained .pt by
