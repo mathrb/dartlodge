@@ -17,6 +17,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_sc
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_recognition_indicators.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -117,8 +118,11 @@ Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
 /// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
 /// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
 /// not the annotated preview snapshot.
-/// Returns true on Done, false on Cancel/back. Consumer-backed only to read the
-/// data-collection opt-in before persisting a capture (otherwise state + a
+/// Pops an [AimOutcome]: `calibrated` on Done, `uncalibrated` when the player
+/// proceeds without the markers, `cancelled` on Cancel/back (also what a system
+/// back gesture yields, since the route then pops null). The caller starts the
+/// game in learning mode on `uncalibrated` (#741). Consumer-backed only to read
+/// the data-collection opt-in before persisting a capture (otherwise state + a
 /// session handle).
 class AutoScorerYoloAimView extends ConsumerStatefulWidget {
   const AutoScorerYoloAimView({
@@ -256,7 +260,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     }
   }
 
-  Future<void> _finish(bool done) async {
+  Future<void> _finish(AimOutcome outcome) async {
     // Release the aim camera BEFORE the route pops: the in-game preview mounts
     // its own YOLOView as soon as the modal returns, and two YOLOViews live
     // during the ~300ms pop animation would contend for the hardware camera
@@ -268,7 +272,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
       // Best-effort; dispose() still tears the controller down.
     }
     if (!mounted) return;
-    if (Navigator.of(context).canPop()) Navigator.of(context).pop(done);
+    if (Navigator.of(context).canPop()) Navigator.of(context).pop(outcome);
   }
 
   /// Proceed past aiming WITHOUT a full calibration (markers not detected).
@@ -279,7 +283,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     final seen =
         ref.read(autoScorerUncalibratedNoticeSeenProvider).value ?? false;
     if (seen) {
-      await _finish(true);
+      await _finish(AimOutcome.uncalibrated);
       return;
     }
     final l10n = AppLocalizations.of(context);
@@ -304,7 +308,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
         .read(autoScorerUncalibratedNoticeSeenProvider.notifier)
         .setSeen(true);
     if (!mounted) return;
-    await _finish(true);
+    await _finish(AimOutcome.uncalibrated);
   }
 
   @override
@@ -404,7 +408,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         FilledButton.tonal(
-                            onPressed: () => _finish(false),
+                            onPressed: () => _finish(AimOutcome.cancelled),
                             child: Text(l10n.commonCancel)),
                         // Always clickable so an unsupported setup (markers
                         // never resolve) can still proceed and contribute
@@ -416,7 +420,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                         // wait is only the advisory "Hold steady…" hint now.
                         FilledButton.icon(
                           onPressed: calibrated
-                              ? () => _finish(true)
+                              ? () => _finish(AimOutcome.calibrated)
                               : _confirmContinueWithoutCals,
                           icon: Icon(calibrated
                               ? Icons.check

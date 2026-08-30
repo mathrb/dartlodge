@@ -1,4 +1,5 @@
 import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_alert.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -10,20 +11,36 @@ import 'package:flutter/material.dart';
 class AutoScorerStatusChip extends StatelessWidget {
   final TrackerStatus status;
 
-  const AutoScorerStatusChip({super.key, required this.status});
+  /// Whether the board has been calibrated at least once in this camera
+  /// session. It splits the sustained "no calibration" phase in two (#741):
+  /// false → learning mode (calm), true → the board was lost (red alert). See
+  /// [calibrationAlertOf].
+  final bool everCalibrated;
+
+  const AutoScorerStatusChip({
+    super.key,
+    required this.status,
+    required this.everCalibrated,
+  });
 
   /// Pure presentation mapping for the chip. Returns the user-facing (localized)
-  /// label and an icon for the given [status].
+  /// label and an icon for the given [status], read through [everCalibrated]
+  /// (see the class doc).
   static ({String label, IconData icon}) describe(
-      AppLocalizations l10n, TrackerStatus status) {
+      AppLocalizations l10n, TrackerStatus status,
+      {required bool everCalibrated}) {
     switch (status.phase) {
       case TrackerPhase.noCalibration:
         return (label: l10n.autoScorerStatusAim, icon: Icons.visibility_off);
       case TrackerPhase.needsCalibration:
-        return (
-          label: l10n.autoScorerStatusNeedsCal,
-          icon: Icons.crop_free
-        );
+        // Never calibrated = the player is scoring by hand on purpose; saying
+        // "camera needs calibration" in red for a whole game reads as a fault.
+        return everCalibrated
+            ? (label: l10n.autoScorerStatusNeedsCal, icon: Icons.crop_free)
+            : (
+                label: l10n.autoScorerStatusLearningMode,
+                icon: Icons.edit_note_outlined
+              );
       case TrackerPhase.idle:
         return (label: l10n.autoScorerStatusReady, icon: Icons.center_focus_weak);
       case TrackerPhase.tracking:
@@ -43,10 +60,15 @@ class AutoScorerStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final info = describe(AppLocalizations.of(context), status);
+    final info = describe(AppLocalizations.of(context), status,
+        everCalibrated: everCalibrated);
+    // Learning mode is a valid way to play, so it never renders errorContainer
+    // (#741): only a calibration that was there and went away alarms.
     final isAlert = status.phase == TrackerPhase.turnFull ||
         status.phase == TrackerPhase.cameraMoved ||
-        status.phase == TrackerPhase.needsCalibration;
+        calibrationAlertOf(
+                phase: status.phase, everCalibrated: everCalibrated) ==
+            CalibrationAlert.lost;
     final fg = isAlert ? scheme.onErrorContainer : scheme.onSecondaryContainer;
     final bg = isAlert ? scheme.errorContainer : scheme.secondaryContainer;
     return Chip(

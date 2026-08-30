@@ -2062,6 +2062,14 @@
   "@autoScorerStatusNeedsCal": {
     "description": "Status chip: needs calibration"
   },
+  "autoScorerStatusLearningMode": "Learning mode",
+  "@autoScorerStatusLearningMode": {
+    "description": "Status chip: the board was never recognised this session — a calm mode, not an alert"
+  },
+  "autoScorerLearningModeHint": "Board not recognised — scoring by hand for this game.",
+  "@autoScorerLearningModeHint": {
+    "description": "Line under the in-game camera bar while in learning mode (board never recognised)"
+  },
   "autoScorerStatusReady": "Ready",
   "@autoScorerStatusReady": {
     "description": "Status chip: ready"

@@ -12,11 +12,30 @@ void main() {
     l10n = await AppLocalizations.delegate.load(const Locale('en'));
   });
 
-  ({String label, IconData icon}) describe(TrackerPhase phase, {int onBoard = 0}) =>
+  ({String label, IconData icon}) describe(TrackerPhase phase,
+          {int onBoard = 0, bool everCalibrated = true}) =>
       AutoScorerStatusChip.describe(
           l10n,
           TrackerStatus(
-              phase: phase, dartsOnBoard: onBoard, dartsThisTurn: 0));
+              phase: phase, dartsOnBoard: onBoard, dartsThisTurn: 0),
+          everCalibrated: everCalibrated);
+
+  /// Pumps the chip and returns the background colour the Chip resolved to.
+  Future<Color?> chipBackground(WidgetTester tester, TrackerPhase phase,
+      {required bool everCalibrated}) async {
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: Scaffold(
+        body: AutoScorerStatusChip(
+          status: TrackerStatus(
+              phase: phase, dartsOnBoard: 0, dartsThisTurn: 0),
+          everCalibrated: everCalibrated,
+        ),
+      ),
+    ));
+    return tester.widget<Chip>(find.byType(Chip)).backgroundColor;
+  }
 
   test('maps each phase to a label', () {
     expect(describe(TrackerPhase.noCalibration).label, 'Aim at the board');
@@ -33,6 +52,33 @@ void main() {
     expect(describe(TrackerPhase.tracking, onBoard: 3).label, '3 darts detected');
   });
 
+  test('a never-calibrated session reads as a mode, not a fault (#741)', () {
+    expect(
+        describe(TrackerPhase.needsCalibration, everCalibrated: false).label,
+        'Learning mode');
+    // Same phase, but the board HAD been recognised: that is a real loss.
+    expect(describe(TrackerPhase.needsCalibration, everCalibrated: true).label,
+        'Camera needs calibration');
+  });
+
+  testWidgets('learning mode never renders errorContainer (#741)',
+      (tester) async {
+    final learning = await chipBackground(
+        tester, TrackerPhase.needsCalibration,
+        everCalibrated: false);
+    final lost = await chipBackground(tester, TrackerPhase.needsCalibration,
+        everCalibrated: true);
+    final normal = await chipBackground(tester, TrackerPhase.idle,
+        everCalibrated: true);
+
+    final scheme = ThemeData().colorScheme;
+    expect(lost, isNot(learning));
+    // Learning mode shares the calm background of an ordinary status; only the
+    // mid-session loss keeps the alert one.
+    expect(learning, normal);
+    expect(learning, isNot(scheme.errorContainer));
+  });
+
   testWidgets('label uses the at-distance titleMedium size (#480)',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
@@ -42,6 +88,7 @@ void main() {
         body: AutoScorerStatusChip(
           status: TrackerStatus(
               phase: TrackerPhase.tracking, dartsOnBoard: 2, dartsThisTurn: 2),
+          everCalibrated: true,
         ),
       ),
     ));
