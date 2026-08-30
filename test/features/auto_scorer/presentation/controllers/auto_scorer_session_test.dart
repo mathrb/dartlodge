@@ -229,6 +229,54 @@ void main() {
     expect(store.saved.single.trigger, CaptureTrigger.auto);
   });
 
+  test('counts every persisted frame and reports each one (#742)', () async {
+    final raw = img.encodePng(img.Image(width: 1200, height: 800));
+    final store = _FakeCaptureStore();
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(oneDartFrame),
+        captureStore: store);
+    final reported = <int>[];
+    session.onCapturePersisted = reported.add;
+
+    expect(session.capturesPersisted, 0);
+
+    // Auto capture on emission (two frames confirm one dart).
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+    // Manual entry for a dart the model missed, then a correction capture.
+    await session.persistManualEntry(oneDartFrame, raw,
+        turnOrdinal: 1, gameId: 'g', segment: 'T20');
+    await session.persistCorrectedCapture(
+        frame: oneDartFrame,
+        bytes: raw,
+        turnOrdinal: 1,
+        gameId: 'g',
+        segment: 'D5');
+
+    expect(session.capturesPersisted, store.saved.length);
+    expect(session.capturesPersisted, 3);
+    // Reported once per persist, with the running total.
+    expect(reported, [1, 2, 3]);
+  });
+
+  test('nothing is counted without a capture store (#742)', () async {
+    final raw = img.encodePng(img.Image(width: 1200, height: 800));
+    final session = AutoScorerSession(
+        preprocessor: const ImageFramePreprocessor(),
+        detector: _FakeDetector(oneDartFrame));
+    var reports = 0;
+    session.onCapturePersisted = (_) => reports++;
+
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+    await session.onFrame(raw, turnOrdinal: 1, gameId: 'g', collectData: true);
+    await session.persistManualEntry(oneDartFrame, raw,
+        turnOrdinal: 1, gameId: 'g', segment: 'T20');
+
+    expect(session.capturesPersisted, 0);
+    expect(reports, 0);
+  });
+
   test('stores the 800×800 preprocessed frame, not the raw camera bytes', () async {
     // A real (non-square) camera frame so we can see it gets cropped+resized.
     final raw = img.encodePng(img.Image(width: 1200, height: 800));

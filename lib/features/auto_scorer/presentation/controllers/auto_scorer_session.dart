@@ -185,6 +185,7 @@ class AutoScorerSession {
             ),
             capture.bytes,
           );
+          _countPersisted();
         }
       }
     }
@@ -255,11 +256,34 @@ class AutoScorerSession {
       ),
       capture.bytes,
     );
+    _countPersisted();
     return true;
   }
 
   int _manualSequence = 0;
   int _correctionSequence = 0;
+
+  int _capturesPersisted = 0;
+
+  /// Training frames actually written to the capture store during this camera
+  /// session (#742). Counted here, where every `save` goes through, rather than
+  /// listing the store per capture.
+  ///
+  /// A correction in "all" capture mode is NOT counted: it rewrites the sidecar
+  /// of a frame already counted at emission. In "mistakes only" mode (the
+  /// default) nothing is stored at emission, so the correction writes — and
+  /// counts — a new frame.
+  int get capturesPersisted => _capturesPersisted;
+
+  /// Called after each successful persist with the new [capturesPersisted]
+  /// total, so the UI can show it (and acknowledge it) without polling. Plain
+  /// callback, not a Flutter listenable — this controller stays widget-free.
+  void Function(int total)? onCapturePersisted;
+
+  void _countPersisted() {
+    _capturesPersisted += 1;
+    onCapturePersisted?.call(_capturesPersisted);
+  }
 
   /// Manual next-turn pressed: reset the per-turn cap counter. Recorded so a
   /// replay resets the cap at the same point (#491).
@@ -345,6 +369,7 @@ class AutoScorerSession {
         ),
         bytes,
       );
+      _countPersisted();
     }
   }
 
@@ -371,6 +396,7 @@ class AutoScorerSession {
       ),
       bytes,
     );
+    _countPersisted();
     return true;
   }
 
@@ -431,6 +457,7 @@ class AutoScorerSession {
       trigger: CaptureTrigger.auto,
     ).withCorrection([CorrectedDart(x: 0, y: 0, segment: segment)]);
     await store.save(record, bytes);
+    _countPersisted();
   }
 
   /// Manual-entry capture (#537): the user typed [segment] for a dart the model
@@ -462,6 +489,7 @@ class AutoScorerSession {
       trigger: CaptureTrigger.manual,
     ).withCorrection([CorrectedDart(x: 0, y: 0, segment: segment)]);
     await store.save(record, bytes);
+    _countPersisted();
   }
 
   Future<void> dispose() async {

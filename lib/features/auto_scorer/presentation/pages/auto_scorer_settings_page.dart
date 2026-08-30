@@ -3,6 +3,7 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_bundle.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/capture_count_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_service.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
@@ -185,6 +186,23 @@ class _AutoScorerSettingsPageState
               ),
             ),
           ),
+          // Your contribution (#742): the in-game counter answers "did that
+          // one land?", this answers "how much have I contributed?" — the real
+          // total on the device, across sessions. Read once per visit (a
+          // directory listing), never on the capture path.
+          ListTile(
+            leading: const Icon(Icons.photo_camera_back_outlined),
+            title: Text(l10n.autoScorerContributionsTitle),
+            subtitle: Text(
+              ref.watch(captureCountProvider).when(
+                    data: (n) => l10n.autoScorerContributionsSubtitle(n),
+                    loading: () => l10n.autoScorerContributionsLoading,
+                    // Never block the page on a store read; the export tile
+                    // below is what actually matters here.
+                    error: (_, __) => l10n.autoScorerContributionsLoading,
+                  ),
+            ),
+          ),
           ListTile(
             leading: const Icon(Icons.ios_share),
             title: Text(l10n.autoScorerExportTitle),
@@ -349,6 +367,10 @@ class _AutoScorerSettingsPageState
     if (clear == true) {
       await store.clear();
       if (sessionStore.isSupported) await sessionStore.clear();
+      // The contribution tile caches a listing — re-read it now that the store
+      // is empty (#742). Guarded: the clears are awaited, and this page can be
+      // popped while they run.
+      if (mounted) ref.invalidate(captureCountProvider);
       messenger.showSnackBar(
           SnackBar(content: Text(l10n.autoScorerClearedToast)));
     }
