@@ -8,6 +8,7 @@ import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_s
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_update_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/technical_display_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -104,6 +105,7 @@ class _AutoScorerSettingsPageState
     final recordingBusy = collect.isLoading || recordSessions.isLoading;
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
+    final technical = ref.watch(autoScorerTechnicalDisplayProvider);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -234,6 +236,23 @@ class _AutoScorerSettingsPageState
             enabled: !dartConf.isLoading,
             onChanged: (v) =>
                 ref.read(autoScorerDartConfidenceProvider.notifier).set(v),
+          ),
+          // Technical display (#738): the plugin paints its own boxes labelled
+          // with the raw class name and confidence (`cal1 82.4`), which is
+          // debugging output, not something a player should read on top of
+          // their board. Off by default; grouped here with the other
+          // detection-tuning controls because it is what you turn on to see
+          // what the sliders are doing.
+          SwitchListTile(
+            secondary: const Icon(Icons.developer_mode_outlined),
+            title: Text(l10n.autoScorerTechnicalDisplayTitle),
+            subtitle: Text(l10n.autoScorerTechnicalDisplaySubtitle),
+            value: technical.value ?? false,
+            onChanged: technical.isLoading
+                ? null
+                : (v) => ref
+                    .read(autoScorerTechnicalDisplayProvider.notifier)
+                    .setEnabled(v),
           ),
         ],
       ),

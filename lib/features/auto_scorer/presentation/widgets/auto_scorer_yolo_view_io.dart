@@ -127,6 +127,7 @@ class AutoScorerYoloAimView extends ConsumerStatefulWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onZoomChanged,
     this.onModelLoadFailed,
   });
@@ -140,6 +141,10 @@ class AutoScorerYoloAimView extends ConsumerStatefulWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+
+  /// Paint the plugin's raw detection boxes on the preview. Off by default —
+  /// see [AutoScorerTechnicalDisplay].
+  final bool showOverlays;
   final ValueChanged<double> onZoomChanged;
 
   /// Fired when a *staged* OTA model fails to load natively (#715). The view has
@@ -174,7 +179,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   void _ensureNative() {
     if (_nativePushed) return;
     _nativePushed = true;
-    _controller.setShowOverlays(true);
+    _controller.setShowOverlays(widget.showOverlays);
     if (_zoom != 1.0) _controller.setZoomLevel(_zoom);
   }
 
@@ -442,6 +447,7 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onStatus,
     this.onModelLoadFailed,
     this.expand = false,
@@ -456,6 +462,10 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+
+  /// Paint the plugin's raw detection boxes on the preview. Off by default —
+  /// see [AutoScorerTechnicalDisplay].
+  final bool showOverlays;
   final ValueChanged<TrackerStatus> onStatus;
 
   /// Fired when a *staged* OTA model fails to load natively (#715). The view has
@@ -502,6 +512,17 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
         ref.read(activeCaptureCorrectionSinkProvider.notifier).bind(this);
       }
     });
+  }
+
+  /// The overlay `watch`es the technical-display preference, so a toggle can
+  /// reach a live preview. `_ensureNative` only ever pushes once, so re-push the
+  /// flag here instead of waiting for the next session.
+  @override
+  void didUpdateWidget(AutoScorerYoloPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_nativePushed && oldWidget.showOverlays != widget.showOverlays) {
+      _controller.setShowOverlays(widget.showOverlays);
+    }
   }
 
   @override
@@ -590,7 +611,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   void _ensureNative() {
     if (_nativePushed) return;
     _nativePushed = true;
-    _controller.setShowOverlays(true);
+    _controller.setShowOverlays(widget.showOverlays);
     final z = widget.initialZoom.clamp(_zoomMin, _zoomMax);
     if (z != 1.0) _controller.setZoomLevel(z);
   }

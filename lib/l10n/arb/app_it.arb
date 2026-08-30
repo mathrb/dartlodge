@@ -483,6 +483,8 @@
   "autoScorerThresholdsHelp": "Quanto la fotocamera deve essere sicura prima di contare un rilevamento. Più basso = rileva più freccette/punti di calibrazione ma rischia falsi positivi; più alto = solo rilevamenti sicuri ma potrebbe perderne alcuni. Lascia il valore predefinito a meno che il rilevamento non manchi o conti in eccesso in modo costante.",
   "autoScorerCalConfidenceLabel": "Confidenza calibrazione",
   "autoScorerDartConfidenceLabel": "Confidenza freccette",
+  "autoScorerTechnicalDisplayTitle": "Visualizzazione tecnica",
+  "autoScorerTechnicalDisplaySubtitle": "Disegna i riquadri di rilevamento e il loro punteggio di confidenza sull'anteprima della fotocamera. Per il debug — disattivato di default.",
   "autoScorerModelTitle": "Modello di rilevamento",
   "autoScorerModelStatus": "{version} · {state}",
   "autoScorerModelUpToDate": "Aggiornato",

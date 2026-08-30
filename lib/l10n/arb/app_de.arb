@@ -483,6 +483,8 @@
   "autoScorerThresholdsHelp": "Wie sicher die Kamera sein muss, bevor sie eine Erkennung zählt. Niedriger = erfasst mehr Darts/Kalibrierungspunkte, riskiert aber Fehltreffer; höher = nur sichere Erkennungen, verpasst aber möglicherweise einige. Belasse den Standardwert, außer die Erkennung fehlt oder zählt dauerhaft zu viel.",
   "autoScorerCalConfidenceLabel": "Kalibrierungs-Konfidenz",
   "autoScorerDartConfidenceLabel": "Dart-Konfidenz",
+  "autoScorerTechnicalDisplayTitle": "Technische Anzeige",
+  "autoScorerTechnicalDisplaySubtitle": "Zeichnet die Erkennungsrahmen und ihre Konfidenzwerte auf die Kameravorschau. Zum Debuggen — standardmäßig aus.",
   "autoScorerModelTitle": "Erkennungsmodell",
   "autoScorerModelStatus": "{version} · {state}",
   "autoScorerModelUpToDate": "Aktuell",
