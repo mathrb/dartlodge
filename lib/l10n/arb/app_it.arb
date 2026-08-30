@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "Fotocamera spostata",
   "autoScorerStatusBoardCleared": "Bersaglio libero",
   "autoScorerAimHint": "Mira al bersaglio…",
-  "autoScorerMarkersReframe": "{found}/4 marcatori — re-inquadra per mostrarli tutti e 4. Qualsiasi rotazione del bersaglio va bene.",
+  "autoScorerMarkersReframe": "Re-inquadra per mostrare tutti e quattro i marcatori. Qualsiasi rotazione del bersaglio va bene.",
   "autoScorerReadyZoomHint": "Pronto — avvicinati o zooma per più precisione, oppure Mira completata",
   "autoScorerReadyDone": "Pronto — Mira completata",
   "autoScorerDoneAiming": "Mira completata",

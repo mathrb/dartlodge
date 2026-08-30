@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "A câmera moveu-se",
   "autoScorerStatusBoardCleared": "Alvo limpo",
   "autoScorerAimHint": "Mire no alvo…",
-  "autoScorerMarkersReframe": "{found}/4 marcadores — reenquadre para mostrar os 4. Qualquer rotação do alvo serve.",
+  "autoScorerMarkersReframe": "Reenquadre para mostrar os quatro marcadores. Qualquer rotação do alvo serve.",
   "autoScorerReadyZoomHint": "Pronto — aproxime-se ou use o zoom para mais precisão, ou Mira concluída",
   "autoScorerReadyDone": "Pronto — Mira concluída",
   "autoScorerDoneAiming": "Mira concluída",

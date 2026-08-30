@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "Camera verplaatst",
   "autoScorerStatusBoardCleared": "Bord leeg",
   "autoScorerAimHint": "Richt op het bord…",
-  "autoScorerMarkersReframe": "{found}/4 markeringen — kader opnieuw zodat alle 4 zichtbaar zijn. Elke bordoriëntatie is prima.",
+  "autoScorerMarkersReframe": "Kader opnieuw zodat alle vier markeringen zichtbaar zijn. Elke bordoriëntatie is prima.",
   "autoScorerReadyZoomHint": "Gereed — kom dichterbij of zoom in voor meer nauwkeurigheid, of Klaar met richten",
   "autoScorerReadyDone": "Gereed — Klaar met richten",
   "autoScorerDoneAiming": "Klaar met richten",

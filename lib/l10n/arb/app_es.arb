@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "La cámara se movió",
   "autoScorerStatusBoardCleared": "Diana despejada",
   "autoScorerAimHint": "Apunta a la diana…",
-  "autoScorerMarkersReframe": "{found}/4 marcadores — reencuadra para ver los 4. Cualquier rotación de la diana vale.",
+  "autoScorerMarkersReframe": "Reencuadra para ver los cuatro marcadores. Cualquier rotación de la diana vale.",
   "autoScorerReadyZoomHint": "Listo — acércate o usa el zoom para más precisión, o Apuntado",
   "autoScorerReadyDone": "Listo — Apuntado",
   "autoScorerDoneAiming": "Apuntado",
