@@ -1824,6 +1824,24 @@
   "@autoScorerCaptureModeMistakes": {
     "description": "Capture-mode option: store only frames the user corrects"
   },
+  "autoScorerContributionsTitle": "Your contribution",
+  "@autoScorerContributionsTitle": {
+    "description": "Settings tile: how many training photos this device holds"
+  },
+  "autoScorerContributionsSubtitle": "{count, plural, =0{No training photos on this device yet} one{1 training photo on this device} other{{count} training photos on this device}}",
+  "@autoScorerContributionsSubtitle": {
+    "description": "Settings tile subtitle: stored training-photo total",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "autoScorerContributionsLoading": "Counting…",
+  "@autoScorerContributionsLoading": {
+    "description": "Settings tile subtitle while the stored training photos are being counted"
+  },
+  "autoScorerContributionsSemantics": "{count, plural, =0{No training photos captured this game} one{1 training photo captured this game} other{{count} training photos captured this game}}",
+  "@autoScorerContributionsSemantics": {
+    "description": "Screen-reader label of the in-game contribution counter",
+    "placeholders": { "count": { "type": "int" } }
+  },
   "autoScorerExportTitle": "Export recordings",
   "@autoScorerExportTitle": {
     "description": "Tile: export captured frames and recorded sessions as a zip"

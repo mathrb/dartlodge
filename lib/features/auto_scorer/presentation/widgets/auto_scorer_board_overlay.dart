@@ -18,6 +18,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tip
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/technical_display_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/contribution_counter_widget.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -113,6 +114,12 @@ class _AutoScorerBoardOverlayState
         phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
   );
 
+  /// Training frames persisted this camera session (#742), mirrored from the
+  /// session's own counter so the counter widget can pulse as it rises. A
+  /// notifier for the same reason as [_status]: it ticks on an async capture
+  /// path and must not rebuild the `YOLOView` preview.
+  final ValueNotifier<int> _contributions = ValueNotifier(0);
+
   /// Whether this camera session has ever had the board calibrated (#741).
   /// Seeded by an aim step that ended with the four markers, then latched by
   /// any preview status whose phase [phaseImpliesCalibration]. It is what
@@ -134,6 +141,7 @@ class _AutoScorerBoardOverlayState
   @override
   void dispose() {
     _collapseTimer?.cancel();
+    _contributions.dispose();
     _status.dispose();
     _session?.dispose();
     super.dispose();
@@ -215,6 +223,11 @@ class _AutoScorerBoardOverlayState
         recordingSessionId: recordingSessionId,
         recordingGameId: widget.gameId,
       );
+      // Acknowledge each stored training frame (#742). Fired from the async
+      // capture paths, so it can land after this shell is gone.
+      session.onCapturePersisted = (total) {
+        if (mounted) _contributions.value = total;
+      };
       await session.start();
       if (!mounted) return;
       _session = session;
@@ -347,6 +360,7 @@ class _AutoScorerBoardOverlayState
     _session = null;
     _collapseTimer?.cancel();
     _everCalibrated = false;
+    _contributions.value = 0;
     setState(() {
       _error = message;
       _starting = false;
@@ -363,6 +377,7 @@ class _AutoScorerBoardOverlayState
     _session = null;
     _collapseTimer?.cancel();
     _everCalibrated = false;
+    _contributions.value = 0;
     setState(() {
       _mode = _Mode.idle;
       _starting = false;
@@ -563,6 +578,17 @@ class _AutoScorerBoardOverlayState
               ),
             ),
           ),
+          // Contribution counter (#742) — only while recording is on: with the
+          // opt-in off nothing is ever captured, so a counter would be a
+          // permanent zero promising something that isn't happening.
+          if (ref.watch(dataCollectionEnabledProvider).value ?? false)
+            ValueListenableBuilder<int>(
+              valueListenable: _contributions,
+              builder: (_, count, __) => Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: ContributionCounter(count: count),
+              ),
+            ),
           IconButton(
             tooltip: l10n.autoScorerReAim,
             visualDensity: VisualDensity.compact,
