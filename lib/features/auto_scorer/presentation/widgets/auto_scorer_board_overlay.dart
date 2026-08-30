@@ -115,9 +115,16 @@ class _AutoScorerBoardOverlayState
 
   /// Whether this camera session has ever had the board calibrated (#741).
   /// Seeded by an aim step that ended with the four markers, then latched by
-  /// any status whose phase [phaseImpliesCalibration]. It is what separates
-  /// "never recognised — learning mode" (calm) from "recognised, then lost"
-  /// (the red alert). Reset with the session in [_stop] / [_fail].
+  /// any preview status whose phase [phaseImpliesCalibration]. It is what
+  /// separates "never recognised — learning mode" (calm) from "recognised,
+  /// then lost" (the red alert). Reset with the session in [_stop] / [_fail].
+  ///
+  /// Camera-session scoped on purpose: a game that skips the aim step (#687)
+  /// starts at false even though a previous game in this app run may have been
+  /// calibrated. That flag says the player confirmed their framing, not that
+  /// the board was recognised (it is set for "Continue without auto-scoring"
+  /// too), so it is no evidence to seed from — and a session that has genuinely
+  /// not seen the board yet is learning mode, which is the honest reading.
   ///
   /// A plain field, not its own notifier: it only ever changes together with a
   /// [_status] update (or before the preview mounts), so the chip's
@@ -269,6 +276,12 @@ class _AutoScorerBoardOverlayState
   /// auto-scoring" is the player choosing to play in learning mode (#741) — so
   /// a re-aim that ends there drops back to learning mode until the tracker
   /// itself reports a calibrated phase.
+  ///
+  /// That reset is deliberate, including after a session that HAD been
+  /// calibrated: the player just re-aimed, could not reacquire the board, and
+  /// confirmed a dialog saying they will score by hand. Keeping the red alert
+  /// up for the rest of that game would be the exact permanent alarm #741
+  /// exists to remove — they have already acted on it.
   Future<AimOutcome> _runAimView(AutoScorerSession session) async {
     final calConf =
         ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;

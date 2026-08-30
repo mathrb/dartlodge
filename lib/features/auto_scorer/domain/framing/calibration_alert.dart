@@ -24,12 +24,19 @@ enum CalibrationAlert {
   lost,
 }
 
-/// True when [phase] can only be reported once the board HAS been calibrated.
+/// True when [phase], **as reported for a processed frame**, can only be
+/// reached once the board has been calibrated.
 ///
-/// The tracker reaches these phases from its calibrated branch, or (for
-/// `tracking`/`turnFull`) through the held-homography continuation, which needs
-/// a transform derived from an earlier calibrated frame (#485). So observing
-/// any of them is proof this camera session saw the board at least once.
+/// `DartTracker.processFrame` reaches these phases from its calibrated branch,
+/// or (for `tracking`/`turnFull`) through the held-homography continuation,
+/// which needs a transform derived from an earlier calibrated frame (#485). So
+/// a frame reporting any of them is proof this camera session saw the board at
+/// least once.
+///
+/// Feed it frame statuses only. `DartTracker.removeDarts()` also returns
+/// `rebaselined`, and that one is a button press — it proves nothing about
+/// calibration. The overlay keeps them apart: the manual path publishes its
+/// status directly and never reaches this latch.
 bool phaseImpliesCalibration(TrackerPhase phase) {
   switch (phase) {
     case TrackerPhase.noCalibration:
