@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/model_compatibility.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/resolved_model.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_alert.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_update_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
@@ -111,6 +113,24 @@ class _AutoScorerBoardOverlayState
         phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
   );
 
+  /// Whether this camera session has ever had the board calibrated (#741).
+  /// Seeded by an aim step that ended with the four markers, then latched by
+  /// any preview status whose phase [phaseImpliesCalibration]. It is what
+  /// separates "never recognised — learning mode" (calm) from "recognised,
+  /// then lost" (the red alert). Reset with the session in [_stop] / [_fail].
+  ///
+  /// Camera-session scoped on purpose: a game that skips the aim step (#687)
+  /// starts at false even though a previous game in this app run may have been
+  /// calibrated. That flag says the player confirmed their framing, not that
+  /// the board was recognised (it is set for "Continue without auto-scoring"
+  /// too), so it is no evidence to seed from — and a session that has genuinely
+  /// not seen the board yet is learning mode, which is the honest reading.
+  ///
+  /// A plain field, not its own notifier: it only ever changes together with a
+  /// [_status] update (or before the preview mounts), so the chip's
+  /// [ValueListenableBuilder] already rebuilds at exactly the right moments.
+  bool _everCalibrated = false;
+
   @override
   void dispose() {
     _collapseTimer?.cancel();
@@ -213,9 +233,11 @@ class _AutoScorerBoardOverlayState
         return;
       }
       setState(() => _mode = _Mode.aim);
-      final done = await _runAimView(session);
+      final outcome = await _runAimView(session);
       if (!mounted) return;
-      if (done) {
+      if (outcome == AimOutcome.cancelled) {
+        _stop();
+      } else {
         ref.read(autoScorerAimConfirmedProvider.notifier).set(true);
         await Future<void>.delayed(_kAimToRunningHandoffDelay);
         if (!mounted) return;
@@ -223,8 +245,6 @@ class _AutoScorerBoardOverlayState
           _mode = _Mode.running;
           _starting = false;
         });
-      } else {
-        _stop();
       }
     } catch (e) {
       _fail(l10n.autoScorerSetupFailed('$e'));
@@ -248,9 +268,21 @@ class _AutoScorerBoardOverlayState
     ref.invalidate(resolvedModelProvider);
   }
 
-  /// Push the fullscreen aim step and return whether the user confirmed it.
-  /// Shared by the initial [_start] flow and the in-preview [_reAim] button.
-  Future<bool> _runAimView(AutoScorerSession session) async {
+  /// Push the fullscreen aim step and return how it ended. Shared by the
+  /// initial [_start] flow and the in-preview [_reAim] button.
+  ///
+  /// The outcome also (re)seeds [_everCalibrated]: confirming with the four
+  /// markers proves the board was recognised, while "Continue without
+  /// auto-scoring" is the player choosing to play in learning mode (#741) — so
+  /// a re-aim that ends there drops back to learning mode until the tracker
+  /// itself reports a calibrated phase.
+  ///
+  /// That reset is deliberate, including after a session that HAD been
+  /// calibrated: the player just re-aimed, could not reacquire the board, and
+  /// confirmed a dialog saying they will score by hand. Keeping the red alert
+  /// up for the rest of that game would be the exact permanent alarm #741
+  /// exists to remove — they have already acted on it.
+  Future<AimOutcome> _runAimView(AutoScorerSession session) async {
     final calConf =
         ref.read(autoScorerCalConfidenceProvider).value ?? kDefaultConfidence;
     final dartConf =
@@ -261,7 +293,8 @@ class _AutoScorerBoardOverlayState
     // Debug-only opt-in (#738): the plain preview is what a player gets.
     final showOverlays =
         ref.read(autoScorerTechnicalDisplayProvider).value ?? false;
-    final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
+    final outcome =
+        await Navigator.of(context).push<AimOutcome>(MaterialPageRoute(
       fullscreenDialog: true,
       builder: (_) => AutoScorerYoloAimView(
         session: session,
@@ -276,7 +309,12 @@ class _AutoScorerBoardOverlayState
         onModelLoadFailed: _onModelLoadFailed,
       ),
     ));
-    return done == true;
+    // A system back gesture pops null — same as Cancel.
+    final result = outcome ?? AimOutcome.cancelled;
+    if (result != AimOutcome.cancelled) {
+      _everCalibrated = result == AimOutcome.calibrated;
+    }
+    return result;
   }
 
   /// Re-run the aim step from the running preview (#687) — for when the phone or
@@ -290,9 +328,11 @@ class _AutoScorerBoardOverlayState
     setState(() => _mode = _Mode.aim);
     await Future<void>.delayed(_kAimToRunningHandoffDelay);
     if (!mounted) return;
-    final done = await _runAimView(session);
+    final outcome = await _runAimView(session);
     if (!mounted) return;
-    if (done) ref.read(autoScorerAimConfirmedProvider.notifier).set(true);
+    if (outcome != AimOutcome.cancelled) {
+      ref.read(autoScorerAimConfirmedProvider.notifier).set(true);
+    }
     // Confirmed or cancelled, resume the live preview after the handoff drain;
     // a cancelled re-aim must not abort the game.
     await Future<void>.delayed(_kAimToRunningHandoffDelay);
@@ -306,6 +346,7 @@ class _AutoScorerBoardOverlayState
     _session?.dispose();
     _session = null;
     _collapseTimer?.cancel();
+    _everCalibrated = false;
     setState(() {
       _error = message;
       _starting = false;
@@ -321,6 +362,7 @@ class _AutoScorerBoardOverlayState
     _session?.dispose();
     _session = null;
     _collapseTimer?.cancel();
+    _everCalibrated = false;
     setState(() {
       _mode = _Mode.idle;
       _starting = false;
@@ -379,6 +421,11 @@ class _AutoScorerBoardOverlayState
               // already-disposed notifier.
               onStatus: (s) {
                 if (!mounted) return;
+                // Latch the session's calibration memory (#741): reaching any
+                // of these phases proves the board was recognised at least
+                // once, so a later sustained loss is a real alert and not
+                // learning mode.
+                if (phaseImpliesCalibration(s.phase)) _everCalibrated = true;
                 // A newly detected dart collapses an expanded vignette (#480).
                 // Compare before updating the notifier so the delta is real.
                 if (_vignetteExpanded &&
@@ -390,13 +437,30 @@ class _AutoScorerBoardOverlayState
             ),
           )
         : null;
+    // The line under the bar row states what the player can do. In learning
+    // mode the "tap a dart to correct" tip is moot — nothing is detected — so
+    // it gives way to a plain statement of the situation (#741). It listens on
+    // [_status] like the chip, because the learning-mode state changes with an
+    // incoming status and not with a setState.
     final hint = running
-        ? Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              AppLocalizations.of(context).autoScorerTapToCorrect,
-              style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
-            ),
+        ? ValueListenableBuilder<TrackerStatus>(
+            valueListenable: _status,
+            builder: (context, status, __) {
+              final l10n = AppLocalizations.of(context);
+              final learning = calibrationAlertOf(
+                      phase: status.phase, everCalibrated: _everCalibrated) ==
+                  CalibrationAlert.learningMode;
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  learning
+                      ? l10n.autoScorerLearningModeHint
+                      : l10n.autoScorerTapToCorrect,
+                  style:
+                      TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+                ),
+              );
+            },
           )
         : null;
 
@@ -494,8 +558,8 @@ class _AutoScorerBoardOverlayState
               alignment: Alignment.centerLeft,
               child: ValueListenableBuilder<TrackerStatus>(
                 valueListenable: _status,
-                builder: (_, status, __) =>
-                    AutoScorerStatusChip(status: status),
+                builder: (_, status, __) => AutoScorerStatusChip(
+                    status: status, everCalibrated: _everCalibrated),
               ),
             ),
           ),

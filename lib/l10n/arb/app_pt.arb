@@ -529,6 +529,8 @@
   "autoScorerStartCamera": "Iniciar câmera",
   "autoScorerStatusAim": "Mire no alvo",
   "autoScorerStatusNeedsCal": "A câmera precisa de calibração",
+  "autoScorerStatusLearningMode": "Modo aprendizagem",
+  "autoScorerLearningModeHint": "Alvo não reconhecido — pontuação manual nesta partida.",
   "autoScorerStatusReady": "Pronto",
   "autoScorerStatusDetected": "{count, plural, one{1 dardo detectado} other{{count} dardos detectados}}",
   "autoScorerStatusTurnFull": "Turno completo — avançar",

@@ -529,6 +529,8 @@
   "autoScorerStartCamera": "Kamera starten",
   "autoScorerStatusAim": "Auf das Board zielen",
   "autoScorerStatusNeedsCal": "Kamera muss kalibriert werden",
+  "autoScorerStatusLearningMode": "Lernmodus",
+  "autoScorerLearningModeHint": "Board nicht erkannt — in diesem Spiel wird von Hand gezählt.",
   "autoScorerStatusReady": "Bereit",
   "autoScorerStatusDetected": "{count, plural, one{1 Dart erkannt} other{{count} Darts erkannt}}",
   "autoScorerStatusTurnFull": "Aufnahme voll — weitergeben",

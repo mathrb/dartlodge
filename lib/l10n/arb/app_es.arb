@@ -529,6 +529,8 @@
   "autoScorerStartCamera": "Iniciar cámara",
   "autoScorerStatusAim": "Apunta a la diana",
   "autoScorerStatusNeedsCal": "La cámara necesita calibración",
+  "autoScorerStatusLearningMode": "Modo aprendizaje",
+  "autoScorerLearningModeHint": "Diana no reconocida: puntuación manual en esta partida.",
   "autoScorerStatusReady": "Listo",
   "autoScorerStatusDetected": "{count, plural, one{1 dardo detectado} other{{count} dardos detectados}}",
   "autoScorerStatusTurnFull": "Turno completo — avanzar",

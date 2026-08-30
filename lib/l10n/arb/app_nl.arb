@@ -529,6 +529,8 @@
   "autoScorerStartCamera": "Camera starten",
   "autoScorerStatusAim": "Richt op het bord",
   "autoScorerStatusNeedsCal": "Camera moet gekalibreerd worden",
+  "autoScorerStatusLearningMode": "Leermodus",
+  "autoScorerLearningModeHint": "Bord niet herkend — deze partij scoor je met de hand.",
   "autoScorerStatusReady": "Gereed",
   "autoScorerStatusDetected": "{count, plural, one{1 dart gedetecteerd} other{{count} darts gedetecteerd}}",
   "autoScorerStatusTurnFull": "Beurt vol — doorgaan",

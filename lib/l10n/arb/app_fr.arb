@@ -529,6 +529,8 @@
   "autoScorerStartCamera": "Démarrer la caméra",
   "autoScorerStatusAim": "Visez la cible",
   "autoScorerStatusNeedsCal": "La caméra doit être calibrée",
+  "autoScorerStatusLearningMode": "Mode apprentissage",
+  "autoScorerLearningModeHint": "Cible non reconnue — comptage à la main pour cette partie.",
   "autoScorerStatusReady": "Prêt",
   "autoScorerStatusDetected": "{count, plural, one{1 fléchette détectée} other{{count} fléchettes détectées}}",
   "autoScorerStatusTurnFull": "Volée complète — avancer",
