@@ -1945,11 +1945,23 @@
   "@autoScorerSetupTipsTileSubtitle": {
     "description": "Subtitle for the setup-tips tile"
   },
+  "autoScorerMarkersTitle": "What the camera looks for",
+  "@autoScorerMarkersTitle": {
+    "description": "Heading of the calibration-marker section in the camera setup tips"
+  },
+  "autoScorerMarkersBody": "Four points on the edge of the scoring area: where the wires between 20 and 5, 3 and 17, 8 and 11, and 13 and 6 cross the outer edge of the double ring. The camera needs all four in view before it can score on its own.",
+  "@autoScorerMarkersBody": {
+    "description": "Explains what the four calibration markers are and where they sit on the board"
+  },
+  "autoScorerMarkersDiagramA11y": "Dartboard diagram: the four points the camera looks for sit on the outer edge of the double ring, on the wires between 20 and 5, 3 and 17, 8 and 11, and 13 and 6.",
+  "@autoScorerMarkersDiagramA11y": {
+    "description": "Screen-reader description of the dartboard diagram showing the four calibration markers"
+  },
   "autoScorerTip1Title": "Fill the frame",
   "@autoScorerTip1Title": {
     "description": "Setup tip title"
   },
-  "autoScorerTip1Body": "Position the camera so the board fills most of the view, with all four corner markers visible. More board on screen means sharper scoring.",
+  "autoScorerTip1Body": "Position the camera so the board fills most of the view, with all four marker points visible. More board on screen means sharper scoring.",
   "@autoScorerTip1Body": {
     "description": "Setup tip body"
   },

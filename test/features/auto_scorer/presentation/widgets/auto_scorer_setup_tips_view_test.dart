@@ -1,4 +1,5 @@
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/calibration_marker_diagram_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:flutter/material.dart';
@@ -38,10 +39,20 @@ void main() {
       home: const AutoScorerSetupTipsView(),
     ));
 
-    // Top tips are on-screen (the list scrolls for the rest); the key
-    // model-constraint tip ("any rotation") is among them.
+    // The marker diagram opens the screen — the tips below all refer to it.
+    expect(find.text('What the camera looks for'), findsOneWidget);
+    expect(find.byType(CalibrationMarkerDiagram), findsOneWidget);
+
+    // The tips follow the diagram, reachable by scrolling the list.
+    await tester.scrollUntilVisible(find.text('Fill the frame'), 120);
     expect(find.text('Fill the frame'), findsOneWidget);
-    expect(find.text('A slight side angle'), findsOneWidget);
+
+    // #740: the framing tip no longer sends the player to the image corners.
+    final tip1 = tester.widget<Text>(find.textContaining('fills most of'));
+    expect(tip1.data, isNot(contains('corner')));
+
+    // The key model-constraint tip ("any rotation") is there too.
+    await tester.scrollUntilVisible(find.text('Any rotation is fine'), 120);
     expect(find.text('Any rotation is fine'), findsOneWidget);
     // Checkbox + action live in the bottom bar, always reachable.
     expect(find.text("Don't show this again"), findsOneWidget);
@@ -60,8 +71,11 @@ void main() {
       home: const AutoScorerSetupTipsView(reviewOnly: true),
     ));
 
-    // Tips still render…
+    // Diagram + tips still render…
+    expect(find.byType(CalibrationMarkerDiagram), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Fill the frame'), 120);
     expect(find.text('Fill the frame'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Any rotation is fine'), 120);
     expect(find.text('Any rotation is fine'), findsOneWidget);
     // …but the game-flow controls are gone (nothing to continue to / remember).
     expect(find.text("Don't show this again"), findsNothing);

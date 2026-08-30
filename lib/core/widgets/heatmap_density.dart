@@ -19,7 +19,7 @@ import 'package:flutter/material.dart';
 /// Orientation is the auto-scorer's scoring frame, which anchors the **5/20
 /// calibration wire at the top** (`cal1 → top`); segment 20's centre therefore
 /// sits ~9° clockwise of vertical, not on it. `HeatmapDartboardWidget` rotates
-/// the whole rendering by `kHeatmapDisplayRotation` so the user still sees a
+/// the whole rendering by `kBoardDisplayRotation` so the user still sees a
 /// standard "20 at the top" board (#697) — the stored positions are unchanged.
 typedef HeatPoint = ({double x, double y});
 
