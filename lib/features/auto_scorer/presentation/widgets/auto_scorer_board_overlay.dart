@@ -13,6 +13,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_coll
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/technical_display_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
@@ -257,6 +258,9 @@ class _AutoScorerBoardOverlayState
     final initialZoom =
         (ref.read(autoScorerCameraZoomProvider).value ?? kDefaultCameraZoom)
             .clamp(1.0, 5.0);
+    // Debug-only opt-in (#738): the plain preview is what a player gets.
+    final showOverlays =
+        ref.read(autoScorerTechnicalDisplayProvider).value ?? false;
     final done = await Navigator.of(context).push<bool>(MaterialPageRoute(
       fullscreenDialog: true,
       builder: (_) => AutoScorerYoloAimView(
@@ -266,6 +270,7 @@ class _AutoScorerBoardOverlayState
         calConfidence: calConf,
         dartConfidence: dartConf,
         initialZoom: initialZoom,
+        showOverlays: showOverlays,
         onZoomChanged: (z) =>
             ref.read(autoScorerCameraZoomProvider.notifier).set(z),
         onModelLoadFailed: _onModelLoadFailed,
@@ -367,6 +372,8 @@ class _AutoScorerBoardOverlayState
                   (ref.watch(autoScorerCameraZoomProvider).value ??
                           kDefaultCameraZoom)
                       .clamp(1.0, 5.0),
+              showOverlays:
+                  ref.watch(autoScorerTechnicalDisplayProvider).value ?? false,
               // Guard: an in-flight onResult from the preview's YOLOView
               // could fire as this shell is disposing; don't write to the
               // already-disposed notifier.

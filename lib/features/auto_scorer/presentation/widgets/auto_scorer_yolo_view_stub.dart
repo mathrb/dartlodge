@@ -21,6 +21,7 @@ class AutoScorerYoloAimView extends StatelessWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onZoomChanged,
     this.onModelLoadFailed,
   });
@@ -31,6 +32,7 @@ class AutoScorerYoloAimView extends StatelessWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+  final bool showOverlays;
   final ValueChanged<double> onZoomChanged;
   final VoidCallback? onModelLoadFailed;
 
@@ -51,6 +53,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onStatus,
     this.onModelLoadFailed,
     this.expand = false,
@@ -63,6 +66,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+  final bool showOverlays;
   final ValueChanged<TrackerStatus> onStatus;
   final VoidCallback? onModelLoadFailed;
   final bool expand;

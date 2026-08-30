@@ -1857,6 +1857,14 @@
   "@autoScorerDartConfidenceLabel": {
     "description": "Slider label: dart detection confidence threshold"
   },
+  "autoScorerTechnicalDisplayTitle": "Technical display",
+  "@autoScorerTechnicalDisplayTitle": {
+    "description": "Advanced switch: draw the raw detection boxes on the camera preview"
+  },
+  "autoScorerTechnicalDisplaySubtitle": "Draw the detection boxes and their confidence scores on the camera preview. For debugging — off by default.",
+  "@autoScorerTechnicalDisplaySubtitle": {
+    "description": "Explains what the technical-display switch turns on"
+  },
   "autoScorerModelTitle": "Detection model",
   "@autoScorerModelTitle": {
     "description": "Settings row title: the on-device auto-scorer detection model + its update status"

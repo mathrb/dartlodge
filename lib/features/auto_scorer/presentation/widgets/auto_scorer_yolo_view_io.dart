@@ -110,8 +110,8 @@ Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
 /// hint. The confirm button is always clickable: with the four cals present it
 /// reads "Done aiming"; otherwise it reads "Continue without auto-scoring" and
 /// proceeds uncalibrated (manual scoring) after a one-time note. Zoom drives the
-/// native `setZoomLevel`; native
-/// overlays draw the detection boxes (no Dart-side coord mapping) — but the
+/// native `setZoomLevel`; the native overlays that draw the detection boxes (no
+/// Dart-side coord mapping) are off unless [showOverlays] is on (#738) — and the
 /// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
 /// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
 /// not the annotated preview snapshot.
@@ -127,6 +127,7 @@ class AutoScorerYoloAimView extends ConsumerStatefulWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onZoomChanged,
     this.onModelLoadFailed,
   });
@@ -140,6 +141,10 @@ class AutoScorerYoloAimView extends ConsumerStatefulWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+
+  /// Paint the plugin's raw detection boxes on the preview. Off by default —
+  /// see [AutoScorerTechnicalDisplay].
+  final bool showOverlays;
   final ValueChanged<double> onZoomChanged;
 
   /// Fired when a *staged* OTA model fails to load natively (#715). The view has
@@ -174,7 +179,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   void _ensureNative() {
     if (_nativePushed) return;
     _nativePushed = true;
-    _controller.setShowOverlays(true);
+    _controller.setShowOverlays(widget.showOverlays);
     if (_zoom != 1.0) _controller.setZoomLevel(_zoom);
   }
 
@@ -431,7 +436,8 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
 /// ([AutoScorerSession.processDetectionFrame]); emitted darts go to the active
 /// `DartInputSink`. Capture-on-emit grabs a clean full-resolution still via
 /// `capturePhoto(withOverlays: false)` only when darts emit AND data-collection
-/// is on. Native overlays draw the on-screen boxes but are NOT in the capture.
+/// is on. The native overlays are off unless [showOverlays] is on (#738); even
+/// then they are drawn on screen only and are NOT in the capture.
 class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   const AutoScorerYoloPreview({
     super.key,
@@ -442,6 +448,7 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
+    required this.showOverlays,
     required this.onStatus,
     this.onModelLoadFailed,
     this.expand = false,
@@ -456,6 +463,10 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
+
+  /// Paint the plugin's raw detection boxes on the preview. Off by default —
+  /// see [AutoScorerTechnicalDisplay].
+  final bool showOverlays;
   final ValueChanged<TrackerStatus> onStatus;
 
   /// Fired when a *staged* OTA model fails to load natively (#715). The view has
@@ -502,6 +513,17 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
         ref.read(activeCaptureCorrectionSinkProvider.notifier).bind(this);
       }
     });
+  }
+
+  /// The overlay `watch`es the technical-display preference, so a toggle can
+  /// reach a live preview. `_ensureNative` only ever pushes once, so re-push the
+  /// flag here instead of waiting for the next session.
+  @override
+  void didUpdateWidget(AutoScorerYoloPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_nativePushed && oldWidget.showOverlays != widget.showOverlays) {
+      _controller.setShowOverlays(widget.showOverlays);
+    }
   }
 
   @override
@@ -590,7 +612,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   void _ensureNative() {
     if (_nativePushed) return;
     _nativePushed = true;
-    _controller.setShowOverlays(true);
+    _controller.setShowOverlays(widget.showOverlays);
     final z = widget.initialZoom.clamp(_zoomMin, _zoomMax);
     if (z != 1.0) _controller.setZoomLevel(z);
   }

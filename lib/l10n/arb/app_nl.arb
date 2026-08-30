@@ -483,6 +483,8 @@
   "autoScorerThresholdsHelp": "Hoe zeker de camera moet zijn voordat een detectie meetelt. Lager = vangt meer darts/kalibratiepunten maar riskeert valse treffers; hoger = alleen zekere detecties maar mist er mogelijk enkele. Laat op de standaard staan tenzij de detectie voortdurend mist of te veel telt.",
   "autoScorerCalConfidenceLabel": "Kalibratiebetrouwbaarheid",
   "autoScorerDartConfidenceLabel": "Dartbetrouwbaarheid",
+  "autoScorerTechnicalDisplayTitle": "Technische weergave",
+  "autoScorerTechnicalDisplaySubtitle": "Tekent de detectiekaders en hun betrouwbaarheidsscore over het camerabeeld. Voor foutopsporing — standaard uit.",
   "autoScorerModelTitle": "Detectiemodel",
   "autoScorerModelStatus": "{version} · {state}",
   "autoScorerModelUpToDate": "Up-to-date",
