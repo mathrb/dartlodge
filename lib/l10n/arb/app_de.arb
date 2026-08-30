@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "Kamera bewegt",
   "autoScorerStatusBoardCleared": "Board frei",
   "autoScorerAimHint": "Auf das Board zielen…",
-  "autoScorerMarkersReframe": "{found}/4 Markierungen — neu einrahmen, bis alle 4 sichtbar sind. Jede Board-Drehung ist in Ordnung.",
+  "autoScorerMarkersReframe": "Neu einrahmen, bis alle vier Markierungen sichtbar sind. Jede Board-Drehung ist in Ordnung.",
   "autoScorerReadyZoomHint": "Bereit — näher rangehen oder heranzoomen für mehr Genauigkeit, oder Zielen fertig",
   "autoScorerReadyDone": "Bereit — Zielen fertig",
   "autoScorerDoneAiming": "Zielen fertig",

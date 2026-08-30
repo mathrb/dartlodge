@@ -532,7 +532,7 @@
   "autoScorerStatusCameraMoved": "Caméra déplacée",
   "autoScorerStatusBoardCleared": "Cible dégagée",
   "autoScorerAimHint": "Visez la cible…",
-  "autoScorerMarkersReframe": "{found}/4 repères — recadrez pour voir les 4. Toute orientation de la cible convient.",
+  "autoScorerMarkersReframe": "Recadrez pour voir les quatre repères. Toute orientation de la cible convient.",
   "autoScorerReadyZoomHint": "Prêt — rapprochez-vous ou zoomez pour plus de précision, ou Visée terminée",
   "autoScorerReadyDone": "Prêt — Visée terminée",
   "autoScorerDoneAiming": "Visée terminée",

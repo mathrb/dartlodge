@@ -2079,14 +2079,9 @@
   "@autoScorerAimHint": {
     "description": "Aim view: initial hint"
   },
-  "autoScorerMarkersReframe": "{found}/4 markers — reframe so all 4 show. Any board rotation is fine.",
+  "autoScorerMarkersReframe": "Reframe so all four markers show. Any board rotation is fine.",
   "@autoScorerMarkersReframe": {
-    "description": "Aim view: partial calibration hint; found is 0-4",
-    "placeholders": {
-      "found": {
-        "type": "int"
-      }
-    }
+    "description": "Aim view: partial calibration hint. The count it used to carry is now shown by the four marker pips (#739)"
   },
   "autoScorerReadyZoomHint": "Ready — move closer or zoom in for better accuracy, or Done aiming",
   "@autoScorerReadyZoomHint": {

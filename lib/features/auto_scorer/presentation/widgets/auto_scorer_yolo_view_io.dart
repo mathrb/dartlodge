@@ -9,10 +9,12 @@ import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.d
 import 'package:dart_lodge/features/auto_scorer/domain/detection/yolo_view_detections.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/recognition_state.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/auto_advance.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_recognition_indicators.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
@@ -309,13 +311,21 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final calibrated = _latest?.hasCalibration ?? false;
-    final found = _latest?.calBestPoints.where((p) => p != null).length ?? 0;
     final fill = _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final ready = _stability.isReady;
+    // One derived state, two renderings (#739): the halo around the preview and
+    // the four pips beside the hint. Advisory — it drives colour and copy only;
+    // `calibrated`/`ready` above still gate the button.
+    final recognition = recognitionStateOf(
+      calBestPoints: _latest?.calBestPoints ?? const [null, null, null, null],
+      calConfidences: _latest?.calConfidences ?? const [null, null, null, null],
+      calMinConfidence: widget.calConfidence,
+      isStable: ready,
+    );
     final hint = _latest == null
         ? l10n.autoScorerAimHint
         : !calibrated
-            ? l10n.autoScorerMarkersReframe(found)
+            ? l10n.autoScorerMarkersReframe
             // Calibrated: the button already reads "Done aiming" and is enabled,
             // so the steadiness nudge must NOT imply it's blocked (hint↔button
             // agreement, #411). Advisory "tap when steady" while not-yet-stable.
@@ -343,13 +353,27 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
             onResult: _onResults,
             onModelError: _onModelError,
           ),
+          // Painted around the preview, never at a detection coordinate — see
+          // the note on [RecognitionHalo].
+          Positioned.fill(
+              child: RecognitionHaloOverlay(grade: recognition.grade)),
           Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Text(hint,
-                    style: const TextStyle(color: Colors.white)),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // The pips replace the old "{found}/4 markers" count: which
+                    // marker is missing is what the count never carried.
+                    MarkerPips(markers: recognition.markers),
+                    const SizedBox(height: 8),
+                    Text(hint,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white)),
+                  ],
+                ),
               ),
             ),
           ),
@@ -489,6 +513,14 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   bool _capturing = false;
   DetectionFrame _latest = _emptyFrame;
 
+  /// Recognition grade for the halo (#739), held as a notifier rather than
+  /// widget state: `_onResults` fires at the inference rate, and calling
+  /// `setState` that often would rebuild `YOLOView` along with everything else.
+  /// Only the border listens. Steadiness is the aim view's signal, so in-game
+  /// the grade reads "all four markers count this frame" as ready.
+  final ValueNotifier<RecognitionGrade> _grade =
+      ValueNotifier(RecognitionGrade.none);
+
   /// Model path currently fed to `YOLOView`. Seeded from the resolved prop; a
   /// native load failure of a staged model resets it to the bundled asset (#715).
   late String _effectivePath = widget.modelPath;
@@ -528,6 +560,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
 
   @override
   void dispose() {
+    _grade.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -632,6 +665,12 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     final (:frame, :raw) = _detectionFrameFrom(
         results, widget.calConfidence, widget.dartConfidence);
     _latest = frame;
+    _grade.value = recognitionStateOf(
+      calBestPoints: frame.calBestPoints,
+      calConfidences: frame.calConfidences,
+      calMinConfidence: widget.calConfidence,
+      isStable: frame.hasCalibration,
+    ).grade;
     final result = widget.session.processDetectionFrame(
       frame,
       rawDetections: raw,
@@ -765,8 +804,18 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
         ),
       ],
     );
+    // The halo (#739) is the only recognition signal left in-game once the
+    // native boxes are off by default (#738), and it is what reads from the
+    // oche when the preview is collapsed to a vignette (#480). Listening
+    // narrowly keeps the inference-rate updates off `YOLOView`.
+    final haloed = ValueListenableBuilder<RecognitionGrade>(
+      valueListenable: _grade,
+      builder: (_, grade, child) =>
+          RecognitionHalo(grade: grade, child: child!),
+      child: stack,
+    );
     // Camera-first fills the Expanded the board gives it; band mode is a fixed
     // ~140px strip under the header.
-    return widget.expand ? stack : SizedBox(height: 140, child: stack);
+    return widget.expand ? haloed : SizedBox(height: 140, child: haloed);
   }
 }
