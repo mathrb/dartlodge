@@ -78,8 +78,10 @@ const double kBoardRDoubleOuter = 0.900;
 
 // ── Dartboard segment colours (canonical, NOT theme tokens) ────────────────
 // These mirror the physical-board palette used by DartboardHighlightWidget.
-// Substituting theme colours would break recognition of the board. This is the
-// accepted hardcoded-colour exception documented in CLAUDE.md.
+// Substituting theme colours would break recognition of the board, so the
+// board face is the standing exception to "never hardcode colors"
+// (`docs/rules/ui-design.md`) — settled in the #195 audit and not to be
+// re-raised. Everything drawn over the face uses theme tokens.
 const Color _darkBase = Color(0xFF212121); // segment black
 const Color _lightBase = Color(0xFFE0D5C1); // segment cream
 final Color _darkColored = Colors.green[800]!;

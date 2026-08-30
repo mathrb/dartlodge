@@ -22,9 +22,9 @@ import 'heatmap_density.dart';
 /// `features/game`, so it cannot be reused here. Instead the board backdrop is
 /// drawn by [paintDartboardFace] (`dartboard_face_painter.dart`), the shared
 /// core-side board face this widget and the auto-assist calibration diagram
-/// (#740) both paint. Dartboard segment colours are an accepted
-/// hardcoded-colour exception (see CLAUDE.md); all non-dartboard chrome uses
-/// themed tokens.
+/// (#740) both paint. Dartboard segment colours are the standing exception to
+/// "never hardcode colors" (see `dartboard_face_painter.dart`); all
+/// non-dartboard chrome uses themed tokens.
 class HeatmapDartboardWidget extends StatefulWidget {
   const HeatmapDartboardWidget({
     super.key,
