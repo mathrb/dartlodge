@@ -214,12 +214,13 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   Future<void> _capture() async {
     if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     // Respect the data-collection opt-in: the store is non-null even when the
     // toggle is off, so without this gate a manual capture would write a frame
     // the user opted out of (mirrors `_captureEmitted`/`correctDart`).
     if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text('Enable data collection to save frames')));
+      messenger.showSnackBar(SnackBar(
+          content: Text(l10n.autoScorerCaptureNeedsCollection)));
       return;
     }
     setState(() => _capturing = true);
@@ -235,14 +236,14 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
       if (!mounted) return;
       if (bytes == null) {
         messenger.showSnackBar(
-            const SnackBar(content: Text('Capture failed (no frame).')));
+            SnackBar(content: Text(l10n.autoScorerCaptureFailed)));
         return;
       }
       await widget.session.persistManualCapture(_latest ?? _emptyFrame, bytes,
           turnOrdinal: 0, gameId: widget.gameId);
       if (!mounted) return;
       messenger.showSnackBar(
-          const SnackBar(content: Text('Frame saved for training')));
+          SnackBar(content: Text(l10n.autoScorerCaptureSaved)));
     } finally {
       if (mounted) setState(() => _capturing = false);
     }
@@ -365,7 +366,9 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                               child:
                                   CircularProgressIndicator(strokeWidth: 2))
                           : const Icon(Icons.add_a_photo_outlined),
-                      label: Text(_capturing ? 'Focusing…' : 'Capture photo'),
+                      label: Text(_capturing
+                          ? l10n.autoScorerCaptureFocusing
+                          : l10n.autoScorerCapturePhoto),
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -659,12 +662,13 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   Future<void> _manualCapture() async {
     if (_capturing) return;
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
     // Respect the data-collection opt-in (mirrors `_captureEmitted`/`correctDart`):
     // the store is non-null even when the toggle is off, so without this gate a
     // manual capture would write a frame the user opted out of.
     if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      messenger.showSnackBar(const SnackBar(
-          content: Text('Enable data collection to save frames')));
+      messenger.showSnackBar(SnackBar(
+          content: Text(l10n.autoScorerCaptureNeedsCollection)));
       return;
     }
     setState(() => _capturing = true);
@@ -678,14 +682,14 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
       if (!mounted) return;
       if (bytes == null) {
         messenger.showSnackBar(
-            const SnackBar(content: Text('Capture failed (no frame).')));
+            SnackBar(content: Text(l10n.autoScorerCaptureFailed)));
         return;
       }
       await widget.session.persistManualCapture(_latest, bytes,
           turnOrdinal: widget.currentTurnOrdinal(), gameId: widget.gameId);
       if (!mounted) return;
       messenger.showSnackBar(
-          const SnackBar(content: Text('Frame saved for training')));
+          SnackBar(content: Text(l10n.autoScorerCaptureSaved)));
     } finally {
       if (mounted) setState(() => _capturing = false);
     }
@@ -697,6 +701,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     // own auto-advance both bump activeTurnSignal — so each new turn requires a
     // fresh dart sighting before it can auto-advance again.
     ref.listen<int>(activeTurnSignalProvider, (_, __) => _sawDartsThisTurn = false);
+    final l10n = AppLocalizations.of(context);
     final stack = Stack(
       fit: StackFit.expand,
       children: [
@@ -721,7 +726,9 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
             color: Colors.black.withValues(alpha: 0.4),
             shape: const CircleBorder(),
             child: IconButton(
-              tooltip: _capturing ? 'Focusing…' : 'Capture frame',
+              tooltip: _capturing
+                  ? l10n.autoScorerCaptureFocusing
+                  : l10n.autoScorerCaptureFrame,
               icon: _capturing
                   ? const SizedBox(
                       width: 16,
