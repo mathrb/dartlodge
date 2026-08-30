@@ -1,64 +1,17 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'dartboard_face_painter.dart';
 import 'heatmap_density.dart';
-
-/// Clockwise segment order beginning with 20 (index 0).
-///
-/// This is the wedge ORDER, not a positional claim — in the stored frame index
-/// 0's wedge starts at the top wire, not centred on it; see
-/// [heatmapSegmentStartAngle] and [kHeatmapDisplayRotation].
-///
-/// Mirrors `kDartboardClockOrder` in
-/// `lib/features/game/presentation/widgets/dartboard_highlight_widget.dart`.
-/// It is duplicated here on purpose: that constant lives in `features/game`,
-/// and `lib/core/` must not import `lib/features/` (dependency direction —
-/// features depend on core, never the reverse). The order is a fixed property
-/// of a regulation dartboard, so the small duplication is the correct trade-off
-/// against introducing a core→feature import.
-const List<int> kHeatmapClockOrder = [
-  20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5,
-];
-
-/// Angular width of one segment wedge: 18° (2π / 20).
-const double kHeatmapSegmentSweep = math.pi / 10;
-
-/// Canvas start angle (radians) of the wedge for the segment at [index] in
-/// [kHeatmapClockOrder], expressed in the **stored canonical frame**.
-///
-/// That frame is the auto-scorer's scoring frame (`canonicalTransform` /
-/// `dartboard_scorer`), which anchors on the detectable **5/20 calibration
-/// wire at the top** (`cal1 → top`). Consequently segment 20 spans the bin just
-/// clockwise of vertical (`[-π/2, -π/2 + sweep]`, centre at `-π/2 + π/20`), not
-/// centred on the top. Index 0 (segment 20) therefore starts at `-π/2` and each
-/// subsequent index advances one sweep clockwise (canvas angles increase
-/// clockwise, y-down). The density image is plotted in this same frame, so the
-/// wedges and the impacts are mutually aligned here — they are rotated together
-/// for display by [kHeatmapDisplayRotation] so a standard "20 at the top" board
-/// is what the user sees. The position data / homography are never touched.
-double heatmapSegmentStartAngle(int index) =>
-    -math.pi / 2 + index * kHeatmapSegmentSweep;
-
-/// Display-only rotation applied to the whole heatmap (board wedges + density
-/// image together) so the stored canonical frame — which puts the 5/20 wire at
-/// the top — renders as a standard board with **segment 20 centred at the top**
-/// and the 5/20 wire ~9° left of vertical (#697).
-///
-/// It is exactly minus half a segment: the scorer's segment-20 centre sits at
-/// `-π/2 + π/20` (9° clockwise of vertical), and rotating by `-π/20` brings it
-/// to straight up. Applying it to BOTH layers keeps every impact inside its
-/// wedge; it changes nothing about the stored positions or the scoring frame.
-const double kHeatmapDisplayRotation = -kHeatmapSegmentSweep / 2;
 
 /// Renders a density heatmap of dart impacts over a dartboard face.
 ///
 /// Input is a list of normalised positions in the canonical board frame (see
 /// [HeatPoint] for the exact orientation: `(0,0)` = bull centre, radius `1.0` =
 /// outer edge of the double ring, 5/20 wire at top — rendered as a standard
-/// "20 at top" board via [kHeatmapDisplayRotation]). Drive it from a passed-in
+/// "20 at top" board via [kBoardDisplayRotation]). Drive it from a passed-in
 /// list — this widget does NO data wiring.
 ///
 /// Empty input renders nothing (a [SizedBox.shrink]) so callers can place it
@@ -66,10 +19,12 @@ const double kHeatmapDisplayRotation = -kHeatmapSegmentSweep / 2;
 ///
 /// Architecture note: this lives in `lib/core/`, which must not import
 /// `lib/features/`. The existing `DartboardHighlightWidget` board face lives in
-/// `features/game`, so it cannot be reused here. Instead the painter draws its
-/// own faithful-enough board backdrop (option (a) of the SI-4 plan). Dartboard
-/// segment colours are an accepted hardcoded-colour exception (see CLAUDE.md);
-/// all non-dartboard chrome uses themed tokens.
+/// `features/game`, so it cannot be reused here. Instead the board backdrop is
+/// drawn by [paintDartboardFace] (`dartboard_face_painter.dart`), the shared
+/// core-side board face this widget and the auto-assist calibration diagram
+/// (#740) both paint. Dartboard segment colours are an accepted
+/// hardcoded-colour exception (see CLAUDE.md); all non-dartboard chrome uses
+/// themed tokens.
 class HeatmapDartboardWidget extends StatefulWidget {
   const HeatmapDartboardWidget({
     super.key,
@@ -188,25 +143,6 @@ class _HeatmapDartboardPainter extends CustomPainter {
   /// Canonical half-extent the density image covers (`[-extent, +extent]`).
   final double extent;
 
-  // Radii as fractions of total board radius — match DartboardHighlightWidget.
-  static const double _rDoubleBull = 0.05;
-  static const double _rSingleBull = 0.115;
-  static const double _rTripleInner = 0.415;
-  static const double _rTripleOuter = 0.475;
-  static const double _rDoubleInner = 0.825;
-  static const double _rDoubleOuter = 0.900;
-
-  // ── Dartboard segment colours (canonical, NOT theme tokens) ──────────────
-  // These mirror the physical-board palette used by DartboardHighlightWidget.
-  // Substituting theme colours would break recognition of the board. This is
-  // the accepted hardcoded-colour exception documented in CLAUDE.md.
-  static const Color _darkBase = Color(0xFF212121); // segment black
-  static const Color _lightBase = Color(0xFFE0D5C1); // segment cream
-  static final Color _darkColored = Colors.green[800]!;
-  static final Color _lightColored = Colors.red[800]!;
-  static final Color _bullSingle = Colors.green[600]!;
-  static final Color _bullDouble = Colors.red[700]!;
-
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -218,10 +154,10 @@ class _HeatmapDartboardPainter extends CustomPainter {
     // centred bull/outline circles are rotation-invariant.
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    canvas.rotate(kHeatmapDisplayRotation);
+    canvas.rotate(kBoardDisplayRotation);
     canvas.translate(-center.dx, -center.dy);
 
-    _paintBoard(canvas, center, radius);
+    paintDartboardFace(canvas, center, radius);
 
     // The board radius (1.0 canonical) corresponds to the double-ring outer
     // edge. The density image spans [-extent, +extent] canonical, i.e. a square
@@ -253,127 +189,6 @@ class _HeatmapDartboardPainter extends CustomPainter {
     }
 
     canvas.restore(); // display rotation
-  }
-
-  void _paintBoard(Canvas canvas, Offset center, double radius) {
-    const sweep = kHeatmapSegmentSweep; // 18°
-
-    // 1. Outer single areas (full pie under everything).
-    for (var i = 0; i < 20; i++) {
-      final isDark = i.isEven;
-      _fillPie(
-        canvas,
-        center,
-        radius,
-        heatmapSegmentStartAngle(i),
-        sweep,
-        isDark ? _darkBase : _lightBase,
-      );
-    }
-
-    // 2. Triple ring.
-    for (var i = 0; i < 20; i++) {
-      final isDark = i.isEven;
-      _fillRing(
-        canvas,
-        center,
-        radius * _rTripleInner,
-        radius * _rTripleOuter,
-        heatmapSegmentStartAngle(i),
-        sweep,
-        isDark ? _darkColored : _lightColored,
-      );
-    }
-
-    // 3. Double ring.
-    for (var i = 0; i < 20; i++) {
-      final isDark = i.isEven;
-      _fillRing(
-        canvas,
-        center,
-        radius * _rDoubleInner,
-        radius * _rDoubleOuter,
-        heatmapSegmentStartAngle(i),
-        sweep,
-        isDark ? _darkColored : _lightColored,
-      );
-    }
-
-    // 4. Bull.
-    _fillRing(
-      canvas,
-      center,
-      radius * _rDoubleBull,
-      radius * _rSingleBull,
-      0,
-      2 * math.pi,
-      _bullSingle,
-    );
-    canvas.drawCircle(
-      center,
-      radius * _rDoubleBull,
-      Paint()..color = _bullDouble,
-    );
-
-    // 5. Faint outline so the board edge reads against any background.
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = math.max(1, radius * 0.01)
-        ..color = const Color(0xFF000000).withValues(alpha: 0.25),
-    );
-  }
-
-  void _fillPie(
-    Canvas canvas,
-    Offset center,
-    double radius,
-    double startAngle,
-    double sweep,
-    Color color,
-  ) {
-    final path = Path()
-      ..moveTo(center.dx, center.dy)
-      ..arcTo(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweep,
-        false,
-      )
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
-  }
-
-  void _fillRing(
-    Canvas canvas,
-    Offset center,
-    double innerR,
-    double outerR,
-    double startAngle,
-    double sweep,
-    Color color,
-  ) {
-    final path = Path()
-      ..moveTo(
-        center.dx + innerR * math.cos(startAngle),
-        center.dy + innerR * math.sin(startAngle),
-      )
-      ..arcTo(
-        Rect.fromCircle(center: center, radius: outerR),
-        startAngle,
-        sweep,
-        false,
-      )
-      ..arcTo(
-        Rect.fromCircle(center: center, radius: innerR),
-        startAngle + sweep,
-        -sweep,
-        false,
-      )
-      ..close();
-    canvas.drawPath(path, Paint()..color = color);
   }
 
   @override

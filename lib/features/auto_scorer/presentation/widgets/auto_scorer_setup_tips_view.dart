@@ -1,3 +1,4 @@
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/calibration_marker_diagram_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -75,6 +76,10 @@ class _AutoScorerSetupTipsViewState extends State<AutoScorerSetupTipsView> {
       appBar: AppBar(title: Text(l10n.autoScorerSetupTipsTile)),
       body: ListView(
         children: [
+          // The markers come first: every tip below talks about them, and until
+          // #740 nothing on this screen said what they were (#736 S1.4).
+          _MarkerDiagramSection(l10n: l10n),
+          const Divider(height: 1),
           for (final tip in _tips(l10n))
             ListTile(
               leading: Icon(tip.icon),
@@ -110,6 +115,44 @@ class _AutoScorerSetupTipsViewState extends State<AutoScorerSetupTipsView> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// Heading + dartboard diagram + explanation of the four calibration markers.
+///
+/// Shown on both entry paths (game flow and Settings review) — the point of the
+/// diagram is that the player learns the markers once, wherever they opened the
+/// tips from.
+class _MarkerDiagramSection extends StatelessWidget {
+  const _MarkerDiagramSection({required this.l10n});
+
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.autoScorerMarkersTitle, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 12),
+          Center(
+            child: ConstrainedBox(
+              // Capped so the diagram doesn't eat a whole tablet screen; on a
+              // phone it just takes the available width.
+              constraints: const BoxConstraints(maxWidth: 260),
+              child: CalibrationMarkerDiagram(
+                semanticsLabel: l10n.autoScorerMarkersDiagramA11y,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(l10n.autoScorerMarkersBody, style: theme.textTheme.bodyMedium),
+        ],
+      ),
     );
   }
 }
