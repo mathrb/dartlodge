@@ -114,11 +114,16 @@ class _AutoScorerBoardOverlayState
         phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
   );
 
-  /// Training frames persisted this camera session (#742), mirrored from the
-  /// session's own counter so the counter widget can pulse as it rises. A
-  /// notifier for the same reason as [_status]: it ticks on an async capture
-  /// path and must not rebuild the `YOLOView` preview.
+  /// Training frames persisted for THIS GAME (#742), mirrored from the running
+  /// session's counter so the counter widget can pulse as it rises. A notifier
+  /// for the same reason as [_status]: it ticks on an async capture path and
+  /// must not rebuild the `YOLOView` preview.
+  ///
+  /// Each camera session counts from zero, so [_contributionsBase] carries what
+  /// earlier sessions of this game already contributed: stopping and restarting
+  /// the camera mid-game must not look like the contribution was undone.
   final ValueNotifier<int> _contributions = ValueNotifier(0);
+  int _contributionsBase = 0;
 
   /// Whether this camera session has ever had the board calibrated (#741).
   /// Seeded by an aim step that ended with the four markers, then latched by
@@ -224,9 +229,16 @@ class _AutoScorerBoardOverlayState
         recordingGameId: widget.gameId,
       );
       // Acknowledge each stored training frame (#742). Fired from the async
-      // capture paths, so it can land after this shell is gone.
+      // capture paths, so it can land after this shell is gone — or after this
+      // session was stopped and another started, which is why it checks that
+      // the reporting session is still the current one. Without that, a save
+      // still in flight at Stop would write its old session's total back over
+      // the new session's count (and pulse for a capture that isn't part of
+      // it).
       session.onCapturePersisted = (total) {
-        if (mounted) _contributions.value = total;
+        if (mounted && identical(_session, session)) {
+          _contributions.value = _contributionsBase + total;
+        }
       };
       await session.start();
       if (!mounted) return;
@@ -360,7 +372,7 @@ class _AutoScorerBoardOverlayState
     _session = null;
     _collapseTimer?.cancel();
     _everCalibrated = false;
-    _contributions.value = 0;
+    _contributionsBase = _contributions.value;
     setState(() {
       _error = message;
       _starting = false;
@@ -377,7 +389,7 @@ class _AutoScorerBoardOverlayState
     _session = null;
     _collapseTimer?.cancel();
     _everCalibrated = false;
-    _contributions.value = 0;
+    _contributionsBase = _contributions.value;
     setState(() {
       _mode = _Mode.idle;
       _starting = false;

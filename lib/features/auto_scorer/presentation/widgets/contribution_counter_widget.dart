@@ -1,4 +1,5 @@
 import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +26,8 @@ const Duration kContributionPulseDuration = Duration(milliseconds: 600);
 class ContributionCounter extends StatefulWidget {
   const ContributionCounter({super.key, required this.count});
 
-  /// Frames persisted so far in this camera session.
+  /// Frames persisted so far in this game — it accumulates across camera
+  /// stop/start, so stopping the camera never appears to undo a contribution.
   final int count;
 
   @override
@@ -93,7 +95,7 @@ class _ContributionCounterState extends State<ContributionCounter>
                   Icon(Icons.photo_camera_back_outlined, size: 16, color: fg),
                   const SizedBox(width: 4),
                   Text(
-                    '${widget.count}',
+                    StatFormatter.fmtInt(widget.count),
                     style: Theme.of(context)
                         .textTheme
                         .labelLarge

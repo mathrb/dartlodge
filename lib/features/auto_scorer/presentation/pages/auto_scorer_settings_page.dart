@@ -368,8 +368,9 @@ class _AutoScorerSettingsPageState
       await store.clear();
       if (sessionStore.isSupported) await sessionStore.clear();
       // The contribution tile caches a listing — re-read it now that the store
-      // is empty (#742).
-      ref.invalidate(captureCountProvider);
+      // is empty (#742). Guarded: the clears are awaited, and this page can be
+      // popped while they run.
+      if (mounted) ref.invalidate(captureCountProvider);
       messenger.showSnackBar(
           SnackBar(content: Text(l10n.autoScorerClearedToast)));
     }
