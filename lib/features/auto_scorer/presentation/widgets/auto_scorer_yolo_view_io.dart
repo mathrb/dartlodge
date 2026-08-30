@@ -110,8 +110,8 @@ Future<void> _focusCenterThenSettle(YOLOViewController controller) async {
 /// hint. The confirm button is always clickable: with the four cals present it
 /// reads "Done aiming"; otherwise it reads "Continue without auto-scoring" and
 /// proceeds uncalibrated (manual scoring) after a one-time note. Zoom drives the
-/// native `setZoomLevel`; native
-/// overlays draw the detection boxes (no Dart-side coord mapping) — but the
+/// native `setZoomLevel`; the native overlays that draw the detection boxes (no
+/// Dart-side coord mapping) are off unless [showOverlays] is on (#738) — and the
 /// "Capture photo" button first re-focuses (see `_focusCenterThenSettle`) then
 /// grabs a clean full-resolution still via `capturePhoto(withOverlays: false)`,
 /// not the annotated preview snapshot.
@@ -436,7 +436,8 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
 /// ([AutoScorerSession.processDetectionFrame]); emitted darts go to the active
 /// `DartInputSink`. Capture-on-emit grabs a clean full-resolution still via
 /// `capturePhoto(withOverlays: false)` only when darts emit AND data-collection
-/// is on. Native overlays draw the on-screen boxes but are NOT in the capture.
+/// is on. The native overlays are off unless [showOverlays] is on (#738); even
+/// then they are drawn on screen only and are NOT in the capture.
 class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   const AutoScorerYoloPreview({
     super.key,
