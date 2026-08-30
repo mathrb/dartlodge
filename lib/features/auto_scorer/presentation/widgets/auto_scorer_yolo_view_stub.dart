@@ -1,5 +1,6 @@
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 
 /// Web no-op for the YOLOView auto-scorer views. The plugin is mobile-only (the
@@ -34,8 +35,9 @@ class AutoScorerYoloAimView extends StatelessWidget {
   final VoidCallback? onModelLoadFailed;
 
   @override
-  Widget build(BuildContext context) => const Scaffold(
-        body: Center(child: Text('Camera not available on this platform.')),
+  Widget build(BuildContext context) => Scaffold(
+        body: Center(
+            child: Text(AppLocalizations.of(context).autoScorerNotAvailable)),
       );
 }
 

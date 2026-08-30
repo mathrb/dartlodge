@@ -2104,6 +2104,30 @@
   "@autoScorerUncalibratedNotice": {
     "description": "One-time note shown when proceeding past aiming without calibration"
   },
+  "autoScorerCapturePhoto": "Capture photo",
+  "@autoScorerCapturePhoto": {
+    "description": "Aim view: button that saves a full-resolution still for training"
+  },
+  "autoScorerCaptureFrame": "Capture frame",
+  "@autoScorerCaptureFrame": {
+    "description": "In-game preview: tooltip of the icon button that saves a still for training"
+  },
+  "autoScorerCaptureFocusing": "Focusing…",
+  "@autoScorerCaptureFocusing": {
+    "description": "Capture button label/tooltip while the camera refocuses before the shot"
+  },
+  "autoScorerCaptureNeedsCollection": "Enable data collection to save frames",
+  "@autoScorerCaptureNeedsCollection": {
+    "description": "Toast when a manual capture is attempted with data collection turned off"
+  },
+  "autoScorerCaptureFailed": "Capture failed (no frame).",
+  "@autoScorerCaptureFailed": {
+    "description": "Toast when the camera returned no image for a manual capture"
+  },
+  "autoScorerCaptureSaved": "Frame saved for training",
+  "@autoScorerCaptureSaved": {
+    "description": "Toast confirming a manually captured frame was stored for training"
+  },
   "achievementFirst180Title": "First 180",
   "@achievementFirst180Title": {
     "description": "Achievement label"
