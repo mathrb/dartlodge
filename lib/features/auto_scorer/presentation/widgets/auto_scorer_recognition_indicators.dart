@@ -1,16 +1,11 @@
+/// The two renderings of [RecognitionState] (#739): a border halo around the
+/// camera preview ([RecognitionHalo], [RecognitionHaloOverlay]) and a row of
+/// four marker pips ([MarkerPips]).
+library;
+
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/recognition_state.dart';
 import 'package:flutter/material.dart';
-
-/// The two renderings of [RecognitionState] (#739): a border halo around the
-/// camera preview and a row of four marker pips.
-///
-/// Both are painted **around/beside** the preview, never on top of it at a
-/// detection coordinate: mapping detection space onto the YOLOView preview is
-/// the geometric risk this design deliberately avoids (it cannot be validated
-/// without a device). The halo carries the "is it working?" signal at no such
-/// risk, and it reads from the oche — which is what matters once the preview
-/// collapses to a vignette during play (#480).
 
 /// Halo thickness. Thick enough to read from throwing distance, thin enough not
 /// to eat the ~140px band preview.
@@ -45,6 +40,13 @@ BoxDecoration _haloDecoration(
 /// Wraps [child] in a border whose colour grades the recognition state — for a
 /// preview that is a box on the page (the in-game band and camera-first
 /// layouts).
+///
+/// The halo is painted **around** the preview, never on top of it at a
+/// detection coordinate: mapping detection space onto the YOLOView preview is
+/// the geometric risk this design deliberately avoids, and it cannot be
+/// validated without a device. The border carries the same "is it working?"
+/// signal at no such risk, and it reads from the oche — which is what matters
+/// once the preview collapses to a vignette during play (#480).
 class RecognitionHalo extends StatelessWidget {
   const RecognitionHalo({
     super.key,

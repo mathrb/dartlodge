@@ -62,11 +62,19 @@ void main() {
     expect(s.grade, RecognitionGrade.ready);
   });
 
-  test('only weak markers still grade as none — nothing counts yet', () {
+  test('only weak markers grade as partial, not none — nearly, not nothing', () {
     final s = state(const [p, p, p, p], const [0.1, 0.1, 0.1, 0.1]);
     expect(s.markers, everyElement(MarkerRecognition.weak));
     expect(s.foundCount, 0);
-    expect(s.grade, RecognitionGrade.none);
+    // Red is reserved for seeing nothing at all: an all-weak frame is a small
+    // reframe away, and the pips are already amber — the halo must agree.
+    expect(s.grade, RecognitionGrade.partial);
+  });
+
+  test('a single weak marker is enough to leave the none grade', () {
+    final s = state(const [null, null, null, p], const [null, null, null, 0.1]);
+    expect(s.foundCount, 0);
+    expect(s.grade, RecognitionGrade.partial);
   });
 
   test('the threshold moves the pips — the same frame at a lower threshold', () {

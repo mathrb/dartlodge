@@ -15,8 +15,9 @@ class DetectionFrame {
 
   /// Best confidence the model gave for each cal class `[cal1, cal2, cal3,
   /// cal4]`, or null where that class wasn't detected this frame. **Diagnostic
-  /// only** (surfaced in the HUD to tune the calibration threshold) — the
-  /// tracker reads [calPoints]/[hasCalibration], not this. Defaults to all-null
+  /// and advisory only** (the calibration-threshold readout, and the halo/pips
+  /// of `recognitionStateOf` in both camera views, #739) — the tracker reads
+  /// [calPoints]/[hasCalibration], not this. Defaults to all-null
   /// so non-detector constructors (tests) need not supply it.
   final List<double?> calConfidences;
 
@@ -24,8 +25,9 @@ class DetectionFrame {
   /// where that class wasn't detected this frame — index-aligned with
   /// [calConfidences]. **Diagnostic only**, like [calConfidences]: unlike
   /// [calPoints] (all-or-nothing) this exposes a cal's position even when the
-  /// full set is incomplete, so the aim overlay can show *which* cals the model
-  /// sees while the user reframes. The tracker does not read it.
+  /// full set is incomplete, so the aim view can show *which* cals the model
+  /// sees while the user reframes, and the in-game preview can grade its halo
+  /// (#739). The tracker does not read it.
   final List<BoardPoint?> calBestPoints;
 
   /// The model's confidence for each dart candidate — index-aligned with

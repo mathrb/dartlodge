@@ -16,14 +16,16 @@ enum MarkerRecognition {
 
 /// Overall recognition grade, the halo's colour: nothing / getting there / good.
 enum RecognitionGrade {
-  /// No marker counts. The camera does not recognise the board.
+  /// The model sees nothing of the board — not even below the threshold.
   none,
 
-  /// Some markers count but not all four, or all four count but the framing is
+  /// Something is recognised but it is not a settled four: markers seen only
+  /// weakly, some markers counting, or all four counting while the framing is
   /// still moving.
   partial,
 
-  /// All four markers count and the framing is steady.
+  /// All four markers count and the caller's steadiness signal agrees — see
+  /// [recognitionStateOf]'s `isStable`, whose meaning each view chooses.
   ready,
 }
 
@@ -55,10 +57,17 @@ typedef RecognitionState = ({
 /// state, the homography, or scoring — those read `DetectionFrame.calPoints` /
 /// `hasCalibration` as before.
 ///
-/// [isStable] comes from the aim view's `CalibrationStabilityGate`; pass false
-/// where no steadiness signal exists (the in-game preview), which caps the grade
-/// at [RecognitionGrade.partial] — honest, since an unsteady four is exactly
-/// what "amber" is for.
+/// [isStable] is what separates a green grade from an amber one once all four
+/// markers count, and its meaning is the caller's to choose:
+///
+/// - the **aim view** passes its `CalibrationStabilityGate` verdict, because
+///   aiming is exactly the moment to ask the player to hold still;
+/// - the **in-game preview** has no steadiness gate (the running tracker
+///   re-derives the transform live, #687) and passes "the board is calibrated
+///   this frame", so the halo turns green as soon as recognition succeeds.
+///
+/// Passing a constant false is also valid and simply caps the grade at
+/// [RecognitionGrade.partial].
 RecognitionState recognitionStateOf({
   required List<BoardPoint?> calBestPoints,
   required List<double?> calConfidences,
@@ -78,12 +87,15 @@ RecognitionState recognitionStateOf({
     }
   }
   final found = markers.where((m) => m == MarkerRecognition.found).length;
-  final grade = found == 0
+  // Red is reserved for "the camera sees nothing of the board". Markers seen
+  // below the threshold grade amber even though none of them counts yet: that
+  // is the whole point of telling weak apart from missing, and it keeps the
+  // halo agreeing with the pips, which are already showing amber outlines.
+  final seenAny = markers.any((m) => m != MarkerRecognition.missing);
+  final grade = !seenAny
       ? RecognitionGrade.none
-      : found < 4
-          ? RecognitionGrade.partial
-          : isStable
-              ? RecognitionGrade.ready
-              : RecognitionGrade.partial;
+      : found == 4 && isStable
+          ? RecognitionGrade.ready
+          : RecognitionGrade.partial;
   return (markers: markers, grade: grade, foundCount: found);
 }

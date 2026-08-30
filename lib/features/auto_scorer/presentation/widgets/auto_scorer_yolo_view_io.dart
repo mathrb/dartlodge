@@ -516,8 +516,11 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   /// Recognition grade for the halo (#739), held as a notifier rather than
   /// widget state: `_onResults` fires at the inference rate, and calling
   /// `setState` that often would rebuild `YOLOView` along with everything else.
-  /// Only the border listens. Steadiness is the aim view's signal, so in-game
-  /// the grade reads "all four markers count this frame" as ready.
+  /// Only the border listens.
+  ///
+  /// There is no steadiness gate here — that belongs to aiming, and the running
+  /// tracker re-derives the transform live (#687) — so `isStable` is fed the
+  /// frame's own calibration: green means "the board is recognised right now".
   final ValueNotifier<RecognitionGrade> _grade =
       ValueNotifier(RecognitionGrade.none);
 
@@ -665,12 +668,17 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     final (:frame, :raw) = _detectionFrameFrom(
         results, widget.calConfidence, widget.dartConfidence);
     _latest = frame;
-    _grade.value = recognitionStateOf(
-      calBestPoints: frame.calBestPoints,
-      calConfidences: frame.calConfidences,
-      calMinConfidence: widget.calConfidence,
-      isStable: frame.hasCalibration,
-    ).grade;
+    // Guard: an in-flight onResult can fire while this state is being disposed,
+    // and `_grade` is disposed here — same hazard the shell's `onStatus` guard
+    // covers for its own notifier (#419).
+    if (mounted) {
+      _grade.value = recognitionStateOf(
+        calBestPoints: frame.calBestPoints,
+        calConfidences: frame.calConfidences,
+        calMinConfidence: widget.calConfidence,
+        isStable: frame.hasCalibration,
+      ).grade;
+    }
     final result = widget.session.processDetectionFrame(
       frame,
       rawDetections: raw,
