@@ -29,11 +29,19 @@ Color recognitionColor(BuildContext context, RecognitionGrade grade) {
 /// the border while the player is aiming.
 const Duration _kHaloFade = Duration(milliseconds: 250);
 
+/// Colour of a halo whose grade may be null — "say nothing" (#758): the border
+/// still frames the preview, in the ordinary chrome outline, so suppressing the
+/// alarm never shifts the layout.
+Color _haloColor(BuildContext context, RecognitionGrade? grade) =>
+    grade == null
+        ? Theme.of(context).colorScheme.outlineVariant
+        : recognitionColor(context, grade);
+
 BoxDecoration _haloDecoration(
-        BuildContext context, RecognitionGrade grade, double radius) =>
+        BuildContext context, RecognitionGrade? grade, double radius) =>
     BoxDecoration(
       border: Border.all(
-          color: recognitionColor(context, grade), width: kRecognitionHaloWidth),
+          color: _haloColor(context, grade), width: kRecognitionHaloWidth),
       borderRadius: BorderRadius.circular(radius),
     );
 
@@ -55,7 +63,9 @@ class RecognitionHalo extends StatelessWidget {
     this.borderRadius = 8,
   });
 
-  final RecognitionGrade grade;
+  /// Null paints the neutral border instead of a grade colour — see
+  /// [haloGradeOf], which is what decides it in game (#758).
+  final RecognitionGrade? grade;
   final Widget child;
   final double borderRadius;
 

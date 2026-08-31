@@ -50,6 +50,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
     required this.gameId,
     required this.modelPath,
     required this.currentTurnOrdinal,
+    required this.everCalibrated,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
@@ -63,6 +64,7 @@ class AutoScorerYoloPreview extends StatelessWidget {
   final String gameId;
   final String modelPath;
   final int Function() currentTurnOrdinal;
+  final bool Function() everCalibrated;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;

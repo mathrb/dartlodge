@@ -431,6 +431,7 @@ class _AutoScorerBoardOverlayState
               onModelLoadFailed: _onModelLoadFailed,
               expand: widget.expand,
               currentTurnOrdinal: () => _turnOrdinal,
+              everCalibrated: () => _everCalibrated,
               calConfidence:
                   ref.watch(autoScorerCalConfidenceProvider).value ??
                       kDefaultConfidence,

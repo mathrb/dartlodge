@@ -568,6 +568,7 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     required this.gameId,
     required this.modelPath,
     required this.currentTurnOrdinal,
+    required this.everCalibrated,
     required this.calConfidence,
     required this.dartConfidence,
     required this.initialZoom,
@@ -583,6 +584,14 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   /// The resolved model to load — bundled asset or staged OTA file (#715).
   final String modelPath;
   final int Function() currentTurnOrdinal;
+
+  /// Whether this camera session has ever been calibrated — read live, like
+  /// [currentTurnOrdinal], because the host keeps it in a plain field.
+  ///
+  /// It cannot be latched here: the aim step seeds it BEFORE this preview
+  /// exists, so a preview that only watched its own frames would treat a board
+  /// lost right after a successful aim as if it had never been recognised.
+  final bool Function() everCalibrated;
   final double calConfidence;
   final double dartConfidence;
   final double initialZoom;
@@ -619,7 +628,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   /// There is no steadiness gate here — that belongs to aiming, and the running
   /// tracker re-derives the transform live (#687) — so `isStable` is fed the
   /// frame's own calibration: green means "the board is recognised right now".
-  final ValueNotifier<RecognitionGrade> _grade =
+  final ValueNotifier<RecognitionGrade?> _grade =
       ValueNotifier(RecognitionGrade.none);
 
   /// Model path currently fed to `YOLOView`. Seeded from the resolved prop; a
@@ -770,12 +779,20 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     // and `_grade` is disposed here — same hazard the shell's `onStatus` guard
     // covers for its own notifier (#419).
     if (mounted) {
-      _grade.value = recognitionStateOf(
-        calBestPoints: frame.calBestPoints,
-        calConfidences: frame.calConfidences,
-        calMinConfidence: widget.calConfidence,
-        isStable: frame.hasCalibration,
-      ).grade;
+      // A never-calibrated session must not be painted as an alarm (#758) —
+      // the chip calls that state learning mode and stays calm about it.
+      // Reading the host's flag here is a frame behind at most, and only for
+      // the transition INTO calibration, whose grade is never the suppressed
+      // one.
+      _grade.value = haloGradeOf(
+        grade: recognitionStateOf(
+          calBestPoints: frame.calBestPoints,
+          calConfidences: frame.calConfidences,
+          calMinConfidence: widget.calConfidence,
+          isStable: frame.hasCalibration,
+        ).grade,
+        everCalibrated: widget.everCalibrated(),
+      );
     }
     final result = widget.session.processDetectionFrame(
       frame,
@@ -855,7 +872,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     // native boxes are off by default (#738), and it is what reads from the
     // oche when the preview is collapsed to a vignette (#480). Listening
     // narrowly keeps the inference-rate updates off `YOLOView`.
-    final haloed = ValueListenableBuilder<RecognitionGrade>(
+    final haloed = ValueListenableBuilder<RecognitionGrade?>(
       valueListenable: _grade,
       builder: (_, grade, child) =>
           RecognitionHalo(grade: grade, child: child!),
