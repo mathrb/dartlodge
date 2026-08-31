@@ -85,6 +85,12 @@ class AutoScorerStatusChip extends StatelessWidget {
       // (#764). Shrinking keeps every word — an ellipsis would drop the
       // actionable half of "Turn full — advance". Same idiom as the ATC
       // summary headline (#261); labels that fit render at full size.
+      //
+      // Accepted trade-off: scaleDown has no floor, so a large system text
+      // scale can be shrunk back below its requested size here. That is still
+      // strictly better than what it replaces — the same setting used to cut
+      // the label mid-word — and the room comes back once the camera actions
+      // move off this row (#761).
       label: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: AlignmentDirectional.centerStart,
