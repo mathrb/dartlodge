@@ -40,9 +40,9 @@ void main() {
   test('maps each phase to a label', () {
     expect(describe(TrackerPhase.noCalibration).label, 'Aim at the board');
     expect(describe(TrackerPhase.needsCalibration).label,
-        'Camera needs calibration');
+        'Calibration lost');
     expect(describe(TrackerPhase.idle).label, 'Ready');
-    expect(describe(TrackerPhase.turnFull).label, 'Turn full — advance');
+    expect(describe(TrackerPhase.turnFull).label, 'Turn full');
     expect(describe(TrackerPhase.cameraMoved).label, 'Camera moved');
     expect(describe(TrackerPhase.rebaselined).label, 'Board cleared');
   });
@@ -58,7 +58,7 @@ void main() {
         'Learning mode');
     // Same phase, but the board HAD been recognised: that is a real loss.
     expect(describe(TrackerPhase.needsCalibration, everCalibrated: true).label,
-        'Camera needs calibration');
+        'Calibration lost');
   });
 
   testWidgets('learning mode never renders errorContainer (#741)',
@@ -97,5 +97,83 @@ void main() {
     // titleMedium = 18px — the chip is the at-distance status/alert line now
     // that the camera preview collapses to a vignette.
     expect(label.style?.fontSize, 18);
+  });
+
+  testWidgets(
+      'a label too long for the row is scaled down, never clipped (#764)',
+      (tester) async {
+    // Dutch has the longest calibration label of the seven locales, and the
+    // chip only ever gets part of the camera bar: the rest goes to the
+    // contribution counter and the camera actions.
+    const available = 180.0;
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('nl'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: available,
+              child: AutoScorerStatusChip(
+                status: TrackerStatus(
+                    phase: TrackerPhase.needsCalibration,
+                    dartsOnBoard: 0,
+                    dartsThisTurn: 0),
+                everCalibrated: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+
+    const label = 'Kalibratie verloren';
+    // Every word survives: an ellipsis would drop the actionable half.
+    expect(find.text(label), findsOneWidget);
+    // The label really is wider than the room it gets here. `getSize` is the
+    // LAYOUT size, which a FittedBox never changes — it lays its child out
+    // unconstrained and scales at paint time.
+    final natural = tester.getSize(find.text(label)).width;
+    final box = tester.getSize(find.byType(FittedBox)).width;
+    expect(natural, greaterThan(box));
+    // So assert on the PAINTED rect, which carries the transform: that is the
+    // only measurement that tells a real scale-down apart from a label left at
+    // full size and clipped by the chip — the #764 bug itself.
+    final painted = tester.getRect(find.text(label)).width;
+    expect(painted, lessThan(natural));
+    expect(painted, lessThanOrEqualTo(box));
+  });
+
+  testWidgets('a label that fits still renders at the full at-distance size',
+      (tester) async {
+    // The scale-down is a safety net, not the normal path: #480 wants this
+    // chip read from the oche, and the fontSize assertion above only checks
+    // the DECLARED style, which a FittedBox does not change. Assert the
+    // painted size too, so a label that outgrows the row can never quietly
+    // become the norm.
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: 220,
+              child: AutoScorerStatusChip(
+                status: TrackerStatus(
+                    phase: TrackerPhase.turnFull,
+                    dartsOnBoard: 3,
+                    dartsThisTurn: 3),
+                everCalibrated: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+
+    final label = find.text('Turn full');
+    expect(tester.getRect(label).width, tester.getSize(label).width);
   });
 }

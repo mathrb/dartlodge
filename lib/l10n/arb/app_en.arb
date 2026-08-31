@@ -2163,9 +2163,9 @@
   "@autoScorerStatusAim": {
     "description": "Status chip: aiming, no calibration yet"
   },
-  "autoScorerStatusNeedsCal": "Camera needs calibration",
+  "autoScorerStatusNeedsCal": "Calibration lost",
   "@autoScorerStatusNeedsCal": {
-    "description": "Status chip: needs calibration"
+    "description": "Status chip: the board was calibrated and is no longer recognised"
   },
   "autoScorerStatusLearningMode": "Learning mode",
   "@autoScorerStatusLearningMode": {
@@ -2188,7 +2188,7 @@
       }
     }
   },
-  "autoScorerStatusTurnFull": "Turn full — advance",
+  "autoScorerStatusTurnFull": "Turn full",
   "@autoScorerStatusTurnFull": {
     "description": "Status chip: 3 darts in, advance the turn"
   },
