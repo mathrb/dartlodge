@@ -98,4 +98,44 @@ void main() {
     // that the camera preview collapses to a vignette.
     expect(label.style?.fontSize, 18);
   });
+
+  testWidgets(
+      'a label too long for the row is scaled down, never clipped (#764)',
+      (tester) async {
+    // Dutch has the longest calibration label of the seven locales, and the
+    // chip only ever gets part of the camera bar: the rest goes to the
+    // contribution counter and the camera actions.
+    const available = 180.0;
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('nl'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: const Scaffold(
+        body: Row(
+          children: [
+            SizedBox(
+              width: available,
+              child: AutoScorerStatusChip(
+                status: TrackerStatus(
+                    phase: TrackerPhase.needsCalibration,
+                    dartsOnBoard: 0,
+                    dartsThisTurn: 0),
+                everCalibrated: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
+
+    const label = 'Camera moet gekalibreerd worden';
+    // Every word survives: an ellipsis would drop the actionable half.
+    expect(find.text(label), findsOneWidget);
+    // The label really is wider than the room it gets here...
+    final natural = tester.getSize(find.text(label)).width;
+    final box = tester.getSize(find.byType(FittedBox)).width;
+    expect(natural, greaterThan(box));
+    // ...so it is the scale-down path that keeps it inside the chip.
+    expect(box, lessThanOrEqualTo(available));
+  });
 }
