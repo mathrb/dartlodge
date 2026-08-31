@@ -554,6 +554,13 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
 /// `capturePhoto(withOverlays: false)` only when darts emit AND data-collection
 /// is on. The native overlays are off unless [showOverlays] is on (#738); even
 /// then they are drawn on screen only and are NOT in the capture.
+///
+/// It carries no controls: during play every capture worth having is taken on
+/// its own (on emission, on a correction, on a hand-entered score), and the
+/// manual button that used to sit here was inert in the collapsed vignette
+/// anyway — an unlabelled frame is worth less than the labelled ones the game
+/// already produces (#745). Framing shots stay in the aim view, where taking
+/// one is the point.
 class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   const AutoScorerYoloPreview({
     super.key,
@@ -602,7 +609,6 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     implements CaptureCorrectionSink {
   final YOLOViewController _controller = YOLOViewController();
   bool _nativePushed = false;
-  bool _capturing = false;
   DetectionFrame _latest = _emptyFrame;
 
   /// Recognition grade for the halo (#739), held as a notifier rather than
@@ -820,49 +826,12 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
     }
   }
 
-  Future<void> _manualCapture() async {
-    if (_capturing) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = AppLocalizations.of(context);
-    // Respect the data-collection opt-in (mirrors `_captureEmitted`/`correctDart`):
-    // the store is non-null even when the toggle is off, so without this gate a
-    // manual capture would write a frame the user opted out of.
-    if (!(ref.read(dataCollectionEnabledProvider).value ?? false)) {
-      messenger.showSnackBar(SnackBar(
-          content: Text(l10n.autoScorerCaptureNeedsCollection)));
-      return;
-    }
-    setState(() => _capturing = true);
-    try {
-      // Focus first: capturePhoto doesn't trigger AF, so a manual shot is often
-      // blurry without re-focusing the board centre (see kAutoScorerFocusSettle).
-      await _focusCenterThenSettle(_controller);
-      if (!mounted) return;
-      // Full-resolution still without the baked-in overlay (see `_capture`).
-      final bytes = await _controller.capturePhoto(withOverlays: false);
-      if (!mounted) return;
-      if (bytes == null) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(l10n.autoScorerCaptureFailed)));
-        return;
-      }
-      await widget.session.persistManualCapture(_latest, bytes,
-          turnOrdinal: widget.currentTurnOrdinal(), gameId: widget.gameId);
-      if (!mounted) return;
-      messenger.showSnackBar(
-          SnackBar(content: Text(l10n.autoScorerCaptureSaved)));
-    } finally {
-      if (mounted) setState(() => _capturing = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Reset the auto-advance guard on every turn advance — manual NEXT and our
     // own auto-advance both bump activeTurnSignal — so each new turn requires a
     // fresh dart sighting before it can auto-advance again.
     ref.listen<int>(activeTurnSignalProvider, (_, __) => _sawDartsThisTurn = false);
-    final l10n = AppLocalizations.of(context);
     final stack = Stack(
       fit: StackFit.expand,
       children: [
@@ -879,28 +848,6 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
               analysisResolution: kAutoScorerAnalysisResolution),
           onResult: _onResults,
           onModelError: _onModelError,
-        ),
-        Positioned(
-          top: 4,
-          right: 4,
-          child: Material(
-            color: Colors.black.withValues(alpha: 0.4),
-            shape: const CircleBorder(),
-            child: IconButton(
-              tooltip: _capturing
-                  ? l10n.autoScorerCaptureFocusing
-                  : l10n.autoScorerCaptureFrame,
-              icon: _capturing
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.add_a_photo_outlined,
-                      color: Colors.white, size: 20),
-              onPressed: _capturing ? null : _manualCapture,
-            ),
-          ),
         ),
       ],
     );
