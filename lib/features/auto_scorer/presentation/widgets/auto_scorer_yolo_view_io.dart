@@ -17,8 +17,11 @@ import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_sc
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_recognition_indicators.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_escalation.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_explanation_panel.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -169,6 +172,20 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   bool _nativePushed = false;
   bool _capturing = false;
   DetectionFrame? _latest;
+
+  /// When the current run of frames-without-the-four-markers started (#743).
+  /// Reset on every successful recognition, so the explanation only appears
+  /// after a sustained failure — never after a marker blinks out.
+  DateTime _unrecognisedSince = DateTime.now();
+
+  /// The player took the panel's "Keep aiming". Held until recognition returns,
+  /// so the panel cannot come back every [kAimExplainAfter] seconds.
+  bool _keepAiming = false;
+
+  /// Re-evaluates the escalation on the clock rather than only on frames: the
+  /// case worth explaining includes a detector that has stopped reporting
+  /// altogether, which produces no rebuilds of its own.
+  Timer? _explainTicker;
   CalibrationStability _stability = (stableFrames: 0, isReady: false);
   late double _zoom = widget.initialZoom.clamp(_zoomMin, _zoomMax);
 
@@ -177,7 +194,16 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   late String _effectivePath = widget.modelPath;
 
   @override
+  void initState() {
+    super.initState();
+    _explainTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
   void dispose() {
+    _explainTicker?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -210,6 +236,13 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     setState(() {
       _latest = frame;
       _stability = stability;
+      if (frame.hasCalibration) {
+        // Recognition is back: restart the patience clock and re-arm the
+        // panel, so a setup that works and then stops working can explain
+        // itself again.
+        _unrecognisedSince = DateTime.now();
+        _keepAiming = false;
+      }
     });
   }
 
@@ -311,6 +344,27 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     await _finish(AimOutcome.uncalibrated);
   }
 
+  /// The panel's primary action (#743): proceed and score by hand. The panel
+  /// has just said everything the one-time uncalibrated notice says, so mark it
+  /// seen rather than showing it on top of the explanation the player has just
+  /// read — and finish on the same `uncalibrated` outcome as the button, so the
+  /// existing path is unchanged.
+  Future<void> _playAnyway() async {
+    await ref
+        .read(autoScorerUncalibratedNoticeSeenProvider.notifier)
+        .setSeen(true);
+    if (!mounted) return;
+    await _finish(AimOutcome.uncalibrated);
+  }
+
+  /// Turn recording on from the panel. Mirrors the settings page's single
+  /// "Record" switch (#686), which drives the training photos and the session
+  /// trace together — so enabling it here means the same thing it means there.
+  void _enableRecording() {
+    ref.read(dataCollectionEnabledProvider.notifier).setEnabled(true);
+    ref.read(sessionRecordingEnabledProvider.notifier).setEnabled(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -325,6 +379,14 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
       calConfidences: _latest?.calConfidences ?? const [null, null, null, null],
       calMinConfidence: widget.calConfidence,
       isStable: ready,
+    );
+    // After a sustained failure to recognise the board, the one-line nudge
+    // gives way to an explanation (#743). Time-based and presentational: the
+    // confirm button below keeps working exactly as before, panel or not.
+    final explain = shouldExplainAim(
+      withoutRecognition: DateTime.now().difference(_unrecognisedSince),
+      recognisedNow: calibrated,
+      keepAimingChosen: _keepAiming,
     );
     final hint = _latest == null
         ? l10n.autoScorerAimHint
@@ -373,9 +435,20 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                     // marker is missing is what the count never carried.
                     MarkerPips(markers: recognition.markers),
                     const SizedBox(height: 8),
-                    Text(hint,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white)),
+                    if (explain)
+                      AimExplanationPanel(
+                        recordingOn:
+                            ref.watch(dataCollectionEnabledProvider).value ??
+                                false,
+                        onPlayAnyway: _playAnyway,
+                        onKeepAiming: () =>
+                            setState(() => _keepAiming = true),
+                        onEnableRecording: _enableRecording,
+                      )
+                    else
+                      Text(hint,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               ),

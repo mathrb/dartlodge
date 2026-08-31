@@ -64,8 +64,17 @@ class _AutoScorerSettingsPageState
     return ListTile(
       leading: const Icon(Icons.model_training),
       title: Text(l10n.autoScorerModelTitle),
-      subtitle: Text(
-        l10n.autoScorerModelStatus(version, _modelStateLabel(l10n, status)),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.autoScorerModelStatus(
+              version, _modelStateLabel(l10n, status))),
+          // Closes the loop the aim-view panel describes (#743, S2.5): this
+          // tile is where a retrained model actually lands, and the one place
+          // to say plainly that no learning happens on the phone.
+          Text(l10n.autoScorerModelLoopNote,
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
       ),
       trailing: downloading
           ? const SizedBox(
