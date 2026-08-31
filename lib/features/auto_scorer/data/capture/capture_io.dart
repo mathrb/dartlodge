@@ -171,6 +171,14 @@ Future<String> reserveExportZipPath() async {
   return p.join(tmp.path, 'dartlodge-export-${_exportStamp()}.zip');
 }
 
+/// Size in bytes of an already-written export zip, or 0 when it is missing.
+/// Used by the pre-send screen (#744) to state how big the file is before the
+/// player sends it.
+Future<int> exportZipSizeBytes(String path) async {
+  final file = File(path);
+  return await file.exists() ? file.length() : 0;
+}
+
 /// Hand an already-written export zip at [path] to the OS share sheet — no
 /// photo-library permission needed, and no in-memory copy of the (possibly
 /// large) zip (#468).
