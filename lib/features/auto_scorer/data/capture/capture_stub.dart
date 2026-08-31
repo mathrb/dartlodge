@@ -46,3 +46,5 @@ Future<CaptureStore> openDefaultCaptureStore() async =>
 Future<String> reserveExportZipPath() async => '';
 
 Future<void> shareCaptureZipFile(String path) async {}
+
+Future<int> exportZipSizeBytes(String path) async => 0;

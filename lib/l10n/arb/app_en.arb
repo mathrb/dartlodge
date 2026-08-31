@@ -1842,6 +1842,89 @@
     "description": "Screen-reader label of the in-game contribution counter",
     "placeholders": { "count": { "type": "int" } }
   },
+  "autoScorerSizeKb": "{size} kB",
+  "@autoScorerSizeKb": {
+    "description": "File size in kilobytes (unit symbol is localised)",
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "autoScorerSizeMb": "{size} MB",
+  "@autoScorerSizeMb": {
+    "description": "File size in megabytes (unit symbol is localised)",
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "autoScorerSizeGb": "{size} GB",
+  "@autoScorerSizeGb": {
+    "description": "File size in gigabytes (unit symbol is localised)",
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "autoScorerPreSendTitle": "Before you send",
+  "@autoScorerPreSendTitle": {
+    "description": "Pre-send screen title"
+  },
+  "autoScorerPreSendContentsTitle": "What's in this file",
+  "@autoScorerPreSendContentsTitle": {
+    "description": "Pre-send section: what the zip contains"
+  },
+  "autoScorerPreSendPhotos": "{count, plural, =0{No training photos} one{1 training photo} other{{count} training photos}}",
+  "@autoScorerPreSendPhotos": {
+    "description": "Pre-send: how many training photos are in the zip",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "autoScorerPreSendSessions": "{count, plural, =0{No recorded sessions} one{1 recorded session} other{{count} recorded sessions}}",
+  "@autoScorerPreSendSessions": {
+    "description": "Pre-send: how many recorded sessions are in the zip",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "autoScorerPreSendSize": "{size} in total",
+  "@autoScorerPreSendSize": {
+    "description": "Pre-send: total size of the zip",
+    "placeholders": { "size": { "type": "String" } }
+  },
+  "autoScorerPreSendPhotosTitle": "What the photos show",
+  "@autoScorerPreSendPhotosTitle": {
+    "description": "Pre-send section: what the photos show"
+  },
+  "autoScorerPreSendPhotosBody": "They were taken by your phone where it was mounted, so besides the board they can show your room and anyone in it. Have a look before you send them.",
+  "@autoScorerPreSendPhotosBody": {
+    "description": "Pre-send: the photos show the player's board and room; look before sending"
+  },
+  "autoScorerPreSendWhereTitle": "Where it goes",
+  "@autoScorerPreSendWhereTitle": {
+    "description": "Pre-send section: where the file goes"
+  },
+  "autoScorerPreSendStep1": "1. In the share sheet, save the zip to your own cloud storage (Google Drive, for example).",
+  "@autoScorerPreSendStep1": {
+    "description": "Pre-send step 1: save the zip to your own cloud storage"
+  },
+  "autoScorerPreSendStep2": "2. Share that file with {email}. The zip is too big to send as an e-mail attachment, which is why it goes through your own storage first.",
+  "@autoScorerPreSendStep2": {
+    "description": "Pre-send step 2: share that file with the maintainer, and why it cannot be e-mailed",
+    "placeholders": { "email": { "type": "String" } }
+  },
+  "autoScorerPreSendCopyAddress": "Copy the address",
+  "@autoScorerPreSendCopyAddress": {
+    "description": "Pre-send: copy the destination address"
+  },
+  "autoScorerPreSendAddressCopied": "Address copied",
+  "@autoScorerPreSendAddressCopied": {
+    "description": "Snackbar: the destination address was copied"
+  },
+  "autoScorerPreSendNextTitle": "What happens next",
+  "@autoScorerPreSendNextTitle": {
+    "description": "Pre-send section: what happens after sending"
+  },
+  "autoScorerPreSendNextBody": "Your photos join the training set, the model is retrained, and the new model reaches the app on its own. Nothing is learned on your phone.",
+  "@autoScorerPreSendNextBody": {
+    "description": "Pre-send: the photos are added to the training set and a new model returns through the app"
+  },
+  "autoScorerPreSendShare": "Open the share sheet",
+  "@autoScorerPreSendShare": {
+    "description": "Pre-send primary action: open the OS share sheet"
+  },
+  "autoScorerPreSendNotNow": "Not now",
+  "@autoScorerPreSendNotNow": {
+    "description": "Pre-send secondary action: do not send now"
+  },
   "autoScorerExportTitle": "Export recordings",
   "@autoScorerExportTitle": {
     "description": "Tile: export captured frames and recorded sessions as a zip"

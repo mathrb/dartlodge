@@ -8,27 +8,27 @@ part of 'data_collection_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The "Collect training data" opt-in (#381 §6) — distinct from the "Use
+/// The training-photo capture opt-in (#381 §6) — distinct from the "Use
 /// auto-scoring" switch (#382). Default **off**: we never silently hoard board
-/// photos. The Settings UI row that toggles this is added with the rest of the
-/// auto-scorer Settings integration in #382; this is the persisted state +
-/// gating the capture pipeline consults.
+/// photos. Since #686 the single "Record for debugging & training" Settings
+/// toggle drives this together with [SessionRecordingEnabled]; this is the
+/// persisted state + gating the capture pipeline consults.
 
 @ProviderFor(DataCollectionEnabled)
 final dataCollectionEnabledProvider = DataCollectionEnabledProvider._();
 
-/// The "Collect training data" opt-in (#381 §6) — distinct from the "Use
+/// The training-photo capture opt-in (#381 §6) — distinct from the "Use
 /// auto-scoring" switch (#382). Default **off**: we never silently hoard board
-/// photos. The Settings UI row that toggles this is added with the rest of the
-/// auto-scorer Settings integration in #382; this is the persisted state +
-/// gating the capture pipeline consults.
+/// photos. Since #686 the single "Record for debugging & training" Settings
+/// toggle drives this together with [SessionRecordingEnabled]; this is the
+/// persisted state + gating the capture pipeline consults.
 final class DataCollectionEnabledProvider
     extends $AsyncNotifierProvider<DataCollectionEnabled, bool> {
-  /// The "Collect training data" opt-in (#381 §6) — distinct from the "Use
+  /// The training-photo capture opt-in (#381 §6) — distinct from the "Use
   /// auto-scoring" switch (#382). Default **off**: we never silently hoard board
-  /// photos. The Settings UI row that toggles this is added with the rest of the
-  /// auto-scorer Settings integration in #382; this is the persisted state +
-  /// gating the capture pipeline consults.
+  /// photos. Since #686 the single "Record for debugging & training" Settings
+  /// toggle drives this together with [SessionRecordingEnabled]; this is the
+  /// persisted state + gating the capture pipeline consults.
   DataCollectionEnabledProvider._()
     : super(
         from: null,
@@ -51,11 +51,11 @@ final class DataCollectionEnabledProvider
 String _$dataCollectionEnabledHash() =>
     r'81e50eed57200a7db196a979bf9a240d885e66c1';
 
-/// The "Collect training data" opt-in (#381 §6) — distinct from the "Use
+/// The training-photo capture opt-in (#381 §6) — distinct from the "Use
 /// auto-scoring" switch (#382). Default **off**: we never silently hoard board
-/// photos. The Settings UI row that toggles this is added with the rest of the
-/// auto-scorer Settings integration in #382; this is the persisted state +
-/// gating the capture pipeline consults.
+/// photos. Since #686 the single "Record for debugging & training" Settings
+/// toggle drives this together with [SessionRecordingEnabled]; this is the
+/// persisted state + gating the capture pipeline consults.
 
 abstract class _$DataCollectionEnabled extends $AsyncNotifier<bool> {
   FutureOr<bool> build();
@@ -75,18 +75,24 @@ abstract class _$DataCollectionEnabled extends $AsyncNotifier<bool> {
   }
 }
 
-/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-/// behaviour is unchanged. Only meaningful while data collection is on.
+/// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+/// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+/// not a flood of easy/correct examples — so "Mistakes only" is the sane
+/// default. Only meaningful while data collection is on.
 
 @ProviderFor(CaptureModeSetting)
 final captureModeSettingProvider = CaptureModeSettingProvider._();
 
-/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-/// behaviour is unchanged. Only meaningful while data collection is on.
+/// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+/// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+/// not a flood of easy/correct examples — so "Mistakes only" is the sane
+/// default. Only meaningful while data collection is on.
 final class CaptureModeSettingProvider
     extends $AsyncNotifierProvider<CaptureModeSetting, CaptureMode> {
-  /// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-  /// behaviour is unchanged. Only meaningful while data collection is on.
+  /// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+  /// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+  /// not a flood of easy/correct examples — so "Mistakes only" is the sane
+  /// default. Only meaningful while data collection is on.
   CaptureModeSettingProvider._()
     : super(
         from: null,
@@ -107,10 +113,12 @@ final class CaptureModeSettingProvider
 }
 
 String _$captureModeSettingHash() =>
-    r'a70c5603fde9f1efd1db611c4826e8c510187b0f';
+    r'964703e8c79a0b4aac5e42fecbee8384b171e240';
 
-/// Persisted [CaptureMode] (#457), default [CaptureMode.all] so existing
-/// behaviour is unchanged. Only meaningful while data collection is on.
+/// Persisted [CaptureMode] (#457), default [CaptureMode.partial] (#686): for a
+/// 1.0 user the useful contribution is the model's mistakes (corrected frames),
+/// not a flood of easy/correct examples — so "Mistakes only" is the sane
+/// default. Only meaningful while data collection is on.
 
 abstract class _$CaptureModeSetting extends $AsyncNotifier<CaptureMode> {
   FutureOr<CaptureMode> build();
