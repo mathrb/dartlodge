@@ -1911,6 +1911,10 @@
   "@autoScorerModelUpdateReady": {
     "description": "Model update state: a newer model was downloaded and takes effect at the next scoring session"
   },
+  "autoScorerModelLoopNote": "Retrained models arrive here on their own. Your phone never learns while you play.",
+  "@autoScorerModelLoopNote": {
+    "description": "Detection-model tile: how a retrained model reaches the app, and that nothing is learned on the phone"
+  },
   "autoScorerModelCheckNow": "Check now",
   "@autoScorerModelCheckNow": {
     "description": "Button: trigger an immediate check for a newer detection model"
@@ -2140,6 +2144,38 @@
   "autoScorerCalibratedSteadyHint": "Calibrated — tap Done aiming when steady",
   "@autoScorerCalibratedSteadyHint": {
     "description": "Aim view hint: 4 markers found, button already enabled, steadiness is advisory"
+  },
+  "autoScorerExplainTitle": "The camera can't find your board",
+  "@autoScorerExplainTitle": {
+    "description": "Aim view panel: heading when the board is never recognised"
+  },
+  "autoScorerExplainCauses": "It looks for four points on the outer wire of the scoring area. A board it hasn't seen before, dim or uneven light, a very head-on angle, or soft-tip equipment can all stop it from finding them.",
+  "@autoScorerExplainCauses": {
+    "description": "Aim view panel: what usually prevents recognition"
+  },
+  "autoScorerExplainLoop": "You can play right now and score by hand. With recording on, each score you type is saved with a photo of your board; sending those photos lets the model be retrained, and a new model reaches the app on its own later. Nothing is learned on your phone while you play.",
+  "@autoScorerExplainLoop": {
+    "description": "Aim view panel: what playing by hand contributes, and that no learning happens on the phone"
+  },
+  "autoScorerExplainPlayAnyway": "Play anyway",
+  "@autoScorerExplainPlayAnyway": {
+    "description": "Aim view panel: primary action, proceed without auto-scoring"
+  },
+  "autoScorerExplainKeepAiming": "Keep aiming",
+  "@autoScorerExplainKeepAiming": {
+    "description": "Aim view panel: secondary action, dismiss and keep framing the board"
+  },
+  "autoScorerExplainRecordingOff": "No photos are being saved: recording is off.",
+  "@autoScorerExplainRecordingOff": {
+    "description": "Aim view panel: recording is off, so nothing is being kept"
+  },
+  "autoScorerExplainRecordingOn": "Recording is on: the scores you type are saved with a photo, on this device, until you send them.",
+  "@autoScorerExplainRecordingOn": {
+    "description": "Aim view panel: recording is on, what is being kept"
+  },
+  "autoScorerExplainEnableRecording": "Turn on recording",
+  "@autoScorerExplainEnableRecording": {
+    "description": "Aim view panel: turn recording on from here"
   },
   "autoScorerUncalibratedNotice": "The board markers weren't detected, so automatic scoring is off in this setup. You can still play and score by hand — and if data collection is on, your throws help train the camera (BETA).",
   "@autoScorerUncalibratedNotice": {
