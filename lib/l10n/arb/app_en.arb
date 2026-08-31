@@ -2165,7 +2165,7 @@
   "@autoScorerExplainKeepAiming": {
     "description": "Aim view panel: secondary action, dismiss and keep framing the board"
   },
-  "autoScorerExplainRecordingOff": "Recording is off, so no photos are being saved.",
+  "autoScorerExplainRecordingOff": "No photos are being saved: recording is off.",
   "@autoScorerExplainRecordingOff": {
     "description": "Aim view panel: recording is off, so nothing is being kept"
   },

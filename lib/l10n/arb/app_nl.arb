@@ -553,7 +553,7 @@
   "autoScorerExplainLoop": "Je kunt meteen spelen en met de hand scoren. Met opname aan wordt elke score die je invoert bewaard met een foto van je bord; door die foto's te versturen kan het model opnieuw getraind worden, en komt een nieuw model later vanzelf in de app. Op je telefoon wordt tijdens het spelen niets geleerd.",
   "autoScorerExplainPlayAnyway": "Toch spelen",
   "autoScorerExplainKeepAiming": "Verder richten",
-  "autoScorerExplainRecordingOff": "Opname staat uit, er worden geen foto's bewaard.",
+  "autoScorerExplainRecordingOff": "Er worden geen foto's bewaard: opname staat uit.",
   "autoScorerExplainRecordingOn": "Opname staat aan: ingevoerde scores worden met een foto bewaard, op dit apparaat, tot je ze verstuurt.",
   "autoScorerExplainEnableRecording": "Opname inschakelen",
   "autoScorerUncalibratedNotice": "De bordmarkeringen zijn niet gedetecteerd, dus automatisch scoren is uit in deze opstelling. Je kunt nog steeds spelen en handmatig scoren — en als gegevensverzameling aan staat, helpen je worpen om de camera te trainen (BÈTA).",

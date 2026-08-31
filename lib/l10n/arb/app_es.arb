@@ -553,7 +553,7 @@
   "autoScorerExplainLoop": "Puedes jugar ya y puntuar a mano. Con la grabación activada, cada puntuación que escribes se guarda con una foto de tu diana; enviar esas fotos permite reentrenar el modelo, y más adelante un modelo nuevo llega solo a la aplicación. En tu teléfono no se aprende nada mientras juegas.",
   "autoScorerExplainPlayAnyway": "Jugar igualmente",
   "autoScorerExplainKeepAiming": "Seguir apuntando",
-  "autoScorerExplainRecordingOff": "La grabación está desactivada: no se guarda ninguna foto.",
+  "autoScorerExplainRecordingOff": "No se guarda ninguna foto: la grabación está desactivada.",
   "autoScorerExplainRecordingOn": "Grabación activada: las puntuaciones que escribes se guardan con una foto, en este dispositivo, hasta que las envíes.",
   "autoScorerExplainEnableRecording": "Activar la grabación",
   "autoScorerUncalibratedNotice": "No se detectaron los marcadores de la diana, así que la puntuación automática está desactivada en esta configuración. Puedes seguir jugando y anotar a mano — y si la recopilación de datos está activada, tus lanzamientos ayudan a entrenar la cámara (BETA).",

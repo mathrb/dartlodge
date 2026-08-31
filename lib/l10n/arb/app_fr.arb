@@ -553,7 +553,7 @@
   "autoScorerExplainLoop": "Vous pouvez jouer tout de suite et compter à la main. Si l'enregistrement est activé, chaque score saisi est conservé avec une photo de votre cible ; envoyer ces photos permet de réentraîner le modèle, et un nouveau modèle arrive ensuite dans l'application tout seul. Rien n'est appris sur votre téléphone pendant que vous jouez.",
   "autoScorerExplainPlayAnyway": "Jouer quand même",
   "autoScorerExplainKeepAiming": "Continuer à viser",
-  "autoScorerExplainRecordingOff": "L'enregistrement est désactivé : aucune photo n'est conservée.",
+  "autoScorerExplainRecordingOff": "Aucune photo n'est conservée : l'enregistrement est désactivé.",
   "autoScorerExplainRecordingOn": "Enregistrement activé : les scores saisis sont conservés avec une photo, sur cet appareil, jusqu'à l'envoi.",
   "autoScorerExplainEnableRecording": "Activer l'enregistrement",
   "autoScorerUncalibratedNotice": "Les marqueurs de la cible n'ont pas été détectés : le score automatique est désactivé dans cette configuration. Vous pouvez quand même jouer et marquer à la main — et si la collecte de données est activée, vos lancers aident à entraîner la caméra (BÊTA).",

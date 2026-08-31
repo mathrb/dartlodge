@@ -70,8 +70,8 @@ class _AutoScorerSettingsPageState
           Text(l10n.autoScorerModelStatus(
               version, _modelStateLabel(l10n, status))),
           // Closes the loop the aim-view panel describes (#743, S2.5): this
-          // tile is where a retrained model actually lands, and the one place
-          // to say plainly that no learning happens on the phone.
+          // tile is where a retrained model actually lands, so it repeats — in
+          // the fewest words — that nothing is learned on the phone.
           Text(l10n.autoScorerModelLoopNote,
               style: Theme.of(context).textTheme.bodySmall),
         ],

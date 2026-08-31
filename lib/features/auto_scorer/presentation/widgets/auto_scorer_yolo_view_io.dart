@@ -176,7 +176,12 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
   /// When the current run of frames-without-the-four-markers started (#743).
   /// Reset on every successful recognition, so the explanation only appears
   /// after a sustained failure — never after a marker blinks out.
-  DateTime _unrecognisedSince = DateTime.now();
+  ///
+  /// Null until the first frame arrives: the clock has to measure time with a
+  /// camera actually running, or a slow permission prompt (the player reading
+  /// the system dialog, or going to Settings and back) would spend the whole
+  /// patience budget before detection ever got a chance.
+  DateTime? _unrecognisedSince;
 
   /// The player took the panel's "Keep aiming". Held until recognition returns,
   /// so the panel cannot come back every [kAimExplainAfter] seconds.
@@ -236,6 +241,8 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     setState(() {
       _latest = frame;
       _stability = stability;
+      // First frame: the camera is live, so start the patience clock.
+      _unrecognisedSince ??= DateTime.now();
       if (frame.hasCalibration) {
         // Recognition is back: restart the patience clock and re-arm the
         // panel, so a setup that works and then stops working can explain
@@ -383,8 +390,10 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     // After a sustained failure to recognise the board, the one-line nudge
     // gives way to an explanation (#743). Time-based and presentational: the
     // confirm button below keeps working exactly as before, panel or not.
+    final since = _unrecognisedSince;
     final explain = shouldExplainAim(
-      withoutRecognition: DateTime.now().difference(_unrecognisedSince),
+      withoutRecognition:
+          since == null ? Duration.zero : DateTime.now().difference(since),
       recognisedNow: calibrated,
       keepAimingChosen: _keepAiming,
     );
@@ -437,6 +446,12 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                     const SizedBox(height: 8),
                     if (explain)
                       AimExplanationPanel(
+                        // The photo opt-in specifically, NOT the settings
+                        // page's `collect || sessions` OR (#686): the panel
+                        // talks about the photos that go with a hand-entered
+                        // score, and only this opt-in decides whether any are
+                        // kept. Turning it on from here still flips both, like
+                        // that single switch does.
                         recordingOn:
                             ref.watch(dataCollectionEnabledProvider).value ??
                                 false,

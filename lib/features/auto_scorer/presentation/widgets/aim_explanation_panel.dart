@@ -42,12 +42,14 @@ class AimExplanationPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     return ConstrainedBox(
-      // The camera fills the screen behind this; cap the panel so the aim
-      // controls at the bottom stay reachable, and scroll inside if the text
-      // needs more room (large text scales, small phones).
+      // The camera fills the screen behind this, and the aim controls (zoom,
+      // capture, Cancel/confirm) are stacked at the bottom of the same screen
+      // — roughly a quarter of it. Cap the panel below the remaining room so
+      // the two can never meet on a short screen, and scroll the prose inside
+      // when it needs more (large text scales, small phones).
       constraints: BoxConstraints(
         maxWidth: 480,
-        maxHeight: MediaQuery.sizeOf(context).height * 0.55,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.45,
       ),
       child: Card(
         color: theme.colorScheme.surface,

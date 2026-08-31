@@ -553,7 +553,7 @@
   "autoScorerExplainLoop": "Você pode jogar agora mesmo e pontuar à mão. Com a gravação ligada, cada pontuação digitada é guardada com uma foto do seu alvo; enviar essas fotos permite retreinar o modelo, e um novo modelo chega depois ao aplicativo sozinho. Nada é aprendido no seu telefone enquanto você joga.",
   "autoScorerExplainPlayAnyway": "Jogar mesmo assim",
   "autoScorerExplainKeepAiming": "Continuar mirando",
-  "autoScorerExplainRecordingOff": "A gravação está desligada: nenhuma foto está sendo guardada.",
+  "autoScorerExplainRecordingOff": "Nenhuma foto está sendo guardada: a gravação está desligada.",
   "autoScorerExplainRecordingOn": "Gravação ligada: as pontuações digitadas são guardadas com uma foto, neste dispositivo, até você enviá-las.",
   "autoScorerExplainEnableRecording": "Ligar a gravação",
   "autoScorerUncalibratedNotice": "Os marcadores do alvo não foram detetados, por isso a pontuação automática está desativada nesta configuração. Pode continuar a jogar e marcar à mão — e se a recolha de dados estiver ativada, os seus lançamentos ajudam a treinar a câmara (BETA).",

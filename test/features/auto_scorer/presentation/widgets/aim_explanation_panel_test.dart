@@ -52,7 +52,7 @@ void main() {
       (tester) async {
     await pump(tester, recordingOn: false);
     expect(find.text('Turn on recording'), findsOneWidget);
-    expect(find.textContaining('Recording is off'), findsOneWidget);
+    expect(find.textContaining('No photos are being saved'), findsOneWidget);
 
     // The offer sits in the panel's scrollable prose (the two actions are the
     // part pinned in view), so bring it up before tapping.
