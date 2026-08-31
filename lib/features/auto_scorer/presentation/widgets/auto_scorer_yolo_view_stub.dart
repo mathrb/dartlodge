@@ -57,7 +57,6 @@ class AutoScorerYoloPreview extends StatelessWidget {
     required this.showOverlays,
     required this.onStatus,
     this.onModelLoadFailed,
-    this.expand = false,
   });
 
   final AutoScorerSession session;
@@ -71,7 +70,6 @@ class AutoScorerYoloPreview extends StatelessWidget {
   final bool showOverlays;
   final ValueChanged<TrackerStatus> onStatus;
   final VoidCallback? onModelLoadFailed;
-  final bool expand;
 
   @override
   Widget build(BuildContext context) => const SizedBox.shrink();

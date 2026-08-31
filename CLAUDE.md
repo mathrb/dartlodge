@@ -107,7 +107,7 @@ lib/features/<feature>/
 ```
 
 - `domain/` has zero imports of `package:flutter`, `package:drift`, or `package:dio`.
-- No feature imports another feature directly. Cross-feature communication via `core/` providers or shared domain entities only. Concrete runtime-wiring seam: a port/holder provider in `core/` (the producer feature `bind`s/`bump`s it; the consumer `watch`/`listen`s it); register the implementation at the composition root (`main.dart` `ProviderScope` override or `app_router`), which alone may import feature widgets. (Examples: `DartInputSink`, `boardOverlayBuilder`, `ActiveTurnSignal`.)
+- No feature imports another feature directly. Cross-feature communication via `core/` providers or shared domain entities only. Concrete runtime-wiring seam: a port/holder provider in `core/` (the producer feature `bind`s/`bump`s it; the consumer `watch`/`listen`s it); register the implementation at the composition root (`main.dart` `ProviderScope` override or `app_router`), which alone may import feature widgets. (Examples: `DartInputSink`, `boardCameraPreviewBuilder`, `ActiveTurnSignal`.)
 - `core/` contains no domain logic — only infrastructure (database wiring, error types, shared utilities).
 
 ### 2. Dependency Direction

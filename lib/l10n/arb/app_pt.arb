@@ -546,7 +546,6 @@
   "autoScorerSetupFailed": "Falha na configuração da câmera: {error}",
   "autoScorerReady": "Pontuação automática pronta",
   "autoScorerTapToCorrect": "Toque num dardo para corrigir uma leitura errada",
-  "autoScorerExpandPreview": "ampliar a pré-visualização da câmera",
   "autoScorerRemoveDarts": "Retirar dardos",
   "autoScorerStop": "Parar a pontuação automática",
   "autoScorerReAim": "Realinhar a câmara",

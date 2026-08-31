@@ -25,14 +25,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-/// Scoreboard-primary assist-mode camera widget (#377 §5.2). Three layouts:
-/// the band variant (`expand: false`, via the core `boardOverlayBuilder` seam)
-/// is a slim row under the header (Cricket); the camera-first variant
-/// (`expand: true`, via `boardCameraPreviewBuilder`, #427) defaults to a
-/// collapsed ~96px VIGNETTE while running (#480) and only fills the flexible
-/// body region while tap-expanded (X01). Detection runs on a live `YOLOView`
-/// preview shown while running (native streaming inference — YOLOView must be
-/// mounted to run, so unlike the old headless path there is now an in-game
+/// Scoreboard-primary assist-mode camera widget (#377 §5.2). One layout: the
+/// running preview fills the flexible body region the board gives it (via
+/// `boardCameraPreviewBuilder`, #427), and shrinks with it (#760). Detection
+/// runs on that live `YOLOView` preview (native streaming inference — YOLOView
+/// must be mounted to run, so unlike the old headless path there is an in-game
 /// preview). The one-time aim step is a transient fullscreen `YOLOView` route.
 ///
 /// Web-safe SHELL: it imports only the conditional `auto_scorer_yolo_view.dart`
@@ -44,13 +41,7 @@ import 'package:uuid/uuid.dart';
 class AutoScorerBoardOverlay extends ConsumerStatefulWidget {
   final String gameId;
 
-  /// Camera-first layout (#427): when true the running preview fills the
-  /// available height (the board places this in an `Expanded`) instead of the
-  /// slim ~140px band. Idle/aim states are unchanged.
-  final bool expand;
-
-  const AutoScorerBoardOverlay(
-      {super.key, required this.gameId, this.expand = false});
+  const AutoScorerBoardOverlay({super.key, required this.gameId});
 
   @override
   ConsumerState<AutoScorerBoardOverlay> createState() =>
@@ -67,17 +58,6 @@ enum _Mode { idle, aim, running }
 /// imperceptible after "Done aiming". See [_AutoScorerBoardOverlayState._start].
 const Duration _kAimToRunningHandoffDelay = Duration(milliseconds: 500);
 
-/// Camera-first vignette (#480): collapsed preview height. The preview is
-/// near-useless during play once calibrated, so by default it shrinks to this
-/// band and the freed space goes to the at-distance game info (#478/#479).
-const double kAutoScorerVignettePreviewHeight = 96;
-
-/// How long an expanded preview stays up without interaction before it
-/// auto-collapses back to the vignette (#480). A detected dart (or a turn
-/// advance) collapses it immediately — any game activity means the player is
-/// done checking the framing.
-const Duration kAutoScorerVignetteAutoCollapse = Duration(seconds: 10);
-
 class _AutoScorerBoardOverlayState
     extends ConsumerState<AutoScorerBoardOverlay> {
   _Mode _mode = _Mode.idle;
@@ -91,24 +71,9 @@ class _AutoScorerBoardOverlayState
   int _turnOrdinal = 1;
   String? _error;
 
-  /// Camera-first vignette state (#480): false = collapsed ~96px band
-  /// (default), true = preview fills the flexible region (tap-to-expand,
-  /// auto-collapses — see [kAutoScorerVignetteAutoCollapse]). Lives INSIDE the
-  /// overlay (not a constructor parameter like [AutoScorerBoardOverlay.expand])
-  /// so flipping it never rebuilds the overlay from outside with new
-  /// constructor args — that would restructure the subtree and risk a native
-  /// `YOLOView` remount (#467 class of bugs). [_previewKey] preserves the
-  /// preview's element/state across the two wrapper shapes.
-  bool _vignetteExpanded = false;
-  Timer? _collapseTimer;
-  final GlobalKey _previewKey = GlobalKey(debugLabel: 'auto-scorer-preview');
-
   /// Tracker status for the chip. A [ValueNotifier] (not setState) so the live
   /// `onResult` stream (~3 Hz) updates only the chip — never rebuilding the
-  /// `YOLOView` preview (which would churn / risk a native remount). The one
-  /// exception (#480): a dart detected while the vignette is expanded fires a
-  /// single `_collapseVignette()` setState — bounded by user expansion, never
-  /// per-frame, and safe because [_previewKey] preserves the preview element.
+  /// `YOLOView` preview (which would churn / risk a native remount).
   final ValueNotifier<TrackerStatus> _status = ValueNotifier(
     const TrackerStatus(
         phase: TrackerPhase.noCalibration, dartsOnBoard: 0, dartsThisTurn: 0),
@@ -149,24 +114,10 @@ class _AutoScorerBoardOverlayState
 
   @override
   void dispose() {
-    _collapseTimer?.cancel();
     _contributions.dispose();
     _status.dispose();
     _session?.dispose();
     super.dispose();
-  }
-
-  void _expandVignette() {
-    _collapseTimer?.cancel();
-    _collapseTimer = Timer(kAutoScorerVignetteAutoCollapse, _collapseVignette);
-    setState(() => _vignetteExpanded = true);
-  }
-
-  void _collapseVignette() {
-    _collapseTimer?.cancel();
-    _collapseTimer = null;
-    if (!mounted || !_vignetteExpanded) return;
-    setState(() => _vignetteExpanded = false);
   }
 
   /// idle → (one-time tips) → aim (fullscreen YOLOView) → running (inline preview).
@@ -374,14 +325,12 @@ class _AutoScorerBoardOverlayState
     ref.read(activeCaptureCorrectionSinkProvider.notifier).bind(null);
     _session?.dispose();
     _session = null;
-    _collapseTimer?.cancel();
     _everCalibrated = false;
     _contributionsBase = _contributions.value;
     setState(() {
       _error = message;
       _starting = false;
       _mode = _Mode.idle;
-      _vignetteExpanded = false;
     });
   }
 
@@ -391,13 +340,11 @@ class _AutoScorerBoardOverlayState
     ref.read(activeCaptureCorrectionSinkProvider.notifier).bind(null);
     _session?.dispose();
     _session = null;
-    _collapseTimer?.cancel();
     _everCalibrated = false;
     _contributionsBase = _contributions.value;
     setState(() {
       _mode = _Mode.idle;
       _starting = false;
-      _vignetteExpanded = false;
     });
   }
 
@@ -408,16 +355,12 @@ class _AutoScorerBoardOverlayState
 
   @override
   Widget build(BuildContext context) {
-    // The board bumps this whenever the turn advances (its own next-turn button);
-    // reset the tracker's per-turn cap in lock-step (#380). The tracker reset
-    // itself needs no setState (the preview reads [_turnOrdinal] live for
-    // capture handles), but a turn advance also collapses an expanded vignette
-    // (#480) — game activity means the player is done checking the framing —
-    // and THAT does setState (no-op while already collapsed, the common case).
+    // The board bumps this whenever the turn advances (its own next-turn
+    // button); reset the tracker's per-turn cap in lock-step (#380). No
+    // setState: the preview reads [_turnOrdinal] live for capture handles.
     ref.listen<int>(activeTurnSignalProvider, (_, __) {
       _session?.onTurnAdvanced();
       _turnOrdinal += 1;
-      _collapseVignette();
     });
     final scheme = Theme.of(context).colorScheme;
     final running = _mode == _Mode.running && _session != null;
@@ -425,15 +368,10 @@ class _AutoScorerBoardOverlayState
         ? ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: AutoScorerYoloPreview(
-              // GlobalKey: the preview keeps its element (and the native
-              // camera binding) when the vignette flips between the collapsed
-              // and expanded wrapper shapes (#480).
-              key: _previewKey,
               session: _session!,
               gameId: widget.gameId,
               modelPath: _resolvedModel!.path,
               onModelLoadFailed: _onModelLoadFailed,
-              expand: widget.expand,
               currentTurnOrdinal: () => _turnOrdinal,
               everCalibrated: () => _everCalibrated,
               calConfidence:
@@ -458,12 +396,6 @@ class _AutoScorerBoardOverlayState
                 // once, so a later sustained loss is a real alert and not
                 // learning mode.
                 if (phaseImpliesCalibration(s.phase)) _everCalibrated = true;
-                // A newly detected dart collapses an expanded vignette (#480).
-                // Compare before updating the notifier so the delta is real.
-                if (_vignetteExpanded &&
-                    s.dartsOnBoard > _status.value.dartsOnBoard) {
-                  _collapseVignette();
-                }
                 _status.value = s;
               },
             ),
@@ -496,73 +428,27 @@ class _AutoScorerBoardOverlayState
           )
         : null;
 
-    // Camera-first vignette (#480): collapsed by default — the preview is
-    // near-useless during play once calibrated, so the freed space goes to the
-    // at-distance game info above. The compact block sits at the TOP of the
-    // camera slot, right under the dart band (a bottom-anchored vignette left
-    // an ugly dead gap mid-screen — device-verified on rc112); the slack below
-    // stays transparent. Tap expands the preview (auto-collapses on the next
-    // detected dart / turn advance / ~10 s).
-    if (widget.expand && preview != null && !_vignetteExpanded) {
-      return Column(
-        children: [
-          Material(
-            color: scheme.surfaceContainerHigh,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Semantics(
-                    button: true,
-                    label: AppLocalizations.of(context).autoScorerExpandPreview,
-                    child: GestureDetector(
-                      // The YOLOView platform view consumes touch events
-                      // natively (it needs them for tapToFocus), so a plain
-                      // parent GestureDetector never wins the gesture arena —
-                      // taps died in the camera view (device-verified on
-                      // rc112). IgnorePointer makes the collapsed preview
-                      // inert so this opaque detector owns the whole surface —
-                      // which costs nothing now that the preview carries no
-                      // controls of its own (#745).
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _expandVignette,
-                      child: IgnorePointer(
-                        child: SizedBox(
-                          height: kAutoScorerVignettePreviewHeight,
-                          width: double.infinity,
-                          child: Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: preview),
-                        ),
-                      ),
-                    ),
-                  ),
-                  _barRow(),
-                  if (hint != null) hint,
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-        ],
-      );
-    }
-
+    // One camera view (#760). The preview takes the space the board gives it
+    // and shrinks with it; there is no collapsed/expanded pair any more.
+    //
+    // This deliberately reverses #480, which collapsed the preview to a ~96px
+    // vignette by default and gave the rest to the at-distance game info. That
+    // choice was device-verified, but it was made between two ways of placing
+    // the slack — never against having none: on device the leftover read as an
+    // unfinished screen (#760). Giving the space back to the preview is what
+    // the maintainer chose after seeing it. Do not reintroduce the pair.
+    //
+    // What happens when the board has very little room to give is #769, not
+    // this: the preview simply gets less here, and it is never hidden — it IS
+    // the detector, so hiding it would stop auto-scoring.
     final children = <Widget>[
       if (preview != null)
-        // Camera-first (expanded vignette): the preview fills the flexible
-        // region; band mode: fixed ~140px height (set inside
-        // AutoScorerYoloPreview).
-        widget.expand
-            ? Expanded(
-                child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4), child: preview))
-            : Padding(
-                padding: const EdgeInsets.only(bottom: 4), child: preview),
-      // In camera-first idle/aim there is no preview yet; centre the Start
-      // action in the open space instead of pinning it to the top.
-      if (widget.expand && preview == null)
+        Expanded(
+            child: Padding(
+                padding: const EdgeInsets.only(bottom: 4), child: preview)),
+      // In idle/aim there is no preview yet; centre the Start action in the
+      // open space instead of pinning it to the top.
+      if (preview == null)
         Expanded(child: Center(child: _barRow()))
       else
         _barRow(),
@@ -573,7 +459,6 @@ class _AutoScorerBoardOverlayState
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         child: Column(
-          mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
           children: children,
         ),
       ),

@@ -575,7 +575,6 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
     required this.showOverlays,
     required this.onStatus,
     this.onModelLoadFailed,
-    this.expand = false,
   });
 
   final AutoScorerSession session;
@@ -605,9 +604,6 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   /// already reset itself to the bundled asset; the host persists the quarantine.
   final VoidCallback? onModelLoadFailed;
 
-  /// Camera-first layout (#427): fill the parent's height (the board places this
-  /// in an `Expanded`) instead of the fixed ~140px band.
-  final bool expand;
 
   @override
   ConsumerState<AutoScorerYoloPreview> createState() =>
@@ -889,8 +885,7 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
           RecognitionHalo(grade: grade, child: child!),
       child: stack,
     );
-    // Camera-first fills the Expanded the board gives it; band mode is a fixed
-    // ~140px strip under the header.
-    return widget.expand ? haloed : SizedBox(height: 140, child: haloed);
+    // Fills whatever the board's Expanded gives it (#760).
+    return haloed;
   }
 }

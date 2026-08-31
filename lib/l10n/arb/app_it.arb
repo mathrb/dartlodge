@@ -546,7 +546,6 @@
   "autoScorerSetupFailed": "Configurazione della fotocamera non riuscita: {error}",
   "autoScorerReady": "Punteggio automatico pronto",
   "autoScorerTapToCorrect": "Tocca una freccetta per correggere una lettura errata",
-  "autoScorerExpandPreview": "ingrandisci l'anteprima della fotocamera",
   "autoScorerRemoveDarts": "Togli le freccette",
   "autoScorerStop": "Ferma il punteggio automatico",
   "autoScorerReAim": "Riallinea la fotocamera",
