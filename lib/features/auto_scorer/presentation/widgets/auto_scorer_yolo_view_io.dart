@@ -604,7 +604,6 @@ class AutoScorerYoloPreview extends ConsumerStatefulWidget {
   /// already reset itself to the bundled asset; the host persists the quarantine.
   final VoidCallback? onModelLoadFailed;
 
-
   @override
   ConsumerState<AutoScorerYoloPreview> createState() =>
       _AutoScorerYoloPreviewState();

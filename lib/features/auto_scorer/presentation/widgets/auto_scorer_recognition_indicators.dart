@@ -54,7 +54,7 @@ BoxDecoration _haloDecoration(
 /// the geometric risk this design deliberately avoids, and it cannot be
 /// validated without a device. The border carries the same "is it working?"
 /// signal at no such risk, and it reads from the oche — which is what matters
-/// once the preview collapses to a vignette during play (#480).
+/// during play, at whatever height the board leaves the preview (#760).
 class RecognitionHalo extends StatelessWidget {
   const RecognitionHalo({
     super.key,
