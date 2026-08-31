@@ -577,7 +577,6 @@
   "autoScorerExplainEnableRecording": "Activer l'enregistrement",
   "autoScorerUncalibratedNotice": "Les marqueurs de la cible n'ont pas été détectés : le score automatique est désactivé dans cette configuration. Vous pouvez quand même jouer et marquer à la main — et si la collecte de données est activée, vos lancers aident à entraîner la caméra (BÊTA).",
   "autoScorerCapturePhoto": "Prendre une photo",
-  "autoScorerCaptureFrame": "Capturer une image",
   "autoScorerCaptureFocusing": "Mise au point…",
   "autoScorerCaptureNeedsCollection": "Activez la collecte de données pour enregistrer des images",
   "autoScorerCaptureFailed": "Échec de la capture (aucune image).",

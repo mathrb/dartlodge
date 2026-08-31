@@ -2268,10 +2268,6 @@
   "@autoScorerCapturePhoto": {
     "description": "Aim view: button that saves a full-resolution still for training"
   },
-  "autoScorerCaptureFrame": "Capture frame",
-  "@autoScorerCaptureFrame": {
-    "description": "In-game preview: tooltip of the icon button that saves a still for training"
-  },
   "autoScorerCaptureFocusing": "Focusing…",
   "@autoScorerCaptureFocusing": {
     "description": "Capture button label/tooltip while the camera refocuses before the shot"

@@ -577,7 +577,6 @@
   "autoScorerExplainEnableRecording": "Ligar a gravação",
   "autoScorerUncalibratedNotice": "Os marcadores do alvo não foram detetados, por isso a pontuação automática está desativada nesta configuração. Pode continuar a jogar e marcar à mão — e se a recolha de dados estiver ativada, os seus lançamentos ajudam a treinar a câmara (BETA).",
   "autoScorerCapturePhoto": "Capturar foto",
-  "autoScorerCaptureFrame": "Capturar quadro",
   "autoScorerCaptureFocusing": "Focando…",
   "autoScorerCaptureNeedsCollection": "Ative a coleta de dados para salvar quadros",
   "autoScorerCaptureFailed": "Falha na captura (nenhum quadro).",

@@ -517,9 +517,9 @@ class _AutoScorerBoardOverlayState
                       // parent GestureDetector never wins the gesture arena —
                       // taps died in the camera view (device-verified on
                       // rc112). IgnorePointer makes the collapsed preview
-                      // inert so this opaque detector owns the whole surface.
-                      // Trade-off: the manual-capture button is disabled while
-                      // collapsed (it stays usable in the expanded state).
+                      // inert so this opaque detector owns the whole surface —
+                      // which costs nothing now that the preview carries no
+                      // controls of its own (#745).
                       behavior: HitTestBehavior.opaque,
                       onTap: _expandVignette,
                       child: IgnorePointer(

@@ -577,7 +577,6 @@
   "autoScorerExplainEnableRecording": "Activar la grabación",
   "autoScorerUncalibratedNotice": "No se detectaron los marcadores de la diana, así que la puntuación automática está desactivada en esta configuración. Puedes seguir jugando y anotar a mano — y si la recopilación de datos está activada, tus lanzamientos ayudan a entrenar la cámara (BETA).",
   "autoScorerCapturePhoto": "Capturar foto",
-  "autoScorerCaptureFrame": "Capturar fotograma",
   "autoScorerCaptureFocusing": "Enfocando…",
   "autoScorerCaptureNeedsCollection": "Activa la recopilación de datos para guardar fotogramas",
   "autoScorerCaptureFailed": "Error al capturar (sin fotograma).",

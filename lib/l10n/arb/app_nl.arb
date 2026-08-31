@@ -577,7 +577,6 @@
   "autoScorerExplainEnableRecording": "Opname inschakelen",
   "autoScorerUncalibratedNotice": "De bordmarkeringen zijn niet gedetecteerd, dus automatisch scoren is uit in deze opstelling. Je kunt nog steeds spelen en handmatig scoren — en als gegevensverzameling aan staat, helpen je worpen om de camera te trainen (BÈTA).",
   "autoScorerCapturePhoto": "Foto maken",
-  "autoScorerCaptureFrame": "Frame vastleggen",
   "autoScorerCaptureFocusing": "Scherpstellen…",
   "autoScorerCaptureNeedsCollection": "Schakel gegevensverzameling in om frames op te slaan",
   "autoScorerCaptureFailed": "Vastleggen mislukt (geen frame).",
