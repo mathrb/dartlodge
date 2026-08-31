@@ -99,3 +99,27 @@ RecognitionState recognitionStateOf({
           : RecognitionGrade.partial;
   return (markers: markers, grade: grade, foundCount: found);
 }
+
+/// The grade the **in-game** halo should paint, or null for "say nothing".
+///
+/// A camera session that has never calibrated is a valid way to play, and the
+/// status chip says so calmly (#741). Painting the "sees nothing" red around
+/// the preview for a whole game is precisely the permanent alarm #741 was
+/// created to remove: the two signals told the player opposite stories (#758).
+/// So while nothing has been recognised yet, red is suppressed.
+///
+/// Amber and green are NOT suppressed: progress is not an alarm, it is the
+/// first sign the board is about to be recognised — the one thing worth
+/// showing a player whose setup is not supported yet.
+///
+/// Once the session HAS been calibrated, red means the board was lost, which
+/// is a real problem and keeps alarming.
+///
+/// The aim view deliberately does not use this: there, "the camera sees
+/// nothing" is the actionable state the player is there to fix, and a
+/// sustained failure escalates to its own explanation panel (#743).
+RecognitionGrade? haloGradeOf({
+  required RecognitionGrade grade,
+  required bool everCalibrated,
+}) =>
+    !everCalibrated && grade == RecognitionGrade.none ? null : grade;

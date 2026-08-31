@@ -90,4 +90,29 @@ void main() {
     expect(s.markers, everyElement(MarkerRecognition.missing));
     expect(s.grade, RecognitionGrade.none);
   });
+
+  group('haloGradeOf (#758)', () {
+    test('a session that never calibrated never paints the alarm', () {
+      // The chip calls this learning mode and stays calm (#741); a red border
+      // around the preview for the whole game is the contradiction #758 fixes.
+      expect(
+          haloGradeOf(
+              grade: RecognitionGrade.none, everCalibrated: false),
+          isNull);
+    });
+
+    test('progress still shows while learning', () {
+      // Amber/green are not alarms — they are the first sign the board is
+      // about to be recognised, which is exactly what this player needs.
+      for (final g in [RecognitionGrade.partial, RecognitionGrade.ready]) {
+        expect(haloGradeOf(grade: g, everCalibrated: false), g);
+      }
+    });
+
+    test('once calibrated, losing the board alarms again', () {
+      for (final g in RecognitionGrade.values) {
+        expect(haloGradeOf(grade: g, everCalibrated: true), g);
+      }
+    });
+  });
 }

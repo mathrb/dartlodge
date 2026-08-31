@@ -141,6 +141,10 @@ class _AutoScorerBoardOverlayState
   /// A plain field, not its own notifier: it only ever changes together with a
   /// [_status] update (or before the preview mounts), so the chip's
   /// [ValueListenableBuilder] already rebuilds at exactly the right moments.
+  ///
+  /// The halo is a second reader (#758) and pulls it live rather than through a
+  /// rebuild, which is why the preview grades itself only after publishing the
+  /// status that may have just latched this flag.
   bool _everCalibrated = false;
 
   @override
@@ -431,6 +435,7 @@ class _AutoScorerBoardOverlayState
               onModelLoadFailed: _onModelLoadFailed,
               expand: widget.expand,
               currentTurnOrdinal: () => _turnOrdinal,
+              everCalibrated: () => _everCalibrated,
               calConfidence:
                   ref.watch(autoScorerCalConfidenceProvider).value ??
                       kDefaultConfidence,
