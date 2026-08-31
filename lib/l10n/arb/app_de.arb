@@ -480,6 +480,7 @@
   "autoScorerContributionsSubtitle": "{count, plural, =0{Noch keine Trainingsfotos auf diesem Gerät} one{1 Trainingsfoto auf diesem Gerät} other{{count} Trainingsfotos auf diesem Gerät}}",
   "autoScorerContributionsLoading": "Wird gezählt…",
   "autoScorerContributionsSemantics": "{count, plural, =0{In diesem Spiel noch keine Trainingsfotos aufgenommen} one{1 Trainingsfoto in diesem Spiel aufgenommen} other{{count} Trainingsfotos in diesem Spiel aufgenommen}}",
+  "autoScorerSizeKb": "{size} kB",
   "autoScorerSizeMb": "{size} MB",
   "autoScorerSizeGb": "{size} GB",
   "autoScorerPreSendTitle": "Vor dem Senden",

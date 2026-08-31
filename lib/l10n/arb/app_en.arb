@@ -1842,6 +1842,11 @@
     "description": "Screen-reader label of the in-game contribution counter",
     "placeholders": { "count": { "type": "int" } }
   },
+  "autoScorerSizeKb": "{size} kB",
+  "@autoScorerSizeKb": {
+    "description": "File size in kilobytes (unit symbol is localised)",
+    "placeholders": { "size": { "type": "String" } }
+  },
   "autoScorerSizeMb": "{size} MB",
   "@autoScorerSizeMb": {
     "description": "File size in megabytes (unit symbol is localised)",

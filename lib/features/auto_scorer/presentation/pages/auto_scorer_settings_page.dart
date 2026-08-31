@@ -92,10 +92,17 @@ class _AutoScorerSettingsPageState
     );
   }
 
-  /// Human-readable zip size for the pre-send screen (#744). MB below a
-  /// gigabyte, GB above it — a training export is never smaller than that.
+  /// Human-readable zip size for the pre-send screen (#744). Photos put an
+  /// export in the megabytes, but an export of recorded sessions alone is a
+  /// handful of JSON files — small enough to read as "0 MB" without the kB
+  /// step.
   String _formatBytes(AppLocalizations l10n, int bytes) {
-    const mb = 1024 * 1024;
+    const kb = 1024;
+    const mb = kb * 1024;
+    if (bytes < mb) {
+      return l10n
+          .autoScorerSizeKb(StatFormatter.fmtDouble(bytes / kb, decimals: 0));
+    }
     final inMb = bytes / mb;
     return inMb >= 1024
         ? l10n.autoScorerSizeGb(StatFormatter.fmtDouble(inMb / 1024))
@@ -369,7 +376,13 @@ class _AutoScorerSettingsPageState
     // so the size is the real one; skippable for a repeat sender, and skipping
     // lands exactly on the previous behaviour (straight to the share sheet).
     if (!mounted) return;
-    if (!(ref.read(autoScorerPreSendSkippedProvider).value ?? false)) {
+    // Await the pref rather than reading `.value`: this is the only place that
+    // touches the provider, so on the first export of an app session it would
+    // still be loading — and a repeat sender who opted out would be shown the
+    // screen again anyway.
+    final skipped = await ref.read(autoScorerPreSendSkippedProvider.future);
+    if (!mounted) return;
+    if (!skipped) {
       final bytes = await exportZipSizeBytes(dest);
       if (!mounted) return;
       final choice =

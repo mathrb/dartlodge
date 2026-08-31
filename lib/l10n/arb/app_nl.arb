@@ -480,6 +480,7 @@
   "autoScorerContributionsSubtitle": "{count, plural, =0{Nog geen trainingsfoto's op dit apparaat} one{1 trainingsfoto op dit apparaat} other{{count} trainingsfoto's op dit apparaat}}",
   "autoScorerContributionsLoading": "Tellen…",
   "autoScorerContributionsSemantics": "{count, plural, =0{Nog geen trainingsfoto's gemaakt in deze partij} one{1 trainingsfoto gemaakt in deze partij} other{{count} trainingsfoto's gemaakt in deze partij}}",
+  "autoScorerSizeKb": "{size} kB",
   "autoScorerSizeMb": "{size} MB",
   "autoScorerSizeGb": "{size} GB",
   "autoScorerPreSendTitle": "Voordat je verstuurt",
