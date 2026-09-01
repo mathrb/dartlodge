@@ -25,7 +25,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Cricket — Standard'), findsOneWidget);
+    expect(find.text('Cricket: Standard'), findsOneWidget);
     expect(find.text('Objective'), findsOneWidget);
     expect(find.text('Winning'), findsOneWidget);
   });

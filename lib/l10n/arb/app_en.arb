@@ -703,7 +703,7 @@
   "@bobs27BustedBadge": {
     "description": "Post-game badge when a Bob's 27 drill ends on a score of zero or below (shown upper-case)"
   },
-  "bobs27BustedSubline": "Bob's 27 — drill ended",
+  "bobs27BustedSubline": "Bob's 27: drill ended",
   "@bobs27BustedSubline": {
     "description": "Post-game subline for a busted-out Bob's 27 drill"
   },
@@ -807,7 +807,7 @@
   "@gameRoundLimitReached": {
     "description": "Title of the cap-winner dialog shown at the per-leg round limit"
   },
-  "gameNoAutoWinner": "No automatic winner — pick who wins this leg.",
+  "gameNoAutoWinner": "No automatic winner. Pick who wins this leg.",
   "@gameNoAutoWinner": {
     "description": "Cap-winner dialog body asking the user to pick the leg winner"
   },
@@ -1316,7 +1316,7 @@
   "@rulesAtcTagline": {
     "description": "Game rules text"
   },
-  "rulesAtcObjectiveBody": "Hit every number from 1 through 20 in sequence. The first player to land on 20 — having visited every number along the way — wins.",
+  "rulesAtcObjectiveBody": "Hit every number from 1 through 20 in sequence. The first player to land on 20, having visited every number along the way, wins.",
   "@rulesAtcObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1328,7 +1328,7 @@
   "@rulesAtcHowB2": {
     "description": "Game rules text"
   },
-  "rulesAtcHowB3": "Singles, doubles and triples all count as one hit in the standard variant — the multiplier gives no extra advantage.",
+  "rulesAtcHowB3": "Singles, doubles and triples all count as one hit in the standard variant: the multiplier gives no extra advantage.",
   "@rulesAtcHowB3": {
     "description": "Game rules text"
   },
@@ -1336,7 +1336,7 @@
   "@rulesAtcHowB4": {
     "description": "Game rules text"
   },
-  "rulesAtcHowB5": "If you reach your final number mid-turn, any remaining darts are not thrown — the leg ends immediately.",
+  "rulesAtcHowB5": "If you reach your final number mid-turn, any remaining darts are not thrown: the leg ends immediately.",
   "@rulesAtcHowB5": {
     "description": "Game rules text"
   },
@@ -1352,7 +1352,7 @@
   "@rulesAtcVariantsB2": {
     "description": "Game rules text"
   },
-  "rulesAtcVariantsB3": "Doubles only: ascending sequence from 1 to 20, but only doubles count — singles and triples on the right number do not advance you.",
+  "rulesAtcVariantsB3": "Doubles only: ascending sequence from 1 to 20, but only doubles count: singles and triples on the right number do not advance you.",
   "@rulesAtcVariantsB3": {
     "description": "Game rules text"
   },
@@ -1388,7 +1388,7 @@
   "@rulesCatch40HowB4": {
     "description": "Game rules text"
   },
-  "rulesCatch40HowB5": "A checkout in three darts scores 2 points — except the target of 99, which still scores 3.",
+  "rulesCatch40HowB5": "A checkout in three darts scores 2 points, except the target of 99, which still scores 3.",
   "@rulesCatch40HowB5": {
     "description": "Game rules text"
   },
@@ -1400,7 +1400,7 @@
   "@rulesCatch40HowB7": {
     "description": "Game rules text"
   },
-  "rulesCatch40WinningBody": "The drill is solo. There is no opponent to beat — your score is the total points across all forty targets, with a maximum of 120. Treat it as a benchmark to improve over time.",
+  "rulesCatch40WinningBody": "The drill is solo. There is no opponent to beat: your score is the total points across all forty targets, with a maximum of 120. Treat it as a benchmark to improve over time.",
   "@rulesCatch40WinningBody": {
     "description": "Game rules text"
   },
@@ -1408,7 +1408,7 @@
   "@rulesBobs27Tagline": {
     "description": "Game rules text"
   },
-  "rulesBobs27ObjectiveBody": "Hit every double from D1 through D20 in order, one number per round, then finish on the double bull. Your score starts at 27 and climbs each time you land the round's target — and drops sharply every round you miss.",
+  "rulesBobs27ObjectiveBody": "Hit every double from D1 through D20 in order, one number per round, then finish on the double bull. Your score starts at 27 and climbs each time you land the round's target, and drops sharply every round you miss.",
   "@rulesBobs27ObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1416,7 +1416,7 @@
   "@rulesBobs27HowB1": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB2": "There are 21 rounds. In round 1 the target is double 1, in round 2 it is double 2, and so on up to double 20 in round 20 — then round 21 targets the bull (double bull).",
+  "rulesBobs27HowB2": "There are 21 rounds. In round 1 the target is double 1, in round 2 it is double 2, and so on up to double 20 in round 20. Round 21 then targets the bull (double bull).",
   "@rulesBobs27HowB2": {
     "description": "Game rules text"
   },
@@ -1424,7 +1424,7 @@
   "@rulesBobs27HowB3": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB4": "For every dart that lands on the round's target, your score goes up — by twice the round number on a double, or by 50 on a double bull. Three double bulls in the final round add 150.",
+  "rulesBobs27HowB4": "For every dart that lands on the round's target, your score goes up: by twice the round number on a double, or by 50 on a double bull. Three double bulls in the final round add 150.",
   "@rulesBobs27HowB4": {
     "description": "Game rules text"
   },
@@ -1432,15 +1432,15 @@
   "@rulesBobs27HowB5": {
     "description": "Game rules text"
   },
-  "rulesBobs27HowB6": "Singles, triples and any other segment do nothing — only the round's exact double counts, or the double bull in the final round.",
+  "rulesBobs27HowB6": "Singles, triples and any other segment do nothing: only the round's exact double counts, or the double bull in the final round.",
   "@rulesBobs27HowB6": {
     "description": "Game rules text"
   },
-  "rulesBobs27WinningBody": "The drill is solo. It ends after the bull round (round 21), or sooner if your score drops to zero or below. Your final score is your result. A perfect run — three doubles every round and three double bulls — totals 1437.",
+  "rulesBobs27WinningBody": "The drill is solo. It ends after the bull round (round 21), or sooner if your score drops to zero or below. Your final score is your result. A perfect run (three doubles every round and three double bulls) totals 1437.",
   "@rulesBobs27WinningBody": {
     "description": "Game rules text"
   },
-  "rulesBobs27TipsB1": "A single missed round on a low number costs little. A wipe on the late rounds is catastrophic — D17, D18, D19, D20 and the bull each cost more than 30 points.",
+  "rulesBobs27TipsB1": "A single missed round on a low number costs little. A wipe on the late rounds is catastrophic: D17, D18, D19, D20 and the bull each cost more than 30 points.",
   "@rulesBobs27TipsB1": {
     "description": "Game rules text"
   },
@@ -1452,11 +1452,11 @@
   "@rulesCheckoutTagline": {
     "description": "Game rules text"
   },
-  "rulesCheckoutObjectiveBody": "Reduce your score to exactly zero, finishing on a double. A solo finishing drill — practise a fixed checkout (the classic 170 by default), a random spread, or a climbing pyramid.",
+  "rulesCheckoutObjectiveBody": "Reduce your score to exactly zero, finishing on a double. A solo finishing drill: practise a fixed checkout (the classic 170 by default), a random spread, or a climbing pyramid.",
   "@rulesCheckoutObjectiveBody": {
     "description": "Game rules text"
   },
-  "rulesCheckoutHowB1": "Each run starts on the chosen checkout target and you are always \"in\" — every dart counts from the first throw.",
+  "rulesCheckoutHowB1": "Each run starts on the chosen checkout target and you are always \"in\": every dart counts from the first throw.",
   "@rulesCheckoutHowB1": {
     "description": "Game rules text"
   },
@@ -1472,11 +1472,11 @@
   "@rulesCheckoutHowB4": {
     "description": "Game rules text"
   },
-  "rulesCheckoutHowB5": "The drill continues across as many turns as it takes — there is no turn limit.",
+  "rulesCheckoutHowB5": "The drill continues across as many turns as it takes. There is no turn limit.",
   "@rulesCheckoutHowB5": {
     "description": "Game rules text"
   },
-  "rulesCheckoutWinningBody": "The drill ends as soon as you check out, or when you tap End Drill. The checkout score shown on the summary screen is the score you were on at the start of your finishing turn — useful for tracking how often you finish from 170 in one visit versus needing to set up first.",
+  "rulesCheckoutWinningBody": "The drill ends as soon as you check out, or when you tap End Drill. The checkout score shown on the summary screen is the score you were on at the start of your finishing turn, useful for tracking how often you finish from 170 in one visit versus needing to set up first.",
   "@rulesCheckoutWinningBody": {
     "description": "Game rules text"
   },
@@ -1484,15 +1484,15 @@
   "@rulesCheckoutTipsB1": {
     "description": "Game rules text"
   },
-  "rulesCheckoutTipsB2": "If your first dart goes wide, recalculate fast — many 170-starts only have a single one-visit path left after a stray.",
+  "rulesCheckoutTipsB2": "If your first dart goes wide, recalculate fast: many 170-starts only have a single one-visit path left after a stray.",
   "@rulesCheckoutTipsB2": {
     "description": "Game rules text"
   },
-  "rulesCountUpTagline": "Reverse X01. No checkout, no bust — just stack points for a fixed number of rounds.",
+  "rulesCountUpTagline": "Reverse X01. No checkout, no bust. Just stack points for a fixed number of rounds.",
   "@rulesCountUpTagline": {
     "description": "Game rules text"
   },
-  "rulesCountUpObjectiveBody": "Score as many points as possible over a fixed number of rounds. Every dart adds to your running total — there is no checkout to land and no bust to worry about. When the last round ends, whoever has the highest total wins.",
+  "rulesCountUpObjectiveBody": "Score as many points as possible over a fixed number of rounds. Every dart adds to your running total: there is no checkout to land and no bust to worry about. When the last round ends, whoever has the highest total wins.",
   "@rulesCountUpObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1504,7 +1504,7 @@
   "@rulesCountUpHowB2": {
     "description": "Game rules text"
   },
-  "rulesCountUpHowB3": "A miss simply scores nothing — your turn still uses up a dart.",
+  "rulesCountUpHowB3": "A miss simply scores nothing, and your turn still uses up a dart.",
   "@rulesCountUpHowB3": {
     "description": "Game rules text"
   },
@@ -1512,7 +1512,7 @@
   "@rulesCountUpHowB4": {
     "description": "Game rules text"
   },
-  "rulesCountUpHowB5": "Players can be given a handicap at setup — a head start of 50, 100, 150, or 200 points added to their starting score.",
+  "rulesCountUpHowB5": "Players can be given a handicap at setup: a head start of 50, 100, 150, or 200 points added to their starting score.",
   "@rulesCountUpHowB5": {
     "description": "Game rules text"
   },
@@ -1520,7 +1520,7 @@
   "@rulesCountUpWinningBody": {
     "description": "Game rules text"
   },
-  "rulesCountUpTipsB1": "Without a bust to dodge, the triple 20 is always the best target — aim hard, every visit.",
+  "rulesCountUpTipsB1": "Without a bust to dodge, the triple 20 is always the best target. Aim hard, every visit.",
   "@rulesCountUpTipsB1": {
     "description": "Game rules text"
   },
@@ -1532,7 +1532,7 @@
   "@rulesShanghaiTagline": {
     "description": "Game rules text"
   },
-  "rulesShanghaiObjectiveBody": "Score as many points as possible across a fixed number of rounds. Each round targets a specific number, starting at 1 and counting up — only hits on that number score. Landing a single, double and triple of the target number in the same turn is a Shanghai, which wins the game outright.",
+  "rulesShanghaiObjectiveBody": "Score as many points as possible across a fixed number of rounds. Each round targets a specific number, starting at 1 and counting up. Only hits on that number score. Landing a single, double and triple of the target number in the same turn is a Shanghai, which wins the game outright.",
   "@rulesShanghaiObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1548,7 +1548,7 @@
   "@rulesShanghaiHowB3": {
     "description": "Game rules text"
   },
-  "rulesShanghaiHowB4": "Hits on any other number — including the bull — score nothing.",
+  "rulesShanghaiHowB4": "Hits on any other number, including the bull, score nothing.",
   "@rulesShanghaiHowB4": {
     "description": "Game rules text"
   },
@@ -1560,7 +1560,7 @@
   "@rulesShanghaiHowB6": {
     "description": "Game rules text"
   },
-  "rulesShanghaiWinningBody": "Shanghai can be played solo or competitively. The game ends when the final round is finished, and the highest total score wins. A Shanghai in any round — the round's single, double and triple in one turn — ends the game early as an instant win.",
+  "rulesShanghaiWinningBody": "Shanghai can be played solo or competitively. The game ends when the final round is finished, and the highest total score wins. A Shanghai in any round (the round's single, double and triple in one turn) ends the game early as an instant win.",
   "@rulesShanghaiWinningBody": {
     "description": "Game rules text"
   },
@@ -1568,7 +1568,7 @@
   "@rulesShanghaiTipsB1": {
     "description": "Game rules text"
   },
-  "rulesShanghaiTipsB2": "Hunting for the Shanghai is high-risk, high-reward — chasing two missing multipliers usually costs you a clean scoring turn.",
+  "rulesShanghaiTipsB2": "Hunting for the Shanghai is high-risk, high-reward: chasing two missing multipliers usually costs you a clean scoring turn.",
   "@rulesShanghaiTipsB2": {
     "description": "Game rules text"
   },
@@ -1592,7 +1592,7 @@
   "@rulesCricketStdHowB3": {
     "description": "Game rules text"
   },
-  "rulesCricketStdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.",
+  "rulesCricketStdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you, but only while at least one opponent still has it open.",
   "@rulesCricketStdHowB4": {
     "description": "Game rules text"
   },
@@ -1600,7 +1600,7 @@
   "@rulesCricketStdHowB5": {
     "description": "Game rules text"
   },
-  "rulesCricketStdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. If you close everything but trail on points, the leg continues — you need to score, or hope an opponent closes a number you are leading on.",
+  "rulesCricketStdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. If you close everything but trail on points, the leg continues: you need to score, or hope an opponent closes a number you are leading on.",
   "@rulesCricketStdWinningBody": {
     "description": "Game rules text"
   },
@@ -1616,7 +1616,7 @@
   "@rulesCricketNsTagline": {
     "description": "Game rules text"
   },
-  "rulesCricketNsObjectiveBody": "Close every cricket target before your opponents. Points do not exist in this variant — the race is purely about shutting numbers down.",
+  "rulesCricketNsObjectiveBody": "Close every cricket target before your opponents. Points do not exist in this variant: the race is purely about shutting numbers down.",
   "@rulesCricketNsObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1632,7 +1632,7 @@
   "@rulesCricketNsHowB3": {
     "description": "Game rules text"
   },
-  "rulesCricketNsHowB4": "Hit a target three times to close it. Extra hits beyond three have no effect — no points are scored in this variant.",
+  "rulesCricketNsHowB4": "Hit a target three times to close it. Extra hits beyond three have no effect: no points are scored in this variant.",
   "@rulesCricketNsHowB4": {
     "description": "Game rules text"
   },
@@ -1652,7 +1652,7 @@
   "@rulesCricketCtTagline": {
     "description": "Game rules text"
   },
-  "rulesCricketCtObjectiveBody": "Close every cricket target — and finish on the lowest score at the table. Points are a punishment here: when you score on a number only you have closed, those points go to your opponents.",
+  "rulesCricketCtObjectiveBody": "Close every cricket target, and finish on the lowest score at the table. Points are a punishment here: when you score on a number only you have closed, those points go to your opponents.",
   "@rulesCricketCtObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1712,11 +1712,11 @@
   "@rulesCricketCzHowB2": {
     "description": "Game rules text"
   },
-  "rulesCricketCzHowB3": "Hit a number three times to close it — and the moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.",
+  "rulesCricketCzHowB3": "Hit a number three times to close it. The moment that happens, the number is locked onto the board for the rest of the leg. No more re-rolls on that slot.",
   "@rulesCricketCzHowB3": {
     "description": "Game rules text"
   },
-  "rulesCricketCzHowB4": "Partial hits (one or two marks) reset every roll. Only closed numbers (and the Bull) keep their marks across turns — even if the same number happens to roll again, you start fresh at 0 marks on it next turn.",
+  "rulesCricketCzHowB4": "Partial hits (one or two marks) reset every roll. Only closed numbers (and the Bull) keep their marks across turns. Even if the same number happens to roll again, you start fresh at 0 marks on it next turn.",
   "@rulesCricketCzHowB4": {
     "description": "Game rules text"
   },
@@ -1732,7 +1732,7 @@
   "@rulesCricketCzTipsB1": {
     "description": "Game rules text"
   },
-  "rulesCricketCzTipsB2": "Spreading hits across multiple open numbers is risky — partial marks are wiped on every roll. Better to commit to closing one number in the same turn before moving on.",
+  "rulesCricketCzTipsB2": "Spreading hits across multiple open numbers is risky: partial marks are wiped on every roll. Better to commit to closing one number in the same turn before moving on.",
   "@rulesCricketCzTipsB2": {
     "description": "Game rules text"
   },
@@ -1748,7 +1748,7 @@
   "@rulesCricketRdTagline": {
     "description": "Game rules text"
   },
-  "rulesCricketRdObjectiveBody": "Same as Standard Cricket — close every target and finish ahead on points — but the six numbers are drawn at random when the game starts. The Bull is always a target. The assigned set stays the same across every leg of the game.",
+  "rulesCricketRdObjectiveBody": "Same as Standard Cricket (close every target and finish ahead on points), but the six numbers are drawn at random when the game starts. The Bull is always a target. The assigned set stays the same across every leg of the game.",
   "@rulesCricketRdObjectiveBody": {
     "description": "Game rules text"
   },
@@ -1756,7 +1756,7 @@
   "@rulesCricketRdHowB1": {
     "description": "Game rules text"
   },
-  "rulesCricketRdHowB2": "The targets do not change between legs — what was drawn is what you play, start to finish.",
+  "rulesCricketRdHowB2": "The targets do not change between legs: what was drawn is what you play, start to finish.",
   "@rulesCricketRdHowB2": {
     "description": "Game rules text"
   },
@@ -1764,7 +1764,7 @@
   "@rulesCricketRdHowB3": {
     "description": "Game rules text"
   },
-  "rulesCricketRdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you — but only while at least one opponent still has it open.",
+  "rulesCricketRdHowB4": "Hit a target three times to close it. Once closed, any extra hits on that target score points for you, but only while at least one opponent still has it open.",
   "@rulesCricketRdHowB4": {
     "description": "Game rules text"
   },
@@ -1772,7 +1772,7 @@
   "@rulesCricketRdHowB5": {
     "description": "Game rules text"
   },
-  "rulesCricketRdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. Closing first while trailing on points does not end the leg — you need to score on, or have opponents close, the targets you are leading on.",
+  "rulesCricketRdWinningBody": "You win the leg the moment all of your targets are closed and your score is at least as high as every opponent's. Closing first while trailing on points does not end the leg: you need to score on, or have opponents close, the targets you are leading on.",
   "@rulesCricketRdWinningBody": {
     "description": "Game rules text"
   },
@@ -1780,7 +1780,7 @@
   "@rulesCricketRdVar1Summary": {
     "description": "Game rules text"
   },
-  "rulesCricketRdVar2Summary": "Random Cricket can be combined with Cut Throat scoring — points go to opponents instead.",
+  "rulesCricketRdVar2Summary": "Random Cricket can be combined with Cut Throat scoring: points go to opponents instead.",
   "@rulesCricketRdVar2Summary": {
     "description": "Game rules text"
   },
@@ -1970,7 +1970,7 @@
   "@autoScorerTechnicalDisplayTitle": {
     "description": "Advanced switch: draw the raw detection boxes on the camera preview"
   },
-  "autoScorerTechnicalDisplaySubtitle": "Draw the detection boxes and their confidence scores on the camera preview. For debugging — off by default.",
+  "autoScorerTechnicalDisplaySubtitle": "Draw the detection boxes and their confidence scores on the camera preview. For debugging. Off by default.",
   "@autoScorerTechnicalDisplaySubtitle": {
     "description": "Explains what the technical-display switch turns on"
   },
@@ -1998,7 +1998,7 @@
   "@autoScorerModelDownloading": {
     "description": "Model update state: a background check/download is in progress"
   },
-  "autoScorerModelUpdateReady": "Update ready — applies next session",
+  "autoScorerModelUpdateReady": "Update ready, applies next session",
   "@autoScorerModelUpdateReady": {
     "description": "Model update state: a newer model was downloaded and takes effect at the next scoring session"
   },
@@ -2090,7 +2090,7 @@
   "@autoScorerTip3Title": {
     "description": "Setup tip title"
   },
-  "autoScorerTip3Body": "You don't need 20 at the top — the camera finds the markers in any board orientation.",
+  "autoScorerTip3Body": "You don't need 20 at the top: the camera finds the markers in any board orientation.",
   "@autoScorerTip3Body": {
     "description": "Setup tip body"
   },
@@ -2177,9 +2177,9 @@
   },
   "autoScorerStatusLearningMode": "Learning mode",
   "@autoScorerStatusLearningMode": {
-    "description": "Status chip: the board was never recognised this session — a calm mode, not an alert"
+    "description": "Status chip: the board was never recognised this session, a calm mode rather than an alert"
   },
-  "autoScorerLearningModeHint": "Board not recognised — scoring by hand for this game.",
+  "autoScorerLearningModeHint": "Board not recognised, scoring by hand for this game.",
   "@autoScorerLearningModeHint": {
     "description": "Line under the in-game camera bar while in learning mode (board never recognised)"
   },
@@ -2235,7 +2235,7 @@
   },
   "autoScorerContinueWithoutAutoScoring": "Continue without auto-scoring",
   "@autoScorerContinueWithoutAutoScoring": {
-    "description": "Aim view: confirm button when the 4 calibration markers aren't detected — proceeds without auto-scoring (manual scoring)"
+    "description": "Aim view: confirm button when the 4 calibration markers aren't detected; proceeds without auto-scoring (manual scoring)"
   },
   "autoScorerCalibratedSteadyHint": "All four markers found. Hold still a moment.",
   "@autoScorerCalibratedSteadyHint": {
@@ -2273,7 +2273,7 @@
   "@autoScorerExplainEnableRecording": {
     "description": "Aim view panel: turn recording on from here"
   },
-  "autoScorerUncalibratedNotice": "The board markers weren't detected, so automatic scoring is off in this setup. You can still play and score by hand — and if data collection is on, your throws help train the camera (BETA).",
+  "autoScorerUncalibratedNotice": "The board markers weren't detected, so automatic scoring is off in this setup. You can still play and score by hand, and if data collection is on, your throws help train the camera (BETA).",
   "@autoScorerUncalibratedNotice": {
     "description": "One-time note shown when proceeding past aiming without calibration"
   },
@@ -2460,15 +2460,15 @@
       }
     }
   },
-  "glossaryPprTitle": "PPR — Points Per Round",
+  "glossaryPprTitle": "PPR: Points Per Round",
   "@glossaryPprTitle": {
     "description": "Glossary dialog title for the PPR statistic"
   },
-  "glossaryPprBody": "Your three-dart average: the average points you score per full turn of 3 darts. Higher is better — a solid amateur sits around 40–60.",
+  "glossaryPprBody": "Your three-dart average: the average points you score per full turn of 3 darts. Higher is better: a solid amateur sits around 40–60.",
   "@glossaryPprBody": {
     "description": "Plain-language definition of the PPR statistic"
   },
-  "glossaryMprTitle": "MPR — Marks Per Round",
+  "glossaryMprTitle": "MPR: Marks Per Round",
   "@glossaryMprTitle": {
     "description": "Glossary dialog title for the Cricket MPR statistic"
   },
@@ -2488,7 +2488,7 @@
   "@glossaryCheckoutScoreTitle": {
     "description": "Glossary dialog title for the checkout score statistic"
   },
-  "glossaryCheckoutScoreBody": "The score you finished a leg on — the total you took out with your winning turn. A higher checkout is a harder finish.",
+  "glossaryCheckoutScoreBody": "The score you finished a leg on: the total you took out with your winning turn. A higher checkout is a harder finish.",
   "@glossaryCheckoutScoreBody": {
     "description": "Plain-language definition of the checkout score statistic"
   }

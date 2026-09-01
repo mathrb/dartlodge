@@ -201,7 +201,7 @@ void main() {
       )));
 
       expect(find.text('BUSTED'), findsOneWidget);
-      expect(find.text("Bob's 27 — drill ended"), findsOneWidget);
+      expect(find.text("Bob's 27: drill ended"), findsOneWidget);
     });
 
     testWidgets(
