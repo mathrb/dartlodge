@@ -16,10 +16,10 @@ const double kAimBannerDiagramSize = 44;
 /// of white text laid straight on the camera image, whose legibility depended
 /// on whatever the player happened to have behind their board.
 ///
-/// The colour carries the state, so the border does not have to. Opaque, so the
-/// text does not depend on the picture underneath. And the four dots sit where
-/// they sit on a real board, which is the part a row of identical pips could
-/// never say.
+/// The fill carries the state — the outline only sharpens the block against the
+/// camera image, and says nothing on its own. Opaque, so the text does not
+/// depend on the picture underneath. And the four dots sit where they sit on a
+/// real board, which is the part a row of identical pips could never say.
 class AimStatusBanner extends StatelessWidget {
   const AimStatusBanner({
     super.key,
@@ -30,8 +30,12 @@ class AimStatusBanner extends StatelessWidget {
 
   final RecognitionState recognition;
 
-  /// What the player should do about the state — already localised.
-  final String message;
+  /// What the player should do about the state — already localised. Null keeps
+  /// the board alone: while the escalation panel (#743) is explaining a
+  /// sustained failure, IT carries the words, but the live board must stay —
+  /// that is the very window in which the player is nudging the camera and
+  /// wants to watch the markers come in one by one.
+  final String? message;
 
   /// Spoken description of the board diagram.
   final String diagramSemanticsLabel;
@@ -71,16 +75,18 @@ class AimStatusBanner extends StatelessWidget {
               foreground: scheme.onSurface,
             ),
           ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
-              message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: scheme.onSurface),
+          if (message != null) ...[
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text(
+                message!,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: scheme.onSurface),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

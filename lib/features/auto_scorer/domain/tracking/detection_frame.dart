@@ -15,7 +15,8 @@ class DetectionFrame {
 
   /// Best confidence the model gave for each cal class `[cal1, cal2, cal3,
   /// cal4]`, or null where that class wasn't detected this frame. **Diagnostic
-  /// and advisory only** (the calibration-threshold readout, and the halo/pips
+  /// and advisory only** (the calibration-threshold readout, and the recognition
+  /// rendering
   /// of `recognitionStateOf` in both camera views, #739) — the tracker reads
   /// [calPoints]/[hasCalibration], not this. Defaults to all-null
   /// so non-detector constructors (tests) need not supply it.

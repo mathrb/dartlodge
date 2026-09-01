@@ -14,7 +14,8 @@ const _kTechnicalDisplayKey = 'auto_scorer_technical_display';
 ///
 /// Accepted trade-off recorded in the design: with the boxes hidden the player
 /// loses the information of *where* the camera sees the markers. The halo and
-/// pips (S1.1/S1.2) replace that signal in player language.
+/// aim view's status banner (S1.1/S1.2) replace that signal in player
+/// language.
 @Riverpod(keepAlive: true)
 class AutoScorerTechnicalDisplay extends _$AutoScorerTechnicalDisplay {
   @override

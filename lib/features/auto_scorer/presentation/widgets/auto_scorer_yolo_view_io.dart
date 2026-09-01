@@ -380,7 +380,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     final fill = _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final ready = _stability.isReady;
     // One derived state, two renderings (#739): the halo around the preview and
-    // the four pips beside the hint. Advisory — it drives colour and copy only;
+    // the live board in the status banner. Advisory — it drives colour and copy only;
     // `calibrated`/`ready` above still gate the button.
     final recognition = recognitionStateOf(
       calBestPoints: _latest?.calBestPoints ?? const [null, null, null, null],
@@ -437,11 +437,20 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // One status object (#759). The explanation panel takes the
-                    // same slot when recognition has failed for long enough
-                    // (#743): they say the same thing at different lengths, so
-                    // they must never be on screen together.
-                    if (explain)
+                    // One status object (#759): the board and the line about
+                    // what to do, together. When recognition has failed long
+                    // enough for the explanation panel to take over the words
+                    // (#743), the board STAYS above it — that is precisely when
+                    // the player is nudging the camera and wants to watch the
+                    // markers arrive.
+                    if (explain) ...[
+                      AimStatusBanner(
+                        recognition: recognition,
+                        message: null,
+                        diagramSemanticsLabel: l10n
+                            .autoScorerMarkersFoundA11y(recognition.foundCount),
+                      ),
+                      const SizedBox(height: 8),
                       AimExplanationPanel(
                         // The photo opt-in specifically, NOT the settings
                         // page's `collect || sessions` OR (#686): the panel
@@ -456,8 +465,8 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                         onKeepAiming: () =>
                             setState(() => _keepAiming = true),
                         onEnableRecording: _enableRecording,
-                      )
-                    else
+                      ),
+                    ] else
                       AimStatusBanner(
                         recognition: recognition,
                         message: hint,

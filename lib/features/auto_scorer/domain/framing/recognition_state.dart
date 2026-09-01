@@ -30,8 +30,8 @@ enum RecognitionGrade {
 }
 
 /// The single derived recognition state behind both the halo (S1.1) and the
-/// marker pips (S1.2) of the aim view. One pure function, two renderings, so
-/// the border colour and the pips can never tell the player different stories.
+/// aim view's status banner (S1.2). One pure function, however many renderings,
+/// so they can never tell the player different stories.
 typedef RecognitionState = ({
   /// Per-marker state in DeepDarts order (cal1=5/20 wire, cal2=3/17, cal3=8/11,
   /// cal4=13/6) — always four entries, index-aligned with the detector's cal
@@ -40,7 +40,7 @@ typedef RecognitionState = ({
   RecognitionGrade grade,
 
   /// How many markers are [MarkerRecognition.found]. Drives copy that still
-  /// wants a number; the pips themselves show it without one.
+  /// wants a number; the board diagram shows it without one.
   int foundCount,
 });
 
@@ -90,7 +90,7 @@ RecognitionState recognitionStateOf({
   // Red is reserved for "the camera sees nothing of the board". Markers seen
   // below the threshold grade amber even though none of them counts yet: that
   // is the whole point of telling weak apart from missing, and it keeps the
-  // halo agreeing with the pips, which are already showing amber outlines.
+  // grade agreeing with the per-marker dots, which already show that nuance.
   final seenAny = markers.any((m) => m != MarkerRecognition.missing);
   final grade = !seenAny
       ? RecognitionGrade.none

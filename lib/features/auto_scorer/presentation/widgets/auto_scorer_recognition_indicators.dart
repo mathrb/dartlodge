@@ -16,7 +16,8 @@ import 'package:flutter/material.dart';
 /// to eat the ~140px band preview.
 const double kRecognitionHaloWidth = 3.0;
 
-/// Colour of the halo/pips for a grade. Red (nothing) → amber (getting there) →
+/// Colour of a recognition grade — the in-game halo, and the aim view's status
+/// banner. Red (nothing) → amber (getting there) →
 /// green (good). Design tokens only: `error` from the scheme, `award` and
 /// `success` from [AppTheme], so both themes stay accessible.
 Color recognitionColor(BuildContext context, RecognitionGrade grade) {

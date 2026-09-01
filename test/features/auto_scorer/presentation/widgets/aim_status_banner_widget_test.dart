@@ -106,4 +106,26 @@ void main() {
     // from three different tokens, not from one with opacity.
     expect(AppTheme.award, isNot(AppTheme.success));
   });
+
+  testWidgets('without a message it is the board alone (#743 coexistence)',
+      (tester) async {
+    // While the escalation panel carries the words, the banner keeps showing
+    // the live board above it: that is exactly when the player is nudging the
+    // camera and wants to watch the markers arrive one by one.
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: Scaffold(
+        body: AimStatusBanner(
+          recognition: _state(RecognitionGrade.partial),
+          message: null,
+          diagramSemanticsLabel: '2 of 4 board markers recognised',
+        ),
+      ),
+    ));
+
+    expect(find.byType(CalibrationMarkerDiagram), findsOneWidget);
+    expect(find.byType(Text), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

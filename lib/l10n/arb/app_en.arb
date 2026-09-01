@@ -2211,9 +2211,9 @@
   },
   "autoScorerMarkersReframe": "Reframe so all four markers show. Any board rotation is fine.",
   "@autoScorerMarkersReframe": {
-    "description": "Aim view: partial calibration hint. The count it used to carry is now shown by the four marker pips (#739)"
+    "description": "Aim view: partial calibration hint. The count it used to carry is shown by the live board diagram in the status banner (#759)"
   },
-  "autoScorerReadyZoomHint": "Ready. Fill more of the frame for finer scoring.",
+  "autoScorerReadyZoomHint": "Ready. Fill more of the frame for more precise scoring.",
   "@autoScorerReadyZoomHint": {
     "description": "Aim view: ready but suboptimal framing"
   },

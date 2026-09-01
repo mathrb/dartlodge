@@ -42,14 +42,19 @@ double calibrationMarkerAngle(int index) {
   throw StateError('Segments $a and $b are not adjacent on a dartboard.');
 }
 
-/// Static dartboard diagram marking the four calibration points the camera
-/// looks for (#740, design S1.4).
+/// Dartboard diagram marking the four calibration points the camera looks for
+/// (#740, design S1.4).
 ///
-/// Pure UI: no providers, no detection state, nothing animated — it is a
-/// drawing in the setup-tips screen, shown identically on the game-flow path
-/// and in review mode from Settings. It renders from the shared core board face
-/// ([paintDartboardFace]) rather than a bitmap asset, so it stays sharp at any
-/// size and costs nothing to ship.
+/// Two forms, one drawing. The default constructor is the static, labelled
+/// diagram of the setup-tips screen, shown identically on the game-flow path
+/// and in review mode from Settings — no detection state, nothing animated.
+/// [CalibrationMarkerDiagram.live] is the same board in the aim view's status
+/// banner (#759), stripped of labels and coloured by what the camera currently
+/// sees.
+///
+/// Pure UI either way: no providers: the caller passes the state in. It renders
+/// from the shared core board face ([paintDartboardFace]) rather than a bitmap
+/// asset, so it stays sharp at any size and costs nothing to ship.
 ///
 /// Square by construction; give it a width and it takes the matching height.
 class CalibrationMarkerDiagram extends StatelessWidget {

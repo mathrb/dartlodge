@@ -563,7 +563,7 @@
   "autoScorerAimHint": "Richte die Kamera auf das Board.",
   "autoScorerMarkersFoundA11y": "{found, plural, =0{Noch keine Board-Markierung erkannt} one{1 von 4 Board-Markierungen erkannt} other{{found} von 4 Board-Markierungen erkannt}}",
   "autoScorerMarkersReframe": "Neu einrahmen, bis alle vier Markierungen sichtbar sind. Jede Board-Drehung ist in Ordnung.",
-  "autoScorerReadyZoomHint": "Bereit. Formatfüllender wird es genauer.",
+  "autoScorerReadyZoomHint": "Bereit. Je formatfüllender, desto genauer.",
   "autoScorerReadyDone": "Bereit zum Zählen.",
   "autoScorerDoneAiming": "Zielen fertig",
   "autoScorerContinueWithoutAutoScoring": "Ohne automatische Wertung fortfahren",
