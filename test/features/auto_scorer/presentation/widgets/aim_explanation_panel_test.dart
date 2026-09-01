@@ -43,7 +43,10 @@ void main() {
         .firstWhere((s) => s.contains('score by hand'));
     // The honest chain: photos → sent → retrained → the new model comes back.
     expect(loop, contains('retrained'));
-    expect(loop, contains('reaches the app on its own'));
+    expect(loop, contains('reaches the app later'));
+    // But NOT "on its own" (#763): the model comes back by itself only on
+    // Android, where the OTA channel exists.
+    expect(loop, isNot(contains('on its own')));
     // And the explicit denial the maintainer asked for.
     expect(loop, contains('Nothing is learned on your phone'));
   });

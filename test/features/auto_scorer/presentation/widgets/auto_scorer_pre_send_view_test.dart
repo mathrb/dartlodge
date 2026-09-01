@@ -14,6 +14,16 @@ Future<void> open(
   int sessions = 2,
   String size = '34.5 MB',
 }) async {
+  // Same width as the default test window, three times the height: the screen
+  // is a scrolling ListView, and with the sessions section (#763) the default
+  // 800x600 cuts off the lower half — a tap or a `findsOneWidget` down there
+  // would then depend on scroll position rather than on the screen's content.
+  // Only the height is changed: at a narrower width the test font (fixed-width
+  // glyph boxes, far wider than the real one) reports overflows the device
+  // does not have.
+  tester.view.physicalSize = const Size(800, 1800);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
   await tester.pumpWidget(MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: kSupportedLocales,
@@ -62,6 +72,37 @@ void main() {
 
     expect(find.text('1 training photo'), findsOneWidget);
     expect(find.text('No recorded sessions'), findsOneWidget);
+    // Nothing to describe, so the section that describes it stays away (#763).
+    expect(find.text('What a recorded session holds'), findsNothing);
+  });
+
+  testWidgets('says what a recorded session holds, and what it does not',
+      (tester) async {
+    // Counted but never explained until #763, while the photos beside them
+    // were. The reassuring half is that a session carries no images at all.
+    await open(tester, (_) {});
+
+    expect(find.text('What a recorded session holds'), findsOneWidget);
+    expect(find.textContaining('no images'), findsOneWidget);
+    // Named honestly: the bundle carries the game's competitor names, and its
+    // timestamps say when it was played.
+    expect(find.textContaining('player names'), findsOneWidget);
+    expect(find.textContaining('when it was played'), findsOneWidget);
+  });
+
+  testWidgets('the loop after sending is not described as automatic',
+      (tester) async {
+    // #763: the old copy read as a hands-off pipeline with a short implied
+    // delay, and promised a model that comes back "on its own" — true only on
+    // Android, where the OTA channel exists.
+    await open(tester, (_) {});
+
+    expect(find.textContaining('hands-on work'), findsOneWidget);
+    expect(find.textContaining('on no set schedule'), findsOneWidget);
+    expect(find.textContaining('on its own'), findsNothing);
+    // What has not changed: no on-device learning.
+    expect(find.textContaining('Nothing is learned on your phone'),
+        findsOneWidget);
   });
 
   testWidgets('copies the address to the clipboard', (tester) async {

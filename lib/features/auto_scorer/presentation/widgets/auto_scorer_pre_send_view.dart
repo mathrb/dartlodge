@@ -93,6 +93,17 @@ class _AutoScorerPreSendViewState extends State<AutoScorerPreSendView> {
           _section(context, l10n.autoScorerPreSendPhotosTitle, [
             Text(l10n.autoScorerPreSendPhotosBody, style: body),
           ]),
+          // Sessions were counted above but never explained, while the photos
+          // beside them were (#763). And what a session does NOT contain is
+          // the reassuring half: no images at all, only numbers.
+          //
+          // Only when there is one to describe: recording sessions is its own
+          // opt-in, so for most senders this section would explain a file that
+          // is not in their zip.
+          if (widget.sessionCount > 0)
+            _section(context, l10n.autoScorerPreSendSessionsTitle, [
+              Text(l10n.autoScorerPreSendSessionsBody, style: body),
+            ]),
           _section(context, l10n.autoScorerPreSendWhereTitle, [
             Text(l10n.autoScorerPreSendStep1, style: body),
             const SizedBox(height: 8),
