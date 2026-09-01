@@ -1684,4 +1684,28 @@ void main() {
     // Advance past the bust-dismissal timer to avoid a pending-timer warning.
     await tester.pump(const Duration(seconds: 3));
   });
+
+  // ── Camera region floor on the worst screen + font (#769) ───────────────────
+
+  group('camera-first fits the smallest screen (#769)', () {
+    testWidgets('320x568 at font x1.5: no overflow, camera stays usable',
+        (tester) async {
+      // The same body as the other three boards, so it inherits the same fix:
+      // the content scrolls, the camera keeps a floor. Measured on X01 before
+      // the fix, this configuration overflowed and left the camera nothing.
+      tester.view.physicalSize = const Size(320, 568) * 3;
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final notifier = _FakeActivePracticeNotifier(_activeState());
+      await tester.pumpWidget(_buildAppCameraFirst(notifier));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+          greaterThanOrEqualTo(190.0));
+    });
+  });
 }

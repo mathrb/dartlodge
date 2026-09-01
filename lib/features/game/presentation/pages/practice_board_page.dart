@@ -19,6 +19,7 @@ import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../state/active_practice_state.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/dartboard_highlight_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
@@ -131,8 +132,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         final prevComplete = prevValue?.gameState.isComplete ?? false;
         if (prevComplete || !gs.isComplete) return;
 
-        final delay = (gs.gameType == GameType.shanghai &&
-                nextValue.showShanghaiBonus)
+        final delay =
+            (gs.gameType == GameType.shanghai && nextValue.showShanghaiBonus)
             ? _shanghaiBonusNavDelay
             : Duration.zero;
 
@@ -162,8 +163,9 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
             duration: const Duration(seconds: 2),
             content: Text(
               'BUST',
-              style: AppTextStyles.headlineSmall
-                  .copyWith(color: cs.onErrorContainer),
+              style: AppTextStyles.headlineSmall.copyWith(
+                color: cs.onErrorContainer,
+              ),
             ),
           ),
         );
@@ -181,9 +183,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
-      loading: () => const Scaffold(
-        body: LoadingSpinnerWidget(),
-      ),
+      loading: () => const Scaffold(body: LoadingSpinnerWidget()),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
           title: l10n.gameDrillLoadFailed,
@@ -195,26 +195,31 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         if (practiceState == null) {
           return Scaffold(
             body: Center(
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Text(l10n.gameNotFound),
-                TextButton(
-                  onPressed: () => context.go(GameRoutes.home),
-                  child: Text(l10n.commonBack),
-                ),
-              ]),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.gameNotFound),
+                  TextButton(
+                    onPressed: () => context.go(GameRoutes.home),
+                    child: Text(l10n.commonBack),
+                  ),
+                ],
+              ),
             ),
           );
         }
 
         final gs = practiceState.gameState;
-        final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
+        final notifier = ref.read(
+          activePracticeProvider(widget.gameId).notifier,
+        );
         final cameraFirst = autoScoringOn && cameraPreview != null;
         final competitor = gs.competitors[gs.currentTurnIndex];
         final allDarts = competitor.dartThrows;
         final currentTurnDarts =
             gs.dartsThrownInTurn == 0 || allDarts.length < gs.dartsThrownInTurn
-                ? <String>[]
-                : allDarts.sublist(allDarts.length - gs.dartsThrownInTurn);
+            ? <String>[]
+            : allDarts.sublist(allDarts.length - gs.dartsThrownInTurn);
         final isAtc = gs.gameType == GameType.aroundTheClock;
         final isBobs27 = gs.gameType == GameType.bobs27;
         final isCatch40 = gs.gameType == GameType.catch40;
@@ -259,8 +264,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
             // Bump only when the previous attempt has been formally ended
             // via NEXT ROUND (dartsThrownInTurn back to 0 with darts on
             // record); otherwise we're still mid-attempt.
-            displayedRound = completedAttempts +
-                (gs.dartsThrownInTurn == 0 ? 1 : 0);
+            displayedRound =
+                completedAttempts + (gs.dartsThrownInTurn == 0 ? 1 : 0);
           }
         } else {
           displayedRound = competitor.practiceRound;
@@ -272,228 +277,257 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         final effectiveTarget = isBobs27
             ? (displayedRound > 20 ? 25 : displayedRound)
             : isShanghai
-                ? displayedRound
-                : isCheckout
-                    ? competitor.score
-                    : competitor.currentTarget;
+            ? displayedRound
+            : isCheckout
+            ? competitor.score
+            : competitor.currentTarget;
         final roundScore = isCatch40
             ? _computeRoundScore(competitor.dartThrows, gs.dartsThrownInTurn)
             : 0;
+
+        // Hoisted so camera-first can put it inside the scrolling half of
+        // the body (#769): with the camera keeping a floor, everything the
+        // game shows above it has to be able to cede.
+        final targetDisplay = PracticeTargetDisplayWidget(
+          gameType: gs.gameType,
+          // Camera-first (#445): enlarge the key target to the hero size.
+          heroSize: cameraFirst,
+          currentTarget: effectiveTarget,
+          practiceRound: displayedRound,
+          totalRounds: _totalRounds(gs),
+          score: competitor.score,
+          // Multi-player ATC / Shanghai: surface whose turn it is
+          // (#276). Solo drills pass null and keep the previous
+          // target-only chrome.
+          currentPlayerName: gs.competitors.length > 1 ? competitor.name : null,
+          practiceAttempts: isCheckout
+              // Per-round count, not session-cumulative (#328).
+              // `dartsThrownInTurn` jumps to 3 on bust/checkout
+              // because the engine pads the slots, so count the
+              // non-empty entries in the trailing `dartsThrownInTurn`
+              // slots of `dartThrows` to exclude sentinel pads
+              // (consistent with the X01 board's per-turn dart-chip
+              // logic).
+              ? _checkoutDartsThisRound(competitor, gs)
+              : competitor.practiceAttempts,
+          practiceSuccesses: competitor.practiceSuccesses,
+          roundScore: roundScore,
+          catch40DartsOnTarget: gs.catch40DartsOnTarget,
+          catch40TargetRemaining: gs.catch40TargetRemaining,
+        );
 
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-            children: [
-              AppHeader(
-                showBack: true,
-                onBack: () => _confirmBack(context),
-                trailing: PopupMenuButton<_DrillAction>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  onSelected: (action) async {
-                    switch (action) {
-                      case _DrillAction.endDrill:
-                        await notifier.endDrill();
-                        // After endDrill() the game is is_complete=true,
-                        // so route to the post-game summary the same way
-                        // a natural completion does — gives the user the
-                        // hero card + per-player breakdown (and, for
-                        // multi-player ATC/Shanghai, the podium added in
-                        // #279/#296). Previously navigated to home, which
-                        // dropped the drill on the floor with no feedback
-                        // (#289, #291).
-                        if (context.mounted) {
-                          context.go(GameRoutes.postGame(widget.gameId));
-                        }
-                      case _DrillAction.settings:
-                        if (context.mounted) {
-                          context.push(GameRoutes.settings);
-                        }
-                      case _DrillAction.reportBug:
-                        if (context.mounted) {
-                          showReportBugDialog(context);
-                        }
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: _DrillAction.endDrill,
-                      // Multi-player ATC / Shanghai is a competitive game,
-                      // not a solo drill — match the label to the context.
-                      child: Text(
-                        gs.competitors.length > 1
-                            ? l10n.gameMenuEndGame
-                            : l10n.gameMenuEndDrill,
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  AppHeader(
+                    showBack: true,
+                    onBack: () => _confirmBack(context),
+                    trailing: PopupMenuButton<_DrillAction>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
-                    ),
-                    // Settings entry so users don't have to abandon the
-                    // drill to reach theme/preferences (#342). `push`
-                    // (not `go`) preserves the active-game route so
-                    // the back arrow returns to the board.
-                    PopupMenuItem(
-                      value: _DrillAction.settings,
-                      child: Text(l10n.settingsTitle),
-                    ),
-                    // Report a Bug without leaving the drill (#688). Gated on
-                    // crash reporting being active this run, like Settings.
-                    if (isBugReportingAvailable())
-                      PopupMenuItem(
-                        value: _DrillAction.reportBug,
-                        child: Text(l10n.settingsReportBug),
-                      ),
-                  ],
-                ),
-              ),
-              GameStatusBarWidget(
-                configLabel: _modeName(gs.gameType),
-                roundInLeg: displayedRound,
-                // Checkout Practice's `_totalRounds` is the success target,
-                // not an attempt cap — pairing it with the attempt-count
-                // numerator produced misleading "ROUND 4 / 3" output (#327).
-                // Drop the denominator here; success progress moves into
-                // the target display's secondary metric instead.
-                totalRounds: isCheckout ? null : _totalRounds(gs),
-                currentTurnDarts: currentTurnDarts,
-                // Camera-first (#445) hides the darts here — they move to the
-                // prominent dart band below. Manual practice has no per-dart
-                // correction on the bar (unchanged).
-                onDartTapped: null,
-                showDarts: !cameraFirst,
-                // Checkout Practice: a busted turn scored 0 — don't show the
-                // raw busted-dart sum in the readout (#604).
-                turnBusted: practiceState.turnBusted,
-              ),
-              // Camera-first hides the aim dartboard (the camera IS the board).
-              if (!cameraFirst)
-                Expanded(
-                  child: DartboardHighlightWidget(
-                    // The highlight widget treats null as the bull; map Bob's
-                    // 27's bull-round segment (25) to null so the finale lights
-                    // up the bullseye, not a (non-existent) number 25 (#588).
-                    currentTarget:
-                        (isBobs27 && effectiveTarget == 25) ? null : effectiveTarget,
-                    doublesOnly: doublesOnly,
-                    bobs27: isBobs27,
-                    noHighlight: isCatch40 || isCheckout,
-                  ),
-                ),
-              PracticeTargetDisplayWidget(
-                gameType: gs.gameType,
-                // Camera-first (#445): enlarge the key target to the hero size.
-                heroSize: cameraFirst,
-                currentTarget: effectiveTarget,
-                practiceRound: displayedRound,
-                totalRounds: _totalRounds(gs),
-                score: competitor.score,
-                // Multi-player ATC / Shanghai: surface whose turn it is
-                // (#276). Solo drills pass null and keep the previous
-                // target-only chrome.
-                currentPlayerName:
-                    gs.competitors.length > 1 ? competitor.name : null,
-                practiceAttempts: isCheckout
-                    // Per-round count, not session-cumulative (#328).
-                    // `dartsThrownInTurn` jumps to 3 on bust/checkout
-                    // because the engine pads the slots, so count the
-                    // non-empty entries in the trailing `dartsThrownInTurn`
-                    // slots of `dartThrows` to exclude sentinel pads
-                    // (consistent with the X01 board's per-turn dart-chip
-                    // logic).
-                    ? _checkoutDartsThisRound(competitor, gs)
-                    : competitor.practiceAttempts,
-                practiceSuccesses: competitor.practiceSuccesses,
-                roundScore: roundScore,
-                catch40DartsOnTarget: gs.catch40DartsOnTarget,
-                catch40TargetRemaining: gs.catch40TargetRemaining,
-              ),
-              if (isShanghai)
-                _ShanghaiBonus(show: practiceState.showShanghaiBonus),
-              // Camera-first (#445): the multi-player progress strip (ATC /
-              // Shanghai) → the prominent dart band → the camera region, which
-              // fills whatever height is left (#760). Manual entry / correction
-              // lives in the band's modal.
-              if (cameraFirst) ...[
-                if ((isAtc || isShanghai) && gs.competitors.length > 1)
-                  PracticePlayersStripWidget(
-                    players: [
-                      for (int i = 0; i < gs.competitors.length; i++)
-                        if (i != gs.currentTurnIndex)
-                          (
-                            name: gs.competitors[i].name,
-                            value: isAtc
-                                // ATC initialises currentTarget to 1; 0 is not
-                                // a valid target, so fall back to the first.
-                                ? (gs.competitors[i].currentTarget ?? 1)
-                                : gs.competitors[i].score,
+                      onSelected: (action) async {
+                        switch (action) {
+                          case _DrillAction.endDrill:
+                            await notifier.endDrill();
+                            // After endDrill() the game is is_complete=true,
+                            // so route to the post-game summary the same way
+                            // a natural completion does — gives the user the
+                            // hero card + per-player breakdown (and, for
+                            // multi-player ATC/Shanghai, the podium added in
+                            // #279/#296). Previously navigated to home, which
+                            // dropped the drill on the floor with no feedback
+                            // (#289, #291).
+                            if (context.mounted) {
+                              context.go(GameRoutes.postGame(widget.gameId));
+                            }
+                          case _DrillAction.settings:
+                            if (context.mounted) {
+                              context.push(GameRoutes.settings);
+                            }
+                          case _DrillAction.reportBug:
+                            if (context.mounted) {
+                              showReportBugDialog(context);
+                            }
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: _DrillAction.endDrill,
+                          // Multi-player ATC / Shanghai is a competitive game,
+                          // not a solo drill — match the label to the context.
+                          child: Text(
+                            gs.competitors.length > 1
+                                ? l10n.gameMenuEndGame
+                                : l10n.gameMenuEndDrill,
                           ),
-                    ],
+                        ),
+                        // Settings entry so users don't have to abandon the
+                        // drill to reach theme/preferences (#342). `push`
+                        // (not `go`) preserves the active-game route so
+                        // the back arrow returns to the board.
+                        PopupMenuItem(
+                          value: _DrillAction.settings,
+                          child: Text(l10n.settingsTitle),
+                        ),
+                        // Report a Bug without leaving the drill (#688). Gated on
+                        // crash reporting being active this run, like Settings.
+                        if (isBugReportingAvailable())
+                          PopupMenuItem(
+                            value: _DrillAction.reportBug,
+                            child: Text(l10n.settingsReportBug),
+                          ),
+                      ],
+                    ),
                   ),
-                ProminentDartBandWidget(
-                  currentTurnDarts: currentTurnDarts,
-                  // A thrown slot opens correction; an empty slot opens manual
-                  // entry for a dart the camera missed (#427).
-                  onDartTapped: gs.isComplete
-                      ? null
-                      : (index) => _onSlotTapped(
-                          context, gs, index, effectiveTarget, doublesOnly),
-                  tapEmptySlots: !gs.isComplete && gs.turnActive,
-                ),
-                Expanded(child: cameraPreview(context, widget.gameId)),
-              ] else if (isCatch40 || isCheckout)
-                Expanded(
-                  flex: 2,
-                  child: PracticeInputButtonsWidget(
+                  GameStatusBarWidget(
+                    configLabel: _modeName(gs.gameType),
+                    roundInLeg: displayedRound,
+                    // Checkout Practice's `_totalRounds` is the success target,
+                    // not an attempt cap — pairing it with the attempt-count
+                    // numerator produced misleading "ROUND 4 / 3" output (#327).
+                    // Drop the denominator here; success progress moves into
+                    // the target display's secondary metric instead.
+                    totalRounds: isCheckout ? null : _totalRounds(gs),
+                    currentTurnDarts: currentTurnDarts,
+                    // Camera-first (#445) hides the darts here — they move to the
+                    // prominent dart band below. Manual practice has no per-dart
+                    // correction on the bar (unchanged).
+                    onDartTapped: null,
+                    showDarts: !cameraFirst,
+                    // Checkout Practice: a busted turn scored 0 — don't show the
+                    // raw busted-dart sum in the readout (#604).
+                    turnBusted: practiceState.turnBusted,
+                  ),
+                  // Camera-first hides the aim dartboard (the camera IS the board).
+                  if (!cameraFirst)
+                    Expanded(
+                      child: DartboardHighlightWidget(
+                        // The highlight widget treats null as the bull; map Bob's
+                        // 27's bull-round segment (25) to null so the finale lights
+                        // up the bullseye, not a (non-existent) number 25 (#588).
+                        currentTarget: (isBobs27 && effectiveTarget == 25)
+                            ? null
+                            : effectiveTarget,
+                        doublesOnly: doublesOnly,
+                        bobs27: isBobs27,
+                        noHighlight: isCatch40 || isCheckout,
+                      ),
+                    ),
+                  if (!cameraFirst) targetDisplay,
+                  if (isShanghai && !cameraFirst)
+                    _ShanghaiBonus(show: practiceState.showShanghaiBonus),
+                  // Camera-first (#445): the multi-player progress strip (ATC /
+                  // Shanghai) → the prominent dart band → the camera region, which
+                  // fills whatever height is left (#760). Manual entry / correction
+                  // lives in the band's modal.
+                  if (cameraFirst)
+                    // The camera region never drops below a useful height, and the
+                    // content above it scrolls instead of overflowing when a small
+                    // screen or a large system font leaves too little room (#769).
+                    Expanded(
+                      child: CameraFirstBody(
+                        camera: cameraPreview(context, widget.gameId),
+                        content: [
+                          targetDisplay,
+                          if (isShanghai)
+                            _ShanghaiBonus(
+                              show: practiceState.showShanghaiBonus,
+                            ),
+                          if ((isAtc || isShanghai) &&
+                              gs.competitors.length > 1)
+                            PracticePlayersStripWidget(
+                              players: [
+                                for (int i = 0; i < gs.competitors.length; i++)
+                                  if (i != gs.currentTurnIndex)
+                                    (
+                                      name: gs.competitors[i].name,
+                                      value: isAtc
+                                          // ATC initialises currentTarget to 1; 0 is not
+                                          // a valid target, so fall back to the first.
+                                          ? (gs.competitors[i].currentTarget ??
+                                                1)
+                                          : gs.competitors[i].score,
+                                    ),
+                              ],
+                            ),
+                          ProminentDartBandWidget(
+                            currentTurnDarts: currentTurnDarts,
+                            // A thrown slot opens correction; an empty slot opens manual
+                            // entry for a dart the camera missed (#427).
+                            onDartTapped: gs.isComplete
+                                ? null
+                                : (index) => _onSlotTapped(
+                                    context,
+                                    gs,
+                                    index,
+                                    effectiveTarget,
+                                    doublesOnly,
+                                  ),
+                            tapEmptySlots: !gs.isComplete && gs.turnActive,
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (isCatch40 || isCheckout)
+                    Expanded(
+                      flex: 2,
+                      child: PracticeInputButtonsWidget(
+                        gameType: gs.gameType,
+                        currentTarget: effectiveTarget,
+                        doublesOnly: doublesOnly,
+                        enabled:
+                            !gs.isComplete &&
+                            gs.dartsThrownInTurn < 3 &&
+                            gs.turnActive,
+                        onDartThrown: (seg) => notifier.processDart(seg),
+                      ),
+                    )
+                  else
+                    PracticeInputButtonsWidget(
+                      gameType: gs.gameType,
+                      currentTarget: effectiveTarget,
+                      doublesOnly: doublesOnly,
+                      enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
+                      onDartThrown: (seg) => notifier.processDart(seg),
+                    ),
+                  _BottomBar(
                     gameType: gs.gameType,
-                    currentTarget: effectiveTarget,
-                    doublesOnly: doublesOnly,
-                    enabled: !gs.isComplete &&
-                        gs.dartsThrownInTurn < 3 &&
-                        gs.turnActive,
-                    onDartThrown: (seg) => notifier.processDart(seg),
+                    canUndo:
+                        !gs.isComplete &&
+                        (gs.dartsThrownInTurn > 0 ||
+                            gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
+                    // #627: NEXT ROUND is gated on ≥1 dart on every board (the
+                    // mis-tap guard first added for Shanghai/ATC in #289/#336 is
+                    // now consistent everywhere). Tapping with 0 darts would
+                    // silently hand the turn over (filling 3 MISS), which reads as
+                    // an accidental forfeit; a deliberate pass remains available by
+                    // throwing a MISS, then NEXT. 1–2 darts advance silently with
+                    // MISS-fill, no confirmation. Catch 40 uses NEXT TARGET
+                    // (`showNextTarget`) below, so this gate doesn't apply to it.
+                    showNextRound: !gs.isComplete && gs.dartsThrownInTurn > 0,
+                    showNextTarget:
+                        isCatch40 &&
+                        (gs.catch40TargetRemaining == 0 ||
+                            gs.catch40DartsOnTarget >= 6) &&
+                        !gs.isComplete,
+                    pulseNext: !gs.isComplete && !gs.turnActive,
+                    onUndo: notifier.undoDart,
+                    onNextRound: () async {
+                      await notifier.startNextTurn();
+                      // Reset the auto-scorer's per-turn cap in lock-step (#380).
+                      ref.read(activeTurnSignalProvider.notifier).bump();
+                    },
                   ),
-                )
-              else
-                PracticeInputButtonsWidget(
-                  gameType: gs.gameType,
-                  currentTarget: effectiveTarget,
-                  doublesOnly: doublesOnly,
-                  enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
-                  onDartThrown: (seg) => notifier.processDart(seg),
-                ),
-              _BottomBar(
-                gameType: gs.gameType,
-                canUndo: !gs.isComplete &&
-                    (gs.dartsThrownInTurn > 0 ||
-                        gs.competitors.any((c) => c.dartThrows.isNotEmpty)),
-                // #627: NEXT ROUND is gated on ≥1 dart on every board (the
-                // mis-tap guard first added for Shanghai/ATC in #289/#336 is
-                // now consistent everywhere). Tapping with 0 darts would
-                // silently hand the turn over (filling 3 MISS), which reads as
-                // an accidental forfeit; a deliberate pass remains available by
-                // throwing a MISS, then NEXT. 1–2 darts advance silently with
-                // MISS-fill, no confirmation. Catch 40 uses NEXT TARGET
-                // (`showNextTarget`) below, so this gate doesn't apply to it.
-                showNextRound: !gs.isComplete && gs.dartsThrownInTurn > 0,
-                showNextTarget: isCatch40 &&
-                    (gs.catch40TargetRemaining == 0 ||
-                        gs.catch40DartsOnTarget >= 6) &&
-                    !gs.isComplete,
-                pulseNext: !gs.isComplete && !gs.turnActive,
-                onUndo: notifier.undoDart,
-                onNextRound: () async {
-                  await notifier.startNextTurn();
-                  // Reset the auto-scorer's per-turn cap in lock-step (#380).
-                  ref.read(activeTurnSignalProvider.notifier).bump();
-                },
+                ],
               ),
-            ],
-          ),
-          ),
+            ),
           ),
         );
       },
@@ -503,38 +537,47 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   /// Camera-first dart-indicator tap (#427): a thrown slot opens correction,
   /// an empty slot opens manual entry for a dart the camera missed. Both host
   /// the standard practice input buttons in a modal.
-  void _onSlotTapped(BuildContext context, GameState gs, int index,
-      int? effectiveTarget, bool doublesOnly) {
+  void _onSlotTapped(
+    BuildContext context,
+    GameState gs,
+    int index,
+    int? effectiveTarget,
+    bool doublesOnly,
+  ) {
     final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
     final l10n = AppLocalizations.of(context);
     if (index < gs.dartsThrownInTurn) {
       // Correcting a recorded dart stays available after the turn ends
       // (turnActive == false once 3 darts are thrown) — #438.
-      _showSegmentSheet(context,
-          title: l10n.gameCorrectDart(index + 1),
-          gameType: gs.gameType,
-          currentTarget: effectiveTarget,
-          doublesOnly: doublesOnly,
-          requireActiveTurn: false,
-          isCorrection: true,
-          onSegment: (seg) => notifier.correctTurnDart(index, seg));
+      _showSegmentSheet(
+        context,
+        title: l10n.gameCorrectDart(index + 1),
+        gameType: gs.gameType,
+        currentTarget: effectiveTarget,
+        doublesOnly: doublesOnly,
+        requireActiveTurn: false,
+        isCorrection: true,
+        onSegment: (seg) => notifier.correctTurnDart(index, seg),
+      );
     } else {
       // Manual entry must not add a 4th dart, so it stays gated on the turn.
-      _showSegmentSheet(context,
-          title: l10n.gameEnterDart,
-          gameType: gs.gameType,
-          currentTarget: effectiveTarget,
-          doublesOnly: doublesOnly,
-          requireActiveTurn: true,
-          isCorrection: false,
-          onSegment: (seg) {
-            // Manual entry = camera missed this dart; capture the frame as
-            // labelled training data (#537).
-            ref
-                .read(activeCaptureCorrectionSinkProvider)
-                ?.captureManualEntry(segment: seg);
-            notifier.processDart(seg);
-          });
+      _showSegmentSheet(
+        context,
+        title: l10n.gameEnterDart,
+        gameType: gs.gameType,
+        currentTarget: effectiveTarget,
+        doublesOnly: doublesOnly,
+        requireActiveTurn: true,
+        isCorrection: false,
+        onSegment: (seg) {
+          // Manual entry = camera missed this dart; capture the frame as
+          // labelled training data (#537).
+          ref
+              .read(activeCaptureCorrectionSinkProvider)
+              ?.captureManualEntry(segment: seg);
+          notifier.processDart(seg);
+        },
+      );
     }
   }
 
@@ -574,9 +617,11 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
               height: MediaQuery.of(sheetContext).size.height * 0.55,
               child: Consumer(
                 builder: (ctx, ref, _) {
-                  final s =
-                      ref.watch(activePracticeProvider(widget.gameId)).value;
-                  final active = s != null &&
+                  final s = ref
+                      .watch(activePracticeProvider(widget.gameId))
+                      .value;
+                  final active =
+                      s != null &&
                       !s.gameState.isComplete &&
                       (!requireActiveTurn || s.gameState.turnActive);
                   return PracticeInputButtonsWidget(
@@ -623,7 +668,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     );
   }
 
-  static int _computeRoundScore(List<String> dartThrows, int dartsThrownInTurn) {
+  static int _computeRoundScore(
+    List<String> dartThrows,
+    int dartsThrownInTurn,
+  ) {
     if (dartsThrownInTurn == 0) return 0;
     final current = dartThrows.sublist(dartThrows.length - dartsThrownInTurn);
     return current.map(_dartScoreValue).fold(0, (a, b) => a + b);
@@ -639,30 +687,29 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   }
 
   static String _modeName(GameType type) => switch (type) {
-        GameType.aroundTheClock => 'Around the Clock',
-        GameType.bobs27 => "Bob's 27",
-        GameType.shanghai => 'Shanghai',
-        GameType.catch40 => 'Catch 40',
-        GameType.checkoutPractice => 'Checkout Practice',
-        _ => 'Practice',
-      };
+    GameType.aroundTheClock => 'Around the Clock',
+    GameType.bobs27 => "Bob's 27",
+    GameType.shanghai => 'Shanghai',
+    GameType.catch40 => 'Catch 40',
+    GameType.checkoutPractice => 'Checkout Practice',
+    _ => 'Practice',
+  };
 
   static int? _totalRounds(GameState gs) => switch (gs.gameType) {
-        GameType.aroundTheClock => null, // completion-based, no round limit
-        GameType.bobs27 => 21,
-        GameType.shanghai => gs.shanghaiTotalRounds,
-        GameType.catch40 => 40,
-        GameType.checkoutPractice => gs.checkoutTargetSuccesses,
-        _ => null,
-      };
+    GameType.aroundTheClock => null, // completion-based, no round limit
+    GameType.bobs27 => 21,
+    GameType.shanghai => gs.shanghaiTotalRounds,
+    GameType.catch40 => 40,
+    GameType.checkoutPractice => gs.checkoutTargetSuccesses,
+    _ => null,
+  };
 
   /// Darts thrown in the CURRENT checkout-practice round, excluding the
   /// engine's empty-slot sentinel pads that fire on bust or checkout. The
   /// engine sets `dartsThrownInTurn = 3` whenever it pads, so we use that
   /// as a slice into the trailing `dartThrows` entries and count only the
   /// non-empty ones (#328).
-  static int _checkoutDartsThisRound(
-      CompetitorState competitor, GameState gs) {
+  static int _checkoutDartsThisRound(CompetitorState competitor, GameState gs) {
     final n = gs.dartsThrownInTurn;
     if (n == 0) return 0;
     final darts = competitor.dartThrows;
@@ -672,10 +719,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
       // whole-list non-empty count rather than throwing.
       return darts.where((d) => d.isNotEmpty).length;
     }
-    return darts
-        .skip(darts.length - n)
-        .where((d) => d.isNotEmpty)
-        .length;
+    return darts.skip(darts.length - n).where((d) => d.isNotEmpty).length;
   }
 }
 
@@ -710,10 +754,14 @@ class _BottomBar extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: AppTheme.opacityBottomBarBackground),
+        color: cs.surfaceContainerHighest.withValues(
+          alpha: AppTheme.opacityBottomBarBackground,
+        ),
         border: Border(
           top: BorderSide(
-            color: cs.surfaceContainer.withValues(alpha: AppTheme.opacityBottomBarTopEdge),
+            color: cs.surfaceContainer.withValues(
+              alpha: AppTheme.opacityBottomBarTopEdge,
+            ),
           ),
         ),
       ),
@@ -737,7 +785,9 @@ class _BottomBar extends StatelessWidget {
                     color: cs.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderStrong),
+                      color: cs.outlineVariant.withValues(
+                        alpha: AppTheme.opacityGhostBorderStrong,
+                      ),
                     ),
                   ),
                   child: Icon(Icons.undo, color: cs.onSurface),
@@ -780,18 +830,28 @@ class _ShanghaiBonusState extends State<_ShanghaiBonus>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600), // 300ms scale-in + 1000ms hold + 300ms fade
+      duration: const Duration(
+        milliseconds: 1600,
+      ), // 300ms scale-in + 1000ms hold + 300ms fade
     );
     _scale = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: const Interval(0.0, 0.1875, curve: Curves.easeOut), // 0–300ms / 1600ms ≈ 0.1875
+        curve: const Interval(
+          0.0,
+          0.1875,
+          curve: Curves.easeOut,
+        ), // 0–300ms / 1600ms ≈ 0.1875
       ),
     );
     _opacity = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _ctrl,
-        curve: const Interval(0.8125, 1.0, curve: Curves.easeIn), // 1300–1600ms / 1600ms ≈ 0.8125
+        curve: const Interval(
+          0.8125,
+          1.0,
+          curve: Curves.easeIn,
+        ), // 1300–1600ms / 1600ms ≈ 0.8125
       ),
     );
   }
@@ -833,18 +893,14 @@ class _ShanghaiBonusState extends State<_ShanghaiBonus>
         final scale = widget.show && _ctrl.isDismissed ? 1.0 : _scale.value;
         return Opacity(
           opacity: opacity,
-          child: Transform.scale(
-            scale: scale,
-            child: child,
-          ),
+          child: Transform.scale(scale: scale, child: child),
         );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Center(
           child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(16),

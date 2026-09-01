@@ -17,14 +17,15 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/dart_input_grid_widget.dart';
-import '../widgets/manual_scoring_input.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/live_average.dart';
+import '../widgets/manual_scoring_input.dart';
 import '../widgets/player_score_section_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
@@ -102,18 +103,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       duration: const Duration(milliseconds: 1100),
     );
     _bustFlashAnim = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween(begin: 0.0, end: 1.0),
-        weight: 300,
-      ),
-      TweenSequenceItem(
-        tween: ConstantTween(1.0),
-        weight: 500,
-      ),
-      TweenSequenceItem(
-        tween: Tween(begin: 1.0, end: 0.0),
-        weight: 300,
-      ),
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 300),
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 500),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 300),
     ]).animate(_bustFlashController);
   }
 
@@ -148,17 +140,16 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
             duration: const Duration(seconds: 2),
             content: Text(
               'BUST',
-              style: AppTextStyles.headlineSmall
-                  .copyWith(color: cs.onErrorContainer),
+              style: AppTextStyles.headlineSmall.copyWith(
+                color: cs.onErrorContainer,
+              ),
             ),
           ),
         );
         _bustFlashController.forward(from: 0);
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            ref
-                .read(activeGameProvider(widget.gameId).notifier)
-                .dismissBust();
+            ref.read(activeGameProvider(widget.gameId).notifier).dismissBust();
           }
         });
       }
@@ -226,9 +217,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
     final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
-      loading: () => Scaffold(
-        body: LoadingSpinnerWidget(color: cs.primary),
-      ),
+      loading: () => Scaffold(body: LoadingSpinnerWidget(color: cs.primary)),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
           title: l10n.commonError,
@@ -238,16 +227,15 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       ),
       data: (activeGameState) {
         if (activeGameState == null) {
-          return Scaffold(
-            body: Center(child: Text(l10n.gameNotFound)),
-          );
+          return Scaffold(body: Center(child: Text(l10n.gameNotFound)));
         }
 
         final gameState = activeGameState.gameState;
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
-        final canUndo = dartsThrownInTurn > 0 ||
+        final canUndo =
+            dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
         // #627: NEXT gated on ≥1 dart (mis-tap guard, consistent across boards);
         // 1–2 darts advance silently with MISS-fill, no confirmation.
@@ -260,8 +248,8 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         final allDarts = activeCompetitor.dartThrows;
         final currentTurnDarts =
             dartsThrownInTurn == 0 || allDarts.length < dartsThrownInTurn
-                ? <String>[]
-                : allDarts.sublist(allDarts.length - dartsThrownInTurn);
+            ? <String>[]
+            : allDarts.sublist(allDarts.length - dartsThrownInTurn);
 
         final roundInLeg = gameState.currentRoundInLeg;
         final cameraFirst = autoScoringOn && cameraPreview != null;
@@ -270,10 +258,10 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-            children: [
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
                   AppHeader(
                     showBack: true,
                     onBack: () => _confirmBack(context),
@@ -332,54 +320,71 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                         : (index) => _showCorrectionSheet(context, index),
                     showDarts: !cameraFirst,
                   ),
-                  if (cameraFirst) ...[
-                    // Camera-first (#443): active player's remaining score as
-                    // the at-distance hero, then checkout, the other players'
-                    // scores, the prominent dart band, and the camera region,
-                    // which fills whatever height is left (#760). Manual entry /
-                    // correction lives in the band's modal.
-                    HeroMetricWidget(
-                      value: '${activeCompetitor.score}',
-                      label: activeCompetitor.name,
-                      // Live PPR for the active player (#696), kept visible in
-                      // camera-first as it is in the manual layout.
-                      secondary: 'PPR ${x01LivePprDisplay(activeCompetitor)}',
-                    ),
-                    _CheckoutBanner(
-                      score: currentScore,
-                      outStrategy: gameState.outStrategy,
-                      dartsThrownInTurn: dartsThrownInTurn,
-                      large: true,
-                    ),
-                    if (gameState.competitors.length > 1)
-                      X01OtherPlayersStripWidget(
-                        players: [
-                          for (int i = 0;
-                              i < gameState.competitors.length;
-                              i++)
-                            if (i != gameState.currentTurnIndex)
-                              (
-                                name: gameState.competitors[i].name,
-                                score: gameState.competitors[i].score,
-                                ppr: x01LivePprDisplay(gameState.competitors[i]),
-                              ),
+                  if (cameraFirst)
+                    // The camera region never drops below a useful height, and the
+                    // content above it scrolls instead of overflowing when a small
+                    // screen or a large system font leaves too little room (#769).
+                    Expanded(
+                      child: CameraFirstBody(
+                        camera: cameraPreview(context, widget.gameId),
+                        content: [
+                          // Camera-first (#443): active player's remaining score as
+                          // the at-distance hero, then checkout, the other players'
+                          // scores, the prominent dart band, and the camera region,
+                          // which fills whatever height is left (#760). Manual entry /
+                          // correction lives in the band's modal.
+                          HeroMetricWidget(
+                            value: '${activeCompetitor.score}',
+                            label: activeCompetitor.name,
+                            // Live PPR for the active player (#696), kept visible in
+                            // camera-first as it is in the manual layout.
+                            secondary:
+                                'PPR ${x01LivePprDisplay(activeCompetitor)}',
+                          ),
+                          _CheckoutBanner(
+                            score: currentScore,
+                            outStrategy: gameState.outStrategy,
+                            dartsThrownInTurn: dartsThrownInTurn,
+                            large: true,
+                          ),
+                          if (gameState.competitors.length > 1)
+                            X01OtherPlayersStripWidget(
+                              players: [
+                                for (
+                                  int i = 0;
+                                  i < gameState.competitors.length;
+                                  i++
+                                )
+                                  if (i != gameState.currentTurnIndex)
+                                    (
+                                      name: gameState.competitors[i].name,
+                                      score: gameState.competitors[i].score,
+                                      ppr: x01LivePprDisplay(
+                                        gameState.competitors[i],
+                                      ),
+                                    ),
+                              ],
+                            ),
+                          ProminentDartBandWidget(
+                            currentTurnDarts: currentTurnDarts,
+                            // A thrown slot opens correction; an empty slot opens
+                            // manual entry for a dart the camera missed (#427).
+                            onDartTapped: gameState.isComplete
+                                ? null
+                                : (index) => _onSlotTapped(
+                                    context,
+                                    index,
+                                    dartsThrownInTurn,
+                                  ),
+                            // Empty-slot manual entry only while the turn is live —
+                            // adding a dart to an inactive turn would throw.
+                            tapEmptySlots:
+                                !gameState.isComplete && gameState.turnActive,
+                          ),
                         ],
                       ),
-                    ProminentDartBandWidget(
-                      currentTurnDarts: currentTurnDarts,
-                      // A thrown slot opens correction; an empty slot opens
-                      // manual entry for a dart the camera missed (#427).
-                      onDartTapped: gameState.isComplete
-                          ? null
-                          : (index) =>
-                              _onSlotTapped(context, index, dartsThrownInTurn),
-                      // Empty-slot manual entry only while the turn is live —
-                      // adding a dart to an inactive turn would throw.
-                      tapEmptySlots:
-                          !gameState.isComplete && gameState.turnActive,
-                    ),
-                    Expanded(child: cameraPreview(context, widget.gameId)),
-                  ] else ...[
+                    )
+                  else ...[
                     PlayerScoreSectionWidget(
                       gameState: gameState,
                       bustFlashAnim: _bustFlashAnim,
@@ -394,8 +399,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                         onSegmentTapped: (segment) => ref
                             .read(activeGameProvider(widget.gameId).notifier)
                             .processDart(segment),
-                        enabled:
-                            !gameState.isComplete && gameState.turnActive,
+                        enabled: !gameState.isComplete && gameState.turnActive,
                       ),
                     ),
                   ],
@@ -418,8 +422,8 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                     },
                   ),
                 ],
-          ),
-          ),
+              ),
+            ),
           ),
         );
       },
@@ -437,9 +441,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           // boundary. Without this, the next won game's bestLegPpr would
           // accumulate darts from this abandoned game (#280). Mirrors the
           // cricket equivalent introduced for #252 / PR #262.
-          await ref
-              .read(activeGameProvider(widget.gameId).notifier)
-              .endGame();
+          await ref.read(activeGameProvider(widget.gameId).notifier).endGame();
           if (!context.mounted) return;
           context.go(GameRoutes.home);
         },
@@ -506,8 +508,10 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(AppLocalizations.of(context).gameEnterDart,
-                  style: AppTextStyles.titleMedium),
+              child: Text(
+                AppLocalizations.of(context).gameEnterDart,
+                style: AppTextStyles.titleMedium,
+              ),
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
@@ -517,7 +521,8 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
               child: Consumer(
                 builder: (ctx, ref, _) {
                   final s = ref.watch(activeGameProvider(widget.gameId)).value;
-                  final active = s != null &&
+                  final active =
+                      s != null &&
                       !s.gameState.isComplete &&
                       s.gameState.turnActive;
                   return DartInputGridWidget(
@@ -549,9 +554,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
       builder: (dialogContext) => EndGameDialogWidget(
         onConfirm: () async {
           Navigator.of(dialogContext).pop();
-          await ref
-              .read(activeGameProvider(widget.gameId).notifier)
-              .endGame();
+          await ref.read(activeGameProvider(widget.gameId).notifier).endGame();
           if (!context.mounted) return;
           context.go(GameRoutes.home);
         },
@@ -583,14 +586,17 @@ class _CheckoutBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final inRange = score >= minCheckoutScore(outStrategy) &&
+    final inRange =
+        score >= minCheckoutScore(outStrategy) &&
         score <= maxCheckoutScore(outStrategy);
-    final rawSuggestion =
-        inRange ? checkoutSuggestionForStrategy(score, outStrategy) : null;
+    final rawSuggestion = inRange
+        ? checkoutSuggestionForStrategy(score, outStrategy)
+        : null;
     // Only surface suggestions reachable with the darts left in this turn —
     // a 3-dart route is misleading on the 3rd dart of a turn (#367).
     final remainingDarts = 3 - dartsThrownInTurn;
-    final suggestion = (rawSuggestion != null &&
+    final suggestion =
+        (rawSuggestion != null &&
             dartsRequiredForCheckout(rawSuggestion) <= remainingDarts)
         ? rawSuggestion
         : null;
@@ -615,7 +621,9 @@ class _CheckoutBanner extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   // At 412px (Pixel 6A) the long suggestion-hint text used
                   // to butt up against the CHECKOUT label with no visible
                   // gap ("CHECKOUTSuggestions appear..."). Add a 12px gap
@@ -626,15 +634,18 @@ class _CheckoutBanner extends StatelessWidget {
                     children: [
                       Text(
                         'CHECKOUT',
-                        style: (large
-                                ? AppTextStyles.labelMedium
-                                : AppTextStyles.labelSmall)
-                            .copyWith(
-                          color: highlight
-                              ? cs.onSurfaceVariant
-                              : cs.onSurfaceVariant.withValues(alpha: 0.35),
-                          letterSpacing: 1.2,
-                        ),
+                        style:
+                            (large
+                                    ? AppTextStyles.labelMedium
+                                    : AppTextStyles.labelSmall)
+                                .copyWith(
+                                  color: highlight
+                                      ? cs.onSurfaceVariant
+                                      : cs.onSurfaceVariant.withValues(
+                                          alpha: 0.35,
+                                        ),
+                                  letterSpacing: 1.2,
+                                ),
                       ),
                       const SizedBox(width: 12),
                       Flexible(
@@ -646,14 +657,17 @@ class _CheckoutBanner extends StatelessWidget {
                           // ellipsised ("Suggestions app…") on a 412dp screen
                           // (device-verified on rc112), and it's not an
                           // at-distance info anyway.
-                          style: (large && highlight
-                                  ? AppTextStyles.headlineMedium
-                                  : AppTextStyles.labelLarge)
-                              .copyWith(
-                            color: highlight
-                                ? cs.primaryFixed
-                                : cs.onSurfaceVariant.withValues(alpha: 0.25),
-                          ),
+                          style:
+                              (large && highlight
+                                      ? AppTextStyles.headlineMedium
+                                      : AppTextStyles.labelLarge)
+                                  .copyWith(
+                                    color: highlight
+                                        ? cs.primaryFixed
+                                        : cs.onSurfaceVariant.withValues(
+                                            alpha: 0.25,
+                                          ),
+                                  ),
                           textAlign: TextAlign.end,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -696,10 +710,14 @@ class _BottomActionBar extends StatelessWidget {
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest.withValues(alpha: AppTheme.opacityBottomBarBackground),
+          color: cs.surfaceContainerHighest.withValues(
+            alpha: AppTheme.opacityBottomBarBackground,
+          ),
           border: Border(
             top: BorderSide(
-              color: cs.surfaceContainer.withValues(alpha: AppTheme.opacityBottomBarTopEdge),
+              color: cs.surfaceContainer.withValues(
+                alpha: AppTheme.opacityBottomBarTopEdge,
+              ),
             ),
           ),
         ),
@@ -719,10 +737,11 @@ class _BottomActionBar extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusLarge),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderStrong),
+                      color: cs.outlineVariant.withValues(
+                        alpha: AppTheme.opacityGhostBorderStrong,
+                      ),
                     ),
                   ),
                   child: Icon(
@@ -748,6 +767,3 @@ class _BottomActionBar extends StatelessWidget {
     );
   }
 }
-
-
-

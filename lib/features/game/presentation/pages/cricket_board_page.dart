@@ -17,6 +17,7 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/cricket_marks_strip_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
@@ -136,8 +137,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
       final prevLeg = prevValue?.pendingLegWinnerId;
       final nextLeg = nextValue.pendingLegWinnerId;
       if (prevLeg == null && nextLeg != null) {
-        final winner =
-            gs.competitors.firstWhere((c) => c.competitorId == nextLeg);
+        final winner = gs.competitors.firstWhere(
+          (c) => c.competitorId == nextLeg,
+        );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
           showDialog<void>(
@@ -168,9 +170,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
     final cameraPreview = ref.watch(boardCameraPreviewBuilderProvider);
 
     return asyncState.when(
-      loading: () => const Scaffold(
-        body: LoadingSpinnerWidget(),
-      ),
+      loading: () => const Scaffold(body: LoadingSpinnerWidget()),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
           title: l10n.commonError,
@@ -181,9 +181,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
       ),
       data: (activeGameState) {
         if (activeGameState == null) {
-          return Scaffold(
-            body: Center(child: Text(l10n.gameNotFound)),
-          );
+          return Scaffold(body: Center(child: Text(l10n.gameNotFound)));
         }
 
         final gameState = activeGameState.gameState;
@@ -209,8 +207,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final variantLabel = targetModeLabel == null
             ? scoringLabel
             : (gameState.cricketScoring == 'standard'
-                ? targetModeLabel
-                : '$targetModeLabel · $scoringLabel');
+                  ? targetModeLabel
+                  : '$targetModeLabel · $scoringLabel');
 
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];
@@ -220,11 +218,13 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
             ? <String>[]
             : allDarts.sublist(allDarts.length - n);
 
-        final notifier =
-            ref.read(activeCricketGameProvider(widget.gameId).notifier);
+        final notifier = ref.read(
+          activeCricketGameProvider(widget.gameId).notifier,
+        );
 
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
-        final canUndo = dartsThrownInTurn > 0 ||
+        final canUndo =
+            dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
         final canNext = !gameState.isComplete;
         final cameraFirst = autoScoringOn && cameraPreview != null;
@@ -237,170 +237,193 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           25,
         ];
         List<CricketMarksRow> marksRows() => [
-              for (var i = 0; i < gameState.competitors.length; i++)
-                (
-                  name: gameState.competitors[i].name,
-                  marks: [
-                    for (final t in displayTargets)
-                      gameState.competitors[i]
-                              .marksPerNumber[t == 25 ? 'Bull' : '$t'] ??
-                          0,
-                  ],
-                  score: gameState.competitors[i].score,
-                  isActive: i == gameState.currentTurnIndex,
-                  // Live MPR (#696) on the game's actual target set (+ Bull),
-                  // matching the manual table's per-player MPR.
-                  mpr: cricketLiveMprDisplay(
-                    gameState.competitors[i],
-                    targets: {...gameState.cricketTargets, 25},
-                  ),
-                ),
-            ];
+          for (var i = 0; i < gameState.competitors.length; i++)
+            (
+              name: gameState.competitors[i].name,
+              marks: [
+                for (final t in displayTargets)
+                  gameState.competitors[i].marksPerNumber[t == 25
+                          ? 'Bull'
+                          : '$t'] ??
+                      0,
+              ],
+              score: gameState.competitors[i].score,
+              isActive: i == gameState.currentTurnIndex,
+              // Live MPR (#696) on the game's actual target set (+ Bull),
+              // matching the manual table's per-player MPR.
+              mpr: cricketLiveMprDisplay(
+                gameState.competitors[i],
+                targets: {...gameState.cricketTargets, 25},
+              ),
+            ),
+        ];
 
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
           child: Scaffold(
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-            children: [
-              AppHeader(
-                showBack: true,
-                onBack: () => _confirmBack(context),
-                // Three-dot menu — see #331 in x01_board_page.dart for
-                // rationale (gear icon implied Settings while the action
-                // was End Game).
-                trailing: PopupMenuButton<_BoardMenuAction>(
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: cs.onSurface,
-                    semanticLabel: l10n.gameOptionsSemantic,
-                  ),
-                  onSelected: (action) {
-                    switch (action) {
-                      case _BoardMenuAction.endGame:
-                        _showEndGameDialog(context);
-                      case _BoardMenuAction.settings:
-                        context.push(GameRoutes.settings);
-                      case _BoardMenuAction.reportBug:
-                        showReportBugDialog(context);
-                    }
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(
-                      value: _BoardMenuAction.endGame,
-                      child: Text(l10n.gameMenuEndGame),
-                    ),
-                    PopupMenuItem(
-                      value: _BoardMenuAction.settings,
-                      child: Text(l10n.settingsTitle),
-                    ),
-                    // Report a Bug without leaving the game (#688). Gated on
-                    // crash reporting being active this run, like Settings.
-                    if (isBugReportingAvailable())
-                      PopupMenuItem(
-                        value: _BoardMenuAction.reportBug,
-                        child: Text(l10n.settingsReportBug),
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  AppHeader(
+                    showBack: true,
+                    onBack: () => _confirmBack(context),
+                    // Three-dot menu — see #331 in x01_board_page.dart for
+                    // rationale (gear icon implied Settings while the action
+                    // was End Game).
+                    trailing: PopupMenuButton<_BoardMenuAction>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: cs.onSurface,
+                        semanticLabel: l10n.gameOptionsSemantic,
                       ),
-                  ],
-                ),
-              ),
-              GameStatusBarWidget(
-                configLabel: variantLabel,
-                currentLegIndex: gameState.currentLegIndex,
-                legsToWin: gameState.legsToWin,
-                roundInLeg: gameState.currentRoundInLeg,
-                totalRounds: gameState.cricketTotalRounds,
-                currentTurnDarts: currentTurnDarts,
-                // Manual mode: tap a thrown dart to correct it (#376).
-                // Camera-first (#444) hides the darts here — they move to the
-                // prominent dart band below.
-                onDartTapped: gameState.isComplete || cameraFirst
-                    ? null
-                    : (index) =>
-                        _showCorrectionSheet(context, gameState, index),
-                showDarts: !cameraFirst,
-              ),
-              if (cameraFirst) ...[
-                // Camera-first (#444): marks strip keeps every player's marks +
-                // score visible, then the prominent dart band, then the camera
-                // region, which fills whatever height is left (#760). Manual
-                // entry / correction lives in the band's modal.
-                CricketMarksStripWidget(
-                  targets: displayTargets,
-                  rows: marksRows(),
-                  showScore: gameState.cricketScoring != 'no-score',
-                ),
-                ProminentDartBandWidget(
-                  currentTurnDarts: currentTurnDarts,
-                  // A thrown slot opens correction; an empty slot opens manual
-                  // entry for a dart the camera missed (#427).
-                  onDartTapped: gameState.isComplete
-                      ? null
-                      : (index) => _onSlotTapped(
-                          context, gameState, index, dartsThrownInTurn),
-                  tapEmptySlots:
-                      !gameState.isComplete && gameState.turnActive,
-                ),
-                Expanded(child: cameraPreview(context, widget.gameId)),
-              ] else
-                // Manual mode keeps the full scoring table.
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 4),
-                    child: ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusLarge),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: cs.surfaceContainerLow,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusLarge),
-                          border: Border.all(
-                            color: cs.outlineVariant.withValues(alpha: 0.15),
+                      onSelected: (action) {
+                        switch (action) {
+                          case _BoardMenuAction.endGame:
+                            _showEndGameDialog(context);
+                          case _BoardMenuAction.settings:
+                            context.push(GameRoutes.settings);
+                          case _BoardMenuAction.reportBug:
+                            showReportBugDialog(context);
+                        }
+                      },
+                      itemBuilder: (_) => [
+                        PopupMenuItem(
+                          value: _BoardMenuAction.endGame,
+                          child: Text(l10n.gameMenuEndGame),
+                        ),
+                        PopupMenuItem(
+                          value: _BoardMenuAction.settings,
+                          child: Text(l10n.settingsTitle),
+                        ),
+                        // Report a Bug without leaving the game (#688). Gated on
+                        // crash reporting being active this run, like Settings.
+                        if (isBugReportingAvailable())
+                          PopupMenuItem(
+                            value: _BoardMenuAction.reportBug,
+                            child: Text(l10n.settingsReportBug),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                  alpha: AppTheme.shadowAlphaCard),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
+                      ],
+                    ),
+                  ),
+                  GameStatusBarWidget(
+                    configLabel: variantLabel,
+                    currentLegIndex: gameState.currentLegIndex,
+                    legsToWin: gameState.legsToWin,
+                    roundInLeg: gameState.currentRoundInLeg,
+                    totalRounds: gameState.cricketTotalRounds,
+                    currentTurnDarts: currentTurnDarts,
+                    // Manual mode: tap a thrown dart to correct it (#376).
+                    // Camera-first (#444) hides the darts here — they move to the
+                    // prominent dart band below.
+                    onDartTapped: gameState.isComplete || cameraFirst
+                        ? null
+                        : (index) =>
+                              _showCorrectionSheet(context, gameState, index),
+                    showDarts: !cameraFirst,
+                  ),
+                  if (cameraFirst)
+                    // The camera region never drops below a useful height, and the
+                    // content above it scrolls instead of overflowing when a small
+                    // screen or a large system font leaves too little room (#769).
+                    Expanded(
+                      child: CameraFirstBody(
+                        camera: cameraPreview(context, widget.gameId),
+                        content: [
+                          // Camera-first (#444): marks strip keeps every player's marks +
+                          // score visible, then the prominent dart band, then the camera
+                          // region, which fills whatever height is left (#760). Manual
+                          // entry / correction lives in the band's modal.
+                          CricketMarksStripWidget(
+                            targets: displayTargets,
+                            rows: marksRows(),
+                            showScore: gameState.cricketScoring != 'no-score',
+                          ),
+                          ProminentDartBandWidget(
+                            currentTurnDarts: currentTurnDarts,
+                            // A thrown slot opens correction; an empty slot opens manual
+                            // entry for a dart the camera missed (#427).
+                            onDartTapped: gameState.isComplete
+                                ? null
+                                : (index) => _onSlotTapped(
+                                    context,
+                                    gameState,
+                                    index,
+                                    dartsThrownInTurn,
+                                  ),
+                            tapEmptySlots:
+                                !gameState.isComplete && gameState.turnActive,
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    // Manual mode keeps the full scoring table.
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
                         ),
-                        child: CricketUnifiedTableWidget(
-                          gameState: gameState,
-                          onSegmentTapped: (gameState.isComplete ||
-                                  !gameState.turnActive)
-                              ? (_) {}
-                              : (segment) => notifier.processDart(segment),
-                          onMiss: (gameState.isComplete ||
-                                  !gameState.turnActive)
-                              ? () {}
-                              : () => notifier.processDart('MISS'),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.radiusLarge,
+                          ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: cs.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(
+                                AppTheme.radiusLarge,
+                              ),
+                              border: Border.all(
+                                color: cs.outlineVariant.withValues(
+                                  alpha: 0.15,
+                                ),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(
+                                    alpha: AppTheme.shadowAlphaCard,
+                                  ),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: CricketUnifiedTableWidget(
+                              gameState: gameState,
+                              onSegmentTapped:
+                                  (gameState.isComplete ||
+                                      !gameState.turnActive)
+                                  ? (_) {}
+                                  : (segment) => notifier.processDart(segment),
+                              onMiss:
+                                  (gameState.isComplete ||
+                                      !gameState.turnActive)
+                                  ? () {}
+                                  : () => notifier.processDart('MISS'),
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                  _BottomActionBar(
+                    canUndo: canUndo,
+                    canNext: canNext,
+                    isMultiplayer: gameState.competitors.length > 1,
+                    dartsThrownInTurn: dartsThrownInTurn,
+                    pulseNext: canNext && !gameState.turnActive,
+                    onUndo: () => notifier.undoDart(),
+                    onNextRound: () {
+                      notifier.nextPlayer();
+                      // Reset the auto-scorer's per-turn cap in lock-step (#380).
+                      ref.read(activeTurnSignalProvider.notifier).bump();
+                    },
                   ),
-                ),
-              _BottomActionBar(
-                canUndo: canUndo,
-                canNext: canNext,
-                isMultiplayer: gameState.competitors.length > 1,
-                dartsThrownInTurn: dartsThrownInTurn,
-                pulseNext: canNext && !gameState.turnActive,
-                onUndo: () => notifier.undoDart(),
-                onNextRound: () {
-                  notifier.nextPlayer();
-                  // Reset the auto-scorer's per-turn cap in lock-step (#380).
-                  ref.read(activeTurnSignalProvider.notifier).bump();
-                },
+                ],
               ),
-            ],
-          ),
-          ),
+            ),
           ),
         );
       },
@@ -414,9 +437,13 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   /// dart and closes the sheet. The notifier resolves the dart's event id and
   /// recomputes state.
   void _showCorrectionSheet(
-      BuildContext context, GameState gameState, int dartIndex) {
-    final notifier =
-        ref.read(activeCricketGameProvider(widget.gameId).notifier);
+    BuildContext context,
+    GameState gameState,
+    int dartIndex,
+  ) {
+    final notifier = ref.read(
+      activeCricketGameProvider(widget.gameId).notifier,
+    );
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -457,8 +484,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
   /// Camera-first dart-indicator tap (#427): a thrown slot opens correction; an
   /// empty slot opens manual entry for a dart the camera missed.
-  void _onSlotTapped(BuildContext context, GameState gameState, int index,
-      int dartsThrownInTurn) {
+  void _onSlotTapped(
+    BuildContext context,
+    GameState gameState,
+    int index,
+    int dartsThrownInTurn,
+  ) {
     if (index < dartsThrownInTurn) {
       _showCorrectionSheet(context, gameState, index);
     } else {
@@ -480,18 +511,22 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(AppLocalizations.of(context).gameEnterDart,
-                  style: AppTextStyles.titleMedium),
+              child: Text(
+                AppLocalizations.of(context).gameEnterDart,
+                style: AppTextStyles.titleMedium,
+              ),
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.6,
               child: Consumer(
                 builder: (ctx, ref, _) {
-                  final s =
-                      ref.watch(activeCricketGameProvider(widget.gameId)).value;
+                  final s = ref
+                      .watch(activeCricketGameProvider(widget.gameId))
+                      .value;
                   if (s == null) return const SizedBox.shrink();
                   final notifier = ref.read(
-                      activeCricketGameProvider(widget.gameId).notifier);
+                    activeCricketGameProvider(widget.gameId).notifier,
+                  );
                   final active =
                       !s.gameState.isComplete && s.gameState.turnActive;
                   return CricketUnifiedTableWidget(
@@ -585,10 +620,14 @@ class _BottomActionBar extends StatelessWidget {
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest.withValues(alpha: AppTheme.opacityBottomBarBackground),
+          color: cs.surfaceContainerHighest.withValues(
+            alpha: AppTheme.opacityBottomBarBackground,
+          ),
           border: Border(
             top: BorderSide(
-              color: cs.surfaceContainer.withValues(alpha: AppTheme.opacityBottomBarTopEdge),
+              color: cs.surfaceContainer.withValues(
+                alpha: AppTheme.opacityBottomBarTopEdge,
+              ),
             ),
           ),
         ),
@@ -608,10 +647,11 @@ class _BottomActionBar extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: cs.surfaceContainerHighest,
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.radiusLarge),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: AppTheme.opacityGhostBorderStrong),
+                      color: cs.outlineVariant.withValues(
+                        alpha: AppTheme.opacityGhostBorderStrong,
+                      ),
                     ),
                   ),
                   child: Icon(
@@ -637,4 +677,3 @@ class _BottomActionBar extends StatelessWidget {
     );
   }
 }
-
