@@ -1,0 +1,151 @@
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar_widget.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/contribution_counter_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+import 'package:dart_lodge/l10n/supported_locales.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// The uniform scale the counter is currently drawn at — the same probe the
+/// counter's own test uses.
+/// `skipOffstage: false` on purpose: while the count is zero the counter is
+/// kept in the tree but off-stage, and that is exactly the state this probe
+/// needs to reach to prove it was mounted before the first capture.
+double _scale(WidgetTester tester) {
+  final transform = tester.widget<Transform>(find
+      .descendant(
+        of: find.byType(ContributionCounter, skipOffstage: false),
+        matching: find.byType(Transform, skipOffstage: false),
+      )
+      .first);
+  return transform.transform.getMaxScaleOnAxis();
+}
+
+void main() {
+  late List<String> tapped;
+
+  setUp(() => tapped = []);
+
+  Future<void> pump(
+    WidgetTester tester, {
+    TrackerPhase phase = TrackerPhase.tracking,
+    bool everCalibrated = true,
+    int contributions = 0,
+    bool showContributions = true,
+  }) async {
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      home: Scaffold(
+        body: AutoScorerCameraBar(
+          status: TrackerStatus(
+              phase: phase, dartsOnBoard: 0, dartsThisTurn: 0),
+          everCalibrated: everCalibrated,
+          contributions: contributions,
+          showContributions: showContributions,
+          onReAim: () => tapped.add('re-aim'),
+          onRemoveDarts: () => tapped.add('remove'),
+          onStop: () => tapped.add('stop'),
+        ),
+      ),
+    ));
+  }
+
+  group('the rare actions carry words, not just icons (#761)', () {
+    testWidgets('they are behind one menu, none of them loose in the row',
+        (tester) async {
+      await pump(tester);
+
+      // Nothing is reachable until the menu is opened...
+      expect(find.text('Re-aim camera'), findsNothing);
+      expect(find.text('Remove darts'), findsNothing);
+      expect(find.text('Stop auto-scoring'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      // ...and then every one of them is spelled out.
+      expect(find.text('Re-aim camera'), findsOneWidget);
+      expect(find.text('Remove darts'), findsOneWidget);
+      expect(find.text('Stop auto-scoring'), findsOneWidget);
+    });
+
+    testWidgets('choosing one runs it', (tester) async {
+      await pump(tester);
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Remove darts'));
+      await tester.pumpAndSettle();
+
+      expect(tapped, ['remove']);
+    });
+  });
+
+  group('re-aim stays one tap while the board is lost (#761)', () {
+    testWidgets('a lost calibration surfaces it beside the status',
+        (tester) async {
+      await pump(tester,
+          phase: TrackerPhase.needsCalibration, everCalibrated: true);
+
+      // Visible without opening anything, and labelled.
+      expect(find.widgetWithText(TextButton, 'Re-aim camera'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Re-aim camera'));
+      expect(tapped, ['re-aim']);
+    });
+
+    testWidgets('learning mode does not surface it — nothing was lost',
+        (tester) async {
+      // Same phase, but the board was never recognised: that is a valid way to
+      // play (#741), not something to recover from.
+      await pump(tester,
+          phase: TrackerPhase.needsCalibration, everCalibrated: false);
+
+      expect(find.widgetWithText(TextButton, 'Re-aim camera'), findsNothing);
+    });
+
+    testWidgets('an ordinary running state does not surface it',
+        (tester) async {
+      await pump(tester);
+      expect(find.widgetWithText(TextButton, 'Re-aim camera'), findsNothing);
+    });
+  });
+
+  group('the contribution counter appears with the first capture (#761)', () {
+    testWidgets('zero captures shows nothing', (tester) async {
+      // A working camera scores on its own and captures nothing, so a counter
+      // stuck at zero all game reads as a broken feature.
+      await pump(tester, contributions: 0);
+      expect(find.byType(ContributionCounter), findsNothing);
+    });
+
+    testWidgets('the first capture brings it in', (tester) async {
+      await pump(tester, contributions: 1);
+      expect(find.byType(ContributionCounter), findsOneWidget);
+    });
+
+    testWidgets('the first capture still pulses (#742)', (tester) async {
+      // The counter pulses when its count RISES, so it has to be mounted at
+      // zero to see the rise at all. Dropping it from the row while empty
+      // would build it fresh at 1 and swallow the acknowledgement on the one
+      // capture that proves the feature works.
+      await pump(tester, contributions: 0);
+      expect(_scale(tester), closeTo(1.0, 1e-6));
+
+      await pump(tester, contributions: 1);
+      // A short pump on purpose, like the counter's own test: the test binding
+      // scales animation durations down, so a fraction of the pulse duration
+      // would already be over.
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(_scale(tester), greaterThan(1.0));
+
+      await tester.pumpAndSettle();
+      expect(_scale(tester), closeTo(1.0, 1e-6));
+    });
+
+    testWidgets('recording off keeps it away whatever the count',
+        (tester) async {
+      await pump(tester, contributions: 3, showContributions: false);
+      expect(find.byType(ContributionCounter), findsNothing);
+    });
+  });
+}

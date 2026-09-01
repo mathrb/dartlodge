@@ -548,6 +548,7 @@
   "autoScorerTapToCorrect": "Tippe einen Dart an, um eine Fehllesung zu korrigieren",
   "autoScorerRemoveDarts": "Darts entfernen",
   "autoScorerStop": "Automatische Zählung stoppen",
+  "autoScorerCameraActions": "Kameraaktionen",
   "autoScorerReAim": "Kamera neu ausrichten",
   "autoScorerStartCamera": "Kamera starten",
   "autoScorerStatusAim": "Auf das Board zielen",

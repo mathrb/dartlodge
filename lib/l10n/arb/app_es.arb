@@ -548,6 +548,7 @@
   "autoScorerTapToCorrect": "Toca un dardo para corregir una lectura errónea",
   "autoScorerRemoveDarts": "Retirar dardos",
   "autoScorerStop": "Detener la puntuación automática",
+  "autoScorerCameraActions": "Acciones de cámara",
   "autoScorerReAim": "Realinear la cámara",
   "autoScorerStartCamera": "Iniciar cámara",
   "autoScorerStatusAim": "Apunta a la diana",

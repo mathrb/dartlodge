@@ -548,6 +548,7 @@
   "autoScorerTapToCorrect": "Tik op een dart om een verkeerde uitlezing te corrigeren",
   "autoScorerRemoveDarts": "Darts verwijderen",
   "autoScorerStop": "Automatisch scoren stoppen",
+  "autoScorerCameraActions": "Camera-acties",
   "autoScorerReAim": "Camera opnieuw richten",
   "autoScorerStartCamera": "Camera starten",
   "autoScorerStatusAim": "Richt op het bord",

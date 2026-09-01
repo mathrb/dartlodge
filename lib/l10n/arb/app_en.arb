@@ -2147,6 +2147,10 @@
   "@autoScorerStop": {
     "description": "Tooltip: stop auto-scoring"
   },
+  "autoScorerCameraActions": "Camera actions",
+  "@autoScorerCameraActions": {
+    "description": "Tooltip / screen-reader label of the in-game camera actions menu"
+  },
   "autoScorerReAim": "Re-aim camera",
   "@autoScorerReAim": {
     "description": "Tooltip: re-run the camera aim/setup step from the running preview"
