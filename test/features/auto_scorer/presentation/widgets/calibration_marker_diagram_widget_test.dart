@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dart_lodge/core/widgets/dartboard_face_painter.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/calibration_marker_diagram_widget.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/framing/recognition_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -86,5 +87,51 @@ void main() {
     );
     await tester.pump();
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the setup-tips diagram stays the static one (#759)',
+      (tester) async {
+    // The aim view now shares this widget through a `.live` constructor. The
+    // tips screen was validated as it is, so it must keep the labelled,
+    // stateless drawing: `markers == null` is what selects it.
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 260,
+          child: CalibrationMarkerDiagram(semanticsLabel: 'diagram'),
+        ),
+      ),
+    ));
+
+    final diagram = tester
+        .widget<CalibrationMarkerDiagram>(find.byType(CalibrationMarkerDiagram));
+    expect(diagram.markers, isNull);
+    expect(diagram.foreground, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the live diagram paints at banner size without complaint',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(
+        body: SizedBox(
+          width: 44,
+          height: 44,
+          child: CalibrationMarkerDiagram.live(
+            semanticsLabel: 'live diagram',
+            markers: [
+              MarkerRecognition.found,
+              MarkerRecognition.weak,
+              MarkerRecognition.missing,
+              MarkerRecognition.found,
+            ],
+            foreground: Colors.white,
+          ),
+        ),
+      ),
+    ));
+
+    expect(tester.takeException(), isNull);
+    expect(find.bySemanticsLabel('live diagram'), findsOneWidget);
   });
 }

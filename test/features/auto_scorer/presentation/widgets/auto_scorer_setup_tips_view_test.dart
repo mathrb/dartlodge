@@ -42,6 +42,16 @@ void main() {
     // The marker diagram opens the screen — the tips below all refer to it.
     expect(find.text('What the camera looks for'), findsOneWidget);
     expect(find.byType(CalibrationMarkerDiagram), findsOneWidget);
+    // The aim view shares this widget through a `.live` constructor (#759).
+    // This screen was validated as it is, so its call site must keep the
+    // labelled, stateless drawing — and `find.byType` alone cannot tell the
+    // two apart, since `.live` is the same class.
+    expect(
+        tester
+            .widget<CalibrationMarkerDiagram>(
+                find.byType(CalibrationMarkerDiagram))
+            .markers,
+        isNull);
 
     // The tips follow the diagram, reachable by scrolling the list.
     await tester.scrollUntilVisible(find.text('Fill the frame'), 120);

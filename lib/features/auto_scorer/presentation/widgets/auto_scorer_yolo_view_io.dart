@@ -22,6 +22,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart'
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_explanation_panel.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_status_banner_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -379,7 +380,7 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
     final fill = _latest == null ? 0.0 : frameFillRatio(_latest!.calBestPoints);
     final ready = _stability.isReady;
     // One derived state, two renderings (#739): the halo around the preview and
-    // the four pips beside the hint. Advisory — it drives colour and copy only;
+    // the live board in the status banner. Advisory — it drives colour and copy only;
     // `calibrated`/`ready` above still gate the button.
     final recognition = recognitionStateOf(
       calBestPoints: _latest?.calBestPoints ?? const [null, null, null, null],
@@ -428,10 +429,6 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
             onResult: _onResults,
             onModelError: _onModelError,
           ),
-          // Painted around the preview, never at a detection coordinate — see
-          // the note on [RecognitionHalo].
-          Positioned.fill(
-              child: RecognitionHaloOverlay(grade: recognition.grade)),
           Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
@@ -440,11 +437,20 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // The pips replace the old "{found}/4 markers" count: which
-                    // marker is missing is what the count never carried.
-                    MarkerPips(markers: recognition.markers),
-                    const SizedBox(height: 8),
-                    if (explain)
+                    // One status object (#759): the board and the line about
+                    // what to do, together. When recognition has failed long
+                    // enough for the explanation panel to take over the words
+                    // (#743), the board STAYS above it — that is precisely when
+                    // the player is nudging the camera and wants to watch the
+                    // markers arrive.
+                    if (explain) ...[
+                      AimStatusBanner(
+                        recognition: recognition,
+                        message: null,
+                        diagramSemanticsLabel: l10n
+                            .autoScorerMarkersFoundA11y(recognition.foundCount),
+                      ),
+                      const SizedBox(height: 8),
                       AimExplanationPanel(
                         // The photo opt-in specifically, NOT the settings
                         // page's `collect || sessions` OR (#686): the panel
@@ -459,11 +465,14 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                         onKeepAiming: () =>
                             setState(() => _keepAiming = true),
                         onEnableRecording: _enableRecording,
-                      )
-                    else
-                      Text(hint,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white)),
+                      ),
+                    ] else
+                      AimStatusBanner(
+                        recognition: recognition,
+                        message: hint,
+                        diagramSemanticsLabel: l10n
+                            .autoScorerMarkersFoundA11y(recognition.foundCount),
+                      ),
                   ],
                 ),
               ),

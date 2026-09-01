@@ -2200,19 +2200,24 @@
   "@autoScorerStatusBoardCleared": {
     "description": "Status chip: board cleared of darts"
   },
-  "autoScorerAimHint": "Aim at the board…",
+  "autoScorerAimHint": "Point the camera at the board.",
+  "autoScorerMarkersFoundA11y": "{found, plural, =0{No board markers recognised yet} one{1 of 4 board markers recognised} other{{found} of 4 board markers recognised}}",
+  "@autoScorerMarkersFoundA11y": {
+    "description": "Screen-reader label of the live board diagram while aiming",
+    "placeholders": { "found": { "type": "int" } }
+  },
   "@autoScorerAimHint": {
     "description": "Aim view: initial hint"
   },
   "autoScorerMarkersReframe": "Reframe so all four markers show. Any board rotation is fine.",
   "@autoScorerMarkersReframe": {
-    "description": "Aim view: partial calibration hint. The count it used to carry is now shown by the four marker pips (#739)"
+    "description": "Aim view: partial calibration hint. The count it used to carry is shown by the live board diagram in the status banner (#759)"
   },
-  "autoScorerReadyZoomHint": "Ready — move closer or zoom in for better accuracy, or Done aiming",
+  "autoScorerReadyZoomHint": "Ready. Fill more of the frame for more precise scoring.",
   "@autoScorerReadyZoomHint": {
     "description": "Aim view: ready but suboptimal framing"
   },
-  "autoScorerReadyDone": "Ready — Done aiming",
+  "autoScorerReadyDone": "Ready to score.",
   "@autoScorerReadyDone": {
     "description": "Aim view: ready, good framing"
   },
@@ -2224,7 +2229,7 @@
   "@autoScorerContinueWithoutAutoScoring": {
     "description": "Aim view: confirm button when the 4 calibration markers aren't detected — proceeds without auto-scoring (manual scoring)"
   },
-  "autoScorerCalibratedSteadyHint": "Calibrated — tap Done aiming when steady",
+  "autoScorerCalibratedSteadyHint": "All four markers found. Hold still a moment.",
   "@autoScorerCalibratedSteadyHint": {
     "description": "Aim view hint: 4 markers found, button already enabled, steadiness is advisory"
   },

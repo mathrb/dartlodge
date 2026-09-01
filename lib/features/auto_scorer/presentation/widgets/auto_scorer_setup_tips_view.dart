@@ -12,8 +12,9 @@ import 'package:flutter/material.dart';
 /// In review mode (`reviewOnly: true`) there is no Continue action, so it only
 /// ever pops `null` via the AppBar back button.
 ///
-/// Riverpod-free (like the aim view): the parent reads/writes the "seen" pref and
-/// reacts to the popped value. Holds only the local checkbox state.
+/// Riverpod-free: the parent reads/writes the "seen" pref and reacts to the
+/// popped value. Holds only the local checkbox state. (The aim view it is
+/// reached from is NOT — it is a `ConsumerState` and watches several settings.)
 ///
 /// [reviewOnly] is for the Settings entry, where the screen is opened just to
 /// re-read the tips — there is no camera to continue to. It hides the "Don't
