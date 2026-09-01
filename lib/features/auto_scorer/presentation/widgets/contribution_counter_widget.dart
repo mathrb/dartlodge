@@ -90,7 +90,12 @@ class _ContributionCounterState extends State<ContributionCounter>
           return Transform.scale(
             scale: 1 + 0.15 * t,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              // 6, not the 8 the borderless version had: the resting border and
+              // the bigger glyph together cost 4px of the row, and that row's
+              // width belongs to the status chip (#767/#771 both had to win it
+              // back). Measured at a real row width, this keeps the reinforced
+              // counter the same size as the pale one it replaces.
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 // A resting fill and border so the number is a countable thing

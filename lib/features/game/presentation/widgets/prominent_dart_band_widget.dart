@@ -14,8 +14,11 @@ import '../../../../core/utils/app_theme.dart';
 /// are unreadable and too small to tap. This band renders the same three darts
 /// prominently with large tap targets.
 ///
-/// Presentational only: the correction / manual-entry UI and the wiring stay in
-/// each board. The public API mirrors the trio the X01 / Cricket / Practice
+/// Presentational for the game itself: the correction / manual-entry UI and the
+/// wiring stay in each board. Its one provider dependency is the `core/`
+/// training-capture tick it acknowledges (#762, [_ContributionFlash]), which is
+/// why it needs a `ProviderScope` above it. The public API mirrors the trio the
+/// X01 / Cricket / Practice
 /// boards already feed `GameStatusBarWidget` ([currentTurnDarts],
 /// [onDartTapped], [tapEmptySlots]) so each camera-first layout can compose this
 /// widget with no per-game branching. Manual-mode layouts keep the compact
@@ -162,10 +165,15 @@ class _ContributionFlashState extends ConsumerState<_ContributionFlash>
                       width: 4,
                     ),
                   ),
+                  // Bottom, not top: a slot centres its segment vertically, so
+                  // the bottom third is the only part of the band that is
+                  // reliably empty. Measured at a real phone width (412dp) with
+                  // a full turn, a top-end badge cut into the third segment's
+                  // glyphs — the at-distance readability #478 exists for.
                   child: Align(
-                    alignment: AlignmentDirectional.topEnd,
+                    alignment: AlignmentDirectional.bottomEnd,
                     child: Padding(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(4),
                       child: Opacity(
                         opacity: t,
                         child: _CapturedBadge(
@@ -205,7 +213,7 @@ class _CapturedBadge extends StatelessWidget {
       liveRegion: true,
       label: label,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(14),
@@ -215,7 +223,7 @@ class _CapturedBadge extends StatelessWidget {
           children: [
             Icon(
               Icons.photo_camera_back_outlined,
-              size: 20,
+              size: 18,
               color: AppTheme.onSuccess(context),
             ),
             const SizedBox(width: 6),

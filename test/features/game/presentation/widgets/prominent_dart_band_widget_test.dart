@@ -168,6 +168,35 @@ void main() {
       expect(find.text('+1'), findsNothing);
     });
 
+    testWidgets('the badge clears the segment labels at a real phone width',
+        (tester) async {
+      // The band exists to be read from the oche (#478), so an acknowledgement
+      // that sits on top of a segment costs more than it gives. Measured, not
+      // eyeballed: the first version of this badge cut into the third slot's
+      // glyphs at 412dp with a full turn.
+      tester.view.physicalSize = const Size(412 * 3, 400 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.reset);
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await tester.pumpWidget(_wrap(
+        const ProminentDartBandWidget(currentTurnDarts: ['T20', 'D20', 'MISS']),
+        container: container,
+      ));
+
+      container.read(trainingCaptureSignalProvider.notifier).bump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 10));
+
+      // The PAINTED rects: a segment is drawn through a FittedBox, so its
+      // layout size is not where it ends up on screen.
+      final badge = tester.getRect(find.text('+1'));
+      for (final segment in ['T20', 'D20', 'MISS']) {
+        expect(badge.overlaps(tester.getRect(find.text(segment))), isFalse,
+            reason: 'the badge covers $segment');
+      }
+    });
+
     testWidgets('the acknowledgement never blocks a tap on the band',
         (tester) async {
       final container = ProviderContainer();

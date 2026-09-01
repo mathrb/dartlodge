@@ -2287,7 +2287,7 @@
   },
   "autoScorerCaptureSaved": "Frame saved for training",
   "@autoScorerCaptureSaved": {
-    "description": "Toast confirming a manually captured frame was stored for training"
+    "description": "Confirms a frame was stored for training: the toast after a manual capture, and the spoken label of the dart band's capture acknowledgement"
   },
   "achievementFirst180Title": "First 180",
   "@achievementFirst180Title": {

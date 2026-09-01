@@ -65,8 +65,10 @@ class ActiveCaptureCorrectionSink extends _$ActiveCaptureCorrectionSink {
   void bind(CaptureCorrectionSink? sink) => state = sink;
 }
 
-/// A monotonically increasing counter bumped by the auto-scorer each time a
-/// training frame is actually written to the capture store (#762).
+/// A monotonically increasing counter bumped by the auto-scorer when a training
+/// frame is written to the capture store while the overlay that ordered it is
+/// still running (#762) — the same guard the in-game counter has carried since
+/// #742, so the two always move together.
 ///
 /// The acknowledgement of a contribution has to happen where the player is
 /// looking — the dart band they just tapped — but the band belongs to the game
