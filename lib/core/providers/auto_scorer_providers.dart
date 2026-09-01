@@ -64,3 +64,25 @@ class ActiveCaptureCorrectionSink extends _$ActiveCaptureCorrectionSink {
 
   void bind(CaptureCorrectionSink? sink) => state = sink;
 }
+
+/// A monotonically increasing counter bumped by the auto-scorer when a training
+/// frame is written to the capture store while the overlay that ordered it is
+/// still running (#762) — the same guard the in-game counter has carried since
+/// #742, so the two always move together.
+///
+/// The acknowledgement of a contribution has to happen where the player is
+/// looking — the dart band they just tapped — but the band belongs to the game
+/// feature and the capture to the auto-scorer, so the two meet here, in `core/`
+/// (CLAUDE.md: no feature imports another). Same shape as [ActiveTurnSignal]: a
+/// bare tick, not the total, because the band acknowledges *an* event; the
+/// running total stays the camera bar's counter.
+///
+/// Never bumped when recording is off (nothing is captured) nor on web (the
+/// capture store is a stub), so a listener needs no guard of its own.
+@Riverpod(keepAlive: true)
+class TrainingCaptureSignal extends _$TrainingCaptureSignal {
+  @override
+  int build() => 0;
+
+  void bump() => state = state + 1;
+}

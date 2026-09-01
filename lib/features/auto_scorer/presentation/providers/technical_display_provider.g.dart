@@ -17,7 +17,8 @@ part of 'technical_display_provider.dart';
 ///
 /// Accepted trade-off recorded in the design: with the boxes hidden the player
 /// loses the information of *where* the camera sees the markers. The halo and
-/// pips (S1.1/S1.2) replace that signal in player language.
+/// aim view's status banner (S1.1/S1.2) replace that signal in player
+/// language.
 
 @ProviderFor(AutoScorerTechnicalDisplay)
 final autoScorerTechnicalDisplayProvider =
@@ -32,7 +33,8 @@ final autoScorerTechnicalDisplayProvider =
 ///
 /// Accepted trade-off recorded in the design: with the boxes hidden the player
 /// loses the information of *where* the camera sees the markers. The halo and
-/// pips (S1.1/S1.2) replace that signal in player language.
+/// aim view's status banner (S1.1/S1.2) replace that signal in player
+/// language.
 final class AutoScorerTechnicalDisplayProvider
     extends $AsyncNotifierProvider<AutoScorerTechnicalDisplay, bool> {
   /// The "Technical display" opt-in (#738 / design S1.3). When on, the YOLO plugin
@@ -44,7 +46,8 @@ final class AutoScorerTechnicalDisplayProvider
   ///
   /// Accepted trade-off recorded in the design: with the boxes hidden the player
   /// loses the information of *where* the camera sees the markers. The halo and
-  /// pips (S1.1/S1.2) replace that signal in player language.
+  /// aim view's status banner (S1.1/S1.2) replace that signal in player
+  /// language.
   AutoScorerTechnicalDisplayProvider._()
     : super(
         from: null,
@@ -76,7 +79,8 @@ String _$autoScorerTechnicalDisplayHash() =>
 ///
 /// Accepted trade-off recorded in the design: with the boxes hidden the player
 /// loses the information of *where* the camera sees the markers. The halo and
-/// pips (S1.1/S1.2) replace that signal in player language.
+/// aim view's status banner (S1.1/S1.2) replace that signal in player
+/// language.
 
 abstract class _$AutoScorerTechnicalDisplay extends $AsyncNotifier<bool> {
   FutureOr<bool> build();

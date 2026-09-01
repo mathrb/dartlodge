@@ -192,6 +192,11 @@ class _AutoScorerBoardOverlayState
       session.onCapturePersisted = (total) {
         if (mounted && identical(_session, session)) {
           _contributions.value = _contributionsBase + total;
+          // And once more where the player is actually looking: the dart band
+          // they just tapped, over in the game feature, listens to this tick
+          // (#762). Bumped here rather than inside the session so it stays
+          // paired with the counter it acknowledges — same guard, same event.
+          ref.read(trainingCaptureSignalProvider.notifier).bump();
         }
       };
       await session.start();

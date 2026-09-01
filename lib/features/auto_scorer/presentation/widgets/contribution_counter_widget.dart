@@ -10,6 +10,9 @@ import 'package:flutter/material.dart';
 /// SnackBar: manual entry happens up to three times per turn, and three
 /// snackbars per turn would cover the board and fight the existing
 /// correction/export ones.
+///
+/// Shorter than the dart band's own flash (#762): that one has to catch a
+/// player looking at the board, this one sits under their thumb.
 const Duration kContributionPulseDuration = Duration(milliseconds: 600);
 
 /// Compact "training photos captured this game" counter for the in-game camera
@@ -19,6 +22,10 @@ const Duration kContributionPulseDuration = Duration(milliseconds: 600);
 /// player has no reason to believe that playing with an unrecognised board is
 /// worth anything. This is the acknowledgement: it counts, and it pulses as it
 /// increments.
+///
+/// It is the running total, and it is the recap the band's own flash (#762)
+/// points back to, so it reads as a thing at rest — a bordered pill — instead
+/// of a stray number in the chrome.
 ///
 /// Pure UI — the caller owns the count (the session counts its own successful
 /// persists) and decides whether to show it at all: it must be absent when
@@ -81,25 +88,35 @@ class _ContributionCounterState extends State<ContributionCounter>
               : (1 - _pulse.value) * 2;
           final fg = Color.lerp(scheme.onSurfaceVariant, highlight, t)!;
           return Transform.scale(
-            scale: 1 + 0.12 * t,
+            scale: 1 + 0.15 * t,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              // 6, not the 8 the borderless version had: the resting border and
+              // the bigger glyph together cost 4px of the row, and that row's
+              // width belongs to the status chip (#767/#771 both had to win it
+              // back). Measured at a real row width, this keeps the reinforced
+              // counter the same size as the pale one it replaces.
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: Color.lerp(
-                    Colors.transparent, highlight.withValues(alpha: 0.16), t),
+                // A resting fill and border so the number is a countable thing
+                // rather than loose chrome (#762); the pulse rides on top of it.
+                color: Color.lerp(scheme.surfaceContainerHighest,
+                    highlight.withValues(alpha: 0.28), t),
+                border: Border.all(
+                  color: Color.lerp(scheme.outlineVariant, highlight, t)!,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.photo_camera_back_outlined, size: 16, color: fg),
+                  Icon(Icons.photo_camera_back_outlined, size: 18, color: fg),
                   const SizedBox(width: 4),
                   Text(
                     StatFormatter.fmtInt(widget.count),
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(color: fg),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: fg,
+                          fontWeight: FontWeight.w700,
+                        ),
                   ),
                 ],
               ),
