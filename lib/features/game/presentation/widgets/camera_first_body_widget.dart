@@ -5,18 +5,25 @@ import 'package:flutter/material.dart';
 /// The height below which the in-game camera region stops teaching the player
 /// anything (#769).
 ///
-/// Derived from what the region has to let you check, not from a value borrowed
-/// elsewhere. The region holds the camera bar (~48dp, more at a large font) and
-/// its own padding (~12dp) above the image, so 240dp leaves the image about
-/// 180dp. Letterboxed into a phone-width region that renders the board roughly
-/// 110dp across — the size the app already treats as readable at the oche for
-/// the dart band's slots (#478). Below that the board is a smudge and a dart in
-/// it is invisible, which is the state #769 was filed about (73dp on a small
-/// screen, 0 with a large font).
+/// Derived from what the region has to let you check, and from what the region
+/// actually contains — measured, not estimated. In the ordinary running state
+/// the camera bar takes 48dp, the hint line under it 16dp and the region's own
+/// padding 12dp, so 260dp leaves the image 180dp. Letterboxed into a
+/// phone-width region that renders the board roughly 110dp across, the size
+/// #478 already settles on as readable at the oche. Below that the board is a
+/// smudge and a dart in it is invisible, which is the state #769 was filed
+/// about (73dp on a small screen, 0 with a large font).
+///
+/// The image is what gives way in the states that stack more chrome: the lost
+/// calibration alert puts re-aim on its own row (#771), and a 150% system font
+/// grows every row, together taking 164dp of this floor rather than 76dp. A
+/// floor tall enough to keep 180dp of image even there would be about 400dp,
+/// which on a 640dp screen is the whole board. The region cannot solve that
+/// from the outside; shrinking the chrome is the auto-scorer's own business.
 ///
 /// Hiding the preview instead is not an option: the preview IS the detector, so
 /// removing it stops auto-scoring (epic #766).
-const double kMinCameraRegionHeight = 240;
+const double kMinCameraRegionHeight = 260;
 
 /// The most of the body the camera region may claim when the floor above cannot
 /// be met outright.

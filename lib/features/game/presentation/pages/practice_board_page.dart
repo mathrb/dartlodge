@@ -19,13 +19,13 @@ import '../../domain/models/game_state.dart';
 import '../providers/active_practice_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../state/active_practice_state.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/dartboard_highlight_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/practice_input_buttons_widget.dart';
 import '../widgets/practice_players_strip_widget.dart';
 import '../widgets/practice_target_display_widget.dart';
-import '../widgets/camera_first_body_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 

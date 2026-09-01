@@ -349,13 +349,64 @@ void main() {
 
           final camera =
               tester.getSize(find.byKey(const ValueKey('camera-stub'))).height;
-          // The floor, or the share the fraction cap allows on the smallest
-          // screen — never the 0-73dp this issue was filed about.
-          expect(camera, greaterThanOrEqualTo(190.0),
+          // Asserted against the constants, not against the number measured
+          // today: a px-level change to the header or the status bar would
+          // otherwise trip this test without the camera floor having moved.
+          // The smallest screen is the one where the fraction cap binds and
+          // the floor itself cannot be met.
+          final expected = screen.height <= 568
+              ? kMinCameraRegionHeight * kMaxCameraRegionFraction
+              : kMinCameraRegionHeight;
+          expect(camera, greaterThanOrEqualTo(expected),
               reason: 'camera region too short at $label');
         });
       }
     }
+
+    testWidgets('an accessibility font size still fits', (tester) async {
+      // 150% is the size #769 measured, not the largest a phone offers: both
+      // Android and iOS go past 200%. Nothing may overflow there either.
+      tester.view.physicalSize = const Size(320, 568) * 3;
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final notifier = _FakeActiveGameNotifier(_activeState());
+      await tester.pumpWidget(_buildAppCameraFirst(notifier));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+          greaterThan(0.0));
+    });
+
+    testWidgets('a full field of players does not push anything off',
+        (tester) async {
+      // The other-players strip is content too, and it is the one part of the
+      // board that grows with the game rather than with the font.
+      tester.view.physicalSize = const Size(320, 568) * 3;
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+
+      final notifier = _FakeActiveGameNotifier(_activeState(
+        gameState: _gameState(competitors: [
+          _competitor(),
+          _competitor(id: 'c2', name: 'Bob'),
+          _competitor(id: 'c3', name: 'Charlie'),
+          _competitor(id: 'c4', name: 'Dave'),
+        ]),
+      ));
+      await tester.pumpWidget(_buildAppCameraFirst(notifier));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+          greaterThanOrEqualTo(
+              kMinCameraRegionHeight * kMaxCameraRegionFraction));
+    });
 
     testWidgets('what a cramped screen keeps in view is the dart band',
         (tester) async {

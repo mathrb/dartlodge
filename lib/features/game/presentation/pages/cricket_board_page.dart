@@ -17,6 +17,7 @@ import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
 import '../widgets/cricket_marks_strip_widget.dart';
 import '../widgets/cricket_unified_table_widget.dart';
@@ -24,7 +25,6 @@ import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
 import '../widgets/live_average.dart';
-import '../widgets/camera_first_body_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 
