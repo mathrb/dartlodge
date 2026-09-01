@@ -24,6 +24,7 @@ import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
 import '../widgets/live_average.dart';
 import '../widgets/player_score_section_widget.dart';
+import '../widgets/camera_first_body_widget.dart';
 import '../widgets/prominent_dart_band_widget.dart';
 import '../widgets/pulsing_next_button_widget.dart';
 import '../widgets/x01_other_players_strip_widget.dart';
@@ -57,7 +58,9 @@ class _CountUpDartInputSink implements DartInputSink {
     final s = _ref.read(activeCountUpProvider(_gameId)).value;
     // No-op when complete or before any dart this turn (a board-clear at turn
     // start must not skip the player). Mirrors the other boards' guard.
-    if (s == null || s.gameState.isComplete || s.gameState.dartsThrownInTurn == 0) {
+    if (s == null ||
+        s.gameState.isComplete ||
+        s.gameState.dartsThrownInTurn == 0) {
       return;
     }
     _ref.read(activeCountUpProvider(_gameId).notifier).advanceTurn();
@@ -137,9 +140,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
     final asyncState = ref.watch(activeCountUpProvider(widget.gameId));
 
     return asyncState.when(
-      loading: () => Scaffold(
-        body: LoadingSpinnerWidget(color: cs.primary),
-      ),
+      loading: () => Scaffold(body: LoadingSpinnerWidget(color: cs.primary)),
       error: (err, _) => Scaffold(
         body: ErrorRetryWidget(
           title: l10n.commonError,
@@ -149,16 +150,15 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
       ),
       data: (activeState) {
         if (activeState == null) {
-          return Scaffold(
-            body: Center(child: Text(l10n.gameNotFound)),
-          );
+          return Scaffold(body: Center(child: Text(l10n.gameNotFound)));
         }
 
         final gameState = activeState.gameState;
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
-        final canUndo = dartsThrownInTurn > 0 ||
+        final canUndo =
+            dartsThrownInTurn > 0 ||
             gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
         // #627: NEXT gated on ≥1 dart (mis-tap guard, consistent across boards);
         // 1–2 darts advance silently with MISS-fill, no confirmation.
@@ -170,8 +170,8 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
         final allDarts = activeCompetitor.dartThrows;
         final currentTurnDarts =
             dartsThrownInTurn == 0 || allDarts.length < dartsThrownInTurn
-                ? <String>[]
-                : allDarts.sublist(allDarts.length - dartsThrownInTurn);
+            ? <String>[]
+            : allDarts.sublist(allDarts.length - dartsThrownInTurn);
 
         // Engine clears `turnActive` after the 3rd dart but before TurnEnded
         // is persisted. Treat that as "turn done — tap NEXT to continue".
@@ -189,124 +189,145 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
             body: SafeArea(
               bottom: false,
               child: Column(
-              children: [
-                AppHeader(
-                  showBack: true,
-                  onBack: () => _confirmBack(context),
-                  // Three-dot menu — see #331 (gear icon misleadingly
-                  // implied Settings while the action was End Game).
-                  trailing: PopupMenuButton<_BoardMenuAction>(
-                    icon: Icon(
-                      Icons.more_vert,
-                      color: cs.onSurface,
-                      semanticLabel: l10n.gameOptionsSemantic,
-                    ),
-                    onSelected: (action) {
-                      switch (action) {
-                        case _BoardMenuAction.endGame:
-                          _showEndGameDialog(context);
-                        case _BoardMenuAction.settings:
-                          context.push(GameRoutes.settings);
-                        case _BoardMenuAction.reportBug:
-                          showReportBugDialog(context);
-                      }
-                    },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(
-                        value: _BoardMenuAction.endGame,
-                        child: Text(l10n.gameMenuEndGame),
+                children: [
+                  AppHeader(
+                    showBack: true,
+                    onBack: () => _confirmBack(context),
+                    // Three-dot menu — see #331 (gear icon misleadingly
+                    // implied Settings while the action was End Game).
+                    trailing: PopupMenuButton<_BoardMenuAction>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: cs.onSurface,
+                        semanticLabel: l10n.gameOptionsSemantic,
                       ),
-                      PopupMenuItem(
-                        value: _BoardMenuAction.settings,
-                        child: Text(l10n.settingsTitle),
-                      ),
-                      // Report a Bug without leaving the game (#688). Gated on
-                      // crash reporting being active this run, like Settings.
-                      if (isBugReportingAvailable())
+                      onSelected: (action) {
+                        switch (action) {
+                          case _BoardMenuAction.endGame:
+                            _showEndGameDialog(context);
+                          case _BoardMenuAction.settings:
+                            context.push(GameRoutes.settings);
+                          case _BoardMenuAction.reportBug:
+                            showReportBugDialog(context);
+                        }
+                      },
+                      itemBuilder: (_) => [
                         PopupMenuItem(
-                          value: _BoardMenuAction.reportBug,
-                          child: Text(l10n.settingsReportBug),
+                          value: _BoardMenuAction.endGame,
+                          child: Text(l10n.gameMenuEndGame),
                         ),
-                    ],
-                  ),
-                ),
-                GameStatusBarWidget(
-                  configLabel: 'COUNT-UP',
-                  roundInLeg: gameState.currentRoundInLeg,
-                  totalRounds: gameState.countUpTotalRounds,
-                  currentTurnDarts: currentTurnDarts,
-                  // Manual mode: tap a thrown dart to correct it (#657).
-                  // Camera-first hides the darts here — they move to the
-                  // prominent dart band below.
-                  onDartTapped: gameState.isComplete || cameraFirst
-                      ? null
-                      : (index) => _showCorrectionSheet(context, index),
-                  showDarts: !cameraFirst,
-                ),
-                if (cameraFirst) ...[
-                  HeroMetricWidget(
-                    value: '${activeCompetitor.score}',
-                    label: activeCompetitor.name,
-                    // Active player's live per-round average (#696), in parity
-                    // with the opponents' strip and the manual layout.
-                    secondary: 'PPR ${x01LivePprDisplay(activeCompetitor)}',
-                  ),
-                  if (gameState.competitors.length > 1)
-                    X01OtherPlayersStripWidget(
-                      players: [
-                        for (int i = 0; i < gameState.competitors.length; i++)
-                          if (i != gameState.currentTurnIndex)
-                            (
-                              name: gameState.competitors[i].name,
-                              score: gameState.competitors[i].score,
-                              // Live per-round average (#696), same helper as
-                              // X01; for Count-Up it reads as the points/round.
-                              ppr: x01LivePprDisplay(gameState.competitors[i]),
-                            ),
+                        PopupMenuItem(
+                          value: _BoardMenuAction.settings,
+                          child: Text(l10n.settingsTitle),
+                        ),
+                        // Report a Bug without leaving the game (#688). Gated on
+                        // crash reporting being active this run, like Settings.
+                        if (isBugReportingAvailable())
+                          PopupMenuItem(
+                            value: _BoardMenuAction.reportBug,
+                            child: Text(l10n.settingsReportBug),
+                          ),
                       ],
                     ),
-                  ProminentDartBandWidget(
+                  ),
+                  GameStatusBarWidget(
+                    configLabel: 'COUNT-UP',
+                    roundInLeg: gameState.currentRoundInLeg,
+                    totalRounds: gameState.countUpTotalRounds,
                     currentTurnDarts: currentTurnDarts,
-                    // Empty slot → manual entry for a dart the camera missed.
-                    onDartTapped: gameState.isComplete
+                    // Manual mode: tap a thrown dart to correct it (#657).
+                    // Camera-first hides the darts here — they move to the
+                    // prominent dart band below.
+                    onDartTapped: gameState.isComplete || cameraFirst
                         ? null
-                        : (index) => _onSlotTapped(context, index, dartsThrownInTurn),
-                    tapEmptySlots: !gameState.isComplete && gameState.turnActive,
+                        : (index) => _showCorrectionSheet(context, index),
+                    showDarts: !cameraFirst,
                   ),
-                  Expanded(child: cameraPreview(context, widget.gameId)),
-                ] else ...[
-                  PlayerScoreSectionWidget(
-                    gameState: gameState,
-                    // No bust → no flash. Pass an always-zero animation.
-                    bustFlashAnim: const AlwaysStoppedAnimation<double>(0.0),
-                  ),
-                  Expanded(
-                    child: ManualScoringInput(
-                      onSegmentTapped: (segment) => ref
-                          .read(activeCountUpProvider(widget.gameId).notifier)
-                          .processDart(segment),
-                      enabled: !gameState.isComplete && gameState.turnActive,
+                  if (cameraFirst)
+                    // The camera region never drops below a useful height, and the
+                    // content above it scrolls instead of overflowing when a small
+                    // screen or a large system font leaves too little room (#769).
+                    Expanded(
+                      child: CameraFirstBody(
+                        camera: cameraPreview(context, widget.gameId),
+                        content: [
+                          HeroMetricWidget(
+                            value: '${activeCompetitor.score}',
+                            label: activeCompetitor.name,
+                            // Active player's live per-round average (#696), in parity
+                            // with the opponents' strip and the manual layout.
+                            secondary:
+                                'PPR ${x01LivePprDisplay(activeCompetitor)}',
+                          ),
+                          if (gameState.competitors.length > 1)
+                            X01OtherPlayersStripWidget(
+                              players: [
+                                for (
+                                  int i = 0;
+                                  i < gameState.competitors.length;
+                                  i++
+                                )
+                                  if (i != gameState.currentTurnIndex)
+                                    (
+                                      name: gameState.competitors[i].name,
+                                      score: gameState.competitors[i].score,
+                                      // Live per-round average (#696), same helper as
+                                      // X01; for Count-Up it reads as the points/round.
+                                      ppr: x01LivePprDisplay(
+                                        gameState.competitors[i],
+                                      ),
+                                    ),
+                              ],
+                            ),
+                          ProminentDartBandWidget(
+                            currentTurnDarts: currentTurnDarts,
+                            // Empty slot → manual entry for a dart the camera missed.
+                            onDartTapped: gameState.isComplete
+                                ? null
+                                : (index) => _onSlotTapped(
+                                    context,
+                                    index,
+                                    dartsThrownInTurn,
+                                  ),
+                            tapEmptySlots:
+                                !gameState.isComplete && gameState.turnActive,
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    PlayerScoreSectionWidget(
+                      gameState: gameState,
+                      // No bust → no flash. Pass an always-zero animation.
+                      bustFlashAnim: const AlwaysStoppedAnimation<double>(0.0),
                     ),
+                    Expanded(
+                      child: ManualScoringInput(
+                        onSegmentTapped: (segment) => ref
+                            .read(activeCountUpProvider(widget.gameId).notifier)
+                            .processDart(segment),
+                        enabled: !gameState.isComplete && gameState.turnActive,
+                      ),
+                    ),
+                  ],
+                  _BottomActionBar(
+                    canUndo: canUndo,
+                    canNext: canNext,
+                    isMultiplayer: gameState.competitors.length > 1,
+                    pulseNext: canNext && turnDone,
+                    onUndo: () => ref
+                        .read(activeCountUpProvider(widget.gameId).notifier)
+                        .undoDart(),
+                    onNextRound: () {
+                      ref
+                          .read(activeCountUpProvider(widget.gameId).notifier)
+                          .advanceTurn();
+                      // Reset the auto-scorer's per-turn cap for the next player.
+                      ref.read(activeTurnSignalProvider.notifier).bump();
+                    },
                   ),
                 ],
-                _BottomActionBar(
-                  canUndo: canUndo,
-                  canNext: canNext,
-                  isMultiplayer: gameState.competitors.length > 1,
-                  pulseNext: canNext && turnDone,
-                  onUndo: () => ref
-                      .read(activeCountUpProvider(widget.gameId).notifier)
-                      .undoDart(),
-                  onNextRound: () {
-                    ref
-                        .read(activeCountUpProvider(widget.gameId).notifier)
-                        .advanceTurn();
-                    // Reset the auto-scorer's per-turn cap for the next player.
-                    ref.read(activeTurnSignalProvider.notifier).bump();
-                  },
-                ),
-              ],
-            ),
+              ),
             ),
           ),
         );
@@ -396,8 +417,10 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-              child: Text(AppLocalizations.of(context).gameEnterDart,
-                  style: AppTextStyles.titleMedium),
+              child: Text(
+                AppLocalizations.of(context).gameEnterDart,
+                style: AppTextStyles.titleMedium,
+              ),
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
@@ -405,9 +428,11 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
               // the sheet is open (e.g. the camera fills the 3rd dart).
               child: Consumer(
                 builder: (ctx, ref, _) {
-                  final s =
-                      ref.watch(activeCountUpProvider(widget.gameId)).value;
-                  final enabled = s != null &&
+                  final s = ref
+                      .watch(activeCountUpProvider(widget.gameId))
+                      .value;
+                  final enabled =
+                      s != null &&
                       !s.gameState.isComplete &&
                       s.gameState.turnActive;
                   return DartInputGridWidget(
@@ -459,12 +484,14 @@ class _BottomActionBar extends StatelessWidget {
     return SafeArea(
       child: Container(
         decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest
-              .withValues(alpha: AppTheme.opacityBottomBarBackground),
+          color: cs.surfaceContainerHighest.withValues(
+            alpha: AppTheme.opacityBottomBarBackground,
+          ),
           border: Border(
             top: BorderSide(
-              color: cs.surfaceContainer
-                  .withValues(alpha: AppTheme.opacityBottomBarTopEdge),
+              color: cs.surfaceContainer.withValues(
+                alpha: AppTheme.opacityBottomBarTopEdge,
+              ),
             ),
           ),
         ),
@@ -486,7 +513,8 @@ class _BottomActionBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                     border: Border.all(
                       color: cs.outlineVariant.withValues(
-                          alpha: AppTheme.opacityGhostBorderStrong),
+                        alpha: AppTheme.opacityGhostBorderStrong,
+                      ),
                     ),
                   ),
                   child: Icon(
