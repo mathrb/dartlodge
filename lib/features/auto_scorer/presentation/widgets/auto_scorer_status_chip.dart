@@ -89,8 +89,10 @@ class AutoScorerStatusChip extends StatelessWidget {
       // Accepted trade-off: scaleDown has no floor, so a large system text
       // scale can be shrunk back below its requested size here. That is still
       // strictly better than what it replaces — the same setting used to cut
-      // the label mid-word — and the room comes back once the camera actions
-      // move off this row (#761).
+      // the label mid-word. #761 gave some of the room back by folding three
+      // camera actions into one menu button, and it keeps the labelled re-aim
+      // of a lost calibration on its own line for the same reason: measured,
+      // that button alone left this chip nothing.
       label: FittedBox(
         fit: BoxFit.scaleDown,
         alignment: AlignmentDirectional.centerStart,

@@ -1,10 +1,25 @@
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar_widget.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/contribution_counter_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+/// The uniform scale the counter is currently drawn at — the same probe the
+/// counter's own test uses.
+/// `skipOffstage: false` on purpose: while the count is zero the counter is
+/// kept in the tree but off-stage, and that is exactly the state this probe
+/// needs to reach to prove it was mounted before the first capture.
+double _scale(WidgetTester tester) {
+  final transform = tester.widget<Transform>(find
+      .descendant(
+        of: find.byType(ContributionCounter, skipOffstage: false),
+        matching: find.byType(Transform, skipOffstage: false),
+      )
+      .first);
+  return transform.transform.getMaxScaleOnAxis();
+}
 
 void main() {
   late List<String> tapped;
@@ -106,6 +121,25 @@ void main() {
     testWidgets('the first capture brings it in', (tester) async {
       await pump(tester, contributions: 1);
       expect(find.byType(ContributionCounter), findsOneWidget);
+    });
+
+    testWidgets('the first capture still pulses (#742)', (tester) async {
+      // The counter pulses when its count RISES, so it has to be mounted at
+      // zero to see the rise at all. Dropping it from the row while empty
+      // would build it fresh at 1 and swallow the acknowledgement on the one
+      // capture that proves the feature works.
+      await pump(tester, contributions: 0);
+      expect(_scale(tester), closeTo(1.0, 1e-6));
+
+      await pump(tester, contributions: 1);
+      // A short pump on purpose, like the counter's own test: the test binding
+      // scales animation durations down, so a fraction of the pulse duration
+      // would already be over.
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(_scale(tester), greaterThan(1.0));
+
+      await tester.pumpAndSettle();
+      expect(_scale(tester), closeTo(1.0, 1e-6));
     });
 
     testWidgets('recording off keeps it away whatever the count',

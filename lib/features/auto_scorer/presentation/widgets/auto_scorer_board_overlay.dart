@@ -17,7 +17,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_r
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/technical_display_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar_widget.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
