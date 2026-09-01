@@ -491,7 +491,7 @@
   "autoScorerPreSendPhotosTitle": "Wat de foto's laten zien",
   "autoScorerPreSendPhotosBody": "Ze zijn gemaakt door je telefoon vanaf de plek waar hij hing: behalve het bord kunnen ze je kamer en iedereen erin tonen. Bekijk ze voordat je ze verstuurt.",
   "autoScorerPreSendSessionsTitle": "Wat een opgenomen sessie bevat",
-  "autoScorerPreSendSessionsBody": "Cijfers, geen beelden: wat de camera beeld voor beeld heeft gemeten, de getelde darts en de spelersnamen van die partij.",
+  "autoScorerPreSendSessionsBody": "Cijfers, geen beelden: wat de camera beeld voor beeld heeft gemeten, de darts en hun score, de spelersnamen en wanneer er gespeeld is.",
   "autoScorerPreSendWhereTitle": "Waar het heen gaat",
   "autoScorerPreSendStep1": "1. Sla de zip in het deelmenu op in je eigen cloudopslag (bijvoorbeeld Google Drive).",
   "autoScorerPreSendStep2": "2. Deel dat bestand met {email}. De zip is te groot om als e-mailbijlage te versturen; daarom gaat hij eerst naar je eigen opslag.",

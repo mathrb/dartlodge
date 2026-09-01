@@ -491,7 +491,7 @@
   "autoScorerPreSendPhotosTitle": "Was die Fotos zeigen",
   "autoScorerPreSendPhotosBody": "Sie wurden von deinem Telefon an seinem Platz aufgenommen: Neben dem Board können sie deinen Raum und alle darin zeigen. Sieh sie dir an, bevor du sie sendest.",
   "autoScorerPreSendSessionsTitle": "Was eine aufgezeichnete Sitzung enthält",
-  "autoScorerPreSendSessionsBody": "Zahlen, keine Bilder: was die Kamera Bild für Bild gemessen hat, die gezählten Darts und die Spielernamen dieser Partie.",
+  "autoScorerPreSendSessionsBody": "Zahlen, keine Bilder: was die Kamera Bild für Bild gemessen hat, die Darts und ihre Punkte, die Spielernamen und wann gespielt wurde.",
   "autoScorerPreSendWhereTitle": "Wohin es geht",
   "autoScorerPreSendStep1": "1. Speichere das Zip im Teilen-Menü in deinem eigenen Cloud-Speicher (zum Beispiel Google Drive).",
   "autoScorerPreSendStep2": "2. Teile diese Datei mit {email}. Das Zip ist zu groß für einen E-Mail-Anhang, deshalb der Umweg über deinen Speicher.",

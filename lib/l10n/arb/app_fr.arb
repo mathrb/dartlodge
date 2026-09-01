@@ -491,7 +491,7 @@
   "autoScorerPreSendPhotosTitle": "Ce que montrent les photos",
   "autoScorerPreSendPhotosBody": "Elles ont été prises par votre téléphone là où il était fixé : au-delà de la cible, elles peuvent montrer votre pièce et les personnes présentes. Regardez-les avant de les envoyer.",
   "autoScorerPreSendSessionsTitle": "Ce que contient une session enregistrée",
-  "autoScorerPreSendSessionsBody": "Des chiffres, aucune image : ce que la caméra a mesuré image par image, les fléchettes comptées, et les noms des joueurs de cette partie.",
+  "autoScorerPreSendSessionsBody": "Des chiffres, aucune image : ce que la caméra a mesuré image par image, les fléchettes et leurs scores, les noms des joueurs et la date de la partie.",
   "autoScorerPreSendWhereTitle": "Où cela va",
   "autoScorerPreSendStep1": "1. Dans le menu de partage, enregistrez le zip dans votre propre espace de stockage (Google Drive, par exemple).",
   "autoScorerPreSendStep2": "2. Partagez ce fichier avec {email}. Le zip est trop volumineux pour être envoyé en pièce jointe, d'où le passage par votre espace de stockage.",

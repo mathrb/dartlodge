@@ -491,7 +491,7 @@
   "autoScorerPreSendPhotosTitle": "Cosa mostrano le foto",
   "autoScorerPreSendPhotosBody": "Le ha scattate il tuo telefono da dov'era fissato: oltre al bersaglio possono mostrare la tua stanza e chi si trova lì. Guardale prima di inviarle.",
   "autoScorerPreSendSessionsTitle": "Cosa contiene una sessione registrata",
-  "autoScorerPreSendSessionsBody": "Numeri, nessuna immagine: quello che la fotocamera ha misurato fotogramma per fotogramma, le freccette conteggiate e i nomi dei giocatori di quella partita.",
+  "autoScorerPreSendSessionsBody": "Numeri, nessuna immagine: quello che la fotocamera ha misurato fotogramma per fotogramma, le freccette e i loro punti, i nomi dei giocatori e quando si è giocato.",
   "autoScorerPreSendWhereTitle": "Dove finisce",
   "autoScorerPreSendStep1": "1. Nel menu di condivisione, salva lo zip nel tuo spazio di archiviazione (Google Drive, per esempio).",
   "autoScorerPreSendStep2": "2. Condividi quel file con {email}. Lo zip è troppo grande per essere allegato a un'e-mail: per questo passa prima dal tuo spazio di archiviazione.",

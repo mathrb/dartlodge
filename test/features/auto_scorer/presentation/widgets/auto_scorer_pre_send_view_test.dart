@@ -84,8 +84,10 @@ void main() {
 
     expect(find.text('What a recorded session holds'), findsOneWidget);
     expect(find.textContaining('no images'), findsOneWidget);
-    // Named honestly: the bundle carries the game's competitor names.
+    // Named honestly: the bundle carries the game's competitor names, and its
+    // timestamps say when it was played.
     expect(find.textContaining('player names'), findsOneWidget);
+    expect(find.textContaining('when it was played'), findsOneWidget);
   });
 
   testWidgets('the loop after sending is not described as automatic',

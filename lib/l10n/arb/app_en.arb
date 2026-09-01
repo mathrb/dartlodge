@@ -1892,7 +1892,7 @@
   "@autoScorerPreSendSessionsTitle": {
     "description": "Pre-send section heading: what a recorded session file contains"
   },
-  "autoScorerPreSendSessionsBody": "Numbers, no images: what the camera measured frame by frame, the darts it scored, and the player names of that game.",
+  "autoScorerPreSendSessionsBody": "Numbers, no images: what the camera measured frame by frame, the darts it scored, the player names of that game, and when it was played.",
   "@autoScorerPreSendSessionsBody": {
     "description": "Pre-send body: a recorded session is numbers only, no images"
   },

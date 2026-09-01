@@ -491,7 +491,7 @@
   "autoScorerPreSendPhotosTitle": "O que as fotos mostram",
   "autoScorerPreSendPhotosBody": "Foram tiradas pelo seu telefone de onde ele estava fixado: além do alvo, podem mostrar o seu cômodo e quem estiver nele. Dê uma olhada antes de enviá-las.",
   "autoScorerPreSendSessionsTitle": "O que contém uma sessão gravada",
-  "autoScorerPreSendSessionsBody": "Números, nenhuma imagem: o que a câmera mediu quadro a quadro, os dardos contados e os nomes dos jogadores daquela partida.",
+  "autoScorerPreSendSessionsBody": "Números, nenhuma imagem: o que a câmera mediu quadro a quadro, os dardos e seus pontos, os nomes dos jogadores e quando a partida foi jogada.",
   "autoScorerPreSendWhereTitle": "Para onde vai",
   "autoScorerPreSendStep1": "1. No menu de compartilhamento, salve o zip no seu próprio armazenamento na nuvem (Google Drive, por exemplo).",
   "autoScorerPreSendStep2": "2. Compartilhe esse arquivo com {email}. O zip é grande demais para ser enviado como anexo de e-mail, por isso passa primeiro pelo seu armazenamento.",
