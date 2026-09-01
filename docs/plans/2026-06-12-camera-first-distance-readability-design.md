@@ -1,8 +1,15 @@
 # Camera-first distance readability — design
 
 **Date:** 2026-06-12
-**Status:** validated (brainstorming session with owner)
+**Status:** validated (brainstorming session with owner), **partly superseded**
 **Scope:** camera-first layouts only (X01, Cricket, Practice boards). Manual-mode layouts unchanged.
+
+> **Superseded on 2026-08-31 (#760):** the camera vignette described below — a
+> collapsed ~96px preview that tap-expands and auto-collapses — no longer
+> exists. The first device pass showed the space it freed reading as an
+> unfinished screen, so the preview now simply fills the height the board gives
+> it, with no collapsed/expanded pair. Everything else here (at-distance
+> typography, the prominent dart band, the hero metric) still stands.
 
 ## Problem
 

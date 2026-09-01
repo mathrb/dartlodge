@@ -10,18 +10,18 @@ part of 'board_camera_preview_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// Cross-feature seam (CLAUDE.md: communicate via `core/`, not direct imports)
 /// for the camera-first board layout (#427). Defaults to null; the composition
-/// root (`main.dart`) overrides it with the auto-scorer's camera widget. Sibling
-/// to [boardOverlayBuilder] — that one is the band variant (still used elsewhere
-/// until every board adopts the camera-first layout).
+/// root (`main.dart`) overrides it with the auto-scorer's camera widget. It is
+/// the only camera seam: the slim band variant it used to sit beside was never
+/// adopted by a board and went with the single-view cleanup (#760).
 
 @ProviderFor(boardCameraPreviewBuilder)
 final boardCameraPreviewBuilderProvider = BoardCameraPreviewBuilderProvider._();
 
 /// Cross-feature seam (CLAUDE.md: communicate via `core/`, not direct imports)
 /// for the camera-first board layout (#427). Defaults to null; the composition
-/// root (`main.dart`) overrides it with the auto-scorer's camera widget. Sibling
-/// to [boardOverlayBuilder] — that one is the band variant (still used elsewhere
-/// until every board adopts the camera-first layout).
+/// root (`main.dart`) overrides it with the auto-scorer's camera widget. It is
+/// the only camera seam: the slim band variant it used to sit beside was never
+/// adopted by a board and went with the single-view cleanup (#760).
 
 final class BoardCameraPreviewBuilderProvider
     extends
@@ -33,9 +33,9 @@ final class BoardCameraPreviewBuilderProvider
     with $Provider<BoardCameraPreviewBuilder?> {
   /// Cross-feature seam (CLAUDE.md: communicate via `core/`, not direct imports)
   /// for the camera-first board layout (#427). Defaults to null; the composition
-  /// root (`main.dart`) overrides it with the auto-scorer's camera widget. Sibling
-  /// to [boardOverlayBuilder] — that one is the band variant (still used elsewhere
-  /// until every board adopts the camera-first layout).
+  /// root (`main.dart`) overrides it with the auto-scorer's camera widget. It is
+  /// the only camera seam: the slim band variant it used to sit beside was never
+  /// adopted by a board and went with the single-view cleanup (#760).
   BoardCameraPreviewBuilderProvider._()
     : super(
         from: null,

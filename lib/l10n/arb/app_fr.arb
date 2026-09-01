@@ -546,7 +546,6 @@
   "autoScorerSetupFailed": "Échec de la configuration de la caméra : {error}",
   "autoScorerReady": "Score automatique prêt",
   "autoScorerTapToCorrect": "Touchez une fléchette pour corriger une erreur de lecture",
-  "autoScorerExpandPreview": "agrandir l'aperçu de la caméra",
   "autoScorerRemoveDarts": "Retirer les fléchettes",
   "autoScorerStop": "Arrêter le score automatique",
   "autoScorerReAim": "Réaligner la caméra",

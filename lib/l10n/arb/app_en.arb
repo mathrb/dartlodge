@@ -2139,10 +2139,6 @@
   "@autoScorerTapToCorrect": {
     "description": "Hint shown while detecting"
   },
-  "autoScorerExpandPreview": "expand camera preview",
-  "@autoScorerExpandPreview": {
-    "description": "Accessibility label for the expand-preview button"
-  },
   "autoScorerRemoveDarts": "Remove darts",
   "@autoScorerRemoveDarts": {
     "description": "Tooltip: tell the tracker the darts were pulled"

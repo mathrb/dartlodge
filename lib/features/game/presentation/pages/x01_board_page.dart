@@ -335,9 +335,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   if (cameraFirst) ...[
                     // Camera-first (#443): active player's remaining score as
                     // the at-distance hero, then checkout, the other players'
-                    // scores, the prominent dart band, and the camera region (a
-                    // collapsed ~96px vignette by default, tap-expands to fill,
-                    // #480). Manual entry / correction lives in the band's modal.
+                    // scores, the prominent dart band, and the camera region,
+                    // which fills whatever height is left (#760). Manual entry /
+                    // correction lives in the band's modal.
                     HeroMetricWidget(
                       value: '${activeCompetitor.score}',
                       label: activeCompetitor.name,

@@ -10,7 +10,7 @@ part of 'sound_port_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// Default no-op port. The composition root overrides this with the real
 /// [SoundPort] impl. Under `flutter test` the no-op is used as-is, so nothing
-/// plays. Mirrors the `boardOverlayBuilder` seam.
+/// plays. Mirrors the `boardCameraPreviewBuilder` seam.
 ///
 /// `keepAlive`: the real impl holds a preloaded audio player; without it the
 /// provider would dispose (tearing down + re-preloading the player) whenever
@@ -21,7 +21,7 @@ final soundPortProvider = SoundPortProvider._();
 
 /// Default no-op port. The composition root overrides this with the real
 /// [SoundPort] impl. Under `flutter test` the no-op is used as-is, so nothing
-/// plays. Mirrors the `boardOverlayBuilder` seam.
+/// plays. Mirrors the `boardCameraPreviewBuilder` seam.
 ///
 /// `keepAlive`: the real impl holds a preloaded audio player; without it the
 /// provider would dispose (tearing down + re-preloading the player) whenever
@@ -32,7 +32,7 @@ final class SoundPortProvider
     with $Provider<SoundPort> {
   /// Default no-op port. The composition root overrides this with the real
   /// [SoundPort] impl. Under `flutter test` the no-op is used as-is, so nothing
-  /// plays. Mirrors the `boardOverlayBuilder` seam.
+  /// plays. Mirrors the `boardCameraPreviewBuilder` seam.
   ///
   /// `keepAlive`: the real impl holds a preloaded audio player; without it the
   /// provider would dispose (tearing down + re-preloading the player) whenever

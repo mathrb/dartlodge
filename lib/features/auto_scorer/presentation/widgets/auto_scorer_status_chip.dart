@@ -74,9 +74,9 @@ class AutoScorerStatusChip extends StatelessWidget {
     return Chip(
       backgroundColor: bg,
       avatar: Icon(info.icon, size: 20, color: fg),
-      // titleMedium (#480): with the camera collapsed to a vignette, this chip
-      // is the at-distance status/alert line — one typographic step up from
-      // the default chip label so its colour + text read from the oche.
+      // titleMedium (#480): this chip is the at-distance status/alert line —
+      // one typographic step up from the default chip label so its colour +
+      // text read from the oche.
       //
       // FittedBox(scaleDown) because the chip shares its row with the
       // contribution counter and the camera actions: at titleMedium the

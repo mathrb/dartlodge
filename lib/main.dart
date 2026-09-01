@@ -21,7 +21,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 import 'core/debug/auto_scorer_sim_bridge.dart';
 import 'core/providers/board_camera_preview_provider.dart';
-import 'core/providers/board_overlay_provider.dart';
 import 'core/sound/sound_port_provider.dart';
 import 'features/auto_scorer/presentation/widgets/auto_scorer_board_overlay.dart';
 import 'features/settings/presentation/providers/crash_reporting_provider.dart';
@@ -46,18 +45,12 @@ Future<void> main() async {
 
   final app = ProviderScope(
     overrides: [
-      // Composition root wires the auto-scorer's board overlay into the
-      // core seam, so the game feature renders it without importing
-      // auto_scorer (CLAUDE.md cross-feature rule).
-      boardOverlayBuilderProvider.overrideWithValue(
-        (context, gameId) => AutoScorerBoardOverlay(gameId: gameId),
-      ),
-      // Camera-first variant (#427): the same overlay laid out to fill a
-      // flexible region (big preview) instead of the slim band. Boards that
-      // adopt the camera-first layout render this in an Expanded.
+      // Composition root wires the auto-scorer's camera region into the core
+      // seam, so the game feature renders it without importing auto_scorer
+      // (CLAUDE.md cross-feature rule). Boards render it in an Expanded and it
+      // fills what they give it (#760).
       boardCameraPreviewBuilderProvider.overrideWithValue(
-        (context, gameId) =>
-            AutoScorerBoardOverlay(gameId: gameId, expand: true),
+        (context, gameId) => AutoScorerBoardOverlay(gameId: gameId),
       ),
       // Composition root wires the real audio impl into the core sound
       // seam, so the game feature plays sounds without importing the sound

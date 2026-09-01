@@ -72,7 +72,7 @@ class CricketMarksStripWidget extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
 
     // Compress rows (and glyphs) as the player count grows so the grid keeps
-    // fitting above the dart band + camera vignette.
+    // fitting above the dart band + camera region.
     final compact = rows.length > 2;
     final rowHeight = compact ? 40.0 : 56.0;
     final glyphSize = compact ? 26.0 : 34.0;

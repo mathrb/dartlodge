@@ -64,9 +64,9 @@ Vérifier que chaque écran respecte le système de design et que l'ensemble est
 - [ ] Hero : `scoreActive` 80px `onSurface`, 1 ligne, jamais scalé ; over-line `labelSmall` `primaryFixed` au-dessus.
 - [ ] Strips secondaires subordonnés au héro (~1.5× compact, ne contestent pas la valeur).
 - [ ] Cricket : `CricketMarkPainter` traits ~4px (slash/cross/circled-cross), 3+ `primaryFixed`, dead targets atténués ; colonnes flex sans scroll horizontal (2-4 joueurs).
-- [ ] Vignette caméra compacte (~96px) + control bar dessous ; `GameStatusBarWidget(showDarts:false)` (darts seulement dans la band, pas dupliqués).
+- [ ] Zone caméra unique remplissant la hauteur restante, sans zone morte sous elle (#760) + control bar dessous ; `GameStatusBarWidget(showDarts:false)` (darts seulement dans la band, pas dupliqués).
 - [ ] Composition identique X01/Cricket/Practice (pas de drift de taille par jeu).
-- **Device-only** : lisibilité à ~2,4 m, resize vignette↔expanded, preview live.
+- **Device-only** : lisibilité à ~2,4 m, preview live occupant toute la place laissée (plus de repli/dépli depuis #760).
 
 ### 2.5 Cohérence inter-écrans
 **Checklist de conformité**

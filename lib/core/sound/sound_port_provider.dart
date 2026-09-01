@@ -7,7 +7,7 @@ part 'sound_port_provider.g.dart';
 
 /// Default no-op port. The composition root overrides this with the real
 /// [SoundPort] impl. Under `flutter test` the no-op is used as-is, so nothing
-/// plays. Mirrors the `boardOverlayBuilder` seam.
+/// plays. Mirrors the `boardCameraPreviewBuilder` seam.
 ///
 /// `keepAlive`: the real impl holds a preloaded audio player; without it the
 /// provider would dispose (tearing down + re-preloading the player) whenever

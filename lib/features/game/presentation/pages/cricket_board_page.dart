@@ -325,9 +325,8 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               if (cameraFirst) ...[
                 // Camera-first (#444): marks strip keeps every player's marks +
                 // score visible, then the prominent dart band, then the camera
-                // region (a collapsed ~96px vignette by default, tap-expands to
-                // fill, #480). Manual entry / correction lives in the band's
-                // modal.
+                // region, which fills whatever height is left (#760). Manual
+                // entry / correction lives in the band's modal.
                 CricketMarksStripWidget(
                   targets: displayTargets,
                   rows: marksRows(),

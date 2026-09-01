@@ -546,7 +546,6 @@
   "autoScorerSetupFailed": "Camera-instelling mislukt: {error}",
   "autoScorerReady": "Automatisch scoren gereed",
   "autoScorerTapToCorrect": "Tik op een dart om een verkeerde uitlezing te corrigeren",
-  "autoScorerExpandPreview": "cameravoorbeeld vergroten",
   "autoScorerRemoveDarts": "Darts verwijderen",
   "autoScorerStop": "Automatisch scoren stoppen",
   "autoScorerReAim": "Camera opnieuw richten",
