@@ -22,6 +22,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart'
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/uncalibrated_notice_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_explanation_panel.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/aim_status_banner_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -428,10 +429,6 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
             onResult: _onResults,
             onModelError: _onModelError,
           ),
-          // Painted around the preview, never at a detection coordinate — see
-          // the note on [RecognitionHalo].
-          Positioned.fill(
-              child: RecognitionHaloOverlay(grade: recognition.grade)),
           Align(
             alignment: Alignment.topCenter,
             child: SafeArea(
@@ -440,10 +437,10 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // The pips replace the old "{found}/4 markers" count: which
-                    // marker is missing is what the count never carried.
-                    MarkerPips(markers: recognition.markers),
-                    const SizedBox(height: 8),
+                    // One status object (#759). The explanation panel takes the
+                    // same slot when recognition has failed for long enough
+                    // (#743): they say the same thing at different lengths, so
+                    // they must never be on screen together.
                     if (explain)
                       AimExplanationPanel(
                         // The photo opt-in specifically, NOT the settings
@@ -461,9 +458,12 @@ class _AutoScorerYoloAimViewState extends ConsumerState<AutoScorerYoloAimView> {
                         onEnableRecording: _enableRecording,
                       )
                     else
-                      Text(hint,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white)),
+                      AimStatusBanner(
+                        recognition: recognition,
+                        message: hint,
+                        diagramSemanticsLabel: l10n
+                            .autoScorerMarkersFoundA11y(recognition.foundCount),
+                      ),
                   ],
                 ),
               ),

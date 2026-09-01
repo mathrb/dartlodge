@@ -1,6 +1,11 @@
-/// The two renderings of [RecognitionState] (#739): a border halo around the
-/// camera preview ([RecognitionHalo], [RecognitionHaloOverlay]) and a row of
-/// four marker pips ([MarkerPips]).
+/// The in-game rendering of [RecognitionState] (#739): a border halo around the
+/// camera preview ([RecognitionHalo]).
+///
+/// The aim view used to have two more — a halo laid over the fullscreen preview
+/// and a row of four pips — and has neither now (#759): with the phone in hand
+/// the border said nothing that could be read, and the pips said which marker
+/// was missing without saying where it was. Both gave way to a board diagram
+/// inside the status banner.
 library;
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
@@ -79,80 +84,4 @@ class RecognitionHalo extends StatelessWidget {
           child: child,
         ),
       );
-}
-
-/// Border-only halo for a preview that fills its own surface (the fullscreen
-/// aim view), stacked over it. Non-interactive: it must never intercept the
-/// taps meant for the camera surface underneath.
-class RecognitionHaloOverlay extends StatelessWidget {
-  const RecognitionHaloOverlay(
-      {super.key, required this.grade, this.borderRadius = 0});
-
-  final RecognitionGrade grade;
-  final double borderRadius;
-
-  @override
-  Widget build(BuildContext context) => IgnorePointer(
-        child: AnimatedContainer(
-          duration: _kHaloFade,
-          decoration: _haloDecoration(context, grade, borderRadius),
-        ),
-      );
-}
-
-/// Four pips, one per board marker, in DeepDarts order. Replaces the raw
-/// "{found}/4 markers" count: which marker is missing is information the count
-/// never carried.
-class MarkerPips extends StatelessWidget {
-  const MarkerPips({super.key, required this.markers, this.size = 12});
-
-  final List<MarkerRecognition> markers;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final m in markers)
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: size / 4),
-            child: _Pip(marker: m, size: size),
-          ),
-      ],
-    );
-  }
-}
-
-class _Pip extends StatelessWidget {
-  const _Pip({required this.marker, required this.size});
-
-  final MarkerRecognition marker;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    // A pip's colour is its own marker's state, on the same red/amber/green
-    // scale as the halo: missing is the "nothing" colour, weak the "getting
-    // there" one, found the "good" one.
-    final color = recognitionColor(
-        context,
-        switch (marker) {
-          MarkerRecognition.missing => RecognitionGrade.none,
-          MarkerRecognition.weak => RecognitionGrade.partial,
-          MarkerRecognition.found => RecognitionGrade.ready,
-        });
-    // Filled when the marker counts; hollow otherwise — so the state survives
-    // for a colour-blind player and in a glance-sized preview.
-    final filled = marker == MarkerRecognition.found;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: filled ? color : Colors.transparent,
-        border: Border.all(color: color, width: 2),
-      ),
-    );
-  }
 }
