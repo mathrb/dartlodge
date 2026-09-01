@@ -298,3 +298,106 @@ abstract class _$ActiveCaptureCorrectionSink
     return element.handleCreate(ref, build);
   }
 }
+
+/// A monotonically increasing counter bumped by the auto-scorer each time a
+/// training frame is actually written to the capture store (#762).
+///
+/// The acknowledgement of a contribution has to happen where the player is
+/// looking — the dart band they just tapped — but the band belongs to the game
+/// feature and the capture to the auto-scorer, so the two meet here, in `core/`
+/// (CLAUDE.md: no feature imports another). Same shape as [ActiveTurnSignal]: a
+/// bare tick, not the total, because the band acknowledges *an* event; the
+/// running total stays the camera bar's counter.
+///
+/// Never bumped when recording is off (nothing is captured) nor on web (the
+/// capture store is a stub), so a listener needs no guard of its own.
+
+@ProviderFor(TrainingCaptureSignal)
+final trainingCaptureSignalProvider = TrainingCaptureSignalProvider._();
+
+/// A monotonically increasing counter bumped by the auto-scorer each time a
+/// training frame is actually written to the capture store (#762).
+///
+/// The acknowledgement of a contribution has to happen where the player is
+/// looking — the dart band they just tapped — but the band belongs to the game
+/// feature and the capture to the auto-scorer, so the two meet here, in `core/`
+/// (CLAUDE.md: no feature imports another). Same shape as [ActiveTurnSignal]: a
+/// bare tick, not the total, because the band acknowledges *an* event; the
+/// running total stays the camera bar's counter.
+///
+/// Never bumped when recording is off (nothing is captured) nor on web (the
+/// capture store is a stub), so a listener needs no guard of its own.
+final class TrainingCaptureSignalProvider
+    extends $NotifierProvider<TrainingCaptureSignal, int> {
+  /// A monotonically increasing counter bumped by the auto-scorer each time a
+  /// training frame is actually written to the capture store (#762).
+  ///
+  /// The acknowledgement of a contribution has to happen where the player is
+  /// looking — the dart band they just tapped — but the band belongs to the game
+  /// feature and the capture to the auto-scorer, so the two meet here, in `core/`
+  /// (CLAUDE.md: no feature imports another). Same shape as [ActiveTurnSignal]: a
+  /// bare tick, not the total, because the band acknowledges *an* event; the
+  /// running total stays the camera bar's counter.
+  ///
+  /// Never bumped when recording is off (nothing is captured) nor on web (the
+  /// capture store is a stub), so a listener needs no guard of its own.
+  TrainingCaptureSignalProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'trainingCaptureSignalProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$trainingCaptureSignalHash();
+
+  @$internal
+  @override
+  TrainingCaptureSignal create() => TrainingCaptureSignal();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$trainingCaptureSignalHash() =>
+    r'1864c0d378199ecbeb49a9882b5a63b238914f15';
+
+/// A monotonically increasing counter bumped by the auto-scorer each time a
+/// training frame is actually written to the capture store (#762).
+///
+/// The acknowledgement of a contribution has to happen where the player is
+/// looking — the dart band they just tapped — but the band belongs to the game
+/// feature and the capture to the auto-scorer, so the two meet here, in `core/`
+/// (CLAUDE.md: no feature imports another). Same shape as [ActiveTurnSignal]: a
+/// bare tick, not the total, because the band acknowledges *an* event; the
+/// running total stays the camera bar's counter.
+///
+/// Never bumped when recording is off (nothing is captured) nor on web (the
+/// capture store is a stub), so a listener needs no guard of its own.
+
+abstract class _$TrainingCaptureSignal extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}

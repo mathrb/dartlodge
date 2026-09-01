@@ -5,20 +5,28 @@
 // compose it without per-game branching.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 
-Widget _wrap(Widget child) {
-  return MaterialApp(
+/// The band listens to the `core/` training-capture signal (#762), so it needs
+/// a scope; [container] lets a test bump that signal from the outside, the way
+/// the auto-scorer does when a frame is stored.
+Widget _wrap(Widget child, {ProviderContainer? container}) {
+  final app = MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: kSupportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(body: child),
   );
+  return container == null
+      ? ProviderScope(child: app)
+      : UncontrolledProviderScope(container: container, child: app);
 }
 
 void main() {
@@ -119,5 +127,68 @@ void main() {
     )));
 
     expect(find.widgetWithText(InkWell, 'T20'), findsNothing);
+  });
+
+  group('training-capture acknowledgement (#762)', () {
+    testWidgets('nothing is shown until a frame is actually stored',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const ProminentDartBandWidget(
+        currentTurnDarts: ['T20'],
+        tapEmptySlots: true,
+      )));
+      await tester.pump(const Duration(milliseconds: 10));
+
+      expect(find.text('+1'), findsNothing);
+    });
+
+    testWidgets('the whole band flashes when a frame is stored, then clears',
+        (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      await tester.pumpWidget(_wrap(
+        const ProminentDartBandWidget(
+          currentTurnDarts: ['T20'],
+          tapEmptySlots: true,
+        ),
+        container: container,
+      ));
+
+      container.read(trainingCaptureSignalProvider.notifier).bump();
+      await tester.pump();
+      // A short pump on purpose: the test binding scales animation durations
+      // down, so a fraction of [kContributionBandFlashDuration] would already
+      // be over.
+      await tester.pump(const Duration(milliseconds: 10));
+
+      expect(find.text('+1'), findsOneWidget);
+      expect(find.bySemanticsLabel('Frame saved for training'), findsOneWidget);
+
+      // It must not sit over the scores: the band comes back on its own.
+      await tester.pumpAndSettle();
+      expect(find.text('+1'), findsNothing);
+    });
+
+    testWidgets('the acknowledgement never blocks a tap on the band',
+        (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      final tapped = <int>[];
+      await tester.pumpWidget(_wrap(
+        ProminentDartBandWidget(
+          currentTurnDarts: const ['T20'],
+          tapEmptySlots: true,
+          onDartTapped: tapped.add,
+        ),
+        container: container,
+      ));
+
+      container.read(trainingCaptureSignalProvider.notifier).bump();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 10));
+      await tester.tap(find.text('T20'));
+      await tester.pumpAndSettle();
+
+      expect(tapped, [0]);
+    });
   });
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
@@ -55,20 +57,177 @@ class ProminentDartBandWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          for (int i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Expanded(
-              child: _DartSlot(
-                segment:
-                    currentTurnDarts.length > i ? currentTurnDarts[i] : '',
-                tapEmptySlots: tapEmptySlots,
-                onTap: _tapFor(i),
+      child: _ContributionFlash(
+        child: Row(
+          children: [
+            for (int i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 10),
+              Expanded(
+                child: _DartSlot(
+                  segment:
+                      currentTurnDarts.length > i ? currentTurnDarts[i] : '',
+                  tapEmptySlots: tapEmptySlots,
+                  onTap: _tapFor(i),
+                ),
               ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How long the band acknowledges a stored training frame (#762).
+///
+/// Longer than the camera bar's own pulse: this one has to be caught by a
+/// player who has already looked back up at the board, and it is still over
+/// well before the next dart lands.
+const Duration kContributionBandFlashDuration = Duration(milliseconds: 900);
+
+/// Acknowledges a stored training frame across the WHOLE band (#762).
+///
+/// When the board is not recognised, entering a dart by hand stores a labelled
+/// training photo — the thing that makes an unrecognised game worth playing —
+/// and until now the only sign was a small counter at the other end of the
+/// screen. The acknowledgement belongs at the gesture: the band the player just
+/// tapped.
+///
+/// Deliberately the whole band and not the tapped slot: the capture is written
+/// asynchronously and can land after the player has entered the NEXT dart, so
+/// pointing at a slot would regularly point at the wrong one.
+///
+/// The tick comes from `core/` ([TrainingCaptureSignal]) — the game feature
+/// never reaches into the auto-scorer — and never fires with recording off or
+/// on web, so this is inert there.
+class _ContributionFlash extends ConsumerStatefulWidget {
+  const _ContributionFlash({required this.child});
+
+  final Widget child;
+
+  @override
+  ConsumerState<_ContributionFlash> createState() => _ContributionFlashState();
+}
+
+class _ContributionFlashState extends ConsumerState<_ContributionFlash>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _flash = AnimationController(
+    vsync: this,
+    duration: kContributionBandFlashDuration,
+  );
+
+  @override
+  void dispose() {
+    _flash.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // A rise only: the signal is monotonic, but a listener that fired on any
+    // change would also flash on a container restart.
+    ref.listen(trainingCaptureSignalProvider, (previous, next) {
+      if (previous != null && next > previous) {
+        _flash
+          ..reset()
+          ..forward();
+      }
+    });
+    final l10n = AppLocalizations.of(context);
+    final highlight = AppTheme.success(context);
+    return Stack(
+      children: [
+        widget.child,
+        Positioned.fill(
+          child: IgnorePointer(
+            child: AnimatedBuilder(
+              animation: _flash,
+              builder: (context, _) {
+                // One triangular ramp out and back, so the band returns to its
+                // ordinary colours on its own and nothing lingers over the
+                // scores.
+                final t = _flash.value <= 0.5
+                    ? _flash.value * 2
+                    : (1 - _flash.value) * 2;
+                if (t == 0) return const SizedBox.shrink();
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                    color: highlight.withValues(alpha: 0.16 * t),
+                    border: Border.all(
+                      color: highlight.withValues(alpha: 0.9 * t),
+                      // Thick on purpose: this is read from the oche, past a
+                      // dart board, by someone who was not looking at the
+                      // phone — the discreet version is the bug (#762).
+                      width: 4,
+                    ),
+                  ),
+                  child: Align(
+                    alignment: AlignmentDirectional.topEnd,
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Opacity(
+                        opacity: t,
+                        child: _CapturedBadge(
+                          // Spoken once per capture, because the badge only
+                          // exists while the flash runs.
+                          label: l10n.autoScorerCaptureSaved,
+                          color: highlight,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The "+1 photo" mark of the band flash: a camera and a plus one, echoing the
+/// camera bar's counter, which is the number this contribution just moved.
+class _CapturedBadge extends StatelessWidget {
+  const _CapturedBadge({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      // One node saying what happened: the bare "+1" inside would otherwise be
+      // announced on its own, without saying what it counts.
+      container: true,
+      excludeSemantics: true,
+      liveRegion: true,
+      label: label,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.photo_camera_back_outlined,
+              size: 20,
+              color: AppTheme.onSuccess(context),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '+1',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppTheme.onSuccess(context),
+                    fontWeight: FontWeight.w700,
+                  ),
             ),
           ],
-        ],
+        ),
       ),
     );
   }
