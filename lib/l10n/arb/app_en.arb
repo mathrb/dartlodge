@@ -1888,6 +1888,14 @@
   "@autoScorerPreSendPhotosBody": {
     "description": "Pre-send: the photos show the player's board and room; look before sending"
   },
+  "autoScorerPreSendSessionsTitle": "What a recorded session holds",
+  "@autoScorerPreSendSessionsTitle": {
+    "description": "Pre-send section heading: what a recorded session file contains"
+  },
+  "autoScorerPreSendSessionsBody": "Numbers, no images: what the camera measured frame by frame, the darts it scored, and the player names of that game.",
+  "@autoScorerPreSendSessionsBody": {
+    "description": "Pre-send body: a recorded session is numbers only, no images"
+  },
   "autoScorerPreSendWhereTitle": "Where it goes",
   "@autoScorerPreSendWhereTitle": {
     "description": "Pre-send section: where the file goes"
@@ -1913,7 +1921,7 @@
   "@autoScorerPreSendNextTitle": {
     "description": "Pre-send section: what happens after sending"
   },
-  "autoScorerPreSendNextBody": "Your photos join the training set, the model is retrained, and the new model reaches the app on its own. Nothing is learned on your phone.",
+  "autoScorerPreSendNextBody": "Your photos join the training set. From there it is hands-on work: someone goes through them and retrains the model, on no set schedule. When a new model is ready, it reaches the app. Nothing is learned on your phone.",
   "@autoScorerPreSendNextBody": {
     "description": "Pre-send: the photos are added to the training set and a new model returns through the app"
   },
@@ -2241,7 +2249,7 @@
   "@autoScorerExplainCauses": {
     "description": "Aim view panel: what usually prevents recognition"
   },
-  "autoScorerExplainLoop": "You can play right now and score by hand. With recording on, each score you type is saved with a photo of your board; sending those photos lets the model be retrained, and a new model reaches the app on its own later. Nothing is learned on your phone while you play.",
+  "autoScorerExplainLoop": "You can play right now and score by hand. With recording on, each score you type is saved with a photo of your board; sending those photos lets the model be retrained, and a new model reaches the app later. Nothing is learned on your phone while you play.",
   "@autoScorerExplainLoop": {
     "description": "Aim view panel: what playing by hand contributes, and that no learning happens on the phone"
   },
