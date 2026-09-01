@@ -238,7 +238,7 @@ void main() {
       await tester.tap(infoIcon);
       await tester.pumpAndSettle();
 
-      expect(find.text('Cricket — Standard'), findsOneWidget);
+      expect(find.text('Cricket: Standard'), findsOneWidget);
       expect(find.text('player-selection'), findsNothing);
     });
   });

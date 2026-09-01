@@ -2,7 +2,7 @@ import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../game_rules.dart';
 
 GameRules cricketStandardRules(AppLocalizations l10n) => GameRules(
-      title: 'Cricket — Standard',
+      title: 'Cricket: Standard',
       tagline: l10n.rulesCricketStdTagline,
       sections: [
         RulesSection(
@@ -31,7 +31,7 @@ GameRules cricketStandardRules(AppLocalizations l10n) => GameRules(
     );
 
 GameRules cricketNoScoreRules(AppLocalizations l10n) => GameRules(
-      title: 'Cricket — No Score',
+      title: 'Cricket: No Score',
       tagline: l10n.rulesCricketNsTagline,
       sections: [
         RulesSection(
@@ -59,7 +59,7 @@ GameRules cricketNoScoreRules(AppLocalizations l10n) => GameRules(
     );
 
 GameRules cricketCutThroatRules(AppLocalizations l10n) => GameRules(
-      title: 'Cricket — Cut Throat',
+      title: 'Cricket: Cut Throat',
       tagline: l10n.rulesCricketCtTagline,
       sections: [
         RulesSection(
@@ -95,7 +95,7 @@ GameRules cricketCutThroatRules(AppLocalizations l10n) => GameRules(
     );
 
 GameRules cricketCrazyRules(AppLocalizations l10n) => GameRules(
-      title: 'Cricket — Crazy',
+      title: 'Cricket: Crazy',
       tagline: l10n.rulesCricketCzTagline,
       sections: [
         RulesSection(
@@ -131,7 +131,7 @@ GameRules cricketCrazyRules(AppLocalizations l10n) => GameRules(
     );
 
 GameRules cricketRandomRules(AppLocalizations l10n) => GameRules(
-      title: 'Cricket — Random',
+      title: 'Cricket: Random',
       tagline: l10n.rulesCricketRdTagline,
       sections: [
         RulesSection(
