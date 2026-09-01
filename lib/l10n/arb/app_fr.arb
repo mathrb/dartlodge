@@ -548,6 +548,7 @@
   "autoScorerTapToCorrect": "Touchez une fléchette pour corriger une erreur de lecture",
   "autoScorerRemoveDarts": "Retirer les fléchettes",
   "autoScorerStop": "Arrêter le score automatique",
+  "autoScorerCameraActions": "Actions caméra",
   "autoScorerReAim": "Réaligner la caméra",
   "autoScorerStartCamera": "Démarrer la caméra",
   "autoScorerStatusAim": "Visez la cible",

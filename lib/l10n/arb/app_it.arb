@@ -548,6 +548,7 @@
   "autoScorerTapToCorrect": "Tocca una freccetta per correggere una lettura errata",
   "autoScorerRemoveDarts": "Togli le freccette",
   "autoScorerStop": "Ferma il punteggio automatico",
+  "autoScorerCameraActions": "Azioni fotocamera",
   "autoScorerReAim": "Riallinea la fotocamera",
   "autoScorerStartCamera": "Avvia fotocamera",
   "autoScorerStatusAim": "Mira al bersaglio",

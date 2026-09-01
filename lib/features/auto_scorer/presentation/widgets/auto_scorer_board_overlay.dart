@@ -17,8 +17,7 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_r
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/setup_tips_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/technical_display_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_setup_tips_view.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_status_chip.dart';
-import 'package:dart_lodge/features/auto_scorer/presentation/widgets/contribution_counter_widget.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_camera_bar.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_yolo_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -468,48 +467,24 @@ class _AutoScorerBoardOverlayState
   Widget _barRow() {
     final l10n = AppLocalizations.of(context);
     if (_mode == _Mode.running) {
-      return Row(
-        children: [
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: ValueListenableBuilder<TrackerStatus>(
-                valueListenable: _status,
-                builder: (_, status, __) => AutoScorerStatusChip(
-                    status: status, everCalibrated: _everCalibrated),
-              ),
-            ),
+      final recording = ref.watch(dataCollectionEnabledProvider).value ?? false;
+      // The whole row listens, not just the chip: the calibration alert decides
+      // whether re-aim is surfaced beside it, and the counter appears with the
+      // first capture (#761).
+      return ValueListenableBuilder<TrackerStatus>(
+        valueListenable: _status,
+        builder: (_, status, __) => ValueListenableBuilder<int>(
+          valueListenable: _contributions,
+          builder: (_, count, __) => AutoScorerCameraBar(
+            status: status,
+            everCalibrated: _everCalibrated,
+            contributions: count,
+            showContributions: recording,
+            onReAim: _reAim,
+            onRemoveDarts: _removeDarts,
+            onStop: _stop,
           ),
-          // Contribution counter (#742) — only while recording is on: with the
-          // opt-in off nothing is ever captured, so a counter would be a
-          // permanent zero promising something that isn't happening.
-          if (ref.watch(dataCollectionEnabledProvider).value ?? false)
-            ValueListenableBuilder<int>(
-              valueListenable: _contributions,
-              builder: (_, count, __) => Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: ContributionCounter(count: count),
-              ),
-            ),
-          IconButton(
-            tooltip: l10n.autoScorerReAim,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.center_focus_strong),
-            onPressed: _reAim,
-          ),
-          IconButton(
-            tooltip: l10n.autoScorerRemoveDarts,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.cleaning_services),
-            onPressed: _removeDarts,
-          ),
-          IconButton(
-            tooltip: l10n.autoScorerStop,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.stop_circle_outlined),
-            onPressed: _stop,
-          ),
-        ],
+        ),
       );
     }
     // idle / aim: a single Start action (plus the last error, if any). While the
