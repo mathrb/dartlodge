@@ -1,4 +1,4 @@
-# DartLodge — Google Play Store Listings
+# DartLodge: Google Play Store Listings
 
 Draft store-listing copy for all 7 supported languages (en, fr, es, de, pt, it,
 nl). Paste into Play Console → *Main store listing* (per locale).
@@ -9,14 +9,14 @@ nl). Paste into Play Console → *Main store listing* (per locale).
 - **Short description:** ≤ 80 characters.
 - **Full description:** ≤ 4000 characters.
 - **Game-mode names** (X01, Cricket, Around the Clock, Bob's 27, Catch 40,
-  Shanghai, cut-throat, checkout, MPR) are kept in **English** on purpose —
+  Shanghai, cut-throat, checkout, MPR) are kept in **English** on purpose:
   they are the standard proper nouns used by darts players across languages.
 - ⚠️ **Native-speaker review recommended** before publishing, especially for
   es / de / pt / it / nl idiom. The text below is a faithful, plain draft.
 - **Portuguese** is drafted as **European Portuguese (pt-PT)**. If you target
   Brazil (pt-BR), a few words change (e.g. *aplicação* → *aplicativo*,
-  *câmara* → *câmera*, *registo* → *registro*, *rastreio* → *rastreamento*) —
-  confirm the target locale.
+  *câmara* → *câmera*, *registo* → *registro*, *rastreio* → *rastreamento*).
+  Confirm the target locale.
 
 ---
 
@@ -25,19 +25,19 @@ nl). Paste into Play Console → *Main store listing* (per locale).
 **Short description**
 
 ```
-Free, offline darts scoring & stats — X01, Cricket, practice modes and more.
+Free, offline darts scoring & stats: X01, Cricket, practice modes and more.
 ```
 
 **Full description**
 
 ```
-DartLodge is a free, open-source darts scoring app that keeps everything on your device — no account, no ads, no tracking.
+DartLodge is a free, open-source darts scoring app that keeps everything on your device: no account, no ads, no tracking.
 
 Score every classic game and practice format, then dive into detailed statistics that update automatically as you play.
 
 GAMES
 • X01 (301 / 501 / 701…) with double or master in and out
-• Cricket — standard, cut-throat and no-score, plus fixed, random and crazy target modes
+• Cricket: standard, cut-throat and no-score, plus fixed, random and crazy target modes
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -66,7 +66,7 @@ MORE
 • Available in 7 languages: English, French, Spanish, German, Portuguese, Italian, Dutch
 
 CAMERA AUTO-SCORING (BETA)
-DartLodge can use your camera to score darts automatically — an experimental, on-device feature that's still learning. Want to help it improve? You can optionally share board photos and your corrections to train the model. It's off by default, runs entirely on your device, and nothing is shared unless you choose to.
+DartLodge can use your camera to score darts automatically. It's an experimental, on-device feature that's still learning. Want to help it improve? You can optionally share board photos and your corrections to train the model. It's off by default, runs entirely on your device, and nothing is shared unless you choose to.
 
 DartLodge is open source. Found a bug or have an idea? Get in touch.
 ```
@@ -78,19 +78,19 @@ DartLodge is open source. Found a bug or have an idea? Get in touch.
 **Short description**
 
 ```
-Scores et stats de fléchettes, gratuit et hors ligne — X01, Cricket et plus.
+Scores et stats de fléchettes, gratuit et hors ligne : X01, Cricket et plus.
 ```
 
 **Full description**
 
 ```
-DartLodge est une application de score de fléchettes gratuite et open-source qui garde tout sur votre appareil — sans compte, sans publicité, sans suivi.
+DartLodge est une application de score de fléchettes gratuite et open-source qui garde tout sur votre appareil : sans compte, sans publicité, sans suivi.
 
 Comptez les points de tous les jeux classiques et entraînements, puis explorez des statistiques détaillées mises à jour automatiquement.
 
 JEUX
 • X01 (301 / 501 / 701…) avec entrée/sortie en double ou master
-• Cricket — standard, cut-throat et sans score, avec cibles fixes, aléatoires ou « crazy »
+• Cricket : standard, cut-throat et sans score, avec cibles fixes, aléatoires ou « crazy »
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -119,7 +119,7 @@ EN PLUS
 • Disponible en 7 langues : anglais, français, espagnol, allemand, portugais, italien, néerlandais
 
 SCORE AUTOMATIQUE PAR CAMÉRA (BÊTA)
-DartLodge peut utiliser votre caméra pour compter les points automatiquement — une fonction expérimentale, sur l'appareil, encore en apprentissage. Envie d'aider à l'améliorer ? Vous pouvez, si vous le souhaitez, partager des photos de la cible et vos corrections pour entraîner le modèle. Désactivée par défaut, elle fonctionne entièrement sur votre appareil et rien n'est partagé sans votre accord.
+DartLodge peut utiliser votre caméra pour compter les points automatiquement. C'est une fonction expérimentale, exécutée sur l'appareil, encore en apprentissage. Envie d'aider à l'améliorer ? Vous pouvez, si vous le souhaitez, partager des photos de la cible et vos corrections pour entraîner le modèle. Désactivée par défaut, elle fonctionne entièrement sur votre appareil et rien n'est partagé sans votre accord.
 
 DartLodge est open-source. Un bug ou une idée ? Contactez-nous.
 ```
@@ -172,7 +172,7 @@ ADEMÁS
 • Disponible en 7 idiomas: inglés, francés, español, alemán, portugués, italiano y neerlandés
 
 PUNTUACIÓN AUTOMÁTICA POR CÁMARA (BETA)
-DartLodge puede usar tu cámara para anotar los dardos automáticamente: una función experimental, en el dispositivo, que todavía está aprendiendo. ¿Quieres ayudar a mejorarla? Si quieres, puedes compartir fotos de la diana y tus correcciones para entrenar el modelo. Está desactivada por defecto, funciona enteramente en tu dispositivo y no se comparte nada sin tu consentimiento.
+DartLodge puede usar tu cámara para anotar los dardos automáticamente. Es una función experimental, ejecutada en el dispositivo, que todavía está aprendiendo. ¿Quieres ayudar a mejorarla? Si quieres, puedes compartir fotos de la diana y tus correcciones para entrenar el modelo. Está desactivada por defecto, funciona enteramente en tu dispositivo y no se comparte nada sin tu consentimiento.
 
 DartLodge es de código abierto. ¿Un error o una idea? Escríbenos.
 ```
@@ -184,19 +184,19 @@ DartLodge es de código abierto. ¿Un error o una idea? Escríbenos.
 **Short description**
 
 ```
-Dart-Zähler & Statistiken, kostenlos und offline — X01, Cricket und mehr.
+Dart-Zähler & Statistiken, kostenlos und offline: X01, Cricket und mehr.
 ```
 
 **Full description**
 
 ```
-DartLodge ist eine kostenlose, quelloffene Dart-App, die alles auf deinem Gerät speichert – ohne Konto, ohne Werbung, ohne Tracking.
+DartLodge ist eine kostenlose, quelloffene Dart-App, die alles auf deinem Gerät speichert: ohne Konto, ohne Werbung, ohne Tracking.
 
 Zähle alle klassischen Spiele und Übungsmodi und sieh dir detaillierte Statistiken an, die sich automatisch aktualisieren.
 
 SPIELE
 • X01 (301 / 501 / 701…) mit Double- oder Master-In und -Out
-• Cricket – Standard, Cut-Throat und No-Score, mit festen, zufälligen oder „Crazy"-Zielen
+• Cricket: Standard, Cut-Throat und No-Score, mit festen, zufälligen oder „Crazy"-Zielen
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -225,31 +225,31 @@ MEHR
 • In 7 Sprachen verfügbar: Englisch, Französisch, Spanisch, Deutsch, Portugiesisch, Italienisch, Niederländisch
 
 KAMERA-AUTO-ERKENNUNG (BETA)
-DartLodge kann deine Kamera nutzen, um Darts automatisch zu zählen – eine experimentelle Funktion, die direkt auf dem Gerät läuft und noch dazulernt. Möchtest du helfen, sie zu verbessern? Du kannst optional Fotos des Boards und deine Korrekturen teilen, um das Modell zu trainieren. Sie ist standardmäßig ausgeschaltet, läuft vollständig auf deinem Gerät, und es wird nichts geteilt, sofern du es nicht selbst möchtest.
+DartLodge kann deine Kamera nutzen, um Darts automatisch zu zählen. Das ist eine experimentelle Funktion, die direkt auf dem Gerät läuft und noch dazulernt. Möchtest du helfen, sie zu verbessern? Du kannst optional Fotos des Boards und deine Korrekturen teilen, um das Modell zu trainieren. Sie ist standardmäßig ausgeschaltet, läuft vollständig auf deinem Gerät, und es wird nichts geteilt, sofern du es nicht selbst möchtest.
 
 DartLodge ist quelloffen. Fehler gefunden oder eine Idee? Melde dich.
 ```
 
 ---
 
-## Português (pt — pt-PT)
+## Português (pt, pt-PT)
 
 **Short description**
 
 ```
-Pontuação e estatísticas de dardos, grátis e offline — X01, Cricket e mais.
+Pontuação e estatísticas de dardos, grátis e offline: X01, Cricket e mais.
 ```
 
 **Full description**
 
 ```
-O DartLodge é uma aplicação de pontuação de dardos gratuita e de código aberto que mantém tudo no seu dispositivo — sem conta, sem anúncios e sem rastreio.
+O DartLodge é uma aplicação de pontuação de dardos gratuita e de código aberto que mantém tudo no seu dispositivo: sem conta, sem anúncios e sem rastreio.
 
 Marque a pontuação de todos os jogos clássicos e modos de treino e veja estatísticas detalhadas que se atualizam automaticamente.
 
 JOGOS
 • X01 (301 / 501 / 701…) com entrada/saída em duplo ou master
-• Cricket — padrão, cut-throat e sem pontuação, com alvos fixos, aleatórios ou "crazy"
+• Cricket: padrão, cut-throat e sem pontuação, com alvos fixos, aleatórios ou "crazy"
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -278,7 +278,7 @@ MAIS
 • Disponível em 7 idiomas: inglês, francês, espanhol, alemão, português, italiano e neerlandês
 
 PONTUAÇÃO AUTOMÁTICA POR CÂMARA (BETA)
-O DartLodge pode usar a sua câmara para marcar os dardos automaticamente — uma funcionalidade experimental, no dispositivo, que ainda está a aprender. Quer ajudar a melhorá-la? Se quiser, pode partilhar fotografias do alvo e as suas correções para treinar o modelo. Está desativada por predefinição, funciona inteiramente no seu dispositivo e nada é partilhado sem o seu consentimento.
+O DartLodge pode usar a sua câmara para marcar os dardos automaticamente. É uma funcionalidade experimental, executada no dispositivo, que ainda está a aprender. Quer ajudar a melhorá-la? Se quiser, pode partilhar fotografias do alvo e as suas correções para treinar o modelo. Está desativada por predefinição, funciona inteiramente no seu dispositivo e nada é partilhado sem o seu consentimento.
 
 O DartLodge é de código aberto. Encontrou um erro ou tem uma ideia? Fale connosco.
 ```
@@ -290,7 +290,7 @@ O DartLodge é de código aberto. Encontrou um erro ou tem uma ideia? Fale conno
 **Short description**
 
 ```
-Punteggi e statistiche per freccette, gratis e offline — X01, Cricket e altro.
+Punteggi e statistiche per freccette, gratis e offline: X01, Cricket e altro.
 ```
 
 **Full description**
@@ -302,7 +302,7 @@ Segna i punti di tutti i giochi classici e le modalità di allenamento e consult
 
 GIOCHI
 • X01 (301 / 501 / 701…) con apertura/chiusura a doppio o master
-• Cricket — standard, cut-throat e senza punteggio, con bersagli fissi, casuali o "crazy"
+• Cricket: standard, cut-throat e senza punteggio, con bersagli fissi, casuali o "crazy"
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -331,7 +331,7 @@ INOLTRE
 • Disponibile in 7 lingue: inglese, francese, spagnolo, tedesco, portoghese, italiano e olandese
 
 PUNTEGGIO AUTOMATICO TRAMITE FOTOCAMERA (BETA)
-DartLodge può usare la fotocamera per segnare le freccette automaticamente: una funzione sperimentale, sul dispositivo, che sta ancora imparando. Vuoi aiutare a migliorarla? Se vuoi, puoi condividere foto del bersaglio e le tue correzioni per addestrare il modello. È disattivata per impostazione predefinita, funziona interamente sul tuo dispositivo e niente viene condiviso senza il tuo consenso.
+DartLodge può usare la fotocamera per segnare le freccette automaticamente. È una funzione sperimentale, eseguita sul dispositivo, che sta ancora imparando. Vuoi aiutare a migliorarla? Se vuoi, puoi condividere foto del bersaglio e le tue correzioni per addestrare il modello. È disattivata per impostazione predefinita, funziona interamente sul tuo dispositivo e niente viene condiviso senza il tuo consenso.
 
 DartLodge è open-source. Hai trovato un bug o hai un'idea? Contattaci.
 ```
@@ -343,19 +343,19 @@ DartLodge è open-source. Hai trovato un bug o hai un'idea? Contattaci.
 **Short description**
 
 ```
-Darts scoren en statistieken, gratis en offline — X01, Cricket en meer.
+Darts scoren en statistieken, gratis en offline: X01, Cricket en meer.
 ```
 
 **Full description**
 
 ```
-DartLodge is een gratis, open-source darts-score-app die alles op je apparaat houdt — geen account, geen advertenties, geen tracking.
+DartLodge is een gratis, open-source darts-score-app die alles op je apparaat houdt: geen account, geen advertenties, geen tracking.
 
 Houd de score bij van alle klassieke spellen en oefenvormen en bekijk gedetailleerde statistieken die automatisch worden bijgewerkt.
 
 SPELLEN
 • X01 (301 / 501 / 701…) met double of master in en uit
-• Cricket — standaard, cut-throat en no-score, met vaste, willekeurige of "crazy" doelen
+• Cricket: standaard, cut-throat en no-score, met vaste, willekeurige of "crazy" doelen
 • Around the Clock
 • Bob's 27
 • Catch 40
@@ -384,7 +384,7 @@ MEER
 • Beschikbaar in 7 talen: Engels, Frans, Spaans, Duits, Portugees, Italiaans, Nederlands
 
 CAMERA-AUTO-SCORE (BÈTA)
-DartLodge kan je camera gebruiken om darts automatisch te scoren — een experimentele functie die op het apparaat draait en nog aan het leren is. Wil je helpen verbeteren? Je kunt optioneel foto's van het bord en je correcties delen om het model te trainen. Standaard uitgeschakeld, draait volledig op je apparaat, en er wordt niets gedeeld tenzij je daarvoor kiest.
+DartLodge kan je camera gebruiken om darts automatisch te scoren. Dit is een experimentele functie die op het apparaat draait en nog aan het leren is. Wil je helpen verbeteren? Je kunt optioneel foto's van het bord en je correcties delen om het model te trainen. Standaard uitgeschakeld, draait volledig op je apparaat, en er wordt niets gedeeld tenzij je daarvoor kiest.
 
 DartLodge is open-source. Bug gevonden of een idee? Neem contact op.
 ```
