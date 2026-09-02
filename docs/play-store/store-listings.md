@@ -15,8 +15,8 @@ nl). Paste into Play Console → *Main store listing* (per locale).
   es / de / pt / it / nl idiom. The text below is a faithful, plain draft.
 - **Portuguese** is drafted as **European Portuguese (pt-PT)**. If you target
   Brazil (pt-BR), a few words change (e.g. *aplicação* → *aplicativo*,
-  *câmara* → *câmera*, *registo* → *registro*, *rastreio* → *rastreamento*);
-  confirm the target locale.
+  *câmara* → *câmera*, *registo* → *registro*, *rastreio* → *rastreamento*).
+  Confirm the target locale.
 
 ---
 
@@ -66,7 +66,7 @@ MORE
 • Available in 7 languages: English, French, Spanish, German, Portuguese, Italian, Dutch
 
 CAMERA AUTO-SCORING (BETA)
-DartLodge can use your camera to score darts automatically. It is an experimental, on-device feature that is still learning. Want to help it improve? You can optionally share board photos and your corrections to train the model. It's off by default, runs entirely on your device, and nothing is shared unless you choose to.
+DartLodge can use your camera to score darts automatically. It's an experimental, on-device feature that's still learning. Want to help it improve? You can optionally share board photos and your corrections to train the model. It's off by default, runs entirely on your device, and nothing is shared unless you choose to.
 
 DartLodge is open source. Found a bug or have an idea? Get in touch.
 ```
@@ -172,7 +172,7 @@ ADEMÁS
 • Disponible en 7 idiomas: inglés, francés, español, alemán, portugués, italiano y neerlandés
 
 PUNTUACIÓN AUTOMÁTICA POR CÁMARA (BETA)
-DartLodge puede usar tu cámara para anotar los dardos automáticamente: una función experimental, en el dispositivo, que todavía está aprendiendo. ¿Quieres ayudar a mejorarla? Si quieres, puedes compartir fotos de la diana y tus correcciones para entrenar el modelo. Está desactivada por defecto, funciona enteramente en tu dispositivo y no se comparte nada sin tu consentimiento.
+DartLodge puede usar tu cámara para anotar los dardos automáticamente. Es una función experimental, ejecutada en el dispositivo, que todavía está aprendiendo. ¿Quieres ayudar a mejorarla? Si quieres, puedes compartir fotos de la diana y tus correcciones para entrenar el modelo. Está desactivada por defecto, funciona enteramente en tu dispositivo y no se comparte nada sin tu consentimiento.
 
 DartLodge es de código abierto. ¿Un error o una idea? Escríbenos.
 ```
@@ -278,7 +278,7 @@ MAIS
 • Disponível em 7 idiomas: inglês, francês, espanhol, alemão, português, italiano e neerlandês
 
 PONTUAÇÃO AUTOMÁTICA POR CÂMARA (BETA)
-O DartLodge pode usar a sua câmara para marcar os dardos automaticamente. É uma funcionalidade experimental, no dispositivo, que ainda está a aprender. Quer ajudar a melhorá-la? Se quiser, pode partilhar fotografias do alvo e as suas correções para treinar o modelo. Está desativada por predefinição, funciona inteiramente no seu dispositivo e nada é partilhado sem o seu consentimento.
+O DartLodge pode usar a sua câmara para marcar os dardos automaticamente. É uma funcionalidade experimental, executada no dispositivo, que ainda está a aprender. Quer ajudar a melhorá-la? Se quiser, pode partilhar fotografias do alvo e as suas correções para treinar o modelo. Está desativada por predefinição, funciona inteiramente no seu dispositivo e nada é partilhado sem o seu consentimento.
 
 O DartLodge é de código aberto. Encontrou um erro ou tem uma ideia? Fale connosco.
 ```
@@ -331,7 +331,7 @@ INOLTRE
 • Disponibile in 7 lingue: inglese, francese, spagnolo, tedesco, portoghese, italiano e olandese
 
 PUNTEGGIO AUTOMATICO TRAMITE FOTOCAMERA (BETA)
-DartLodge può usare la fotocamera per segnare le freccette automaticamente: una funzione sperimentale, sul dispositivo, che sta ancora imparando. Vuoi aiutare a migliorarla? Se vuoi, puoi condividere foto del bersaglio e le tue correzioni per addestrare il modello. È disattivata per impostazione predefinita, funziona interamente sul tuo dispositivo e niente viene condiviso senza il tuo consenso.
+DartLodge può usare la fotocamera per segnare le freccette automaticamente. È una funzione sperimentale, eseguita sul dispositivo, che sta ancora imparando. Vuoi aiutare a migliorarla? Se vuoi, puoi condividere foto del bersaglio e le tue correzioni per addestrare il modello. È disattivata per impostazione predefinita, funziona interamente sul tuo dispositivo e niente viene condiviso senza il tuo consenso.
 
 DartLodge è open-source. Hai trovato un bug o hai un'idea? Contattaci.
 ```
