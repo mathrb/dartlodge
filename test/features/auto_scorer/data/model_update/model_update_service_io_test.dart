@@ -230,6 +230,40 @@ void main() {
       expect(svc.store.read(), isNull);
     });
 
+    // A staged model from before an app contract bump is one selectModel will
+    // never apply. If the manifest is also incompatible we return before the
+    // quarantine block, so the settled status must not read the lingering store
+    // entry as a pending update and promise "applies next session".
+    test('an incompatible manifest does not promise a stale staged model',
+        () async {
+      final svc = await service();
+      await stageFile(
+          svc,
+          const StagedModelState(
+            version: 'dart_round26_withcal',
+            contract: kAutoScorerModelContract + 1, // staged under an old app
+            sha256: 'abc',
+            sizeBytes: 100,
+          ));
+      serve(manifest(contract: 999));
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.upToDate);
+      expect((await svc.resolve()).origin, ModelOrigin.bundled);
+    });
+
+    test('a staged entry whose file vanished is not a pending update',
+        () async {
+      final svc = await service();
+      await svc.store.write(staged); // state only, no file on disk
+      serve(manifest(version: kAutoScorerModelVersion));
+      await svc.checkAndStage();
+
+      expect(svc.status, ModelUpdateStatus.upToDate);
+      expect((await svc.resolve()).origin, ModelOrigin.bundled);
+    });
+
     test('non-release url is rejected', () async {
       final svc = await service();
       serve(manifest(url: 'https://evil.test/model.tflite'));

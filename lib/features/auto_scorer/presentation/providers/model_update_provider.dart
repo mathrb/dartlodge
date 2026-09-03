@@ -40,8 +40,9 @@ class ModelUpdateController extends _$ModelUpdateController {
   }
 
   /// Best-effort background check + stage. The service never throws; state
-  /// reflects downloading → up-to-date/update-ready. A newly staged model is
-  /// picked up at the next session via the [resolvedModelProvider] invalidation.
+  /// reflects downloading → up-to-date/update-ready/check-failed. A newly
+  /// staged model is picked up at the next session via the
+  /// [resolvedModelProvider] invalidation.
   Future<void> checkNow() async {
     final service = await ref.read(modelUpdateServiceProvider.future);
     if (!service.isSupported) return;
