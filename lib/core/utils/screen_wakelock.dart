@@ -31,6 +31,13 @@ abstract final class ScreenWakelock {
   static void disable() => _toggle(enable: false);
 
   static void _toggle({required bool enable}) {
-    unawaited(platformToggle(enable: enable).catchError((Object _) {}));
+    // Future.sync so a *synchronous* throw is swallowed too — the platform
+    // interface's default `toggle()` throws `UnimplementedError` outright, and
+    // `catchError` alone would let that escape into initState/dispose.
+    unawaited(
+      Future.sync(
+        () => platformToggle(enable: enable),
+      ).catchError((Object _) {}),
+    );
   }
 }

@@ -40,6 +40,20 @@ void main() {
       expect(uncaught, isEmpty);
     });
 
+    test('swallows a synchronous platform throw', () async {
+      ScreenWakelock.platformToggle = ({required bool enable}) =>
+          throw UnimplementedError();
+
+      final uncaught = <Object>[];
+      await runZonedGuarded(() async {
+        ScreenWakelock.enable();
+        ScreenWakelock.disable();
+        await Future<void>.delayed(Duration.zero);
+      }, (error, stack) => uncaught.add(error));
+
+      expect(uncaught, isEmpty);
+    });
+
     test('is the only caller of wakelock_plus in lib/', () {
       final offenders = <String>[];
       for (final entity in Directory('lib').listSync(recursive: true)) {
@@ -53,7 +67,8 @@ void main() {
       expect(
         offenders,
         isEmpty,
-        reason: 'Use ScreenWakelock — a bare WakelockPlus call is unawaited '
+        reason:
+            'Use ScreenWakelock — a bare WakelockPlus call is unawaited '
             'and crashes the app when the platform refuses (MY-DARTS-P).',
       );
     });
