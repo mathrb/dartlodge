@@ -87,6 +87,11 @@
     .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: color .2s; }
     .nav-links a:hover { color: var(--text); }
     @media (max-width: 720px) { .nav-links { gap: 16px; } .nav-links a { font-size: 0.9rem; } }
+    /* The nav needs 347px of its own, so it fits from 360px up (a common
+       Android width) but is clipped below that by body{overflow-x:hidden}.
+       index.html hides its non-CTA links on small screens for the same reason;
+       here Source is the one worth keeping. */
+    @media (max-width: 359px) { .nav-links a:not(:last-child) { display: none; } }
 
     /* ---- Page head ---- */
     .page-head { padding: 64px 0 8px; }
@@ -116,7 +121,9 @@
     .card h3 { font-size: 1.12rem; font-weight: 700; margin-bottom: 10px; }
     .card p { color: var(--muted); font-size: 0.98rem; }
     .card p + p { margin-top: 10px; }
-    .card a { color: var(--neon); text-decoration: none; }
+    /* The issues URL is a single 282px unbreakable token; without this it
+       overflows the card on a 320px screen. */
+    .card a { color: var(--neon); text-decoration: none; overflow-wrap: anywhere; }
     .card a:hover { text-decoration: underline; }
 
     /* ---- Fact list (model specs) ---- */
@@ -172,19 +179,19 @@
         </div>
         <h2>Where camera assist stands</h2>
       </div>
-      <p class="prose">Camera assist is experimental. It is off by default, and when you turn it on, detection runs entirely on your device — camera frames are not uploaded.</p>
+      <p class="prose">Camera assist is experimental. It is off by default, and when you turn it on, detection runs entirely on your device: camera frames are not uploaded.</p>
       <ul class="facts">
         <li>Current detection model: <strong>dart_round25_withcal</strong></li>
         <li>800 × 800 input · 5 classes · about 10.7 MB</li>
-        <li>The model ships inside the app. On Android, a newer one can arrive over the air from the project's GitHub releases — verified by SHA-256 before it is used, downloaded on an unmetered connection only, with the bundled model as the fallback.</li>
+        <li>The model ships inside the app. On Android, a newer one can arrive over the air from the project's GitHub releases: verified by SHA-256 before it is used, downloaded on an unmetered connection only, with the bundled model as the fallback.</li>
       </ul>
 
       <h3 class="sub-head">If your board is never recognised</h3>
-      <p class="prose">The model has only ever seen a limited range of boards, darts and lighting. If yours is not among them, recognition may never lock on. That is a limit of the model, not something you are doing wrong — and the app is built to stay playable either way: you can score by hand for the whole game.</p>
+      <p class="prose">The model has only ever seen a limited range of boards, darts and lighting. If yours is not among them, recognition may never lock on. That is a limit of the model, not something you are doing wrong. The app stays playable either way: you can score by hand for the whole game.</p>
 
       <h3 class="sub-head">What a contribution does</h3>
       <p class="prose">Collecting training data is a separate option, also off by default. With it on, board images and your scoring corrections are saved <strong>on your device</strong>. They are never uploaded automatically: they leave only if you export them yourself and send them to the project.</p>
-      <p class="prose">What you send becomes the training data for the next model. That is the only way the list of boards that work gets longer — which makes a board that fails today the most useful thing you can send. The full detail is in the <a href="privacy.html">privacy policy</a>.</p>
+      <p class="prose">What you send becomes the training data for the next model. That is the only way the list of boards that work gets longer, which makes a board that fails today the most useful thing you can send. The full detail is in the <a href="privacy.html">privacy policy</a>.</p>
     </section>
 
     <section id="news">
