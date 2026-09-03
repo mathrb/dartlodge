@@ -515,6 +515,7 @@
   "autoScorerModelUpToDate": "Aktuell",
   "autoScorerModelDownloading": "Suche nach Update…",
   "autoScorerModelUpdateReady": "Update bereit, wird in der nächsten Sitzung angewendet",
+  "autoScorerModelCheckFailed": "Letzte Suche fehlgeschlagen",
   "autoScorerModelLoopNote": "Neu trainierte Modelle kommen von selbst hierher. Dein Telefon lernt nie, während du spielst.",
   "autoScorerModelCheckNow": "Jetzt prüfen",
   "autoScorerExportUnavailable": "Export ist hier nicht verfügbar.",

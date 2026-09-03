@@ -13,6 +13,12 @@ enum ModelUpdateStatus {
 
   /// A newer model finished staging and applies at the next session.
   updateReady,
+
+  /// The last check could not complete (offline, HTTP error, or an asset whose
+  /// size/hash did not match the manifest). The active model is unchanged; the
+  /// next launch retries. Distinct from [upToDate] so the settings row stops
+  /// reporting a failed check as a successful one (#782).
+  checkFailed,
 }
 
 /// Resolves and updates the auto-scorer detection model out-of-band (#715).

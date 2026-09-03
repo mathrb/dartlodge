@@ -2002,6 +2002,10 @@
   "@autoScorerModelUpdateReady": {
     "description": "Model update state: a newer model was downloaded and takes effect at the next scoring session"
   },
+  "autoScorerModelCheckFailed": "Last check failed",
+  "@autoScorerModelCheckFailed": {
+    "description": "Model update state: the last check could not complete (offline, HTTP error, or an asset that did not match the manifest). The active model is unchanged and the next launch retries."
+  },
   "autoScorerModelLoopNote": "Retrained models arrive here on their own. Your phone never learns while you play.",
   "@autoScorerModelLoopNote": {
     "description": "Detection-model tile: how a retrained model reaches the app, and that nothing is learned on the phone"
