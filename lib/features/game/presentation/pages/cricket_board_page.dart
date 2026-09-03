@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -11,6 +10,7 @@ import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../domain/models/game_state.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
@@ -78,7 +78,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable();
+    ScreenWakelock.enable();
     // Bind this game as the dart sink so the auto-scorer overlay (when active)
     // emits detected darts into it (#382). No unbind on dispose — the sink's
     // only consumer is the overlay on this board, so a stale sink is never
@@ -94,7 +94,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
   @override
   void dispose() {
-    WakelockPlus.disable();
+    ScreenWakelock.disable();
     super.dispose();
   }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -12,6 +11,7 @@ import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
@@ -93,7 +93,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable();
+    ScreenWakelock.enable();
     // Register the auto-scorer→game emit sink (#601), post-frame to avoid
     // mutating a provider during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -107,7 +107,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
 
   @override
   void dispose() {
-    WakelockPlus.disable();
+    ScreenWakelock.disable();
     super.dispose();
   }
 
