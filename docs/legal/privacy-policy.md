@@ -9,7 +9,7 @@
 
 DartLodge is a local-first, open-source darts scoring and statistics app. This
 policy explains what data the app handles and what (very little) leaves your
-device. It is written to be read, not to cover lawyers — if anything here is
+device. It is written to be read, not to cover lawyers. If anything here is
 unclear, contact us (below).
 
 ## Summary
@@ -64,7 +64,7 @@ text.
 **Data retention.** Crash and error diagnostics (including any "Report a Bug"
 text) are retained by Sentry for **up to 90 days**, after which they are
 automatically and permanently deleted. We keep them only this long because their
-sole purpose is to diagnose and fix recent crashes — once an issue is understood
+sole purpose is to diagnose and fix recent crashes: once an issue is understood
 and a release has stabilised, older reports serve no purpose, so we do not retain
 them beyond this window.
 
@@ -86,8 +86,8 @@ train and improve the detection model. These saved images:
 
 - Stay on your device.
 - Are **never** uploaded automatically.
-- Can be **exported by you**, manually, via your device's share sheet — for
-  example to share them with the project to train the model. Exporting is
+- Can be **exported by you**, manually, via your device's share sheet (for
+  example to share them with the project to train the model). Exporting is
   entirely your choice and under your control. You can also clear all saved
   images at any time.
 
