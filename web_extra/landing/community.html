@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--
+  Community page for DartLodge, served at
+  https://mathrb.github.io/dartlodge/community.html
+
+  THIS URL IS FROZEN. It is baked into shipped APKs, which can never be
+  corrected. Never rename or move this file. See #748 and
+  docs/plans/2026-09-03-community-page-design.md.
+
+  KEEP IN SYNC:
+  - When model_manifest.json changes (a new auto-scorer model ships), add a
+    dated entry under "What's new" AND update the model facts under "Where
+    camera assist stands".
+  - Privacy wording must never go further than web_extra/privacy.html
+    § "Camera and auto-scoring (optional, beta)".
+
+  Visual source of truth is landing/index.html. The CSS below is a deliberate
+  subset of it. There is no shared stylesheet on purpose: two branded pages do
+  not justify one, and index.html has been through a typography pass that a
+  refactor would put at risk.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <title>DartLodge — Community</title>
+  <meta name="description" content="Where DartLodge's camera assist stands, what shipped recently, and how to reach the project." />
+  <meta property="og:title" content="DartLodge — Community" />
+  <meta property="og:description" content="Where camera assist stands, what shipped recently, and how to reach the project." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="favicon.png" />
+  <style>
+    /* Self-hosted, NOT the Google Fonts CDN — see the note in index.html. */
+    @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+      src: url('fonts/space-grotesk.woff2') format('woff2');
+    }
+    :root {
+      --bg: #0C0E10;
+      --bg-1: #111416;
+      --bg-2: #171A1C;
+      --line: rgba(255,255,255,0.07);
+      --neon: #00FFAB;
+      --on-neon: #002112;
+      --text: #E7E5E5;
+      --muted: #ACABAA;
+      --maxw: 1140px;
+      --font: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(60% 40% at 78% -5%, rgba(0,255,171,0.16), transparent 60%),
+        radial-gradient(45% 35% at 5% 12%, rgba(31,196,106,0.10), transparent 60%);
+    }
+    .wrap { position: relative; z-index: 1; max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+    /* ---- Header ---- */
+    header {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(12,14,16,0.72);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .brand { font-weight: 700; font-size: 1.35rem; letter-spacing: 0.06em; color: var(--neon); text-decoration: none; }
+    .brand span { color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    @media (max-width: 720px) { .nav-links { gap: 16px; } .nav-links a { font-size: 0.9rem; } }
+
+    /* ---- Page head ---- */
+    .page-head { padding: 64px 0 8px; }
+    .page-head h1 { font-size: clamp(2.2rem, 5vw, 3.2rem); font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; margin: 12px 0 16px; }
+    .lede { color: var(--muted); font-size: 1.12rem; max-width: 52ch; }
+
+    /* ---- Section scaffolding ---- */
+    section { padding: 44px 0; position: relative; }
+    .sec-head { max-width: 680px; margin-bottom: 28px; }
+    .sec-tag { font-size: 0.78rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--neon); font-weight: 600; }
+    .sec-head h2 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 700; letter-spacing: -0.02em; margin: 10px 0 12px; }
+    .tag-row { display: flex; align-items: center; gap: 12px; }
+    .beta { font-size: 0.62rem; letter-spacing: 0.14em; font-weight: 700; color: var(--neon); border: 1px solid rgba(0,255,171,0.5); padding: 2px 7px; border-radius: 6px; text-transform: uppercase; }
+
+    /* ---- Prose + cards ---- */
+    .prose { color: var(--muted); font-size: 1.02rem; max-width: 68ch; }
+    .prose + .prose { margin-top: 14px; }
+    .prose a { color: var(--neon); text-decoration: none; border-bottom: 1px solid rgba(0,255,171,0.35); }
+    .prose a:hover { border-bottom-color: var(--neon); }
+    .sub-head { margin: 34px 0 10px; font-size: 1.12rem; font-weight: 700; }
+    .card {
+      background: linear-gradient(180deg, var(--bg-1), var(--bg));
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 26px;
+    }
+    .card h3 { font-size: 1.12rem; font-weight: 700; margin-bottom: 10px; }
+    .card p { color: var(--muted); font-size: 0.98rem; }
+    .card p + p { margin-top: 10px; }
+    .card a { color: var(--neon); text-decoration: none; }
+    .card a:hover { text-decoration: underline; }
+
+    /* ---- Fact list (model specs) ---- */
+    .facts { list-style: none; margin-top: 18px; display: grid; gap: 8px; max-width: 68ch; }
+    .facts li { color: var(--muted); font-size: 0.95rem; }
+    .facts li::before { content: '•'; color: var(--neon); margin-right: 10px; }
+    .facts strong { color: var(--text); font-weight: 600; }
+
+    /* ---- Journal ---- */
+    .journal { display: grid; gap: 18px; max-width: 760px; }
+    .entry { border-left: 2px solid rgba(0,255,171,0.35); padding: 2px 0 2px 20px; }
+    .entry time { display: block; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neon); font-weight: 600; }
+    .entry h3 { font-size: 1.08rem; font-weight: 700; margin: 6px 0 8px; }
+    .entry p { color: var(--muted); font-size: 0.98rem; }
+
+    /* ---- Contact routes ---- */
+    .routes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    .note { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); color: #8f9391; font-size: 0.88rem; }
+
+    /* ---- Footer ---- */
+    footer { border-top: 1px solid var(--line); padding: 46px 0; margin-top: 30px; }
+    .foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: center; }
+    .foot-links { display: flex; flex-wrap: wrap; gap: 24px; }
+    .foot-links a { color: var(--muted); text-decoration: none; font-size: 0.95rem; transition: color .2s; }
+    .foot-links a:hover { color: var(--neon); }
+    .foot .fine { color: #6b6f6e; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="index.html">DART<span>LODGE</span></a>
+      <nav class="nav-links">
+        <a href="index.html#features">Features</a>
+        <a href="index.html#games">Games</a>
+        <a href="https://github.com/mathrb/dartlodge" target="_blank" rel="noopener">Source</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="page-head">
+      <div class="sec-tag">Camera assist &amp; contact</div>
+      <h1>Community</h1>
+      <p class="lede">Where the camera feature stands, what shipped recently, and how to reach the project.</p>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div>
+        <a class="brand" href="index.html" style="font-size:1.15rem;">DART<span>LODGE</span></a>
+        <div class="fine" style="margin-top:8px;">Built with Flutter · MIT-licensed · "DartLodge", the logo and store assets are reserved (see TRADEMARK).</div>
+      </div>
+      <div class="foot-links">
+        <a href="app/">Play in browser</a>
+        <a href="https://github.com/mathrb/dartlodge" target="_blank" rel="noopener">GitHub</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="https://github.com/mathrb/dartlodge/blob/main/TRADEMARK.md" target="_blank" rel="noopener">Trademark</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
