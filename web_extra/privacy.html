@@ -42,7 +42,7 @@
 </head>
 <body>
   <h1>DartLodge — Privacy Policy</h1>
-  <p class="effective"><strong>Effective date:</strong> 2026-06-24</p>
+  <p class="effective"><strong>Effective date:</strong> 2026-09-03</p>
 
   <p>DartLodge is a local-first, open-source darts scoring and statistics app.
   This policy explains what data the app handles and what (very little) leaves
@@ -128,9 +128,20 @@
   collect personal information from children.</p>
 
   <h2>Network access</h2>
-  <p>In normal use the app works fully offline. The app contacts the network only
-  to send the crash diagnostics described above. There is no DartLodge backend
-  server that your game data is sent to.</p>
+  <p>In normal use the app works fully offline. There is no DartLodge backend
+  server that your game data is sent to. The app contacts the network in exactly
+  two cases:</p>
+  <ul>
+    <li>To <strong>send the crash diagnostics</strong> described above.</li>
+    <li>To <strong>check for a new auto-scoring model</strong>, on Android only,
+    and only if you have turned camera auto-scoring on. Once per app launch it
+    reads a small version file from this project's public GitHub repository, and
+    if a newer model is available it downloads it from this project's GitHub
+    releases, on an unmetered connection only. This is a <strong>download</strong>:
+    nothing about you or your games is sent. As with any download, GitHub sees the
+    request (and therefore your IP address) as the file's host. If camera
+    auto-scoring stays off, this check never runs.</li>
+  </ul>
 
   <h2>Open source</h2>
   <p>DartLodge is open source. You can review exactly how data is handled in the

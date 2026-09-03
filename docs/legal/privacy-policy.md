@@ -5,7 +5,7 @@
 > <https://mathrb.github.io/dartlodge/privacy.html> (the Google Play privacy
 > policy URL). **Keep the two in sync** when either changes.
 
-**Effective date:** 2026-06-24
+**Effective date:** 2026-09-03
 
 DartLodge is a local-first, open-source darts scoring and statistics app. This
 policy explains what data the app handles and what (very little) leaves your
@@ -105,9 +105,19 @@ personal information from children.
 
 ## Network access
 
-In normal use the app works fully offline. The app contacts the network only to
-send the crash diagnostics described above. There is no DartLodge backend server
-that your game data is sent to.
+In normal use the app works fully offline. There is no DartLodge backend server
+that your game data is sent to. The app contacts the network in exactly two
+cases:
+
+- To **send the crash diagnostics** described above.
+- To **check for a new auto-scoring model**, on Android only, and only if you
+  have turned camera auto-scoring on. Once per app launch it reads a small
+  version file from this project's public GitHub repository, and if a newer
+  model is available it downloads it from this project's GitHub releases, on an
+  unmetered connection only. This is a **download**: nothing about you or your
+  games is sent. As with any download, GitHub sees the request (and therefore
+  your IP address) as the file's host. If camera auto-scoring stays off, this
+  check never runs.
 
 ## Open source
 
