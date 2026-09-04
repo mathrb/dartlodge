@@ -5,8 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// description of the currently-staged model, and the version of one that was
 /// rejected at native load (#785). Sole owner of these keys, so the download
 /// pipeline and the resolver never disagree about what is staged, and so the
-/// rejection outlives the process that observed it. Only the download pipeline
-/// reads the rejection; the resolver has no use for it. Platform-agnostic
+/// rejection outlives the process that observed it. The resolver has no use for
+/// the rejection; the download pipeline and the settings row both read it.
+/// Platform-agnostic
 /// (SharedPreferences works on web too), but only exercised by the io service.
 class StagedModelStore {
   final SharedPreferences _prefs;

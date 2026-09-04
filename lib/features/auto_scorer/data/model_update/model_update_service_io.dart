@@ -104,7 +104,17 @@ class ModelUpdateServiceIo implements ModelUpdateService {
   /// guarantee.
   @override
   Future<ModelUpdateStatus> restingStatus() async {
-    if (store.readQuarantined() != null) return ModelUpdateStatus.updateRejected;
+    final quarantined = store.readQuarantined();
+    // A record naming the version the app now bundles is obsolete: the
+    // rejection judged a downloaded artifact, and the asset shipped in the APK
+    // is not that artifact. checkAndStage clears such a record, but rest is
+    // read when no check has run at all, so it must decline to report it here
+    // too — otherwise a promoted version leaves the row reading "could not be
+    // used" forever while the app runs it without trouble. Declining rather
+    // than clearing keeps this method free of side effects.
+    if (quarantined != null && quarantined != kAutoScorerModelVersion) {
+      return ModelUpdateStatus.updateRejected;
+    }
     return (await resolve()).origin == ModelOrigin.staged
         ? ModelUpdateStatus.updateReady
         : ModelUpdateStatus.upToDate;
@@ -119,17 +129,20 @@ class ModelUpdateServiceIo implements ModelUpdateService {
           jsonDecode(await http.getString(Uri.parse(manifestUrl)))
               as Map<String, dynamic>);
 
-      // Ahead of the compatibility gate on purpose: a version already rejected
-      // at native load must not be downloaded again, and the rejection is a
-      // fact about that version whatever the manifest's contract says. Behind
-      // the gate, an incompatible manifest would settle the status through
-      // _settledStatus() and quietly replace "could not be used" with "up to
-      // date", undoing for this state what #782 fixed for the others.
+      // A version already rejected at native load must not be downloaded again:
+      // quarantine clears the staged state, so without this record the manifest
+      // looks like a fresh update at every launch and the same asset is
+      // fetched, staged and rejected forever (#785). Any other version clears
+      // the record, so one bad model never blocks its successors.
       //
-      // The record is needed at all because quarantine clears the staged state:
-      // without it the manifest looks like a fresh update at every launch and
-      // the same asset is fetched, staged and rejected forever (#785). Any
-      // other version clears it, so one bad model never blocks its successors.
+      // It sits ahead of the compatibility gate, which mattered when the
+      // settling helper knew nothing about the record: an incompatible manifest
+      // would then have replaced "could not be used" with "up to date". Since
+      // #786 that helper is [restingStatus] and consults the record itself, so
+      // the ordering is no longer load-bearing for the status. Kept first
+      // because reading a recorded verdict before judging the manifest is the
+      // clearer order, and because the deliberate-skip exits below rely on the
+      // record having been cleared by then.
       final quarantined = store.readQuarantined();
       if (quarantined != null) {
         // The record goes stale two ways. The manifest moves on to another

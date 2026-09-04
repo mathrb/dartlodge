@@ -57,9 +57,11 @@ abstract class ModelUpdateService {
   /// the new contract under the same version string.
   Future<void> quarantine(String version, {bool remember = true});
 
-  /// The lifecycle status of the last check *this process* ran, or the initial
-  /// value when none has. Read after [checkAndStage] to publish its verdict;
-  /// for what is actually installed, use [restingStatus].
+  /// What this process last observed: the verdict of a [checkAndStage] run, or
+  /// a rejection recorded by [quarantine] (which the board calls when a staged
+  /// model fails to load, outside any check), or the initial value when neither
+  /// has happened. Read it to publish a verdict just reached; for what is
+  /// actually installed, use [restingStatus].
   ModelUpdateStatus get status;
 
   /// The status implied by what is on disk right now, with no network check: a

@@ -50,6 +50,12 @@ class ModelUpdateController extends _$ModelUpdateController {
   Future<void> checkNow() async {
     final service = await ref.read(modelUpdateServiceProvider.future);
     if (!service.isSupported) return;
+    // Let the initial build settle before publishing a transient state. Since
+    // #786 build() reads the disk, so it no longer completes synchronously: on
+    // the launch path, which triggers the first build and this call together,
+    // its result would otherwise land after `downloading` and overwrite it,
+    // bringing the "Check now" button back mid-check.
+    await future;
     state = const AsyncData(ModelUpdateStatus.downloading);
     await service.checkAndStage();
     ref.invalidate(resolvedModelProvider);

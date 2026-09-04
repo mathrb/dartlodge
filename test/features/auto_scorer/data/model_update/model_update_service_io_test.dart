@@ -528,6 +528,16 @@ void main() {
       expect(await svc.restingStatus(), ModelUpdateStatus.updateRejected);
     });
 
+    // The staleness guard #785 added lives inside checkAndStage, but rest is
+    // read with no check having run at all. A record for the version the app
+    // now bundles is obsolete: the rejection judged a downloaded artifact, not
+    // the asset shipped in the APK.
+    test('a rejection of the now-bundled version is not reported', () async {
+      final svc = await service();
+      await svc.store.writeQuarantined(kAutoScorerModelVersion);
+      expect(await svc.restingStatus(), ModelUpdateStatus.upToDate);
+    });
+
     test('non-Android → up to date', () async {
       final svc = await service(isAndroid: false);
       await stageFile(svc, staged);
