@@ -185,6 +185,7 @@ void main() {
       expect(await File(svc.stagedPathFor('dart_round26_withcal')).exists(),
           isFalse);
       expect(svc.store.read(), isNull);
+      expect(svc.status, ModelUpdateStatus.checkFailed);
     });
 
     test('size mismatch does not stage', () async {
@@ -192,6 +193,33 @@ void main() {
       serve(manifest(size: 999));
       await svc.checkAndStage();
       expect(svc.store.read(), isNull);
+      expect(svc.status, ModelUpdateStatus.checkFailed);
+    });
+
+    // The gap #782 was filed for: the manifest fetch succeeds, the asset URL
+    // does not. Silently swallowing it made a broken channel read as "up to
+    // date" in settings.
+    test('a failed asset download reports a failed check and stages nothing',
+        () async {
+      final svc = await service();
+      serve(manifest());
+      http.throwOnBinary = const HttpException('Unexpected status 404');
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 1);
+      expect(svc.store.read(), isNull);
+      expect(await File(svc.stagedPathFor('dart_round26_withcal')).exists(),
+          isFalse);
+      expect(svc.status, ModelUpdateStatus.checkFailed);
+      expect((await svc.resolve()).origin, ModelOrigin.bundled);
+    });
+
+    test('an unreachable manifest reports a failed check', () async {
+      final svc = await service();
+      http.manifestBody = null; // _FakeHttp throws on getString
+      await svc.checkAndStage();
+      expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.checkFailed);
     });
 
     test('incompatible contract skips before download', () async {
@@ -200,6 +228,40 @@ void main() {
       await svc.checkAndStage();
       expect(http.binaryCalls, 0);
       expect(svc.store.read(), isNull);
+    });
+
+    // A staged model from before an app contract bump is one selectModel will
+    // never apply. If the manifest is also incompatible we return before the
+    // quarantine block, so the settled status must not read the lingering store
+    // entry as a pending update and promise "applies next session".
+    test('an incompatible manifest does not promise a stale staged model',
+        () async {
+      final svc = await service();
+      await stageFile(
+          svc,
+          const StagedModelState(
+            version: 'dart_round26_withcal',
+            contract: kAutoScorerModelContract + 1, // staged under an old app
+            sha256: 'abc',
+            sizeBytes: 100,
+          ));
+      serve(manifest(contract: 999));
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.upToDate);
+      expect((await svc.resolve()).origin, ModelOrigin.bundled);
+    });
+
+    test('a staged entry whose file vanished is not a pending update',
+        () async {
+      final svc = await service();
+      await svc.store.write(staged); // state only, no file on disk
+      serve(manifest(version: kAutoScorerModelVersion));
+      await svc.checkAndStage();
+
+      expect(svc.status, ModelUpdateStatus.upToDate);
+      expect((await svc.resolve()).origin, ModelOrigin.bundled);
     });
 
     test('non-release url is rejected', () async {
@@ -217,6 +279,9 @@ void main() {
       await svc.checkAndStage();
       expect(http.binaryCalls, 0);
       expect(svc.store.read(), isNull);
+      // A deferral, not a failure: nothing is wrong, so the row must not cry
+      // wolf. The next launch retries.
+      expect(svc.status, ModelUpdateStatus.upToDate);
     });
 
     test('version equal to bundled baseline is a no-op', () async {
@@ -224,6 +289,7 @@ void main() {
       serve(manifest(version: kAutoScorerModelVersion));
       await svc.checkAndStage();
       expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.upToDate);
     });
 
     test('already-staged version is a no-op', () async {
@@ -232,6 +298,21 @@ void main() {
       serve(manifest()); // manifest also round26
       await svc.checkAndStage();
       expect(http.binaryCalls, 0);
+      // A model is still pending, so the no-op must not flatten the status to
+      // "up to date" and drop the "applies next session" hint.
+      expect(svc.status, ModelUpdateStatus.updateReady);
+    });
+
+    test('a second check after a successful stage keeps update-ready',
+        () async {
+      final svc = await service();
+      serve(manifest());
+      await svc.checkAndStage();
+      expect(svc.status, ModelUpdateStatus.updateReady);
+
+      // Same manifest: the second run takes the already-staged no-op path.
+      await svc.checkAndStage();
+      expect(svc.status, ModelUpdateStatus.updateReady);
     });
 
     test('non-Android never downloads', () async {

@@ -8,17 +8,24 @@ import 'package:flutter_test/flutter_test.dart';
 /// Fake service: `checkAndStage` "stages" by flipping to updateReady and making
 /// `resolve` return a staged model. Tracks whether it was invoked.
 class _FakeService implements ModelUpdateService {
-  _FakeService({this.supported = true});
+  _FakeService({this.supported = true, this.fails = false});
   final bool supported;
+
+  /// When true, `checkAndStage` completes without staging and reports a failed
+  /// check, the way the io service does on a 404 or a hash mismatch (#782).
+  final bool fails;
   bool staged = false;
+  bool failed = false;
   int checkCalls = 0;
 
   @override
   bool get isSupported => supported;
 
   @override
-  ModelUpdateStatus get status =>
-      staged ? ModelUpdateStatus.updateReady : ModelUpdateStatus.upToDate;
+  ModelUpdateStatus get status {
+    if (failed) return ModelUpdateStatus.checkFailed;
+    return staged ? ModelUpdateStatus.updateReady : ModelUpdateStatus.upToDate;
+  }
 
   @override
   Future<ResolvedModel> resolve() async => staged
@@ -36,7 +43,12 @@ class _FakeService implements ModelUpdateService {
   @override
   Future<void> checkAndStage() async {
     checkCalls++;
-    if (supported) staged = true;
+    if (!supported) return;
+    if (fails) {
+      failed = true;
+    } else {
+      staged = true;
+    }
   }
 
   @override
@@ -70,6 +82,25 @@ void main() {
     // resolvedModel was invalidated → now resolves to the staged model.
     expect((await container.read(resolvedModelProvider.future)).origin,
         ModelOrigin.staged);
+  });
+
+  test('checkNow surfaces a failed check instead of reporting up to date',
+      () async {
+    final service = _FakeService(fails: true);
+    final container = containerFor(service);
+    addTearDown(container.dispose);
+
+    expect(await container.read(modelUpdateControllerProvider.future),
+        ModelUpdateStatus.upToDate);
+
+    await container.read(modelUpdateControllerProvider.notifier).checkNow();
+
+    expect(service.checkCalls, 1);
+    expect(container.read(modelUpdateControllerProvider).value,
+        ModelUpdateStatus.checkFailed);
+    // The active model is untouched by a failed check.
+    expect((await container.read(resolvedModelProvider.future)).origin,
+        ModelOrigin.bundled);
   });
 
   test('checkNow is a no-op when the service is unsupported', () async {

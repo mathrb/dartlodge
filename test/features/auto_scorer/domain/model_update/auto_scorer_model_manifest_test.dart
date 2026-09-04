@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/auto_scorer_model_manifest.dart';
+import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_service_io.dart'
+    show kModelReleaseUrlPrefix;
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/model_compatibility.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,5 +70,17 @@ void main() {
         jsonDecode(file.readAsStringSync()) as Map<String, dynamic>);
     expect(manifest.contract, kAutoScorerModelContract);
     expect(isManifestCompatible(manifest), isTrue);
+
+    // Static stand-ins for a networked release-liveness check, which was
+    // rejected as CI flakiness for a file that changes once per model (#782).
+    // These catch the mistakes that are actually plausible when publishing:
+    // a URL that the provenance gate would reject outright, a truncated or
+    // placeholder digest, and a missing size.
+    expect(manifest.url, startsWith(kModelReleaseUrlPrefix),
+        reason: 'the asset must be an app-repo release download, or '
+            'checkAndStage rejects it before downloading');
+    expect(manifest.sha256, matches(RegExp(r'^[0-9a-f]{64}$')),
+        reason: 'sha256 must be a lowercase 64-hex digest');
+    expect(manifest.sizeBytes, greaterThan(0));
   });
 }

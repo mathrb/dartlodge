@@ -515,6 +515,7 @@
   "autoScorerModelUpToDate": "Up-to-date",
   "autoScorerModelDownloading": "Controleren op update…",
   "autoScorerModelUpdateReady": "Update klaar, wordt de volgende sessie toegepast",
+  "autoScorerModelCheckFailed": "Laatste controle mislukt",
   "autoScorerModelLoopNote": "Opnieuw getrainde modellen komen hier vanzelf aan. Je telefoon leert nooit terwijl je speelt.",
   "autoScorerModelCheckNow": "Nu controleren",
   "autoScorerExportUnavailable": "Exporteren is hier niet beschikbaar.",
