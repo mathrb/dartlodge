@@ -43,10 +43,16 @@ class ModelUpdateController extends _$ModelUpdateController {
     return service.restingStatus();
   }
 
-  /// Best-effort background check + stage. The service never throws; state
-  /// reflects downloading → up-to-date/update-ready/check-failed/update-rejected.
-  /// A newly staged model is picked up at the next session via the
-  /// [resolvedModelProvider] invalidation.
+  /// Best-effort background check + stage. The service never throws: state goes
+  /// to [ModelUpdateStatus.downloading] for the duration, then to whatever
+  /// verdict the check reached. A newly staged model is picked up at the next
+  /// session via the [resolvedModelProvider] invalidation.
+  ///
+  /// It deliberately does not list the possible verdicts. [ModelUpdateStatus]
+  /// is the source of truth, and the compiler checks it exhaustively where it
+  /// is consumed; the prose copy that used to live here fell silently out of
+  /// date every time a value was added, and was corrected seven times before
+  /// being removed. Please do not restore it.
   Future<void> checkNow() async {
     final service = await ref.read(modelUpdateServiceProvider.future);
     if (!service.isSupported) return;
