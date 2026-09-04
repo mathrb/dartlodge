@@ -21,6 +21,7 @@ import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
+import 'package:dart_lodge/features/game/domain/turn_dart_resolver.dart';
 import 'package:dart_lodge/features/game/domain/usecases/correct_dart_use_case.dart';
 import 'package:dart_lodge/features/game/domain/usecases/process_cricket_dart_use_case.dart';
 import 'package:dart_lodge/features/game/domain/usecases/process_dart_use_case.dart';
@@ -44,8 +45,10 @@ class _Harness {
   GameState state;
 
   /// Throws [segment] for the active competitor through the real ProcessDart
-  /// path, returning the new state (also stored on [state]).
-  Future<GameState> throwDart(String segment) async {
+  /// path, returning the new state (also stored on [state]). [inputMethod] and
+  /// [x]/[y] mirror what the auto-scorer supplies for a camera dart (#788).
+  Future<GameState> throwDart(String segment,
+      {String inputMethod = 'manual', double? x, double? y}) async {
     final comp = state.competitors[state.currentTurnIndex];
     final dart = DartThrow(
       dartId: const Uuid().v4(),
@@ -56,9 +59,23 @@ class _Harness {
       dartNumber: state.dartsThrownInTurn + 1,
       segment: segment,
       score: Segment.parse(segment).scoreValue,
+      x: x,
+      y: y,
     );
-    state = await process(state, dart);
+    state = await process(state, dart, inputMethod: inputMethod);
     return state;
+  }
+
+  /// The live `DartThrown` events for the active competitor's current turn, in
+  /// throw order — payloads included, so a test can assert provenance.
+  Future<List<GameEvent>> liveTurnDartEvents() async {
+    final ids = await liveDartIds();
+    final events = await eventRepo.getEventsForGame(state.gameId);
+    final byId = {for (final e in events) e.eventId: e as GameEvent};
+    return [
+      for (final id in ids.sublist(ids.length - state.dartsThrownInTurn))
+        byId[id]!,
+    ];
   }
 
   /// The live (non-corrected, non-superseded) DartThrown event ids for the
@@ -470,6 +487,86 @@ void main() {
       // One dart left this turn (the corrected '5'): 501 - 5 = 496.
       expect(afterUndo.competitors[0].score, 496);
       expect(afterUndo.dartsThrownInTurn, 1);
+    });
+  });
+
+  // #788 — a correction rewinds the target AND the darts after it, then
+  // re-throws them. That round trip used to drop `input_method` and `x`/`y`, so
+  // every dart from the corrected one onward was re-recorded as a positionless
+  // manual dart. The visible symptom: a SECOND correction in the same turn was
+  // skipped by ActiveGameNotifier (which refuses to touch a capture for a manual
+  // dart, #469), so no training frame was saved and the contribution counter
+  // never moved.
+  runHybridTests('CorrectDartUseCase — provenance (#788)', (base) {
+    test('an untouched tail dart keeps its camera provenance and position',
+        () async {
+      final h = await _setupX01(base);
+      await h.throwDart('14', inputMethod: 'camera', x: 0.1, y: 0.2);
+      await h.throwDart('14', inputMethod: 'camera', x: 0.3, y: 0.4);
+      await h.throwDart('SB', inputMethod: 'camera', x: 0.5, y: 0.6);
+      final ids = await h.liveDartIds();
+
+      // Correct the SECOND dart 14 → SB (the reporter's scenario).
+      h.state = await h.correct
+          .execute(h.state, originalEventId: ids[1], segment: 25, multiplier: 1);
+
+      final darts = await h.liveTurnDartEvents();
+      expect(darts.length, 3);
+      // Dart 1: untouched by the rewind — unchanged.
+      expect(darts[0].payload['input_method'], 'camera');
+      expect(darts[0].payload['x'], 0.1);
+      // Dart 2: the corrected one — still camera-sourced (the camera really did
+      // detect a dart there), but its stale position is dropped.
+      expect(darts[1].payload['input_method'], 'camera');
+      expect(darts[1].payload['x'], isNull);
+      expect(darts[1].payload['y'], isNull);
+      // Dart 3: rewound only to reach the target, so it comes back exactly as
+      // it was recorded — this is the one #788 turned into a manual dart.
+      expect(darts[2].payload['input_method'], 'camera');
+      expect(darts[2].payload['x'], 0.5);
+      expect(darts[2].payload['y'], 0.6);
+    });
+
+    test('a second correction still resolves a camera ordinal', () async {
+      final h = await _setupX01(base);
+      await h.throwDart('14', inputMethod: 'camera');
+      await h.throwDart('14', inputMethod: 'camera');
+      await h.throwDart('SB', inputMethod: 'camera');
+
+      Future<TurnDartRef?> resolve(int index) async => resolveTurnDart(
+            events: await h.eventRepo.getEventsForGame(h.state.gameId),
+            competitorId:
+                h.state.competitors[h.state.currentTurnIndex].competitorId,
+            dartsThrownInTurn: h.state.dartsThrownInTurn,
+            turnDartIndex: index,
+          );
+
+      h.state = await h.correct.execute(h.state,
+          originalEventId: (await resolve(1))!.eventId,
+          segment: 25,
+          multiplier: 1);
+
+      // The camera ordinals still run 1/2/3, so ActiveGameNotifier reaches the
+      // CaptureCorrectionSink for the third dart and a frame gets saved.
+      expect((await resolve(0))!.cameraDartOrdinal, 1);
+      expect((await resolve(1))!.cameraDartOrdinal, 2);
+      expect((await resolve(2))!.cameraDartOrdinal, 3);
+    });
+
+    test('a manual dart stays manual through a correction of an earlier dart',
+        () async {
+      final h = await _setupX01(base);
+      await h.throwDart('14', inputMethod: 'camera', x: 0.1, y: 0.2);
+      await h.throwDart('20'); // manual entry for a dart the model missed
+      final ids = await h.liveDartIds();
+
+      h.state = await h.correct
+          .execute(h.state, originalEventId: ids[0], segment: 5, multiplier: 1);
+
+      final darts = await h.liveTurnDartEvents();
+      expect(darts[0].payload['input_method'], 'camera');
+      expect(darts[1].payload['input_method'], 'manual');
+      expect(darts[1].payload['x'], isNull);
     });
   });
 
