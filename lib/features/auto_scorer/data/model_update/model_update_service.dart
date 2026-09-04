@@ -57,6 +57,17 @@ abstract class ModelUpdateService {
   /// the new contract under the same version string.
   Future<void> quarantine(String version, {bool remember = true});
 
-  /// The current lifecycle status for the settings row.
+  /// The lifecycle status of the last check *this process* ran, or the initial
+  /// value when none has. Read after [checkAndStage] to publish its verdict;
+  /// for what is actually installed, use [restingStatus].
   ModelUpdateStatus get status;
+
+  /// The status implied by what is on disk right now, with no network check: a
+  /// recorded rejection, a staged model pending, or nothing to report.
+  ///
+  /// The settings row is built from this rather than from [status], so it
+  /// describes what is installed instead of stating a verdict no check ever
+  /// reached — which is what happened on every launch with auto-scoring off,
+  /// since the launch check is gated on that switch (#786).
+  Future<ModelUpdateStatus> restingStatus();
 }

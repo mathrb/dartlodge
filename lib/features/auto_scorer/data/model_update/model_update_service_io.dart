@@ -79,24 +79,36 @@ class ModelUpdateServiceIo implements ModelUpdateService {
     );
   }
 
-  /// The status when a check ends without failing: a staged model is pending
-  /// and applies at the next session, otherwise there is nothing to report.
+  /// What is on disk right now, with no network check: a recorded rejection, a
+  /// staged model pending, or nothing to report.
   ///
-  /// Assigned at every non-failing exit so the status reflects this run rather
-  /// than whatever the previous one left behind (#782). It must not be
-  /// flattened to [ModelUpdateStatus.upToDate]: a second check in the same
-  /// launch takes the "already staged" no-op path, and that would erase the
-  /// "applies next session" hint the user just earned.
+  /// Serves two callers. [checkAndStage] assigns it at every non-failing exit
+  /// so the status reflects this run rather than whatever the previous one left
+  /// behind (#782); it must not be flattened to [ModelUpdateStatus.upToDate]
+  /// there, because a second check in the same launch takes the "already
+  /// staged" no-op path and that would erase the "applies next session" hint
+  /// the user just earned. And the settings row reads it directly, so it stops
+  /// stating a verdict when no check has run at all (#786) — which happens on
+  /// every launch with auto-scoring switched off, since the launch check is
+  /// gated on that switch.
   ///
   /// It asks [resolve] rather than testing `store.read() != null`, so the row
   /// can only promise an update the resolver would actually apply. A persisted
   /// entry is not enough on its own: the staged file may be gone, or the entry
   /// may predate a contract bump — and the incompatible-manifest exit returns
   /// before the quarantine block that would have cleared it.
-  Future<ModelUpdateStatus> _settledStatus() async =>
-      (await resolve()).origin == ModelOrigin.staged
-          ? ModelUpdateStatus.updateReady
-          : ModelUpdateStatus.upToDate;
+  ///
+  /// The rejection branch is unreachable from [checkAndStage]: every call site
+  /// there sits after the quarantine block, which has either returned or
+  /// cleared the record. It exists for the settings row, which has no such
+  /// guarantee.
+  @override
+  Future<ModelUpdateStatus> restingStatus() async {
+    if (store.readQuarantined() != null) return ModelUpdateStatus.updateRejected;
+    return (await resolve()).origin == ModelOrigin.staged
+        ? ModelUpdateStatus.updateReady
+        : ModelUpdateStatus.upToDate;
+  }
 
   @override
   Future<void> checkAndStage() async {
@@ -137,7 +149,7 @@ class ModelUpdateServiceIo implements ModelUpdateService {
 
       // Compatibility gate: contract + sanity fields must match this app.
       if (!isManifestCompatible(manifest)) {
-        _status = await _settledStatus();
+        _status = await restingStatus();
         return;
       }
 
@@ -157,20 +169,20 @@ class ModelUpdateServiceIo implements ModelUpdateService {
       // Re-check no-op: already staged, or same as the bundled baseline.
       if (manifest.modelVersion == current?.version ||
           manifest.modelVersion == kAutoScorerModelVersion) {
-        _status = await _settledStatus();
+        _status = await restingStatus();
         return;
       }
 
       // Provenance: the asset must be an app-repo release download.
       if (!manifest.url.startsWith(kModelReleaseUrlPrefix)) {
-        _status = await _settledStatus();
+        _status = await restingStatus();
         return;
       }
 
       // Only download on an unmetered connection. A deferral, not a failure:
       // the check will run again at the next launch.
       if (!await connectivity.isUnmetered()) {
-        _status = await _settledStatus();
+        _status = await restingStatus();
         return;
       }
 
