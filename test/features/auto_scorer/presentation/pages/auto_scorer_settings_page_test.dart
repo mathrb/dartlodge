@@ -32,6 +32,9 @@ class _FakeModelUpdateService implements ModelUpdateService {
   ModelUpdateStatus get status => _status;
 
   @override
+  Future<ModelUpdateStatus> restingStatus() async => _status;
+
+  @override
   Future<ResolvedModel> resolve() async => const ResolvedModel(
         path: kAutoScorerModelAsset,
         version: kAutoScorerModelVersion,

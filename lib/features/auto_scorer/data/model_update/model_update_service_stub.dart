@@ -22,6 +22,12 @@ class _UnsupportedModelUpdateService implements ModelUpdateService {
         origin: ModelOrigin.bundled,
       );
 
+  /// Nothing is ever staged or rejected here, so rest is always "nothing to
+  /// report" — the same value [status] returns.
+  @override
+  Future<ModelUpdateStatus> restingStatus() async =>
+      ModelUpdateStatus.upToDate;
+
   @override
   Future<void> checkAndStage() async {}
 

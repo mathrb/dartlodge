@@ -391,6 +391,21 @@ void main() {
       expect(svc.status, ModelUpdateStatus.updateReady);
     });
 
+    // Safety pin for merging the rejection branch into restingStatus: every
+    // deliberate-skip exit sits after the quarantine block, which has either
+    // returned or cleared the record, so those exits can never settle to
+    // updateRejected.
+    test('a deliberate skip never settles to update-rejected', () async {
+      connectivity.unmetered = false;
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round27_withcal');
+      serve(manifest()); // round26: different, so the record is cleared
+      await svc.checkAndStage();
+
+      expect(svc.store.readQuarantined(), isNull);
+      expect(svc.status, ModelUpdateStatus.upToDate);
+    });
+
     test('non-Android never downloads', () async {
       final svc = await service(isAndroid: false);
       serve(manifest());
@@ -482,6 +497,53 @@ void main() {
     await svc.quarantine(staged.version, remember: false);
     expect(svc.store.read(), isNull);
     expect(svc.store.readQuarantined(), isNull);
+  });
+
+  // --- restingStatus() ---
+  //
+  // What the settings row reads (#786). It must describe the disk, never a
+  // verdict a check reached, because with auto-scoring off no check ever runs.
+
+  group('restingStatus', () {
+    test('nothing staged → up to date', () async {
+      expect(await (await service()).restingStatus(), ModelUpdateStatus.upToDate);
+    });
+
+    test('a staged, present model → update ready', () async {
+      final svc = await service();
+      await stageFile(svc, staged);
+      expect(await svc.restingStatus(), ModelUpdateStatus.updateReady);
+    });
+
+    test('a staged entry whose file is gone → up to date', () async {
+      final svc = await service();
+      await svc.store.write(staged); // state only, no file
+      expect(await svc.restingStatus(), ModelUpdateStatus.upToDate);
+    });
+
+    test('a recorded rejection wins over everything → update rejected',
+        () async {
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round26_withcal');
+      expect(await svc.restingStatus(), ModelUpdateStatus.updateRejected);
+    });
+
+    // The staleness guard #785 added lives inside checkAndStage, but rest is
+    // read with no check having run at all. A record for the version the app
+    // now bundles is obsolete: the rejection judged a downloaded artifact, not
+    // the asset shipped in the APK.
+    test('a rejection of the now-bundled version is not reported', () async {
+      final svc = await service();
+      await svc.store.writeQuarantined(kAutoScorerModelVersion);
+      expect(await svc.restingStatus(), ModelUpdateStatus.upToDate);
+    });
+
+    test('non-Android → up to date', () async {
+      final svc = await service(isAndroid: false);
+      await stageFile(svc, staged);
+      // selectModel refuses a staged model off Android, so rest is bundled.
+      expect(await svc.restingStatus(), ModelUpdateStatus.upToDate);
+    });
   });
 
   test('isSupported reflects the Android flag', () async {

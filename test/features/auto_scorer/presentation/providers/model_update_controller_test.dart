@@ -5,30 +5,41 @@ import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_upd
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Fake service: `checkAndStage` "stages" by flipping to updateReady and making
-/// `resolve` return a staged model. Tracks whether it was invoked.
+/// Fake service shaped like the io one, and the shape is load-bearing: [status]
+/// is an in-memory verdict that only a check writes, while [staged]/[rejected]
+/// stand in for the disk. Deriving [status] from the disk instead would make
+/// the #786 regression test pass against the very bug it guards.
 class _FakeService implements ModelUpdateService {
   _FakeService({this.supported = true, this.fails = false});
   final bool supported;
 
   /// Set by [quarantine], the way the io service does when a staged model is
-  /// rejected at native load (#785).
+  /// rejected at native load (#785). Part of the "disk".
   bool rejected = false;
 
   /// When true, `checkAndStage` completes without staging and reports a failed
   /// check, the way the io service does on a 404 or a hash mismatch (#782).
   final bool fails;
+
+  /// The "disk": whether a model is staged and would resolve.
   bool staged = false;
-  bool failed = false;
   int checkCalls = 0;
+
+  /// The in-memory verdict, exactly like the io service's field: it starts at
+  /// upToDate whatever the disk holds, and only a check moves it.
+  ModelUpdateStatus _status = ModelUpdateStatus.upToDate;
 
   @override
   bool get isSupported => supported;
 
   @override
-  ModelUpdateStatus get status {
+  ModelUpdateStatus get status => _status;
+
+  /// Mirrors the real service: rest describes the disk, so a failed check (a
+  /// fact about this launch only) is deliberately not represented.
+  @override
+  Future<ModelUpdateStatus> restingStatus() async {
     if (rejected) return ModelUpdateStatus.updateRejected;
-    if (failed) return ModelUpdateStatus.checkFailed;
     return staged ? ModelUpdateStatus.updateReady : ModelUpdateStatus.upToDate;
   }
 
@@ -50,16 +61,20 @@ class _FakeService implements ModelUpdateService {
     checkCalls++;
     if (!supported) return;
     if (fails) {
-      failed = true;
+      _status = ModelUpdateStatus.checkFailed;
     } else {
       staged = true;
+      _status = ModelUpdateStatus.updateReady;
     }
   }
 
   @override
   Future<void> quarantine(String version, {bool remember = true}) async {
     staged = false;
-    if (remember) rejected = true;
+    if (remember) {
+      rejected = true;
+      _status = ModelUpdateStatus.updateRejected;
+    }
   }
 }
 
@@ -128,6 +143,19 @@ void main() {
 
     expect(await container.read(modelUpdateControllerProvider.future),
         ModelUpdateStatus.updateRejected);
+  });
+
+  // #786: with auto-scoring off the launch check never runs, so the row used
+  // to read the in-memory default and state "up to date" while a staged model
+  // was waiting.
+  test('reports a staged model with no check having run', () async {
+    final service = _FakeService()..staged = true;
+    final container = containerFor(service);
+    addTearDown(container.dispose);
+
+    expect(await container.read(modelUpdateControllerProvider.future),
+        ModelUpdateStatus.updateReady);
+    expect(service.checkCalls, 0);
   });
 
   test('checkNow is a no-op when the service is unsupported', () async {

@@ -33,10 +33,14 @@ Future<ResolvedModel> resolvedModel(Ref ref) async {
 /// [resolvedModelProvider] so a newly staged model applies at the next session.
 @Riverpod(keepAlive: true)
 class ModelUpdateController extends _$ModelUpdateController {
+  /// Describes what is installed, not what was last checked: with auto-scoring
+  /// off the launch check never runs, and reading the in-memory [status] made
+  /// the row state "up to date" having judged nothing, while a staged model
+  /// could be waiting (#786). [checkNow] still publishes a real check's verdict.
   @override
   Future<ModelUpdateStatus> build() async {
     final service = await ref.watch(modelUpdateServiceProvider.future);
-    return service.status;
+    return service.restingStatus();
   }
 
   /// Best-effort background check + stage. The service never throws; state
@@ -46,6 +50,12 @@ class ModelUpdateController extends _$ModelUpdateController {
   Future<void> checkNow() async {
     final service = await ref.read(modelUpdateServiceProvider.future);
     if (!service.isSupported) return;
+    // Let the initial build settle before publishing a transient state. Since
+    // #786 build() reads the disk, so it no longer completes synchronously: on
+    // the launch path, which triggers the first build and this call together,
+    // its result would otherwise land after `downloading` and overwrite it,
+    // bringing the "Check now" button back mid-check.
+    await future;
     state = const AsyncData(ModelUpdateStatus.downloading);
     await service.checkAndStage();
     ref.invalidate(resolvedModelProvider);
