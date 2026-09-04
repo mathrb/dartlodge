@@ -211,10 +211,20 @@ segment          Enum {0, 1–20, bull}
 multiplier       Integer {1, 2, 3}
 score            Integer         Points scored by this dart
 input_method     Enum {manual, camera}   # 'camera' = on-device auto-scorer (#377)
+rethrown         Boolean?  # conditional — true on a dart re-created by a
+                           # correction's rewind-and-replay (#788)
 bust             Boolean?  # conditional — set true on the dart that busts the turn
 x                Double?  # optional — normalised canonical impact position (#571)
 y                Double?  # optional — heatmap frame; omitted for manual/old darts
 ```
+
+> `rethrown: true` is added by `CorrectDartUseCase`, which corrects a dart by
+> rewinding it and the darts after it and re-throwing them. The replacements keep
+> the `input_method` of the darts they stand in for, so this marker is the only
+> thing distinguishing them from the original events (which stay in the log,
+> skipped on replay). Consumers that count *what the camera detected* — notably
+> `correlateCameraDarts` in the session-replay harness — must skip replacements.
+> **Omitted** when false, so pre-#788 events parse unchanged.
 
 > `bust: true` is added to the busting dart's payload by `ProcessDartUseCase`
 > when the engine resolves the throw as a bust. It is **omitted** (→ `null` on

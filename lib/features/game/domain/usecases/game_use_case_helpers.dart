@@ -38,6 +38,7 @@ GameEvent buildDartThrownEvent({
   int? score,
   String? playerId,
   String inputMethod = 'manual',
+  bool rethrown = false,
   double? x,
   double? y,
 }) {
@@ -54,6 +55,12 @@ GameEvent buildDartThrownEvent({
       'multiplier': multiplier,
       if (score != null) 'score': score,
       'input_method': inputMethod,
+      // Set only on a dart re-created by a correction's rewind-and-replay
+      // (#788). The dart keeps its original `input_method`, so this is the only
+      // thing separating a replacement from the original camera emission it
+      // stands in for — `correlateCameraDarts` needs that to keep counting
+      // emissions. Omitted when false so old events parse unchanged.
+      if (rethrown) 'rethrown': true,
       // Normalised canonical impact position from the auto-scorer (#571).
       // Omitted (→ null on read) for manual entry and pre-#571 events so the
       // payload key-set stays minimal and old events parse unchanged.

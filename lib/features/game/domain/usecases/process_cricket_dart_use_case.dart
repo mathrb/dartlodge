@@ -34,7 +34,7 @@ class ProcessCricketDartUseCase {
   }) : _random = random ?? math.Random();
 
   Future<GameState> execute(GameState currentState, DartThrow dartThrow,
-      {String inputMethod = 'manual'}) async {
+      {String inputMethod = 'manual', bool rethrown = false}) async {
     // 1. Guard: game already complete
     if (currentState.isComplete) {
       throw GameAlreadyCompleteException(currentState.gameId);
@@ -62,6 +62,7 @@ class ProcessCricketDartUseCase {
       score: parsedSegment.scoreValue,
       playerId: currentPlayerId,
       inputMethod: inputMethod,
+      rethrown: rethrown,
       // Carry the auto-scorer's normalised impact position (#571) — null for
       // manual entry. The DartThrow itself already holds x/y for the DB insert
       // at step 8; mirror them into the event payload for the heatmap.
