@@ -525,6 +525,11 @@ void main() {
       expect(darts[2].payload['input_method'], 'camera');
       expect(darts[2].payload['x'], 0.5);
       expect(darts[2].payload['y'], 0.6);
+      // Both re-created darts are tagged as replacements, so the session-replay
+      // correlation still counts the originals as the tracker's emissions.
+      expect(darts[0].payload['rethrown'], isNull);
+      expect(darts[1].payload['rethrown'], isTrue);
+      expect(darts[2].payload['rethrown'], isTrue);
     });
 
     test('a second correction still resolves a camera ordinal', () async {

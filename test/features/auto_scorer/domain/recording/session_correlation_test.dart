@@ -39,7 +39,7 @@ SessionTrace _traceWith(List<List<RecordedEmission>> perFrame) => SessionTrace(
     );
 
 GameEvent _cameraDart(int seq, int base, int mult,
-        {String method = 'camera'}) =>
+        {String method = 'camera', bool rethrown = false}) =>
     buildDartThrownEvent(
       gameId: 'g',
       dartId: 'd$seq',
@@ -49,9 +49,35 @@ GameEvent _cameraDart(int seq, int base, int mult,
       segment: base,
       multiplier: mult,
       inputMethod: method,
+      rethrown: rethrown,
     );
 
 void main() {
+  test('a correction does not inflate the game-side camera count (#788)', () {
+    // The tracker emitted two darts. The player then corrected the first, which
+    // rewinds both and re-throws them — the replacements keep `input_method:
+    // camera` (so a second correction still reaches the capture sink) and are
+    // tagged `rethrown`. The originals stay in the log and are what the tracker
+    // actually emitted, so they remain the correlation's game side.
+    final trace = _traceWith([
+      [_emit(0, 'T20', 20, 3)],
+      [_emit(1, 'SB', 25, 1)],
+    ]);
+    final events = [
+      _cameraDart(1, 20, 3), // original
+      _cameraDart(2, 25, 1), // original
+      _cameraDart(3, 5, 1, rethrown: true), // corrected T20 → 5
+      _cameraDart(4, 25, 1, rethrown: true), // untouched tail, re-thrown
+    ];
+
+    final c = correlateCameraDarts(trace, events);
+
+    expect(c.gameCameraCount, 2);
+    expect(c.trackerEmittedCount, 2);
+    expect(c.isAligned, isTrue);
+    expect(c.mismatches, isEmpty);
+  });
+
   test('aligns matching tracker emissions with camera DartThrowns', () {
     final trace = _traceWith([
       [_emit(0, 'T20', 20, 3)],

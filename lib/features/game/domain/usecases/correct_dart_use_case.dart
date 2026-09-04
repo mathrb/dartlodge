@@ -27,8 +27,9 @@ import 'undo_last_dart_use_case.dart';
 /// [inputMethod] is threaded through (rather than left to the use case's
 /// `'manual'` default) because a correction re-throws darts that were already
 /// recorded, and their provenance must survive the round trip (#788).
+/// [rethrown] tags the resulting event as a replacement for an earlier one.
 typedef ProcessDartFn = Future<GameState> Function(
-    GameState state, DartThrow dart, {String inputMethod});
+    GameState state, DartThrow dart, {String inputMethod, bool rethrown});
 
 /// One live dart captured off the event log before the rewind, so the re-throw
 /// can restore it exactly as it was recorded (#788).
@@ -146,7 +147,9 @@ class CorrectDartUseCase {
       x: x,
       y: y,
     );
-    return _processDart(state, dart, inputMethod: inputMethod);
+    // Every dart this use case throws is a replacement for one already in
+    // the log — that is what the rewind-and-replay is (#788).
+    return _processDart(state, dart, inputMethod: inputMethod, rethrown: true);
   }
 }
 

@@ -40,9 +40,12 @@ class CameraCorrelation {
   /// Emitted darts the tracker reported (the trace, `emitted == true`).
   final int trackerEmittedCount;
 
-  /// Camera-sourced `DartThrown` events the game recorded (originals; corrected
-  /// darts keep their original event in the log, which is what the tracker
-  /// emitted).
+  /// Camera-sourced `DartThrown` events the game recorded — **originals only**.
+  /// A corrected dart keeps its original event in the log (that is what the
+  /// tracker emitted, so it is what we correlate against); the replacement the
+  /// correction re-throws is skipped via its `rethrown` marker (#788). Counting
+  /// replacements too would report every recorded session that contains a
+  /// correction as misaligned.
   final int gameCameraCount;
 
   const CameraCorrelation({
@@ -76,7 +79,9 @@ CameraCorrelation correlateCameraDarts(
 
   final cameraDarts = <GameEvent>[
     for (final e in events)
-      if (e.eventType == 'DartThrown' && e.payload['input_method'] == 'camera')
+      if (e.eventType == 'DartThrown' &&
+          e.payload['input_method'] == 'camera' &&
+          e.payload['rethrown'] != true)
         e,
   ];
 
