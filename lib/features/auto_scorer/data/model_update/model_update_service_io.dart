@@ -118,8 +118,27 @@ class ModelUpdateServiceIo implements ModelUpdateService {
       // quarantine it here so the stale file + state don't linger.
       var current = store.read();
       if (current != null && current.contract != kAutoScorerModelContract) {
-        await quarantine(current.version);
+        // remember: false — a contract bump makes the staged file unusable by
+        // this app, but says nothing about the model itself. Recording it as
+        // rejected would refuse the same version once it is republished for the
+        // new contract.
+        await quarantine(current.version, remember: false);
         current = null;
+      }
+
+      // A version already rejected at native load must not be downloaded
+      // again: quarantine clears the staged state, so without this record the
+      // manifest would look like a fresh update at every launch and the same
+      // asset would be fetched, staged and rejected forever (#785). Any other
+      // version clears the record, so one bad model never blocks its
+      // successors.
+      final quarantined = store.readQuarantined();
+      if (quarantined != null) {
+        if (manifest.modelVersion == quarantined) {
+          _status = ModelUpdateStatus.updateRejected;
+          return;
+        }
+        await store.clearQuarantined();
       }
 
       // Re-check no-op: already staged, or same as the bundled baseline.
@@ -187,11 +206,13 @@ class ModelUpdateServiceIo implements ModelUpdateService {
   }
 
   @override
-  Future<void> quarantine(String version) async {
+  Future<void> quarantine(String version, {bool remember = true}) async {
     final file = File(stagedPathFor(version));
     if (await file.exists()) await file.delete();
     await store.clear();
-    _status = ModelUpdateStatus.upToDate;
+    if (!remember) return;
+    await store.writeQuarantined(version);
+    _status = ModelUpdateStatus.updateRejected;
   }
 
   /// Delete stray `*.part` files left by a killed/failed download.

@@ -516,6 +516,8 @@
   "autoScorerModelDownloading": "Recherche d'une mise à jour…",
   "autoScorerModelUpdateReady": "Mise à jour prête, appliquée à la prochaine session",
   "autoScorerModelCheckFailed": "Échec de la dernière recherche",
+  "autoScorerModelRejected": "Mise à jour inutilisable",
+  "autoScorerModelRejectedNotice": "Cette mise à jour du modèle n'a pas pu se charger. Elle a été supprimée, et le score continue avec le modèle fourni avec l'application.",
   "autoScorerModelLoopNote": "Les modèles réentraînés arrivent ici tout seuls. Votre téléphone n'apprend jamais pendant que vous jouez.",
   "autoScorerModelCheckNow": "Vérifier",
   "autoScorerExportUnavailable": "L'export n'est pas disponible ici.",

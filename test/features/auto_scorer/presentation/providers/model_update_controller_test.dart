@@ -11,6 +11,10 @@ class _FakeService implements ModelUpdateService {
   _FakeService({this.supported = true, this.fails = false});
   final bool supported;
 
+  /// Set by [quarantine], the way the io service does when a staged model is
+  /// rejected at native load (#785).
+  bool rejected = false;
+
   /// When true, `checkAndStage` completes without staging and reports a failed
   /// check, the way the io service does on a 404 or a hash mismatch (#782).
   final bool fails;
@@ -23,6 +27,7 @@ class _FakeService implements ModelUpdateService {
 
   @override
   ModelUpdateStatus get status {
+    if (rejected) return ModelUpdateStatus.updateRejected;
     if (failed) return ModelUpdateStatus.checkFailed;
     return staged ? ModelUpdateStatus.updateReady : ModelUpdateStatus.upToDate;
   }
@@ -52,7 +57,10 @@ class _FakeService implements ModelUpdateService {
   }
 
   @override
-  Future<void> quarantine(String version) async {}
+  Future<void> quarantine(String version, {bool remember = true}) async {
+    staged = false;
+    if (remember) rejected = true;
+  }
 }
 
 void main() {
@@ -101,6 +109,25 @@ void main() {
     // The active model is untouched by a failed check.
     expect((await container.read(resolvedModelProvider.future)).origin,
         ModelOrigin.bundled);
+  });
+
+  // The board overlay quarantines a model that would not load, then
+  // invalidates this controller so the row stops promising the update it had
+  // announced (#785).
+  test('a quarantine surfaces as update-rejected after invalidation', () async {
+    final service = _FakeService();
+    final container = containerFor(service);
+    addTearDown(container.dispose);
+
+    await container.read(modelUpdateControllerProvider.notifier).checkNow();
+    expect(container.read(modelUpdateControllerProvider).value,
+        ModelUpdateStatus.updateReady);
+
+    await service.quarantine('dart_round26_withcal');
+    container.invalidate(modelUpdateControllerProvider);
+
+    expect(await container.read(modelUpdateControllerProvider.future),
+        ModelUpdateStatus.updateRejected);
   });
 
   test('checkNow is a no-op when the service is unsupported', () async {

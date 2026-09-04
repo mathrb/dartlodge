@@ -516,6 +516,8 @@
   "autoScorerModelDownloading": "Controleren op update…",
   "autoScorerModelUpdateReady": "Update klaar, wordt de volgende sessie toegepast",
   "autoScorerModelCheckFailed": "Laatste controle mislukt",
+  "autoScorerModelRejected": "Update niet bruikbaar",
+  "autoScorerModelRejectedNotice": "Deze modelupdate kon niet worden geladen. Hij is verwijderd en het scoren gaat verder met het meegeleverde model.",
   "autoScorerModelLoopNote": "Opnieuw getrainde modellen komen hier vanzelf aan. Je telefoon leert nooit terwijl je speelt.",
   "autoScorerModelCheckNow": "Nu controleren",
   "autoScorerExportUnavailable": "Exporteren is hier niet beschikbaar.",

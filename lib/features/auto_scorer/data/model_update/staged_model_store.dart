@@ -14,6 +14,7 @@ class StagedModelStore {
   static const _kContract = 'auto_scorer_staged_contract';
   static const _kSha = 'auto_scorer_staged_sha';
   static const _kSize = 'auto_scorer_staged_size';
+  static const _kQuarantined = 'auto_scorer_quarantined_version';
 
   /// The staged model, or null when nothing is staged (any key missing).
   StagedModelState? read() {
@@ -45,4 +46,18 @@ class StagedModelStore {
     await _prefs.remove(_kSha);
     await _prefs.remove(_kSize);
   }
+
+  /// The model version that was downloaded, staged, then rejected because it
+  /// would not load natively (#785). Kept so the updater does not fetch the
+  /// same asset again on the next launch: [clear] alone would leave nothing to
+  /// tell a rejected version apart from one never seen, and the download would
+  /// repeat every launch.
+  String? readQuarantined() => _prefs.getString(_kQuarantined);
+
+  Future<void> writeQuarantined(String version) =>
+      _prefs.setString(_kQuarantined, version);
+
+  /// Dropped as soon as the manifest advertises a different version, so one bad
+  /// model never blocks the ones published after it.
+  Future<void> clearQuarantined() => _prefs.remove(_kQuarantined);
 }

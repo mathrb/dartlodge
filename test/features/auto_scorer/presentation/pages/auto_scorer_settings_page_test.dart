@@ -42,7 +42,7 @@ class _FakeModelUpdateService implements ModelUpdateService {
   Future<void> checkAndStage() async {}
 
   @override
-  Future<void> quarantine(String version) async {}
+  Future<void> quarantine(String version, {bool remember = true}) async {}
 }
 
 void main() {
@@ -161,5 +161,20 @@ void main() {
 
     expect(find.textContaining('Last check failed'), findsOneWidget);
     expect(find.textContaining('Up to date'), findsNothing);
+  });
+
+  // #785: the row had promised this update, so it must not fall back to a
+  // reassuring label once the model is discarded.
+  testWidgets('the model tile says so when an update was discarded',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await pump(tester, extraOverrides: [
+      modelUpdateServiceProvider.overrideWith((ref) async =>
+          _FakeModelUpdateService(ModelUpdateStatus.updateRejected)),
+    ]);
+
+    expect(find.textContaining('Update could not be used'), findsOneWidget);
+    expect(find.textContaining('Up to date'), findsNothing);
+    expect(find.textContaining('Update ready'), findsNothing);
   });
 }

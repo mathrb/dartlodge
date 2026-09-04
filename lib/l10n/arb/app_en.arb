@@ -2006,6 +2006,14 @@
   "@autoScorerModelCheckFailed": {
     "description": "Model update state: the last check could not complete (offline, HTTP error, or an asset that did not match the manifest). The active model is unchanged and the next launch retries."
   },
+  "autoScorerModelRejected": "Update could not be used",
+  "@autoScorerModelRejected": {
+    "description": "Model update state: a downloaded update failed to load and was discarded. The bundled model stays in use and the discarded version is never fetched again."
+  },
+  "autoScorerModelRejectedNotice": "That model update would not load. It has been removed, and scoring continues with the model that came with the app.",
+  "@autoScorerModelRejectedNotice": {
+    "description": "Snackbar shown once, when a downloaded detection model fails to load as a camera view starts."
+  },
   "autoScorerModelLoopNote": "Retrained models arrive here on their own. Your phone never learns while you play.",
   "@autoScorerModelLoopNote": {
     "description": "Detection-model tile: how a retrained model reaches the app, and that nothing is learned on the phone"
