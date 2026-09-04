@@ -1,9 +1,12 @@
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/staged_model_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persists the description of the currently-staged over-the-air model (#715) in
-/// `shared_preferences`. Sole owner of these keys, so the download pipeline and
-/// the resolver never disagree about what is staged. Platform-agnostic
+/// Persists the over-the-air model state (#715) in `shared_preferences`: the
+/// description of the currently-staged model, and the version of one that was
+/// rejected at native load (#785). Sole owner of these keys, so the download
+/// pipeline and the resolver never disagree about what is staged, and so the
+/// rejection outlives the process that observed it. Only the download pipeline
+/// reads the rejection; the resolver has no use for it. Platform-agnostic
 /// (SharedPreferences works on web too), but only exercised by the io service.
 class StagedModelStore {
   final SharedPreferences _prefs;

@@ -242,15 +242,21 @@ class _AutoScorerBoardOverlayState
   /// a staged model was in play.
   ///
   /// The player is told, because the settings row had promised them this update
-  /// (#785). A snackbar is safe here despite the "never interrupt a game" rule
-  /// of #715: this fires when a camera view mounts, never mid-inference, and
-  /// the board pages already raise snackbars during play for a bust.
+  /// (#785). A snackbar is the right weight for it: this fires when a camera
+  /// view mounts, never mid-inference, and the board pages already raise
+  /// snackbars during play for a bust. (#715's "never mid-game" is about when a
+  /// staged model takes effect, not about staying silent.)
   Future<void> _onModelLoadFailed() async {
     final resolved = _resolvedModel;
     if (resolved == null || resolved.origin != ModelOrigin.staged) return;
-    // Captured before the await: context is unsafe to touch afterwards.
-    final messenger = ScaffoldMessenger.of(context);
-    final message = AppLocalizations.of(context).autoScorerModelRejectedNotice;
+    // Captured before the await: context is unsafe to touch afterwards. Both
+    // are best-effort, and deliberately do not gate the quarantine below: if
+    // this ever runs unmounted, losing the snackbar is acceptable and losing
+    // the quarantine is not, since the record is what stops the failing model
+    // being downloaded again on every launch.
+    final messenger = mounted ? ScaffoldMessenger.maybeOf(context) : null;
+    final message =
+        mounted ? AppLocalizations.of(context).autoScorerModelRejectedNotice : null;
     // Refresh the snapshot so any later mount this session (e.g. the preview
     // after an aim-view failure, or a re-aim) uses the bundled path/version —
     // otherwise it would re-point at the just-quarantined staged file.
@@ -263,7 +269,9 @@ class _AutoScorerBoardOverlayState
     // beside the bundled version it just fell back to: the controller only
     // re-reads the service status on build or an explicit check.
     ref.invalidate(modelUpdateControllerProvider);
-    messenger.showSnackBar(SnackBar(content: Text(message)));
+    if (messenger != null && message != null) {
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   /// Push the fullscreen aim step and return how it ended. Shared by the

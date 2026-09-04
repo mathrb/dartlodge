@@ -328,6 +328,36 @@ void main() {
       expect(svc.status, ModelUpdateStatus.updateRejected);
     });
 
+    // The rejection is a fact about that version whatever the manifest's
+    // contract says. Behind the compatibility gate this settled back to
+    // upToDate and the player lost the message they had just been shown.
+    test('an incompatible manifest still reports a quarantined version',
+        () async {
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round26_withcal');
+      serve(manifest(contract: 999));
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 0);
+      expect(svc.store.readQuarantined(), 'dart_round26_withcal');
+      expect(svc.status, ModelUpdateStatus.updateRejected);
+    });
+
+    // A later app release can promote a model into the bundle. The rejection
+    // was a verdict on a downloaded artifact, not on the asset shipped in the
+    // APK, so the record must not outlive that promotion.
+    test('promoting a quarantined version into the bundle clears the record',
+        () async {
+      final svc = await service();
+      await svc.store.writeQuarantined(kAutoScorerModelVersion);
+      serve(manifest(version: kAutoScorerModelVersion));
+      await svc.checkAndStage();
+
+      expect(svc.store.readQuarantined(), isNull);
+      expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.upToDate);
+    });
+
     test('a newer version clears the quarantine and stages normally', () async {
       final svc = await service();
       await svc.store.writeQuarantined('dart_round26_withcal');

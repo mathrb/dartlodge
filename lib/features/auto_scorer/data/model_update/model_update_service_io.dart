@@ -107,6 +107,34 @@ class ModelUpdateServiceIo implements ModelUpdateService {
           jsonDecode(await http.getString(Uri.parse(manifestUrl)))
               as Map<String, dynamic>);
 
+      // Ahead of the compatibility gate on purpose: a version already rejected
+      // at native load must not be downloaded again, and the rejection is a
+      // fact about that version whatever the manifest's contract says. Behind
+      // the gate, an incompatible manifest would settle the status through
+      // _settledStatus() and quietly replace "could not be used" with "up to
+      // date", undoing for this state what #782 fixed for the others.
+      //
+      // The record is needed at all because quarantine clears the staged state:
+      // without it the manifest looks like a fresh update at every launch and
+      // the same asset is fetched, staged and rejected forever (#785). Any
+      // other version clears it, so one bad model never blocks its successors.
+      final quarantined = store.readQuarantined();
+      if (quarantined != null) {
+        // The record goes stale two ways. The manifest moves on to another
+        // version, or a later app release promotes the rejected version into
+        // the bundle: the rejection was a verdict on a downloaded artifact, and
+        // the asset shipped inside the APK is not that artifact. Without the
+        // second case the row would read "could not be used" forever while the
+        // app happily ran that very version.
+        if (quarantined == kAutoScorerModelVersion ||
+            manifest.modelVersion != quarantined) {
+          await store.clearQuarantined();
+        } else {
+          _status = ModelUpdateStatus.updateRejected;
+          return;
+        }
+      }
+
       // Compatibility gate: contract + sanity fields must match this app.
       if (!isManifestCompatible(manifest)) {
         _status = await _settledStatus();
@@ -124,21 +152,6 @@ class ModelUpdateServiceIo implements ModelUpdateService {
         // new contract.
         await quarantine(current.version, remember: false);
         current = null;
-      }
-
-      // A version already rejected at native load must not be downloaded
-      // again: quarantine clears the staged state, so without this record the
-      // manifest would look like a fresh update at every launch and the same
-      // asset would be fetched, staged and rejected forever (#785). Any other
-      // version clears the record, so one bad model never blocks its
-      // successors.
-      final quarantined = store.readQuarantined();
-      if (quarantined != null) {
-        if (manifest.modelVersion == quarantined) {
-          _status = ModelUpdateStatus.updateRejected;
-          return;
-        }
-        await store.clearQuarantined();
       }
 
       // Re-check no-op: already staged, or same as the bundled baseline.

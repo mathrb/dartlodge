@@ -46,10 +46,11 @@ abstract class ModelUpdateService {
   /// next session. Silent and best-effort — never throws.
   Future<void> checkAndStage();
 
-  /// Delete a staged model that failed to load natively and clear its persisted
-  /// state, so the resolver falls back to bundled and never retries it.
+  /// Delete a staged model and clear its persisted state, so the resolver falls
+  /// back to bundled and never loads that file again.
   ///
-  /// [remember] records the version so the updater never fetches it again;
+  /// [remember] additionally records the version so the *updater* never fetches
+  /// it again;
   /// leave it true for a real rejection. The contract-bump housekeeping inside
   /// `checkAndStage` passes false: dropping a model made stale by a new app
   /// version is not a verdict on that model, which may well be republished for
