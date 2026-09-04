@@ -1845,7 +1845,7 @@
   "@autoScorerRecordPartial": {
     "description": "Subtitle of the record toggle when the two underlying opt-ins disagree (legacy state, #790)."
   },
-  "autoScorerDisabledNotice": "Auto-scoring is off. These settings apply the next time you turn it on; the export and the counter below still cover what is already on this device.",
+  "autoScorerDisabledNotice": "Auto-scoring is off. These settings apply the next time you turn it on; anything already stored on this device is unaffected.",
   "@autoScorerDisabledNotice": {
     "description": "Notice at the top of the auto-scorer settings page while the master switch is off (#790)."
   },

@@ -245,6 +245,24 @@ void main() {
     expect(modeButton(tester).selected, isEmpty);
   });
 
+  // Showing no selection (above) means SegmentedButton is in
+  // emptySelectionAllowed mode, which turns a tap on the ALREADY selected
+  // segment into a de-select — it fires the callback with an empty set.
+  testWidgets('re-tapping the current capture mode keeps it, without throwing',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester);
+    expect(modeButton(tester).selected, {CaptureMode.partial});
+
+    await tester.ensureVisible(find.text('Mistakes only'));
+    await tester.tap(find.text('Mistakes only'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(modeButton(tester).selected, {CaptureMode.partial});
+  });
+
   testWidgets('capture-mode names its mode again once collection is on',
       (tester) async {
     SharedPreferences.setMockInitialValues(
@@ -292,6 +310,25 @@ void main() {
     expect(find.textContaining('Auto-scoring is off.'), findsNothing);
   });
 
+  testWidgets('the export says so when the store cannot be read',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester, extraOverrides: [
+      captureStoreProvider
+          .overrideWith((ref) async => _UnreadableCaptureStore()),
+    ]);
+
+    await tester.ensureVisible(find.text('Export recordings'));
+    await tester.tap(find.text('Export recordings'));
+    await tester.pumpAndSettle();
+
+    // The read used to throw out of the handler as an unhandled async error:
+    // no snackbar, no progress, the tap simply did nothing.
+    expect(tester.takeException(), isNull);
+    expect(find.text('Export failed. Please try again.'), findsOneWidget);
+  });
+
   testWidgets('offers no recording, counter or export without a store',
       (tester) async {
     SharedPreferences.setMockInitialValues(const {});
@@ -309,5 +346,8 @@ void main() {
     // The detection controls below it are unaffected — they tune the live
     // camera, which does not need a store.
     expect(find.textContaining('Calibration confidence'), findsOneWidget);
+    // ...and the master-switch notice must not point at an export and a counter
+    // that this very gating just removed from the page.
+    expect(find.textContaining('export'), findsNothing);
   });
 }

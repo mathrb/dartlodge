@@ -1,7 +1,9 @@
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_bundle.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/capture_count_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
@@ -141,7 +143,14 @@ class _AutoScorerSettingsPageState
     // behaviours while half of them run, so say so rather than let the ON state
     // overstate it (#790). Unreachable from a fresh install — _setRecording
     // always writes the pair.
-    final recordingPartial = collectOn != recordSessionsOn;
+    //
+    // Only ever claimed off two RESOLVED preferences: `.value ?? false` reads a
+    // still-loading or errored provider as "off", which would raise the alarming
+    // subtitle on a staggered load, or permanently if one read fails — the exact
+    // kind of unverified assertion this page is being cleaned of.
+    final recordingPartial = collect.hasValue &&
+        recordSessions.hasValue &&
+        collectOn != recordSessionsOn;
     final recordingBusy = collect.isLoading || recordSessions.isLoading;
     // Both pipelines write through a store that is a no-op stub on web (#377
     // §8). Offering the toggle, the counter and the export there would promise
@@ -266,9 +275,18 @@ class _AutoScorerSettingsPageState
                     : const <CaptureMode>{},
                 onSelectionChanged: (!collectOn || captureMode.isLoading)
                     ? null
-                    : (selection) => ref
-                        .read(captureModeSettingProvider.notifier)
-                        .setMode(selection.first),
+                    : (selection) {
+                        // emptySelectionAllowed turns a tap on the ALREADY
+                        // selected segment into a de-select, so the callback can
+                        // arrive empty — `.first` would throw. There is no
+                        // "capture nothing" mode to move to: that is what the
+                        // recording switch is for, so a re-tap confirms rather
+                        // than clears.
+                        if (selection.isEmpty) return;
+                        ref
+                            .read(captureModeSettingProvider.notifier)
+                            .setMode(selection.first);
+                      },
               ),
             ),
           ),
@@ -382,28 +400,40 @@ class _AutoScorerSettingsPageState
           SnackBar(content: Text(l10n.autoScorerExportUnavailable)));
       return;
     }
-    final captures = await store.list();
-
-    // Bundle each recorded session into an in-memory JSON under sessions/.
-    final sessionStore = await ref.read(sessionTraceStoreProvider.future);
+    // Reading the two stores is disk I/O and can fail exactly the way the
+    // contribution counter now reports (#790). Without this the tap threw out
+    // of here as an unhandled async error: no snackbar, no progress, nothing —
+    // the one row left on this page that silently did nothing.
+    late final List<CaptureRecord> captures;
+    late final SessionTraceStore sessionStore;
     final sessionFiles = <({String archivePath, String content})>[];
-    if (sessionStore.isSupported) {
-      final ids = await sessionStore.list();
-      final gameRepo = ref.read(gameRepositoryProvider);
-      final eventRepo = ref.read(gameEventRepositoryProvider);
-      for (final id in ids) {
-        final trace = await sessionStore.read(id);
-        if (trace == null) continue;
-        final gameId = trace.header.gameId;
-        final game = await gameRepo.getGame(gameId);
-        if (game == null) continue; // game pruned — skip, don't fail the export
-        final events = await eventRepo.getEventsForGame(gameId);
-        final competitors = await gameRepo.getCompetitors(gameId);
-        final bundle = SessionBundle(
-            trace: trace, events: events, game: game, competitors: competitors);
-        sessionFiles.add(
-            (archivePath: 'sessions/$id.json', content: bundle.toJsonString()));
+    try {
+      captures = await store.list();
+
+      // Bundle each recorded session into an in-memory JSON under sessions/.
+      sessionStore = await ref.read(sessionTraceStoreProvider.future);
+      if (sessionStore.isSupported) {
+        final ids = await sessionStore.list();
+        final gameRepo = ref.read(gameRepositoryProvider);
+        final eventRepo = ref.read(gameEventRepositoryProvider);
+        for (final id in ids) {
+          final trace = await sessionStore.read(id);
+          if (trace == null) continue;
+          final gameId = trace.header.gameId;
+          final game = await gameRepo.getGame(gameId);
+          if (game == null) continue; // game pruned — skip, don't fail the export
+          final events = await eventRepo.getEventsForGame(gameId);
+          final competitors = await gameRepo.getCompetitors(gameId);
+          final bundle = SessionBundle(
+              trace: trace, events: events, game: game, competitors: competitors);
+          sessionFiles.add(
+              (archivePath: 'sessions/$id.json', content: bundle.toJsonString()));
+        }
       }
+    } catch (_) {
+      messenger.showSnackBar(
+          SnackBar(content: Text(l10n.autoScorerExportFailed)));
+      return;
     }
 
     if (captures.isEmpty && sessionFiles.isEmpty) {
