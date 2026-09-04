@@ -8,7 +8,8 @@ part of 'capture_count_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Total training frames stored on this device (#742).
+/// Total training frames stored on this device (#742), or **null when the store
+/// could not be read** (#790).
 ///
 /// This is the settings-side view of the contribution counter: the in-game one
 /// counts what the running session persisted (cheap, in memory), while the
@@ -18,11 +19,18 @@ part of 'capture_count_provider.dart';
 /// Listing the store is a directory read, so it is deliberately NOT used on the
 /// capture path; the settings page invalidates this provider after clearing.
 /// Zero on web, where the capture store is a stub.
+///
+/// The failure is carried as a null rather than left to `AsyncError`: letting
+/// the read throw does NOT reach the tile's error branch — the provider is
+/// disposed while still loading and never emits, so the tile sat on "Counting…"
+/// for good, which is the stuck state #790 reported. A value the UI can render
+/// is the only way the failure becomes visible.
 
 @ProviderFor(captureCount)
 final captureCountProvider = CaptureCountProvider._();
 
-/// Total training frames stored on this device (#742).
+/// Total training frames stored on this device (#742), or **null when the store
+/// could not be read** (#790).
 ///
 /// This is the settings-side view of the contribution counter: the in-game one
 /// counts what the running session persisted (cheap, in memory), while the
@@ -32,11 +40,18 @@ final captureCountProvider = CaptureCountProvider._();
 /// Listing the store is a directory read, so it is deliberately NOT used on the
 /// capture path; the settings page invalidates this provider after clearing.
 /// Zero on web, where the capture store is a stub.
+///
+/// The failure is carried as a null rather than left to `AsyncError`: letting
+/// the read throw does NOT reach the tile's error branch — the provider is
+/// disposed while still loading and never emits, so the tile sat on "Counting…"
+/// for good, which is the stuck state #790 reported. A value the UI can render
+/// is the only way the failure becomes visible.
 
 final class CaptureCountProvider
-    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
-    with $FutureModifier<int>, $FutureProvider<int> {
-  /// Total training frames stored on this device (#742).
+    extends $FunctionalProvider<AsyncValue<int?>, int?, FutureOr<int?>>
+    with $FutureModifier<int?>, $FutureProvider<int?> {
+  /// Total training frames stored on this device (#742), or **null when the store
+  /// could not be read** (#790).
   ///
   /// This is the settings-side view of the contribution counter: the in-game one
   /// counts what the running session persisted (cheap, in memory), while the
@@ -46,6 +61,12 @@ final class CaptureCountProvider
   /// Listing the store is a directory read, so it is deliberately NOT used on the
   /// capture path; the settings page invalidates this provider after clearing.
   /// Zero on web, where the capture store is a stub.
+  ///
+  /// The failure is carried as a null rather than left to `AsyncError`: letting
+  /// the read throw does NOT reach the tile's error branch — the provider is
+  /// disposed while still loading and never emits, so the tile sat on "Counting…"
+  /// for good, which is the stuck state #790 reported. A value the UI can render
+  /// is the only way the failure becomes visible.
   CaptureCountProvider._()
     : super(
         from: null,
@@ -62,13 +83,13 @@ final class CaptureCountProvider
 
   @$internal
   @override
-  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+  $FutureProviderElement<int?> $createElement($ProviderPointer pointer) =>
       $FutureProviderElement(pointer);
 
   @override
-  FutureOr<int> create(Ref ref) {
+  FutureOr<int?> create(Ref ref) {
     return captureCount(ref);
   }
 }
 
-String _$captureCountHash() => r'7b2fd027b2b8d0835a9729d98d014923ec59ed6e';
+String _$captureCountHash() => r'70d0a4378769c41b0650229ee547581cac00fdbc';

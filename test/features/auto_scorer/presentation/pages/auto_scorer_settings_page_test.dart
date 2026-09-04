@@ -1,6 +1,10 @@
 import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_service.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/resolved_model.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_settings_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/capture_count_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
@@ -48,11 +52,42 @@ class _FakeModelUpdateService implements ModelUpdateService {
   Future<void> quarantine(String version, {bool remember = true}) async {}
 }
 
+/// Stands in for the web stubs (#377 §8): a store that can never hold anything.
+/// Only [isSupported] is exercised — the page reads nothing else while it is
+/// false, which is the point of #790.
+class _UnsupportedCaptureStore implements CaptureStore {
+  @override
+  bool get isSupported => false;
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+/// A store that exists but cannot be read — the disk failure behind #790's
+/// first point. Exercises the real `captureCountProvider`, not a stub of it.
+class _UnreadableCaptureStore implements CaptureStore {
+  @override
+  bool get isSupported => true;
+  @override
+  Future<List<CaptureRecord>> list() async =>
+      throw Exception('store unreadable');
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
+class _UnsupportedTraceStore implements SessionTraceStore {
+  @override
+  bool get isSupported => false;
+  @override
+  noSuchMethod(Invocation i) => super.noSuchMethod(i);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   Future<void> pump(WidgetTester tester,
-      {int? captureCount, List<Override> extraOverrides = const []}) async {
+      {int? captureCount,
+      bool realCaptureCount = false,
+      List<Override> extraOverrides = const []}) async {
     // Tall viewport so the whole settings list fits without scrolling — the
     // controls below the fold (capture-mode, toggles) stay tappable.
     tester.view.physicalSize = const Size(1080, 3000);
@@ -63,7 +98,8 @@ void main() {
         overrides: [
           // The real provider opens the on-device capture store; give the tile
           // a number instead of a plugin.
-          captureCountProvider.overrideWith((ref) async => captureCount ?? 0),
+          if (!realCaptureCount)
+            captureCountProvider.overrideWith((ref) async => captureCount ?? 0),
           ...extraOverrides,
         ],
         child: MaterialApp(
@@ -179,5 +215,139 @@ void main() {
     expect(find.textContaining('Update could not be used'), findsOneWidget);
     expect(find.textContaining('Up to date'), findsNothing);
     expect(find.textContaining('Update ready'), findsNothing);
+  });
+
+  // #790 — four rows on this page stated something they had not verified.
+
+  testWidgets('a failed store read is not dressed up as a count in progress',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester, realCaptureCount: true, extraOverrides: [
+      captureStoreProvider.overrideWith((ref) async => _UnreadableCaptureStore()),
+    ]);
+
+    expect(find.text("Couldn't read the photos stored on this device."),
+        findsOneWidget);
+    // "Counting…" never resolves, so it must not be the resting state of a
+    // failure — that is what left the player waiting for a number.
+    expect(find.text('Counting…'), findsNothing);
+  });
+
+  testWidgets('capture-mode names no mode while nothing is being captured',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(const {}); // collection off
+    await pump(tester);
+
+    // Disabled AND unselected: greying it out alone still answered "we capture
+    // your mistakes" when the honest answer is "nothing".
+    expect(modeButton(tester).onSelectionChanged, isNull);
+    expect(modeButton(tester).selected, isEmpty);
+  });
+
+  // Showing no selection (above) means SegmentedButton is in
+  // emptySelectionAllowed mode, which turns a tap on the ALREADY selected
+  // segment into a de-select — it fires the callback with an empty set.
+  testWidgets('re-tapping the current capture mode keeps it, without throwing',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester);
+    expect(modeButton(tester).selected, {CaptureMode.partial});
+
+    await tester.ensureVisible(find.text('Mistakes only'));
+    await tester.tap(find.text('Mistakes only'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(modeButton(tester).selected, {CaptureMode.partial});
+  });
+
+  testWidgets('capture-mode names its mode again once collection is on',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester);
+
+    expect(modeButton(tester).selected, {CaptureMode.partial});
+  });
+
+  testWidgets('the record toggle owns up when only one pipeline is on',
+      (tester) async {
+    // A pre-#686 install: the two opt-ins were separate controls, so one can be
+    // on alone. The unified switch then claims both behaviours.
+    SharedPreferences.setMockInitialValues({
+      'auto_scorer_record_sessions': true,
+      'auto_scorer_collect_training_data': false,
+    });
+    await pump(tester);
+
+    expect(find.textContaining('Partly on:'), findsOneWidget);
+  });
+
+  testWidgets('the record toggle makes its full claim when both agree',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'auto_scorer_record_sessions': true,
+      'auto_scorer_collect_training_data': true,
+    });
+    await pump(tester);
+
+    expect(find.textContaining('Partly on:'), findsNothing);
+    expect(find.textContaining('Store board photos'), findsOneWidget);
+  });
+
+  testWidgets('says so when auto-scoring is off', (tester) async {
+    SharedPreferences.setMockInitialValues({'auto_scorer_use': false});
+    await pump(tester);
+    expect(find.textContaining('Auto-scoring is off.'), findsOneWidget);
+  });
+
+  testWidgets('stays quiet about the master switch when it is on',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({'auto_scorer_use': true});
+    await pump(tester);
+    expect(find.textContaining('Auto-scoring is off.'), findsNothing);
+  });
+
+  testWidgets('the export says so when the store cannot be read',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_collect_training_data': true});
+    await pump(tester, extraOverrides: [
+      captureStoreProvider
+          .overrideWith((ref) async => _UnreadableCaptureStore()),
+    ]);
+
+    await tester.ensureVisible(find.text('Export recordings'));
+    await tester.tap(find.text('Export recordings'));
+    await tester.pumpAndSettle();
+
+    // The read used to throw out of the handler as an unhandled async error:
+    // no snackbar, no progress, the tap simply did nothing.
+    expect(tester.takeException(), isNull);
+    expect(find.text('Export failed. Please try again.'), findsOneWidget);
+  });
+
+  testWidgets('offers no recording, counter or export without a store',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(const {});
+    await pump(tester, extraOverrides: [
+      captureStoreProvider.overrideWith((ref) async => _UnsupportedCaptureStore()),
+      sessionTraceStoreProvider
+          .overrideWith((ref) async => _UnsupportedTraceStore()),
+    ]);
+
+    // On web both stores are no-op stubs, so the whole block promised an
+    // on-device archive that could never exist.
+    expect(find.text('Record for debugging & training'), findsNothing);
+    expect(find.text('Your contribution'), findsNothing);
+    expect(find.text('Export recordings'), findsNothing);
+    // The detection controls below it are unaffected — they tune the live
+    // camera, which does not need a store.
+    expect(find.textContaining('Calibration confidence'), findsOneWidget);
+    // ...and the master-switch notice must not point at an export and a counter
+    // that this very gating just removed from the page.
+    expect(find.textContaining('export'), findsNothing);
   });
 }
