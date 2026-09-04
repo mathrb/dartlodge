@@ -315,6 +315,82 @@ void main() {
       expect(svc.status, ModelUpdateStatus.updateReady);
     });
 
+    // The loop #785 was filed for: without the record this manifest looks like
+    // a fresh update at every launch.
+    test('a quarantined version is never downloaded again', () async {
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round26_withcal');
+      serve(manifest()); // same version
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 0);
+      expect(svc.store.read(), isNull);
+      expect(svc.status, ModelUpdateStatus.updateRejected);
+    });
+
+    // The rejection is a fact about that version whatever the manifest's
+    // contract says. Behind the compatibility gate this settled back to
+    // upToDate and the player lost the message they had just been shown.
+    test('an incompatible manifest still reports a quarantined version',
+        () async {
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round26_withcal');
+      serve(manifest(contract: 999));
+      await svc.checkAndStage();
+
+      expect(http.binaryCalls, 0);
+      expect(svc.store.readQuarantined(), 'dart_round26_withcal');
+      expect(svc.status, ModelUpdateStatus.updateRejected);
+    });
+
+    // A later app release can promote a model into the bundle. The rejection
+    // was a verdict on a downloaded artifact, not on the asset shipped in the
+    // APK, so the record must not outlive that promotion.
+    test('promoting a quarantined version into the bundle clears the record',
+        () async {
+      final svc = await service();
+      await svc.store.writeQuarantined(kAutoScorerModelVersion);
+      serve(manifest(version: kAutoScorerModelVersion));
+      await svc.checkAndStage();
+
+      expect(svc.store.readQuarantined(), isNull);
+      expect(http.binaryCalls, 0);
+      expect(svc.status, ModelUpdateStatus.upToDate);
+    });
+
+    test('a newer version clears the quarantine and stages normally', () async {
+      final svc = await service();
+      await svc.store.writeQuarantined('dart_round26_withcal');
+      serve(manifest(version: 'dart_round27_withcal'));
+      await svc.checkAndStage();
+
+      // One bad model must not block the ones published after it.
+      expect(svc.store.readQuarantined(), isNull);
+      expect(svc.store.read()?.version, 'dart_round27_withcal');
+      expect(svc.status, ModelUpdateStatus.updateReady);
+    });
+
+    test('a contract bump does not record the staged model as rejected',
+        () async {
+      final svc = await service();
+      await stageFile(
+          svc,
+          const StagedModelState(
+            version: 'dart_round26_withcal',
+            contract: kAutoScorerModelContract + 1,
+            sha256: 'abc',
+            sizeBytes: 100,
+          ));
+      // The same version, republished for this app's contract, must still be
+      // accepted: a contract bump is housekeeping, not a verdict on the model.
+      serve(manifest());
+      await svc.checkAndStage();
+
+      expect(svc.store.readQuarantined(), isNull);
+      expect(svc.store.read()?.version, 'dart_round26_withcal');
+      expect(svc.status, ModelUpdateStatus.updateReady);
+    });
+
     test('non-Android never downloads', () async {
       final svc = await service(isAndroid: false);
       serve(manifest());
@@ -383,6 +459,29 @@ void main() {
     expect(await File(svc.stagedPathFor(staged.version)).exists(), isFalse);
     expect(svc.store.read(), isNull);
     expect((await svc.resolve()).origin, ModelOrigin.bundled);
+    expect(svc.status, ModelUpdateStatus.updateRejected);
+  });
+
+  // #785: clearing the staged state alone leaves nothing to tell a rejected
+  // version from one never seen, so the next launch would fetch it again.
+  test('quarantine records the version, and the record outlives the store',
+      () async {
+    final svc = await service();
+    await stageFile(svc, staged);
+    await svc.quarantine(staged.version);
+    expect(svc.store.readQuarantined(), staged.version);
+
+    // A second store over the same prefs stands in for the next app launch.
+    final reborn = StagedModelStore(await SharedPreferences.getInstance());
+    expect(reborn.readQuarantined(), staged.version);
+  });
+
+  test('quarantine with remember: false leaves no record', () async {
+    final svc = await service();
+    await stageFile(svc, staged);
+    await svc.quarantine(staged.version, remember: false);
+    expect(svc.store.read(), isNull);
+    expect(svc.store.readQuarantined(), isNull);
   });
 
   test('isSupported reflects the Android flag', () async {

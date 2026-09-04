@@ -516,6 +516,8 @@
   "autoScorerModelDownloading": "Ricerca di un aggiornamento…",
   "autoScorerModelUpdateReady": "Aggiornamento pronto, verrà applicato alla prossima sessione",
   "autoScorerModelCheckFailed": "Ultima ricerca non riuscita",
+  "autoScorerModelRejected": "Aggiornamento non utilizzabile",
+  "autoScorerModelRejectedNotice": "Questo aggiornamento del modello non si è caricato. È stato rimosso e il punteggio continua con il modello incluso nell'app.",
   "autoScorerModelLoopNote": "I modelli riaddestrati arrivano qui da soli. Il tuo telefono non impara mai mentre giochi.",
   "autoScorerModelCheckNow": "Controlla",
   "autoScorerExportUnavailable": "L'esportazione non è disponibile qui.",

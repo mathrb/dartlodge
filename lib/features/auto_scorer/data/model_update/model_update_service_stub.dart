@@ -26,7 +26,7 @@ class _UnsupportedModelUpdateService implements ModelUpdateService {
   Future<void> checkAndStage() async {}
 
   @override
-  Future<void> quarantine(String version) async {}
+  Future<void> quarantine(String version, {bool remember = true}) async {}
 }
 
 Future<ModelUpdateService> openModelUpdateService(SharedPreferences prefs) async =>

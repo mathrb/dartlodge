@@ -516,6 +516,8 @@
   "autoScorerModelDownloading": "Suche nach Update…",
   "autoScorerModelUpdateReady": "Update bereit, wird in der nächsten Sitzung angewendet",
   "autoScorerModelCheckFailed": "Letzte Suche fehlgeschlagen",
+  "autoScorerModelRejected": "Update nicht verwendbar",
+  "autoScorerModelRejectedNotice": "Dieses Modell-Update ließ sich nicht laden. Es wurde entfernt, die Erkennung läuft mit dem mitgelieferten Modell weiter.",
   "autoScorerModelLoopNote": "Neu trainierte Modelle kommen von selbst hierher. Dein Telefon lernt nie, während du spielst.",
   "autoScorerModelCheckNow": "Jetzt prüfen",
   "autoScorerExportUnavailable": "Export ist hier nicht verfügbar.",

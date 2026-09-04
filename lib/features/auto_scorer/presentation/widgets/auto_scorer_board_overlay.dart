@@ -237,11 +237,26 @@ class _AutoScorerBoardOverlayState
 
   /// A staged OTA model failed to load natively (#715). The view already fell
   /// back to the bundled asset for this session; persist the quarantine (delete
-  /// + clear staged state) so future sessions also use bundled, and refresh the
-  /// resolver. No-op unless a staged model was in play.
+  /// + clear staged state, and record the version so it is never fetched again)
+  /// so future sessions also use bundled, and refresh the resolver. No-op unless
+  /// a staged model was in play.
+  ///
+  /// The player is told, because the settings row had promised them this update
+  /// (#785). A snackbar is the right weight for it: this fires when a camera
+  /// view mounts, never mid-inference, and the board pages already raise
+  /// snackbars during play for a bust. (#715's "never mid-game" is about when a
+  /// staged model takes effect, not about staying silent.)
   Future<void> _onModelLoadFailed() async {
     final resolved = _resolvedModel;
     if (resolved == null || resolved.origin != ModelOrigin.staged) return;
+    // Captured before the await: context is unsafe to touch afterwards. Both
+    // are best-effort, and deliberately do not gate the quarantine below: if
+    // this ever runs unmounted, losing the snackbar is acceptable and losing
+    // the quarantine is not, since the record is what stops the failing model
+    // being downloaded again on every launch.
+    final messenger = mounted ? ScaffoldMessenger.maybeOf(context) : null;
+    final message =
+        mounted ? AppLocalizations.of(context).autoScorerModelRejectedNotice : null;
     // Refresh the snapshot so any later mount this session (e.g. the preview
     // after an aim-view failure, or a re-aim) uses the bundled path/version —
     // otherwise it would re-point at the just-quarantined staged file.
@@ -250,6 +265,13 @@ class _AutoScorerBoardOverlayState
     await service.quarantine(resolved.version);
     if (!mounted) return;
     ref.invalidate(resolvedModelProvider);
+    // Without this the row keeps showing "Update ready, applies next session"
+    // beside the bundled version it just fell back to: the controller only
+    // re-reads the service status on build or an explicit check.
+    ref.invalidate(modelUpdateControllerProvider);
+    if (messenger != null && message != null) {
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+    }
   }
 
   /// Push the fullscreen aim step and return how it ended. Shared by the

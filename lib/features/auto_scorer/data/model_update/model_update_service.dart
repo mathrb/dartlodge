@@ -19,6 +19,12 @@ enum ModelUpdateStatus {
   /// next launch retries. Distinct from [upToDate] so the settings row stops
   /// reporting a failed check as a successful one (#782).
   checkFailed,
+
+  /// A model downloaded and verified, then failed to load natively when the
+  /// session that would have used it started. It has been discarded and will
+  /// not be fetched again; the bundled model stays in use. Distinct from
+  /// [checkFailed] because nothing about the check failed (#785).
+  updateRejected,
 }
 
 /// Resolves and updates the auto-scorer detection model out-of-band (#715).
@@ -40,9 +46,16 @@ abstract class ModelUpdateService {
   /// next session. Silent and best-effort — never throws.
   Future<void> checkAndStage();
 
-  /// Delete a staged model that failed to load natively and clear its persisted
-  /// state, so the resolver falls back to bundled and never retries it.
-  Future<void> quarantine(String version);
+  /// Delete a staged model and clear its persisted state, so the resolver falls
+  /// back to bundled and never loads that file again.
+  ///
+  /// [remember] additionally records the version so the *updater* never fetches
+  /// it again;
+  /// leave it true for a real rejection. The contract-bump housekeeping inside
+  /// `checkAndStage` passes false: dropping a model made stale by a new app
+  /// version is not a verdict on that model, which may well be republished for
+  /// the new contract under the same version string.
+  Future<void> quarantine(String version, {bool remember = true});
 
   /// The current lifecycle status for the settings row.
   ModelUpdateStatus get status;

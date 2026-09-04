@@ -119,6 +119,8 @@ class _AutoScorerSettingsPageState
         return l10n.autoScorerModelUpdateReady;
       case ModelUpdateStatus.checkFailed:
         return l10n.autoScorerModelCheckFailed;
+      case ModelUpdateStatus.updateRejected:
+        return l10n.autoScorerModelRejected;
     }
   }
 
