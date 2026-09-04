@@ -132,10 +132,27 @@ class _AutoScorerSettingsPageState
     final collect = ref.watch(dataCollectionEnabledProvider);
     final captureMode = ref.watch(captureModeSettingProvider);
     final collectOn = collect.value ?? false;
+    final recordSessionsOn = recordSessions.value ?? false;
     // The single "Record" toggle (#686) reflects either underlying opt-in being
     // on, and drives both together via _setRecording.
-    final recordingOn = collectOn || (recordSessions.value ?? false);
+    final recordingOn = collectOn || recordSessionsOn;
+    // ...but they are independent preferences, and an install that predates the
+    // unified toggle can hold only one of them. The switch then claims both
+    // behaviours while half of them run, so say so rather than let the ON state
+    // overstate it (#790). Unreachable from a fresh install — _setRecording
+    // always writes the pair.
+    final recordingPartial = collectOn != recordSessionsOn;
     final recordingBusy = collect.isLoading || recordSessions.isLoading;
+    // Both pipelines write through a store that is a no-op stub on web (#377
+    // §8). Offering the toggle, the counter and the export there would promise
+    // an on-device archive that can never exist, so the whole block is hidden
+    // once we know neither store can hold anything. `null` while the stores
+    // open — the block stays up so it never flickers away on a real device.
+    final captureSupported = ref.watch(captureStoreProvider).value?.isSupported;
+    final traceSupported =
+        ref.watch(sessionTraceStoreProvider).value?.isSupported;
+    final storageUnavailable =
+        captureSupported == false && traceSupported == false;
     final calConf = ref.watch(autoScorerCalConfidenceProvider);
     final dartConf = ref.watch(autoScorerDartConfidenceProvider);
     final technical = ref.watch(autoScorerTechnicalDisplayProvider);
@@ -145,6 +162,33 @@ class _AutoScorerSettingsPageState
       appBar: AppBar(title: Text(l10n.autoScorerTitle)),
       body: ListView(
         children: [
+          // Nothing below is hidden or disabled when auto-scoring is off (#790):
+          // the export, the contribution counter and the clear prompt all act on
+          // frames ALREADY on the device, and locking them behind the master
+          // switch would strand that data. State the fact once instead, so the
+          // live controls aren't read as "this is running right now".
+          if (useAuto.value == false)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.autoScorerDisabledNotice,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           // Camera setup tips first (#686): the first thing a new user should
           // read before turning auto-scoring on. Review-only — see the tile's
           // note below; the one-time prompt lives on the game-flow path.
@@ -179,6 +223,7 @@ class _AutoScorerSettingsPageState
                     .read(autoAdvanceOnClearEnabledProvider.notifier)
                     .setEnabled(v),
           ),
+          if (!storageUnavailable) ...[
           const Divider(),
           // Single "Record (debug)" opt-in (#686): one toggle drives BOTH the
           // lightweight session trace (detections + game events, to replay a
@@ -187,7 +232,9 @@ class _AutoScorerSettingsPageState
           SwitchListTile(
             secondary: const Icon(Icons.fiber_manual_record_outlined),
             title: Text(l10n.autoScorerRecordTitle),
-            subtitle: Text(l10n.autoScorerRecordSubtitle),
+            subtitle: Text(recordingPartial
+                ? l10n.autoScorerRecordPartial
+                : l10n.autoScorerRecordSubtitle),
             value: recordingOn,
             onChanged: recordingBusy ? null : _setRecording,
           ),
@@ -209,7 +256,14 @@ class _AutoScorerSettingsPageState
                       value: CaptureMode.partial,
                       label: Text(l10n.autoScorerCaptureModeMistakes)),
                 ],
-                selected: {captureMode.value ?? CaptureMode.partial},
+                // With collection off this policy governs nothing, so it
+                // shows no selection rather than naming a mode that is not in
+                // force (#790) — greying it out alone still answered "we
+                // capture your mistakes" when the answer is "nothing".
+                emptySelectionAllowed: true,
+                selected: collectOn
+                    ? {captureMode.value ?? CaptureMode.partial}
+                    : const <CaptureMode>{},
                 onSelectionChanged: (!collectOn || captureMode.isLoading)
                     ? null
                     : (selection) => ref
@@ -227,11 +281,15 @@ class _AutoScorerSettingsPageState
             title: Text(l10n.autoScorerContributionsTitle),
             subtitle: Text(
               ref.watch(captureCountProvider).when(
-                    data: (n) => l10n.autoScorerContributionsSubtitle(n),
+                    // Null = the store could not be read (#790). Never block the
+                    // page on it, but don't dress the failure as a count still
+                    // running either: "Counting…" never resolves, so the player
+                    // waits for a number that is not coming.
+                    data: (n) => n == null
+                        ? l10n.autoScorerContributionsUnavailable
+                        : l10n.autoScorerContributionsSubtitle(n),
                     loading: () => l10n.autoScorerContributionsLoading,
-                    // Never block the page on a store read; the export tile
-                    // below is what actually matters here.
-                    error: (_, __) => l10n.autoScorerContributionsLoading,
+                    error: (_, __) => l10n.autoScorerContributionsUnavailable,
                   ),
             ),
           ),
@@ -255,6 +313,7 @@ class _AutoScorerSettingsPageState
                 : Text(l10n.autoScorerExportSubtitle),
             onTap: _exporting ? null : () => _export(context),
           ),
+          ],
           const Divider(),
           // Detection thresholds (#377 §3). The model's recall is measured at a
           // near-zero eval threshold, so a lower operating threshold recovers
@@ -466,6 +525,15 @@ class _ConfidenceSlider extends StatefulWidget {
 
 class _ConfidenceSliderState extends State<_ConfidenceSlider> {
   double? _dragValue;
+
+  // Deliberately NOT nuanced while the preference loads (#790, audit point 4).
+  // The title states a number the caller defaulted to, so for the frame or two
+  // a SharedPreferences read takes it can name a value that is not the player's.
+  // Reviewed and left as is: the window is never observed, and the same
+  // `value ?? default` shape backs every other row on this page — spelling
+  // "loading" into one control and not the rest would read as inconsistent for
+  // no gain. The failure worth fixing was the one that never resolves (the
+  // contribution row's error branch), not the one that resolves in a frame.
 
   @override
   Widget build(BuildContext context) {
