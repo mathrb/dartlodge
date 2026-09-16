@@ -97,7 +97,7 @@ dev_dependencies:
   # analyzer 12. freezed is a build-time-only codegen dep and its output is
   # committed + covered by the test suite; drop the prerelease once a freezed
   # stable supports analyzer 12 (#126).
-  freezed: ^3.2.5
+  freezed: ">=3.2.5 <5.0.0"
   json_serializable: ^6.12.0
   drift_dev: ^2.34.0
   
