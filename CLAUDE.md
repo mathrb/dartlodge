@@ -213,6 +213,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 - **Route every displayed number through `StatFormatter`** (`lib/core/utils/stat_formatter.dart`) — `test.yml` greps `lib/features/*/presentation/` for `toStringAsFixed` and fails CI on ANY match. Detail → `docs/rules/statistics.md`.
 - **Spec edits touch only the spec** — never code, unless explicitly asked.
 - **After any UI refactor, update the test expectations in the same session** before committing.
+- **GitHub issues go through `/refine-issue`** (`.claude/skills/refine-issue/`) — English, `type(scope): …` titles, symptom-only bodies, created only after explicit sign-off.
 
 ### Rules Index — open the matching file before working in that area
 
