@@ -6,7 +6,10 @@ web/
 android/
 releases/
 tools/apk-server/
-.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/refine-issue/
 .claude.local.md
 .remember/
 *.iml
