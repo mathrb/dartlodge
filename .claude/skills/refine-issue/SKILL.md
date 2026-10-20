@@ -19,7 +19,7 @@ Take whatever the user gives: free text, a finding from `/plan` or a review, a s
 
 - **Duplicates.** Search open *and* closed issues with a few keyword variants:
   `gh issue list --repo mathrb/dartlodge --state all --search "<keywords>" --limit 20`
-  If one looks like the same thing, show it and offer: link to it, reopen it, or go ahead anyway. If an existing issue is related but too narrow, that is the superseding case in `epic.md`.
+  If one looks like the same thing, show it and offer: link to it, reopen it (only on explicit go-ahead: `gh issue reopen <n> --repo mathrb/dartlodge`), or go ahead anyway. If an existing issue is related but too narrow, that is the superseding case in `epic.md`.
 - **Code, to ask better questions.** Read just enough code to know the real extent of the symptom (does it hit other game types, other platforms, other screens?). Use what you learn to sharpen questions. **Nothing learned from the code goes into the ticket body.**
 - **Live repro (optional).** If the bug is reproducible on Flutter web, *offer* a repro in Chrome with the `playwright-cli` skill. Never impose it. Skip the offer for device-only areas (camera, auto-scorer, OTA, native plugins).
 
@@ -37,7 +37,7 @@ Decide here whether this is **one issue or an epic**. Propose a split when there
 
 ### 4. Draft
 
-Read `format.md` and write the draft (for an epic, also read `epic.md`). Show the full draft in the terminal: title, labels, body.
+Read `format.md` and write the draft (for an epic, also read `epic.md`). Do not show it yet.
 
 ### 5. Self-check (before showing the draft)
 
@@ -48,7 +48,7 @@ Read `format.md` and write the draft (for an epic, also read `epic.md`). Show th
 - [ ] Exactly one of P0/P1/P2, justified in "Why Px"
 - [ ] Every label exists (`gh label list --repo mathrb/dartlodge --limit 100`); if one is missing, tell the user instead of inventing it
 
-Fix anything that fails before showing the draft.
+Fix anything that fails, then show the full draft in the terminal: title, labels, body. For an epic, run the self-check on the epic and on every child, then show the whole set.
 
 ### 6. Gate
 

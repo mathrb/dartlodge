@@ -31,7 +31,7 @@ Each sub-issue gets its own fresh `/plan` analysis before coding.
 <Optional.>
 ```
 
-The epic title follows `format.md` (`feat(scope): …` or `fix(scope): …`) and carries the same labels rules.
+The epic title follows `format.md` (`feat(scope): …` or `fix(scope): …`) and follows the same label rules.
 
 ## Children
 
@@ -41,11 +41,11 @@ The epic title follows `format.md` (`feat(scope): …` or `fix(scope): …`) and
 
 ## Gate
 
-Show the whole set — epic plus every child — and get one explicit go-ahead for all of it.
+Show the whole set — the epic, every child, and, when superseding, the old issue number plus the exact closing comment — and get one explicit go-ahead for all of it. Closing the old issue is never done without that go-ahead.
 
 ## Creation order
 
-1. Create the epic first with a placeholder delivery list (child titles, no numbers).
+1. Create the epic first with a placeholder delivery list: `- [ ] <child title>` lines, with no `#` at all (an ordinal like `#1` would link an unrelated issue).
 2. Create each child in delivery order, with `Part of #<epic>`.
 3. Edit the epic body so the delivery list carries the real `#numbers`:
    `gh issue edit <epic> --repo mathrb/dartlodge --body-file <scratchpad>/epic.md`

@@ -20,7 +20,7 @@ English, always — even when the conversation is in French.
   - `P0` — wrong user-facing output or broken core flow
   - `P1` — correctness or architectural inconsistency
   - `P2` — hygiene: anti-patterns, dead code, doc drift
-- Area labels that already exist and fit (`ui`, `testing`, `data`, `domain`, `documentation`…). Never invent one; if a needed label is missing, tell the user.
+- Area labels that already exist and describe the user-facing area (`ui`, `testing`, `documentation`…). Do not use architecture-layer labels (`domain`, `data`, `presentation`, `state management`, `use case`, `router`) or `refactor`: they imply a diagnosis. Never invent a label; if a needed one is missing, tell the user.
 
 ## Body — bug
 
