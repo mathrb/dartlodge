@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dartboard_scorer.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/board_clear_wait.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker_config.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -251,6 +252,28 @@ void main() {
           reason: 'a several-second empty board is a real pull');
       expect(tracker.confirmedDarts, isEmpty);
     });
+
+    // #800: each auto-advance preset clears a genuine pull on exactly its
+    // frame count, and a streak one frame shorter keeps the dart.
+    for (final wait in BoardClearWait.values) {
+      test('preset ${wait.name} clears after exactly ${wait.frames} empty frames (#800)',
+          () {
+        final tracker = DartTracker(
+            config: DartTrackerConfig(emptyFramesToRebaseline: wait.frames));
+        final dart = seg(11, rSingle);
+        tracker.processFrame(frame([dart]));
+        tracker.processFrame(frame([dart])); // confirmed
+
+        for (var i = 0; i < wait.frames - 1; i++) {
+          final e = tracker.processFrame(frame(const []));
+          expect(e.status.phase, isNot(TrackerPhase.rebaselined),
+              reason: 'empty frame ${i + 1} of ${wait.frames} must not clear');
+        }
+        final last = tracker.processFrame(frame(const []));
+        expect(last.status.phase, TrackerPhase.rebaselined);
+        expect(tracker.confirmedDarts, isEmpty);
+      });
+    }
 
     test('manual removeDarts clears the board but not the turn counter', () {
       final tracker = DartTracker();

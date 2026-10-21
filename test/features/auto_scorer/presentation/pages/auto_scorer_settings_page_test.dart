@@ -4,6 +4,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.da
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/model_update/resolved_model.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/board_clear_wait.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/session_recording_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/pages/auto_scorer_settings_page.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/capture_count_provider.dart';
@@ -349,5 +350,50 @@ void main() {
     // ...and the master-switch notice must not point at an export and a counter
     // that this very gating just removed from the page.
     expect(find.textContaining('export'), findsNothing);
+  });
+
+  SegmentedButton<BoardClearWait> clearWaitButton(WidgetTester tester) =>
+      tester.widget<SegmentedButton<BoardClearWait>>(
+          find.byType(SegmentedButton<BoardClearWait>));
+
+  testWidgets('board-clear wait names no preset while auto-advance is off',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(const {}); // auto-advance off
+    await pump(tester);
+
+    expect(clearWaitButton(tester).onSelectionChanged, isNull);
+    expect(clearWaitButton(tester).selected, isEmpty);
+  });
+
+  testWidgets('board-clear wait defaults to Normal and switches to Fast (#800)',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_auto_advance_on_clear': true});
+    await pump(tester);
+
+    expect(clearWaitButton(tester).selected, {BoardClearWait.normal});
+    expect(clearWaitButton(tester).onSelectionChanged, isNotNull);
+
+    await tester.ensureVisible(find.text('Fast'));
+    await tester.tap(find.text('Fast'));
+    await tester.pumpAndSettle();
+
+    expect(clearWaitButton(tester).selected, {BoardClearWait.fast});
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('auto_scorer_board_clear_wait'), 'fast');
+  });
+
+  testWidgets('re-tapping the current board-clear wait keeps it',
+      (tester) async {
+    SharedPreferences.setMockInitialValues(
+        {'auto_scorer_auto_advance_on_clear': true});
+    await pump(tester);
+
+    await tester.ensureVisible(find.text('Normal'));
+    await tester.tap(find.text('Normal'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(clearWaitButton(tester).selected, {BoardClearWait.normal});
   });
 }

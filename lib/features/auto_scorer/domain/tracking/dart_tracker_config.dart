@@ -34,6 +34,9 @@ class DartTrackerConfig {
   /// still clears normally. A too-short window (the old default of 3 ≈ 1s) made
   /// a flicker look like a pull → premature turn advance + double-counted dart
   /// (#499).
+  ///
+  /// Auto-advance sessions override this with the player's `BoardClearWait`
+  /// preset (5/6/9 frames, #800); see `emptyFramesToRebaselineFor`.
   final int emptyFramesToRebaseline;
 
   /// Mean per-cal-point image-space displacement (normalised 0–1) above which a

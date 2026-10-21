@@ -1,4 +1,7 @@
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_replayer.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/board_clear_wait.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker_config.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -43,4 +46,51 @@ void main() {
       reason: 'the same physical dart must not be re-emitted as a double',
     );
   });
+
+  // #800: auto-advance lets players shorten the window. Every preset — down to
+  // the shortest — must still ride out this recording's flicker (its worst
+  // dropout on the still-occupied board is ~4 frames).
+  for (final wait in BoardClearWait.values) {
+    test('#800: preset ${wait.name} (${wait.frames} frames) still kills the false clears',
+        () {
+      final bundle = loadBundle('single_dart_d11_flicker');
+      final trace = SessionTrace(
+        header: bundle.trace.header,
+        lines: [
+          for (final line in bundle.trace.lines)
+            if (line case TrackerSegment(:final instance, :final config))
+              TrackerSegment(
+                instance: instance,
+                config: DartTrackerConfig(
+                  matchTolerance: config.matchTolerance,
+                  confirmFrames: config.confirmFrames,
+                  pendingMissTolerance: config.pendingMissTolerance,
+                  emptyFramesToRebaseline: wait.frames,
+                  calShiftThreshold: config.calShiftThreshold,
+                  maxDartsPerTurn: config.maxDartsPerTurn,
+                  noCalibrationFramesToWarn: config.noCalibrationFramesToWarn,
+                ),
+              )
+            else
+              line,
+        ],
+      );
+      final result = const SessionReplayer().replay(trace);
+
+      expect(
+        [for (final f in result.frames) f.replayed.status.phase],
+        isNot(contains(TrackerPhase.rebaselined)),
+        reason: 'a transient empty board must not be treated as a pull',
+      );
+      expect(
+        [
+          for (final f in result.frames)
+            for (final e in f.replayed.newDarts)
+              if (e.emitted) e.segment
+        ],
+        isNot(contains('D11')),
+        reason: 'the same physical dart must not be re-emitted as a double',
+      );
+    });
+  }
 }
