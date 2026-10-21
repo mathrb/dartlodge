@@ -10,7 +10,9 @@ const _kAutoAdvanceOnClearKey = 'auto_scorer_auto_advance_on_clear';
 /// removed from the board (board-clear → `TrackerPhase.rebaselined`), so the
 /// player doesn't press NEXT. Default **off**: changing the game flow
 /// automatically is opt-in, like the other auto-scorer switches. Only consulted
-/// on the YOLOView live-game path (X01 + Cricket).
+/// on the YOLOView live-game path (every board with a `DartInputSink`: X01,
+/// Cricket, practice, count-up). How long "cleared" takes is the separate
+/// `BoardClearWaitSetting` preset (#800).
 @Riverpod(keepAlive: true)
 class AutoAdvanceOnClearEnabled extends _$AutoAdvanceOnClearEnabled {
   @override

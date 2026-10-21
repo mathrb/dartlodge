@@ -7,9 +7,14 @@ import 'package:dart_lodge/features/auto_scorer/domain/framing/aim_outcome.dart'
 import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_alert.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/model_update_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/board_clear_wait.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker_config.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/aim_confirmed_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/board_clear_wait_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/camera_zoom_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/detection_thresholds_provider.dart';
@@ -173,9 +178,23 @@ class _AutoScorerBoardOverlayState
       final resolved = await ref.read(resolvedModelProvider.future);
       if (!mounted) return;
       _resolvedModel = resolved;
+      // Board-clear window (#800): the player's preset when auto-advance is
+      // on, the conservative default otherwise. Snapshotted for the session,
+      // like the model.
+      final autoAdvance =
+          await ref.read(autoAdvanceOnClearEnabledProvider.future);
+      if (!mounted) return;
+      final clearWait = await ref.read(boardClearWaitSettingProvider.future);
+      if (!mounted) return;
       // No predict detector: YOLOView loads its own model. The session just
       // wires the tracker + capture; start() prunes captures to the cap.
       final session = AutoScorerSession(
+        tracker: DartTracker(config: DartTrackerConfig(
+          emptyFramesToRebaseline: emptyFramesToRebaselineFor(
+            autoAdvance: autoAdvance,
+            wait: clearWait,
+          ),
+        )),
         captureStore: store,
         modelVersion: resolved.version,
         traceStore: traceStore,

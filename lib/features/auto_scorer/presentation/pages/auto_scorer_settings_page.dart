@@ -3,8 +3,10 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_record.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_bundle.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/board_clear_wait.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/auto_advance_provider.dart';
+import 'package:dart_lodge/features/auto_scorer/presentation/providers/board_clear_wait_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/capture_count_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/providers/data_collection_provider.dart';
 import 'package:dart_lodge/features/auto_scorer/data/model_update/model_update_service.dart';
@@ -130,6 +132,8 @@ class _AutoScorerSettingsPageState
   Widget build(BuildContext context) {
     final useAuto = ref.watch(autoScoringEnabledProvider);
     final autoAdvance = ref.watch(autoAdvanceOnClearEnabledProvider);
+    final autoAdvanceOn = autoAdvance.value ?? false;
+    final clearWait = ref.watch(boardClearWaitSettingProvider);
     final recordSessions = ref.watch(sessionRecordingEnabledProvider);
     final collect = ref.watch(dataCollectionEnabledProvider);
     final captureMode = ref.watch(captureModeSettingProvider);
@@ -231,6 +235,49 @@ class _AutoScorerSettingsPageState
                 : (v) => ref
                     .read(autoAdvanceOnClearEnabledProvider.notifier)
                     .setEnabled(v),
+          ),
+          // Board-clear wait (#800): how long the board must read empty before
+          // auto-advance fires. Presets, not a slider, so nothing goes below
+          // the #499-safe floor. Only governs auto-advance, so with it off the
+          // control shows no selection rather than a wait that is not in force
+          // (same reasoning as the capture mode, #790).
+          ListTile(
+            leading: const Icon(Icons.timer_outlined),
+            title: Text(l10n.autoScorerClearWaitTitle),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.autoScorerClearWaitSubtitle),
+                const SizedBox(height: 8),
+                SegmentedButton<BoardClearWait>(
+                  segments: [
+                    ButtonSegment(
+                        value: BoardClearWait.fast,
+                        label: Text(l10n.autoScorerClearWaitFast)),
+                    ButtonSegment(
+                        value: BoardClearWait.normal,
+                        label: Text(l10n.autoScorerClearWaitNormal)),
+                    ButtonSegment(
+                        value: BoardClearWait.safe,
+                        label: Text(l10n.autoScorerClearWaitSafe)),
+                  ],
+                  emptySelectionAllowed: true,
+                  selected: autoAdvanceOn
+                      ? {clearWait.value ?? BoardClearWait.normal}
+                      : const <BoardClearWait>{},
+                  onSelectionChanged: (!autoAdvanceOn || clearWait.isLoading)
+                      ? null
+                      : (selection) {
+                          // A re-tap on the selected segment arrives empty
+                          // (emptySelectionAllowed); keep the current wait.
+                          if (selection.isEmpty) return;
+                          ref
+                              .read(boardClearWaitSettingProvider.notifier)
+                              .setWait(selection.first);
+                        },
+                ),
+              ],
+            ),
           ),
           if (!storageUnavailable) ...[
           const Divider(),

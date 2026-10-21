@@ -1804,6 +1804,26 @@
   "@autoScorerAutoAdvanceSubtitle": {
     "description": "Subtitle for the auto-advance toggle"
   },
+  "autoScorerClearWaitTitle": "Board-clear wait",
+  "@autoScorerClearWaitTitle": {
+    "description": "Label for the board-clear wait selector (how long the board must read empty before auto-advance)"
+  },
+  "autoScorerClearWaitSubtitle": "How long the board must look empty before the turn moves on: Fast ≈ 1.7 s, Normal 2 s, Safe 3 s. Pick Safe if the turn sometimes moves on while a dart is still in the board (beta).",
+  "@autoScorerClearWaitSubtitle": {
+    "description": "Help text for the board-clear wait selector; keep the (beta) marker"
+  },
+  "autoScorerClearWaitFast": "Fast",
+  "@autoScorerClearWaitFast": {
+    "description": "Board-clear wait option: shortest wait (about 1.7 seconds)"
+  },
+  "autoScorerClearWaitNormal": "Normal",
+  "@autoScorerClearWaitNormal": {
+    "description": "Board-clear wait option: default wait (2 seconds)"
+  },
+  "autoScorerClearWaitSafe": "Safe",
+  "@autoScorerClearWaitSafe": {
+    "description": "Board-clear wait option: longest wait (3 seconds), for flaky detection"
+  },
   "autoScorerRecordTitle": "Record for debugging & training",
   "@autoScorerRecordTitle": {
     "description": "Toggle: record board photos + detection stream for debugging and model training"
