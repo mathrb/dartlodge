@@ -25,7 +25,9 @@ enum BoardClearWait {
 /// The preset only applies when auto-advance is on — that's the one flow where
 /// a shorter window buys anything. With auto-advance off a board-clear just
 /// rebaselines the tracker, so it keeps the conservative default and takes on
-/// none of the #499 double-count risk.
+/// none of the #499 double-count risk. Both inputs are read once, when the
+/// session starts: toggling auto-advance mid-session keeps the session's window
+/// until the camera is restarted.
 int emptyFramesToRebaselineFor({
   required bool autoAdvance,
   required BoardClearWait wait,
