@@ -18,6 +18,7 @@ import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/cricket_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_cricket_game_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_cricket_game_state.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/camera_first_body_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/cricket_marks_strip_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/cricket_unified_table_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
@@ -903,27 +904,49 @@ void main() {
     expect(sound.cues, [SoundCue.dartMiss]);
   });
 
-  // ── Camera region floor on the worst screen + font (#769) ───────────────────
+  // ── Camera-first on the worst screen + font (#801) ──────────────────────────
 
-  group('camera-first fits the smallest screen (#769)', () {
-    testWidgets('320x568 at font x1.5: no overflow, camera stays usable',
+  group('camera-first keeps everything on screen (#801)', () {
+    testWidgets('320x568 at font x1.5, four players: nothing scrolls, all on screen',
         (tester) async {
-      // The same body as the other three boards, so it inherits the same fix:
-      // the content scrolls, the camera keeps a floor. Measured on X01 before
-      // the fix, this configuration overflowed and left the camera nothing.
+      // The same body as the other three boards, so it inherits the same rule:
+      // the content never scrolls, the camera gives way down to its floor, and
+      // past that the content scales down rather than leaving the screen.
       tester.view.physicalSize = const Size(320, 568) * 3;
       tester.view.devicePixelRatio = 3.0;
       tester.platformDispatcher.textScaleFactorTestValue = 1.5;
       addTearDown(tester.view.reset);
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-      final notifier = _FakeActiveCricketGameNotifier(_activeState());
+      final notifier = _FakeActiveCricketGameNotifier(_activeState(
+        gameState: _cricketState(competitors: [
+          _competitor(id: 'c1', name: 'Alice'),
+          _competitor(id: 'c2', name: 'Charlie'),
+          _competitor(id: 'c3', name: 'Dorothy'),
+          _competitor(id: 'c4', name: 'Eleanor'),
+        ]),
+      ));
       await tester.pumpWidget(_buildAppCameraFirst(notifier));
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
-          greaterThanOrEqualTo(190.0));
+      expect(
+        find.descendant(
+            of: find.byType(CameraFirstBody), matching: find.byType(Scrollable)),
+        findsNothing,
+      );
+      for (final type in [CricketMarksStripWidget, ProminentDartBandWidget]) {
+        final r = tester.getRect(find.byType(type).first);
+        expect(r.top, greaterThanOrEqualTo(0.0), reason: '$type');
+        expect(r.bottom, lessThanOrEqualTo(568.0), reason: '$type');
+      }
+      final body = tester.getSize(find.byType(CameraFirstBody)).height;
+      expect(
+        tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+        greaterThanOrEqualTo(
+            (body * kMaxCameraRegionFraction).clamp(0, kMinCameraRegionHeight) -
+                0.01),
+      );
     });
   });
 }

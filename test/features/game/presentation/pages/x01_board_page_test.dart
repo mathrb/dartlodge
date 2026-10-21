@@ -316,146 +316,133 @@ void _setPhoneViewport(WidgetTester tester) {
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 void main() {
-  // ── 0. Camera region floor + scrolling content across screens and fonts ─────
+  // ── 0. Camera-first: scores never scroll, the camera gives way (#801) ─────
 
-  group('camera-first fits every screen and font size (#769)', () {
-    // The table this sweep reproduces was measured on this very layout before
-    // the fix: at 320x568 the camera region got 73dp, and with the system font
-    // at 150% the column overflowed by 51px and the region got nothing at all.
-    // The board grows a scroll instead, and the region keeps a floor.
+  group('camera-first keeps every score on screen (#801)', () {
+    // #769 gave the camera a 260dp floor and let the scores scroll, anchored on
+    // the dart band; with three players on an ordinary phone that scrolled the
+    // current player's score off the top. #801 reverses it: the content never
+    // scrolls, the camera gives way down to a smaller floor, and only past that
+    // does the content scale down.
     const screens = [
       Size(320, 568),
       Size(360, 640),
       Size(360, 740),
       Size(393, 851),
+      // The phone #801 was reported on (1080x2400 at 2.75).
+      Size(393, 873),
       Size(412, 892),
     ];
+    const names = ['Alice', 'Charlie', 'Dorothy', 'Eleanor'];
+
+    _FakeActiveGameNotifier players(int count) => _FakeActiveGameNotifier(
+          _activeState(
+            gameState: _gameState(competitors: [
+              for (var i = 0; i < count; i++)
+                _competitor(id: 'c$i', name: names[i]),
+            ]),
+          ),
+        );
+
+    Future<void> pumpAt(
+      WidgetTester tester, {
+      required Size screen,
+      required double textScale,
+      required int playerCount,
+    }) async {
+      tester.view.physicalSize = screen * 3;
+      tester.view.devicePixelRatio = 3.0;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      await tester.pumpWidget(_buildAppCameraFirst(players(playerCount)));
+      await tester.pump();
+    }
+
+    /// Everything a player reads or touches, painted fully on screen — a
+    /// finder alone would also match a widget scrolled or clipped out of view.
+    void expectAllOnScreen(WidgetTester tester, Size screen, String label) {
+      expect(tester.takeException(), isNull, reason: 'overflow at $label');
+      expect(
+        find.descendant(
+            of: find.byType(CameraFirstBody), matching: find.byType(Scrollable)),
+        findsNothing,
+        reason: 'the scores scroll at $label',
+      );
+      for (final type in [HeroMetricWidget, ProminentDartBandWidget]) {
+        final r = tester.getRect(find.byType(type));
+        expect(r.top, greaterThanOrEqualTo(0.0), reason: '$type at $label');
+        expect(r.bottom, lessThanOrEqualTo(screen.height),
+            reason: '$type at $label');
+      }
+      final body = tester.getSize(find.byType(CameraFirstBody)).height;
+      final camera =
+          tester.getSize(find.byKey(const ValueKey('camera-stub'))).height;
+      // Asserted against the constants, not against the number measured
+      // today: a px-level change to the header or the status bar would
+      // otherwise trip this test without the floor having moved.
+      expect(
+          camera,
+          greaterThanOrEqualTo(
+              (body * kMaxCameraRegionFraction).clamp(0, kMinCameraRegionHeight) -
+                  0.01),
+          reason: 'camera region below its floor at $label');
+    }
 
     for (final screen in screens) {
       for (final textScale in [1.0, 1.5]) {
-        final label = '${screen.width.toInt()}x${screen.height.toInt()} '
-            'at font x$textScale';
-        testWidgets('$label: no overflow, camera stays usable', (tester) async {
-          tester.view.physicalSize = screen * 3;
-          tester.view.devicePixelRatio = 3.0;
-          tester.platformDispatcher.textScaleFactorTestValue = textScale;
-          addTearDown(tester.view.reset);
-          addTearDown(
-              tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-          final notifier = _FakeActiveGameNotifier(_activeState());
-          await tester.pumpWidget(_buildAppCameraFirst(notifier));
-          await tester.pump();
-
-          // A RenderFlex overflow is reported as an exception in tests, so an
-          // empty exception box is the assertion that nothing is cut off.
-          expect(tester.takeException(), isNull, reason: 'overflow at $label');
-
-          final camera =
-              tester.getSize(find.byKey(const ValueKey('camera-stub'))).height;
-          // Asserted against the constants, not against the number measured
-          // today: a px-level change to the header or the status bar would
-          // otherwise trip this test without the camera floor having moved.
-          // The smallest screen is the one where the fraction cap binds and
-          // the floor itself cannot be met.
-          final expected = screen.height <= 568
-              ? kMinCameraRegionHeight * kMaxCameraRegionFraction
-              : kMinCameraRegionHeight;
-          expect(camera, greaterThanOrEqualTo(expected),
-              reason: 'camera region too short at $label');
-        });
+        for (final playerCount in [1, 2, 3, 4]) {
+          final label = '${screen.width.toInt()}x${screen.height.toInt()} '
+              'at font x$textScale, $playerCount players';
+          testWidgets('$label: everything on screen, nothing scrolls',
+              (tester) async {
+            await pumpAt(tester,
+                screen: screen, textScale: textScale, playerCount: playerCount);
+            expectAllOnScreen(tester, screen, label);
+          });
+        }
       }
     }
 
+    testWidgets('#801 as reported: three players on 393x873 render unscaled',
+        (tester) async {
+      // The camera gives way before the content shrinks: on this phone the
+      // scores keep their full size and the camera is still above its floor.
+      const screen = Size(393, 873);
+      await pumpAt(tester, screen: screen, textScale: 1.0, playerCount: 3);
+      // The symptom as filed: the hero's top edge was cut off above the body.
+      final body = tester.getRect(find.byType(CameraFirstBody));
+      expect(tester.getRect(find.byType(HeroMetricWidget)).top,
+          greaterThanOrEqualTo(body.top),
+          reason: 'the current player\'s score is cut off at the top');
+      expectAllOnScreen(tester, screen, '#801');
+
+      final hero = find.byType(HeroMetricWidget);
+      expect(tester.getRect(hero).height,
+          closeTo(tester.getSize(hero).height, 0.01),
+          reason: 'the hero score was scaled down');
+      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+          greaterThan(kMinCameraRegionHeight));
+    });
+
     testWidgets('an accessibility font size still fits', (tester) async {
-      // 150% is the size #769 measured, not the largest a phone offers: both
-      // Android and iOS go past 200%. Nothing may overflow there either.
-      tester.view.physicalSize = const Size(320, 568) * 3;
-      tester.view.devicePixelRatio = 3.0;
-      tester.platformDispatcher.textScaleFactorTestValue = 2.0;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-      final notifier = _FakeActiveGameNotifier(_activeState());
-      await tester.pumpWidget(_buildAppCameraFirst(notifier));
-      await tester.pump();
-
-      expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
-          greaterThan(0.0));
-    });
-
-    testWidgets('a full field of players does not push anything off',
-        (tester) async {
-      // The other-players strip is content too, and it is the one part of the
-      // board that grows with the game rather than with the font.
-      tester.view.physicalSize = const Size(320, 568) * 3;
-      tester.view.devicePixelRatio = 3.0;
-      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-      final notifier = _FakeActiveGameNotifier(_activeState(
-        gameState: _gameState(competitors: [
-          _competitor(),
-          _competitor(id: 'c2', name: 'Bob'),
-          _competitor(id: 'c3', name: 'Charlie'),
-          _competitor(id: 'c4', name: 'Dave'),
-        ]),
-      ));
-      await tester.pumpWidget(_buildAppCameraFirst(notifier));
-      await tester.pump();
-
-      expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
-          greaterThanOrEqualTo(
-              kMinCameraRegionHeight * kMaxCameraRegionFraction));
-    });
-
-    testWidgets('what a cramped screen keeps in view is the dart band',
-        (tester) async {
-      // The arbitration: when room runs out the game content cedes by becoming
-      // scrollable. Which half cedes is a product call — the band stays, since
-      // it is the only thing here you touch (manual entry, correction) and it
-      // belongs beside the camera it stands in for. The scores are one flick
-      // up.
-      tester.view.physicalSize = const Size(320, 568) * 3;
-      tester.view.devicePixelRatio = 3.0;
-      tester.platformDispatcher.textScaleFactorTestValue = 1.5;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-
-      final notifier = _FakeActiveGameNotifier(_activeState());
-      await tester.pumpWidget(_buildAppCameraFirst(notifier));
-      await tester.pump();
-
-      // On screen without touching anything: `find.byType` alone would also
-      // match a band scrolled out of view, so assert where it is painted.
-      final band = tester.getRect(find.byType(ProminentDartBandWidget));
-      final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
-      expect(band.top, greaterThanOrEqualTo(0.0));
-      expect(band.bottom, lessThanOrEqualTo(screen.height));
-
-      // And the score is not lost, just scrolled: one flick brings it back.
-      await tester.scrollUntilVisible(find.byType(HeroMetricWidget), -100);
-      expect(tester.takeException(), isNull);
+      // 150% is not the largest a phone offers: both Android and iOS go past
+      // 200%. Nothing may overflow or scroll there either.
+      const screen = Size(320, 568);
+      await pumpAt(tester, screen: screen, textScale: 2.0, playerCount: 4);
+      expectAllOnScreen(tester, screen, 'font x2.0');
     });
 
     testWidgets('a tall screen keeps giving the camera all the slack',
         (tester) async {
       // The floor must not become a ceiling: #760 removed the dead zone by
       // giving the leftover to the preview, and that has to survive.
-      tester.view.physicalSize = const Size(412, 892) * 3;
-      tester.view.devicePixelRatio = 3.0;
-      addTearDown(tester.view.reset);
-
-      final notifier = _FakeActiveGameNotifier(_activeState());
-      await tester.pumpWidget(_buildAppCameraFirst(notifier));
-      await tester.pump();
+      await pumpAt(tester,
+          screen: const Size(412, 892), textScale: 1.0, playerCount: 1);
 
       final camera =
           tester.getSize(find.byKey(const ValueKey('camera-stub'))).height;
-      expect(camera, greaterThan(kMinCameraRegionHeight * 1.5));
+      expect(camera, greaterThan(kMinCameraRegionHeight * 2));
     });
   });
 
