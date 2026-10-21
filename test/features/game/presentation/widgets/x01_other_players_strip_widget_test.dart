@@ -37,4 +37,53 @@ void main() {
 
     expect(find.byType(Text), findsNothing);
   });
+
+  // #801: a second row of chips cost the never-scrolling board ~50dp, and with
+  // three players that was what pushed the hero score off screen.
+  testWidgets('three opponents share one row on a narrow phone', (tester) async {
+    tester.view.physicalSize = const Size(320, 568) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
+      players: [
+        (name: 'Charlie', score: 501, ppr: '58.4'),
+        (name: 'Dorothy', score: 501, ppr: '58.4'),
+        (name: 'Eleanor', score: 501, ppr: '58.4'),
+      ],
+    )));
+
+    expect(tester.takeException(), isNull);
+    final rows = {
+      for (final name in ['CHARLIE', 'DOROTHY', 'ELEANOR'])
+        tester.getRect(find.text(name)).center.dy,
+    };
+    expect(rows, hasLength(1));
+    for (final name in ['CHARLIE', 'DOROTHY', 'ELEANOR']) {
+      final r = tester.getRect(find.text(name));
+      expect(r.left, greaterThanOrEqualTo(0));
+      expect(r.right, lessThanOrEqualTo(320));
+    }
+  });
+
+  testWidgets('four opponents wrap rather than shrink past reading',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 568) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
+      players: [
+        (name: 'Bob', score: 501, ppr: '0'),
+        (name: 'Carol', score: 501, ppr: '0'),
+        (name: 'Dave', score: 501, ppr: '0'),
+        (name: 'Erin', score: 501, ppr: '0'),
+      ],
+    )));
+
+    expect(tester.takeException(), isNull);
+    expect(find.byType(Wrap), findsOneWidget);
+    expect(tester.getRect(find.text('ERIN')).top,
+        greaterThan(tester.getRect(find.text('BOB')).bottom));
+  });
 }

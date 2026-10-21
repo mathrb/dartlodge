@@ -17,65 +17,88 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
   /// pre-formatted live PPR string (#696, e.g. `'58.4'` or `'—'`).
   final List<({String name, int score, String ppr})> players;
 
+  /// The most opponents laid out on a single row (#801).
+  static const int _maxSingleRow = 3;
+
+  static const double _chipSpacing = 6;
+
   @override
   Widget build(BuildContext context) {
     if (players.isEmpty) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
 
+    Widget chip(({String name, int score, String ppr}) p) => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainer,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(
+            alpha: AppTheme.opacityGhostBorderLight,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            p.name.toUpperCase(),
+            style: AppTextStyles.labelMedium.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '${p.score}',
+            maxLines: 1,
+            // Inactive players: the score-tier token (DESIGN_SYSTEM §3.2)
+            // in the inactive `onSurfaceVariant` colour, dimmer than the
+            // active hero, preserving the active/inactive hierarchy.
+            style: AppTextStyles.scoreSmall.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 6),
+          // Live PPR (#696) — small "PPR <v>" caption, muted and smaller
+          // than the opponent's score numeral so it stays secondary.
+          Text(
+            'PPR ${p.ppr}',
+            maxLines: 1,
+            style: AppTextStyles.labelSmall.copyWith(
+              color: cs.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final p in players)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainer,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                border: Border.all(
-                  color: cs.outlineVariant
-                      .withValues(alpha: AppTheme.opacityGhostBorderLight),
-                ),
-              ),
+      // Up to three opponents share one row (#801): a second row cost ~50dp
+      // of a board that must never scroll, and with three players on an
+      // ordinary phone that was what pushed the hero score off screen. A
+      // narrow screen shrinks the row instead of wrapping it. Past three,
+      // one row would shrink the chips past reading, so they wrap.
+      child: players.length <= _maxSingleRow
+          ? FittedBox(
+              fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    p.name.toUpperCase(),
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: cs.onSurfaceVariant,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${p.score}',
-                    maxLines: 1,
-                    // Inactive players: the score-tier token (DESIGN_SYSTEM §3.2)
-                    // in the inactive `onSurfaceVariant` colour, dimmer than the
-                    // active hero, preserving the active/inactive hierarchy.
-                    style: AppTextStyles.scoreSmall.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Live PPR (#696) — small "PPR <v>" caption, muted and smaller
-                  // than the opponent's score numeral so it stays secondary.
-                  Text(
-                    'PPR ${p.ppr}',
-                    maxLines: 1,
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
+                  for (var i = 0; i < players.length; i++) ...[
+                    if (i > 0) const SizedBox(width: _chipSpacing),
+                    chip(players[i]),
+                  ],
                 ],
               ),
+            )
+          : Wrap(
+              alignment: WrapAlignment.center,
+              spacing: _chipSpacing,
+              runSpacing: 8,
+              children: [for (final p in players) chip(p)],
             ),
-        ],
-      ),
     );
   }
 }

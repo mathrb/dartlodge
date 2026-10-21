@@ -2,54 +2,43 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// The height below which the in-game camera region stops teaching the player
-/// anything (#769).
+/// The height the in-game camera region keeps when the game content above it
+/// needs the room (#801, down from #769's 260).
 ///
-/// Derived from what the region has to let you check, and from what the region
-/// actually contains — measured, not estimated. In the ordinary running state
-/// the camera bar takes 48dp, the hint line under it 16dp and the region's own
-/// padding 12dp, so 260dp leaves the image 180dp. Letterboxed into a
-/// phone-width region that renders the board roughly 110dp across, the size
-/// #478 already settles on as readable at the oche. Below that the board is a
-/// smudge and a dart in it is invisible, which is the state #769 was filed
-/// about (73dp on a small screen, 0 with a large font).
+/// #801 settled which half gives way: the game content never scrolls, the
+/// camera shrinks first. #769 had it the other way round, guaranteeing the
+/// camera 260dp and scrolling the content, and with three players on an
+/// ordinary phone that scrolled the current player's score off the top: the
+/// one number a player at the oche reads and cannot scroll back to.
 ///
-/// The image is what gives way in the states that stack more chrome: the lost
-/// calibration alert puts re-aim on its own row (#771), and a 150% system font
-/// grows every row, together taking 164dp of this floor rather than 76dp. A
-/// floor tall enough to keep 180dp of image even there would be about 400dp,
-/// which on a 640dp screen is the whole board. The region cannot solve that
-/// from the outside; shrinking the chrome is the auto-scorer's own business.
+/// So the floor only has to keep the region honest, not readable at distance.
+/// In the ordinary running state the camera bar takes 48dp, the hint line under
+/// it 16dp and the region's own padding 12dp, so 140dp leaves the image about
+/// 64dp: enough to see at a glance that the board is still framed, not enough
+/// to read a dart in it. Darts are read on the band above.
 ///
 /// Hiding the preview instead is not an option: the preview IS the detector, so
 /// removing it stops auto-scoring (epic #766).
-const double kMinCameraRegionHeight = 260;
+const double kMinCameraRegionHeight = 140;
 
 /// The most of the body the camera region may claim when the floor above cannot
 /// be met outright.
 ///
 /// Honouring [kMinCameraRegionHeight] on the smallest screen at the largest
-/// font would leave the scores and the dart band a window too small to scroll
-/// usefully. The game content keeps at least this much of the body in return —
-/// the camera still gets far more than the 0-73dp it gets today, and both
-/// halves stay usable.
-const double kMaxCameraRegionFraction = 0.6;
+/// font would scale the scores and the dart band down past legibility. The
+/// game content keeps at least this much of the body in return.
+const double kMaxCameraRegionFraction = 0.5;
 
 /// The camera-first body of a board screen: the game content, then the camera
-/// region (#769).
+/// region (#769, #801).
 ///
-/// The four board screens shared one layout — content at its natural height,
-/// camera in whatever was left — which had no floor under the camera and no
-/// answer when the content alone outgrew the screen. Measured before the fix,
-/// an X01 game at 320x568 with the system font at 150% overflowed by 51px and
-/// gave the camera nothing at all.
-///
-/// So the two sides swap roles when space runs short: the camera region is
-/// guaranteed [kMinCameraRegionHeight] (capped by [kMaxCameraRegionFraction]),
-/// and the game content, which until now could only overflow, scrolls instead.
-/// When there is room to spare nothing changes: the content sits at its natural
-/// height and the camera takes all the rest, with no dead zone between them
-/// (#760).
+/// The game content is laid out at its natural height and the camera region
+/// takes everything it leaves, with no dead zone between them (#760). When the
+/// content grows (more players, a larger system font, a smaller screen) the
+/// camera gives way, down to [kMinCameraRegionHeight] (capped by
+/// [kMaxCameraRegionFraction]). Past that point the content is scaled down as a
+/// whole to fit above the floor: smaller, but every child stays on screen.
+/// It never scrolls, because the player reads it from the oche (#801).
 class CameraFirstBody extends StatelessWidget {
   const CameraFirstBody({
     super.key,
@@ -58,11 +47,12 @@ class CameraFirstBody extends StatelessWidget {
   });
 
   /// The scores, banners and dart band, in order. Laid out at their natural
-  /// height while they fit, scrollable once they do not.
+  /// height while they fit, scaled down as one block once they do not.
   final List<Widget> content;
 
-  /// The camera region — the preview and its bar. Never hidden, never shorter
-  /// than the floor above.
+  /// The camera region: the preview and its bar. Never hidden, never shorter
+  /// than [kMinCameraRegionHeight], or than [kMaxCameraRegionFraction] of the
+  /// body when that is less.
   final Widget camera;
 
   @override
@@ -86,23 +76,26 @@ class CameraFirstBody extends StatelessWidget {
         return Column(
           children: [
             // A non-flex child, so it takes its natural height and the camera
-            // below gets everything it leaves. The cap is what turns "the
-            // content overflows" into "the content scrolls".
+            // below gets everything it leaves. The cap is what stops the
+            // content from pushing the camera under its floor.
             ConstrainedBox(
               constraints: BoxConstraints(
                 maxHeight: math.max(0, available - floor),
               ),
-              child: SingleChildScrollView(
-                // Anchored at the bottom, so what a cramped screen keeps in
-                // view is the dart band: it is the only thing here you touch
-                // (manual entry and correction), and it belongs next to the
-                // camera it stands in for. The scores sit one flick up.
-                // Inert when everything fits, since the scroll view is then
-                // exactly as tall as its content.
-                reverse: true,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: content,
+              // A no-op at scale 1, i.e. whenever the content fits. Otherwise
+              // the whole block shrinks uniformly, hero included, so nothing is
+              // pushed off screen (#801).
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.topCenter,
+                // FittedBox lays its child out unconstrained; pinning the width
+                // keeps the content laid out exactly as it is unscaled.
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: content,
+                  ),
                 ),
               ),
             ),

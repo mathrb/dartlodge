@@ -285,8 +285,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
             ? _computeRoundScore(competitor.dartThrows, gs.dartsThrownInTurn)
             : 0;
 
-        // Hoisted so camera-first can put it inside the scrolling half of
-        // the body (#769): with the camera keeping a floor, everything the
+        // Hoisted so camera-first can put it inside the content half of the
+        // body (#769, #801): with the camera keeping a floor, everything the
         // game shows above it has to be able to cede.
         final targetDisplay = PracticeTargetDisplayWidget(
           gameType: gs.gameType,
@@ -436,9 +436,9 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                   // fills whatever height is left (#760). Manual entry / correction
                   // lives in the band's modal.
                   if (cameraFirst)
-                    // The camera region never drops below a useful height, and the
-                    // content above it scrolls instead of overflowing when a small
-                    // screen or a large system font leaves too little room (#769).
+                    // The content keeps its natural height and never scrolls; the
+                    // camera region gives way, down to a floor, and past that the
+                    // content scales down to fit (#801).
                     Expanded(
                       child: CameraFirstBody(
                         camera: cameraPreview(context, widget.gameId),

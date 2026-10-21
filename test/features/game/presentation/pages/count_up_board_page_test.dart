@@ -15,6 +15,8 @@ import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_count_up_state.dart';
 import 'package:dart_lodge/core/settings/simplified_input_provider.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/camera_first_body_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
@@ -553,14 +555,14 @@ void main() {
     });
   });
 
-  // ── Camera region floor on the worst screen + font (#769) ───────────────────
+  // ── Camera-first on the worst screen + font (#801) ──────────────────────────
 
-  group('camera-first fits the smallest screen (#769)', () {
-    testWidgets('320x568 at font x1.5: no overflow, camera stays usable',
+  group('camera-first keeps everything on screen (#801)', () {
+    testWidgets('320x568 at font x1.5: nothing scrolls, all on screen',
         (tester) async {
-      // The same body as the other three boards, so it inherits the same fix:
-      // the content scrolls, the camera keeps a floor. Measured on X01 before
-      // the fix, this configuration overflowed and left the camera nothing.
+      // The same body as the other three boards, so it inherits the same rule:
+      // the content never scrolls, the camera gives way down to its floor, and
+      // past that the content scales down rather than leaving the screen.
       tester.view.physicalSize = const Size(320, 568) * 3;
       tester.view.devicePixelRatio = 3.0;
       tester.platformDispatcher.textScaleFactorTestValue = 1.5;
@@ -574,8 +576,23 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
-          greaterThanOrEqualTo(190.0));
+      expect(
+        find.descendant(
+            of: find.byType(CameraFirstBody), matching: find.byType(Scrollable)),
+        findsNothing,
+      );
+      for (final type in [HeroMetricWidget, ProminentDartBandWidget]) {
+        final r = tester.getRect(find.byType(type).first);
+        expect(r.top, greaterThanOrEqualTo(0.0), reason: '$type');
+        expect(r.bottom, lessThanOrEqualTo(568.0), reason: '$type');
+      }
+      final body = tester.getSize(find.byType(CameraFirstBody)).height;
+      expect(
+        tester.getSize(find.byKey(const ValueKey('camera-stub'))).height,
+        greaterThanOrEqualTo(
+            (body * kMaxCameraRegionFraction).clamp(0, kMinCameraRegionHeight) -
+                0.01),
+      );
     });
   });
 }

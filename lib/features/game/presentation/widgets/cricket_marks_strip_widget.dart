@@ -143,36 +143,47 @@ class CricketMarksStripWidget extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // Name + MPR are two text lines in a fixed-height row: a
+                  // large system font outgrows the compact 40dp row (7dp over
+                  // at 150%). Scaled down rather than overflowing; the width
+                  // stays pinned so a long name still ellipsizes (#801).
                   SizedBox(
                     width: _nameWidth,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          r.name.toUpperCase(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.labelMedium.copyWith(
-                            color: r.isActive
-                                ? cs.primaryFixed
-                                : cs.onSurfaceVariant,
-                            letterSpacing: 1.2,
-                          ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: SizedBox(
+                        width: _nameWidth,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              r.name.toUpperCase(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.labelMedium.copyWith(
+                                color: r.isActive
+                                    ? cs.primaryFixed
+                                    : cs.onSurfaceVariant,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            // Live MPR (#696) under the name — small, so the marks
+                            // grid stays dominant. Active player tinted `primary`
+                            // like the manual table's MPR; inactive muted.
+                            Text(
+                              'MPR ${r.mpr}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color:
+                                    r.isActive ? cs.primary : cs.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
-                        // Live MPR (#696) under the name — small, so the marks
-                        // grid stays dominant. Active player tinted `primary`
-                        // like the manual table's MPR; inactive muted.
-                        Text(
-                          'MPR ${r.mpr}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color:
-                                r.isActive ? cs.primary : cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
                   for (var i = 0; i < targets.length; i++)

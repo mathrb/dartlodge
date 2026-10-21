@@ -483,9 +483,10 @@ class _AutoScorerBoardOverlayState
     // unfinished screen (#760). Giving the space back to the preview is what
     // the maintainer chose after seeing it. Do not reintroduce the pair.
     //
-    // What happens when the board has very little room to give is #769, not
-    // this: the preview simply gets less here, and it is never hidden — it IS
-    // the detector, so hiding it would stop auto-scoring.
+    // What happens when the board has very little room to give is the
+    // board's call (#769, #801), not this: the preview simply gets less here,
+    // down to the board's floor, and it is never hidden — it IS the detector,
+    // so hiding it would stop auto-scoring.
     final children = <Widget>[
       if (preview != null)
         Expanded(
