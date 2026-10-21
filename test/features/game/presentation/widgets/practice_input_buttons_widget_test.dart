@@ -5,17 +5,33 @@
 // not advance the target.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:dart_lodge/core/settings/simplified_input_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_input_buttons_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
 
-Widget _wrap(Widget child) {
-  return MaterialApp(
-    theme: AppTheme.light(),
-    home: Scaffold(body: child),
+/// Forces the simplified keypad on without touching SharedPreferences.
+class _FakeSimplifiedInputEnabled extends SimplifiedInputEnabled {
+  @override
+  Future<bool> build() async => true;
+}
+
+Widget _wrap(Widget child, {bool simplified = false}) {
+  return ProviderScope(
+    overrides: [
+      if (simplified)
+        simplifiedInputEnabledProvider
+            .overrideWith(() => _FakeSimplifiedInputEnabled()),
+    ],
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: Scaffold(body: child),
+    ),
   );
 }
 
@@ -91,24 +107,24 @@ void main() {
     });
   });
 
-  // #500: in correction mode the sheet must offer the FULL board picker for
-  // every target-scoped practice type, so a false-positive advance can be
-  // corrected to the segment actually thrown — not just the (already advanced)
-  // live target's segments.
-  group('PracticeInputButtonsWidget — correction mode full picker (#500)', () {
+  // #500 / #799: camera-first sheets (correction AND missed-dart entry) must
+  // offer the FULL board picker for every target-scoped practice type, so a
+  // false-positive advance can be corrected to the segment actually thrown,
+  // and a missed dart on another number isn't forced to MISS.
+  group('PracticeInputButtonsWidget — fullBoard picker (#500, #799)', () {
     for (final gameType in [
       GameType.aroundTheClock,
       GameType.shanghai,
       GameType.bobs27,
     ]) {
-      testWidgets('$gameType correction sheet shows the full grid, not the bar',
+      testWidgets('$gameType fullBoard shows the full grid, not the bar',
           (tester) async {
         final thrown = <String>[];
         await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
           gameType: gameType,
           currentTarget: 19, // live (advanced) target
           enabled: true,
-          isCorrection: true,
+          fullBoard: true,
           onDartThrown: thrown.add,
         )));
 
@@ -124,7 +140,7 @@ void main() {
       });
     }
 
-    testWidgets('correction mode overrides doublesOnly (full grid, not the bar)',
+    testWidgets('fullBoard overrides doublesOnly (full grid, not the bar)',
         (tester) async {
       final thrown = <String>[];
       await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
@@ -132,7 +148,7 @@ void main() {
         currentTarget: 19,
         doublesOnly: true, // would dim/disable S & T on the bar (#322)
         enabled: true,
-        isCorrection: true,
+        fullBoard: true,
         onDartThrown: thrown.add,
       )));
 
@@ -144,7 +160,7 @@ void main() {
       expect(thrown, ['SB']);
     });
 
-    testWidgets('live (non-correction) ATC entry keeps the target-scoped bar',
+    testWidgets('manual ATC entry keeps the target-scoped bar',
         (tester) async {
       final thrown = <String>[];
       await tester.pumpWidget(_wrap(PracticeInputButtonsWidget(
@@ -158,5 +174,68 @@ void main() {
       expect(find.text('S-19'), findsOneWidget);
       expect(find.bySemanticsLabel('Single 1'), findsNothing);
     });
+  });
+
+  // #799: every full-board picker follows the Simplified scoring keypad
+  // setting; the target-scoped bars are not keypads and never change.
+  group('PracticeInputButtonsWidget — simplified keypad setting (#799)', () {
+    testWidgets('fullBoard renders the simplified keypad when the setting is on',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        PracticeInputButtonsWidget(
+          gameType: GameType.aroundTheClock,
+          currentTarget: 5,
+          enabled: true,
+          fullBoard: true,
+          onDartThrown: (_) {},
+        ),
+        simplified: true,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+      expect(find.byType(DartInputGridWidget), findsNothing);
+    });
+
+    for (final gameType in [GameType.catch40, GameType.checkoutPractice]) {
+      testWidgets('$gameType live entry follows the setting', (tester) async {
+        await tester.pumpWidget(_wrap(
+          PracticeInputButtonsWidget(
+            gameType: gameType,
+            currentTarget: 40,
+            enabled: true,
+            onDartThrown: (_) {},
+          ),
+          simplified: true,
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+      });
+    }
+
+    for (final gameType in [
+      GameType.aroundTheClock,
+      GameType.shanghai,
+      GameType.bobs27,
+    ]) {
+      testWidgets('$gameType manual entry keeps its bar with the setting on',
+          (tester) async {
+        await tester.pumpWidget(_wrap(
+          PracticeInputButtonsWidget(
+            gameType: gameType,
+            currentTarget: 5,
+            enabled: true,
+            onDartThrown: (_) {},
+          ),
+          simplified: true,
+        ));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(SimplifiedDartInputGridWidget), findsNothing);
+        expect(find.byType(DartInputGridWidget), findsNothing);
+        expect(find.text('MISS'), findsOneWidget);
+      });
+    }
   });
 }

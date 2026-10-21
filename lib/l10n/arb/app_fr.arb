@@ -15,7 +15,7 @@
   "settingsSoundEffectsSubtitle": "Jouer des effets sonores pendant les parties",
   "settingsScoringSection": "Saisie des scores",
   "settingsSimplifiedInputTitle": "Clavier de saisie simplifié",
-  "settingsSimplifiedInputSubtitle": "Boutons plus grands : les nombres avec Double/Triple. Utilisé dans X01 et Count-Up.",
+  "settingsSimplifiedInputSubtitle": "Boutons plus grands : les nombres avec Double/Triple. Remplace le clavier complet partout, sauf au Cricket.",
   "settingsAboutSection": "À propos",
   "settingsVersion": "Version",
   "settingsFeedbackSection": "Retours",

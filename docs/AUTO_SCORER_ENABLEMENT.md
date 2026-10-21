@@ -87,14 +87,11 @@ round's metrics) has not cleared the **88.9%** ship bar at 720p, so treat it as
 
 ## Known gaps (deferred)
 
-Two spec items are intentionally not wired yet (functional audit, 2026-06-03):
+One spec item is intentionally not wired yet (functional audit, 2026-06-03;
+the corrected-frame flagging gap it also listed is wired now — a per-dart
+correction reaches `CaptureStore.applyCorrection` via the capture-correction
+sink):
 
-- **Corrected frames aren't flagged in training data.** `CaptureStore.applyCorrection`
-  exists but isn't called from the board's per-dart correction flow, so
-  `was_corrected` / `corrected_darts` stay empty in exported sidecars. Wiring it
-  is cross-feature and needs the capture turn-ordinal seeded from game state so
-  handles align. Workaround: the **force-capture** button grabs missed/mis-scored
-  frames directly, which covers the high-value cases.
 - **No mid-game on-screen master toggle.** §5.1 wants a quick board toggle to
   flip auto-scoring off mid-game. The overlay's **Stop** button stops detection
   on the board (covers the practical need); flipping the master pref still

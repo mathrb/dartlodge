@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
-import 'dart_input_grid_widget.dart';
+import 'manual_scoring_input.dart';
 
 class PracticeInputButtonsWidget extends StatelessWidget {
   const PracticeInputButtonsWidget({
@@ -10,7 +10,7 @@ class PracticeInputButtonsWidget extends StatelessWidget {
     required this.onDartThrown,
     required this.enabled,
     this.doublesOnly = false,
-    this.isCorrection = false,
+    this.fullBoard = false,
     super.key,
   });
 
@@ -20,27 +20,34 @@ class PracticeInputButtonsWidget extends StatelessWidget {
   final bool enabled;
   final bool doublesOnly;
 
-  /// When correcting an already-recorded dart, offer the full board picker
-  /// regardless of game type, the live target, or [doublesOnly] — a
-  /// false-positive auto-score may have advanced the target, and the player
-  /// must be able to record the segment actually thrown so the engine replay
-  /// can roll the advance back (#500). This intentionally bypasses the
-  /// Doubles-Only S/T tap restriction (#322): correction records what was
-  /// thrown, and the engine still treats a non-double as a non-advancing hit.
-  /// Live/manual entry keeps the target-scoped bar (default false).
-  final bool isCorrection;
+  /// Offer the full board picker regardless of game type, the live target, or
+  /// [doublesOnly]. Camera-first boards set it for BOTH paths of the dart band —
+  /// correcting a recorded dart and adding one the camera missed — so the
+  /// player gets one picker for what is, to them, the same action (#799):
+  ///
+  ///  * Correction: a false-positive auto-score may have advanced the target,
+  ///    and the player must be able to record the segment actually thrown so
+  ///    the engine replay can roll the advance back (#500).
+  ///  * Missed-dart entry: a dart the camera missed may have landed on another
+  ///    number; the target-scoped bar could only record it as MISS, which is
+  ///    wrong for the throw history and mislabels the captured frame (#537).
+  ///
+  /// This intentionally bypasses the Doubles-Only S/T tap restriction (#322):
+  /// the sheet records what was thrown, and the engine still treats a
+  /// non-double as a non-advancing hit. Manual (non-camera) entry and
+  /// correction keep the game's own picker (default false).
+  ///
+  /// Every full-board picker here — this one and Catch 40 / Checkout Practice
+  /// live entry — follows the Simplified scoring keypad setting via
+  /// [ManualScoringInput].
+  final bool fullBoard;
 
   @override
   Widget build(BuildContext context) {
-    if (isCorrection) {
-      return DartInputGridWidget(
-        onSegmentTapped: onDartThrown,
-        enabled: enabled,
-      );
-    }
-
-    if (gameType == GameType.catch40) {
-      return DartInputGridWidget(
+    if (fullBoard ||
+        gameType == GameType.catch40 ||
+        gameType == GameType.checkoutPractice) {
+      return ManualScoringInput(
         onSegmentTapped: onDartThrown,
         enabled: enabled,
       );
@@ -51,13 +58,6 @@ class PracticeInputButtonsWidget extends StatelessWidget {
         n: currentTarget,
         enabled: enabled,
         onDartThrown: onDartThrown,
-      );
-    }
-
-    if (gameType == GameType.checkoutPractice) {
-      return DartInputGridWidget(
-        onSegmentTapped: onDartThrown,
-        enabled: enabled,
       );
     }
 

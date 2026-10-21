@@ -397,9 +397,17 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     totalRounds: isCheckout ? null : _totalRounds(gs),
                     currentTurnDarts: currentTurnDarts,
                     // Camera-first (#445) hides the darts here — they move to the
-                    // prominent dart band below. Manual practice has no per-dart
-                    // correction on the bar (unchanged).
-                    onDartTapped: null,
+                    // prominent dart band below. Manual practice corrects a dart
+                    // by tapping it here, with the game's own picker (#799).
+                    onDartTapped: gs.isComplete || cameraFirst
+                        ? null
+                        : (index) => _onManualDartTapped(
+                            context,
+                            gs,
+                            index,
+                            effectiveTarget,
+                            doublesOnly,
+                          ),
                     showDarts: !cameraFirst,
                     // Checkout Practice: a busted turn scored 0 — don't show the
                     // raw busted-dart sum in the readout (#604).
@@ -535,8 +543,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   }
 
   /// Camera-first dart-indicator tap (#427): a thrown slot opens correction,
-  /// an empty slot opens manual entry for a dart the camera missed. Both host
-  /// the standard practice input buttons in a modal.
+  /// an empty slot opens manual entry for a dart the camera missed. Both open
+  /// the same full-board picker (#799).
   void _onSlotTapped(
     BuildContext context,
     GameState gs,
@@ -556,7 +564,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         currentTarget: effectiveTarget,
         doublesOnly: doublesOnly,
         requireActiveTurn: false,
-        isCorrection: true,
+        fullBoard: true,
         onSegment: (seg) => notifier.correctTurnDart(index, seg),
       );
     } else {
@@ -568,7 +576,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         currentTarget: effectiveTarget,
         doublesOnly: doublesOnly,
         requireActiveTurn: true,
-        isCorrection: false,
+        fullBoard: true,
         onSegment: (seg) {
           // Manual entry = camera missed this dart; capture the frame as
           // labelled training data (#537).
@@ -581,6 +589,40 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     }
   }
 
+  /// Manual-mode status-bar dart tap (#799): correct a recorded dart of the
+  /// current turn with the picker live entry uses — the target bar (ATC /
+  /// Shanghai), the doubles bar (Bob's 27) or the board (Catch 40 / Checkout).
+  /// Stays available after the 3rd dart, until NEXT ROUND (#438 parity).
+  ///
+  /// The bar must offer the target that dart was thrown at, not the live one:
+  /// an Around the Clock hit has already advanced it. Shanghai and Bob's 27
+  /// keep one target per turn, so [effectiveTarget] is already right.
+  Future<void> _onManualDartTapped(
+    BuildContext context,
+    GameState gs,
+    int index,
+    int? effectiveTarget,
+    bool doublesOnly,
+  ) async {
+    if (index >= gs.dartsThrownInTurn) return;
+    final notifier = ref.read(activePracticeProvider(widget.gameId).notifier);
+    final l10n = AppLocalizations.of(context);
+    final target = gs.gameType == GameType.aroundTheClock
+        ? await notifier.targetBeforeTurnDart(index)
+        : effectiveTarget;
+    if (!context.mounted) return;
+    _showSegmentSheet(
+      context,
+      title: l10n.gameCorrectDart(index + 1),
+      gameType: gs.gameType,
+      currentTarget: target,
+      doublesOnly: doublesOnly,
+      requireActiveTurn: false,
+      fullBoard: false,
+      onSegment: (seg) => notifier.correctTurnDart(index, seg),
+    );
+  }
+
   /// Modal hosting the standard [PracticeInputButtonsWidget] — the camera-first
   /// replacement for the always-visible input. Watches the live turn so the
   /// buttons disable if the turn ends while the sheet is open.
@@ -589,9 +631,8 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
   /// entry (must not add a 4th dart), false for correcting a recorded dart
   /// (allowed after the turn ends, before it is advanced — #438).
   ///
-  /// [isCorrection] makes the sheet offer the full board picker instead of the
-  /// target-scoped bar, so a false-positive advance can be corrected to the
-  /// real segment thrown (#500).
+  /// [fullBoard] makes the sheet offer the full board picker instead of the
+  /// game's own bar — camera-first entry and correction (#500, #799).
   void _showSegmentSheet(
     BuildContext context, {
     required String title,
@@ -599,7 +640,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
     required int? currentTarget,
     required bool doublesOnly,
     required bool requireActiveTurn,
-    required bool isCorrection,
+    required bool fullBoard,
     required void Function(String segment) onSegment,
   }) {
     showModalBottomSheet<void>(
@@ -629,7 +670,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     currentTarget: currentTarget,
                     doublesOnly: doublesOnly,
                     enabled: active,
-                    isCorrection: isCorrection,
+                    fullBoard: fullBoard,
                     onDartThrown: (seg) {
                       onSegment(seg);
                       Navigator.of(sheetContext).pop();

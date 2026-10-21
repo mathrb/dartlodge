@@ -232,6 +232,7 @@ Widget _buildAppCameraFirst(
   _FakeActiveGameNotifier notifier, {
   String gameId = 'game-1',
   CaptureCorrectionSink? correctionSink,
+  bool simplified = false,
 }) {
   final router = GoRouter(
     initialLocation: '/game/active/x01/$gameId',
@@ -241,6 +242,9 @@ Widget _buildAppCameraFirst(
     overrides: [
       activeGameProvider.overrideWith(() => notifier),
       autoScoringEnabledProvider.overrideWith(() => _FakeAutoScoringEnabled()),
+      if (simplified)
+        simplifiedInputEnabledProvider
+            .overrideWith(() => _FakeSimplifiedInputEnabled()),
       boardCameraPreviewBuilderProvider.overrideWithValue(
         (ctx, id) => const SizedBox(key: ValueKey('camera-stub')),
       ),
@@ -1518,6 +1522,44 @@ void main() {
     _setPhoneViewport(tester);
     final notifier = _FakeActiveGameNotifier(_activeState());
     await tester.pumpWidget(_buildAppSimplified(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+    expect(find.byType(DartInputGridWidget), findsNothing);
+  });
+
+  // #799: the camera-first sheets follow the setting too — one keypad for
+  // entering a missed dart, correcting a detected one, and live manual entry.
+  testWidgets('camera-first correction sheet follows the simplified setting',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [
+        _competitor(name: 'Alice', score: 481, dartThrows: const ['20']),
+      ],
+      dartsThrownInTurn: 1,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester
+        .pumpWidget(_buildAppCameraFirst(notifier, simplified: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('20'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+    expect(find.byType(DartInputGridWidget), findsNothing);
+  });
+
+  testWidgets('camera-first entry sheet follows the simplified setting',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final notifier = _FakeActiveGameNotifier(_activeState());
+    await tester
+        .pumpWidget(_buildAppCameraFirst(notifier, simplified: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.add_circle_outline).first);
     await tester.pumpAndSettle();
 
     expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);

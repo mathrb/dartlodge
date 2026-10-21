@@ -18,6 +18,7 @@ import 'package:dart_lodge/features/game/presentation/pages/practice_board_page.
 import 'package:dart_lodge/features/game/presentation/providers/active_practice_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/active_practice_state.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dartboard_highlight_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/end_game_dialog_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
@@ -38,8 +39,20 @@ class _FakeActivePracticeNotifier extends ActivePracticeNotifier {
   int nextTurnCalls = 0;
   int endDrillCalls = 0;
 
+  /// What [targetBeforeTurnDart] answers — the target a dart was thrown at
+  /// (#799). Null falls back to the live target, like the real notifier.
+  int? targetBefore;
+  final List<int> targetBeforeQueries = [];
+
   @override
   Future<ActivePracticeState?> build(String gameId) async => _state;
+
+  @override
+  Future<int?> targetBeforeTurnDart(int turnDartIndex) async {
+    targetBeforeQueries.add(turnDartIndex);
+    final gs = _state?.gameState;
+    return targetBefore ?? gs?.competitors[gs.currentTurnIndex].currentTarget;
+  }
 
   @override
   Future<void> processDart(String segment,
@@ -1602,6 +1615,180 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(notifier.corrections, [(0, 'SB')]);
+  });
+
+  // ── #799: one picker per scoring mode ───────────────────────────────────────
+
+  for (final gameType in [
+    GameType.aroundTheClock,
+    GameType.shanghai,
+    GameType.bobs27,
+  ]) {
+    testWidgets(
+        'Camera-first $gameType: adding a missed dart opens the full board '
+        '(#799)', (tester) async {
+      _setTallViewport(tester);
+      final gs = _practiceState(
+        gameType: gameType,
+        competitor: _practiceCompetitor(dartThrows: const ['3']),
+        dartsThrownInTurn: 1,
+      ).copyWith(turnActive: true);
+      final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+      await tester.pumpWidget(_buildAppCameraFirst(notifier));
+      await tester.pumpAndSettle();
+
+      // Empty slot 2 → manual entry for a dart the camera missed.
+      await tester.tap(find.byIcon(Icons.add_circle_outline).first);
+      await tester.pumpAndSettle();
+      expect(find.text('Enter dart'), findsOneWidget);
+
+      // Same full picker as correction — not the target-scoped bar, so a dart
+      // on another number is recorded as that number, not forced to MISS.
+      expect(find.byType(DartInputGridWidget), findsOneWidget);
+      expect(find.text('D-3'), findsNothing);
+      expect(find.text('Double 3'), findsNothing);
+      tester
+          .widget<DartInputGridWidget>(find.byType(DartInputGridWidget))
+          .onSegmentTapped('17');
+      await tester.pumpAndSettle();
+
+      expect(notifier.processedDarts, ['17']);
+      expect(notifier.corrections, isEmpty);
+    });
+  }
+
+  Finder inSheet(Finder f) =>
+      find.descendant(of: find.byType(BottomSheet), matching: f);
+  // The target display can show the same text as a dart badge.
+  Finder inBar(String text) => find.descendant(
+      of: find.byType(GameStatusBarWidget), matching: find.text(text));
+
+  testWidgets(
+      'Manual ATC: tapping a recorded dart corrects it with the bar for the '
+      'target it was thrown at (#799)', (tester) async {
+    _setTallViewport(tester);
+    // D5 was a hit: the live target already moved on to 6.
+    final gs = _practiceState(
+      gameType: GameType.aroundTheClock,
+      competitor: _practiceCompetitor(currentTarget: 6, dartThrows: const ['D5']),
+      dartsThrownInTurn: 1,
+    ).copyWith(turnActive: true);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs))
+      ..targetBefore = 5;
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    // Empty slots stay inert in manual mode: no "+" to add a dart.
+    expect(find.byIcon(Icons.add_circle_outline), findsNothing);
+
+    await tester.tap(inBar('D5'));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct dart 1'), findsOneWidget);
+    expect(notifier.targetBeforeQueries, [0]);
+
+    // The live-entry bar, scoped to 5 (not the advanced 6), and no full grid.
+    expect(inSheet(find.byType(DartInputGridWidget)), findsNothing);
+    expect(inSheet(find.text('D-6')), findsNothing);
+    await tester.tap(inSheet(find.text('S-5')));
+    await tester.pumpAndSettle();
+
+    expect(notifier.corrections, [(0, '5')]);
+    expect(find.text('Correct dart 1'), findsNothing);
+  });
+
+  testWidgets(
+      'Manual Shanghai: a dart stays correctable after the 3rd dart, until '
+      'NEXT ROUND (#799, #438)', (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.shanghai,
+      competitor: _practiceCompetitor(dartThrows: const ['3', 'D3', 'T3']),
+      dartsThrownInTurn: 3,
+    ).copyWith(turnActive: false);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(inBar('T3'));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct dart 3'), findsOneWidget);
+
+    await tester.tap(inSheet(find.text('MISS')));
+    await tester.pumpAndSettle();
+    expect(notifier.corrections, [(2, 'MISS')]);
+  });
+
+  testWidgets('Manual Doubles-Only ATC correction keeps S/T locked (#799)',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.aroundTheClock,
+      aroundTheClockVariant: 'doublesOnly',
+      competitor: _practiceCompetitor(currentTarget: 6, dartThrows: const ['D5']),
+      dartsThrownInTurn: 1,
+    ).copyWith(turnActive: true);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs))
+      ..targetBefore = 5;
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(inBar('D5'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(inSheet(find.text('S-5')), warnIfMissed: false);
+    await tester.tap(inSheet(find.text('T-5')), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(notifier.corrections, isEmpty);
+
+    await tester.tap(inSheet(find.text('MISS')));
+    await tester.pumpAndSettle();
+    expect(notifier.corrections, [(0, 'MISS')]);
+  });
+
+  testWidgets("Manual Bob's 27 correction uses the doubles bar (#799)",
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.bobs27,
+      competitor: _practiceCompetitor(dartThrows: const ['D3']),
+      dartsThrownInTurn: 1,
+    ).copyWith(turnActive: true);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(inBar('D3'));
+    await tester.pumpAndSettle();
+    expect(inSheet(find.byType(DartInputGridWidget)), findsNothing);
+    // Bob's 27 has one target per turn: no replay lookup needed.
+    expect(notifier.targetBeforeQueries, isEmpty);
+
+    await tester.tap(inSheet(find.text('MISS')));
+    await tester.pumpAndSettle();
+    expect(notifier.corrections, [(0, 'MISS')]);
+  });
+
+  testWidgets('Manual Catch 40 correction uses the full board (#799)',
+      (tester) async {
+    _setTallViewport(tester);
+    final gs = _practiceState(
+      gameType: GameType.catch40,
+      competitor: _practiceCompetitor(dartThrows: const ['T20']),
+      dartsThrownInTurn: 1,
+    ).copyWith(turnActive: true);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    await tester.tap(inBar('T20'));
+    await tester.pumpAndSettle();
+    expect(find.text('Correct dart 1'), findsOneWidget);
+
+    final grid = inSheet(find.byType(DartInputGridWidget));
+    expect(grid, findsOneWidget);
+    tester.widget<DartInputGridWidget>(grid).onSegmentTapped('D20');
+    await tester.pumpAndSettle();
+    expect(notifier.corrections, [(0, 'D20')]);
   });
 
   testWidgets('Manual mode shows the input buttons and dartboard highlight',

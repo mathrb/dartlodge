@@ -5,6 +5,11 @@
 ### Game config is edited in a bottom sheet, not a page
 X01/Cricket in/out strategy, legs-to-win, and starting score are set via the config-summary chip → `GameConfigPanel` bottom sheet on the player-selection screen (`APPLY` commits). `GameConfigPage` exists but is unwired (and there is no "Custom" variant tile — it was removed pre-1.0, #684). The `LEGS TO WIN` `ConfigStepperWidget` +/- icon buttons carry localized `semanticLabel`s (`setupLegsIncrement`/`setupLegsDecrement`, #666 fixed); the X01 config-summary chip surfaces `legsToWin` as a localized `setupLegsCount` segment, matching Cricket (#667 fixed). (E2E driving notes: `docs/E2E_REGRESSION.md` § Authoring specs.)
 
+### Dart pickers: one per scoring mode (#799)
+Entering and correcting a dart use the same picker within a scoring mode:
+- **Camera-first (auto-scoring on):** the dart band's "+" (missed dart) and recorded-dart taps both open the full board via `ManualScoringInput`, so they follow the Simplified scoring keypad setting. This holds on X01, Count-Up and every practice game (`PracticeInputButtonsWidget(fullBoard: true)`). Cricket keeps its own target-scoped sheets.
+- **Manual:** tapping a recorded status-bar dart of the current turn (until NEXT ROUND) opens the game's live-entry picker. That is the MISS/S/D/T bar for ATC and Shanghai (Doubles-Only S/T lock kept), the doubles bar for Bob's 27, or the keypad for X01, Count-Up, Catch 40 and Checkout. An ATC correction bar shows the target that dart was thrown at (`ActivePracticeNotifier.targetBeforeTurnDart`), not the live, already-advanced one.
+
 ### Colors
 Always use themed color tokens from `docs/design/DESIGN_SYSTEM.md`. Never hardcode color values directly in widgets.
 
