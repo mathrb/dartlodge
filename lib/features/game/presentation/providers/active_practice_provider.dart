@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
 import '../../domain/engines/base_game_engine.dart';
+import '../../domain/engines/event_replay.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/turn_dart_resolver.dart';
@@ -271,6 +272,46 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
             segment: newSegment,
           );
     }
+  }
+
+  /// The competitor's target as it stood just before dart [turnDartIndex] of
+  /// the current turn was thrown — what a manual correction bar must offer
+  /// (#799). Around the Clock advances the target on every hit, so after
+  /// "S5" the live target is already 6; and the turn's own darts can't recover
+  /// it (`[4, MISS, MISS]` fits a turn start of either 4 or 5), so this replays
+  /// the log up to that dart. Falls back to the live target when the dart
+  /// can't be resolved.
+  Future<int?> targetBeforeTurnDart(int turnDartIndex) async {
+    final gs = state.value?.gameState;
+    if (gs == null) return null;
+    final liveTarget = gs.competitors[gs.currentTurnIndex].currentTarget;
+
+    final gameRepo = ref.read(gameRepositoryProvider);
+    final events = await ref
+        .read(gameEventRepositoryProvider)
+        .getEventsForGame(gs.gameId);
+    final turnDart = resolveTurnDart(
+      events: events,
+      competitorId: gs.competitors[gs.currentTurnIndex].competitorId,
+      dartsThrownInTurn: gs.dartsThrownInTurn,
+      turnDartIndex: turnDartIndex,
+    );
+    if (turnDart == null) return liveTarget;
+
+    // Strip before truncating: a DartCorrected later in the log can supersede
+    // events that sit before this dart.
+    final live = stripSupersededEvents(events);
+    final idx = live.indexWhere((e) => e.eventId == turnDart.eventId);
+    final game = await gameRepo.getGame(gs.gameId);
+    if (idx < 0 || game == null) return liveTarget;
+    final competitors = await gameRepo.getCompetitors(gs.gameId);
+
+    final before = replayEvents(
+      initial: GameState.initial(game, competitors),
+      events: live.sublist(0, idx),
+      engine: _engineFor(gs.gameType),
+    );
+    return before.competitors[before.currentTurnIndex].currentTarget;
   }
 
   /// Resolves the live current-turn dart at [turnDartIndex] (0-based, throw

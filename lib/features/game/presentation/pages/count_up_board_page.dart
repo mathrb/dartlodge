@@ -18,7 +18,6 @@ import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_count_up_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/camera_first_body_widget.dart';
-import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
@@ -390,7 +389,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
-              child: DartInputGridWidget(
+              child: ManualScoringInput(
                 onSegmentTapped: (segment) {
                   ref
                       .read(activeCountUpProvider(widget.gameId).notifier)
@@ -435,7 +434,7 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                       s != null &&
                       !s.gameState.isComplete &&
                       s.gameState.turnActive;
-                  return DartInputGridWidget(
+                  return ManualScoringInput(
                     enabled: enabled,
                     onSegmentTapped: (segment) {
                       // A manual entry means the camera missed this dart —

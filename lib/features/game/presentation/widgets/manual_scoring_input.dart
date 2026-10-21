@@ -9,8 +9,10 @@ import 'simplified_dart_input_grid_widget.dart';
 /// the dense full [DartInputGridWidget] (default) or the forgiving
 /// [SimplifiedDartInputGridWidget]. Exposes the same
 /// `onSegmentTapped` / `enabled` API as either grid so board pages can swap in
-/// place. Used for the primary in-board input on X01 and Count-up; the
-/// correction and manual-entry sheets keep the full grid.
+/// place. Used wherever a full-board keypad is shown (#799): the in-board input
+/// on X01 and Count-up, Catch 40 / Checkout Practice live entry, and the
+/// correction and manual-entry sheets of every board except Cricket (which
+/// keeps its own target-scoped sheets).
 class ManualScoringInput extends ConsumerWidget {
   const ManualScoringInput({
     required this.onSegmentTapped,

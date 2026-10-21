@@ -60,7 +60,7 @@
   "@settingsSimplifiedInputTitle": {
     "description": "Simplified scoring layout toggle row title"
   },
-  "settingsSimplifiedInputSubtitle": "Larger buttons: numbers with Double/Triple. Used in X01 and Count-Up.",
+  "settingsSimplifiedInputSubtitle": "Larger buttons: numbers with Double/Triple. Replaces the full keypad everywhere except Cricket.",
   "@settingsSimplifiedInputSubtitle": {
     "description": "Simplified scoring layout toggle row subtitle"
   },

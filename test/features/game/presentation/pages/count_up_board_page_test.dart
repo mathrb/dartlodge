@@ -335,6 +335,39 @@ void main() {
       expect(notifier.correctedDarts, [(index: 0, segment: 'T20')]);
     });
 
+    // #799: the correction sheet follows the simplified setting, like live
+    // entry does.
+    testWidgets('camera-first: correction sheet follows the simplified setting',
+        (tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final notifier = _FakeActiveCountUpNotifier(ActiveCountUpState(
+        gameState: _countUpState(
+          competitors: const [
+            CompetitorState(
+              competitorId: 'c1',
+              name: 'Alice',
+              playerIds: [],
+              score: 140,
+              dartThrows: ['20'],
+            ),
+          ],
+          dartsThrownInTurn: 1,
+        ),
+      ));
+      await tester.pumpWidget(
+          _buildApp(notifier, cameraFirst: true, simplified: true));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('20'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
+      expect(find.byType(DartInputGridWidget), findsNothing);
+    });
+
     testWidgets('manual mode: tapping a status-bar dart opens correction',
         (tester) async {
       // Wide viewport so the manual status bar's full cluster (label · round ·

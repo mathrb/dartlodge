@@ -19,7 +19,6 @@ import '../providers/active_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/camera_first_body_widget.dart';
 import '../widgets/cap_winner_selection_dialog_widget.dart';
-import '../widgets/dart_input_grid_widget.dart';
 import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
@@ -470,7 +469,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
             ),
             SizedBox(
               height: MediaQuery.of(sheetContext).size.height * 0.55,
-              child: DartInputGridWidget(
+              child: ManualScoringInput(
                 onSegmentTapped: (segment) {
                   ref
                       .read(activeGameProvider(widget.gameId).notifier)
@@ -495,7 +494,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
     }
   }
 
-  /// Manual-entry modal hosting the standard [DartInputGridWidget] — the
+  /// Manual-entry modal hosting the [ManualScoringInput] keypad — the
   /// camera-first replacement for the always-visible grid. Submits the picked
   /// segment as the next dart of the turn.
   void _showEntrySheet(BuildContext context) {
@@ -525,7 +524,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                       s != null &&
                       !s.gameState.isComplete &&
                       s.gameState.turnActive;
-                  return DartInputGridWidget(
+                  return ManualScoringInput(
                     enabled: active,
                     onSegmentTapped: (segment) {
                       // A manual entry means the camera missed this dart —

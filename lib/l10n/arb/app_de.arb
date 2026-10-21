@@ -15,7 +15,7 @@
   "settingsSoundEffectsSubtitle": "Soundeffekte während der Spiele abspielen",
   "settingsScoringSection": "Punkteingabe",
   "settingsSimplifiedInputTitle": "Vereinfachtes Eingabefeld",
-  "settingsSimplifiedInputSubtitle": "Größere Tasten: Zahlen mit Doppel/Triple. Verwendet in X01 und Count-Up.",
+  "settingsSimplifiedInputSubtitle": "Größere Tasten: Zahlen mit Doppel/Triple. Ersetzt das vollständige Eingabefeld überall außer bei Cricket.",
   "settingsAboutSection": "Über",
   "settingsVersion": "Version",
   "settingsFeedbackSection": "Feedback",
