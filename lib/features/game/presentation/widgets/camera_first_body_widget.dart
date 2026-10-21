@@ -51,7 +51,8 @@ class CameraFirstBody extends StatelessWidget {
   final List<Widget> content;
 
   /// The camera region: the preview and its bar. Never hidden, never shorter
-  /// than the floor above.
+  /// than [kMinCameraRegionHeight], or than [kMaxCameraRegionFraction] of the
+  /// body when that is less.
   final Widget camera;
 
   @override

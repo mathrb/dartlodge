@@ -59,7 +59,9 @@ class HeroMetricWidget extends StatelessWidget {
         ],
         // Score numerals never scale or wrap — the container is constrained by
         // the consumer, the numeral renders at its tier size (DESIGN_SYSTEM
-        // §3.3). maxLines:1 with the default clip keeps it to one line.
+        // §3.3). maxLines:1 with the default clip keeps it to one line. The
+        // camera-first body may still scale the whole block it sits in, as a
+        // last resort once its camera is at the floor (#801).
         Text(
           value,
           maxLines: 1,
