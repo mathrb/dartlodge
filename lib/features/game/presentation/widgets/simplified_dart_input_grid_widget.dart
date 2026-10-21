@@ -14,9 +14,9 @@ enum _Armed { none, double, triple }
 
 /// A forgiving alternative to [DartInputGridWidget] with fewer, larger targets,
 /// laid out as four rows: `1–7`, `8–14`, `15–20` + an arm-aware **Bull** cell,
-/// setting, through [ManualScoringInput] wherever a full-board keypad is shown
+/// then **MISS** / **Double** / **Triple**. Opt-in via the simplified-input
+/// setting, through `ManualScoringInput` wherever a full-board keypad is shown
 /// (every board except Cricket). Emits the identical
-/// setting; used on the X01 and Count-up board pages only. Emits the identical
 /// segment strings (`'20'`, `'D20'`, `'T20'`, `'SB'`, `'DB'`, `'MISS'`) as the
 /// full grid, so the scoring engine is unchanged.
 ///
