@@ -10,7 +10,6 @@ import 'package:dart_lodge/features/auto_scorer/domain/detection/yolo_view_detec
 import 'package:dart_lodge/features/auto_scorer/domain/framing/calibration_stability.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/framing_metrics.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/framing/recognition_state.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/tracking/auto_advance.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -645,13 +644,6 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
   /// native load failure of a staged model resets it to the bundled asset (#715).
   late String _effectivePath = widget.modelPath;
 
-  /// Whether any dart has been seen on the board since the last turn advance —
-  /// the guard for auto-advance-on-clear, so a `rebaselined` frame from a board
-  /// that sat empty at turn start (no darts thrown) doesn't skip the player.
-  /// Reset on every turn advance (manual or auto) via the `activeTurnSignal`
-  /// listener in [build].
-  bool _sawDartsThisTurn = false;
-
   @override
   void initState() {
     super.initState();
@@ -804,15 +796,11 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
       unawaited(_captureEmitted(frame, result.firstEmittedDartOrdinal!,
           result.emittedDarts.length));
     }
-    // Auto-advance-on-clear (opt-in): when all darts are removed (board-clear →
-    // rebaselined) after at least one dart was on the board this turn, advance.
-    // `dartsOnBoard` (not emittedDarts) so a cap-held 4th dart still counts.
-    if (result.status.dartsOnBoard > 0) _sawDartsThisTurn = true;
-    if (shouldAutoAdvance(
-      phase: result.status.phase,
-      sawDartsThisTurn: _sawDartsThisTurn,
-      enabled: ref.read(autoAdvanceOnClearEnabledProvider).value ?? false,
-    )) {
+    // Auto-advance-on-clear (opt-in): the session reports a board-clear after
+    // darts the camera emitted this turn (#805 — its gate owns the arming, so a
+    // clear the game declines can't fire later in the next player's turn).
+    if (result.boardClearedAfterThrow &&
+        (ref.read(autoAdvanceOnClearEnabledProvider).value ?? false)) {
       sink?.advanceTurn();
     }
     widget.onStatus(result.status);
@@ -860,10 +848,6 @@ class _AutoScorerYoloPreviewState extends ConsumerState<AutoScorerYoloPreview>
 
   @override
   Widget build(BuildContext context) {
-    // Reset the auto-advance guard on every turn advance — manual NEXT and our
-    // own auto-advance both bump activeTurnSignal — so each new turn requires a
-    // fresh dart sighting before it can auto-advance again.
-    ref.listen<int>(activeTurnSignalProvider, (_, __) => _sawDartsThisTurn = false);
     final stack = Stack(
       fit: StackFit.expand,
       children: [
