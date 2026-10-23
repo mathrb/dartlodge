@@ -15,6 +15,7 @@ import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.d
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/dart_position.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/scoring/emitted_dart.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/auto_advance.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracked_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
@@ -44,12 +45,18 @@ class SessionFrameResult {
   /// another frame advances the tracker before its `capturePhoto()` resolves.
   final int? firstEmittedDartOrdinal;
 
+  /// This frame is a board-clear after darts the camera emitted this turn — the
+  /// trigger for the opt-in auto-advance (see [AutoAdvanceGate], #805). The
+  /// caller still checks the opt-in before advancing.
+  final bool boardClearedAfterThrow;
+
   const SessionFrameResult({
     required this.emittedDarts,
     required this.status,
     this.timings = const PipelineTimings(),
     this.calConfidences = const [null, null, null, null],
     this.firstEmittedDartOrdinal,
+    this.boardClearedAfterThrow = false,
   });
 }
 
@@ -59,8 +66,10 @@ class SessionFrameResult {
 /// with a fake detector; the camera plumbing lives in the capture page.
 ///
 /// The session never advances the turn and never talks to the game directly —
-/// it returns the darts to emit; the caller submits them via the core
-/// `DartInputSink`. Turn ownership / ordinals are supplied by the caller.
+/// it returns the darts to emit (and whether a board-clear should auto-advance,
+/// [SessionFrameResult.boardClearedAfterThrow]); the caller acts on them via
+/// the core `DartInputSink`. Turn ownership / ordinals are supplied by the
+/// caller.
 class AutoScorerSession {
   AutoScorerSession({
     DartDetector? detector,
@@ -105,6 +114,7 @@ class AutoScorerSession {
   /// require it to be non-null.
   final DartDetector? _detector;
   final DartTracker _tracker;
+  final AutoAdvanceGate _autoAdvance = AutoAdvanceGate();
   final CaptureStore? _captureStore;
   final FramePreprocessor? _preprocessor;
   final String _modelVersion;
@@ -161,6 +171,7 @@ class AutoScorerSession {
     detectWatch.stop();
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
+    final cleared = _autoAdvance.onFrame(update);
     trackWatch.stop();
 
     if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
@@ -198,6 +209,7 @@ class AutoScorerSession {
         track: trackWatch.elapsed,
       ),
       calConfidences: frame.calConfidences,
+      boardClearedAfterThrow: cleared,
     );
   }
 
@@ -285,18 +297,22 @@ class AutoScorerSession {
     onCapturePersisted?.call(_capturesPersisted);
   }
 
-  /// Manual next-turn pressed: reset the per-turn cap counter. Recorded so a
-  /// replay resets the cap at the same point (#491).
+  /// The turn advanced (manual NEXT or auto-advance): reset the per-turn cap
+  /// counter and the auto-advance arming. Recorded so a replay resets the cap
+  /// at the same point (#491).
   void onTurnAdvanced() {
     _tracker.onTurnAdvanced();
+    _autoAdvance.reset();
     _recorder?.recordSignal(TrackerSignalKind.turnAdvanced);
   }
 
   /// Manual "remove darts": re-baseline the tracker; returns the resulting
-  /// status (phase `rebaselined`) so the caller can refresh the chip. Recorded
-  /// so a replay re-baselines at the same point (#491).
+  /// status (phase `rebaselined`) so the caller can refresh the chip. Disarms
+  /// auto-advance like any other clear (#805). Recorded so a replay
+  /// re-baselines at the same point (#491).
   TrackerStatus removeDarts() {
     final status = _tracker.removeDarts().status;
+    _autoAdvance.reset();
     _recorder?.recordSignal(TrackerSignalKind.removeDarts);
     return status;
   }
@@ -313,6 +329,7 @@ class AutoScorerSession {
   }) {
     final trackWatch = Stopwatch()..start();
     final update = _tracker.processFrame(frame);
+    final cleared = _autoAdvance.onFrame(update);
     trackWatch.stop();
     // Record the raw (pre-filter) detections + thresholds + outcome for replay
     // (#490). recordFrame is an O(1) in-memory append — no I/O on the hot path;
@@ -332,6 +349,7 @@ class AutoScorerSession {
       // Snapshot the ordinal NOW (synchronously), before any async capture.
       firstEmittedDartOrdinal:
           emitted == 0 ? null : _tracker.dartsThisTurn - emitted + 1,
+      boardClearedAfterThrow: cleared,
     );
   }
 

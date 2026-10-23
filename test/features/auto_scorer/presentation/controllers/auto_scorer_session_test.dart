@@ -10,6 +10,8 @@ import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.d
 import 'package:dart_lodge/features/auto_scorer/domain/detection/detection_mapping.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker.dart';
+import 'package:dart_lodge/features/auto_scorer/domain/tracking/dart_tracker_config.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/detection_frame.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/tracking/tracker_status.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/controllers/auto_scorer_session.dart';
@@ -649,5 +651,67 @@ void main() {
         turnOrdinal: 1,
         gameId: 'g',
         segment: 'T20');
+  });
+
+  group('board-clear auto-advance (#805)', () {
+    const threeDarts = <BoardPoint>[
+      (x: 0.5, y: 0.35),
+      (x: 0.4, y: 0.45),
+      (x: 0.6, y: 0.45),
+    ];
+    final threeDartFrame =
+        DetectionFrame(calPoints: cals, dartCandidates: threeDarts);
+    final emptyFrame = DetectionFrame(calPoints: cals, dartCandidates: const []);
+    final strayFrame = DetectionFrame(
+        calPoints: cals, dartCandidates: const [(x: 0.3, y: 0.6)]);
+
+    // Normal preset: 6 empty frames before the board counts as cleared.
+    AutoScorerSession normalSession() => AutoScorerSession(
+          tracker: DartTracker(
+              config: const DartTrackerConfig(emptyFramesToRebaseline: 6)),
+        );
+
+    /// Feeds [frame] [n] times; true if any of them reported a clear-advance.
+    bool feed(AutoScorerSession s, DetectionFrame frame, int n) {
+      var cleared = false;
+      for (var i = 0; i < n; i++) {
+        if (s.processDetectionFrame(frame).boardClearedAfterThrow) {
+          cleared = true;
+        }
+      }
+      return cleared;
+    }
+
+    test('pulling the camera-seen darts advances the turn', () {
+      final s = normalSession();
+      expect(feed(s, threeDartFrame, 2), isFalse); // 3 darts emitted
+      expect(feed(s, emptyFrame, 6), isTrue);
+    });
+
+    test('a hand-added dart after NEXT-before-pull never advances the turn',
+        () {
+      final s = normalSession();
+      feed(s, threeDartFrame, 2); // turn N: 3 camera darts
+      s.onTurnAdvanced(); // NEXT tapped, darts still on the board
+      feed(s, threeDartFrame, 2);
+      // Pull: the game declines this clear (0 darts in the new turn).
+      expect(feed(s, emptyFrame, 6), isFalse);
+      // Turn N+1: the camera catches dart 1 once and never confirms it; the
+      // player adds it by hand; the board reads empty. Before #805 this fired.
+      expect(feed(s, strayFrame, 1), isFalse);
+      expect(feed(s, emptyFrame, 6), isFalse);
+      // A normal camera turn afterwards still advances on the pull.
+      s.onTurnAdvanced();
+      expect(feed(s, threeDartFrame, 2), isFalse);
+      expect(feed(s, emptyFrame, 6), isTrue);
+    });
+
+    test('remove darts disarms it', () {
+      final s = normalSession();
+      feed(s, threeDartFrame, 2);
+      s.removeDarts();
+      feed(s, strayFrame, 1);
+      expect(feed(s, emptyFrame, 6), isFalse);
+    });
   });
 }

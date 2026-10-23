@@ -15,7 +15,7 @@ un comportement surprenant**. On regarde les *transitions* et les *états*, pas 
 **Oracles :**
 - `docs/UI_SCREEN_FLOWS_V3_FINAL.md` (flux & index des écrans — réaligné #585).
 - `CLAUDE.md` — règles de navigation (`context.go()` vs `context.push()`, `PopScope`, `onExit`),
-  gestion des 3 états `AsyncValue`, garde `_sawDartsThisTurn` de l'auto-advance, etc.
+  gestion des 3 états `AsyncValue`, garde `AutoAdvanceGate` de l'auto-advance, etc.
 - Code : `lib/app/app_router.dart`, `lib/features/**/presentation/pages/*.dart`.
 
 **Rail :** majorité `[web]` (Pixel 6a portrait 412×915) ; `[device]` pour back physique, haptique,
@@ -149,12 +149,12 @@ heuristiques, pas d'étapes figées.
 
 **Heuristiques / frontière web↔device (explicite)**
 - **Web (sim) couvre** : bascule camera-first chrome, `submitDart`, `advanceTurn` direct, correction.
-- **Device-only / hors scope web** : `CameraPreview` live, détection board-clear réelle, focus ; le **confirm-before-clear** (`emptyFramesToRebaseline` ≈ 9 frames ≈ 3 s @ 3 Hz ; avec l'auto-advance, preset « Board-clear wait » 5/6/9 frames, défaut 6 ≈ 2 s, #800) et la garde `_sawDartsThisTurn` — `dartlodgeSim.advance()` BYPASSE ces gardes (contrôle direct), donc `shouldAutoAdvance` se vérifie en **test unitaire** + device, pas via le sim.
+- **Device-only / hors scope web** : `CameraPreview` live, détection board-clear réelle, focus ; le **confirm-before-clear** (`emptyFramesToRebaseline` ≈ 9 frames ≈ 3 s @ 3 Hz ; avec l'auto-advance, preset « Board-clear wait » 5/6/9 frames, défaut 6 ≈ 2 s, #800) et la garde `AutoAdvanceGate` (#805) — `dartlodgeSim.advance()` BYPASSE ces gardes (contrôle direct), donc `AutoAdvanceGate` se vérifie en **test unitaire** + device, pas via le sim.
 - Opt-in par défaut OFF : toujours établir l'état avant d'explorer l'auto-advance.
 - « Jeu complet » autoritatif = `GameRepository.getGame`, pas le notifier.
 - Mock = post-détection (injecte à `sink.submitDart`) : n'exerce ni tracker, ni cap 3-darts, ni board-clear.
 
-- Oracle : confirm-before-clear, auto-advance opt-in (`_sawDartsThisTurn`), no-op si modal/jeu fini ; rail sim (`dartlodgeSim`).
+- Oracle : confirm-before-clear, auto-advance opt-in (`AutoAdvanceGate`), no-op si modal/jeu fini ; rail sim (`dartlodgeSim`).
 
 ### 3.7 Partie en cours (reload / exit / read-only)
 

@@ -52,7 +52,9 @@ class _PracticeDartInputSink implements DartInputSink {
     // No-op when complete, or when the current turn has no darts yet: Catch 40's
     // internal same-target auto-advance (inside processDart) already starts a
     // fresh turn without bumping activeTurnSignal, so a board-clear here would
-    // otherwise advance again and emit a spurious 0-dart TurnEnded.
+    // otherwise advance again and emit a spurious 0-dart TurnEnded. Skipping
+    // here is safe: the auto-scorer disarms on every board-clear, so a declined
+    // advance can't fire later in the next turn (#805).
     if (s == null ||
         s.gameState.isComplete ||
         s.gameState.dartsThrownInTurn == 0) {
