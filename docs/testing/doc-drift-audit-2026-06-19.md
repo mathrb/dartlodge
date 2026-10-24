@@ -1,162 +1,162 @@
-# Audit de dérive documentaire — oracles du plan de vérification 1.0
+# Documentation drift audit — 1.0 verification plan oracles
 
-> Date : 2026-06-19. Branche : `docs/1.0-verification-plan` (rebasée sur `main` @ `40ac44c`,
-> heatmap epic #571 inclus). Méthode : 7 agents parallèles (doc vs code), rapport sans modification.
+> Date: 2026-06-19. Branch: `docs/1.0-verification-plan` (rebased on `main` @ `40ac44c`,
+> heatmap epic #571 included). Method: 7 parallel agents (doc vs code), report-only, no changes.
 >
-> **Note de méthode (important).** Le premier passage a tourné sur un `main` local en retard de
-> 6 commits (toute la heatmap #579→#584). Les findings « heatmap absente » étaient des faux
-> positifs ; après mise à jour de la branche, un audit ciblé heatmap a révélé les vraies dérives
-> (docs non mises à jour par l'epic). **Leçon : toute vérification doit tourner sur `origin/main` à jour.**
+> **Method note (important).** The first pass ran on a local `main` that was 6 commits
+> behind (all of heatmap #579→#584). The "heatmap missing" findings were false
+> positives; after updating the branch, a targeted heatmap audit revealed the real drift
+> (docs not updated by the epic). **Lesson: every verification must run on an up-to-date `origin/main`.**
 
 ---
 
-## Tableau de synthèse
+## Summary table
 
 | Document | Verdict | P0 | P1 | P2 |
 |---|---|---|---|---|
-| `docs/games/x01.transitions.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/games/cricket.transitions.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/games/around-the-clock.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/games/count-up.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/games/checkout-practice.md` | ⚠️ dérive | 0 | 1 | 1 |
-| `docs/statistics/x01.projections.md` | ⚠️ dérive | 0 | 1 | 1 |
-| `docs/statistics/statistics.architecture.md` | ⚠️ dérive | 0 | 3 | 2 |
-| `docs/statistics/projection-test-matrix.md` | ⚠️ dérive | 0 | 1 | 0 |
-| `docs/DATABASE_DDL.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/DATA.md` | ✅ à jour | 0 | 0 | 0 |
-| `docs/GAME-EVENT-SPECIFICATIONS.md` | ⚠️ dérive | 0 | 2 | 1 |
-| `docs/UI_SCREEN_FLOWS_V3_FINAL.md` | ❌ forte dérive | 0 | 7 | 6 |
-| `docs/design/DESIGN_SYSTEM.md` | ⚠️ dérive | 0 | 2 | 6 |
-| `docs/REPOSITORY_INTERFACES.md` | ❌ forte dérive | 0 | 6 | 6 |
-| `docs/STATE_MANAGEMENT.md` | ⚠️ dérive | 0 | 2 | 4 |
-| `lib/l10n/arb/app_*.arb` (×7) | ✅ parité parfaite | 0 | 0 | 7 (cosmétique) |
+| `docs/games/x01.transitions.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/games/cricket.transitions.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/games/around-the-clock.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/games/count-up.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/games/checkout-practice.md` | ⚠️ drift | 0 | 1 | 1 |
+| `docs/statistics/x01.projections.md` | ⚠️ drift | 0 | 1 | 1 |
+| `docs/statistics/statistics.architecture.md` | ⚠️ drift | 0 | 3 | 2 |
+| `docs/statistics/projection-test-matrix.md` | ⚠️ drift | 0 | 1 | 0 |
+| `docs/DATABASE_DDL.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/DATA.md` | ✅ up to date | 0 | 0 | 0 |
+| `docs/GAME-EVENT-SPECIFICATIONS.md` | ⚠️ drift | 0 | 2 | 1 |
+| `docs/UI_SCREEN_FLOWS_V3_FINAL.md` | ❌ heavy drift | 0 | 7 | 6 |
+| `docs/design/DESIGN_SYSTEM.md` | ⚠️ drift | 0 | 2 | 6 |
+| `docs/REPOSITORY_INTERFACES.md` | ❌ heavy drift | 0 | 6 | 6 |
+| `docs/STATE_MANAGEMENT.md` | ⚠️ drift | 0 | 2 | 4 |
+| `lib/l10n/arb/app_*.arb` (×7) | ✅ perfect parity | 0 | 0 | 7 (cosmetic) |
 
-**Aucun P0.** Les 6 docs « à jour » incluent l'essentiel des oracles de correctness (transitions de jeu) et de schéma (DDL/DATA). Les dérives les plus lourdes sont sur les **flux UI**, les **interfaces de repo** et le **state management** (oracles d'implémentation).
+**No P0.** The 6 "up to date" docs include most of the correctness oracles (game transitions) and the schema oracles (DDL/DATA). The heaviest drift is in the **UI flows**, the **repository interfaces** and **state management** (implementation oracles).
 
 ---
 
-## Détail par document
+## Detail per document
 
 ### `docs/games/checkout-practice.md` — P1 + P2
-- **P1** — Le doc décrit un drill « un seul checkout puis fin ». Le moteur
-  (`stateless_checkout_practice_engine.dart:84-208`) + l'UI (`game_config_page.dart:337`,
-  picker `setupSectionTargetSuccesses`) implémentent un **mode quota multi-succès** :
-  `practiceSuccesses >= checkoutTargetSuccesses` (∞ si null → jusqu'à End Drill). Non documenté.
-- **P2** — Sur multi-succès, `TurnStarted` réinitialise `score`/`turnStartScore` à 170 après un
-  checkout (`:55-82`). Conséquence du point ci-dessus.
+- **P1** — The doc describes a "single checkout then end" drill. The engine
+  (`stateless_checkout_practice_engine.dart:84-208`) + the UI (`game_config_page.dart:337`,
+  `setupSectionTargetSuccesses` picker) implement a **multi-success quota mode**:
+  `practiceSuccesses >= checkoutTargetSuccesses` (∞ if null → until End Drill). Undocumented.
+- **P2** — With multi-success, `TurnStarted` resets `score`/`turnStartScore` to 170 after a
+  checkout (`:55-82`). Consequence of the point above.
 
 ### `docs/statistics/statistics.architecture.md` — 3×P1 + 2×P2
-- **P1** — §5.2/§6/§9.1 disent « ordre = `global_sequence` ». Le code trie par
-  `(gameId, localSequence)` (`projection_runner.dart:22-27`) ; `global_sequence` est inutilisé.
-- **P1** — Projections de succès **NineDarter** (`x01.nineDarter`) et **Games501** (`x01.games501`)
-  câblées dans `achievementMetricsFromEvents` (`player_stats_assembler.dart:108-148`) — absentes du doc.
-- **P1** — Chemin **heatmap** non documenté : `getDartPositions` lit `dart_throws` en **brut**
-  (hors assembler/ProjectionRunner), filtré `is_complete=1` + x/y non-null
-  (`statistics_repository_drift.dart:535-553`). Exception architecturale au principe « stats = projections ».
-- **P2** — Structure de snapshot à deux niveaux (`{descriptor.id: {field: value}}`) non décrite.
-- **P2** — Positions x/y persistées sur `dart_throws` non évoquées dans l'architecture stats.
+- **P1** — §5.2/§6/§9.1 say "order = `global_sequence`". The code sorts by
+  `(gameId, localSequence)` (`projection_runner.dart:22-27`); `global_sequence` is unused.
+- **P1** — **NineDarter** (`x01.nineDarter`) and **Games501** (`x01.games501`) achievement projections
+  wired into `achievementMetricsFromEvents` (`player_stats_assembler.dart:108-148`) — missing from the doc.
+- **P1** — Undocumented **heatmap** path: `getDartPositions` reads `dart_throws` **raw**
+  (outside the assembler/ProjectionRunner), filtered on `is_complete=1` + non-null x/y
+  (`statistics_repository_drift.dart:535-553`). Architectural exception to the "stats = projections" principle.
+- **P2** — Two-level snapshot structure (`{descriptor.id: {field: value}}`) not described.
+- **P2** — x/y positions persisted on `dart_throws` not mentioned in the stats architecture.
 
 ### `docs/statistics/x01.projections.md` — P1 + P2
-- **P1** — §10 table de reset dit « Turn stats → reset on **TurnEnded** ». Le code reset sur
-  **TurnStarted** (`projection_runner.dart:30-33`) ; contredit par l'architecture, CLAUDE.md et la test-matrix.
-- **P2** — Pas de note « first-nine / checkout-attempt / nine-darter / 501 exigent `TurnStarted` ».
-- ✅ §5.2 (`turn_score` delta #318), checkout ≤170, ids de descripteur, snapshot keys : exacts.
+- **P1** — §10 reset table says "Turn stats → reset on **TurnEnded**". The code resets on
+  **TurnStarted** (`projection_runner.dart:30-33`); contradicted by the architecture doc, CLAUDE.md and the test matrix.
+- **P2** — No note that "first-nine / checkout-attempt / nine-darter / 501 require `TurnStarted`".
+- ✅ §5.2 (`turn_score` delta #318), checkout ≤170, descriptor ids, snapshot keys: accurate.
 
 ### `docs/statistics/projection-test-matrix.md` — P1
-- **P1** — §3 « golden rule : event order = `global_sequence`, nothing else » → doit être
-  `(game_id, local_sequence)`. (§3-D1 reset `TurnStarted` est correct.)
+- **P1** — §3 "golden rule: event order = `global_sequence`, nothing else" → must be
+  `(game_id, local_sequence)`. (§3-D1 reset on `TurnStarted` is correct.)
 
 ### `docs/GAME-EVENT-SPECIFICATIONS.md` — 2×P1 + P2
-- **P1** — §4.4 `DartCorrected` documenté avec `corrected_segment`/`corrected_multiplier`. Réalité
-  (`undo_last_dart_use_case.dart:112-126`) : `original_event_id`, `corrected_dart_id`,
-  `superseded_event_ids` (record d'undo/supersession, pas de re-score vision).
-- **P1** — `TurnStarted` omet `player_id`/`leg_index`/`starting_score` ; `TurnEnded` omet
-  `player_id` et le `turn_score` (#318) (`game_use_case_helpers.dart:62-91,141-168`).
-- **P2** — `DartThrown` omet `player_id`, `score` (toujours présents) et le flag conditionnel `bust`.
-- ✅ x/y (#571), `CrazyTargetsRolled`, `CricketTargetsAssigned`, `GameCreated`, `GameCompleted` : exacts.
+- **P1** — §4.4 `DartCorrected` documented with `corrected_segment`/`corrected_multiplier`. Reality
+  (`undo_last_dart_use_case.dart:112-126`): `original_event_id`, `corrected_dart_id`,
+  `superseded_event_ids` (undo/supersession record, not a vision re-score).
+- **P1** — `TurnStarted` omits `player_id`/`leg_index`/`starting_score`; `TurnEnded` omits
+  `player_id` and `turn_score` (#318) (`game_use_case_helpers.dart:62-91,141-168`).
+- **P2** — `DartThrown` omits `player_id`, `score` (always present) and the conditional `bust` flag.
+- ✅ x/y (#571), `CrazyTargetsRolled`, `CricketTargetsAssigned`, `GameCreated`, `GameCompleted`: accurate.
 
-### `docs/UI_SCREEN_FLOWS_V3_FINAL.md` — 7×P1 + 6×P2 (forte dérive)
-- **P1** — Routes board fausses : réel `/game/active/x01/:gameId`, `/game/active/cricket/:gameId`,
+### `docs/UI_SCREEN_FLOWS_V3_FINAL.md` — 7×P1 + 6×P2 (heavy drift)
+- **P1** — Wrong board routes: actual `/game/active/x01/:gameId`, `/game/active/cricket/:gameId`,
   `/practice-board/:gameId` (`app_router.dart:49-52,262-273`).
-- **P1** — **Count Up board** absent (`/game/active/count-up/:gameId`).
-- **P1** — **Achievements page** absente (`/achievements/:playerId`, depuis Player Stats).
-- **P1** — **Auto-Scorer Settings** absent (`/settings/auto-scoring`).
-- **P1** — Layout **Home** faux (doc = grille 2×2 + « coming soon » ; réel = liste de cartes
-  kinétiques X01/Cricket/Casual/Practice + nav rows Statistics/History/Players).
-- **P1** — **Settings** : réel = Theme 3-way + Language + Sound + Auto-Scoring + About + Feedback +
-  Debug + Danger Zone (doc = Theme + About seulement).
-- **P1** — **Heatmap** : deux surfaces absentes — `GameHeatmapSectionWidget` (post-game, sélecteur
-  joueur) + `StatsHeatmapSectionWidget` (stats all-time par gameType, ignore le TimeRangeSelector).
-- **P2** — param route variant `:category` (x01/cricket/casual/practice) ; Game Config = bottom
-  sheet (pas de route) ; Edit Player absent ; `/stats` = player-picker (pas « deferred ») ;
-  variantes camera-first des boards ; sémantique push/go + PopScope + onExit.
+- **P1** — **Count Up board** missing (`/game/active/count-up/:gameId`).
+- **P1** — **Achievements page** missing (`/achievements/:playerId`, from Player Stats).
+- **P1** — **Auto-Scorer Settings** missing (`/settings/auto-scoring`).
+- **P1** — Wrong **Home** layout (doc = 2×2 grid + "coming soon"; actual = list of kinetic cards
+  X01/Cricket/Casual/Practice + Statistics/History/Players nav rows).
+- **P1** — **Settings**: actual = 3-way Theme + Language + Sound + Auto-Scoring + About + Feedback +
+  Debug + Danger Zone (doc = Theme + About only).
+- **P1** — **Heatmap**: two surfaces missing — `GameHeatmapSectionWidget` (post-game, player
+  selector) + `StatsHeatmapSectionWidget` (all-time stats per gameType, ignores the TimeRangeSelector).
+- **P2** — variant route param `:category` (x01/cricket/casual/practice); Game Config = bottom
+  sheet (not a route); Edit Player missing; `/stats` = player picker (not "deferred");
+  camera-first board variants; push/go semantics + PopScope + onExit.
 
 ### `docs/design/DESIGN_SYSTEM.md` — 2×P1 + 6×P2
-- **P1** — Light `primary` : doc `#AFFFD1`, code `#006D45` (`app_colors.dart:46`). Le doc affirme à
-  tort que la famille `primary` est identique en clair/sombre ; seul `primaryFixed*` l'est.
-- **P1** — Tokens **camera-first #477** non documentés : bande 110px,
-  `scoreMedium`-dans-FittedBox-sur-labels, `HeroMetricWidget` (`scoreActive` + over-line
-  `labelSmall`/`primaryFixed`), strips at-distance, `CricketMarkPainter`.
-- **P2** — Hex obsolètes : dark `outlineVariant` `#46484A`→`#484848` ; §7.4 `surfaceBright`
-  `#292C30`→`#2B2C2C` ; §10.1 `primaryFixedDim` `#00E297`→`#00F2A2`.
-- **P2** — Noms de tokens : doc `textScore*`/`textSegmentButton`/`textMultiplierLabel` → code
-  `score*`/`segmentButton`/`multiplierLabel` (sans préfixe `text`).
-- **P2** — Colormap heatmap / KDE / couleurs board non documentés (cf. won't-fix #195 pour les
-  couleurs dartboard domaine).
-- **P2** — Dark `surfaceVariant` `#252626` / `onSecondary` `#003417` absents des tables ; notation
-  letter-spacing `display-lg` (em vs px) — équivalent, cosmétique.
+- **P1** — Light `primary`: doc `#AFFFD1`, code `#006D45` (`app_colors.dart:46`). The doc wrongly
+  claims the `primary` family is identical in light/dark; only `primaryFixed*` is.
+- **P1** — **Camera-first #477** tokens undocumented: 110px band,
+  `scoreMedium`-in-FittedBox-on-labels, `HeroMetricWidget` (`scoreActive` + `labelSmall`/`primaryFixed`
+  over-line), at-distance strips, `CricketMarkPainter`.
+- **P2** — Stale hex values: dark `outlineVariant` `#46484A`→`#484848`; §7.4 `surfaceBright`
+  `#292C30`→`#2B2C2C`; §10.1 `primaryFixedDim` `#00E297`→`#00F2A2`.
+- **P2** — Token names: doc `textScore*`/`textSegmentButton`/`textMultiplierLabel` → code
+  `score*`/`segmentButton`/`multiplierLabel` (no `text` prefix).
+- **P2** — Heatmap colormap / KDE / board colours undocumented (see won't-fix #195 for the
+  domain dartboard colours).
+- **P2** — Dark `surfaceVariant` `#252626` / `onSecondary` `#003417` missing from the tables; `display-lg`
+  letter-spacing notation (em vs px) — equivalent, cosmetic.
 
-### `docs/REPOSITORY_INTERFACES.md` — 6×P1 + 6×P2 (forte dérive)
-- **P1** — `getLeaderboard` fantôme (n'existe pas). 4 méthodes Statistics manquantes
+### `docs/REPOSITORY_INTERFACES.md` — 6×P1 + 6×P2 (heavy drift)
+- **P1** — Phantom `getLeaderboard` (doesn't exist). 4 Statistics methods missing
   (`achievementMetricsForPlayer`, `getPlayerLegHistory`, `getPlayerX01StartingScores`,
-  `getPlayerCricketVariants`) + params `getPlayerStats` manquants (`startingScore`, `variant`,
+  `getPlayerCricketVariants`) + missing `getPlayerStats` params (`startingScore`, `variant`,
   `legLimit`, `cricketTargetMode`).
-- **P1** — GameRepository : `saveGameState` fantôme ; `appendEventsAndCompleteGame` manquant ;
-  `getCompletedGames` params `dateFrom`/`dateTo` manquants ; claim « completeGame clears
-  game_state_json » obsolète.
-- **P1** — `getLatestSequence` : doc « -1 si vide », code « 0 » (`game_event_repository.dart:22-24`).
-- **P1** — `MultipleActiveGamesException` fantôme ; 6 exceptions réelles non documentées
+- **P1** — GameRepository: phantom `saveGameState`; `appendEventsAndCompleteGame` missing;
+  `getCompletedGames` `dateFrom`/`dateTo` params missing; stale "completeGame clears
+  game_state_json" claim.
+- **P1** — `getLatestSequence`: doc "-1 if empty", code "0" (`game_event_repository.dart:22-24`).
+- **P1** — Phantom `MultipleActiveGamesException`; 6 real exceptions undocumented
   (`DuplicatePlayerNameException`, `StatisticsException`, `InvalidGameStateException`,
   `NoDartsToUndoException`, `DartNotCorrectableException`, `DatabaseException`).
-- **P1** — §8 wiring obsolète : doc `appDatabase`/`*Impl`/typed `XxxRef` → réel `databaseProvider`/
+- **P1** — §8 stale wiring: doc `appDatabase`/`*Impl`/typed `XxxRef` → actual `databaseProvider`/
   `*Drift`/plain `Ref` (Riverpod 3.x).
-- **P2** — `deletePlayer`, `watchUnlockedDetails` manquants ; **entité `DartPosition` non définie**
-  (référencée par `getDartPositions` mais sans bloc de champs) ; `GameStats.gameType` manquant ;
-  stubs exceptions §4 vs §7 incohérents ; framing dual-backend sqflite obsolète (single drift).
-- ✅ « toutes exceptions extends RepositoryException » et « getPlayerStats/watchPlayerStats prennent
-  `required GameType` » : exacts.
+- **P2** — `deletePlayer`, `watchUnlockedDetails` missing; **`DartPosition` entity undefined**
+  (referenced by `getDartPositions` but with no field block); `GameStats.gameType` missing;
+  exception stubs inconsistent between §4 and §7; stale dual-backend sqflite framing (single drift).
+- ✅ "all exceptions extend RepositoryException" and "getPlayerStats/watchPlayerStats take
+  `required GameType`": accurate.
 
 ### `docs/STATE_MANAGEMENT.md` — 2×P1 + 4×P2
-- **P1** — Règle de suffixe `Notifier` (la « plus facile à violer ») absente ; exemples nommés
-  `class ActiveGame` au lieu de `ActiveGameNotifier` → `activeGameProvider`.
-- **P1** — Signatures à ref typée obsolètes (`GameRepositoryRef`…) → plain `Ref ref` partout (3.x).
-- **P2** — Classes freezed sans `abstract` (3.x exige `abstract class … with _$…`) ;
-  `watchGameEvents` inexistant (réel `GameEventRepository.watchEventsForGame`) ;
-  `StateNotifierProvider`/`StateProvider` inutilisés dans le code ; note `AsyncValue.value` vs
-  `valueOrNull` absente.
+- **P1** — The `Notifier` suffix rule (the "easiest to violate") is missing; examples named
+  `class ActiveGame` instead of `ActiveGameNotifier` → `activeGameProvider`.
+- **P1** — Stale typed-ref signatures (`GameRepositoryRef`…) → plain `Ref ref` everywhere (3.x).
+- **P2** — freezed classes without `abstract` (3.x requires `abstract class … with _$…`);
+  nonexistent `watchGameEvents` (actual `GameEventRepository.watchEventsForGame`);
+  `StateNotifierProvider`/`StateProvider` unused in the code; `AsyncValue.value` vs
+  `valueOrNull` note missing.
 
-### `lib/l10n/arb/app_*.arb` (×7) — parité parfaite, P2 cosmétique
-- Parité exacte : 515 clés par locale, 0 manquante, 0 orpheline, placeholders intacts (44 clés paramétrées).
-- « Identiques à l'EN » majoritairement légitimes (nombres, jargon darts, noms propres de succès).
-- Vrais (cosmétiques) : poignée de chaînes laissées en anglais par locale (loanwords surtout).
-- **Lacunes côté CODE (pas ARB)** : surface debug `auto_scorer/` (33 littéraux EN, debug-only) et
-  `count_up_board_page.dart` (3 chaînes user-facing EN — vraie lacune si Count Up est shippé).
+### `lib/l10n/arb/app_*.arb` (×7) — perfect parity, cosmetic P2
+- Exact parity: 515 keys per locale, 0 missing, 0 orphaned, placeholders intact (44 parameterized keys).
+- "Identical to EN" mostly legitimate (numbers, darts jargon, proper names of achievements).
+- Real (cosmetic) ones: a handful of strings left in English per locale (mostly loanwords).
+- **Gaps on the CODE side (not ARB)**: `auto_scorer/` debug surface (33 EN literals, debug-only) and
+  `count_up_board_page.dart` (3 user-facing EN strings — a real gap if Count Up ships).
 
 ---
 
-## Recommandation de regroupement des corrections
+## Recommended grouping of the fixes
 
-Les corrections se regroupent naturellement par domaine (un PR `docs:` par groupe) :
+The fixes group naturally by domain (one `docs:` PR per group):
 
 1. **Stats** — `statistics.architecture.md` + `x01.projections.md` + `projection-test-matrix.md`
-   (global_sequence, achievements, heatmap path, turn-reset).
-2. **Events** — `GAME-EVENT-SPECIFICATIONS.md` (DartCorrected, Turn*/keys).
-3. **Flux UI** — `UI_SCREEN_FLOWS_V3_FINAL.md` (réécriture lourde : routes, écrans manquants, Home, Settings, heatmap).
-4. **Design** — `DESIGN_SYSTEM.md` (hex, noms tokens, camera-first, heatmap).
-5. **Oracles d'implémentation** — `REPOSITORY_INTERFACES.md` + `STATE_MANAGEMENT.md`.
-6. **Jeux** — `checkout-practice.md` (mode quota).
-7. **i18n (code, pas doc)** — `count_up_board_page.dart` à localiser (la surface auto_scorer debug = won't-fix probable).
+   (global_sequence, achievements, heatmap path, turn reset).
+2. **Events** — `GAME-EVENT-SPECIFICATIONS.md` (DartCorrected, Turn* keys).
+3. **UI flows** — `UI_SCREEN_FLOWS_V3_FINAL.md` (heavy rewrite: routes, missing screens, Home, Settings, heatmap).
+4. **Design** — `DESIGN_SYSTEM.md` (hex, token names, camera-first, heatmap).
+5. **Implementation oracles** — `REPOSITORY_INTERFACES.md` + `STATE_MANAGEMENT.md`.
+6. **Games** — `checkout-practice.md` (quota mode).
+7. **i18n (code, not doc)** — localize `count_up_board_page.dart` (the auto_scorer debug surface = probable won't-fix).
 
-Priorité pour débloquer le plan de vérification : les oracles que le plan cite (stats, design,
-UI-flows, transitions) avant les oracles d'implémentation (repo/state — utiles mais moins critiques
-pour la phase de test).
+Priority to unblock the verification plan: the oracles the plan cites (stats, design,
+UI flows, transitions) before the implementation oracles (repo/state — useful but less critical
+for the test phase).
