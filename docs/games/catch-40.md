@@ -1,60 +1,60 @@
-# Catch 40 — règles canoniques (oracle de test)
+# Catch 40 — canonical rules (test oracle)
 
-> **Statut : ORACLE.** Source de vérité pour l'axe 1. Catch 40 n'avait pas de table de
-> transitions ; ce document capture les **règles canoniques** du jeu (origine : GoDartsPro)
-> pour servir d'oracle indépendant de l'engine.
-> Sources : godartspro.com/catch-40, dartcounterapp.com, dolfdarts.com (juin 2026).
+> **Status: ORACLE.** Source of truth for axis 1. Catch 40 had no transition
+> table; this document captures the game's **canonical rules** (origin: GoDartsPro)
+> to serve as an oracle independent of the engine.
+> Sources: godartspro.com/catch-40, dartcounterapp.com, dolfdarts.com (June 2026).
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Overview
 
-Drill de finition **solo**. Le joueur enchaîne **40 checkouts**, de **61 à 100**, et marque des
-points selon la rapidité de chaque finition. But : finir chaque score en un minimum de fléchettes.
+A **solo** finishing drill. The player works through **40 checkouts**, from **61 to 100**, and scores
+points according to how fast each finish is. Goal: finish each score in as few darts as possible.
 
 ## 2. Setup
 
-| Paramètre | Valeur |
+| Parameter | Value |
 |---|---|
-| Cibles (outs) | 61, 62, …, 100 (40 cibles) |
-| Fléchettes par cible | jusqu'à 6 |
-| Finition | sur un double (checkout = score à exactement 0 sur un double) |
-| Joueurs | solo (pas d'adversaire) |
+| Targets (outs) | 61, 62, …, 100 (40 targets) |
+| Darts per target | up to 6 |
+| Finish | on a double (checkout = score at exactly 0 on a double) |
+| Players | solo (no opponent) |
 
 ## 3. Progression
 
-- Démarre à l'out **61**, puis 62, …, jusqu'à **100**.
-- Pour chaque out : jusqu'à 6 fléchettes pour ramener le score à 0 (sur un double).
-- Échec en 6 fléchettes → 0 point, on passe à l'out suivant.
+- Starts at out **61**, then 62, …, up to **100**.
+- For each out: up to 6 darts to bring the score to 0 (on a double).
+- Failure within 6 darts → 0 points, move on to the next out.
 
 ## 4. Scoring
 
-| Finition | Points |
+| Finish | Points |
 |---|---|
-| en 2 fléchettes | 3 |
-| en 3 fléchettes | 2 |
-| en 4, 5 ou 6 fléchettes | 1 |
-| **out 99 en 3 fléchettes** | **3** (exception : 99 ne peut pas se finir en 2 fléchettes) |
-| échec (après 6 fléchettes) | 0 |
+| in 2 darts | 3 |
+| in 3 darts | 2 |
+| in 4, 5 or 6 darts | 1 |
+| **out 99 in 3 darts** | **3** (exception: 99 can't be finished in 2 darts) |
+| failure (after 6 darts) | 0 |
 
-**Score maximum = 120.**
+**Maximum score = 120.**
 
-## 5. Fin de partie
+## 5. End of game
 
-- Le drill se termine après la **40ᵉ cible (out 100)**.
-- Pas de gagnant (solo) ; le résultat = total des points sur les 40 cibles.
+- The drill ends after the **40th target (out 100)**.
+- No winner (solo); the result = total points over the 40 targets.
 
-## 6. Conformité de l'implémentation
+## 6. Implementation compliance
 
-> Vérifié 2026-06-19 : `stateless_catch_40_engine.dart` **correspond au canonique** — séquence
-> 61→100 (40 cibles), 6 fléchettes, barème 3/2/1, exception 99→3, plafond 120, solo. Aucune
-> divergence connue. (Les commentaires d'en-tête de l'engine portent le barème ; ce doc le
-> formalise comme oracle indépendant.)
+> Verified 2026-06-19: `stateless_catch_40_engine.dart` **matches the canonical rules** — sequence
+> 61→100 (40 targets), 6 darts, 3/2/1 table, 99→3 exception, 120 ceiling, solo. No
+> known divergence. (The engine's header comments carry the scoring table; this doc
+> formalizes it as an independent oracle.)
 
-## 7. Heuristiques de test (engine vs CE doc)
+## 7. Test heuristics (engine vs THIS doc)
 
-- Cible affichée == `61 + nombre de cibles déjà passées` ; 40ᵉ = 100.
-- Barème exact, **dont l'exception 99→3** (seul out où 3 fléchettes valent 3 pts).
-- Plafond 120 ; `successes ≤ attempts` ; scores monotones non-décroissants.
-- Checkout exige un double ; échec en 6 → 0 pt et passage à l'out suivant.
-- Bornes : fin après l'out 100 ; apparition en History.
+- Displayed target == `61 + number of targets already passed`; the 40th = 100.
+- Exact scoring table, **including the 99→3 exception** (the only out where 3 darts are worth 3 pts).
+- 120 ceiling; `successes ≤ attempts`; scores monotonically non-decreasing.
+- Checkout requires a double; failure within 6 → 0 pts and move on to the next out.
+- Bounds: ends after out 100; appears in History.

@@ -1,82 +1,82 @@
-# Shanghai — règles canoniques (oracle de test)
+# Shanghai — canonical rules (test oracle)
 
-> **Statut : ORACLE.** Source de vérité pour l'axe 1. Shanghai n'avait pas de table de
-> transitions ; ce document capture les **règles canoniques** du jeu pour servir d'oracle
-> indépendant de l'engine.
-> Sources : groupgames101.com, gldproducts.com, darthelp.com, mostdartgames.com (juin 2026).
+> **Status: ORACLE.** Source of truth for axis 1. Shanghai had no transition
+> table; this document captures the game's **canonical rules** to serve as an oracle
+> independent of the engine.
+> Sources: groupgames101.com, gldproducts.com, darthelp.com, mostdartgames.com (June 2026).
 >
-> ⚠️ Voir §7 « Divergences avec l'implémentation » — à trancher, à ne pas figer.
+> ⚠️ See §7 "Divergences from the implementation" — to be settled, not to be frozen.
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Overview
 
-Jeu **multi-joueurs** (compétitif). Chaque manche cible un numéro précis, en montant à partir de 1.
-Seules les touches sur le numéro de la manche comptent. On gagne soit au **plus haut score** en
-fin de partie, soit par une **victoire instantanée « Shanghai »**.
+A **multi-player** (competitive) game. Each round targets a specific number, counting up from 1.
+Only hits on the round's number count. You win either with the **highest score** at the
+end of the game, or with a **"Shanghai" instant win**.
 
 ## 2. Setup
 
-| Paramètre | Valeur |
+| Parameter | Value |
 |---|---|
-| Joueurs | 2+ (compétitif ; « unlimited ») |
-| Manches | numéros 1 → N, dans l'ordre (N variable ; souvent 7 ou 20) |
-| Fléchettes par tour | 3 |
+| Players | 2+ (competitive; "unlimited") |
+| Rounds | numbers 1 → N, in order (N varies; often 7 or 20) |
+| Darts per turn | 3 |
 
-## 3. Cibles par manche
+## 3. Targets per round
 
-- Manche `n` → cible = le numéro `n` (manche 1 → 1, …). Seul ce numéro score ce tour-là.
+- Round `n` → target = the number `n` (round 1 → 1, …). Only that number scores in that turn.
 
-## 4. Scoring (par fléchette sur le numéro de la manche)
+## 4. Scoring (per dart on the round's number)
 
-| Touche | Points |
+| Hit | Points |
 |---|---|
-| Simple `n` | `n × 1` |
+| Single `n` | `n × 1` |
 | Double `n` | `n × 2` |
 | Triple `n` | `n × 3` |
-| Hors numéro / Bull / Miss | 0 |
+| Other number / Bull / Miss | 0 |
 
-> Note de source : une page (groupgames101) résume « single=1, double=2, triple=3 » — c'est le
-> **multiplicateur**, pas le score. Le scoring canonique dominant (et le plus répandu) est
-> **numéro × multiplicateur** (triple-7 en manche 7 = 21). C'est cette convention qui fait foi ici.
+> Source note: one page (groupgames101) summarizes it as "single=1, double=2, triple=3" — that's the
+> **multiplier**, not the score. The dominant (and most widespread) canonical scoring is
+> **number × multiplier** (triple-7 in round 7 = 21). That convention is the one that applies here.
 
-## 5. Conditions de victoire
+## 5. Win conditions
 
-1. **Plus haut score** à la fin de la dernière manche.
-2. **Shanghai (victoire instantanée)** — toucher, **dans le même tour**, un **simple + un double +
-   un triple** du numéro de la manche (dans n'importe quel ordre) → fin immédiate, ce joueur gagne.
+1. **Highest score** at the end of the last round.
+2. **Shanghai (instant win)** — hit, **within the same turn**, a **single + a double +
+   a triple** of the round's number (in any order) → the game ends immediately and that player wins.
 
-**Départage (égalité de score)** : compter les triples ; si toujours à égalité, « bull up » ou tous
-gagnants (selon variante).
+**Tie-break (equal scores)**: count the triples; if still tied, "bull up" or everyone
+wins (depending on the variant).
 
-## 6. Cas-limites
+## 6. Edge cases
 
-- Un Shanghai n'est possible qu'à la 3ᵉ fléchette d'un tour (il faut les 3 types).
-- 3 touches du numéro sans couvrir les 3 multiplicateurs (ex. 3 simples) ≠ Shanghai.
-- Aucune fléchette acceptée après une victoire (Shanghai ou fin de partie).
+- A Shanghai is only possible on the 3rd dart of a turn (all 3 types are needed).
+- 3 hits on the number without covering all 3 multipliers (e.g. 3 singles) ≠ Shanghai.
+- No dart accepted after a win (Shanghai or end of game).
 
-## 7. Divergences avec l'implémentation actuelle (à trancher — NE PAS figer)
+## 7. Divergences from the current implementation (to settle — do NOT freeze)
 
-> Candidats findings pour l'axe 1. `stateless_shanghai_engine.dart`, défaut `shanghaiTotalRounds = 7`.
+> Finding candidates for axis 1. `stateless_shanghai_engine.dart`, default `shanghaiTotalRounds = 7`.
 
-- **D-1 (RÉSOLU — issue #605)** — `rulesShanghaiWinningBody` disait à tort **« Played solo … no
-  opponent to beat »**. Réécrit (7 langues) pour refléter le jeu **multi-joueurs compétitif** (solo ou
-  compétitif ; fin après le dernier tour ; plus haut score gagne ; Shanghai = victoire instantanée),
-  conforme au canonique et à l'engine (qui supportait déjà le multi-joueurs). Texte corrigé, engine
-  inchangé.
-- **D-2 (P2, départage)** — l'engine départage par **« premier de la liste »** ; le canonique
-  départage par **nombre de triples** (puis bull-up / nul). Divergence de tie-break → finding ou
-  simplification assumée. **Décision mainteneur.**
-- **D-3 (note)** — N de manches **configurable** (défaut 7) : choix de design légitime (le canonique
-  admet 7 ou 20). Pas un bug ; à confirmer comme intentionnel.
-- **D-4 (note)** — l'engine enregistre aussi un Shanghai comme `practiceSuccesses++` (sémantique
-  hybride drill/match). À clarifier si Shanghai est positionné comme jeu compétitif ou drill.
+- **D-1 (RESOLVED — issue #605)** — `rulesShanghaiWinningBody` wrongly said **"Played solo … no
+  opponent to beat"**. Rewritten (7 languages) to reflect the **competitive multi-player** game (solo or
+  competitive; ends after the last round; highest score wins; Shanghai = instant win),
+  in line with the canonical rules and the engine (which already supported multi-player). Text fixed, engine
+  unchanged.
+- **D-2 (P2, tie-break)** — the engine breaks ties by **"first in the list"**; the canonical rules
+  break ties by **number of triples** (then bull-up / draw). Tie-break divergence → finding or
+  accepted simplification. **Maintainer decision.**
+- **D-3 (note)** — **configurable** number of rounds N (default 7): a legitimate design choice (the canonical rules
+  allow 7 or 20). Not a bug; to confirm as intentional.
+- **D-4 (note)** — the engine also records a Shanghai as `practiceSuccesses++` (hybrid
+  drill/match semantics). To clarify whether Shanghai is positioned as a competitive game or a drill.
 
-## 8. Heuristiques de test (engine vs CE doc)
+## 8. Test heuristics (engine vs THIS doc)
 
-- Score par fléchette = `numéro_manche × multiplicateur`, **uniquement** sur le numéro de la manche.
-- Shanghai = {simple, double, triple} du numéro dans le même tour, ordre indifférent ; évalué à la
-  3ᵉ fléchette ; faux-positif = 3 touches sans les 3 types.
-- Plus haut score en fin de partie ; sonder le **départage** (révèle D-2).
-- Multi-joueurs vs « solo » du texte (révèle D-1).
-- Bull et Miss non-scorants ; aucune fléchette après victoire.
+- Score per dart = `round_number × multiplier`, **only** on the round's number.
+- Shanghai = {single, double, triple} of the number within the same turn, any order; evaluated on the
+  3rd dart; false positive = 3 hits without all 3 types.
+- Highest score at the end of the game; probe the **tie-break** (reveals D-2).
+- Multi-player vs the text's "solo" (reveals D-1).
+- Bull and Miss don't score; no dart after a win.

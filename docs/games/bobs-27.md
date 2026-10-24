@@ -1,74 +1,74 @@
-# Bob's 27 — règles canoniques (oracle de test)
+# Bob's 27 — canonical rules (test oracle)
 
-> **Statut : ORACLE.** Source de vérité pour la vérification de correctness (axe 1). Bob's 27
-> n'avait pas de table de transitions ; ce document capture les **règles canoniques** (routine
-> de Bob Anderson) à partir de sources externes, pour servir d'oracle indépendant de l'engine.
-> Sources : godartspro.com/app/bobs-27, dartsplanet.tv, darthelp.com (juin 2026).
+> **Status: ORACLE.** Source of truth for correctness verification (axis 1). Bob's 27
+> had no transition table; this document captures the **canonical rules** (Bob Anderson's
+> routine) from external sources, to serve as an oracle independent of the engine.
+> Sources: godartspro.com/app/bobs-27, dartsplanet.tv, darthelp.com (June 2026).
 >
-> ⚠️ **Ce doc décrit le jeu canonique, PAS forcément l'implémentation actuelle.** Voir §7
-> « Divergences avec l'implémentation » — à trancher avec le mainteneur, à ne pas figer.
+> ⚠️ **This doc describes the canonical game, NOT necessarily the current implementation.** See §7
+> "Divergences from the implementation" — to be settled with the maintainer, not to be frozen.
 
 ---
 
-## 1. Vue d'ensemble
+## 1. Overview
 
-Routine d'entraînement aux doubles inventée par Bob Anderson. Score de départ **27**. Le joueur
-parcourt **tous les doubles dans l'ordre, de D1 à D20, puis termine sur le Bull (Double Bull)** —
-soit **21 cibles**. À chaque cible, 3 fléchettes. On gagne des points en touchant le double de la
-manche et on en perd quand on rate les trois.
+A doubles training routine invented by Bob Anderson. Starting score **27**. The player
+works through **all the doubles in order, from D1 to D20, then finishes on the Bull (Double Bull)** —
+**21 targets** in all. 3 darts at each target. You gain points by hitting the round's
+double and lose points when you miss with all three.
 
 ## 2. Setup
 
-| Paramètre | Valeur |
+| Parameter | Value |
 |---|---|
-| Score de départ | 27 |
-| Séquence de cibles | D1, D2, …, D20, **Bull (DB)** (21 manches) |
-| Fléchettes par manche | 3 |
-| Joueurs | solo à l'origine ; jouable en multi (chacun sa progression) |
+| Starting score | 27 |
+| Target sequence | D1, D2, …, D20, **Bull (DB)** (21 rounds) |
+| Darts per round | 3 |
+| Players | solo originally; playable multi-player (each with their own progression) |
 
-## 3. Cibles par manche
+## 3. Targets per round
 
-- Manche `n` (1..20) → cible = `D{n}`.
-- Manche **21** → cible = **Double Bull** (`DB`).
+- Round `n` (1..20) → target = `D{n}`.
+- Round **21** → target = **Double Bull** (`DB`).
 
 ## 4. Scoring
 
-| Événement | Effet sur le score |
+| Event | Effect on the score |
 |---|---|
-| Chaque fléchette dans la cible (manche n ≤ 20) | `+ 2 × n` |
-| Chaque Double Bull touché (manche 21) | `+ 50` |
-| Aucune des 3 fléchettes ne touche la cible | `− 2 × n` (et `− 50` en manche bull) |
-| Single / triple / autre segment | aucun effet (seul le double exact de la manche compte) |
+| Each dart in the target (round n ≤ 20) | `+ 2 × n` |
+| Each Double Bull hit (round 21) | `+ 50` |
+| None of the 3 darts hits the target | `− 2 × n` (and `− 50` in the bull round) |
+| Single / triple / other segment | no effect (only the round's exact double counts) |
 
-## 5. Fin de partie
+## 5. End of game
 
-- La partie se termine après la **manche 21 (bull)**.
-- Condition de fin anticipée : si le score tombe **à zéro ou en dessous**, la partie s'arrête.
-- Résultat = score final. Pas d'adversaire à battre en solo.
+- The game ends after **round 21 (bull)**.
+- Early-end condition: if the score drops **to zero or below**, the game stops.
+- Result = final score. No opponent to beat when playing solo.
 
-## 6. Score parfait
+## 6. Perfect score
 
 `27 + Σ_{n=1..20}(3 × 2n) + (3 × 50)` = `27 + 1260 + 150` = **1437**.
-(Le 1437 documenté implique mathématiquement la manche bull : sans elle, le max est **1287**.)
+(The documented 1437 mathematically implies the bull round: without it, the max is **1287**.)
 
-## 7. Divergences avec l'implémentation actuelle (à trancher — NE PAS figer)
+## 7. Divergences from the current implementation (to settle — do NOT freeze)
 
-> Candidats findings pour l'axe 1. Décision mainteneur requise avant toute correction.
+> Finding candidates for axis 1. Maintainer decision required before any fix.
 
-- **D-1 (RÉSOLU — issue #588, PR ajoutant la manche bull)** — décision mainteneur : **ajouter la
-  manche bull canonique** (round 21 = Double Bull). `stateless_bobs_27_engine.dart` termine désormais
-  à `roundNum >= 21` ; round 21 cible `DB` (+50/hit, −50 en blanchissage). Le parfait **1437** est
-  donc atteignable et conforme à §6. L'engine est aligné sur le canonique — ce doc fait foi.
-- **D-2 (RÉSOLU avec D-1)** — `rulesBobs27HowB2`/`Tagline`/`ObjectiveBody`/`HowB4`/`WinningBody` (7
-  langues) réécrits pour décrire 21 manches finissant sur le double bull ; le « 1437 » de
-  `rulesBobs27WinningBody` est maintenant correct. Plus de contradiction interne.
-- **D-3 (note)** — fin sur `score <= 0` (zéro inclus) sans flag « busted/perdu » explicite ;
-  cohérent avec « zero or below » du canonique. À confirmer côté UX (axe 2) que l'utilisateur
-  comprend la fin.
+- **D-1 (RESOLVED — issue #588, PR adding the bull round)** — maintainer decision: **add the
+  canonical bull round** (round 21 = Double Bull). `stateless_bobs_27_engine.dart` now ends
+  at `roundNum >= 21`; round 21 targets `DB` (+50/hit, −50 on a blank). The perfect **1437** is
+  therefore reachable and matches §6. The engine is aligned with the canonical rules — this doc is authoritative.
+- **D-2 (RESOLVED with D-1)** — `rulesBobs27HowB2`/`Tagline`/`ObjectiveBody`/`HowB4`/`WinningBody` (7
+  languages) rewritten to describe 21 rounds ending on the double bull; the "1437" in
+  `rulesBobs27WinningBody` is now correct. No more internal contradiction.
+- **D-3 (note)** — ends on `score <= 0` (zero included) with no explicit "busted/lost" flag;
+  consistent with the canonical "zero or below". To confirm on the UX side (axis 2) that the user
+  understands the ending.
 
-## 8. Heuristiques de test (engine vs CE doc)
+## 8. Test heuristics (engine vs THIS doc)
 
-- Vérifier la cible de chaque manche contre §3 (dont la manche 21 = bull, **attendu canonique**).
-- Recalculer le delta de score à la main (§4) et comparer ; sonder un blanchissage (`−2n`).
-- Sonder explicitement l'existence (ou non) de la manche bull → c'est le test qui révèle D-1.
-- Bornes de fin : score passant à 0 vs sous 0 ; fin après la dernière manche.
+- Check each round's target against §3 (including round 21 = bull, **canonical expectation**).
+- Recompute the score delta by hand (§4) and compare; probe a blank (`−2n`).
+- Explicitly probe whether the bull round exists → this is the test that reveals D-1.
+- End bounds: score dropping to 0 vs below 0; end after the last round.
