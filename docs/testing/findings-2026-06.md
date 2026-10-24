@@ -1,370 +1,370 @@
-# Carnet de findings — cycle de vérification pré-1.0 (2026-06)
+# Findings log — pre-1.0 verification cycle (2026-06)
 
-> **Carnet vivant.** Toutes les observations de la phase d'exécution atterrissent ici, dans le
-> format ci-dessous. Les issues GitHub sont créées **par lot, après revue ensemble** — jamais au fil
-> de l'eau, jamais sans feu vert explicite. Convention : `docs/plans/2026-06-19-1.0-verification-plan.md` §8.
+> **Living log.** Every observation from the execution phase lands here, in the
+> format below. GitHub issues are created **in batches, after a joint review** — never as
+> they come up, never without an explicit go-ahead. Convention: `docs/plans/2026-06-19-1.0-verification-plan.md` §8.
 
 ---
 
 ## Convention
 
-**Format d'un finding**
+**Finding format**
 ```
-### F-NNN — <titre court symptôme>
-- Axe        : Correctness | UX | Design | Données | i18n
-- Surface    : <jeu/écran de l'inventaire (plan §2)>
+### F-NNN — <short symptom title>
+- Axis       : Correctness | UX | Design | Data | i18n
+- Surface    : <game/screen from the inventory (plan §2)>
 - Rail       : web | device
-- Sévérité   : P0 | P1 | P2
-- Observé    : <ce qui se passe>
-- Attendu    : <ce qui devrait + oracle/réf>
-- Preuve     : <screenshot / étapes de repro / spec>
-- Statut     : à trier | à confirmer | confirmé | issue #N | won't-fix (raison)
+- Severity   : P0 | P1 | P2
+- Observed   : <what happens>
+- Expected   : <what should happen + oracle/ref>
+- Evidence   : <screenshot / repro steps / spec>
+- Status     : to triage | to confirm | confirmed | issue #N | won't-fix (reason)
 ```
 
-**Sévérité** — **P0** sortie utilisateur fausse / flux cœur cassé · **P1** incohérence
-correctness/archi ou UX/design dégradant · **P2** hygiène/polish.
+**Severity** — **P0** wrong user-facing output / broken core flow · **P1** correctness/architecture
+inconsistency or degrading UX/design · **P2** hygiene/polish.
 
-**Règle anti-faux-positif** — un finding est une *hypothèse*. Avant promotion en issue : confirmer
-la repro **ET** vérifier l'oracle. « Won't-fix + documenter le scope » est un statut valide.
+**Anti-false-positive rule** — a finding is a *hypothesis*. Before promoting it to an issue: confirm
+the repro **AND** check the oracle. "Won't-fix + document the scope" is a valid status.
 
-**Finding → issue** — symptôme seul (pas de cause/fix), section « Avant implémentation » forçant un
-`/plan`, sous-issues natives si epic. Création **par lot après revue**.
+**Finding → issue** — symptom only (no cause/fix), a "Before implementation" section forcing a
+`/plan`, native sub-issues if it's an epic. Created **in batches after review**.
 
-**Finding → régression** — un finding P0/P1 reproductible en web devient une spec `@playwright/test`
-dans `e2e/`.
+**Finding → regression** — a P0/P1 finding reproducible on web becomes an `@playwright/test` spec
+in `e2e/`.
 
-**Cycle de vie du statut** : `à trier` → (repro + oracle) → `confirmé` / `won't-fix` → (revue + sign-off) → `issue #N`.
+**Status lifecycle**: `to triage` → (repro + oracle) → `confirmed` / `won't-fix` → (review + sign-off) → `issue #N`.
 
 ---
 
 ## Index
 
-| ID | Axe | Sévérité | Titre | Statut |
+| ID | Axis | Severity | Title | Status |
 |----|-----|----------|-------|--------|
-| F-001 | Correctness | P1 | Bob's 27 — score parfait 1437 inatteignable (manche bull absente) | issue #588 (confirmé live : run parfait = 1287) |
-| F-010 | Correctness | P1 | Cricket — Turn Breakdown (historique) ignore DartCorrected → fléchette périmée + marks faux | confirmé (live + code) |
-| F-011 | UX | P2 | Bob's 27 — fin sur score≤0 sans cadrage « busted/perdu » | confirmé |
-| **F-012** | **Correctness/UX** | **P0** | **Shanghai multi-joueurs : fin naturelle ne complète jamais → board soft-lock (irrécupérable)** | **confirmé (live ×2 + code)** |
-| F-015 | Correctness/Données | P1 | Checkout Practice — fléchettes bustées comptées dans DARTS (spec §4/§6 vs projection) | confirmé |
-| F-013 | UX | P2 | Count-Up sans DartInputSink → sim/auto-scoring inerte (probt intentionnel) | confirmé |
-| F-014 | UX | P2 | Count-Up — NEXT termine le tour <3 fléchettes sans garde (auto-MISS-fill) | confirmé |
-| F-016 | UX | P2 | Checkout — headline « N OF M » : M = tentatives, pas le quota configuré | confirmé |
-| F-017 | UX | P2 | Checkout — readout « turn points » = somme brute (180) sur tour busté | confirmé |
-| F-018 | i18n | P2 | Shanghai — texte règles « solo » alors que jeu multi-joueurs (D-1) | confirmé |
+| F-001 | Correctness | P1 | Bob's 27 — perfect score 1437 unreachable (bull round missing) | issue #588 (confirmed live: perfect run = 1287) |
+| F-010 | Correctness | P1 | Cricket — Turn Breakdown (history) ignores DartCorrected → stale dart + wrong marks | confirmed (live + code) |
+| F-011 | UX | P2 | Bob's 27 — ending on score≤0 with no "busted/lost" framing | confirmed |
+| **F-012** | **Correctness/UX** | **P0** | **Multi-player Shanghai: natural end never completes → board soft-lock (unrecoverable)** | **confirmed (live ×2 + code)** |
+| F-015 | Correctness/Data | P1 | Checkout Practice — busted darts counted in DARTS (spec §4/§6 vs projection) | confirmed |
+| F-013 | UX | P2 | Count-Up without DartInputSink → sim/auto-scoring inert (probably intentional) | confirmed |
+| F-014 | UX | P2 | Count-Up — NEXT ends the turn with <3 darts without a guard (auto-MISS-fill) | confirmed |
+| F-016 | UX | P2 | Checkout — "N OF M" headline: M = attempts, not the configured quota | confirmed |
+| F-017 | UX | P2 | Checkout — "turn points" readout = raw sum (180) on a busted turn | confirmed |
+| F-018 | i18n | P2 | Shanghai — rules text says "solo" whereas the game is multi-player (D-1) | confirmed |
 
-> F-006 (Count-Up non localisé) : **confirmé live + source** (était « à confirmer »).
+> F-006 (Count-Up not localized): **confirmed live + source** (was "to confirm").
 
-**Issues GitHub créées (lot 2026-06-19)** : F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 infirmé, pas d'issue.)_
+**GitHub issues created (batch 2026-06-19)**: F-001→#588 · F-012→**#595** (P0) · F-006→#596 · F-010→#597 · F-015→#598 · F-009→#599 · F-011→#600 · F-013→#601 · F-014→#602 · F-016→#603 · F-017→#604 · F-018→#605. _(F-003 refuted, no issue.)_
 
-### Résolution — boucle de correction sérielle (2026-06-19/20)
+### Resolution — serial fix loop (2026-06-19/20)
 
-Toutes les issues traitées de bout en bout (branche → /plan → impl → revue → CI → squash-merge), une PR à la fois.
+All issues handled end to end (branch → /plan → impl → review → CI → squash-merge), one PR at a time.
 
 | Finding | Issue | PR | Disposition |
 |---|---|---|---|
-| F-012 (P0) | #595 | #618 | **Fixed** — Shanghai TurnEnded renvoie `LegOutcome.gameCompleted` (mirroir Catch 40) + régression e2e |
-| F-010 | #597 | #619 | **Fixed** — Turn Breakdown strippe DartCorrected via le helper partagé `stripSupersededEvents` |
-| F-006 | #596 | #620 | **Fixed** — board Count-Up localisé (clés existantes) |
-| F-001 | #588 | #621 | **Fixed (décision : ajouter la manche bull)** — round 21 Double Bull, 1437 atteignable, règles 7 langues |
-| F-020 | #610 | #622 | **Fixed (décision : bust = 0 partout)** — per-game/BEST/first-9/trend PPR alignés sur §5.2 |
-| F-023/24/26 | #614 | #623 | **Fixed** — terminologie fr (tour/leg/qu'une) |
-| F-021 (+F-007/F-008) | #612 | #624 | **Fixed** — Home/Retry/stats labels localisés (7 langues) |
-| F-018 | #605 | #625 | **Fixed** — règles Shanghai multi-joueurs (7 langues) |
-| F-002 | #616 | #626 | **Fixed** — surface DB-error stylée + localisée (ErrorRetryWidget) |
-| F-005 | #617 | #628 | **Won't-fix (décision : amender la spec)** — DESIGN_SYSTEM §7.6 « pas de légende par design » |
-| F-011 | #600 | #629 | **Déjà adressé** (badge BUSTED existant) → badge localisé + correction round-total /21 |
-| F-009 | #599 | #630 | **Fixed (décision : titrer Stats)** — `AppHeader.title` optionnel |
-| F-017 | #604 | #631 | **Fixed (décision : 0 sur bust)** — `turnBusted` → readout 0 |
-| F-013 | #601 | #632 | **Fixed (décision : binder le sink)** — Count-Up DartInputSink + layout camera-first + e2e sim |
-| F-022 | #613 | — | **Won't-fix (décision)** — nl « Win N games » déjà correct (loanword « games », « Win » impératif ; vérifié) |
-| F-014 | #602 | — | **Superseded par #627** — l'UX de passage de tour <3 fléchettes à revoir sur **tous** les plateaux (confirmation indésirable même en X01/Cricket) |
-| F-015 | #598 | — | **Différé** — décision mainteneur en cours (DARTS sur tour busté : 6 = tour entier vs 8 = fléchette bustante seule) |
-| F-016 | #603 | — | **Différé** — décision mainteneur en cours (dénominateur headline) |
+| F-012 (P0) | #595 | #618 | **Fixed** — Shanghai TurnEnded returns `LegOutcome.gameCompleted` (mirrors Catch 40) + e2e regression |
+| F-010 | #597 | #619 | **Fixed** — Turn Breakdown strips DartCorrected via the shared `stripSupersededEvents` helper |
+| F-006 | #596 | #620 | **Fixed** — Count-Up board localized (existing keys) |
+| F-001 | #588 | #621 | **Fixed (decision: add the bull round)** — round 21 Double Bull, 1437 reachable, rules in 7 languages |
+| F-020 | #610 | #622 | **Fixed (decision: bust = 0 everywhere)** — per-game/BEST/first-9/trend PPR aligned on §5.2 |
+| F-023/24/26 | #614 | #623 | **Fixed** — fr terminology (tour/leg/qu'une) |
+| F-021 (+F-007/F-008) | #612 | #624 | **Fixed** — Home/Retry/stats labels localized (7 languages) |
+| F-018 | #605 | #625 | **Fixed** — multi-player Shanghai rules (7 languages) |
+| F-002 | #616 | #626 | **Fixed** — styled + localized DB-error surface (ErrorRetryWidget) |
+| F-005 | #617 | #628 | **Won't-fix (decision: amend the spec)** — DESIGN_SYSTEM §7.6 "no legend by design" |
+| F-011 | #600 | #629 | **Already addressed** (existing BUSTED badge) → badge localized + round-total /21 fix |
+| F-009 | #599 | #630 | **Fixed (decision: give Stats a title)** — optional `AppHeader.title` |
+| F-017 | #604 | #631 | **Fixed (decision: 0 on bust)** — `turnBusted` → readout 0 |
+| F-013 | #601 | #632 | **Fixed (decision: bind the sink)** — Count-Up DartInputSink + camera-first layout + sim e2e |
+| F-022 | #613 | — | **Won't-fix (decision)** — nl "Win N games" already correct (loanword "games", imperative "Win"; verified) |
+| F-014 | #602 | — | **Superseded by #627** — the <3-dart turn-advance UX to be revisited on **all** boards (confirmation unwanted even in X01/Cricket) |
+| F-015 | #598 | — | **Deferred** — maintainer decision pending (DARTS on a busted turn: 6 = whole turn vs 8 = busting dart only) |
+| F-016 | #603 | — | **Deferred** — maintainer decision pending (headline denominator) |
 
-_(F-003 infirmé · F-004/F-019/F-025 « à confirmer » non promus.)_
-| F-002 | Design | P2 | Surface DB-error = string brut non stylé | issue #616 — Fixed (PR #626) |
-| F-003 | Design | P2 | Incohérence empty-state (spacing 8 vs 16, titre body vs titleLarge) | infirmé (marginal, won't-fix) |
-| F-004 | Design | P2 | Loading non uniforme (skeleton Players vs spinner History/Stats) | à confirmer |
-| F-005 | Design | P2 | Heatmap sans légende/échelle ni numéros de segments (gap oracle DESIGN_SYSTEM §7.6) | issue #617 — Won't-fix (PR #628) |
-| F-019 | Design | P2 | Heatmap : faible densité tinte tout le plateau en bleu (lisibilité réduite ; données éparses) | à confirmer (conf. basse) |
-| F-020 | Correctness/Données | P1 | X01 : fléchettes bustées comptées dans le PPR par-partie + BEST carrière (incohérent avec AVERAGE + §5.2) | issue #610 |
-| F-021 | i18n | P2 | Lacune de localisation large : sous-titres cartes Home + libellés stats/post-game non traduits | issue #612 (englobe F-007/F-008) — Fixed (PR #624) |
-| F-022 | i18n | P2 | nl : `achievementWins10/50/100Description` = « Win N games » (phrase EN non traduite) | issue #613 — Won't-fix |
-| F-023 | i18n | P2 | fr : `historyRoundBreakdown` = « manches » (terme faux + incohérent, devrait être « tours ») | issue #614 — Fixed (PR #623) |
-| F-024 | i18n | P2 | fr : `achievementNineDarterDescription` = « manche » (devrait être « leg », incohérent) | issue #614 — Fixed (PR #623) |
-| F-025 | i18n | P2 | es/pt : split « Puntos/Pontos » vs « Puntuación/Pontuação » (intentionnel ?) | à confirmer (conf. basse) |
-| F-026 | i18n | P2 | fr : `gameAdvanceTurnBody` « que 1 fléchette » (idiome « qu'une ») | issue #614 — Fixed (PR #623) |
-| F-006 | i18n | P2 | Count-Up board non localisé (chaînes en dur, clés existantes) | à confirmer |
-| F-007 | i18n | P2 | `ErrorRetryWidget` « Retry » en dur (~10 pages prod) | à confirmer |
-| F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip en dur | à confirmer |
-| F-009 | Design | P2 | Page Stats : header logo « DARTLODGE » vs header titré (Players/History) | à trier (confidence basse) |
-
----
-
-## Axe 1 — Correctness
-
-### F-001 — Bob's 27 : le score parfait documenté (1437) est inatteignable
-- Axe : Correctness
-- Surface : Bob's 27 (board + écran de règles)
-- Rail : web
-- Sévérité : P1
-- Observé : les règles in-app annoncent un parcours parfait à 1437 ; la partie s'arrête après Double 20, max atteignable = 1287.
-- Attendu : oracle `docs/games/bobs-27.md` — Bob's 27 canonique termine sur une manche Double Bull (1437). Résolution (ajouter la manche bull vs corriger le texte) = décision mainteneur.
-- Preuve : `stateless_bobs_27_engine.dart:123` (`roundNum >= 20`) ; règles `rulesBobs27WinningBody`/`HowB2`.
-- Statut : **issue #588** — **confirmé en live** : run parfait joué = FINAL SCORE **1287**, fin à ROUND 20/20, aucune manche bull.
-
-### F-010 — Cricket : le Turn Breakdown de l'historique ignore les corrections (DartCorrected)
-- Axe : Correctness (+ Données)
-- Surface : History → Game Detail → tableau Turn Breakdown
-- Rail : web
-- Sévérité : P1
-- Observé : un tour où une fléchette a été annulée+re-lancée (T20, 5, single-19 → undo single-19 → T19) s'affiche « T20 5 19 », MARKS = 4 dans le breakdown ; alors que le board live, l'AVG MPR post-game (6) et les mark-buckets reflètent la correction (T19, 6 marks). Seul le Turn Breakdown montre la fléchette périmée.
-- Attendu : le breakdown doit refléter la fléchette corrigée comme toutes les autres surfaces. `TurnBreakdownBuilder.build` (`lib/features/history/domain/turn_breakdown.dart`) traite chaque `DartThrown` SANS gérer `DartCorrected`/supersession, contrairement à `PlayerStatsAssembler.fromEvents` (qui strippe les `original_event_id`/`superseded_event_ids`). **Viole le contrat CLAUDE.md** : « Any replay-aware code path … must collect these and skip the originals ». Risque aussi de corrompre le `runningTotal` rejoué pour tout tour contenant une fléchette annulée.
-- Preuve : `exec-cricket-17.png` (row « Alice 2 4 T20 5 19 ») vs board `exec-cricket-11.png` (19 fermé = 3 hits) + post-game MPR 6.
-- Statut : **confirmé (live + lecture code)** — candidat issue (P1)
+_(F-003 refuted · F-004/F-019/F-025 "to confirm", not promoted.)_
+| F-002 | Design | P2 | DB-error surface = unstyled raw string | issue #616 — Fixed (PR #626) |
+| F-003 | Design | P2 | Empty-state inconsistency (spacing 8 vs 16, body vs titleLarge title) | refuted (marginal, won't-fix) |
+| F-004 | Design | P2 | Non-uniform loading (Players skeleton vs History/Stats spinner) | to confirm |
+| F-005 | Design | P2 | Heatmap without legend/scale or segment numbers (DESIGN_SYSTEM §7.6 oracle gap) | issue #617 — Won't-fix (PR #628) |
+| F-019 | Design | P2 | Heatmap: low density tints the whole board blue (reduced readability; sparse data) | to confirm (low conf.) |
+| F-020 | Correctness/Data | P1 | X01: busted darts counted in per-game PPR + career BEST (inconsistent with AVERAGE + §5.2) | issue #610 |
+| F-021 | i18n | P2 | Broad localization gap: Home card subtitles + stats/post-game labels untranslated | issue #612 (covers F-007/F-008) — Fixed (PR #624) |
+| F-022 | i18n | P2 | nl: `achievementWins10/50/100Description` = "Win N games" (untranslated EN sentence) | issue #613 — Won't-fix |
+| F-023 | i18n | P2 | fr: `historyRoundBreakdown` = "manches" (wrong + inconsistent term, should be "tours") | issue #614 — Fixed (PR #623) |
+| F-024 | i18n | P2 | fr: `achievementNineDarterDescription` = "manche" (should be "leg", inconsistent) | issue #614 — Fixed (PR #623) |
+| F-025 | i18n | P2 | es/pt: "Puntos/Pontos" vs "Puntuación/Pontuação" split (intentional?) | to confirm (low conf.) |
+| F-026 | i18n | P2 | fr: `gameAdvanceTurnBody` "que 1 fléchette" (idiom "qu'une") | issue #614 — Fixed (PR #623) |
+| F-006 | i18n | P2 | Count-Up board not localized (hardcoded strings, existing keys) | to confirm |
+| F-007 | i18n | P2 | `ErrorRetryWidget` hardcoded "Retry" (~10 prod pages) | to confirm |
+| F-008 | i18n | P2 | `home_page` Settings semanticLabel/tooltip hardcoded | to confirm |
+| F-009 | Design | P2 | Stats page: "DARTLODGE" logo header vs titled header (Players/History) | to triage (low confidence) |
 
 ---
 
-## Axe 2 — UX / flux
+## Axis 1 — Correctness
 
-### F-011 — Bob's 27 : fin sur score ≤ 0 sans cadrage « busted/perdu »
-- Axe : UX
-- Surface : Bob's 27 post-game
-- Rail : web
-- Sévérité : P2
-- Observé : l'écran de fin est une carte neutre « FINAL SCORE / ROUND n/20 » (DONE + PLAY AGAIN), sans label win/lose/busted — identique pour une fin normale (round 20) et une fin anticipée sur score ≤ 0.
-- Attendu : un signal distinct pour la fin anticipée « zéro » (cf. oracle bobs-27.md §7 D-3) — à confirmer comme intentionnel ou non.
-- Preuve : `exec-bobs27-03.png`.
-- Statut : confirmé (mineur)
+### F-001 — Bob's 27: the documented perfect score (1437) is unreachable
+- Axis: Correctness
+- Surface: Bob's 27 (board + rules screen)
+- Rail: web
+- Severity: P1
+- Observed: the in-app rules announce a perfect run of 1437; the game stops after Double 20, max reachable = 1287.
+- Expected: oracle `docs/games/bobs-27.md` — canonical Bob's 27 ends with a Double Bull round (1437). Resolution (add the bull round vs fix the text) = maintainer decision.
+- Evidence: `stateless_bobs_27_engine.dart:123` (`roundNum >= 20`); rules `rulesBobs27WinningBody`/`HowB2`.
+- Status: **issue #588** — **confirmed live**: perfect run played = FINAL SCORE **1287**, ends at ROUND 20/20, no bull round.
 
-### F-009 — Page Statistiques : header logo au lieu d'un titre d'écran
-- Axe : Design / UX (cohérence inter-écrans)
-- Surface : Statistics (root / player-picker)
-- Rail : web
-- Sévérité : P2 (confidence basse — possiblement intentionnel)
-- Observé : la page Stats affiche le logo « DARTLODGE » en header, alors que Players et History affichent un header **titré** (« Players » / « History »).
-- Attendu : cohérence de traitement des headers — OU confirmer que le logo est intentionnel pour la page « hub » Stats.
-- Preuve : `exec-03-stats-empty.png` (header DARTLODGE) vs `exec-01-players-empty.png` / `exec-02-history-empty.png` (titrés).
-- Statut : à trier
-
-### F-012 — Shanghai multi-joueurs : la fin naturelle ne complète jamais (soft-lock irrécupérable) — **P0**
-- Axe : Correctness / UX
-- Surface : board Shanghai (`practice_board_page`) ; `active_practice_provider._advanceTurn` ; `stateless_shanghai_engine`
-- Rail : web
-- Sévérité : **P0**
-- Observé : partie 2 joueurs, 7 rounds, jouée proprement. Après le tour round-7 du 2ᵉ joueur, **pas de post-game** : board bloqué sur « ROUND 8 / 7 », inputs morts (« dart not thrown » persiste, NEXT désactivé), `is_complete=false`, **et même « End Game » → confirm ne navigue pas**. Irrécupérable. Reproduit 2×.
-- Attendu : plus haut score gagne en fin de round final → post-game (oracle shanghai.md §5).
-- Cause (code) : l'engine Shanghai `apply('TurnEnded')` renvoie l'état avec `isComplete=true` **mais sans** `outcome: LegOutcome.gameCompleted` ; `_advanceTurn` (~ligne 341) gate la complétion sur cet outcome → la saute et émet un TurnStarted pour un compétiteur « suivant » fantôme (round 8). Catch40 met l'outcome (→ marche) ; le Shanghai instant-win passe par le chemin DartThrown (→ marche). Les tests ratent : ils pré-règlent `practiceRound:8` et font finir l'index-0, jamais une vraie rotation jusqu'à la fin.
-- Preuve : trace tours 1–14 puis board figé « ROUND 8/7 BOB'S TURN » (inputs `generic` non-interactifs).
-- Statut : **confirmé (live ×2 + lecture code)** — **candidat issue P0**
-
-### F-015 — Checkout Practice : fléchettes bustées comptées dans le total DARTS — **P1**
-- Axe : Correctness / Données
-- Surface : post-game Checkout Practice (`practice_summary_widget._buildCheckoutHero` ← `legCompetitorStatsFromEvents`)
-- Rail : web
-- Sévérité : P1
-- Observé : 2 checkouts (3 darts chacun) + 1 tour busté (3 darts) → **DARTS = 9**.
-- Attendu : oracle checkout-practice.md §4/§6 « une fléchette bustée n'incrémente pas darts_thrown / ne compte que les non-bustées » → **DARTS = 6**.
-- Cause : l'engine enregistre la fléchette de bust dans `dartThrows` (intentionnel, replay — comme X01) ; la projection `legCompetitorStatsFromEvents` compte tous les `DartThrown` sans filtre bust. Spec et projection se contredisent.
-- Preuve : `exec-checkout-04-postgame.png` (DARTS 9).
-- Statut : confirmé — candidat issue (P1) ; trancher spec vs projection
-
-### Vague 2 — autres findings P2
-- **F-013** — Count-Up board ne bind pas `DartInputSink` → `dartlodgeSim.emit` inerte + auto-scoring caméra mort sur Count-Up (probablement intentionnel : count-up manuel-only). À confirmer comme voulu.
-- **F-014** — Count-Up : NEXT termine le tour avec <3 fléchettes (auto-remplit MISS), sans garde → un user peut forfaiter des fléchettes par erreur. Pas un bug de score (invariant darts préservé via MISS-fill), garde UX manquante.
-- **F-016** — Checkout post-game headline « 2 OF 3 CHECKOUTS » : le dénominateur = tentatives, pas le quota configuré (2) → potentiellement confus.
-- **F-017** — Checkout : readout « turn points » du status bar montre la somme brute (180) sur un tour busté (le score reste correctement à 170). Cosmétique.
-- **F-018** — Shanghai : `rulesShanghaiWinningBody` dit « Played solo … no opponent » alors que le jeu est multi-joueurs (canonique + engine). Corriger le **texte** (i18n), pas l'engine.
+### F-010 — Cricket: the history Turn Breakdown ignores corrections (DartCorrected)
+- Axis: Correctness (+ Data)
+- Surface: History → Game Detail → Turn Breakdown table
+- Rail: web
+- Severity: P1
+- Observed: a turn where a dart was undone + re-thrown (T20, 5, single-19 → undo single-19 → T19) shows "T20 5 19", MARKS = 4 in the breakdown; whereas the live board, the post-game AVG MPR (6) and the mark buckets reflect the correction (T19, 6 marks). Only the Turn Breakdown shows the stale dart.
+- Expected: the breakdown must reflect the corrected dart like every other surface. `TurnBreakdownBuilder.build` (`lib/features/history/domain/turn_breakdown.dart`) processes each `DartThrown` WITHOUT handling `DartCorrected`/supersession, unlike `PlayerStatsAssembler.fromEvents` (which strips the `original_event_id`/`superseded_event_ids`). **Violates the CLAUDE.md contract**: "Any replay-aware code path … must collect these and skip the originals". Also risks corrupting the replayed `runningTotal` for any turn containing an undone dart.
+- Evidence: `exec-cricket-17.png` (row "Alice 2 4 T20 5 19") vs board `exec-cricket-11.png` (19 closed = 3 hits) + post-game MPR 6.
+- Status: **confirmed (live + code reading)** — issue candidate (P1)
 
 ---
 
-## Confirmations positives — passe 1 (X01, axes 1+2, 2026-06-19)
+## Axis 2 — UX / flows
 
-> Vérifié en exécution réelle (Pixel 6a portrait, build release, sim bridge). **Aucun défaut** sur ces points.
+### F-011 — Bob's 27: ending on score ≤ 0 with no "busted/lost" framing
+- Axis: UX
+- Surface: Bob's 27 post-game
+- Rail: web
+- Severity: P2
+- Observed: the end screen is a neutral "FINAL SCORE / ROUND n/20" card (DONE + PLAY AGAIN), with no win/lose/busted label — identical for a normal end (round 20) and an early end on score ≤ 0.
+- Expected: a distinct signal for the early "zero" ending (see oracle bobs-27.md §7 D-3) — to confirm as intentional or not.
+- Evidence: `exec-bobs27-03.png`.
+- Status: confirmed (minor)
 
-- **États vides** (Players / History / Stats) : propres, cohérents, on-brand (icône 64px + titre + CTA/hint). → **F-003 (spacing 8 vs 16) infirmé visuellement** : pas de différence perceptible, marqué won't-fix.
-- **Scoring X01** : 501 − T20×3 = 321 ; undo → 381 (cohérent band/score) ; checkout T20+T19+D12 → 0.
-- **9-darter** : 9 fléchettes (l'undo exclut bien la fléchette annulée du compte), AVG PPR = 167 (= 501×3/9).
-- **Buckets** : 180s = 2, 140-179 = 1 (mutuellement exclusifs, le 141 ne double-compte pas) ; CHECKOUT 100 % ; BEST OUT 141.
-- **Nav post-game** : checkout → écran de fin (winner, breakdown) correct.
-- **Succès** (axe 4) : First 180 + First Win + **Nine-Darter** débloqués et datés ; Big Fish correctement **non** débloqué (141 ≠ 170) ; progress « 100 Games of 501 » = 1/100.
-- **Sim bridge** opérationnel dans le build release (prérequis passe 2 confirmé).
+### F-009 — Statistics page: logo header instead of a screen title
+- Axis: Design / UX (cross-screen consistency)
+- Surface: Statistics (root / player picker)
+- Rail: web
+- Severity: P2 (low confidence — possibly intentional)
+- Observed: the Stats page shows the "DARTLODGE" logo as its header, whereas Players and History show a **titled** header ("Players" / "History").
+- Expected: consistent header treatment — OR confirm the logo is intentional for the Stats "hub" page.
+- Evidence: `exec-03-stats-empty.png` (DARTLODGE header) vs `exec-01-players-empty.png` / `exec-02-history-empty.png` (titled).
+- Status: to triage
 
-### Vague 1 — Cricket / Bob's 27 / Catch 40 (agents parallèles, 2026-06-19)
-- **Cricket** : fermeture des marks (hits cap 3), overflow standard sur nombre fermé avec adversaire ouvert (T20→+60), **Bull = 25/mark (pas 50 pour DB)**, #569 in-game (segment hors-cible affiché mais 0 mark), undo in-game cohérent, rotation, leg→post-game, stats per-game/leg cohérentes. ✅ (seul défaut = F-010, spécifique à l'historique + correction).
-- **Bob's 27** : start 27, cible D{n}, +2n/hit, −2n sur blanchissage, solo. ✅ (défauts = F-001/#588 + F-011).
-- **Catch 40** : **conforme au canonique de bout en bout** — 61→100 (40 cibles), 2-dart=3pts / 3-dart=2 / 4-6=1, **exception 99→3pts**, max 120, bust-reset (checkout exige un double), fin de drill solo sans gagnant, apparition en History. ✅ **Aucun défaut.**
+### F-012 — Multi-player Shanghai: the natural end never completes (unrecoverable soft-lock) — **P0**
+- Axis: Correctness / UX
+- Surface: Shanghai board (`practice_board_page`); `active_practice_provider._advanceTurn`; `stateless_shanghai_engine`
+- Rail: web
+- Severity: **P0**
+- Observed: 2-player game, 7 rounds, played cleanly. After player 2's round-7 turn, **no post-game**: board stuck on "ROUND 8 / 7", dead inputs ("dart not thrown" persists, NEXT disabled), `is_complete=false`, **and even "End Game" → confirm doesn't navigate**. Unrecoverable. Reproduced 2×.
+- Expected: highest score wins at the end of the final round → post-game (oracle shanghai.md §5).
+- Cause (code): the Shanghai engine `apply('TurnEnded')` returns the state with `isComplete=true` **but without** `outcome: LegOutcome.gameCompleted`; `_advanceTurn` (~line 341) gates completion on that outcome → skips it and emits a TurnStarted for a ghost "next" competitor (round 8). Catch40 sets the outcome (→ works); the Shanghai instant win goes through the DartThrown path (→ works). The tests miss it: they preset `practiceRound:8` and have index 0 finish, never a real rotation through to the end.
+- Evidence: trace of turns 1–14 then frozen board "ROUND 8/7 BOB'S TURN" (`generic` inputs non-interactive).
+- Status: **confirmed (live ×2 + code reading)** — **P0 issue candidate**
 
-### Vague 2 — ATC / Shanghai / Count Up / Checkout (agents parallèles, 2026-06-19)
-- **Around the Clock** : **aucun défaut** — progression 1→20, variantes standard/reverse/**doublesOnly** (seul mult==2 avance), Bull/MISS ignorés, hors-séquence ne fait pas avancer (fléchette comptée), >3 darts rejetés, victoire immédiate mid-turn, rotation multi-joueurs + cibles indépendantes, undo, post-game, labels de variante en historique. ✅
-- **Shanghai** : scoring round×mult sur le numéro du round, **instant-win Shanghai** (S+D+T même tour) fonctionne de bout en bout, 3 hits sans les 3 multiplicateurs ≠ Shanghai, rotation, round cap 7 configurable. ✅ (défauts = F-012 P0 sur la fin naturelle + F-018 texte).
-- **Count Up** : additif sans bust ni borne, MISS=0/SB=25/**DB=50**, tour = exactement 3 fléchettes, rotation + round++ après dernier joueur, fin après round 8, winner=plus haut score, buckets + PPR (sans checkout) corrects, invariant darts = comp×rounds×3. ✅ (défauts = F-006 P1 + F-013/F-014 P2).
-- **Checkout Practice** : start 170, quota {∞,1,2,3,5,10,20}, checkout sur double incrémente succès, **reset 170** au tour suivant, complétion exacte au quota, bust → revert 170 sans incrément. ✅ (défauts = F-015 P1 + F-016/F-017 P2).
+### F-015 — Checkout Practice: busted darts counted in the DARTS total — **P1**
+- Axis: Correctness / Data
+- Surface: Checkout Practice post-game (`practice_summary_widget._buildCheckoutHero` ← `legCompetitorStatsFromEvents`)
+- Rail: web
+- Severity: P1
+- Observed: 2 checkouts (3 darts each) + 1 busted turn (3 darts) → **DARTS = 9**.
+- Expected: oracle checkout-practice.md §4/§6 "a busted dart doesn't increment darts_thrown / only non-busted darts count" → **DARTS = 6**.
+- Cause: the engine records the bust dart in `dartThrows` (intentional, for replay — like X01); the `legCompetitorStatsFromEvents` projection counts every `DartThrown` without a bust filter. Spec and projection contradict each other.
+- Evidence: `exec-checkout-04-postgame.png` (DARTS 9).
+- Status: confirmed — issue candidate (P1); decide spec vs projection
 
-### Axe 3 — Design (passe solo, thèmes clair + sombre, 2026-06-19)
-> Capture + inspection contre les checklists de `axis-3-design.md`. **Design solide, aucun nouveau finding.**
-- **Thème clair** : Home, board X01 (score `onSurface`, nom `primaryFixed` mint, 50 BULL mint, grille sans overflow), post-game (trophée/héro/breakdown), History (carte badge+trophée), Stats (PPR 167, solo exclu des legs #106), Settings, états vides — tous propres et token-compliant. ✅
-- **Thème sombre** : Home + Stats re-capturés — parité parfaite (fond sombre, accents mint, texte clair, contraste OK). ✅
-- **F-009 re-confirmé** (header Stats = logo « DARTLODGE », pas titré comme Players/History). **F-002 confirmé** (surface DB-error = string brut non stylé).
-- **Heatmap (vérifiée live, après extension sim-bridge x/y #607)** : un 9-darter joué avec coordonnées (`emit('T20', x, y)`) **peuple la heatmap** au post-game → chemin complet x/y validé (sim → submitDart → payload → dart_throws → getDartPositions → rendu). Le dartboard auto-dessiné + densité KDE s'affichent (hotspot rouge où les fléchettes clusterisent). **F-005 confirmé** (pas de légende/numéros) ; **F-019** (lavage bleu basse densité, conf. basse). ✅ chemin OK.
-- **Reste de l'axe 3** : camera-first (#477) — vérifier si le chrome bascule sur web (cameraPreview possiblement null sans stub builder) ; cohérence inter-écrans (largement OK).
-
----
-
-## Axe 3 — Design visuel
-
-> Candidats **pressentis** (analyse code passe 1) — à confirmer visuellement sur screenshot avant toute issue.
-
-### F-002 — Surface DB-error : string brut non stylé
-- Axe : Design (+ i18n, cf. F-?)
-- Surface : surface d'échec d'ouverture de la base (`app.dart` branche `error:`)
-- Rail : web
-- Sévérité : P2
-- Observé : `Center(child: Text('Database failed to open: $e'))` — pas d'icône, pas de thème, pas de retry ; `$e` brut exposé. (Vu sur device pendant la validation résolution Pixel 6a.)
-- Attendu : surface d'erreur stylée (icône + message borné + thème), cf. dimension « états transitoires ».
-- Preuve : capture de la validation résolution (DB stale) — string brut centré, sans icône/thème/retry ; `lib/app/app.dart:~38`.
-- Statut : **issue #616** — **Fixed** (PR #626 : surface DB-error stylée + localisée via `ErrorRetryWidget`)
-
-### F-003 — Incohérence visuelle des empty-states
-- Axe : Design
-- Surface : Players / History / Stats (états vides)
-- Rail : web
-- Sévérité : P2
-- Observé : gap icône→label 16dp (Players/Stats) vs 8dp (History) ; titre History en body vs `titleLarge` ailleurs.
-- Attendu : empty-states cohérents (typo titre + rythme) — `axis-3-design.md` §2.7.
-- Preuve : `exec-01-players-empty.png` / `exec-02-history-empty.png` — visuellement cohérents.
-- Statut : **infirmé** — la différence de code (8 vs 16dp) n'est pas visuellement perceptible ; won't-fix.
-
-### F-004 — Loading non uniforme
-- Axe : Design
-- Surface : Players / History / Stats (chargement)
-- Rail : web
-- Sévérité : P2
-- Observé : Players a un skeleton façonné, History/Stats un simple spinner.
-- Attendu : traitement loading cohérent inter-écrans.
-- Preuve : _[capture passe 2]_
-- Statut : à confirmer
-
-### F-005 — Heatmap sans légende/échelle de couleur
-- Axe : Design (gap oracle)
-- Surface : Heatmap (post-game + stats)
-- Rail : web
-- Sévérité : P2
-- Observé : le widget ne dessine ni légende/échelle ni numéros de segments, alors que `DESIGN_SYSTEM.md` §7.6 mentionne une « légende lisible ».
-- Attendu : trancher — ajouter la légende OU corriger l'oracle.
-- Preuve : `heatmap_dartboard_widget.dart` ; DESIGN_SYSTEM §7.6 ; **vu live** (`hm-postgame-scrolled.png` — heatmap rendue sans légende ni numéros).
-- Statut : **issue #617** — **Won't-fix** (PR #628 : décision d'amender la spec, DESIGN_SYSTEM §7.6 « pas de légende par design »)
-
-### F-019 — Heatmap : faible densité tinte tout le plateau en bleu
-- Axe : Design
-- Surface : Heatmap (post-game)
-- Rail : web
-- Sévérité : P2 (confidence basse)
-- Observé : avec 9 fléchettes positionnées, la densité KDE basse tinte la quasi-totalité du plateau en bleu (le board sous-jacent — segments/anneaux — est lavé de bleu), réduisant sa lisibilité ; seuls les hotspots ressortent.
-- Attendu : checklist axe 3 §2.6 — « la traîne basse densité s'estompe vers transparent, pas de plancher dur ». À revoir avec un jeu de données plus dense (possiblement normal pour 9 fléchettes éparses).
-- Preuve : `hm-postgame-scrolled.png`.
-- Statut : à confirmer (conf. basse) — revoir avec plus de fléchettes
+### Wave 2 — other P2 findings
+- **F-013** — The Count-Up board doesn't bind `DartInputSink` → `dartlodgeSim.emit` inert + camera auto-scoring dead on Count-Up (probably intentional: Count-Up is manual-only). To confirm as intended.
+- **F-014** — Count-Up: NEXT ends the turn with <3 darts (auto-fills MISS), without a guard → a user can forfeit darts by mistake. Not a scoring bug (darts invariant preserved via the MISS fill), a missing UX guard.
+- **F-016** — Checkout post-game headline "2 OF 3 CHECKOUTS": the denominator = attempts, not the configured quota (2) → potentially confusing.
+- **F-017** — Checkout: the status bar's "turn points" readout shows the raw sum (180) on a busted turn (the score correctly stays at 170). Cosmetic.
+- **F-018** — Shanghai: `rulesShanghaiWinningBody` says "Played solo … no opponent" whereas the game is multi-player (canonical + engine). Fix the **text** (i18n), not the engine.
 
 ---
 
-## Axe 4 — Données / persistance
+## Positive confirmations — pass 1 (X01, axes 1+2, 2026-06-19)
 
-### F-020 — X01 : les fléchettes bustées sont comptées dans le PPR par-partie et le BEST PPR carrière
-- Axe : Correctness / Données
-- Surface : post-game X01 (AVG PPR) + page Stats X01 (PPR → BEST)
-- Rail : web
-- Sévérité : P1
-- Observé : partie 501 avec un tour busté (180,180,[bust depuis 141],141) → AVG PPR **170.3** sur 12 darts (= 681/12×3, le tour busté crédité 180) ; BEST PPR carrière aussi 170.3. Or l'**AVERAGE PPR carrière = 143.1** est correct (busté = 0) → **deux conventions de bust sur le même écran**.
-- Attendu : x01.projections.md §5.2 « bust turns score = 0 » → PPR = 501/12×3 = **125.25** (numérateur exclut les points bustés, dénominateur garde les 3 fléchettes).
-- Cause : `gameStatsFromEvents` somme `dart_throws.score` brut ; `X01BestLegPprProjection` inclut délibérément les busts (commentaire périmé renvoyant à `X01AverageProjection`, qui depuis #318 les EXCLUT via `turn_score`). Possiblement une divergence doc↔code (#246) → réconcilier (corriger le code à bust=0, OU amender §5.2 + le commentaire).
-- Preuve : `a4stats-04-postgame2.png` (170.3/12), `a4stats-05-career.png` (AVERAGE 143.1, BEST 170.3).
-- Statut : **issue #610**
+> Verified in a real run (Pixel 6a portrait, release build, sim bridge). **No defect** on these points.
 
-### Confirmations positives — Axe 4 (agents parallèles, 2026-06-19)
-- **Stats** : 9-darter 167, buckets mutuellement exclusifs ; **agrégation cross-game + ordering `(game_id, local_sequence)` corrects** (carrière 143.1 = combiné des 2 parties — si l'ordering était cassé, les `local_sequence` qui se chevauchent corromptraient le total) ; #106 (parties solo exclues des legs carrière mais comptées en Games Played) wiré correctement.
-- **History** (6 parties mixtes) : liste `end_time` DESC, seulement complétées ; filtres type + plage de dates (narrow/clear) ; detail leg-breakdown = match exact du jeu (X01 301 hand-checké) ; labels MPR/PPR par gameType ; read-only. Pagination NON exercée (6 < 20).
-- **Achievements** : 9-darter → First180/First Win/Nine-Darter datés, Big Fish correctement verrouillé, 100-Games 1/100 ; **idempotence reload confirmée** (pas de re-toast, dates conservées) ; 2ᵉ partie → progress 1→2, aucun re-toast.
-- **Persistance/replay** : reload mid-game → état restauré **exact** (score/round/joueur/darts) ; undo cohérent ; DartCorrected recompute correct ; partie terminée read-only + URL active redirige vers post-game ; reload post-complétion reste complétée.
-- **Observations mineures (non élevées)** : 2 erreurs console transitoires au START d'un X01 (non investigué) ; après un reload navigateur, le hash-route revient à Home (l'état est préservé/rejouable mais la deep-link n'est pas auto-restaurée — comportement release attendu ; à vérifier : existe-t-il une affordance « reprendre la partie en cours » côté UI ?).
+- **Empty states** (Players / History / Stats): clean, consistent, on-brand (64px icon + title + CTA/hint). → **F-003 (spacing 8 vs 16) visually refuted**: no perceptible difference, marked won't-fix.
+- **X01 scoring**: 501 − T20×3 = 321; undo → 381 (band/score consistent); checkout T20+T19+D12 → 0.
+- **9-darter**: 9 darts (undo correctly excludes the undone dart from the count), AVG PPR = 167 (= 501×3/9).
+- **Buckets**: 180s = 2, 140-179 = 1 (mutually exclusive, the 141 isn't double-counted); CHECKOUT 100 %; BEST OUT 141.
+- **Post-game navigation**: checkout → end screen (winner, breakdown) correct.
+- **Achievements** (axis 4): First 180 + First Win + **Nine-Darter** unlocked and dated; Big Fish correctly **not** unlocked (141 ≠ 170); "100 Games of 501" progress = 1/100.
+- **Sim bridge** operational in the release build (pass 2 prerequisite confirmed).
 
----
+### Wave 1 — Cricket / Bob's 27 / Catch 40 (parallel agents, 2026-06-19)
+- **Cricket**: closing marks (hits capped at 3), standard overflow on a closed number with the opponent open (T20→+60), **Bull = 25/mark (not 50 for DB)**, #569 in-game (off-target segment shown but 0 marks), consistent in-game undo, rotation, leg→post-game, consistent per-game/leg stats. ✅ (only defect = F-010, specific to history + correction).
+- **Bob's 27**: start 27, target D{n}, +2n/hit, −2n on a blank, solo. ✅ (defects = F-001/#588 + F-011).
+- **Catch 40**: **compliant with the canonical rules end to end** — 61→100 (40 targets), 2-dart=3pts / 3-dart=2 / 4-6=1, **99→3pts exception**, max 120, bust reset (checkout requires a double), solo drill end without a winner, appears in History. ✅ **No defect.**
 
-## Axe 5 — i18n
+### Wave 2 — ATC / Shanghai / Count Up / Checkout (parallel agents, 2026-06-19)
+- **Around the Clock**: **no defect** — progression 1→20, standard/reverse/**doublesOnly** variants (only mult==2 advances), Bull/MISS ignored, out of sequence doesn't advance (dart counted), >3 darts rejected, immediate mid-turn win, multi-player rotation + independent targets, undo, post-game, variant labels in history. ✅
+- **Shanghai**: round×mult scoring on the round number, **Shanghai instant win** (S+D+T same turn) works end to end, 3 hits without all 3 multipliers ≠ Shanghai, rotation, configurable round cap 7. ✅ (defects = F-012 P0 on the natural end + F-018 text).
+- **Count Up**: additive with no bust or bound, MISS=0/SB=25/**DB=50**, turn = exactly 3 darts, rotation + round++ after the last player, ends after round 8, winner = highest score, buckets + PPR (no checkout) correct, darts invariant = comp×rounds×3. ✅ (defects = F-006 P1 + F-013/F-014 P2).
+- **Checkout Practice**: start 170, quota {∞,1,2,3,5,10,20}, checkout on a double increments successes, **reset to 170** on the next turn, completion exactly at the quota, bust → revert to 170 without increment. ✅ (defects = F-015 P1 + F-016/F-017 P2).
 
-> **Exécution (agents parallèles, 2026-06-19)** : débordement DE+NL (runtime), jargon (web+ARB), pluriels/cohérence (ARB).
-
-### F-021 — Lacune de localisation large (Home + stats/post-game)
-- Axe : i18n · Surface : Home, Stats, post-game, game detail · Rail : web · Sévérité : P2
-- Observé (en DE et NL) : sous-titres des cartes Home (« STRATEGIC PLAY », « SHANGHAI, COUNT-UP », « IMPROVE SKILLS », « ANALYZE DATA », « SESSIONS », « ROSTER ») non traduits ; « STATISTICS BREAKDOWN », « CATEGORY » (alors que le tableau detail utilise « CATEGORIE » en nl → incohérent), « Need ≥2 games for a trend », onglet « Practice », chip config « Double Out » restent EN.
-- Attendu : localiser ces chaînes (non-jargon). Superset de F-007 (`Retry`) / F-008 (home Settings).
-- Preuve : `de-home.png`, `nl-settings.png`, `de-statsdetail.png`.
-- Statut : **issue #612** (englobe F-007/F-008) — **Fixed** (PR #624 : Home/Retry/stats labels localisés, 7 langues)
-
-### F-022 — nl : descriptions de succès « Win N games » non traduites
-- Axe : i18n · Surface : Achievements (nl) · Sévérité : P2
-- Observé : `achievementWins10/50/100Description` = « Win 10/50/100 games » (phrase anglaise) ; les 5 autres locales le traduisent (de « Gewinne 10 Spiele », fr « Gagner 10 parties »…). nl seul outlier.
-- Attendu : « Win 10 spellen/potjes ».
-- Statut : **issue #613** — **Won't-fix** (décision : nl « Win N games » déjà correct — loanword « games » + « Win » impératif, vérifié)
-
-### F-023 / F-024 — fr : « manche » au lieu de « tour » / « leg »
-- Axe : i18n · Surface : history detail / achievements (fr) · Sévérité : P2
-- Observé : `historyRoundBreakdown` = « Détail des **manches** » (tout le reste fr utilise « tour » pour round ; « manche » = un set de legs, sémantiquement faux) ; `achievementNineDarterDescription` = « Gagner une **manche** de 501 » (tout le reste fr utilise le loanword « leg »).
-- Attendu : « Détail des tours » ; « Gagner un leg de 501 ».
-- Preuve : `app_fr.arb`. Source : darts-nerd.com/glossaire.
-- Statut : **issue #614** (avec F-026) — **Fixed** (PR #623 : terminologie fr tour/leg/qu'une)
-
-### F-025 / F-026 — low-confidence (es/pt score split ; fr idiome)
-- **F-025** : es/pt `historyColScore` = « Puntos »/« Pontos » vs « Puntuación »/« Pontuação » ailleurs — possiblement intentionnel (points-par-tour vs métrique agrégée). **À confirmer** — gardé au carnet, pas d'issue.
-- **F-026** (cosmétique) : fr `gameAdvanceTurnBody` branche `one` code « que 1 fléchette » au lieu de « qu'une fléchette ». **issue #614** (avec F-023/F-024) — **Fixed** (PR #623).
-
-### Confirmations positives — Axe 5
-- **Débordement DE+NL : AUCUN** sur toutes les surfaces atteintes (Settings, variant selection dont la **rangée 4-chips** EINSTIEG/AUSSTIEG/LEGS/RUNDEN, board, config, modals, stats, history). Ellipse checkout = gracieuse ; turn-breakdown = scroll horizontal by-design. *(Post-game/turn-breakdown DE non atteints — abandon route home.)*
-- **Pluriels ICU** : 9 clés × 7 locales corrects (fr/pt count=0 → `one`/singulier OK ; pas de catégorie surnuméraire) ; **placeholders** tous présents + bien positionnés (réordonnancement fr/it vérifié) ; pas de double-espace.
-- **Cohérence terminologique** : de/es/it/nl/pt propres (1 radical/concept) ; seul fr a les 2 « manche » (F-023/024).
-- **Loanwords légitimes** (PAS des défauts) : de Name/System/Debug/Darts, nl Tips/VARIANT, it Round/Feedback, es Error ; checkout/leg/marks/180s/bull cohérents par locale.
+### Axis 3 — Design (solo pass, light + dark themes, 2026-06-19)
+> Capture + inspection against the `axis-3-design.md` checklists. **Solid design, no new finding.**
+- **Light theme**: Home, X01 board (score `onSurface`, mint `primaryFixed` name, mint 50 BULL, grid without overflow), post-game (trophy/hero/breakdown), History (badge+trophy card), Stats (PPR 167, solo excluded from legs #106), Settings, empty states — all clean and token-compliant. ✅
+- **Dark theme**: Home + Stats re-captured — perfect parity (dark background, mint accents, light text, contrast OK). ✅
+- **F-009 re-confirmed** (Stats header = "DARTLODGE" logo, not titled like Players/History). **F-002 confirmed** (DB-error surface = unstyled raw string).
+- **Heatmap (verified live, after the sim-bridge x/y extension #607)**: a 9-darter played with coordinates (`emit('T20', x, y)`) **populates the heatmap** in post-game → full x/y path validated (sim → submitDart → payload → dart_throws → getDartPositions → render). The self-drawn dartboard + KDE density render (red hotspot where the darts cluster). **F-005 confirmed** (no legend/numbers); **F-019** (low-density blue wash, low conf.). ✅ path OK.
+- **Rest of axis 3**: camera-first (#477) — check whether the chrome switches on web (cameraPreview possibly null without a stub builder); cross-screen consistency (largely OK).
 
 ---
 
-> Candidats **pressentis** (analyse code passe 1, tableau d'offenders) — à confirmer en passe 2.
+## Axis 3 — Visual design
 
-### F-006 — Count-Up board non localisé
-- Axe : i18n
-- Surface : Count Up board (`count_up_board_page.dart`)
-- Rail : web
-- Sévérité : P2
-- Observé : seul board avec des chaînes en dur (« Error », « Game not found », « End Game », « Settings », « Undo last dart », « NEXT PLAYER »/« NEXT ROUND », semanticLabels) ; X01/Cricket/Practice sont localisés.
-- Attendu : câbler `l10n.*` — les clés ARB existent déjà et sont consommées par X01 (`gameNotFound`, `commonError`, `gameMenuEndGame`, `settingsTitle`, `gameOptionsSemantic`, `gameUndoLastDart`, `gameNextPlayer`/`gameNextRound`). Aucune clé à créer.
-- Preuve : `count_up_board_page.dart:84,92,133,146,150,279,287`.
-- Statut : **confirmé (live + source, vague 2)** — candidat issue (P1) ; priorité si Count-Up est expédié
+> **Likely** candidates (pass-1 code analysis) — to confirm visually on a screenshot before any issue.
 
-### F-007 — `ErrorRetryWidget` « Retry » en dur
-- Axe : i18n
-- Surface : widget partagé (~10 pages de prod)
-- Rail : web
-- Sévérité : P2
-- Observé : `Text('Retry')` codé en dur ; widget réutilisé par de nombreuses pages.
-- Attendu : libellé localisé.
-- Preuve : `lib/core/widgets/error_retry_widget.dart:35,54`.
-- Statut : à confirmer
+### F-002 — DB-error surface: unstyled raw string
+- Axis: Design (+ i18n, see F-?)
+- Surface: database open failure surface (`app.dart` `error:` branch)
+- Rail: web
+- Severity: P2
+- Observed: `Center(child: Text('Database failed to open: $e'))` — no icon, no theme, no retry; raw `$e` exposed. (Seen on device during the Pixel 6a resolution validation.)
+- Expected: styled error surface (icon + bounded message + theme), see the "transient states" dimension.
+- Evidence: capture from the resolution validation (stale DB) — raw centred string, no icon/theme/retry; `lib/app/app.dart:~38`.
+- Status: **issue #616** — **Fixed** (PR #626: styled + localized DB-error surface via `ErrorRetryWidget`)
 
-### F-008 — `home_page` Settings semanticLabel/tooltip en dur
-- Axe : i18n
-- Surface : Home (bouton Settings)
-- Rail : web
-- Sévérité : P2
-- Observé : `semanticLabel: 'Settings'` + `tooltip: 'Settings'` en dur (accessibilité non traduite) ; clé `settingsTitle` existe.
-- Attendu : libellé localisé.
-- Preuve : `lib/features/game/presentation/pages/home_page.dart:24,25`.
-- Statut : à confirmer
+### F-003 — Visual inconsistency of the empty states
+- Axis: Design
+- Surface: Players / History / Stats (empty states)
+- Rail: web
+- Severity: P2
+- Observed: icon→label gap 16dp (Players/Stats) vs 8dp (History); History title in body vs `titleLarge` elsewhere.
+- Expected: consistent empty states (title typography + rhythm) — `axis-3-design.md` §2.7.
+- Evidence: `exec-01-players-empty.png` / `exec-02-history-empty.png` — visually consistent.
+- Status: **refuted** — the code difference (8 vs 16dp) isn't visually perceptible; won't-fix.
 
-> **Won't-fix présumés (à confirmer)** : surface auto_scorer (~33 chaînes, débogage/labo) ; acronymes
-> darts (`PPR`/`MPR`/`MPT`) ; surface DB-error pré-`MaterialApp` (anglais acceptable, mais à documenter — voir F-002 côté style).
+### F-004 — Non-uniform loading
+- Axis: Design
+- Surface: Players / History / Stats (loading)
+- Rail: web
+- Severity: P2
+- Observed: Players has a shaped skeleton, History/Stats a plain spinner.
+- Expected: consistent loading treatment across screens.
+- Evidence: _[pass 2 capture]_
+- Status: to confirm
+
+### F-005 — Heatmap without a colour legend/scale
+- Axis: Design (oracle gap)
+- Surface: Heatmap (post-game + stats)
+- Rail: web
+- Severity: P2
+- Observed: the widget draws neither a legend/scale nor segment numbers, whereas `DESIGN_SYSTEM.md` §7.6 mentions a "readable legend".
+- Expected: decide — add the legend OR fix the oracle.
+- Evidence: `heatmap_dartboard_widget.dart`; DESIGN_SYSTEM §7.6; **seen live** (`hm-postgame-scrolled.png` — heatmap rendered without legend or numbers).
+- Status: **issue #617** — **Won't-fix** (PR #628: decision to amend the spec, DESIGN_SYSTEM §7.6 "no legend by design")
+
+### F-019 — Heatmap: low density tints the whole board blue
+- Axis: Design
+- Surface: Heatmap (post-game)
+- Rail: web
+- Severity: P2 (low confidence)
+- Observed: with 9 positioned darts, the low KDE density tints almost the whole board blue (the underlying board — segments/rings — is washed in blue), reducing its readability; only the hotspots stand out.
+- Expected: axis 3 checklist §2.6 — "the low-density tail fades to transparent, no hard floor". To review with a denser dataset (possibly normal for 9 sparse darts).
+- Evidence: `hm-postgame-scrolled.png`.
+- Status: to confirm (low conf.) — review with more darts
+
+---
+
+## Axis 4 — Data / persistence
+
+### F-020 — X01: busted darts are counted in the per-game PPR and the career BEST PPR
+- Axis: Correctness / Data
+- Surface: X01 post-game (AVG PPR) + X01 Stats page (PPR → BEST)
+- Rail: web
+- Severity: P1
+- Observed: 501 game with a busted turn (180,180,[bust from 141],141) → AVG PPR **170.3** over 12 darts (= 681/12×3, the busted turn credited 180); career BEST PPR also 170.3. Yet the **career AVERAGE PPR = 143.1** is correct (busted = 0) → **two bust conventions on the same screen**.
+- Expected: x01.projections.md §5.2 "bust turns score = 0" → PPR = 501/12×3 = **125.25** (numerator excludes busted points, denominator keeps the 3 darts).
+- Cause: `gameStatsFromEvents` sums the raw `dart_throws.score`; `X01BestLegPprProjection` deliberately includes busts (stale comment pointing at `X01AverageProjection`, which since #318 EXCLUDES them via `turn_score`). Possibly a doc↔code divergence (#246) → reconcile (fix the code to bust=0, OR amend §5.2 + the comment).
+- Evidence: `a4stats-04-postgame2.png` (170.3/12), `a4stats-05-career.png` (AVERAGE 143.1, BEST 170.3).
+- Status: **issue #610**
+
+### Positive confirmations — Axis 4 (parallel agents, 2026-06-19)
+- **Stats**: 9-darter 167, mutually exclusive buckets; **cross-game aggregation + `(game_id, local_sequence)` ordering correct** (career 143.1 = both games combined — if the ordering were broken, the overlapping `local_sequence`s would corrupt the total); #106 (solo games excluded from career legs but counted in Games Played) wired correctly.
+- **History** (6 mixed games): list by `end_time` DESC, completed only; type + date range filters (narrow/clear); detail leg breakdown = exact match of the game (X01 301 hand-checked); MPR/PPR labels per gameType; read-only. Pagination NOT exercised (6 < 20).
+- **Achievements**: 9-darter → First180/First Win/Nine-Darter dated, Big Fish correctly locked, 100-Games 1/100; **reload idempotence confirmed** (no re-toast, dates kept); 2nd game → progress 1→2, no re-toast.
+- **Persistence/replay**: reload mid-game → state restored **exactly** (score/round/player/darts); consistent undo; correct DartCorrected recompute; finished game read-only + active URL redirects to post-game; reload after completion stays completed.
+- **Minor observations (not raised)**: 2 transient console errors on START of an X01 (not investigated); after a browser reload, the hash route goes back to Home (state is preserved/replayable but the deep link isn't auto-restored — expected release behaviour; to check: is there a "resume the game in progress" affordance in the UI?).
+
+---
+
+## Axis 5 — i18n
+
+> **Execution (parallel agents, 2026-06-19)**: DE+NL overflow (runtime), jargon (web+ARB), plurals/consistency (ARB).
+
+### F-021 — Broad localization gap (Home + stats/post-game)
+- Axis: i18n · Surface: Home, Stats, post-game, game detail · Rail: web · Severity: P2
+- Observed (in DE and NL): Home card subtitles ("STRATEGIC PLAY", "SHANGHAI, COUNT-UP", "IMPROVE SKILLS", "ANALYZE DATA", "SESSIONS", "ROSTER") untranslated; "STATISTICS BREAKDOWN", "CATEGORY" (while the detail table uses "CATEGORIE" in nl → inconsistent), "Need ≥2 games for a trend", the "Practice" tab, the "Double Out" config chip stay in EN.
+- Expected: localize these (non-jargon) strings. Superset of F-007 (`Retry`) / F-008 (home Settings).
+- Evidence: `de-home.png`, `nl-settings.png`, `de-statsdetail.png`.
+- Status: **issue #612** (covers F-007/F-008) — **Fixed** (PR #624: Home/Retry/stats labels localized, 7 languages)
+
+### F-022 — nl: "Win N games" achievement descriptions untranslated
+- Axis: i18n · Surface: Achievements (nl) · Severity: P2
+- Observed: `achievementWins10/50/100Description` = "Win 10/50/100 games" (English sentence); the other 5 locales translate it (de "Gewinne 10 Spiele", fr "Gagner 10 parties"…). nl is the only outlier.
+- Expected: "Win 10 spellen/potjes".
+- Status: **issue #613** — **Won't-fix** (decision: nl "Win N games" already correct — loanword "games" + imperative "Win", verified)
+
+### F-023 / F-024 — fr: "manche" instead of "tour" / "leg"
+- Axis: i18n · Surface: history detail / achievements (fr) · Severity: P2
+- Observed: `historyRoundBreakdown` = "Détail des **manches**" (all the rest of fr uses "tour" for round; "manche" = a set of legs, semantically wrong); `achievementNineDarterDescription` = "Gagner une **manche** de 501" (all the rest of fr uses the loanword "leg").
+- Expected: "Détail des tours"; "Gagner un leg de 501".
+- Evidence: `app_fr.arb`. Source: darts-nerd.com/glossaire.
+- Status: **issue #614** (with F-026) — **Fixed** (PR #623: fr terminology tour/leg/qu'une)
+
+### F-025 / F-026 — low confidence (es/pt score split; fr idiom)
+- **F-025**: es/pt `historyColScore` = "Puntos"/"Pontos" vs "Puntuación"/"Pontuação" elsewhere — possibly intentional (points per turn vs aggregate metric). **To confirm** — kept in the log, no issue.
+- **F-026** (cosmetic): fr `gameAdvanceTurnBody` `one` branch hardcodes "que 1 fléchette" instead of "qu'une fléchette". **issue #614** (with F-023/F-024) — **Fixed** (PR #623).
+
+### Positive confirmations — Axis 5
+- **DE+NL overflow: NONE** on all surfaces reached (Settings, variant selection including the **4-chip row** EINSTIEG/AUSSTIEG/LEGS/RUNDEN, board, config, modals, stats, history). Checkout ellipsis = graceful; turn breakdown = horizontal scroll by design. *(DE post-game/turn breakdown not reached — route home abandoned.)*
+- **ICU plurals**: 9 keys × 7 locales correct (fr/pt count=0 → `one`/singular OK; no superfluous category); **placeholders** all present + correctly positioned (fr/it reordering verified); no double spaces.
+- **Terminology consistency**: de/es/it/nl/pt clean (1 stem per concept); only fr has the 2 "manche" (F-023/024).
+- **Legitimate loanwords** (NOT defects): de Name/System/Debug/Darts, nl Tips/VARIANT, it Round/Feedback, es Error; checkout/leg/marks/180s/bull consistent per locale.
+
+---
+
+> **Likely** candidates (pass-1 code analysis, offenders table) — to confirm in pass 2.
+
+### F-006 — Count-Up board not localized
+- Axis: i18n
+- Surface: Count Up board (`count_up_board_page.dart`)
+- Rail: web
+- Severity: P2
+- Observed: the only board with hardcoded strings ("Error", "Game not found", "End Game", "Settings", "Undo last dart", "NEXT PLAYER"/"NEXT ROUND", semanticLabels); X01/Cricket/Practice are localized.
+- Expected: wire `l10n.*` — the ARB keys already exist and are consumed by X01 (`gameNotFound`, `commonError`, `gameMenuEndGame`, `settingsTitle`, `gameOptionsSemantic`, `gameUndoLastDart`, `gameNextPlayer`/`gameNextRound`). No key to create.
+- Evidence: `count_up_board_page.dart:84,92,133,146,150,279,287`.
+- Status: **confirmed (live + source, wave 2)** — issue candidate (P1); priority if Count-Up ships
+
+### F-007 — `ErrorRetryWidget` hardcoded "Retry"
+- Axis: i18n
+- Surface: shared widget (~10 prod pages)
+- Rail: web
+- Severity: P2
+- Observed: hardcoded `Text('Retry')`; widget reused by many pages.
+- Expected: localized label.
+- Evidence: `lib/core/widgets/error_retry_widget.dart:35,54`.
+- Status: to confirm
+
+### F-008 — `home_page` Settings semanticLabel/tooltip hardcoded
+- Axis: i18n
+- Surface: Home (Settings button)
+- Rail: web
+- Severity: P2
+- Observed: hardcoded `semanticLabel: 'Settings'` + `tooltip: 'Settings'` (untranslated accessibility); the `settingsTitle` key exists.
+- Expected: localized label.
+- Evidence: `lib/features/game/presentation/pages/home_page.dart:24,25`.
+- Status: to confirm
+
+> **Presumed won't-fix (to confirm)**: auto_scorer surface (~33 strings, debugging/lab); darts
+> acronyms (`PPR`/`MPR`/`MPT`); pre-`MaterialApp` DB-error surface (English acceptable, but to be documented — see F-002 for the styling side).
 
 ---
 
 ## Notes
 
-- Les findings « à confirmer » proviennent de l'**analyse code de la passe 1**, pas d'une observation
-  d'exécution — ils restent des hypothèses jusqu'à repro/screenshot en passe 2.
-- F-002 et la partie « non localisée » de la surface DB-error se recoupent (design × i18n) — à traiter
-  ensemble le cas échéant.
+- The "to confirm" findings come from the **pass-1 code analysis**, not from an execution
+  observation — they remain hypotheses until reproduced/screenshotted in pass 2.
+- F-002 and the "not localized" part of the DB-error surface overlap (design × i18n) — to handle
+  together if needed.

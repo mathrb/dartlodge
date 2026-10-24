@@ -1,97 +1,97 @@
-# Axe 5 — i18n — plan de test détaillé
+# Axis 5 — i18n — detailed test plan
 
-> **Statut : passe 1 (chartes exploratoires par préoccupation).** Traité **en dernier** (UI stabilisée
-> par les axes 1-4). Cas scriptés / revue par locale = passe 2 (différée).
-> Parent : `docs/plans/2026-06-19-1.0-verification-plan.md` §7. Mécanique : voir `axis-1-correctness.md` §2
-> (viewport Pixel 6a 412×915) + bascule de langue via `localeSettingProvider`.
-
----
-
-## 1. Objet & oracles
-
-Vérifier que l'appli est correcte et soignée dans les **7 langues** (en/fr/de/es/it/nl/pt).
-La **parité des clés est déjà auditée et parfaite** (515 clés × 7, 0 manquante/orpheline,
-placeholders intacts — cf. `doc-drift-audit-2026-06-19.md`) → l'axe 5 cible ce que la parité ne couvre PAS.
-
-- Oracles : `lib/l10n/arb/*.arb` (template `app_en.arb`), `lib/l10n/l10n.yaml` + `gen_l10n`,
-  `lib/l10n/gen/app_localizations*.dart`, `test/l10n/arb_integrity_test.dart` (gate parité ARB↔ARB).
-- Rail : `[web]` (bascule de langue + screenshots des 7 locales) ; `[device]` marginal.
+> **Status: pass 1 (exploratory charters per concern).** Handled **last** (UI stabilized
+> by axes 1-4). Scripted cases / per-locale review = pass 2 (deferred).
+> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §7. Mechanics: see `axis-1-correctness.md` §2
+> (Pixel 6a viewport 412×915) + language switch via `localeSettingProvider`.
 
 ---
 
-## 2. Préoccupations
+## 1. Purpose & oracles
 
-### 2.1 Clés manquantes / fallback au rendu
-**Charte exploratoire** — *Missions*
-1. **Aucune clé brute à l'écran.** Risque réel ≠ ARB (parité parfaite) mais **confusion clé-de-snapshot ↔ libellé** : les clés de projection (`x01_average`, `cricket.mpt`, slugs de variante, `GameType.name`) servent d'argument à un mapping ; un `orElse: () => key` afficherait l'identifiant. Cibler post-game, stats, heatmap, succès.
-2. **Toute clé consommée existe dans l'ARB template.** Le gate `arb_integrity_test` compare ARB↔ARB, **pas** code→ARB. `nullable-getter: false` → un getter manquant casse la compil du `gen/` (donc régénérer + committer `gen/` en lock-step — CI ne lance pas build_runner).
-3. **Bascule de langue runtime re-rend tout l'arbre.** Changer la langue depuis Settings doit propager à chaque écran monté (board, modales bust/leg, `AchievementNotificationHost`, snackbars, sheets) ; un libellé capturé dans `initState`/un champ reste figé. `_BootstrapApp` (pré-DB) n'a pas de `Localizations` — aucun texte localisable n'y transite.
-4. **Résolution locale système + repli.** `resolveAppLocale` matche par `languageCode` seul, retombe sur `en` ; device en langue non listée (`ja`) → `en` propre ; variantes régionales (`pt_BR`, `de_CH`) → langue de base ; code stocké invalide → gracieux. Cardinalité cohérente : `kSupportedLocales` ↔ `supportedLocales` généré ↔ 7 ARB ↔ 7 `gen/` ↔ `kLanguageAutonyms`.
+Verify that the app is correct and polished in all **7 languages** (en/fr/de/es/it/nl/pt).
+**Key parity has already been audited and is perfect** (515 keys × 7, 0 missing/orphaned,
+placeholders intact — see `doc-drift-audit-2026-06-19.md`) → axis 5 targets what parity does NOT cover.
 
-**Heuristiques** — gen_l10n retombe sur le template *silencieusement* (la parité parfaite masque ce risque pour une *future* clé) ; `orElse: () => key` = anti-pattern à débusquer ; libellé lu hors `build` (champ/`late final`) ne suit pas la bascule ; un autonyme manquant casse le sélecteur sans erreur.
-
-### 2.2 Débordement de texte (Pixel 6a portrait 412×915)
-**Charte exploratoire** — *Missions*
-1. **Faire éclater les chips de config en DE/NL.** `_MetadataRow` (variant selection) : chips `setupChipIn/Out/Legs` dans un `Row` à espacement fixe, **sans `Flexible`/`maxLines`/overflow**. DE : `IN`→`EINSTIEG` (×2.67), `OUT`→`AUSSTIEG` → la rangée X01 (4 chips) déborde-t-elle (rayures) à 412px ?
-2. **CTA ALL-CAPS à letterSpacing élevé.** `setupStartGame` (→`SPIEL STARTEN`), `gameNextRound` (→`NÄCHSTE RUNDE`), `gameNextPlayer` (→`NÄCHSTER SPIELER`), `setupApply` (→`ANWENDEN`) : le letterSpacing 1.0-1.2 amplifie la largeur — pas de troncature ni wrap qui casse la hauteur de barre.
-3. **Le FittedBox(scaleDown) #477 ne couvre PAS les labels traduits.** Il n'enveloppe que le `segment` (numéral locale-stable `T20`/`MISS`) au band ; over-lines de section, titres de modale, noms joueurs board (`labelMedium` CAPS letterSpacing 1.2) n'ont pas ce filet — débordent.
-4. **Titres de modale & snackbars longs.** `gameEndGameTitle`, `gameMenuEndDrill` (→`Oefening beëindigen`), `gameUndoLastDart` (→`Letzten Dart rückgängig machen`, ×2.14) ; snackbars `gameRoundLimitReached`/`setupCouldNotStartRetry`. Ellipse propre vs troncature en plein mot vs débordement vertical.
-5. **Badges/tabs/colonnes stats.** Onglet `statsOthersTab`, `statsColAverage` (→`GEMIDDELDE` NL), en-têtes history `historyColTurn` (→`Aufnahme`), `historyTurnBreakdown` (→`Aufnahmen-Aufschlüsselung`, ×1.79).
-
-**Heuristiques** — DE/NL +25-35% de longueur ; composés allemands = mots **non-cassables** (un conteneur fixe ne wrappe pas, il déborde) ; ALL-CAPS + letterSpacing 1.2 multiplie la largeur ; numéraux `StatFormatter` locale-stables (chasser le débordement côté **labels**, pas chiffres) ; tester aussi `textScaleFactor ≥ 1.3` (accessibilité) qui compose avec l'expansion ; 3 échecs distincts : ellipse (OK) / troncature laide ou rayures (bug) / wrap qui pousse hors écran (bug).
-
-### 2.3 Qualité / jargon darts par langue (web-search)
-**Charte exploratoire** — *Missions*
-1. **Terme consensuel par langue pour chaque concept.** checkout, leg, bust, ton/180, double-out/in, marks, bull/double-bull, around the clock, shanghai, catch 40 : terme réellement utilisé par la communauté darts de la langue — ni calque inventé, ni anglicisme parasite. Trancher : (a) loanword légitime / (b) terme natif requis / (c) anglicisme à corriger.
-2. **Statuer sur les chaînes « identiques à l'EN ».** Critère : mot d'UI générique (Name, Error, Round, System, Tips, « Win N games ») → à traduire en principe ; terme de jargon (Darts, 180, marks) → loanword admis possible.
-3. **Cohérence intra-langue d'un terme.** « leg » rendu tantôt « manche » tantôt « leg » dans une même langue = défaut.
-4. **Confirmer par recherche web l'usage réel** (glossaires/fédérations) avant de trancher — mémoire `feedback_translate_via_web_search`.
-
-**Termes/clés à risque par langue (point de départ)**
-- **de** : `commonName='Name'`, `settingsThemeSystem='System'` (ambigus EN/DE), `summaryDarts='Darts'` (loanword tech/jargon probable) ; + `leg`/Aus, `statCheckout`, `stat180s`.
-- **nl** : `achievementWins10/50/100Description='Win N games'` (phrase complète → présomption bug), `rulesHeadingTips='Tips'` / `setupSectionVariant='VARIANT'` (plausibles) ; + `leg`/`checkout`/`marks`.
-- **it** : `summaryRound='Round'` (vs turno/giro — vérifier cohérence), `settingsFeedbackSection` (prestito).
-- **es** : `commonError='Error'` (homographe légitime) ; + `leg`/manga, `checkout`/cierre, `bust`/pasarse, `marks`/marcas, `bull`/diana.
-- **fr/pt** (non flaggés) : couvrir `leg`/manche, `checkout`, `bust`/dépassé, `marks`/marques, `bull`/mouche, `180`/ton.
-
-**Heuristiques** — anglais sur clé **non-jargon** (réglages/nav/succès) = suspect par défaut ; sur clé **jargon** = loanword plausible (vérifier glossaire) ; ne jamais inventer un calque (loanword > traduction fabriquée, mais le signaler comme décision) ; vérifier le verdict sur TOUTES les occurrences.
-
-### 2.4 Pluriels & interpolation
-**Charte exploratoire** — *Missions*
-1. **Catégories ICU correctes par langue.** 9 clés à pluriel ; **fr & pt** : `count=0` doit tomber dans `one` (singulier), contrairement à en/de/nl/es — tester explicitement 0. Aucune langue du projet n'exige `few`/`many` cardinal — signaler toute catégorie surnuméraire ou `other`-seul.
-2. **Accord nombre↔substantif & participe.** « 1 joueur »/« 3 joueurs », « 1 leg gagné »/« 3 legs gagnés » ; genres/participes (fr/es/it/pt : gagné/gagnés, non localisée/localisées) ; invariabilité voulue (de `Spieler`, it `round`/`leg`) vs copier-coller paresseux.
-3. **Placeholders bien placés (ordre des mots).** Multi-placeholders sensibles : `gameLegWonBy`, `summaryNOfMCheckouts` (`{successes}/{attempts}` réordonné en fr/it), `gameCheckoutSuccess`, `gameLegOf`. + incohérence convention « 1 » en dur (branch `one`) vs `{count}` réinjecté.
-4. **Plural inline dans une phrase.** `gameAdvanceTurnBody` : phrase fluide quelle que soit la branche, pas de double-espace ni ponctuation orpheline.
-
-**Clés à pluriel** : `commonRelativeDaysAgo`, `summaryLegsWon`, `statsHeatmapUnlocated`, `gameAdvanceTurnBody` (inline), `gameDartsThrown`, `setupLineupCount`, `setupRoundsCount`, `setupLegsCount`, `autoScorerStatusDetected`.
-**Heuristiques** — tester 0/1/2/grand nombre ; double-espaces, séparateurs `·`/`|` mal entourés, ponctuation (espagnol `¿?`, français espace insécable avant `?`).
-
-### 2.5 Cohérence terminologique
-**Charte exploratoire** — *Missions*
-1. **Concept → terme unique par langue.** Indexer concept → traductions observées sur toutes les clés ; tout concept avec >1 radical distinct (hors flexion/casse) = dérive synonymique à confirmer.
-2. **Cohérence inter-surfaces.** Même terme entre board (`game*`) / post-game (`summary*`) / history (`history*`) / stats (`stat*`) pour : leg, checkout, round/tour, score, average, marks, player.
-3. **Étiquettes de variantes.** Mêmes mots entre picker (Title Case) / header in-game / history (minuscule) — la **casse divergente est voulue** (CLAUDE.md, ne pas signaler) ; seul un radical divergent est un défaut.
-4. **Verbes d'action partagés.** start / next (Leg/Player/Round/Target) / cancel / delete : un même geste = même verbe (pas supprimer↔effacer, suivant↔prochain).
-
-**Heuristiques** — normaliser casse/ponctuation/flexion avant comparaison (radical seul) ; comparer **intra-langue** uniquement ; emprunt EN acceptable s'il est universel dans la langue, le défaut est l'inconstance. Clusters concept→clés détaillés (leg, round, player, checkout, score/average/marks, variantes, actions) fournis par l'analyse — à recouper.
-
-### 2.6 Lacunes de localisation côté code
-**Charte exploratoire** — *Missions*
-1. **Confirmer le gap Count-Up (parité avec X01).** `count_up_board_page.dart` est le **seul board non localisé** ; chaque chaîne en dur a déjà une clé ARB consommée par X01 → câblage simple, **priorité si Count-Up est expédié**.
-2. **Surfaces d'erreur globales hors-feature** (`app.dart`, `app_router.dart`, `error_retry_widget.dart`) : déterminer atteignabilité avec/sans `AppLocalizations` dans l'arbre (DB-error s'affiche avant `MaterialApp` → pré-l10n acceptable mais à documenter ; `ErrorRetryWidget` « Retry » utilisé par ~10 pages prod → vrai gap).
-3. **Labels non-`Text` masqués** : `semanticLabel`/`tooltip`/`hintText`/`labelText`, titres dialog, `content:` de SnackBar (accessibilité = contenu traduisible). Ex. `home_page` `semanticLabel/tooltip: 'Settings'`.
-4. **Bloc auto_scorer (~33) = débogage** : won't-fix présumé, sauf chemin atteignable hors mode dev (ex. snackbar « Recording not found. »).
-5. **Acronymes darts** (`PPR`/`MPR`/`MPT`, labels d'axes) : termes universels, won't-fix présumé.
-
-**Offenders confirmés (file:line — catégorie)** : `count_up_board_page.dart` :84 `'Error'`, :92 `'Game not found'`, :133 `semanticLabel 'Game options'`, :146 `'End Game'`, :150 `'Settings'`, :279 `'Undo last dart'`, :287 `'NEXT PLAYER'/'NEXT ROUND'` → **(a) gaps réels, clés existantes** ; `error_retry_widget.dart:35,54` `'Retry'` (~10 pages) → **(a)** ; `home_page.dart:24,25` `'Settings'` → **(a)** ; `app.dart:38` `'Database failed to open: $e'` → **(b)** pré-l10n, documenter ; `app_router.dart:134,135` `'Error'`/`'Page not found'` → **(a/b)** ; `auto_scorer/**` ~33 → **(b)** débogage ; `ppr_trend_chart_widget.dart:196` `'PPR'` → **(c)** acronyme.
-
-**Heuristiques** — test décisif vrai-gap vs débogage : la chaîne a-t-elle un jumeau déjà localisé ? ; exclure `*.g.dart`/`*.freezed.dart`/`gen/` ; exceptions `repository_exception.dart` = messages dev (Sentry, pas affichés) ; chaîne en `domain/`/`data/` ≠ user-facing.
+- Oracles: `lib/l10n/arb/*.arb` (template `app_en.arb`), `lib/l10n/l10n.yaml` + `gen_l10n`,
+  `lib/l10n/gen/app_localizations*.dart`, `test/l10n/arb_integrity_test.dart` (ARB↔ARB parity gate).
+- Rail: `[web]` (language switch + screenshots of the 7 locales); `[device]` marginal.
 
 ---
 
-## 3. Sortie
+## 2. Concerns
 
-- Findings i18n → carnet `docs/testing/findings-2026-06.md` (format plan §8). Candidats déjà nets :
-  Count-Up non localisé (a), `ErrorRetryWidget` « Retry » (a), `home_page` Settings (a).
-- Passe 2 : boucle sur les 7 locales (screenshots écrans à fort texte : setup, post-game, stats, settings) +
-  parcours nominal complet en **DE** (mots longs) ; vérification jargon par recherche web.
+### 2.1 Missing keys / fallback at render time
+**Exploratory charter** — *Missions*
+1. **No raw key on screen.** The real risk ≠ ARB (perfect parity) but **snapshot-key ↔ label confusion**: projection keys (`x01_average`, `cricket.mpt`, variant slugs, `GameType.name`) are used as the argument of a mapping; an `orElse: () => key` would display the identifier. Target post-game, stats, heatmap, achievements.
+2. **Every consumed key exists in the ARB template.** The `arb_integrity_test` gate compares ARB↔ARB, **not** code→ARB. `nullable-getter: false` → a missing getter breaks compilation of `gen/` (so regenerate + commit `gen/` in lock-step — CI doesn't run build_runner).
+3. **Runtime language switch re-renders the whole tree.** Changing the language from Settings must propagate to every mounted screen (board, bust/leg modals, `AchievementNotificationHost`, snackbars, sheets); a label captured in `initState`/a field stays frozen. `_BootstrapApp` (pre-DB) has no `Localizations` — no localizable text goes through it.
+4. **System locale resolution + fallback.** `resolveAppLocale` matches on `languageCode` only, falls back to `en`; device in an unlisted language (`ja`) → clean `en`; regional variants (`pt_BR`, `de_CH`) → base language; invalid stored code → graceful. Consistent cardinality: `kSupportedLocales` ↔ generated `supportedLocales` ↔ 7 ARBs ↔ 7 `gen/` ↔ `kLanguageAutonyms`.
+
+**Heuristics** — gen_l10n falls back to the template *silently* (perfect parity hides this risk for a *future* key); `orElse: () => key` = anti-pattern to flush out; a label read outside `build` (field/`late final`) doesn't follow the switch; a missing autonym breaks the selector without an error.
+
+### 2.2 Text overflow (Pixel 6a portrait 412×915)
+**Exploratory charter** — *Missions*
+1. **Burst the config chips in DE/NL.** `_MetadataRow` (variant selection): `setupChipIn/Out/Legs` chips in a fixed-spacing `Row`, **with no `Flexible`/`maxLines`/overflow**. DE: `IN`→`EINSTIEG` (×2.67), `OUT`→`AUSSTIEG` → does the X01 row (4 chips) overflow (stripes) at 412px?
+2. **ALL-CAPS CTAs with high letterSpacing.** `setupStartGame` (→`SPIEL STARTEN`), `gameNextRound` (→`NÄCHSTE RUNDE`), `gameNextPlayer` (→`NÄCHSTER SPIELER`), `setupApply` (→`ANWENDEN`): the 1.0-1.2 letterSpacing amplifies the width — no truncation or wrap that breaks the bar height.
+3. **The #477 FittedBox(scaleDown) does NOT cover translated labels.** It only wraps the `segment` (locale-stable numeral `T20`/`MISS`) in the band; section over-lines, modal titles, board player names (`labelMedium` CAPS letterSpacing 1.2) don't have that safety net — they overflow.
+4. **Long modal titles & snackbars.** `gameEndGameTitle`, `gameMenuEndDrill` (→`Oefening beëindigen`), `gameUndoLastDart` (→`Letzten Dart rückgängig machen`, ×2.14); snackbars `gameRoundLimitReached`/`setupCouldNotStartRetry`. Clean ellipsis vs mid-word truncation vs vertical overflow.
+5. **Stats badges/tabs/columns.** `statsOthersTab` tab, `statsColAverage` (→`GEMIDDELDE` NL), history headers `historyColTurn` (→`Aufnahme`), `historyTurnBreakdown` (→`Aufnahmen-Aufschlüsselung`, ×1.79).
+
+**Heuristics** — DE/NL +25-35% length; German compounds = **unbreakable** words (a fixed container doesn't wrap, it overflows); ALL-CAPS + letterSpacing 1.2 multiplies the width; `StatFormatter` numerals are locale-stable (hunt overflow on the **labels**, not the digits); also test `textScaleFactor ≥ 1.3` (accessibility), which compounds with the expansion; 3 distinct failure modes: ellipsis (OK) / ugly truncation or stripes (bug) / wrap that pushes off screen (bug).
+
+### 2.3 Quality / darts jargon per language (web search)
+**Exploratory charter** — *Missions*
+1. **Consensus term per language for each concept.** checkout, leg, bust, ton/180, double-out/in, marks, bull/double-bull, around the clock, shanghai, catch 40: the term actually used by that language's darts community — neither an invented calque nor a stray anglicism. Decide: (a) legitimate loanword / (b) native term required / (c) anglicism to fix.
+2. **Rule on the strings "identical to EN".** Criterion: generic UI word (Name, Error, Round, System, Tips, "Win N games") → should in principle be translated; jargon term (Darts, 180, marks) → loanword possibly acceptable.
+3. **Intra-language consistency of a term.** "leg" rendered sometimes "manche", sometimes "leg" in the same language = defect.
+4. **Confirm real usage by web search** (glossaries/federations) before deciding — memory `feedback_translate_via_web_search`.
+
+**At-risk terms/keys per language (starting point)**
+- **de**: `commonName='Name'`, `settingsThemeSystem='System'` (ambiguous EN/DE), `summaryDarts='Darts'` (probable tech/jargon loanword); + `leg`/Aus, `statCheckout`, `stat180s`.
+- **nl**: `achievementWins10/50/100Description='Win N games'` (full sentence → presumed bug), `rulesHeadingTips='Tips'` / `setupSectionVariant='VARIANT'` (plausible); + `leg`/`checkout`/`marks`.
+- **it**: `summaryRound='Round'` (vs turno/giro — check consistency), `settingsFeedbackSection` (loanword).
+- **es**: `commonError='Error'` (legitimate homograph); + `leg`/manga, `checkout`/cierre, `bust`/pasarse, `marks`/marcas, `bull`/diana.
+- **fr/pt** (not flagged): cover `leg`/manche, `checkout`, `bust`/dépassé, `marks`/marques, `bull`/mouche, `180`/ton.
+
+**Heuristics** — English on a **non-jargon** key (settings/nav/achievements) = suspect by default; on a **jargon** key = plausible loanword (check a glossary); never invent a calque (loanword > made-up translation, but flag it as a decision); check the verdict on ALL occurrences.
+
+### 2.4 Plurals & interpolation
+**Exploratory charter** — *Missions*
+1. **Correct ICU categories per language.** 9 plural keys; **fr & pt**: `count=0` must fall into `one` (singular), unlike en/de/nl/es — test 0 explicitly. No project language requires cardinal `few`/`many` — report any superfluous category or `other`-only.
+2. **Number↔noun & participle agreement.** "1 joueur"/"3 joueurs", "1 leg gagné"/"3 legs gagnés"; genders/participles (fr/es/it/pt: gagné/gagnés, non localisée/localisées); intended invariability (de `Spieler`, it `round`/`leg`) vs lazy copy-paste.
+3. **Placeholders in the right place (word order).** Sensitive multi-placeholder keys: `gameLegWonBy`, `summaryNOfMCheckouts` (`{successes}/{attempts}` reordered in fr/it), `gameCheckoutSuccess`, `gameLegOf`. + inconsistent convention of a hardcoded "1" (`one` branch) vs re-injected `{count}`.
+4. **Inline plural within a sentence.** `gameAdvanceTurnBody`: fluent sentence whatever the branch, no double space or orphan punctuation.
+
+**Plural keys**: `commonRelativeDaysAgo`, `summaryLegsWon`, `statsHeatmapUnlocated`, `gameAdvanceTurnBody` (inline), `gameDartsThrown`, `setupLineupCount`, `setupRoundsCount`, `setupLegsCount`, `autoScorerStatusDetected`.
+**Heuristics** — test 0/1/2/a large number; double spaces, badly spaced `·`/`|` separators, punctuation (Spanish `¿?`, French non-breaking space before `?`).
+
+### 2.5 Terminology consistency
+**Exploratory charter** — *Missions*
+1. **Concept → single term per language.** Index concept → observed translations across all keys; any concept with >1 distinct stem (ignoring inflection/case) = synonym drift to confirm.
+2. **Cross-surface consistency.** Same term across board (`game*`) / post-game (`summary*`) / history (`history*`) / stats (`stat*`) for: leg, checkout, round/turn, score, average, marks, player.
+3. **Variant labels.** Same words across picker (Title Case) / in-game header / history (lowercase) — the **diverging case is intended** (CLAUDE.md, don't report); only a diverging stem is a defect.
+4. **Shared action verbs.** start / next (Leg/Player/Round/Target) / cancel / delete: one gesture = one verb (not supprimer↔effacer, suivant↔prochain).
+
+**Heuristics** — normalize case/punctuation/inflection before comparing (stem only); compare **within a language** only; an EN loanword is acceptable if it's universal in the language, the defect is inconsistency. Detailed concept→key clusters (leg, round, player, checkout, score/average/marks, variants, actions) provided by the analysis — to cross-check.
+
+### 2.6 Localization gaps in the code
+**Exploratory charter** — *Missions*
+1. **Confirm the Count-Up gap (parity with X01).** `count_up_board_page.dart` is the **only non-localized board**; every hardcoded string already has an ARB key consumed by X01 → simple wiring, **priority if Count-Up ships**.
+2. **Global out-of-feature error surfaces** (`app.dart`, `app_router.dart`, `error_retry_widget.dart`): determine reachability with/without `AppLocalizations` in the tree (DB-error shows before `MaterialApp` → pre-l10n acceptable but to be documented; `ErrorRetryWidget` "Retry" used by ~10 prod pages → real gap).
+3. **Hidden non-`Text` labels**: `semanticLabel`/`tooltip`/`hintText`/`labelText`, dialog titles, SnackBar `content:` (accessibility = translatable content). E.g. `home_page` `semanticLabel/tooltip: 'Settings'`.
+4. **auto_scorer block (~33) = debugging**: presumed won't-fix, unless a path is reachable outside dev mode (e.g. the "Recording not found." snackbar).
+5. **Darts acronyms** (`PPR`/`MPR`/`MPT`, axis labels): universal terms, presumed won't-fix.
+
+**Confirmed offenders (file:line — category)**: `count_up_board_page.dart` :84 `'Error'`, :92 `'Game not found'`, :133 `semanticLabel 'Game options'`, :146 `'End Game'`, :150 `'Settings'`, :279 `'Undo last dart'`, :287 `'NEXT PLAYER'/'NEXT ROUND'` → **(a) real gaps, existing keys**; `error_retry_widget.dart:35,54` `'Retry'` (~10 pages) → **(a)**; `home_page.dart:24,25` `'Settings'` → **(a)**; `app.dart:38` `'Database failed to open: $e'` → **(b)** pre-l10n, document; `app_router.dart:134,135` `'Error'`/`'Page not found'` → **(a/b)**; `auto_scorer/**` ~33 → **(b)** debugging; `ppr_trend_chart_widget.dart:196` `'PPR'` → **(c)** acronym.
+
+**Heuristics** — the decisive test for real gap vs debugging: does the string have an already-localized twin?; exclude `*.g.dart`/`*.freezed.dart`/`gen/`; `repository_exception.dart` exceptions = dev messages (Sentry, not displayed); a string in `domain/`/`data/` ≠ user-facing.
+
+---
+
+## 3. Output
+
+- i18n findings → log `docs/testing/findings-2026-06.md` (plan §8 format). Candidates already clear:
+  Count-Up not localized (a), `ErrorRetryWidget` "Retry" (a), `home_page` Settings (a).
+- Pass 2: loop over the 7 locales (screenshots of text-heavy screens: setup, post-game, stats, settings) +
+  full nominal journey in **DE** (long words); jargon verification by web search.

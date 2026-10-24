@@ -1,93 +1,93 @@
-# Axe 4 — Données / persistance — plan de test détaillé
+# Axis 4 — Data / persistence — detailed test plan
 
-> **Statut : passe 1 (chartes exploratoires par sujet).** Cas scriptés = passe 2 (différée).
-> Parent : `docs/plans/2026-06-19-1.0-verification-plan.md` §6. Mécanique d'exécution + template :
-> voir `axis-1-correctness.md` §2–§3. Principe directeur : **calculer la valeur attendue à la main
-> depuis les événements, comparer à l'UI** (les stats sont des projections, jamais stockées).
+> **Status: pass 1 (exploratory charters per topic).** Scripted cases = pass 2 (deferred).
+> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §6. Execution mechanics + template:
+> see `axis-1-correctness.md` §2–§3. Guiding principle: **compute the expected value by hand
+> from the events, compare with the UI** (stats are projections, never stored).
 
 ---
 
-## 1. Objet & oracles
+## 1. Purpose & oracles
 
-Vérifier que ce qui est calculé et stocké est **exact et durable**. Stats = projections rejouées
-depuis `game_events` ; history/succès/heatmap reflètent fidèlement les parties.
+Verify that what is computed and stored is **exact and durable**. Stats = projections replayed
+from `game_events`; history/achievements/heatmap faithfully reflect the games.
 
-- Oracles : `docs/statistics/{x01.projections,statistics.architecture,projection-test-matrix}.md`
-  (réalignés #585), `docs/DATABASE_DDL.md`, `docs/DATA.md`, `docs/GAME-EVENT-SPECIFICATIONS.md`,
+- Oracles: `docs/statistics/{x01.projections,statistics.architecture,projection-test-matrix}.md`
+  (realigned #585), `docs/DATABASE_DDL.md`, `docs/DATA.md`, `docs/GAME-EVENT-SPECIFICATIONS.md`,
   `docs/REPOSITORY_INTERFACES.md` (#586) + `PlayerStatsAssembler` / `ProjectionRunner`.
-- Rail : quasi tout `[web]` (drift/IndexedDB ≈ natif) ; `[device]` pour le runtime sqlite3 minSdk23.
+- Rail: almost all `[web]` (drift/IndexedDB ≈ native); `[device]` for the sqlite3 minSdk23 runtime.
 
 ---
 
-## 2. Sujets
+## 2. Topics
 
-### 2.1 Statistiques = projections
-**Charte exploratoire** — *Missions*
-1. **Moyenne 3-fléchettes X01 via delta `turn_score` (#318).** Partie avec visite bust et/ou Double-In non franchi : calculer `avg = (Σ turn_score / darts) × 3` (x01.projections §5.2) ; la visite bust contribue **0** au numérateur mais +1 par dart au dénominateur ; event legacy sans `turn_score` retombe sur la somme par-dart.
-2. **Checkout % — définition de la tentative.** Tentative = `TurnStarted.starting_score ≤ 170` ET « in » (§6.4). Sonder 170 (compte) / 171 (non) ; **requiert `TurnStarted`** (sinon 0 → null).
-3. **Highest checkout & buckets 100/140/180.** Buckets mutuellement exclusifs (180 exact n'apparaît pas aussi en 140+/100+) ; visites bust exclues.
-4. **Cricket MPR/MPT + overload exact-N vs ≥-N.** Visite de 7 marques : per-game/leg → exact-7 (clés `*Exact`) ; carrière (`getPlayerStats`) → ≥5/≥6/≥7 (clés `*MarkTurns`). Identifier le chemin d'appel avant de juger.
-5. **First-nine (X01 PPR / cricket MPR).** Requiert `TurnStarted` + garde ≥3 tours (leg court exclu du dénominateur, #290) ; `null` rendu proprement (pas « 0.0 »).
-6. **Snapshot 2 niveaux & scope.** `snapshot[descriptor.id][field]` (architecture §5.3) ; carrière `fromEvents` / par-partie `gameStatsFromEvents` / par-leg `legCompetitorStatsFromEvents` cohérents.
+### 2.1 Statistics = projections
+**Exploratory charter** — *Missions*
+1. **X01 3-dart average via the `turn_score` delta (#318).** Game with a bust visit and/or an unmet Double-In: compute `avg = (Σ turn_score / darts) × 3` (x01.projections §5.2); the bust visit contributes **0** to the numerator but +1 per dart to the denominator; a legacy event without `turn_score` falls back to the per-dart sum.
+2. **Checkout % — definition of an attempt.** Attempt = `TurnStarted.starting_score ≤ 170` AND "in" (§6.4). Probe 170 (counts) / 171 (doesn't); **requires `TurnStarted`** (otherwise 0 → null).
+3. **Highest checkout & 100/140/180 buckets.** Mutually exclusive buckets (an exact 180 doesn't also appear in 140+/100+); bust visits excluded.
+4. **Cricket MPR/MPT + exact-N vs ≥-N overload.** A 7-mark visit: per-game/leg → exact-7 (`*Exact` keys); career (`getPlayerStats`) → ≥5/≥6/≥7 (`*MarkTurns` keys). Identify the call path before judging.
+5. **First nine (X01 PPR / cricket MPR).** Requires `TurnStarted` + ≥3-turn guard (short leg excluded from the denominator, #290); `null` rendered cleanly (not "0.0").
+6. **Two-level snapshot & scope.** `snapshot[descriptor.id][field]` (architecture §5.3); career `fromEvents` / per-game `gameStatsFromEvents` / per-leg `legCompetitorStatsFromEvents` consistent.
 
-**Heuristiques** — toute valeur affichée reproductible par rejeu à la main (sinon = stockée = défaut ; seule exception : heatmap §2.5) ; le dénominateur ment plus que le numérateur (recompter séparément) ; `null` ≠ `0.0` à l'écran ; corrections = rejeu complet ; strategy en littéraux minuscules `'straight'/'double'/'master'`.
+**Heuristics** — every displayed value reproducible by replaying by hand (otherwise = stored = defect; only exception: heatmap §2.5); the denominator lies more often than the numerator (recount separately); `null` ≠ `0.0` on screen; corrections = full replay; strategy as lowercase literals `'straight'/'double'/'master'`.
 
-### 2.2 Scope des resets & ordre d'événements
-**Charte exploratoire** — *Missions*
-1. **Frontières de reset exactes.** Turn sur `TurnStarted` (PAS TurnEnded), Leg sur `LegCompleted`, Match sur `GameCompleted` ; aucun autre. Runner : reset Turn **avant** `apply`, Leg/Match **après** — un reset au mauvais bord corrompt le snapshot du dart de frontière.
-2. **Pas de fuite turn→turn.** Tour N (180) puis tour vide : snapshot N+1 sans résidu ; event non-`DartThrown` entre tours ne reset pas le Turn prématurément.
-3. **Tri `(game_id, local_sequence)` multi-parties.** `local_sequence` redémarre à 1/partie → plages qui se chevauchent ; vérifier que `getPlayerStats`/`achievementMetricsForPlayer`/`getPlayerLegHistory` trient par les deux, et que `ProjectionRunner` réimpose le tri.
-4. **Pas de pollution cross-game/leg.** Match multi-legs + multi-parties : compteurs Match ne débordent pas, Leg ne survit pas à `LegCompleted` (test-matrix XG1/XG2).
-5. **`replayFrom` cutoff per-game.** Filtré par `localSequence >= fromSequencePerGame[gameId]` ; un cutoff global unique drop par erreur des events co-chargés.
+### 2.2 Reset scope & event order
+**Exploratory charter** — *Missions*
+1. **Exact reset boundaries.** Turn on `TurnStarted` (NOT TurnEnded), Leg on `LegCompleted`, Match on `GameCompleted`; nothing else. Runner: Turn reset **before** `apply`, Leg/Match **after** — a reset on the wrong edge corrupts the snapshot of the boundary dart.
+2. **No turn→turn leak.** Turn N (180) then an empty turn: snapshot N+1 without residue; a non-`DartThrown` event between turns doesn't reset the Turn prematurely.
+3. **Multi-game `(game_id, local_sequence)` sort.** `local_sequence` restarts at 1 per game → overlapping ranges; check that `getPlayerStats`/`achievementMetricsForPlayer`/`getPlayerLegHistory` sort by both, and that `ProjectionRunner` re-imposes the sort.
+4. **No cross-game/leg pollution.** Multi-leg match + multiple games: Match counters don't overflow, Leg doesn't survive `LegCompleted` (test-matrix XG1/XG2).
+5. **Per-game `replayFrom` cutoff.** Filtered by `localSequence >= fromSequencePerGame[gameId]`; a single global cutoff wrongly drops co-loaded events.
 
-**Heuristiques** — reset au mauvais bord = inclut/exclut le dart de frontière ; `orderBy(localSequence)` seul sur un chemin multi-parties = bug (mono-partie OK) ; idempotence : run complet ≡ `replayFrom(0)` ; events event-only (LegCompleted/bust-via-TurnEnded) déclenchent des resets sans dart — un fixture DartThrown-seul les rate.
+**Heuristics** — reset on the wrong edge = includes/excludes the boundary dart; `orderBy(localSequence)` alone on a multi-game path = bug (single game OK); idempotence: full run ≡ `replayFrom(0)`; event-only events (LegCompleted/bust-via-TurnEnded) trigger resets with no dart — a DartThrown-only fixture misses them.
 
-### 2.3 Historique
-**Charte exploratoire** — *Missions*
-1. **Liste & ordre.** Seulement `is_complete=1` + `end_time` non nul, triées `end_time` DESC ; abandonnées/en cours jamais présentes.
-2. **Pagination (`loadNextPage`/offset, `_pageSize=20`).** Tailles 20/21/40/41/grand N : aucun doublon, aucun trou, dernière page partielle non omise ; `hasMore` correct ; appels parallèles rapides gardés (`_loadingNextPage`).
-3. **Filtres & survie à `invalidateSelf`.** Type + plage de dates (inclusives sur `end_time`), poussés en base ; `_filter*` survivent au rebuild ; filtre+pagination combinés ; `clearFilters`.
-4. **Détail = leg-breakdown correct.** `legStats` (events triés `localSequence`) = gagnant/darts/stats par ligne (PPR/checkout/180s X01 ; MPR/first-9/marks Cricket).
-5. **Cross-check à la main.** Reconstruire stats par leg depuis les events bruts pour 1 partie X01 + 1 Cricket, comparer au détail ET à `getGameStats` (cas piège : bust, Double-In non validé, buckets, overflow).
-6. **Lecture seule & carte résumé.** Ouvrir le détail n'émet/altère aucun event ; gagnant trié en tête, score `a–b`, libellé variante **minuscule** en historique.
+### 2.3 History
+**Exploratory charter** — *Missions*
+1. **List & order.** Only `is_complete=1` + non-null `end_time`, sorted by `end_time` DESC; abandoned/in-progress games never present.
+2. **Pagination (`loadNextPage`/offset, `_pageSize=20`).** Sizes 20/21/40/41/large N: no duplicates, no gaps, partial last page not omitted; correct `hasMore`; rapid parallel calls guarded (`_loadingNextPage`).
+3. **Filters & surviving `invalidateSelf`.** Type + date range (inclusive on `end_time`), pushed down to the database; `_filter*` survive the rebuild; filter + pagination combined; `clearFilters`.
+4. **Detail = correct leg breakdown.** `legStats` (events sorted by `localSequence`) = winner/darts/stats per row (PPR/checkout/180s X01; MPR/first-9/marks Cricket).
+5. **Cross-check by hand.** Rebuild per-leg stats from the raw events for 1 X01 game + 1 Cricket game, compare with the detail AND with `getGameStats` (tricky cases: bust, unvalidated Double-In, buckets, overflow).
+6. **Read-only & summary card.** Opening the detail emits/alters no event; winner sorted first, score `a–b`, **lowercase** variant label in history.
 
-**Heuristiques** — tailles pile sur multiples de `_pageSize` ; set d'IDs cumulés == `getCompletedGames(∞)` ; oracle indépendant (recompter, pas faire confiance à `computeLegStats`) ; champs null → `'—'` ; zéro mutation en lecture.
+**Heuristics** — sizes exactly on multiples of `_pageSize`; set of accumulated IDs == `getCompletedGames(∞)`; independent oracle (recount, don't trust `computeLegStats`); null fields → `'—'`; zero mutation on read.
 
-### 2.4 Achievements (données/persistance)
-**Charte exploratoire** — *Missions*
-1. **Déblocage au bon moment (NineDarter).** Seulement sur 501 fini en 9 fléchettes authentiques (pas 10+, pas 301/701, pas busté/non terminé) ; `hasNineDarter` via `x01.nineDarter`.
-2. **Seuils des compteurs (Games501, total180s, highestCheckout, totalWins).** `value >= threshold` exact : tester N-1 / N / N+1 ; `big_fish` (170 explicite) ; binaires sans seuil (1ʳᵉ occurrence).
-3. **Persistance + idempotence.** Ligne dans `unlocked_achievements` (PK `player_id+achievement_id`) ; `recordUnlock` idempotent (conflit PK avalé, premier `unlocked_at`/`game_id` conservés) ; aucun 2ᵉ toast/doublon au replay/reload.
-4. **Détection réactive & survie au reload.** Watcher (keepAlive) détecte sur partie *nouvellement* complétée, joueurs participants seulement ; `earned.difference(already)` ; no-backfill (snapshot initial `_processed`).
-5. **Comportement FK à la suppression.** Supprimer la partie → `game_id` NULL (trophée conservé) ; supprimer le joueur → CASCADE ; FK inexistante → `DatabaseException` (PAS avalée comme le conflit PK).
-6. **Faits persistés, pas des GameEvents.** Aucun `AchievementUnlocked` event ; pas de colonne progress/notification.
+### 2.4 Achievements (data/persistence)
+**Exploratory charter** — *Missions*
+1. **Unlocked at the right moment (NineDarter).** Only on a 501 finished in 9 genuine darts (not 10+, not 301/701, not busted/unfinished); `hasNineDarter` via `x01.nineDarter`.
+2. **Counter thresholds (Games501, total180s, highestCheckout, totalWins).** Exact `value >= threshold`: test N-1 / N / N+1; `big_fish` (explicit 170); binary ones with no threshold (first occurrence).
+3. **Persistence + idempotence.** Row in `unlocked_achievements` (PK `player_id+achievement_id`); `recordUnlock` idempotent (PK conflict swallowed, first `unlocked_at`/`game_id` kept); no second toast/duplicate on replay/reload.
+4. **Reactive detection & surviving reload.** Watcher (keepAlive) detects on a *newly* completed game, participating players only; `earned.difference(already)`; no backfill (initial `_processed` snapshot).
+5. **FK behaviour on deletion.** Delete the game → `game_id` NULL (trophy kept); delete the player → CASCADE; nonexistent FK → `DatabaseException` (NOT swallowed like the PK conflict).
+6. **Persisted facts, not GameEvents.** No `AchievementUnlocked` event; no progress/notification column.
 
-**Heuristiques** — frontières de seuil exactes ; faux positifs (mauvaise partie/joueur, avant complétion) ; distinguer « déjà débloqué » (no-op) de « échec d'écriture » (doit remonter) ; multi-joueurs (1 partie crédite plusieurs, chacun sur son historique cross-type) ; migration v1→v2 (`unlocked_achievements`) couverte par `migration_test`.
+**Heuristics** — exact threshold boundaries; false positives (wrong game/player, before completion); distinguish "already unlocked" (no-op) from "write failure" (must surface); multi-player (1 game credits several, each on their own cross-type history); v1→v2 migration (`unlocked_achievements`) covered by `migration_test`.
 
-### 2.5 Heatmap (données/persistance)
-**Charte exploratoire** — *Missions*
-1. **Double persistance auto-scorée.** `submitDart(seg, x:, y:)` → payload `DartThrown` (clés plates `x`/`y`, ajoutées `if != null`) → colonnes `dart_throws.x/.y` ; même couple dans event ET ligne.
-2. **Null-by-construction (manuel + corrigé).** Chemins non-auto passent `x:null,y:null` → clés omises → NULL ; jamais de fléchette manuelle avec x/y non-null.
-3. **Contrat `getDartPositions` (bypass projection).** Lit `dart_throws` directement (jamais l'assembler), 3 prédicats : `playerId`, `x/y NOT NULL`, `games.is_complete=1` ; segment réel conservé (pas normalisé MISS).
-4. **Correction qui retire une position.** Préserve l'invariant : pas de position « fantôme » d'une détection annulée.
-5. **Agrégation `dartHeatmapProvider` / filtre temporel.** Post-game (`gameId`) vs all-time-par-`gameType` (`from/to=null`) ; la vue stats **ignore délibérément** le `TimeRangeSelector` (décision mainteneur) — non-application = décision UI, pas limite repo.
+### 2.5 Heatmap (data/persistence)
+**Exploratory charter** — *Missions*
+1. **Dual persistence when auto-scored.** `submitDart(seg, x:, y:)` → `DartThrown` payload (flat `x`/`y` keys, added `if != null`) → `dart_throws.x/.y` columns; same pair in the event AND the row.
+2. **Null by construction (manual + corrected).** Non-auto paths pass `x:null,y:null` → keys omitted → NULL; never a manual dart with non-null x/y.
+3. **`getDartPositions` contract (projection bypass).** Reads `dart_throws` directly (never the assembler), 3 predicates: `playerId`, `x/y NOT NULL`, `games.is_complete=1`; real segment kept (not normalized to MISS).
+4. **A correction that removes a position.** Preserves the invariant: no "ghost" position from a cancelled detection.
+5. **`dartHeatmapProvider` aggregation / time filter.** Post-game (`gameId`) vs all-time per `gameType` (`from/to=null`); the stats view **deliberately ignores** the `TimeRangeSelector` (maintainer decision) — not applying it = a UI decision, not a repo limitation.
 
-**Heuristiques** — cadre canonique (origine=centre, r=1.0 au double, 20 en haut ; pas de pixels/repère caméra) ; clés plates `x`/`y` ; omission ≠ sentinelle (0,0 = bull légitime, jamais NaN) ; asymétrie manuel/auto voulue ; x/y `REAL` nullable depuis v1 (pas de migration #571) ; faits pas projections.
+**Heuristics** — canonical frame (origin=centre, r=1.0 at the double, 20 at the top; no pixels/camera frame); flat `x`/`y` keys; omission ≠ sentinel (0,0 = legitimate bull, never NaN); manual/auto asymmetry intended; x/y nullable `REAL` since v1 (no #571 migration); facts, not projections.
 
-### 2.6 Persistance & replay
-**Charte exploratoire** — *Missions*
-1. **Restauration exacte au reload.** Recharger en plein jeu reconstruit l'état exact par replay (score, joueur actif, round, darts du tour, cibles cricket, targets verrouillées, in/out, currentTarget) ; aucune entrée perdue/dupliquée ; points de reprise délicats (après TurnStarted sans dart, bust non acquitté, bascule de leg).
-2. **Déterminisme vs RNG.** Replay identique même avec RNG (`CrazyTargetsRolled`, random) : valeur figée à l'émission, `apply()` pur, jamais re-roll.
-3. **Ordre `(game_id, local_sequence)` multi-parties.** Plages qui se chevauchent (`UNIQUE (game_id, local_sequence)`) ; toute requête cross-parties trie par les deux, jamais `local_sequence` seul.
-4. **Supersession `DartCorrected` replay-aware.** `original_event_id` collecté + originaux sautés par `PlayerStatsAssembler` ET `UndoLastDartUseCase` ; pièges : correction puis undo au passage de tour, corrections multiples, dernier dart d'un leg.
-5. **Lecture seule des parties terminées (logique app, pas trigger).** `is_complete=1` → `appendEvent(s)` rejette dans la transaction (anti-TOCTOU, relit `gameRow.isComplete`) ; aucun chemin (undo/auto-advance/correction tardive) ne contourne.
-6. **IndexedDB & intégrité FK.** Données survivent au vrai reload (WASM/IndexedDB) ; `CASCADE` (games→enfants), `RESTRICT` (joueur historisé non supprimable), `SET NULL` (`current_turn_player_id`, `unlocked_achievements.game_id`).
+### 2.6 Persistence & replay
+**Exploratory charter** — *Missions*
+1. **Exact restoration on reload.** Reloading mid-game rebuilds the exact state by replay (score, active player, round, darts of the turn, cricket targets, locked targets, in/out, currentTarget); no input lost/duplicated; tricky resume points (after a TurnStarted with no dart, unacknowledged bust, leg switch).
+2. **Determinism vs RNG.** Identical replay even with RNG (`CrazyTargetsRolled`, random): value frozen at emission, pure `apply()`, never re-rolled.
+3. **Multi-game `(game_id, local_sequence)` order.** Overlapping ranges (`UNIQUE (game_id, local_sequence)`); every cross-game query sorts by both, never by `local_sequence` alone.
+4. **Replay-aware `DartCorrected` supersession.** `original_event_id` collected + originals skipped by `PlayerStatsAssembler` AND `UndoLastDartUseCase`; traps: correction then undo across a turn change, multiple corrections, last dart of a leg.
+5. **Finished games read-only (app logic, not a trigger).** `is_complete=1` → `appendEvent(s)` rejects inside the transaction (anti-TOCTOU, re-reads `gameRow.isComplete`); no path (undo/auto-advance/late correction) gets around it.
+6. **IndexedDB & FK integrity.** Data survives a real reload (WASM/IndexedDB); `CASCADE` (games→children), `RESTRICT` (player with history can't be deleted), `SET NULL` (`current_turn_player_id`, `unlocked_achievements.game_id`).
 
-**Heuristiques** — tester le reload au début/milieu/fin de tour/leg/partie ; oracle = recompté à la main (pas l'état mémoire avant reload) ; compter darts rejoués vs `dart_throws` persistés ; idempotence (rejouer 2× = même état) ; verrou read-only sous course (append concurrent à `completeGame`) ; vrai reload navigateur (pas rebuild de provider) pour exercer IndexedDB.
+**Heuristics** — test reload at the start/middle/end of a turn/leg/game; oracle = recounted by hand (not the in-memory state before reload); count replayed darts vs persisted `dart_throws`; idempotence (replaying twice = same state); read-only lock under a race (append concurrent with `completeGame`); real browser reload (not a provider rebuild) to exercise IndexedDB.
 
 ---
 
-## 3. Sortie
+## 3. Output
 
-- Findings données → carnet `docs/testing/findings-2026-06.md` (format plan §8).
-- Cas scriptés (passe 2) : parties à valeurs connues, 9-darter émulé, reload, heatmap à positions connues — _[à dériver après la 1re passe exploratoire]_.
+- Data findings → log `docs/testing/findings-2026-06.md` (plan §8 format).
+- Scripted cases (pass 2): games with known values, emulated 9-darter, reload, heatmap with known positions — _[to derive after the first exploratory pass]_.
