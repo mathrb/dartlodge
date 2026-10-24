@@ -2,7 +2,7 @@
 
 > **Status: pass 1 (exploratory charters per concern).** Handled **last** (UI stabilized
 > by axes 1-4). Scripted cases / per-locale review = pass 2 (deferred).
-> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §7. Mechanics: see `axis-1-correctness.md` §2
+> Part of the pre-1.0 verification cycle (2026-06). Mechanics: see `axis-1-correctness.md` §2
 > (Pixel 6a viewport 412×915) + language switch via `localeSettingProvider`.
 
 ---
@@ -91,7 +91,7 @@ placeholders intact — see `doc-drift-audit-2026-06-19.md`) → axis 5 targets 
 
 ## 3. Output
 
-- i18n findings → log `docs/testing/findings-2026-06.md` (plan §8 format). Candidates already clear:
+- i18n findings → log `docs/testing/findings-2026-06.md` (see its Convention section). Candidates already clear:
   Count-Up not localized (a), `ErrorRetryWidget` "Retry" (a), `home_page` Settings (a).
 - Pass 2: loop over the 7 locales (screenshots of text-heavy screens: setup, post-game, stats, settings) +
   full nominal journey in **DE** (long words); jargon verification by web search.

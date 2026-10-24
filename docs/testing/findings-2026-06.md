@@ -2,7 +2,7 @@
 
 > **Living log.** Every observation from the execution phase lands here, in the
 > format below. GitHub issues are created **in batches, after a joint review** — never as
-> they come up, never without an explicit go-ahead. Convention: `docs/plans/2026-06-19-1.0-verification-plan.md` §8.
+> they come up, never without an explicit go-ahead. Convention below.
 
 ---
 
@@ -12,7 +12,7 @@
 ```
 ### F-NNN — <short symptom title>
 - Axis       : Correctness | UX | Design | Data | i18n
-- Surface    : <game/screen from the inventory (plan §2)>
+- Surface    : <game/screen>
 - Rail       : web | device
 - Severity   : P0 | P1 | P2
 - Observed   : <what happens>

@@ -1,7 +1,7 @@
 # Axis 4 — Data / persistence — detailed test plan
 
 > **Status: pass 1 (exploratory charters per topic).** Scripted cases = pass 2 (deferred).
-> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §6. Execution mechanics + template:
+> Part of the pre-1.0 verification cycle (2026-06). Execution mechanics + template:
 > see `axis-1-correctness.md` §2–§3. Guiding principle: **compute the expected value by hand
 > from the events, compare with the UI** (stats are projections, never stored).
 
@@ -89,5 +89,5 @@ from `game_events`; history/achievements/heatmap faithfully reflect the games.
 
 ## 3. Output
 
-- Data findings → log `docs/testing/findings-2026-06.md` (plan §8 format).
+- Data findings → log `docs/testing/findings-2026-06.md` (see its Convention section).
 - Scripted cases (pass 2): games with known values, emulated 9-darter, reload, heatmap with known positions — _[to derive after the first exploratory pass]_.

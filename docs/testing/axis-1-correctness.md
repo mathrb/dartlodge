@@ -2,7 +2,7 @@
 
 > **Status: SKELETON.** Framework + template + oracles in place. Detailed content filled in 2 passes:
 > (1) **exploratory charter** per game, (2) **scripted cases** derived from the first exploratory pass.
-> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §3.
+> Part of the pre-1.0 verification cycle (2026-06); findings go to `findings-2026-06.md`.
 
 ---
 
@@ -299,4 +299,4 @@ Exploratory charter (per game) = **missions** ("explore X, note everything that 
 ## 7. Output
 
 - Regression candidates to code in `@playwright/test` — _[list produced after pass 2]_
-- Correctness findings → log `docs/testing/findings-2026-06.md` (to create) following the plan's §8 format.
+- Correctness findings → log `docs/testing/findings-2026-06.md` following its Convention section.

@@ -2,7 +2,7 @@
 
 > **Status: SKELETON.** Framework + oracles in place. Content filled in 2 passes:
 > (1) **exploratory charter** per concern, (2) **base of scripted journeys** (pass 2).
-> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §4. Execution mechanics and
+> Part of the pre-1.0 verification cycle (2026-06). Execution mechanics and
 > test case template: see `docs/testing/axis-1-correctness.md` §2–§3 (reused as-is).
 
 ---
@@ -201,4 +201,4 @@ Likely candidates:
 ## 6. Output
 
 - `@playwright/test` regression candidates — _[list produced after pass 2]_
-- UX findings → log `docs/testing/findings-2026-06.md` (to create) following the plan's §8 format.
+- UX findings → log `docs/testing/findings-2026-06.md` following its Convention section.

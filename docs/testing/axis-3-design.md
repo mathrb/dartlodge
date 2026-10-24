@@ -3,7 +3,7 @@
 > **Status: pass 1 (checklists per dimension).** Axis 3 is fundamentally *visual*:
 > pass 1 produces the **compliance checklists** + the **gallery of surfaces to capture**;
 > **pass 2** (deferred) captures each surface in Pixel 6a portrait and inspects it against the checklists.
-> Parent: `docs/plans/2026-06-19-1.0-verification-plan.md` §5. Execution mechanics: see
+> Part of the pre-1.0 verification cycle (2026-06). Execution mechanics: see
 > `axis-1-correctness.md` §2 (rails, Pixel 6a viewport 412×915, semantics gotchas).
 
 ---
@@ -132,5 +132,5 @@ _[to run: app launched in Pixel 6a portrait, sim bridge for camera-first/heatmap
 
 ## 6. Output
 
-- Confirmed design findings → log `docs/testing/findings-2026-06.md` (plan §8 format).
+- Confirmed design findings → log `docs/testing/findings-2026-06.md` (see its Convention section).
 - Any visual regressions → screenshot baseline (optional, post-1.0).
