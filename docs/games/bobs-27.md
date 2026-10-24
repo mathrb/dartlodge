@@ -5,8 +5,8 @@
 > routine) from external sources, to serve as an oracle independent of the engine.
 > Sources: godartspro.com/app/bobs-27, dartsplanet.tv, darthelp.com (June 2026).
 >
-> ⚠️ **This doc describes the canonical game, NOT necessarily the current implementation.** See §7
-> "Divergences from the implementation" — to be settled with the maintainer, not to be frozen.
+> The engine now matches this canonical game: the divergences in §7 (D-1, D-2) were resolved
+> by #588, which added the bull round. Only the D-3 UX note remains.
 
 ---
 
@@ -51,9 +51,9 @@ double and lose points when you miss with all three.
 `27 + Σ_{n=1..20}(3 × 2n) + (3 × 50)` = `27 + 1260 + 150` = **1437**.
 (The documented 1437 mathematically implies the bull round: without it, the max is **1287**.)
 
-## 7. Divergences from the current implementation (to settle — do NOT freeze)
+## 7. Divergences from the implementation (resolved)
 
-> Finding candidates for axis 1. Maintainer decision required before any fix.
+> Found during axis 1 (2026-06-19); D-1 and D-2 were settled by the maintainer and fixed in #588.
 
 - **D-1 (RESOLVED — issue #588, PR adding the bull round)** — maintainer decision: **add the
   canonical bull round** (round 21 = Double Bull). `stateless_bobs_27_engine.dart` now ends
@@ -70,5 +70,5 @@ double and lose points when you miss with all three.
 
 - Check each round's target against §3 (including round 21 = bull, **canonical expectation**).
 - Recompute the score delta by hand (§4) and compare; probe a blank (`−2n`).
-- Explicitly probe whether the bull round exists → this is the test that reveals D-1.
+- Explicitly probe that the bull round exists (round 21 = `DB`) → the regression test for D-1.
 - End bounds: score dropping to 0 vs below 0; end after the last round.

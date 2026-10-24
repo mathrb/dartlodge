@@ -204,7 +204,7 @@ Exploratory charter (per game) = **missions** ("explore X, note everything that 
 
 ### 4.6 Bob's 27
 
-**Exploratory charter** — *Missions* (⚠️ behaviours to check against the canonical rules online — see §8)
+**Exploratory charter** — *Missions* (⚠️ behaviours to check against the canonical rules online — see `docs/games/bobs-27.md`)
 
 1. **Nominal walk through the 20 rounds.** Round 1→20, expected target `D{round}`; starting score 27; delta applied only on dart 3; gain `+round×2×hitCount` (1/2/3 doubles), loss `−round×2` on a complete blank. Perfect run = 1437.
 2. **"Busted" / score ≤ 0 boundary.** The engine triggers `isComplete` as soon as `newScore <= 0` (exactly zero also ends it) with no loss flag (`winnerCompetitorId: null`). Build states that land just at 0 vs just below 0.
@@ -223,7 +223,7 @@ Exploratory charter (per game) = **missions** ("explore X, note everything that 
 - **Critical scripted cases** — _[to fill: pass 2]_
 - **Edge cases** — _[to fill]_
 - Oracle: `docs/games/bobs-27.md` (canonical: D1..D20 **+ Bull**, perfect 1437). **Test engine vs canonical.**
-- **Canonical↔engine divergences (see bobs-27.md §7)**: **D-1 (P1, issue #588) — final bull round missing** (`engine:123` ends at `roundNum >= 20`) → max reachable **1287**, so the in-app rules' "1437" is **unreachable**; **D-2 (P2)** — the `rulesBobs27HowB2` text "20 rounds" contradicts its own 1437. Maintainer decision: add the bull round OR fix the text to 1287.
+- **Canonical↔engine divergences (see bobs-27.md §7)** — both **resolved by #588** (maintainer decision: add the bull round): **D-1 (P1)** — final bull round was missing (engine ended at `roundNum >= 20`, max 1287 vs the rules' 1437); the engine now ends at `roundNum >= 21` with round 21 = `DB`, so 1437 is reachable. **D-2 (P2)** — the `rulesBobs27HowB2` "20 rounds" text contradicted its own 1437; rules rewritten for 21 rounds in 7 languages.
 
 ### 4.7 Checkout Practice
 

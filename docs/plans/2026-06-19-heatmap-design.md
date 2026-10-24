@@ -221,7 +221,7 @@ run in parallel.
 
 - `lib/features/auto_scorer/domain/scoring/homography.dart` — `canonicalTransform()`, `centre`/`radius`
 - `lib/features/auto_scorer/domain/tracking/tracked_dart.dart` — `TrackedDart.boardPosition`
-- `lib/core/providers/board_overlay_provider.dart` — cross-feature seam (pattern)
+- `lib/core/providers/board_camera_preview_provider.dart` — cross-feature seam (pattern; the `board_overlay_provider.dart` seam this doc originally cited was removed in #770)
 - `lib/features/game/presentation/widgets/dartboard_highlight_widget.dart` — `DartboardHighlightWidget` + `kDartboardClockOrder`
 - `lib/features/statistics/presentation/widgets/atc_annotated_dartboard_widget.dart` — overlay-on-board pattern
 - `lib/core/widgets/game_summary_section_widget.dart` — end-of-game integration
