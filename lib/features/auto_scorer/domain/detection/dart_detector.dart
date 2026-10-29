@@ -12,7 +12,7 @@ const String kAutoScorerModelAsset = 'assets/models/dart_auto_scorer.tflite';
 /// every training capture so the probe can attribute each sample to the model
 /// that produced its predictions. Matches the probe's `pre_annotate` stem
 /// convention — bump this in lock-step with [kAutoScorerModelAsset].
-const String kAutoScorerModelVersion = 'dart_round26_withcal';
+const String kAutoScorerModelVersion = 'dart_round27_withcal';
 
 /// The over-the-air (#715) model **compatibility contract** the app understands.
 /// A downloaded model is accepted only when its manifest declares the exact same
