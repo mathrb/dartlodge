@@ -77,7 +77,7 @@ void main() {
   }
 
   const staged = StagedModelState(
-    version: 'dart_round27_withcal',
+    version: 'dart_round28_withcal',
     contract: kAutoScorerModelContract,
     sha256: 'abc',
     sizeBytes: 100,
@@ -141,14 +141,14 @@ void main() {
     final modelBytes = Uint8List.fromList(List.filled(200, 7));
 
     AutoScorerModelManifest manifest({
-      String version = 'dart_round27_withcal',
+      String version = 'dart_round28_withcal',
       int contract = kAutoScorerModelContract,
       int inputSize = 800,
       int classCount = 5,
       String? sha,
       int? size,
       String url =
-          '${kModelReleaseUrlPrefix}model-round27/dart_auto_scorer.tflite',
+          '${kModelReleaseUrlPrefix}model-round28/dart_auto_scorer.tflite',
     }) =>
         AutoScorerModelManifest(
           schema: 1,
@@ -171,9 +171,9 @@ void main() {
       serve(manifest());
       await svc.checkAndStage();
 
-      expect(await File(svc.stagedPathFor('dart_round27_withcal')).exists(),
+      expect(await File(svc.stagedPathFor('dart_round28_withcal')).exists(),
           isTrue);
-      expect(svc.store.read()?.version, 'dart_round27_withcal');
+      expect(svc.store.read()?.version, 'dart_round28_withcal');
       expect(svc.status, ModelUpdateStatus.updateReady);
       expect((await svc.resolve()).origin, ModelOrigin.staged);
     });
@@ -182,7 +182,7 @@ void main() {
       final svc = await service();
       serve(manifest(sha: 'f' * 64));
       await svc.checkAndStage();
-      expect(await File(svc.stagedPathFor('dart_round27_withcal')).exists(),
+      expect(await File(svc.stagedPathFor('dart_round28_withcal')).exists(),
           isFalse);
       expect(svc.store.read(), isNull);
       expect(svc.status, ModelUpdateStatus.checkFailed);
@@ -208,7 +208,7 @@ void main() {
 
       expect(http.binaryCalls, 1);
       expect(svc.store.read(), isNull);
-      expect(await File(svc.stagedPathFor('dart_round27_withcal')).exists(),
+      expect(await File(svc.stagedPathFor('dart_round28_withcal')).exists(),
           isFalse);
       expect(svc.status, ModelUpdateStatus.checkFailed);
       expect((await svc.resolve()).origin, ModelOrigin.bundled);
@@ -240,7 +240,7 @@ void main() {
       await stageFile(
           svc,
           const StagedModelState(
-            version: 'dart_round27_withcal',
+            version: 'dart_round28_withcal',
             contract: kAutoScorerModelContract + 1, // staged under an old app
             sha256: 'abc',
             sizeBytes: 100,
@@ -294,8 +294,8 @@ void main() {
 
     test('already-staged version is a no-op', () async {
       final svc = await service();
-      await stageFile(svc, staged); // staged version == round27
-      serve(manifest()); // manifest also round27
+      await stageFile(svc, staged); // staged version == round28
+      serve(manifest()); // manifest also round28
       await svc.checkAndStage();
       expect(http.binaryCalls, 0);
       // A model is still pending, so the no-op must not flatten the status to
@@ -319,7 +319,7 @@ void main() {
     // a fresh update at every launch.
     test('a quarantined version is never downloaded again', () async {
       final svc = await service();
-      await svc.store.writeQuarantined('dart_round27_withcal');
+      await svc.store.writeQuarantined('dart_round28_withcal');
       serve(manifest()); // same version
       await svc.checkAndStage();
 
@@ -334,12 +334,12 @@ void main() {
     test('an incompatible manifest still reports a quarantined version',
         () async {
       final svc = await service();
-      await svc.store.writeQuarantined('dart_round27_withcal');
+      await svc.store.writeQuarantined('dart_round28_withcal');
       serve(manifest(contract: 999));
       await svc.checkAndStage();
 
       expect(http.binaryCalls, 0);
-      expect(svc.store.readQuarantined(), 'dart_round27_withcal');
+      expect(svc.store.readQuarantined(), 'dart_round28_withcal');
       expect(svc.status, ModelUpdateStatus.updateRejected);
     });
 
@@ -360,13 +360,13 @@ void main() {
 
     test('a newer version clears the quarantine and stages normally', () async {
       final svc = await service();
-      await svc.store.writeQuarantined('dart_round27_withcal');
-      serve(manifest(version: 'dart_round28_withcal'));
+      await svc.store.writeQuarantined('dart_round28_withcal');
+      serve(manifest(version: 'dart_round29_withcal'));
       await svc.checkAndStage();
 
       // One bad model must not block the ones published after it.
       expect(svc.store.readQuarantined(), isNull);
-      expect(svc.store.read()?.version, 'dart_round28_withcal');
+      expect(svc.store.read()?.version, 'dart_round29_withcal');
       expect(svc.status, ModelUpdateStatus.updateReady);
     });
 
@@ -376,7 +376,7 @@ void main() {
       await stageFile(
           svc,
           const StagedModelState(
-            version: 'dart_round27_withcal',
+            version: 'dart_round28_withcal',
             contract: kAutoScorerModelContract + 1,
             sha256: 'abc',
             sizeBytes: 100,
@@ -387,7 +387,7 @@ void main() {
       await svc.checkAndStage();
 
       expect(svc.store.readQuarantined(), isNull);
-      expect(svc.store.read()?.version, 'dart_round27_withcal');
+      expect(svc.store.read()?.version, 'dart_round28_withcal');
       expect(svc.status, ModelUpdateStatus.updateReady);
     });
 
@@ -398,8 +398,8 @@ void main() {
     test('a deliberate skip never settles to update-rejected', () async {
       connectivity.unmetered = false;
       final svc = await service();
-      await svc.store.writeQuarantined('dart_round28_withcal');
-      serve(manifest()); // round27: different, so the record is cleared
+      await svc.store.writeQuarantined('dart_round29_withcal');
+      serve(manifest()); // round28: different, so the record is cleared
       await svc.checkAndStage();
 
       expect(svc.store.readQuarantined(), isNull);
@@ -424,11 +424,11 @@ void main() {
           sizeBytes: 3,
         ),
       );
-      serve(manifest()); // round27
+      serve(manifest()); // round28
       await svc.checkAndStage();
       expect(await File(svc.stagedPathFor('dart_round20_withcal')).exists(),
           isFalse);
-      expect(await File(svc.stagedPathFor('dart_round27_withcal')).exists(),
+      expect(await File(svc.stagedPathFor('dart_round28_withcal')).exists(),
           isTrue);
     });
 
@@ -444,14 +444,14 @@ void main() {
           sizeBytes: 3,
         ),
       );
-      serve(manifest()); // round27, current contract
+      serve(manifest()); // round28, current contract
       await svc.checkAndStage();
       // Stale file gone, new one staged, state points at the new version.
       expect(await File(svc.stagedPathFor('dart_round20_withcal')).exists(),
           isFalse);
-      expect(await File(svc.stagedPathFor('dart_round27_withcal')).exists(),
+      expect(await File(svc.stagedPathFor('dart_round28_withcal')).exists(),
           isTrue);
-      expect(svc.store.read()?.version, 'dart_round27_withcal');
+      expect(svc.store.read()?.version, 'dart_round28_withcal');
     });
 
     test('sweeps stray .part files', () async {
@@ -524,7 +524,7 @@ void main() {
     test('a recorded rejection wins over everything → update rejected',
         () async {
       final svc = await service();
-      await svc.store.writeQuarantined('dart_round27_withcal');
+      await svc.store.writeQuarantined('dart_round28_withcal');
       expect(await svc.restingStatus(), ModelUpdateStatus.updateRejected);
     });
 

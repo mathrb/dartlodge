@@ -1,10 +1,10 @@
 {
   "schema": 1,
   "contract": 1,
-  "model_version": "dart_round26_withcal",
-  "url": "https://github.com/mathrb/dartlodge/releases/download/model-round26/dart_auto_scorer.tflite",
-  "sha256": "e4f269305faa134dc0dfd1154f81b75aeed0ceb4b53fe493d159733274d95a3c",
-  "size_bytes": 10842875,
+  "model_version": "dart_round27_withcal",
+  "url": "https://github.com/mathrb/dartlodge/releases/download/model-round27/dart_auto_scorer.tflite",
+  "sha256": "56335ef68460f73b59336da3cd3fcfef85b5acca48736dbcec05c9cbd4f640ba",
+  "size_bytes": 10842876,
   "input_size": 800,
   "class_count": 5,
   "format": "tflite"
