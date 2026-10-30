@@ -59,7 +59,7 @@ that's fine; otherwise consider git-lfs or a build-time fetch. The CoreML
 
 ## 3. Camera permission
 
-- **Android — nothing to do.** `camera_android_camerax` declares
+- **Android — nothing to do.** `ultralytics_yolo` declares
   `<uses-permission android:name="android.permission.CAMERA"/>` in its own
   manifest; Gradle merges it into the app.
 - **iOS — one line.** After `flutter create --platforms=ios .`, add to

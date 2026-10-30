@@ -3,8 +3,8 @@ description: Local-first open-source darts scoring and statistics app for Androi
 version: 1.0.0+0
 
 environment:
-  # Dart 3.12 floor: the resolved graph requires it (drift 2.34 / sqlite3 3.x
-  # need ≥3.10, and camera_android_camerax 0.7.2+ pulls the floor to 3.12).
+  # Dart 3.12 floor: drift 2.34 / sqlite3 3.x need ≥3.10, and the toolchain is
+  # pinned to Flutter 3.44.2 (Dart 3.12.2) locally and in CI.
   # Ships with Flutter 3.44+.
   sdk: ">=3.12.0 <4.0.0"
 
@@ -61,10 +61,6 @@ dependencies:
   # detector impl is web-stubbed behind a conditional import).
   image: ^4.3.0
   ultralytics_yolo: ^0.6.4
-  # Assist-mode camera capture (#382). Raw frames → FramePreprocessor (800×800
-  # center-crop, training parity §2) → detector. Mobile only; the capture UI is
-  # gated behind the default-off "use auto-scoring" toggle and platform checks.
-  camera: ">=0.11.0 <0.13.0"
 
   # Settings / preferences
   shared_preferences: ^2.3.4
