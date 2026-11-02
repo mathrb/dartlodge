@@ -228,7 +228,9 @@ y                Double?  # optional — heatmap frame; omitted for manual/old d
 
 > `bust: true` is added to the busting dart's payload by `ProcessDartUseCase`
 > when the engine resolves the throw as a bust. It is **omitted** (→ `null` on
-> read) for all non-busting darts.
+> read) for all non-busting darts. The X01 engine honours it on replay: a dart
+> persisted with `bust: true` is applied as a bust even if the current rules
+> would score it, so a stream rebuilds the state that was actually played.
 
 > `x`/`y` are the dart's normalised impact position in the stable heatmap frame
 > (origin = board centre, radius `1.0` at the double ring, "20 at top"), emitted

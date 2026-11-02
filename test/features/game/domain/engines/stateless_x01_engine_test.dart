@@ -2401,6 +2401,85 @@ void main() {
       expect(result.state.competitors[0].score, 0);
       expect(result.isBust, false);
     });
+
+    test('leaving 1 is not a bust; single 1 then completes leg', () {
+      var state = _straightOutState(21);
+      state = engine.apply(state, _createEvent(
+        eventId: 'ts', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+
+      final r1 = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      ));
+      expect(r1.isBust, false);
+      expect(r1.outcome, LegOutcome.none);
+      expect(r1.state.competitors[0].score, 1);
+      expect(r1.state.dartsThrownInTurn, 1);
+
+      final r2 = engine.apply(r1.state, _createEvent(
+        eventId: 'e2', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 3, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 1, 'multiplier': 1},
+      ));
+      expect(r2.isBust, false);
+      expect(r2.outcome, LegOutcome.gameCompleted);
+      expect(r2.state.competitors[0].score, 0);
+    });
+
+    test('double-in dart that also leaves 1 opens scoring without a bust', () {
+      var state = initialState.copyWith(
+        inStrategy: 'double',
+        outStrategy: 'straight',
+        competitors: [
+          initialState.competitors[0].copyWith(score: 41, isIn: false),
+          initialState.competitors[1],
+        ],
+      );
+      state = engine.apply(state, _createEvent(
+        eventId: 'ts', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 2},
+      ));
+      expect(result.isBust, false);
+      expect(result.state.competitors[0].isIn, true);
+      expect(result.state.competitors[0].score, 1);
+      expect(result.state.dartsThrownInTurn, 1);
+      expect(result.state.competitors[0].dartThrows, ['D20']);
+    });
+
+    test('replaying a dart persisted as a bust keeps it a bust', () {
+      // Streams recorded before straight-out allowed a leave of 1 carry
+      // `bust: true` on the dart that left 1; replay must rebuild that state.
+      var state = _straightOutState(21);
+      state = engine.apply(state, _createEvent(
+        eventId: 'ts', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {
+          'competitor_id': 'c1', 'segment': 20, 'multiplier': 1, 'bust': true,
+        },
+      ));
+      expect(result.isBust, true);
+      expect(result.outcome, LegOutcome.none);
+      expect(result.state.competitors[0].score, 21);
+      expect(result.state.dartsThrownInTurn, 3);
+      expect(result.state.turnActive, false);
+    });
   });
 
   group('Master-out strategy (outStrategy = master)', () {
@@ -2413,6 +2492,23 @@ void main() {
         ],
       );
     }
+
+    test('leaving 1 is a bust (no double or triple finishes 1)', () {
+      var state = _masterOutState(21);
+      state = engine.apply(state, _createEvent(
+        eventId: 'ts', gameId: 'test-game', eventType: 'TurnStarted',
+        localSequence: 1, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1'},
+      )).state;
+
+      final result = engine.apply(state, _createEvent(
+        eventId: 'e1', gameId: 'test-game', eventType: 'DartThrown',
+        localSequence: 2, occurredAt: DateTime.now(),
+        payload: {'competitor_id': 'c1', 'segment': 20, 'multiplier': 1},
+      ));
+      expect(result.isBust, true);
+      expect(result.state.competitors[0].score, 21);
+    });
 
     test('double to zero completes leg', () {
       var state = _masterOutState(40);

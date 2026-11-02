@@ -1,6 +1,7 @@
 // Stateless X01 Game Engine
 // Pure functional implementation of X01 darts game using event sourcing
 
+import '../../../../core/utils/checkout_table.dart';
 import '../models/game_state.dart';
 import '../models/game_config.dart';
 import '../entities/game_event.dart';
@@ -209,7 +210,11 @@ class StatelessX01Engine implements GameEngine {
     bool isBust = false;
     String? legWinnerId;
     
-    if (newScore < 0 || newScore == 1) {
+    // A leave below the out strategy's minimum checkout can never be
+    // finished: 1 busts under double/master-out, but under straight-out a
+    // single 1 finishes (Table D).
+    if (newScore < 0 ||
+        (newScore > 0 && newScore < minCheckoutScore(state.outStrategy))) {
       isBust = true; // Bust condition
     } else if (newScore == 0) {
       // Out validation (Table E)
@@ -232,6 +237,15 @@ class StatelessX01Engine implements GameEngine {
       } else {
         isBust = true; // Invalid out strategy
       }
+    }
+
+    // A dart persisted as a bust stays a bust on replay, so streams recorded
+    // under an earlier rule (straight-out used to bust on a leave of 1)
+    // rebuild the state that was actually played. Live darts never carry the
+    // flag: ProcessDartUseCase adds it after the engine has applied the dart.
+    if (!isBust && payload['bust'] == true) {
+      isBust = true;
+      legWinnerId = null;
     }
 
     // Update the competitor with the new dart throw
