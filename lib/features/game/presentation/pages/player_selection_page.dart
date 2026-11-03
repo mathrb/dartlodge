@@ -34,13 +34,19 @@ String _strategyLabel(String strategy) => switch (strategy) {
 String _roundsLabel(AppLocalizations l10n, int? rounds) =>
     rounds == null ? l10n.setupRoundsInfinite : l10n.setupRoundsCount(rounds);
 
-/// A multi-leg match reads as its best-of count ("Best of 3" for first to 2),
-/// never as legs-to-win. A single-leg match reads "1 leg", and so does a solo
-/// lineup, which plays exactly legs-to-win legs ("2 legs").
-String _legsLabel(AppLocalizations l10n, int legsToWin, int playerCount) =>
-    legsToWin == 1 || playerCount == 1
-        ? l10n.setupLegsCount(legsToWin)
-        : l10n.setupBestOfLegs(bestOfLegs(legsToWin));
+/// A multi-leg match reads as its best-of count, never as legs-to-win: the
+/// most legs the lineup can play (`maxLegsInMatch`), so it matches the board's
+/// "LEG n / m" header. Two players, first to 2 = "Best of 3"; three players,
+/// first to 2 = "Best of 4". With no lineup yet it assumes head-to-head. A
+/// single-leg match reads "1 leg", and a solo lineup, which plays exactly
+/// legs-to-win legs, reads "3 legs".
+String _legsLabel(AppLocalizations l10n, int legsToWin, int playerCount) {
+  if (legsToWin == 1 || playerCount == 1) {
+    return l10n.setupLegsCount(legsToWin);
+  }
+  final competitors = playerCount < 2 ? 2 : playerCount;
+  return l10n.setupBestOfLegs(maxLegsInMatch(legsToWin, competitors));
+}
 
 String _configSummaryFor(
   AppLocalizations l10n,

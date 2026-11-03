@@ -242,6 +242,31 @@ void main() {
         findsOneWidget);
   });
 
+  testWidgets('1f. Config chip counts the longest match for three players',
+      (tester) async {
+    // Three players, first to 2: each can win one leg before the decider.
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+          legsToWin: 2,
+        ),
+        selectedPlayerIds: ['p1', 'p2', 'p3'],
+      ),
+      players: [
+        _fakePlayer('p1', 'Alice'),
+        _fakePlayer('p2', 'Bob'),
+        _fakePlayer('p3', 'Cleo'),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('501 · Double Out · ∞ Rounds · Best of 4'),
+        findsOneWidget);
+  });
+
   // ── 2. Config chip Cricket ────────────────────────────────────────────────
 
   testWidgets('2. Config chip shows "standard · 0 pts" for Cricket',
