@@ -311,6 +311,7 @@
   "setupPlayerNameLabel": "Spelersnaam",
   "setupRoundsInfinite": "∞ rondes",
   "setupRoundsCount": "{count, plural, one{1 ronde} other{{count} rondes}}",
+  "setupBestOfLegs": "Best of {count}",
   "setupLegsCount": "{count, plural, one{{count} leg} other{{count} legs}}",
   "setupGameSelection": "SPELKEUZE",
   "setupSelectVariantHint": "Kies je variant om te beginnen",

@@ -200,10 +200,10 @@ void main() {
         findsOneWidget);
   });
 
-  // ── 1d. Config chip surfaces best-of legs, pluralized (#667) ──────────────
+  // ── 1d. Config chip surfaces the best-of leg count ────────────────────────
 
   testWidgets(
-      '1d. Config chip shows pluralized legs for X01 best-of-N (#667)',
+      '1d. Config chip shows "Best of 5" for X01 first to 3, not the legs to win',
       (tester) async {
     await tester.pumpWidget(_buildApp(
       setupState: _selectingPlayersState(
@@ -214,6 +214,27 @@ void main() {
           legsToWin: 3,
         ),
       ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('501 · Double Out · ∞ Rounds · Best of 5'),
+        findsOneWidget);
+  });
+
+  testWidgets('1e. Config chip shows the plain leg count for a solo lineup',
+      (tester) async {
+    // Solo, every checkout wins the leg: first to 3 is exactly 3 legs.
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.x01(
+          startingScore: 501,
+          inStrategy: 'straight',
+          outStrategy: 'double',
+          legsToWin: 3,
+        ),
+        selectedPlayerIds: ['p1'],
+      ),
+      players: [_fakePlayer('p1', 'Alice')],
     ));
     await tester.pumpAndSettle();
 

@@ -10,7 +10,7 @@
  * resume path. (We navigate to the captured URL rather than page.reload(): a
  * bare reload doesn't restore the deep route on this Flutter-web build.)
  *
- * We win leg 1 of a best-of-2 (board then reads "LEG 2 / 2", i.e.
+ * We win leg 1 of a solo first-to-2, i.e. two legs (board then reads "LEG 2 / 2", i.e.
  * currentLegIndex == 1), re-open, and assert it still reads "LEG 2 / 2" — before
  * the fix the resumed board showed "LEG 3 / 2".
  *

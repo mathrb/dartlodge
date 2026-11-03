@@ -1149,6 +1149,15 @@
       }
     }
   },
+  "setupBestOfLegs": "Best of {count}",
+  "@setupBestOfLegs": {
+    "description": "Config summary chip for a multi-leg match: the best-of leg count (2 x legs-to-win - 1)",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "setupLegsCount": "{count, plural, one{{count} leg} other{{count} legs}}",
   "@setupLegsCount": {
     "description": "Config summary chip: leg count (leg is a darts loanword)",

@@ -1552,4 +1552,36 @@ void main() {
     expect(find.byType(SimplifiedDartInputGridWidget), findsOneWidget);
     expect(find.byType(DartInputGridWidget), findsNothing);
   });
+
+  testWidgets(
+      'the leg indicator counts against the longest match, not the legs to win',
+      (tester) async {
+    // First to 2 between two players = best of 3: the decider is leg 3 of 3.
+    // It used to read "LEG 3 / 2".
+    _setPhoneViewport(tester);
+    final gs = _gameState(
+      competitors: [
+        _competitor(id: 'c1', name: 'Alice'),
+        _competitor(id: 'c2', name: 'Bob'),
+      ],
+      legsToWin: 2,
+      currentLegIndex: 2,
+    );
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('LEG 3 / 3'), findsOneWidget);
+    expect(find.text('LEG 3 / 2'), findsNothing);
+  });
+
+  testWidgets('a solo match counts its legs to win', (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(legsToWin: 2, currentLegIndex: 1);
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.text('LEG 2 / 2'), findsOneWidget);
+  });
 }

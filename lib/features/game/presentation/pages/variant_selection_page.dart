@@ -9,6 +9,7 @@ import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/models/match_format.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/rules/rules_bottom_sheet.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
@@ -417,7 +418,7 @@ class _MetadataRow extends StatelessWidget {
         const SizedBox(width: 16),
         _MetaChip(
           label: l10n.setupChipLegs,
-          value: c.legsToWin == 1 ? '1' : 'Bo${c.legsToWin}',
+          value: c.legsToWin == 1 ? '1' : 'Bo${bestOfLegs(c.legsToWin)}',
         ),
         if (c.totalRounds != null) ...[
           const SizedBox(width: 16),
@@ -432,7 +433,7 @@ class _MetadataRow extends StatelessWidget {
         const SizedBox(width: 16),
         _MetaChip(
           label: l10n.setupChipLegs,
-          value: c.legsToWin == 1 ? '1' : 'Bo${c.legsToWin}',
+          value: c.legsToWin == 1 ? '1' : 'Bo${bestOfLegs(c.legsToWin)}',
         ),
       ],
       orElse: () => <Widget>[],
