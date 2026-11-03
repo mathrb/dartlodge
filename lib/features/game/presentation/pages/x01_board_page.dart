@@ -15,6 +15,7 @@ import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
+import '../../domain/models/match_format.dart';
 import '../providers/active_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/camera_first_body_widget.dart';
@@ -307,7 +308,10 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   GameStatusBarWidget(
                     configLabel: '${gameState.startingScore}',
                     currentLegIndex: gameState.currentLegIndex,
-                    legsToWin: gameState.legsToWin,
+                    maxLegs: maxLegsInMatch(
+                      gameState.legsToWin,
+                      gameState.competitors.length,
+                    ),
                     roundInLeg: roundInLeg,
                     totalRounds: gameState.x01TotalRounds,
                     currentTurnDarts: currentTurnDarts,

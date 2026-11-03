@@ -14,15 +14,16 @@ import '../../domain/models/game_config.dart';
 /// [configLabel] is game-type specific — e.g. `'501'` for X01 or `'Standard'`
 /// for Cricket.
 /// [totalRounds] is optional; when null the round denominator is omitted.
-/// [currentLegIndex] and [legsToWin] are optional; when absent the leg section
-/// is hidden (e.g. practice games have no leg concept).
+/// [currentLegIndex] and [maxLegs] are optional; when absent the leg section
+/// is hidden (e.g. practice games have no leg concept). [maxLegs] is the most
+/// legs the match can last (see `maxLegsInMatch`), not the legs needed to win.
 class GameStatusBarWidget extends StatelessWidget {
   const GameStatusBarWidget({
     required this.configLabel,
     required this.roundInLeg,
     required this.currentTurnDarts,
     this.currentLegIndex,
-    this.legsToWin,
+    this.maxLegs,
     this.totalRounds,
     this.onDartTapped,
     this.tapEmptySlots = false,
@@ -33,7 +34,7 @@ class GameStatusBarWidget extends StatelessWidget {
 
   final String configLabel;
   final int? currentLegIndex;
-  final int? legsToWin;
+  final int? maxLegs;
   final int roundInLeg;
   final int? totalRounds;
   final List<String> currentTurnDarts;
@@ -117,9 +118,9 @@ class GameStatusBarWidget extends StatelessWidget {
                 : l10n.gameRound(roundInLeg),
             style: labelStyle,
           ),
-          if (currentLegIndex != null && legsToWin != null) ...[
+          if (currentLegIndex != null && maxLegs != null) ...[
             dot,
-            Text(l10n.gameLegOf(currentLegIndex! + 1, legsToWin!),
+            Text(l10n.gameLegOf(currentLegIndex! + 1, maxLegs!),
                 style: labelStyle),
           ],
           if (showDarts) ...[

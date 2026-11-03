@@ -13,6 +13,7 @@ import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../domain/models/game_state.dart';
+import '../../domain/models/match_format.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
@@ -310,7 +311,10 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   GameStatusBarWidget(
                     configLabel: variantLabel,
                     currentLegIndex: gameState.currentLegIndex,
-                    legsToWin: gameState.legsToWin,
+                    maxLegs: maxLegsInMatch(
+                      gameState.legsToWin,
+                      gameState.competitors.length,
+                    ),
                     roundInLeg: gameState.currentRoundInLeg,
                     totalRounds: gameState.cricketTotalRounds,
                     currentTurnDarts: currentTurnDarts,

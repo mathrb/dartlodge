@@ -311,6 +311,7 @@
   "setupPlayerNameLabel": "Nombre del jugador",
   "setupRoundsInfinite": "∞ rondas",
   "setupRoundsCount": "{count, plural, one{1 ronda} other{{count} rondas}}",
+  "setupBestOfLegs": "Al mejor de {count}",
   "setupLegsCount": "{count, plural, one{{count} leg} other{{count} legs}}",
   "setupGameSelection": "SELECCIÓN DE PARTIDA",
   "setupSelectVariantHint": "Elige tu variante para empezar",

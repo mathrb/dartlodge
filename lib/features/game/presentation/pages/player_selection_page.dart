@@ -13,6 +13,7 @@ import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/models/match_format.dart';
 import 'package:dart_lodge/features/game/presentation/pages/game_config_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
@@ -33,7 +34,25 @@ String _strategyLabel(String strategy) => switch (strategy) {
 String _roundsLabel(AppLocalizations l10n, int? rounds) =>
     rounds == null ? l10n.setupRoundsInfinite : l10n.setupRoundsCount(rounds);
 
-String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
+/// A multi-leg match reads as its best-of count, never as legs-to-win: the
+/// most legs the lineup can play (`maxLegsInMatch`), so it matches the board's
+/// "LEG n / m" header. Two players, first to 2 = "Best of 3"; three players,
+/// first to 2 = "Best of 4". With no lineup yet it assumes head-to-head. A
+/// single-leg match reads "1 leg", and a solo lineup, which plays exactly
+/// legs-to-win legs, reads "3 legs".
+String _legsLabel(AppLocalizations l10n, int legsToWin, int playerCount) {
+  if (legsToWin == 1 || playerCount == 1) {
+    return l10n.setupLegsCount(legsToWin);
+  }
+  final competitors = playerCount < 2 ? 2 : playerCount;
+  return l10n.setupBestOfLegs(maxLegsInMatch(legsToWin, competitors));
+}
+
+String _configSummaryFor(
+  AppLocalizations l10n,
+  GameConfig config,
+  int playerCount,
+) {
   return config.maybeMap(
     x01: (c) {
       // Surface the in-strategy when the user picked something other than
@@ -44,10 +63,10 @@ String _configSummaryFor(AppLocalizations l10n, GameConfig config) {
       final inLabel = c.inStrategy == 'straight'
           ? ''
           : '${_strategyLabel(c.inStrategy)} In · ';
-      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}';
+      return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)} · ${_legsLabel(l10n, c.legsToWin, playerCount)}';
     },
     cricket: (c) =>
-        '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${l10n.setupLegsCount(c.legsToWin)}',
+        '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${_legsLabel(l10n, c.legsToWin, playerCount)}',
     aroundTheClock: (_) => 'Around the Clock',
     catch40: (_) => 'Catch 40',
     bobs27: (_) => "Bob's 27",
@@ -195,7 +214,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             if (config != null && _configHasEditableFields(config))
               Center(
                 child: _ConfigSummaryChip(
-                  summary: _configSummaryFor(l10n, config),
+                  summary: _configSummaryFor(l10n, config, selectedIds.length),
                   onTap: () => _openConfigSheet(context, setupState),
                 ),
               ),
