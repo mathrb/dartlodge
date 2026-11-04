@@ -287,6 +287,22 @@ Triggered after LegCompleted when match not finished.
 | Reset order    | `close_order = null`               |
 | Reset turn     | `turn_active = false`              |
 | Advance leg    | `current_leg_index += 1`           |
+| Leg starter    | `leg_starter = current_leg_index % competitors.length`; `current_turn_index = leg_starter` |
+
+**Who starts the next leg**
+
+The throw alternates leg by leg, regardless of who won the previous leg,
+because throwing first is an advantage. With two players the first player
+starts legs 1, 3, 5… and the second player starts legs 2, 4, 6…; with three or
+more players the start rotates round-robin and the turn order within each leg
+is unchanged. The next leg's `TurnStarted` is emitted for `leg_starter`.
+
+A round of the new leg is one full rotation starting from `leg_starter`:
+`current_round_in_leg` increments when the turn returns to `leg_starter`, and
+the last competitor of a round (Table N) is the one just before `leg_starter`
+in turn order. On replay the leg's first `TurnStarted` is authoritative for
+`leg_starter`, so event streams recorded before the rotation existed (the
+first competitor started every leg) rebuild the rounds that were played.
 
 ---
 
@@ -315,7 +331,8 @@ that would trigger this table).
 ```
 cap_reached = cricket_total_rounds != null
            && current_round_in_leg >= cricket_total_rounds
-           && current_turn_index == competitors.length - 1   // last competitor
+           && current_turn_index == (leg_starter + competitors.length - 1)
+                                    % competitors.length    // last competitor of the round
 ```
 
 **Winner selection by `scoring` (no existing Table G winner on the board)**

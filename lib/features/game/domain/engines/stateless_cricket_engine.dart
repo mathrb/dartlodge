@@ -6,6 +6,7 @@ import '../models/game_config.dart';
 import '../models/game_state.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
+import 'leg_rotation.dart';
 
 class StatelessCricketEngine implements GameEngine {
   // The cricket target set is no longer hardcoded: it is derived from
@@ -124,18 +125,16 @@ class StatelessCricketEngine implements GameEngine {
         state.competitors.indexWhere((c) => c.competitorId == competitorId);
     final resolvedIndex = competitorIndex >= 0 ? competitorIndex : state.currentTurnIndex;
 
-    // Increment round when cycling back to the first competitor after darts
-    // have been thrown — i.e. a full visit cycle just completed.
-    final newRound = resolvedIndex == 0 &&
-            state.competitors[0].dartThrows.isNotEmpty
-        ? state.currentRoundInLeg + 1
-        : state.currentRoundInLeg;
+    // Increment round when the turn cycles back to the leg starter after
+    // darts have been thrown — i.e. a full visit cycle just completed.
+    final rotation = roundAfterTurnStarted(state, resolvedIndex);
 
     return state.copyWith(
       currentTurnIndex: resolvedIndex,
       dartsThrownInTurn: 0,
       turnActive: true,
-      currentRoundInLeg: newRound,
+      currentRoundInLeg: rotation.round,
+      legStarterIndex: rotation.legStarterIndex,
     );
   }
 
@@ -409,8 +408,7 @@ class StatelessCricketEngine implements GameEngine {
     );
 
     final cap = state.cricketTotalRounds;
-    final wasLastCompetitorOfRound =
-        state.currentTurnIndex == state.competitors.length - 1;
+    final wasLastCompetitorOfRound = isLastTurnOfRound(state);
     final capReached = cap != null &&
         state.currentRoundInLeg >= cap &&
         wasLastCompetitorOfRound;
@@ -584,9 +582,12 @@ class StatelessCricketEngine implements GameEngine {
       );
     }).toList();
 
+    final starter =
+        legStarterIndexFor(state.currentLegIndex, resetCompetitors.length);
     return state.copyWith(
       competitors: resetCompetitors,
-      currentTurnIndex: 0,
+      currentTurnIndex: starter,
+      legStarterIndex: starter,
       dartsThrownInTurn: 0,
       turnActive: false,
       winnerCompetitorId: null,

@@ -111,7 +111,7 @@ class ProcessCricketDartUseCase {
         // finalState stays as result.state (game is over, no TurnStarted)
 
       } else if (result.outcome == LegOutcome.legCompleted) {
-        // Append LegCompleted + TurnStarted for first player of new leg
+        // Append LegCompleted + TurnStarted for the new leg's starter
         final winnerPlayerId = getPlayerIdForCompetitor(currentState, result.winnerCompetitorId);
         eventsToStore.add(buildLegCompletedEvent(
           gameId: currentState.gameId,
@@ -120,7 +120,8 @@ class ProcessCricketDartUseCase {
           winnerPlayerId: winnerPlayerId,
         ));
 
-        // After _resetLeg, currentTurnIndex == 0 (first player of next leg)
+        // After _resetLeg, currentTurnIndex is the next leg's starter (the
+        // throw alternates leg by leg, see legStarterIndexFor)
         final nextCompetitor = finalState.competitors[finalState.currentTurnIndex];
         final nextPlayerId = nextCompetitor.playerIds.isNotEmpty
             ? nextCompetitor.playerIds.first
