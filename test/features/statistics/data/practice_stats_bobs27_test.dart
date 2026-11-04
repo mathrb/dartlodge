@@ -159,17 +159,8 @@ void main() {
       expect(stats.bobs27AvgScore, closeTo(25.0, 0.01));
     });
 
-    test('completion rate: 0 when score goes negative (bust)', () async {
-      // Round 1: no hits → score -= 2 → 25
-      // Round 2: no hits → score -= 4 → 21
-      // ... score stays positive but let's test with a bust scenario
-      // Let's force a low score: start 27, miss all 20 rounds
-      // 27 - (1*2 + 2*2 + 3*2 + ... would go negative)
-      // For simplicity: 1 round miss makes score go to 25 which is > 0 — still a completion
-      // So let's make 2 rounds miss: round 1 miss → 25, round 2 miss → 21 (still > 0)
-      // We need to miss enough rounds to go negative.
-      // After round 8: 27 - 2(1+2+3+4+5+6+7+8) = 27 - 2*36 = 27 - 72 = -45
-      // Let's just test with 1 drill that ends with positive score
+    test('completion rate: 1 when the drill ends with a positive score',
+        () async {
       await _setupGame([
         {'__type': 'TurnStarted', 'player_id': playerId},
         {'__type': 'DartThrown', 'player_id': playerId, 'segment': 1, 'multiplier': 2, 'score': 2},
@@ -184,6 +175,85 @@ void main() {
 
       // score = 27 + 2 = 29 > 0, so it's a completion
       expect(stats.bobs27CompletionRate, closeTo(1.0, 0.001));
+    });
+
+    // The events below follow the order ProcessPracticeDartUseCase writes:
+    // the drill-ending dart is DartThrown + GameCompleted, with no TurnEnded
+    // for the final round.
+    List<Map<String, dynamic>> round(List<(int, int)> darts,
+            {bool ended = true}) =>
+        [
+          {'__type': 'TurnStarted', 'player_id': playerId},
+          for (final (seg, mult) in darts)
+            {
+              '__type': 'DartThrown',
+              'player_id': playerId,
+              'segment': seg,
+              'multiplier': mult,
+              'score': seg * mult,
+            },
+          if (ended)
+            {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'normal'},
+        ];
+    const miss = (0, 1);
+
+    test('busted drill: the busting round counts and the drill is not a '
+        'completion', () async {
+      // 27 - 2 - 4 - 6 - 8 = 7 after round 4; round 5 whitewash (-10) = -3.
+      await _setupGame([
+        for (var r = 1; r <= 4; r++) ...round([miss, miss, miss]),
+        ...round([miss, miss, miss], ended: false),
+        {'__type': 'GameCompleted', 'winner_player_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.bobs27,
+      );
+
+      expect(stats.bobs27BestScore, -3);
+      expect(stats.bobs27AvgScore, closeTo(-3.0, 0.01));
+      expect(stats.bobs27CompletionRate, 0.0);
+    });
+
+    test('finished drill: the Double-Bull round counts toward the score',
+        () async {
+      // Rounds 1–20: one target-double hit each, adding 2n per round:
+      // 27 + Σ2n (n=1..20) = 27 + 420 = 447.
+      // Round 21: one Double Bull (+50) = 497, ended by GameCompleted.
+      await _setupGame([
+        for (var r = 1; r <= 20; r++) ...round([(r, 2), miss, miss]),
+        ...round([(25, 2), miss, miss], ended: false),
+        {'__type': 'GameCompleted', 'winner_player_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.bobs27,
+      );
+
+      expect(stats.bobs27BestScore, 497);
+      expect(stats.bobs27CompletionRate, 1.0);
+      // 21 hits out of 63 darts.
+      expect(stats.bobs27DoubleHitRate, closeTo(21 / 63, 0.001));
+    });
+
+    test('drill ended early mid-round: the partial round is not scored',
+        () async {
+      // Round 1 hit (+2 = 29); round 2 has one dart thrown when the drill
+      // is ended, which the engine never scores.
+      await _setupGame([
+        ...round([(1, 2), miss, miss]),
+        ...round([miss], ended: false),
+        {'__type': 'GameCompleted', 'winner_player_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.bobs27,
+      );
+
+      expect(stats.bobs27BestScore, 29);
     });
   });
 }
