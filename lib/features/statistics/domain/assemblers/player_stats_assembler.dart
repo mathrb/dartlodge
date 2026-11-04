@@ -165,8 +165,15 @@ class PlayerStatsAssembler {
     int score = 27;
     int currentRound = 1;
     int turnDoubleHits = 0;
+    int turnDarts = 0;
     bool inPlayerTurn = false;
     bool sawAnyTurn = false;
+
+    void settleRound() {
+      inPlayerTurn = false;
+      score += _bobs27RoundDelta(turnDoubleHits, currentRound);
+      currentRound++;
+    }
 
     for (final event in legEvents) {
       final epid = event.payload['player_id'] as String?;
@@ -175,27 +182,42 @@ class PlayerStatsAssembler {
           if (epid != playerId) break;
           inPlayerTurn = true;
           turnDoubleHits = 0;
+          turnDarts = 0;
           sawAnyTurn = true;
         case 'DartThrown':
           if (!inPlayerTurn || epid != playerId) break;
+          turnDarts++;
           final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
           final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
           if (_bobs27Match(seg, mult, currentRound)) turnDoubleHits++;
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          final pts = _bobs27Points(currentRound);
-          if (turnDoubleHits > 0) {
-            score += turnDoubleHits * pts;
-          } else {
-            score -= pts;
-          }
-          currentRound++;
+          settleRound();
       }
     }
 
+    // The drill-ending dart is followed by GameCompleted with no TurnEnded
+    // (see `_bobs27EndsOpenRound`): settle that final round too.
+    if (_bobs27EndsOpenRound(inPlayerTurn, turnDarts)) settleRound();
+
     return sawAnyTurn ? score : null;
   }
+
+  /// Score change for one finished Bob's 27 round: `hits * points` when the
+  /// round's target was hit at least once, otherwise `-points`.
+  static int _bobs27RoundDelta(int hits, int round) {
+    final pts = _bobs27Points(round);
+    return hits > 0 ? hits * pts : -pts;
+  }
+
+  /// True when the player's open turn is a fully thrown round that the
+  /// engine already scored. `ProcessPracticeDartUseCase` writes the
+  /// drill-ending dart (bust at <= 0, or the end of the Double-Bull round)
+  /// as `DartThrown` + `GameCompleted` with no `TurnEnded`, so projections
+  /// must settle that round themselves. A shorter open turn (the drill was
+  /// ended early) was never scored by the engine and is left unscored.
+  static bool _bobs27EndsOpenRound(bool inPlayerTurn, int turnDarts) =>
+      inPlayerTurn && turnDarts >= 3;
 
   /// True when a dart `(segment, multiplier)` hits the Bob's 27 target for
   /// [round]: the round's double for rounds 1–20, the Double Bull for round 21.
@@ -1752,7 +1774,14 @@ class PlayerStatsAssembler {
     int currentRound = 1;
     int currentScore = 27;
     int turnDoubleHits = 0;
+    int turnDarts = 0;
     bool inPlayerTurn = false;
+
+    void settleRound() {
+      inPlayerTurn = false;
+      currentScore += _bobs27RoundDelta(turnDoubleHits, currentRound);
+      currentRound++;
+    }
 
     for (final event in events) {
       final epid = event.payload['player_id'] as String?;
@@ -1761,8 +1790,10 @@ class PlayerStatsAssembler {
           if (epid != playerId) break;
           inPlayerTurn = true;
           turnDoubleHits = 0;
+          turnDarts = 0;
         case 'DartThrown':
           if (!inPlayerTurn || epid != playerId) break;
+          turnDarts++;
           final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
           final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
           // "Doubles Hit Rate" = darts that landed on the round's target
@@ -1781,15 +1812,11 @@ class PlayerStatsAssembler {
           }
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          final pts = _bobs27Points(currentRound);
-          if (turnDoubleHits > 0) {
-            currentScore += turnDoubleHits * pts;
-          } else {
-            currentScore -= pts;
-          }
-          currentRound++;
+          settleRound();
         case 'GameCompleted':
+          // The drill-ending round has no TurnEnded: settle it here so the
+          // final score includes it (see `_bobs27EndsOpenRound`).
+          if (_bobs27EndsOpenRound(inPlayerTurn, turnDarts)) settleRound();
           // Bob's 27 ends on either bust (score ≤ 0) or finishing the
           // Double-Bull round (round 21) — both paths emit GameCompleted
           // directly with no preceding

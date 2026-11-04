@@ -532,6 +532,38 @@ void main() {
     });
 
     test(
+        "Bob's 27: practiceScore settles a final 3-dart round that has no "
+        'TurnEnded', () {
+      // The drill-ending round has no TurnEnded. legHistoryFromEvents only
+      // snapshots on LegCompleted (which a real drill does not write today),
+      // so this pins `_bobs27LegScore` itself: it must settle the open
+      // 3-dart round the same way `_computeBobs27Stats` does.
+      // Round 1: D1 hit (+2 = 29). Round 2: three misses (-4 = 25).
+      final events = [
+        turnStarted(turnNumber: 1),
+        dart(1, 2),
+        dart(20, 1),
+        dart(20, 1),
+        turnEnded(),
+        turnStarted(turnNumber: 2),
+        dart(0, 1),
+        dart(0, 1),
+        dart(0, 1),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.bobs27,
+        startingScore: null,
+        events: events,
+      );
+      expect(snaps.single.practiceScore, 25.0);
+    });
+
+    test(
         'Checkout Practice: practiceScore is null (no per-leg score concept)',
         () {
       // Checkout practice has no canonical per-leg score — only attempts /
