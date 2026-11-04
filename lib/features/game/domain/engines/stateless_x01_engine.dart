@@ -6,6 +6,7 @@ import '../models/game_state.dart';
 import '../models/game_config.dart';
 import '../entities/game_event.dart';
 import 'base_game_engine.dart';
+import 'leg_rotation.dart';
 
 class StatelessX01Engine implements GameEngine {
   @override
@@ -107,19 +108,17 @@ class StatelessX01Engine implements GameEngine {
       isIn: isIn,
     );
     
-    // Increment round when cycling back to the first competitor after darts
-    // have been thrown — i.e. a full visit cycle just completed.
-    final newRound = competitorIndex == 0 &&
-            state.competitors[0].dartThrows.isNotEmpty
-        ? state.currentRoundInLeg + 1
-        : state.currentRoundInLeg;
+    // Increment round when the turn cycles back to the leg starter after
+    // darts have been thrown — i.e. a full visit cycle just completed.
+    final rotation = roundAfterTurnStarted(state, competitorIndex);
 
     return state.copyWith(
       currentTurnIndex: competitorIndex,
       dartsThrownInTurn: 0,
       turnActive: true,
       competitors: updatedCompetitors,
-      currentRoundInLeg: newRound,
+      currentRoundInLeg: rotation.round,
+      legStarterIndex: rotation.legStarterIndex,
     );
   }
 
@@ -344,8 +343,7 @@ class StatelessX01Engine implements GameEngine {
     );
 
     final cap = state.x01TotalRounds;
-    final wasLastCompetitorOfRound =
-        state.currentTurnIndex == state.competitors.length - 1;
+    final wasLastCompetitorOfRound = isLastTurnOfRound(state);
     final capReached = cap != null &&
         state.currentRoundInLeg >= cap &&
         wasLastCompetitorOfRound;
@@ -473,7 +471,8 @@ class StatelessX01Engine implements GameEngine {
     }
   }
   
-  /// Reset leg state for next leg (Table K)
+  /// Reset leg state for next leg (Table K). Expects [state] to carry the
+  /// new leg's `currentLegIndex`; the starter rotates by leg index.
   GameState _resetLeg(GameState state) {
     final resetCompetitors = state.competitors.map((competitor) {
       return competitor.copyWith(
@@ -485,9 +484,12 @@ class StatelessX01Engine implements GameEngine {
       );
     }).toList();
     
+    final starter =
+        legStarterIndexFor(state.currentLegIndex, resetCompetitors.length);
     return state.copyWith(
       competitors: resetCompetitors,
-      currentTurnIndex: 0,
+      currentTurnIndex: starter,
+      legStarterIndex: starter,
       dartsThrownInTurn: 0,
       winnerCompetitorId: null,
       currentRoundInLeg: 1,

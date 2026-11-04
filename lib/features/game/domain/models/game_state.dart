@@ -24,6 +24,12 @@ abstract class GameState with _$GameState {
     @Default(1) int legsToWin,
     @Default(0) int currentLegIndex,
     @Default(1) int currentRoundInLeg,
+    // Competitor index that threw first in the current leg. A round ends when
+    // the turn comes back to this competitor. Multi-leg X01/Cricket matches
+    // rotate it by leg index (see the engines' `_resetLeg`); the leg's first
+    // `TurnStarted` is authoritative, so streams recorded before the rotation
+    // replay with the starter they were actually played with.
+    @Default(0) int legStarterIndex,
     int? x01TotalRounds,
     int? cricketTotalRounds,
     @Default('straight') String inStrategy,
