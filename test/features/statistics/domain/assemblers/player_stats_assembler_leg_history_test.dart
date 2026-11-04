@@ -534,7 +534,10 @@ void main() {
     test(
         "Bob's 27: practiceScore settles a final 3-dart round that has no "
         'TurnEnded', () {
-      // The drill-ending dart is written as DartThrown with no TurnEnded.
+      // The drill-ending round has no TurnEnded. legHistoryFromEvents only
+      // snapshots on LegCompleted (which a real drill does not write today),
+      // so this pins `_bobs27LegScore` itself: it must settle the open
+      // 3-dart round the same way `_computeBobs27Stats` does.
       // Round 1: D1 hit (+2 = 29). Round 2: three misses (-4 = 25).
       final events = [
         turnStarted(turnNumber: 1),
