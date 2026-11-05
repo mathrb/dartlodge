@@ -8,6 +8,7 @@ import '../models/game_state.dart';
 import '../repositories/game_event_repository.dart';
 import '../repositories/dart_throw_repository.dart';
 import '../engines/base_game_engine.dart';
+import '../engines/event_replay.dart';
 import '../../../../core/error/repository_exception.dart';
 import 'package:uuid/uuid.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
@@ -19,13 +20,10 @@ import 'package:dart_lodge/core/utils/constants.dart';
 /// counter collapses back to its seed (round 1) and surviving darts are scored
 /// against the wrong target (#656).
 ///
-/// X01 and Cricket are deliberately absent: they advance the round on
-/// `TurnStarted` (replayed unless superseded) and fold leg/game completion into
-/// `_applyDartThrown`, while the dart-processing path ALSO persists
-/// `LegCompleted`/`GameCompleted`. Replaying `TurnEnded`/`LegCompleted`/
-/// `GameCompleted` for them double-counts `legsWon` (verified empirically:
-/// `replayEvents` yields 2× the live leg count), so they keep skipping all of
-/// them — see the skip block in [UndoLastDartUseCase.execute].
+/// X01 and Cricket are deliberately absent: they are rebuilt through the shared
+/// cold-load [replayEvents], which replays `TurnEnded` (a round-cap leg is
+/// decided there) and applies a persisted `LegCompleted` only when it records
+/// the pick for a tied round cap (#111).
 const _roundAdvancesOnTurnEnded = {
   GameType.countUp,
   GameType.shanghai,
@@ -151,16 +149,26 @@ class UndoLastDartUseCase {
     // 7. Delete the physical dart throw record
     await _dartThrowRepository.deleteDart(lastDartEvent.eventId);
 
-    // 8. Full replay to rebuild authoritative state
+    // 8. Full replay to rebuild authoritative state.
+    //    X01 / Cricket share the cold-load replay so a round-cap leg (decided
+    //    on TurnEnded, or by the persisted pick for a tied cap) survives the
+    //    undo exactly as it survives a reload (#111). The appended correction
+    //    makes stripSupersededEvents drop the undone dart and its boundary.
+    if (foldsLegCompletionIntoTurn(currentState.gameType)) {
+      return replayEvents(
+        initial: _buildInitialState(currentState),
+        events: [...events, correctionEvent],
+        engine: _engine,
+      );
+    }
+
+    //    Other game types:
     //    - Skip ALL corrected DartThrown events (prior corrections + this one)
     //    - TurnEnded: skip when superseded (a cross-turn undo's tombstoned
     //      boundary, #108). For round-based games a NON-superseded TurnEnded is
     //      replayed so the engine re-advances its round/target counter (#656);
-    //      for X01/Cricket it is still skipped — the engine folds turn/leg/game
-    //      transitions into _applyDartThrown, so re-applying it double-counts.
-    //    - Skip LegCompleted / GameCompleted unconditionally — the engine folds
-    //      these transitions into _applyDartThrown; applying the separately
-    //      persisted events again would double-count legsWon.
+    //      other types skip it.
+    //    - Skip LegCompleted / GameCompleted unconditionally.
     //    - Skip TurnStarted entries marked as superseded (current + prior).
     //    - Skip DartCorrected — they carry no engine state change.
     final allCorrectedIds = {...alreadyCorrectedIds, lastDartEvent.eventId};
@@ -186,12 +194,6 @@ class UndoLastDartUseCase {
         continue;
       }
       if (event.eventType == 'TurnStarted' &&
-          allSupersededIds.contains(event.eventId)) {
-        continue;
-      }
-      // Crazy Cricket: a superseded CrazyTargetsRolled would otherwise
-      // overwrite `cricketTargets` with the cancelled turn's rolls.
-      if (event.eventType == 'CrazyTargetsRolled' &&
           allSupersededIds.contains(event.eventId)) {
         continue;
       }
