@@ -441,6 +441,22 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
     });
 
     test(
+        'a practice drill (GameCompleted, no LegCompleted) yields one '
+        'snapshot with its practice score', () async {
+      await _setupCompletedCatch40Drill(
+          playerRepo, gameRepo, dartThrowRepo, gameEventRepo,
+          playerId: 'p1', gameId: 'g-c40', competitorId: 'c1');
+
+      final history = await statsRepo.getPlayerLegHistory('p1',
+          gameType: GameType.catch40);
+      expect(history, hasLength(1));
+      expect(history.single.gameId, 'g-c40');
+      expect(history.single.legIndex, 1);
+      // S20 + S20 = 40 (the drill's raw dart sum).
+      expect(history.single.practiceScore, 40.0);
+    });
+
+    test(
       'multi-game history loads in start_time order without cross-bleed',
       () async {
         // Regression for the N+1 → single-query refactor: load events for
@@ -1040,6 +1056,94 @@ Future<void> _setupCompletedCricketGame(
 /// turns of canonical-payload events. Used by leg-history positive-path tests.
 ///
 /// Turns: 180 + 180 + 141 (T20+T19+D12) → 501 checkout in 9 darts.
+/// Seeds a completed solo Catch 40 drill in the real event order: one
+/// S20-S20 checkout turn, then GameCompleted. Practice engines never advance
+/// the leg index, so no LegCompleted is written.
+Future<void> _setupCompletedCatch40Drill(
+  PlayerRepository playerRepo,
+  GameRepository gameRepo,
+  DartThrowRepository dartThrowRepo,
+  GameEventRepository gameEventRepo, {
+  required String playerId,
+  required String gameId,
+  required String competitorId,
+}) async {
+  await _createPlayer(playerRepo, playerId);
+  await gameRepo.createGame(
+    Game(
+      gameId: gameId,
+      gameType: GameType.catch40,
+      config: const GameConfig.catch40(),
+      startTime: DateTime.now(),
+      isComplete: false,
+    ),
+    [
+      Competitor(
+        competitorId: competitorId,
+        gameId: gameId,
+        type: CompetitorType.solo,
+        name: 'Player $playerId',
+        players: [CompetitorPlayer(playerId: playerId, rotationPosition: 0)],
+      ),
+    ],
+  );
+
+  int seq = 1;
+  Future<void> appendEvent(String type, Map<String, dynamic> payload) =>
+      gameEventRepo.appendEvent(GameEvent(
+        eventId: '$gameId-e$seq',
+        gameId: gameId,
+        eventType: type,
+        localSequence: seq++,
+        occurredAt: DateTime.now(),
+        payload: payload,
+        synced: false,
+        actorId: playerId,
+        source: EventSource.client,
+      ));
+
+  await appendEvent('TurnStarted', {
+    'competitor_id': competitorId,
+    'player_id': playerId,
+    'turn_index': 0,
+  });
+  for (var d = 1; d <= 2; d++) {
+    await dartThrowRepo.insertDart(DartThrow(
+      dartId: '$gameId-d$d',
+      gameId: gameId,
+      competitorId: competitorId,
+      playerId: playerId,
+      turnNumber: 0,
+      dartNumber: d,
+      segment: '20',
+      score: 20,
+    ));
+    await appendEvent('DartThrown', {
+      'competitor_id': competitorId,
+      'player_id': playerId,
+      'segment': 20,
+      'multiplier': 1,
+      'score': 20,
+      'input_method': 'manual',
+    });
+  }
+  await appendEvent('TurnEnded', {
+    'competitor_id': competitorId,
+    'player_id': playerId,
+    'reason': 'checkout',
+  });
+  await appendEvent('GameCompleted', {
+    'winner_competitor_id': competitorId,
+    'winner_player_id': playerId,
+  });
+
+  await gameRepo.completeGame(
+    gameId: gameId,
+    winnerCompetitorId: competitorId,
+    endTime: DateTime.now(),
+  );
+}
+
 Future<void> _setupCompletedX01Game(
   PlayerRepository playerRepo,
   GameRepository gameRepo,

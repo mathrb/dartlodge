@@ -76,6 +76,14 @@ void main() {
     return event('LegCompleted', payload);
   }
 
+  // Practice drills end with GameCompleted only: their engines never advance
+  // the leg index, so no LegCompleted is written (#190).
+  GameEvent gameCompleted({String? winnerPlayerId}) {
+    final payload = <String, dynamic>{};
+    if (winnerPlayerId != null) payload['winner_player_id'] = winnerPlayerId;
+    return event('GameCompleted', payload);
+  }
+
   group('legHistoryFromEvents — X01 PPR / checkout score', () {
     test('one clean leg → PPR = (score / darts) * 3', () {
       final events = [
@@ -326,7 +334,7 @@ void main() {
         dart(1, 1), // hit target 1 → currentTarget = 2
         dart(2, 1), // hit target 2 → currentTarget = 3
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -344,7 +352,7 @@ void main() {
     });
 
     test('no darts at a target → practiceScore null', () {
-      final events = [legCompleted()];
+      final events = [turnStarted(), turnEnded(), gameCompleted()];
       final snaps = assembler.legHistoryFromEvents(
         playerId: playerId,
         gameId: gameId,
@@ -365,7 +373,7 @@ void main() {
         dart(20, 1), // hit target 20 → currentTarget = 19
         dart(19, 1), // hit target 19 → currentTarget = 18
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -392,7 +400,7 @@ void main() {
         dart(1, 1), // miss target 20
         dart(1, 1), // miss target 20
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -420,7 +428,7 @@ void main() {
         dart(1, 2), // D1 → hit → currentTarget = 2
         dart(2, 2), // D2 → hit → currentTarget = 3
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -446,7 +454,7 @@ void main() {
         dart(1, 3), // T1 — still a miss
         dart(1, 3), // T1 — still a miss
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -472,7 +480,7 @@ void main() {
         dart(1, 2), // 2
         dart(1, 3), // 3 → total 6
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -514,7 +522,7 @@ void main() {
         dart(5, 1),
         dart(8, 1),
         turnEnded(),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -534,10 +542,9 @@ void main() {
     test(
         "Bob's 27: practiceScore settles a final 3-dart round that has no "
         'TurnEnded', () {
-      // The drill-ending round has no TurnEnded. legHistoryFromEvents only
-      // snapshots on LegCompleted (which a real drill does not write today),
-      // so this pins `_bobs27LegScore` itself: it must settle the open
-      // 3-dart round the same way `_computeBobs27Stats` does.
+      // The drill-ending round has no TurnEnded: GameCompleted follows the
+      // last dart directly. The snapshot must settle that open 3-dart round
+      // the same way `_computeBobs27Stats` does.
       // Round 1: D1 hit (+2 = 29). Round 2: three misses (-4 = 25).
       final events = [
         turnStarted(turnNumber: 1),
@@ -549,7 +556,7 @@ void main() {
         dart(0, 1),
         dart(0, 1),
         dart(0, 1),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -575,7 +582,7 @@ void main() {
         dart(20, 3), // T20 = 60
         dart(25, 2), // DB = 50
         turnEnded(reason: 'checkout'),
-        legCompleted(),
+        gameCompleted(),
       ];
 
       final snaps = assembler.legHistoryFromEvents(
@@ -588,6 +595,122 @@ void main() {
       );
       expect(snaps.single.practiceScore, isNull,
           reason: 'Checkout Practice has no per-leg score');
+    });
+  });
+
+  group('legHistoryFromEvents — practice drills close on GameCompleted', () {
+    List<GameEvent> catch40Drill() => [
+          turnStarted(),
+          dart(20, 1),
+          dart(20, 1),
+          turnEnded(reason: 'checkout'),
+          turnStarted(turnNumber: 2),
+          dart(5, 1),
+          dart(1, 1),
+          dart(0, 1),
+          turnEnded(reason: 'failed'),
+        ];
+
+    test('Catch 40: a real drill (no LegCompleted) yields one snapshot', () {
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.catch40,
+        startingScore: null,
+        events: [...catch40Drill(), gameCompleted()],
+      );
+
+      expect(snaps, hasLength(1));
+      expect(snaps.single.gameId, gameId);
+      expect(snaps.single.legIndex, 1);
+      expect(snaps.single.practiceScore, 46.0);
+    });
+
+    test('a drill ended early (GameCompleted mid-turn) is still snapshotted',
+        () {
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.shanghai,
+        startingScore: null,
+        events: [
+          turnStarted(),
+          dart(1, 1),
+          dart(1, 3),
+          gameCompleted(),
+        ],
+      );
+
+      expect(snaps.single.practiceScore, 4.0);
+    });
+
+    test('a LegCompleted then GameCompleted drill is snapshotted once', () {
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.catch40,
+        startingScore: null,
+        events: [...catch40Drill(), legCompleted(), gameCompleted()],
+      );
+
+      expect(snaps, hasLength(1));
+      expect(snaps.single.practiceScore, 46.0);
+    });
+
+    test('a player with no turn in the drill gets no snapshot', () {
+      const otherPlayer = 'p2';
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.aroundTheClock,
+        startingScore: null,
+        events: [
+          turnStarted(pid: otherPlayer),
+          dart(1, 1, pid: otherPlayer),
+          turnEnded(pid: otherPlayer),
+          gameCompleted(winnerPlayerId: otherPlayer),
+        ],
+      );
+
+      expect(snaps, isEmpty);
+    });
+
+    test('startingLegIndex still offsets drills across games', () {
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.catch40,
+        startingScore: null,
+        events: [...catch40Drill(), gameCompleted()],
+        startingLegIndex: 4,
+      );
+
+      expect(snaps.single.legIndex, 5);
+    });
+
+    test('X01 GameCompleted after the final LegCompleted adds no snapshot',
+        () {
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.x01,
+        startingScore: 501,
+        events: [
+          turnStarted(startingScore: 501),
+          dart(20, 3),
+          turnEnded(),
+          legCompleted(winnerPlayerId: playerId),
+          gameCompleted(winnerPlayerId: playerId),
+        ],
+      );
+
+      expect(snaps, hasLength(1));
     });
   });
 
