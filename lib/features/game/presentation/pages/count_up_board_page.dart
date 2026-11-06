@@ -275,6 +275,8 @@ class _CountUpBoardPageState extends ConsumerState<CountUpBoardPage> {
                                       ppr: x01LivePprDisplay(
                                         gameState.competitors[i],
                                       ),
+                                      // Count-Up is single-leg.
+                                      legs: null,
                                     ),
                               ],
                             ),

@@ -256,6 +256,7 @@
   "gameRound": "ROUND {round}",
   "gameRoundOf": "ROUND {round} / {total}",
   "gameLegOf": "LEG {leg} / {total}",
+  "gameLegsWon": "LEG VINTI {count}",
   "gameEnterDartHint": "inserisci freccetta",
   "gameDartNotThrown": "freccetta non lanciata",
   "gameNumberClosed": "Numero già chiuso",

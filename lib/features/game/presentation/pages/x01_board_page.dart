@@ -24,6 +24,7 @@ import '../widgets/end_game_dialog_widget.dart';
 import '../widgets/game_status_bar_widget.dart';
 import '../widgets/hero_metric_widget.dart';
 import '../widgets/leg_complete_modal_widget.dart';
+import '../widgets/legs_won_label.dart';
 import '../widgets/live_average.dart';
 import '../widgets/manual_scoring_input.dart';
 import '../widgets/player_score_section_widget.dart';
@@ -341,8 +342,16 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                             label: activeCompetitor.name,
                             // Live PPR for the active player (#696), kept visible in
                             // camera-first as it is in the manual layout.
-                            secondary:
-                                'PPR ${x01LivePprDisplay(activeCompetitor)}',
+                            // In a multi-leg match the legs-won readout follows
+                            // it, so the match score stays visible.
+                            secondary: [
+                              'PPR ${x01LivePprDisplay(activeCompetitor)}',
+                              ?legsWonLabel(
+                                context,
+                                gameState,
+                                activeCompetitor,
+                              ),
+                            ].join(' · '),
                           ),
                           _CheckoutBanner(
                             score: currentScore,
@@ -363,6 +372,11 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                                       name: gameState.competitors[i].name,
                                       score: gameState.competitors[i].score,
                                       ppr: x01LivePprDisplay(
+                                        gameState.competitors[i],
+                                      ),
+                                      legs: legsWonLabel(
+                                        context,
+                                        gameState,
                                         gameState.competitors[i],
                                       ),
                                     ),

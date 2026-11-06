@@ -256,6 +256,7 @@
   "gameRound": "TOUR {round}",
   "gameRoundOf": "TOUR {round} / {total}",
   "gameLegOf": "LEG {leg} / {total}",
+  "gameLegsWon": "LEGS {count}",
   "gameEnterDartHint": "saisir une fléchette",
   "gameDartNotThrown": "fléchette non lancée",
   "gameNumberClosed": "Numéro déjà fermé",

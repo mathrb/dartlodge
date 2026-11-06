@@ -256,6 +256,7 @@
   "gameRound": "RONDA {round}",
   "gameRoundOf": "RONDA {round} / {total}",
   "gameLegOf": "LEG {leg} / {total}",
+  "gameLegsWon": "LEGS {count}",
   "gameEnterDartHint": "introducir dardo",
   "gameDartNotThrown": "dardo no lanzado",
   "gameNumberClosed": "Número ya cerrado",

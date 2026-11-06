@@ -8,14 +8,16 @@ import '../../../../core/utils/app_theme.dart';
 /// is the hero metric. Keeps every opponent visible at a glance without the
 /// full multi-card score section.
 ///
-/// Game-state-free: the board passes a pre-filtered list of `(name, score, ppr)`
+/// Game-state-free: the board passes a pre-filtered list of
+/// `(name, score, ppr, legs)`
 /// for the players whose turn it is NOT, so the widget is testable in isolation.
 class X01OtherPlayersStripWidget extends StatelessWidget {
   const X01OtherPlayersStripWidget({required this.players, super.key});
 
-  /// The non-active competitors: display name, remaining score, and the
-  /// pre-formatted live PPR string (#696, e.g. `'58.4'` or `'—'`).
-  final List<({String name, int score, String ppr})> players;
+  /// The non-active competitors: display name, remaining score, the
+  /// pre-formatted live PPR string (#696, e.g. `'58.4'` or `'—'`), and the
+  /// legs-won readout (`'LEGS 1'`; null in a single-leg game, hidden).
+  final List<({String name, int score, String ppr, String? legs})> players;
 
   /// The most opponents laid out on a single row (#801).
   static const int _maxSingleRow = 3;
@@ -27,7 +29,7 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
     if (players.isEmpty) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
 
-    Widget chip(({String name, int score, String ppr}) p) => Container(
+    Widget chip(({String name, int score, String ppr, String? legs}) p) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
         color: cs.surfaceContainer,
@@ -69,6 +71,17 @@ class X01OtherPlayersStripWidget extends StatelessWidget {
               color: cs.onSurfaceVariant,
             ),
           ),
+          // Match score in a multi-leg game, as muted as the PPR caption.
+          if (p.legs != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              p.legs!,
+              maxLines: 1,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );

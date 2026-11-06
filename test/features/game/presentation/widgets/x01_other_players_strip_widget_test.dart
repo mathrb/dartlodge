@@ -19,8 +19,8 @@ void main() {
       (tester) async {
     await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
       players: [
-        (name: 'Bob', score: 280, ppr: '0'),
-        (name: 'Carol', score: 412, ppr: '0'),
+        (name: 'Bob', score: 280, ppr: '0', legs: null),
+        (name: 'Carol', score: 412, ppr: '0', legs: null),
       ],
     )));
 
@@ -47,9 +47,9 @@ void main() {
 
     await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
       players: [
-        (name: 'Charlie', score: 501, ppr: '58.4'),
-        (name: 'Dorothy', score: 501, ppr: '58.4'),
-        (name: 'Eleanor', score: 501, ppr: '58.4'),
+        (name: 'Charlie', score: 501, ppr: '58.4', legs: null),
+        (name: 'Dorothy', score: 501, ppr: '58.4', legs: null),
+        (name: 'Eleanor', score: 501, ppr: '58.4', legs: null),
       ],
     )));
 
@@ -74,10 +74,10 @@ void main() {
 
     await tester.pumpWidget(_wrap(const X01OtherPlayersStripWidget(
       players: [
-        (name: 'Bob', score: 501, ppr: '0'),
-        (name: 'Carol', score: 501, ppr: '0'),
-        (name: 'Dave', score: 501, ppr: '0'),
-        (name: 'Erin', score: 501, ppr: '0'),
+        (name: 'Bob', score: 501, ppr: '0', legs: null),
+        (name: 'Carol', score: 501, ppr: '0', legs: null),
+        (name: 'Dave', score: 501, ppr: '0', legs: null),
+        (name: 'Erin', score: 501, ppr: '0', legs: null),
       ],
     )));
 

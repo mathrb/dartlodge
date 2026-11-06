@@ -872,6 +872,15 @@
       }
     }
   },
+  "gameLegsWon": "LEGS {count}",
+  "@gameLegsWon": {
+    "description": "Per-player legs-won readout on the X01/Cricket board in multi-leg matches (uppercase); LEGS kept as the darts loanword. count is pre-formatted.",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "gameEnterDartHint": "enter dart",
   "@gameEnterDartHint": {
     "description": "Accessibility label for an empty, tappable dart slot (manual entry)"
