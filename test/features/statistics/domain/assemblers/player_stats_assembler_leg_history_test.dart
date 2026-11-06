@@ -486,6 +486,34 @@ void main() {
       expect(snaps.single.practiceScore, 6.0);
     });
 
+    test('Shanghai practice: only hits on the round number score', () {
+      // Synthetic LegCompleted: real Shanghai drills end on GameCompleted and
+      // practice leg history only snapshots on LegCompleted.
+      final events = [
+        turnStarted(),
+        dart(20, 3), // round 1, off target → 0 (raw value 60)
+        dart(1, 2), // D1 → 2
+        dart(25, 1), // Bull → 0
+        turnEnded(),
+        turnStarted(),
+        dart(1, 3), // round 2, T1 is off target → 0
+        dart(2, 3), // T2 → 6
+        dart(0, 1), // miss
+        turnEnded(),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.shanghai,
+        startingScore: null,
+        events: events,
+      );
+      expect(snaps.single.practiceScore, 8.0);
+    });
+
     test(
         "Bob's 27: practiceScore uses bonus/penalty mechanics, not raw sum "
         '(regression for #190)', () {
