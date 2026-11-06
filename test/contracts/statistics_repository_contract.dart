@@ -1052,10 +1052,6 @@ Future<void> _setupCompletedCricketGame(
   );
 }
 
-/// Creates a player + completed X01 game (501, straight/double) with three
-/// turns of canonical-payload events. Used by leg-history positive-path tests.
-///
-/// Turns: 180 + 180 + 141 (T20+T19+D12) → 501 checkout in 9 darts.
 /// Seeds a completed solo Catch 40 drill in the real event order: one
 /// S20-S20 checkout turn, then GameCompleted. Practice engines never advance
 /// the leg index, so no LegCompleted is written.
@@ -1144,6 +1140,10 @@ Future<void> _setupCompletedCatch40Drill(
   );
 }
 
+/// Creates a player + completed X01 game (501, straight/double) with three
+/// turns of canonical-payload events. Used by leg-history positive-path tests.
+///
+/// Turns: 180 + 180 + 141 (T20+T19+D12) → 501 checkout in 9 darts.
 Future<void> _setupCompletedX01Game(
   PlayerRepository playerRepo,
   GameRepository gameRepo,
