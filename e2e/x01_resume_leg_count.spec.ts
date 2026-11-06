@@ -12,7 +12,8 @@
  *
  * We win leg 1 of a solo first-to-2, i.e. two legs (board then reads "LEG 2 / 2", i.e.
  * currentLegIndex == 1), re-open, and assert it still reads "LEG 2 / 2" — before
- * the fix the resumed board showed "LEG 3 / 2".
+ * the fix the resumed board showed "LEG 3 / 2". The legs-won readout next to
+ * the hero's PPR ("LEGS 1") is checked on both sides of the resume as well.
  *
  * Serve sim-enabled web on :6780 (see docs/E2E_REGRESSION.md).
  */
@@ -103,6 +104,8 @@ test.describe('X01 resume leg count', { tag: ['@x01'] }, () => {
     await page.getByRole('button', { name: /Next Leg/i }).click({ force: true });
 
     await expect(page.getByText(/LEG\s*2\s*\/\s*2/i)).toBeVisible({ timeout: 15000 });
+    // Multi-leg match: the hero shows the legs won next to the live PPR.
+    await expect(page.getByText(/LEGS\s*1\b/)).toBeVisible({ timeout: 15000 });
 
     // Re-open the app directly at the in-progress board URL (hash route carries
     // the gameId) → a fresh load runs loadedGameState, replaying the persisted
@@ -114,6 +117,9 @@ test.describe('X01 resume leg count', { tag: ['@x01'] }, () => {
     // Still on leg 2 — NOT "LEG 3 / 2" (the pre-#663 doubled count).
     await expect(page.getByText(/LEG\s*2\s*\/\s*2/i)).toBeVisible({ timeout: 30000 });
     await expect(page.getByText(/LEG\s*3/i)).toHaveCount(0);
+    // The legs-won readout survives the resume too (not doubled to 2).
+    await expect(page.getByText(/LEGS\s*1\b/)).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(/LEGS\s*2\b/)).toHaveCount(0);
 
     await page.context().close();
   });

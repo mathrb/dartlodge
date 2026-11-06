@@ -5,13 +5,15 @@ import '../../../../core/utils/app_theme.dart';
 import 'cricket_mark_painter.dart';
 
 /// Per-player row data for [CricketMarksStripWidget]. [marks] is aligned to the
-/// widget's `targets` list (one mark count per target).
+/// widget's `targets` list (one mark count per target). [legs] is the
+/// legs-won readout (`'LEGS 1'`), null in a single-leg game (hidden).
 typedef CricketMarksRow = ({
   String name,
   List<int> marks,
   int score,
   bool isActive,
   String mpr,
+  String? legs,
 });
 
 /// At-distance marks grid shown in the camera-first Cricket layout (#444,
@@ -181,6 +183,18 @@ class CricketMarksStripWidget extends StatelessWidget {
                                     r.isActive ? cs.primary : cs.onSurfaceVariant,
                               ),
                             ),
+                            // Match score in a multi-leg game; the FittedBox
+                            // above scales the third line down if the row is
+                            // too short for it.
+                            if (r.legs != null)
+                              Text(
+                                r.legs!,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
                           ],
                         ),
                       ),

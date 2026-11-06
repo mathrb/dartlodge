@@ -4,6 +4,7 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import 'legs_won_label.dart';
 import 'live_average.dart';
 
 class PlayerScoreSectionWidget extends StatelessWidget {
@@ -70,6 +71,11 @@ class PlayerScoreSectionWidget extends StatelessWidget {
                   i == gameState.currentTurnIndex,
                 ),
                 pprDisplay: _pprDisplay(gameState.competitors[i]),
+                legsWon: legsWonLabel(
+                  context,
+                  gameState,
+                  gameState.competitors[i],
+                ),
                 bustFlashAnim: bustFlashAnim,
               ),
             ),
@@ -87,6 +93,7 @@ class _PlayerCard extends StatelessWidget {
     required this.scoreStyle,
     required this.roundSum,
     required this.pprDisplay,
+    required this.legsWon,
     required this.bustFlashAnim,
   });
 
@@ -95,6 +102,10 @@ class _PlayerCard extends StatelessWidget {
   final TextStyle scoreStyle;
   final int roundSum;
   final String pprDisplay;
+
+  /// Legs-won readout (`'LEGS 1'`); null in a single-leg game, where it is
+  /// hidden.
+  final String? legsWon;
   final Animation<double> bustFlashAnim;
 
   @override
@@ -134,13 +145,30 @@ class _PlayerCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: Text(
-                        competitor.name.toUpperCase(),
-                        style: AppTextStyles.labelMedium.copyWith(
-                          color: isActive ? cs.primaryFixed : cs.onSurfaceVariant,
-                          letterSpacing: 1.2,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            competitor.name.toUpperCase(),
+                            style: AppTextStyles.labelMedium.copyWith(
+                              color: isActive
+                                  ? cs.primaryFixed
+                                  : cs.onSurfaceVariant,
+                              letterSpacing: 1.2,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Match score in a multi-leg game, under the name.
+                          if (legsWon != null)
+                            Text(
+                              legsWon!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     Column(
