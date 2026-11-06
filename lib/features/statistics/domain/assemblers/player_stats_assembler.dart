@@ -1105,6 +1105,11 @@ class PlayerStatsAssembler {
   ///     progression and hit detection mirror
   ///     `StatelessAroundTheClockEngine` (issue #157).
   ///
+  /// A leg closes on `LegCompleted`. Practice drills write no
+  /// `LegCompleted` (their engines never advance the leg index), so a
+  /// practice drill also closes on its `GameCompleted`, once, and only for a
+  /// player who took a turn in it.
+  ///
   /// [gameType] selects the practice-score branch. Pass `null` to treat the
   /// game as non-practice (no `practiceScore`). [atcVariant] is consulted only
   /// when [gameType] is [GameType.aroundTheClock]; valid values are
@@ -1175,10 +1180,23 @@ class PlayerStatsAssembler {
 
     final currentLegEvents = <GameEvent>[];
 
+    // True once [playerId] has started a turn in the open leg (reset when a
+    // leg closes). Gates the practice-drill close below.
+    bool legHasPlayerTurn = false;
+
     for (final event in events) {
       currentLegEvents.add(event);
       final payload = event.payload;
-      switch (event.eventType) {
+      // Practice drills never advance the leg index, so their engines end
+      // with GameCompleted alone (no LegCompleted). Close the drill on that
+      // GameCompleted through the LegCompleted branch. A drill that did write
+      // LegCompleted was already closed (which cleared `legHasPlayerTurn`),
+      // so it is not snapshotted twice; a player with no turn in the drill
+      // gets no snapshot. Match types keep LegCompleted-only emission.
+      final closesPracticeDrill = isPracticeGame &&
+          legHasPlayerTurn &&
+          event.eventType == 'GameCompleted';
+      switch (closesPracticeDrill ? 'LegCompleted' : event.eventType) {
         case 'GameCreated':
           activeCricketTargets = kCricketTargets;
           cricketClosure.onGameCreated(payload['competitors']); // #638
@@ -1204,6 +1222,7 @@ class PlayerStatsAssembler {
         case 'TurnStarted':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
+          legHasPlayerTurn = true;
           currentTurnMarks = 0;
           // Reset the X01 per-turn dart-sum fallback too (mirrors the
           // projection engines' turn-scope reset) so a dangling TurnStarted
@@ -1406,6 +1425,7 @@ class PlayerStatsAssembler {
           atcCurrentTarget = atcInitialTarget;
           atcInPlayerTurn = false;
           lastPlayerTurnStartingScore = null;
+          legHasPlayerTurn = false;
           currentLegEvents.clear();
           cricketClosure.onLegReset(); // #638 board resets each leg
       }
