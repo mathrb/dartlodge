@@ -91,7 +91,9 @@ void main() {
       expect(singleLabel, isNull);
     });
 
-    testWidgets('Italian keeps the invariant loanword', (tester) async {
+    testWidgets('Italian says "won" so it does not read like the leg counter', (
+      tester,
+    ) async {
       final alex = _competitor('Alex', legsWon: 2);
       final gs = _gameState(
         gameType: GameType.x01,
@@ -110,7 +112,7 @@ void main() {
           locale: const Locale('it'),
         ),
       );
-      expect(label, 'LEG 2');
+      expect(label, 'LEG VINTI 2');
     });
   });
 
