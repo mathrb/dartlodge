@@ -564,6 +564,64 @@ void main() {
     });
 
     test(
+        'Catch 40: practiceScore = checkout points (3/2/1, failed 0), not '
+        'the raw dart sum', () {
+      GameEvent catch40TurnEnded(String reason, int dartsOnTarget) =>
+          event('TurnEnded', {
+            'player_id': playerId,
+            'reason': reason,
+            'darts_on_target': dartsOnTarget,
+          });
+      final events = [
+        // Target 61: 6 darts, no checkout → failed, 0 points.
+        turnStarted(),
+        dart(20, 1),
+        dart(20, 1),
+        dart(1, 1),
+        catch40TurnEnded('normal', 3),
+        turnStarted(),
+        dart(5, 1),
+        dart(5, 1),
+        dart(5, 1),
+        catch40TurnEnded('failed', 6),
+        // Target 62: 2-dart checkout → 3 points.
+        turnStarted(),
+        dart(20, 3),
+        dart(1, 2),
+        catch40TurnEnded('checkout', 2),
+        // Target 63: 3-dart checkout → 2 points.
+        turnStarted(),
+        dart(20, 1),
+        dart(3, 1),
+        dart(20, 2),
+        catch40TurnEnded('checkout', 3),
+        // Target 64: 5-dart checkout straddling two visits → 1 point.
+        turnStarted(),
+        dart(0, 1),
+        dart(0, 1),
+        dart(0, 1),
+        catch40TurnEnded('normal', 3),
+        turnStarted(),
+        dart(14, 1),
+        dart(25, 2),
+        catch40TurnEnded('checkout', 5),
+        legCompleted(),
+      ];
+
+      final snaps = assembler.legHistoryFromEvents(
+        playerId: playerId,
+        gameId: gameId,
+        gameDate: gameDate,
+        gameType: GameType.catch40,
+        startingScore: null,
+        events: events,
+      );
+      expect(snaps.single.practiceScore, 6.0,
+          reason: 'Catch 40 score is 0 + 3 + 2 + 1 checkout points, as the '
+              'engine and the end screen count it');
+    });
+
+    test(
         'Checkout Practice: practiceScore is null (no per-leg score concept)',
         () {
       // Checkout practice has no canonical per-leg score — only attempts /

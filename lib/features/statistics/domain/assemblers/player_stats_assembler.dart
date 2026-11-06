@@ -229,6 +229,72 @@ class PlayerStatsAssembler {
   /// Bob's 27 [round]: `round*2` for rounds 1–20, 50 for the Double-Bull round.
   static int _bobs27Points(int round) => round >= 21 ? 50 : round * 2;
 
+  /// Computes the canonical Catch 40 score for one drill of events, scoped to
+  /// [playerId]: the checkout points the engine awards (docs/games/catch-40.md
+  /// §4), not the raw dart sum. Returns null if no player turns were observed.
+  static int? _catch40DrillScore(List<GameEvent> drillEvents, String playerId) {
+    int score = 0;
+    int targetsPassed = 0;
+    int turnDarts = 0;
+    bool inPlayerTurn = false;
+    bool sawAnyTurn = false;
+
+    for (final event in drillEvents) {
+      final epid = event.payload['player_id'] as String?;
+      switch (event.eventType) {
+        case 'TurnStarted':
+          if (epid != playerId) break;
+          inPlayerTurn = true;
+          turnDarts = 0;
+          sawAnyTurn = true;
+        case 'DartThrown':
+          if (!inPlayerTurn || epid != playerId) break;
+          turnDarts++;
+        case 'TurnEnded':
+          if (!inPlayerTurn || epid != playerId) break;
+          inPlayerTurn = false;
+          final reason = event.payload['reason'] as String?;
+          if (!_catch40ClosesTarget(reason)) break;
+          score += _catch40TargetPoints(
+            reason: reason,
+            dartsOnTarget: _catch40DartsOnTarget(event, turnDarts),
+            target: 61 + targetsPassed,
+          );
+          targetsPassed++;
+      }
+    }
+
+    return sawAnyTurn ? score : null;
+  }
+
+  /// True when a Catch 40 `TurnEnded` [reason] closes the current target
+  /// (`checkout` or `failed`); a `normal` TurnEnded between the two visits of
+  /// one target keeps the same target.
+  static bool _catch40ClosesTarget(String? reason) =>
+      reason == 'checkout' || reason == 'failed';
+
+  /// Darts spent on the target a Catch 40 `TurnEnded` closes. The payload's
+  /// `darts_on_target` covers checkouts that straddle two visits (3 darts in
+  /// visit 1 + 1 in visit 2 = 4); legacy events without it fall back to the
+  /// darts of the closing visit, [turnDarts].
+  static int _catch40DartsOnTarget(GameEvent turnEnded, int turnDarts) =>
+      (turnEnded.payload['darts_on_target'] as num?)?.toInt() ?? turnDarts;
+
+  /// Points one closed Catch 40 [target] is worth, mirroring the engine's
+  /// `_computePoints` (docs/games/catch-40.md §4): a checkout in 1–2 darts = 3,
+  /// in 3 darts = 2 (3 for out 99, which cannot be finished in 2), in 4–6
+  /// darts = 1; a failed target = 0.
+  static int _catch40TargetPoints({
+    required String? reason,
+    required int dartsOnTarget,
+    required int target,
+  }) {
+    if (reason != 'checkout') return 0;
+    if (dartsOnTarget <= 2) return 3;
+    if (dartsOnTarget == 3) return target == 99 ? 3 : 2;
+    return 1;
+  }
+
   /// Strips events superseded by any DartCorrected payload. Two flavours
   /// of skip:
   ///
@@ -1094,7 +1160,7 @@ class PlayerStatsAssembler {
     int legScoreTotal = 0;
     // X01 PPR numerator via the turn_score delta (bust turns score 0, §5.2 /
     // #610) — kept separate from `legScoreTotal` (the raw dart sum, which
-    // shanghai/catch40 still use for their practiceScore). `currentTurnScore`
+    // shanghai still uses for its practiceScore). `currentTurnScore`
     // is the per-turn dart-sum fallback for legacy events lacking turn_score.
     final bool isX01Leg = gameType == GameType.x01;
     int legX01Score = 0;
@@ -1306,12 +1372,13 @@ class PlayerStatsAssembler {
             //   raw dart sum is WRONG because Bob's 27 doesn't accumulate
             //   dart values — doubles on the current round target add
             //   `currentRound * 2`, misses subtract `currentRound * 2`.
-            // - shanghai / catch40: raw dart sum matches the existing
-            //   _computeShanghaiStats / _computeCatch40Stats logic. Both
-            //   methods sum `DartThrown.score` directly. (Whether THAT
-            //   matches the canonical game-rule score is a separate concern
-            //   tracked outside #190; here we just keep the trend chart
-            //   consistent with the detail screen.)
+            // - shanghai: raw dart sum matches the existing
+            //   _computeShanghaiStats logic, which sums `DartThrown.score`
+            //   directly. (Whether THAT matches the canonical game-rule
+            //   score is a separate concern tracked outside #190; here we
+            //   just keep the trend chart consistent with the detail screen.)
+            // - catch40: checkout points (matches _computeCatch40Stats and
+            //   the engine's 3/2/1 table); raw dart sum is WRONG.
             // - checkoutPractice: no per-leg score concept; the canonical
             //   metric is attempts/successes (consumer should pivot to
             //   _computeCheckoutStats for that).
@@ -1323,8 +1390,10 @@ class PlayerStatsAssembler {
                 practiceScore =
                     _bobs27LegScore(currentLegEvents, playerId)?.toDouble();
               case GameType.shanghai:
-              case GameType.catch40:
                 practiceScore = legScoreTotal.toDouble();
+              case GameType.catch40:
+                practiceScore =
+                    _catch40DrillScore(currentLegEvents, playerId)?.toDouble();
               case GameType.checkoutPractice:
                 practiceScore = null;
               case GameType.x01:
@@ -1939,7 +2008,10 @@ class PlayerStatsAssembler {
     int fourSixDart = 0;
     int failed = 0;
 
+    // Drill score = checkout points (3/2/1 per target, 0 when failed), the
+    // engine's score — not the raw dart sum.
     int gameScore = 0;
+    int targetsPassed = 0;
     int turnDarts = 0;
     bool inPlayerTurn = false;
 
@@ -1961,6 +2033,7 @@ class PlayerStatsAssembler {
       final prev = bestScore;
       if (prev == null || gameScore > prev) bestScore = gameScore;
       gameScore = 0;
+      targetsPassed = 0;
       inPlayerTurn = false;
     }
 
@@ -1969,6 +2042,7 @@ class PlayerStatsAssembler {
         currentGameId = event.gameId;
         gameCounted = false;
         gameScore = 0;
+        targetsPassed = 0;
         inPlayerTurn = false;
         turnDarts = 0;
       }
@@ -1980,19 +2054,20 @@ class PlayerStatsAssembler {
           turnDarts = 0;
         case 'DartThrown':
           if (!inPlayerTurn || epid != playerId) break;
-          final score = (event.payload['score'] as num?)?.toInt() ?? 0;
-          gameScore += score;
           turnDarts++;
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
           inPlayerTurn = false;
           final reason = event.payload['reason'] as String?;
-          // `darts_on_target` covers checkouts that straddle visit 1 → visit 2
-          // (e.g. 3 darts in turn 1, 1 dart in turn 2 → 4-dart checkout). The
-          // per-turn `turnDarts` would under-count to 1 in that case. Falls
-          // back to `turnDarts` for legacy events that didn't emit the field.
-          final dartsOnTarget =
-              (event.payload['darts_on_target'] as num?)?.toInt() ?? turnDarts;
+          final dartsOnTarget = _catch40DartsOnTarget(event, turnDarts);
+          if (_catch40ClosesTarget(reason)) {
+            gameScore += _catch40TargetPoints(
+              reason: reason,
+              dartsOnTarget: dartsOnTarget,
+              target: 61 + targetsPassed,
+            );
+            targetsPassed++;
+          }
           if (reason == 'checkout') {
             if (dartsOnTarget <= 2) {
               twoDart++;
