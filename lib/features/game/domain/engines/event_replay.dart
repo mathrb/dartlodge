@@ -16,15 +16,24 @@ import 'base_game_engine.dart';
 /// `DartThrown` (and round-cap `TurnEnded`) AND separately persist
 /// `LegCompleted`/`GameCompleted`. Re-applying those persisted events during
 /// replay double-counts `legsWon` and `currentLegIndex` (#663), so the shared
-/// cold-load replay skips them — exactly as `UndoLastDartUseCase` already does
-/// (see `_roundAdvancesOnTurnEnded` there). Practice/round-based engines (ATC,
+/// replay skips them. Practice/round-based engines (ATC,
 /// Shanghai, Catch 40, Count Up) instead RELY on `LegCompleted` to increment
 /// `legsWon`, so they are deliberately absent.
 ///
-/// Note the asymmetry with the undo loop: undo also skips `TurnEnded` for these
-/// games, but replay must NOT — a round-cap leg win is produced by
-/// `TurnEnded`→`_resolveRoundCap`, which has to run exactly once here.
+/// One exception: a round cap that ends in a tie. `TurnEnded`→`_resolveRoundCap`
+/// then returns [LegOutcome.roundCapReached] and leaves the leg open; the
+/// `LegCompleted` persisted by `selectCapWinner` is the only record of the
+/// user's pick, so it IS applied (#111). A cap with a clear winner is resolved
+/// by the `TurnEnded` itself, so its persisted `LegCompleted` stays skipped.
+///
+/// `UndoLastDartUseCase` replays these game types through this function too,
+/// so undo and cold load share one replay path.
 const _foldsLegCompletionIntoTurn = {GameType.x01, GameType.cricket};
+
+/// Whether [replayEvents] treats [gameType] as folding leg/game completion
+/// into the turn (see `_foldsLegCompletionIntoTurn`).
+bool foldsLegCompletionIntoTurn(GameType gameType) =>
+    _foldsLegCompletionIntoTurn.contains(gameType);
 
 GameState replayEvents({
   required GameState initial,
@@ -33,13 +42,22 @@ GameState replayEvents({
 }) {
   final skipLegEvents = _foldsLegCompletionIntoTurn.contains(initial.gameType);
   var gs = initial;
+  // True between a `TurnEnded` that hit a tied round cap and the
+  // `LegCompleted` that records the user's pick.
+  var capPending = false;
   for (final event in stripSupersededEvents(events)) {
-    if (skipLegEvents &&
-        (event.eventType == 'LegCompleted' ||
-            event.eventType == 'GameCompleted')) {
-      continue;
+    if (skipLegEvents) {
+      if (event.eventType == 'GameCompleted') continue;
+      if (event.eventType == 'LegCompleted') {
+        if (!capPending) continue;
+        capPending = false;
+      }
     }
-    gs = engine.apply(gs, event).state;
+    final result = engine.apply(gs, event);
+    gs = result.state;
+    if (event.eventType == 'TurnEnded') {
+      capPending = result.outcome == LegOutcome.roundCapReached;
+    }
   }
   return gs;
 }
