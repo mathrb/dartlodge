@@ -687,8 +687,8 @@ void main() {
   group('legHistoryFromEvents — practice drills close on GameCompleted', () {
     List<GameEvent> catch40Drill() => [
           turnStarted(),
-          dart(20, 1),
-          dart(20, 1),
+          dart(20, 3), // T20 + S1 = 61, out in 2 darts
+          dart(1, 1),
           turnEnded(reason: 'checkout'),
           turnStarted(turnNumber: 2),
           dart(5, 1),
