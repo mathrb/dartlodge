@@ -452,8 +452,8 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       expect(history, hasLength(1));
       expect(history.single.gameId, 'g-c40');
       expect(history.single.legIndex, 1);
-      // S20 + S20 = 40 (the drill's raw dart sum).
-      expect(history.single.practiceScore, 40.0);
+      // 61 checked out in 2 darts = 3 checkout points.
+      expect(history.single.practiceScore, 3.0);
     });
 
     test(
@@ -1053,7 +1053,7 @@ Future<void> _setupCompletedCricketGame(
 }
 
 /// Seeds a completed solo Catch 40 drill in the real event order: one
-/// S20-S20 checkout turn, then GameCompleted. Practice engines never advance
+/// T20-S1 checkout turn on target 61, then GameCompleted. Practice engines never advance
 /// the leg index, so no LegCompleted is written.
 Future<void> _setupCompletedCatch40Drill(
   PlayerRepository playerRepo,
@@ -1103,7 +1103,13 @@ Future<void> _setupCompletedCatch40Drill(
     'player_id': playerId,
     'turn_index': 0,
   });
-  for (var d = 1; d <= 2; d++) {
+  // Target 61 checked out in 2 darts: T20 (60) + S1 (1).
+  const darts = [
+    (segment: 'T20', number: 20, multiplier: 3, score: 60),
+    (segment: '1', number: 1, multiplier: 1, score: 1),
+  ];
+  for (var d = 1; d <= darts.length; d++) {
+    final dart = darts[d - 1];
     await dartThrowRepo.insertDart(DartThrow(
       dartId: '$gameId-d$d',
       gameId: gameId,
@@ -1111,15 +1117,15 @@ Future<void> _setupCompletedCatch40Drill(
       playerId: playerId,
       turnNumber: 0,
       dartNumber: d,
-      segment: '20',
-      score: 20,
+      segment: dart.segment,
+      score: dart.score,
     ));
     await appendEvent('DartThrown', {
       'competitor_id': competitorId,
       'player_id': playerId,
-      'segment': 20,
-      'multiplier': 1,
-      'score': 20,
+      'segment': dart.number,
+      'multiplier': dart.multiplier,
+      'score': dart.score,
       'input_method': 'manual',
     });
   }
