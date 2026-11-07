@@ -203,6 +203,45 @@ class PlayerStatsAssembler {
     return sawAnyTurn ? score : null;
   }
 
+  /// Shanghai points for one dart `(segment, multiplier)` thrown in [round],
+  /// as `StatelessShanghaiEngine` scores it: only a hit on the round's number
+  /// counts, worth `number * multiplier`; Bull, misses and other numbers score
+  /// 0. The DartThrown payload's `score` is the raw dart value (a T20 in
+  /// round 1 = 60), which is not the drill score.
+  static int _shanghaiDartScore(int segment, int multiplier, int round) =>
+      segment == round && segment != 0 && segment != 25
+          ? segment * multiplier
+          : 0;
+
+  /// Canonical Shanghai score for one leg of events, scoped to [playerId]
+  /// (same rule as `_computeShanghaiStats`). Returns null if no player turns
+  /// were observed.
+  static int? _shanghaiLegScore(List<GameEvent> legEvents, String playerId) {
+    int score = 0;
+    int currentRound = 1;
+    bool inPlayerTurn = false;
+    bool sawAnyTurn = false;
+    for (final event in legEvents) {
+      final epid = event.payload['player_id'] as String?;
+      switch (event.eventType) {
+        case 'TurnStarted':
+          if (epid != playerId) break;
+          inPlayerTurn = true;
+          sawAnyTurn = true;
+        case 'DartThrown':
+          if (!inPlayerTurn || epid != playerId) break;
+          final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
+          final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
+          score += _shanghaiDartScore(seg, mult, currentRound);
+        case 'TurnEnded':
+          if (!inPlayerTurn || epid != playerId) break;
+          inPlayerTurn = false;
+          currentRound++;
+      }
+    }
+    return sawAnyTurn ? score : null;
+  }
+
   /// Score change for one finished Bob's 27 round: `hits * points` when the
   /// round's target was hit at least once, otherwise `-points`.
   static int _bobs27RoundDelta(int hits, int round) {
@@ -1132,6 +1171,11 @@ class PlayerStatsAssembler {
   ///     progression and hit detection mirror
   ///     `StatelessAroundTheClockEngine` (issue #157).
   ///
+  /// A leg closes on `LegCompleted`. Practice drills write no
+  /// `LegCompleted` (their engines never advance the leg index), so a
+  /// practice drill also closes on its `GameCompleted`, once, and only for a
+  /// player who took a turn in it.
+  ///
   /// [gameType] selects the practice-score branch. Pass `null` to treat the
   /// game as non-practice (no `practiceScore`). [atcVariant] is consulted only
   /// when [gameType] is [GameType.aroundTheClock]; valid values are
@@ -1202,10 +1246,23 @@ class PlayerStatsAssembler {
 
     final currentLegEvents = <GameEvent>[];
 
+    // True once [playerId] has started a turn in the open leg (reset when a
+    // leg closes). Gates the practice-drill close below.
+    bool legHasPlayerTurn = false;
+
     for (final event in events) {
       currentLegEvents.add(event);
       final payload = event.payload;
-      switch (event.eventType) {
+      // Practice drills never advance the leg index, so their engines end
+      // with GameCompleted alone (no LegCompleted). Close the drill on that
+      // GameCompleted through the LegCompleted branch. A drill that did write
+      // LegCompleted was already closed (which cleared `legHasPlayerTurn`),
+      // so it is not snapshotted twice; a player with no turn in the drill
+      // gets no snapshot. Match types keep LegCompleted-only emission.
+      final closesPracticeDrill = isPracticeGame &&
+          legHasPlayerTurn &&
+          event.eventType == 'GameCompleted';
+      switch (closesPracticeDrill ? 'LegCompleted' : event.eventType) {
         case 'GameCreated':
           activeCricketTargets = kCricketTargets;
           cricketClosure.onGameCreated(payload['competitors']); // #638
@@ -1231,6 +1288,7 @@ class PlayerStatsAssembler {
         case 'TurnStarted':
           final pid = payload['player_id'] as String?;
           if (pid != playerId) break;
+          legHasPlayerTurn = true;
           currentTurnMarks = 0;
           // Reset the X01 per-turn dart-sum fallback too (mirrors the
           // projection engines' turn-scope reset) so a dangling TurnStarted
@@ -1372,11 +1430,8 @@ class PlayerStatsAssembler {
             //   raw dart sum is WRONG because Bob's 27 doesn't accumulate
             //   dart values — doubles on the current round target add
             //   `currentRound * 2`, misses subtract `currentRound * 2`.
-            // - shanghai: raw dart sum matches the existing
-            //   _computeShanghaiStats logic, which sums `DartThrown.score`
-            //   directly. (Whether THAT matches the canonical game-rule
-            //   score is a separate concern tracked outside #190; here we
-            //   just keep the trend chart consistent with the detail screen.)
+            // - shanghai: only hits on the round's number, number × multiplier
+            //   (matches _computeShanghaiStats and the engine).
             // - catch40: checkout points (matches _computeCatch40Stats and
             //   the engine's 3/2/1 table); raw dart sum is WRONG.
             // - checkoutPractice: no per-leg score concept; the canonical
@@ -1390,7 +1445,8 @@ class PlayerStatsAssembler {
                 practiceScore =
                     _bobs27LegScore(currentLegEvents, playerId)?.toDouble();
               case GameType.shanghai:
-                practiceScore = legScoreTotal.toDouble();
+                practiceScore =
+                    _shanghaiLegScore(currentLegEvents, playerId)?.toDouble();
               case GameType.catch40:
                 practiceScore =
                     _catch40DrillScore(currentLegEvents, playerId)?.toDouble();
@@ -1433,6 +1489,7 @@ class PlayerStatsAssembler {
           atcCurrentTarget = atcInitialTarget;
           atcInPlayerTurn = false;
           lastPlayerTurnStartingScore = null;
+          legHasPlayerTurn = false;
           currentLegEvents.clear();
           cricketClosure.onLegReset(); // #638 board resets each leg
       }
@@ -1936,7 +1993,7 @@ class PlayerStatsAssembler {
     int totalDartsThrown,
   ) {
     int shanghaiCount = 0;
-    int scoreAcc = 0;
+    int gameScore = 0;
     int gamesCompleted = 0;
     int totalScore = 0;
     int? bestScore;
@@ -1945,7 +2002,41 @@ class PlayerStatsAssembler {
     bool inPlayerTurn = false;
     final Set<int> turnMultipliers = {};
 
+    // A Shanghai turn is counted once, either at its TurnEnded or, for the
+    // instant win, at the GameCompleted that follows the third dart directly
+    // (StatelessShanghaiEngine ends the game on the dart, so no TurnEnded is
+    // written for the winning turn).
+    void settleTurn() {
+      if (!inPlayerTurn) return;
+      inPlayerTurn = false;
+      if (turnMultipliers.containsAll({1, 2, 3})) shanghaiCount++;
+      turnMultipliers.clear();
+    }
+
+    // The real flow ends a Shanghai game with GameCompleted only: the engine
+    // never advances currentLegIndex, so no LegCompleted is written. Close the
+    // game on either event, once per game (same guard as Catch 40, #253).
+    String? currentGameId;
+    bool gameCounted = false;
+    void closeGame() {
+      settleTurn();
+      if (gameCounted) return;
+      gameCounted = true;
+      gamesCompleted++;
+      totalScore += gameScore;
+      final prev = bestScore;
+      if (prev == null || gameScore > prev) bestScore = gameScore;
+    }
+
     for (final event in events) {
+      if (event.gameId != currentGameId) {
+        currentGameId = event.gameId;
+        gameCounted = false;
+        gameScore = 0;
+        currentRound = 1;
+        inPlayerTurn = false;
+        turnMultipliers.clear();
+      }
       final epid = event.payload['player_id'] as String?;
       switch (event.eventType) {
         case 'TurnStarted':
@@ -1953,30 +2044,21 @@ class PlayerStatsAssembler {
           inPlayerTurn = true;
           turnMultipliers.clear();
         case 'DartThrown':
-          if (epid != playerId) break;
-          final score = (event.payload['score'] as num?)?.toInt() ?? 0;
-          scoreAcc += score;
-          if (inPlayerTurn) {
-            final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
-            final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
-            if (seg == currentRound) turnMultipliers.add(mult);
+          if (!inPlayerTurn || epid != playerId) break;
+          final seg = (event.payload['segment'] as num?)?.toInt() ?? 0;
+          final mult = (event.payload['multiplier'] as num?)?.toInt() ?? 1;
+          final points = _shanghaiDartScore(seg, mult, currentRound);
+          if (points > 0) {
+            gameScore += points;
+            turnMultipliers.add(mult);
           }
         case 'TurnEnded':
           if (!inPlayerTurn || epid != playerId) break;
-          inPlayerTurn = false;
-          if (turnMultipliers.containsAll({1, 2, 3})) shanghaiCount++;
+          settleTurn();
           currentRound++;
         case 'LegCompleted':
-          gamesCompleted++;
-          totalScore += scoreAcc;
-          if (bestScore == null || scoreAcc > bestScore) bestScore = scoreAcc;
-          scoreAcc = 0;
-          currentRound = 1;
-          inPlayerTurn = false;
         case 'GameCompleted':
-          scoreAcc = 0;
-          currentRound = 1;
-          inPlayerTurn = false;
+          closeGame();
       }
     }
 

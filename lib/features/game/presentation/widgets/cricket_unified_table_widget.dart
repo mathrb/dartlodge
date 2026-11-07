@@ -6,6 +6,7 @@ import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../domain/models/game_state.dart';
 import 'cricket_mark_painter.dart';
+import 'legs_won_label.dart';
 import 'live_average.dart';
 
 // ── File-private helpers ──────────────────────────────────────────────────────
@@ -112,6 +113,11 @@ class _CricketHeaderRow extends StatelessWidget {
                   isActive: i == gameState.currentTurnIndex,
                   currentRoundInLeg: gameState.currentRoundInLeg,
                   activeTargets: activeTargets,
+                  legsWon: legsWonLabel(
+                    context,
+                    gameState,
+                    gameState.competitors[i],
+                  ),
                 ),
               ),
             Expanded(
@@ -131,11 +137,16 @@ class _PlayerHeaderCell extends StatelessWidget {
     required this.isActive,
     required this.currentRoundInLeg,
     required this.activeTargets,
+    required this.legsWon,
   });
 
   final CompetitorState competitor;
   final bool isActive;
   final int currentRoundInLeg;
+
+  /// Legs-won readout (`'LEGS 1'`); null in a single-leg game, where it is
+  /// hidden.
+  final String? legsWon;
 
   /// Cricket targets active for THIS game (Fixed = 15–20+25, Random/Crazy =
   /// the assigned set + Bull 25). Drives `cricketMarksForSegment` so the
@@ -206,6 +217,18 @@ class _PlayerHeaderCell extends StatelessWidget {
               ),
             ],
           ),
+          // Match score in a multi-leg game, under the MPR.
+          if (legsWon != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              legsWon!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyles.labelSmall.copyWith(
+                color: isActive ? cs.primary : cs.onSurfaceVariant,
+              ),
+            ),
+          ],
         ],
       ),
     );
