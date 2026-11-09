@@ -186,7 +186,12 @@ class GetGameResultUseCase {
       return AtcCompetitorResult(
         competitorId: c.competitorId,
         competitorName: c.name,
-        turnsCompleted: c.practiceRound,
+        // Count the turns actually started, not `practiceRound`: that is a
+        // 1-based "current round" counter bumped on every TurnEnded, so it
+        // over-counts by one for every player who never starts another
+        // turn after their last TurnEnded (all non-finishers, since the
+        // winning dart ends the game without a further TurnStarted).
+        turnsCompleted: _countTurnStarted(events, c.competitorId),
         totalDarts: _countDarts(events, c.competitorId),
         lastTargetHit: lastHit,
         finished: finished,

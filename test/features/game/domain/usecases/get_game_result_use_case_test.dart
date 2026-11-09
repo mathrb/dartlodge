@@ -343,6 +343,11 @@ void main() {
       expect(atc.competitors[1].lastTargetHit, 5);
       expect(atc.competitors[2].competitorName, 'Carol');
       expect(atc.competitors[2].lastTargetHit, 0);
+      // Alice wins on dart 2 of her 7th turn, so Bob and Carol never start
+      // a 7th turn: 6 turns / 18 darts each. Turns must not be read off the
+      // 1-based `practiceRound` counter, which would report 7 for them.
+      expect(atc.competitors.map((c) => c.turnsCompleted), [7, 6, 6]);
+      expect(atc.competitors.map((c) => c.totalDarts), [20, 18, 18]);
     }));
 
     test(
