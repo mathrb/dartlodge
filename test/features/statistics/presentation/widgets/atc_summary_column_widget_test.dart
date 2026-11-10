@@ -6,6 +6,7 @@
 // asserts the "100%" Text stays on a single line.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -91,6 +92,15 @@ void main() {
         expect(tester.getSize(finder).height, oneLine.height,
             reason: '"$header" wrapped');
         oneLine.dispose();
+        // Not clipped either: the paragraph gets its full natural width
+        // (and is scaled down), while its painted rect fits the column.
+        final paragraph = tester.renderObject<RenderParagraph>(finder);
+        expect(paragraph.size.width,
+            greaterThanOrEqualTo(
+                paragraph.getMaxIntrinsicWidth(double.infinity) - 0.01),
+            reason: '"$header" is clipped');
+        expect(tester.getRect(finder).width, lessThanOrEqualTo(70),
+            reason: '"$header" overflows the column');
       }
     });
   }
