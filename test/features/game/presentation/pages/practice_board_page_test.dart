@@ -754,6 +754,15 @@ void main() {
     expect(undoBtn.onTap, isNotNull);
   });
 
+  testWidgets('12b. Undo button has an accessible label', (tester) async {
+    final gs = _practiceState(dartsThrownInTurn: 1);
+    final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    expect(find.bySemanticsLabel('Undo last dart'), findsOneWidget);
+  });
+
   // ── 13. NEXT ROUND shown + enabled after 3 darts, not complete ────────────
 
   testWidgets('13. NEXT ROUND shown and enabled after 3 darts', (tester) async {

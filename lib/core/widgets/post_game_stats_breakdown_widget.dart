@@ -211,7 +211,19 @@ class _BreakdownTable extends StatelessWidget {
           children: [
             Padding(
               padding: cellPadding,
-              child: Text(categoryHeader, style: headerStyle),
+              // Scale down rather than wrap: the letter-spaced upper-case
+              // header broke mid-word ("CATEGOR" / "Y") in a ~95 px flex
+              // cell (3 players on a phone), and longer locales are wider.
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  categoryHeader,
+                  style: headerStyle,
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+              ),
             ),
             ...columns.map((col) {
               return Padding(
