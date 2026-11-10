@@ -833,7 +833,11 @@ class _BottomBar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  child: Icon(Icons.undo, color: cs.onSurface),
+                  child: Icon(
+                    Icons.undo,
+                    color: cs.onSurface,
+                    semanticLabel: l10n.gameUndoLastDart,
+                  ),
                 ),
               ),
             ),

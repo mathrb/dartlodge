@@ -61,4 +61,16 @@ void main() {
     await pumpAt(tester, 800, 6); // maxWidth >= 600 → fill
     expect(horizontalScroll(), findsNothing);
   });
+
+  testWidgets(
+      'category header stays on one line in a narrow flex cell '
+      '(3 players on a phone)', (tester) async {
+    await pumpAt(tester, 380, 3); // 4 flex columns of 95 px each
+
+    final header = tester.getSize(find.text('CATEGORY'));
+    final rowLabel = tester.getSize(find.text('AVG'));
+    // Same font size as the row labels, so a single line has the same
+    // height; a wrap ("CATEGOR" / "Y") would double it.
+    expect(header.height, rowLabel.height);
+  });
 }
