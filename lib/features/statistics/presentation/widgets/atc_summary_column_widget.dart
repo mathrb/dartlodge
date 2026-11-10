@@ -49,12 +49,21 @@ class AtcSummaryColumnWidget extends StatelessWidget {
 
     String fmtRate(double v) => StatFormatter.fmtPct(v, decimals: 0);
 
+    // Scale down rather than wrap: in the ~70 px column of a phone the
+    // upper-case "WEAKEST" broke mid-word ("WEAKES" / "T"), and longer
+    // locales ("PLUS FAIBLES", "SCHWÄCHSTE") are wider still.
     Widget sectionHeader(String text) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          child: Text(
-            text,
-            style: AppTextStyles.labelSmall
-                .copyWith(color: colorScheme.onSurfaceVariant),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              text,
+              maxLines: 1,
+              softWrap: false,
+              style: AppTextStyles.labelSmall
+                  .copyWith(color: colorScheme.onSurfaceVariant),
+            ),
           ),
         );
 

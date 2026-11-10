@@ -13,10 +13,11 @@ import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/statistics/presentation/widgets/atc_summary_column_widget.dart';
 
-Widget _wrap(Widget child, {double width = 90}) {
+Widget _wrap(Widget child, {double width = 90, Locale? locale}) {
   return MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: kSupportedLocales,
+    locale: locale,
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: kSupportedLocales,
     theme: AppTheme.light(),
     home: Scaffold(
       body: Align(
@@ -64,4 +65,33 @@ void main() {
     final renderText = tester.renderObject<RenderBox>(find.text('—'));
     expect(renderText.size.height, lessThan(100));
   });
+
+  // On a 412 px phone the column is ~70 px wide inside its card, and the
+  // WEAKEST section header wrapped mid-word ("WEAKES" / "T"). Each header
+  // must be exactly one line of its own style tall; a wrap doubles it.
+  for (final (locale, headers) in [
+    (const Locale('en'), ['OVERALL', 'BEST', 'WEAKEST']),
+    (const Locale('fr'), ['GLOBAL', 'MEILLEURS', 'PLUS FAIBLES']),
+  ]) {
+    testWidgets(
+        'section headers stay on one line at 70px column width '
+        '(${locale.languageCode})', (tester) async {
+      await tester.pumpWidget(_wrap(
+        const AtcSummaryColumnWidget(hits: {}, attempts: {}),
+        width: 70,
+        locale: locale,
+      ));
+
+      for (final header in headers) {
+        final finder = find.text(header);
+        final oneLine = TextPainter(
+          text: TextSpan(text: 'X', style: tester.widget<Text>(finder).style),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        expect(tester.getSize(finder).height, oneLine.height,
+            reason: '"$header" wrapped');
+        oneLine.dispose();
+      }
+    });
+  }
 }
