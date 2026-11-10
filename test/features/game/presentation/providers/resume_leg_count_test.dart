@@ -218,6 +218,47 @@ void main() {
   });
 
   test(
+      'X01 re-opened in a fresh container: the board state rebuilt by '
+      'loadedGameState keeps the live leg count #663', () async {
+    // Same scenario as above, but resumed through the real path the board
+    // takes on re-open (activeGameProvider → loadedGameState → replayEvents)
+    // instead of calling replayEvents directly. Web e2e cannot reach this
+    // path: a cold load always starts at Home and the app has no resume entry.
+    final game = x01Game(legsToWin: 2);
+    final comps = twoCompetitors();
+    final build = [turnStarted(seq: 1)];
+    wire(game: game, comps: comps, buildEvents: build);
+
+    await container.read(activeGameProvider('g1').future);
+    await container.read(activeGameProvider('g1').notifier).processDart('D20');
+    final live = container.read(activeGameProvider('g1')).value!.gameState;
+    expect(legsWonOf(live, 'c1'), 1, reason: 'live count after one leg');
+
+    // "Close the app": drop every provider, then re-open against the log the
+    // live session persisted.
+    container.dispose();
+    final persisted = [...build, ...appended]
+      ..sort((a, b) => a.localSequence.compareTo(b.localSequence));
+    when(mockEventRepo.getEventsForGame('g1'))
+        .thenAnswer((_) async => persisted);
+    container = ProviderContainer(
+      overrides: [
+        gameRepositoryProvider.overrideWithValue(mockGameRepo),
+        gameEventRepositoryProvider.overrideWithValue(mockEventRepo),
+        dartThrowRepositoryProvider.overrideWithValue(mockDartRepo),
+      ],
+    );
+
+    final resumed =
+        (await container.read(activeGameProvider('g1').future))!.gameState;
+    expect(legsWonOf(resumed, 'c1'), 1,
+        reason: 'resumed board must not double the leg (was 2 before #663)');
+    expect(resumed.currentLegIndex, live.currentLegIndex,
+        reason: 'resumed board must stay on the same leg');
+    expect(resumed.currentLegIndex, 1, reason: 'leg 2 of a first-to-2');
+  });
+
+  test(
       'X01 round-cap-decided leg: resumed leg count matches live (not doubled) #663',
       () async {
     // totalRounds: 1 → the cap fires after round 1; lower remaining score wins.
