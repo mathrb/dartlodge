@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../glossary/stat_term.dart';
+import '../utils/app_spacing.dart';
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
 import 'glossary_term_label.dart';
+import 'text_measurer.dart';
 
 /// Minimum comfortable width per breakdown column (category + each player).
 /// Below this the columns would be cramped, so the table falls back to a
@@ -115,26 +117,41 @@ class PostGameStatsBreakdown extends StatelessWidget {
               final minWidth = (columns.length + 1) * _kMinBreakdownColWidth;
               final fillsWidth =
                   constraints.maxWidth >= 600 || minWidth <= constraints.maxWidth;
-              if (fillsWidth) {
+              if (!fillsWidth) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _BreakdownTable(
+                    columns: columns,
+                    rows: rows,
+                    categoryHeader: resolvedCategoryHeader,
+                    columnFloors: null,
+                  ),
+                );
+              }
+              // Flex columns only while every column keeps room for its
+              // content at the ambient text scale: the widest word of each
+              // label and name, and each value whole. Otherwise (large system
+              // text, long names, longer locales) the cells would break words
+              // mid-way or ellipsize, so each category stacks its values
+              // instead (DESIGN_SYSTEM §13).
+              final floors = _BreakdownTable.measureFloors(
+                context,
+                columns: columns,
+                rows: rows,
+              );
+              final needed = floors.fold<double>(0, (sum, w) => sum + w);
+              if (needed <= constraints.maxWidth) {
                 return SizedBox(
                   width: constraints.maxWidth,
                   child: _BreakdownTable(
                     columns: columns,
                     rows: rows,
                     categoryHeader: resolvedCategoryHeader,
-                    flexColumns: true,
+                    columnFloors: floors,
                   ),
                 );
               }
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: _BreakdownTable(
-                  columns: columns,
-                  rows: rows,
-                  categoryHeader: resolvedCategoryHeader,
-                  flexColumns: false,
-                ),
-              );
+              return _StackedBreakdown(columns: columns, rows: rows);
             },
           ),
         ),
@@ -160,16 +177,110 @@ class PostGameSectionLabel extends StatelessWidget {
       children: [
         Container(width: 32, height: 1, color: cs.primaryFixed),
         const SizedBox(width: 12),
+        // One line, scaled down when too wide: a long single-word label
+        // ("STATISTIKAUFSCHLÜSSELUNG") at large text would otherwise break
+        // mid-word.
         Flexible(
-          child: Text(
-            text,
-            style: tt.labelSmall?.copyWith(
-              color: cs.onSurfaceVariant,
-              letterSpacing: 3,
-              fontWeight: FontWeight.w900,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              text,
+              maxLines: 1,
+              softWrap: false,
+              style: tt.labelSmall?.copyWith(
+                color: cs.onSurfaceVariant,
+                letterSpacing: 3,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),
+      ],
+    );
+  }
+}
+
+const EdgeInsets _kCellPadding = EdgeInsets.symmetric(
+  horizontal: 16,
+  vertical: 12,
+);
+
+/// Gap and size of the info glyph a [GlossaryTermLabel] adds after its text.
+const double _kGlossaryGlyphWidth = AppSpacing.space1 + 14;
+
+/// Text styles shared by the table, the stacked fallback and the width
+/// measurement, so what is measured is what is rendered.
+class _BreakdownStyles {
+  _BreakdownStyles(BuildContext context)
+      : cs = Theme.of(context).colorScheme,
+        tt = Theme.of(context).textTheme;
+
+  final ColorScheme cs;
+  final TextTheme tt;
+
+  TextStyle? get header => tt.labelSmall?.copyWith(
+        color: cs.onSurfaceVariant,
+        letterSpacing: 1.5,
+        fontWeight: FontWeight.w900,
+      );
+
+  TextStyle? get category => tt.labelSmall?.copyWith(
+        color: cs.onSurfaceVariant,
+        letterSpacing: 1.5,
+        fontWeight: FontWeight.w700,
+      );
+
+  TextStyle? name(bool emphasize) => tt.labelMedium?.copyWith(
+        color: emphasize ? cs.primaryFixed : cs.onSurface,
+        fontWeight: FontWeight.w700,
+      );
+
+  TextStyle? subtitle(bool emphasize) => tt.labelSmall?.copyWith(
+        color: emphasize
+            ? cs.primaryFixed.withValues(alpha: 0.7)
+            : cs.onSurfaceVariant,
+        letterSpacing: 1.2,
+      );
+
+  TextStyle value(bool highlight) => AppTextStyles.headlineSmall.copyWith(
+        color: highlight ? cs.primaryFixed : cs.onSurface,
+        fontSize: 20,
+      );
+}
+
+/// A row's category label: a tappable glossary term when it has one,
+/// plain text otherwise. Wraps at word boundaries.
+class _CategoryLabel extends StatelessWidget {
+  const _CategoryLabel({required this.row, required this.style});
+
+  final PostGameBreakdownRow row;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = row.category.toUpperCase();
+    return row.term != null
+        ? GlossaryTermLabel(label: label, term: row.term!, style: style)
+        : Text(label, style: style);
+  }
+}
+
+/// A column's name with its optional subtitle (e.g. `WINNER`) below it.
+class _ColumnName extends StatelessWidget {
+  const _ColumnName({required this.column, required this.styles});
+
+  final PostGameBreakdownColumn column;
+  final _BreakdownStyles styles;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(column.name, style: styles.name(column.emphasize)),
+        if (column.subtitle != null)
+          Text(column.subtitle!, style: styles.subtitle(column.emphasize)),
       ],
     );
   }
@@ -180,39 +291,79 @@ class _BreakdownTable extends StatelessWidget {
     required this.columns,
     required this.rows,
     required this.categoryHeader,
-    required this.flexColumns,
+    required this.columnFloors,
   });
 
   final List<PostGameBreakdownColumn> columns;
   final List<PostGameBreakdownRow> rows;
   final String categoryHeader;
 
-  /// When true, columns flex to fill the parent width (desktop). When
-  /// false, columns size to their content (mobile, with the horizontal
-  /// scroll fallback in the parent handling overflow).
-  final bool flexColumns;
+  /// When set (category column first, then one per player column), each
+  /// column is at least that wide and the remaining width is shared equally
+  /// so the table fills its parent. When null, columns size to their content
+  /// (the horizontal-scroll fallback in the parent handles overflow).
+  final List<double>? columnFloors;
+
+  /// Narrowest width (cell padding included) of each column, category column
+  /// first, that holds its content at the ambient text scale without
+  /// breaking a word: the widest word of each category label (whole label
+  /// plus glyph for glossary terms, which render on one line) and column
+  /// name, each subtitle and value whole.
+  static List<double> measureFloors(
+    BuildContext context, {
+    required List<PostGameBreakdownColumn> columns,
+    required List<PostGameBreakdownRow> rows,
+  }) {
+    final styles = _BreakdownStyles(context);
+    final measure = TextMeasurer.of(context);
+    double floor(double content) =>
+        content.ceilToDouble() + _kCellPadding.horizontal;
+
+    var category = 0.0;
+    for (final row in rows) {
+      final label = row.category.toUpperCase();
+      final w = row.term != null
+          ? measure.width(label, styles.category) + _kGlossaryGlyphWidth
+          : measure.widestWord(label, styles.category);
+      if (w > category) category = w;
+    }
+
+    return [
+      floor(category),
+      for (var i = 0; i < columns.length; i++)
+        floor([
+          measure.widestWord(
+            columns[i].name,
+            styles.name(columns[i].emphasize),
+          ),
+          if (columns[i].subtitle != null)
+            measure.width(
+              columns[i].subtitle!,
+              styles.subtitle(columns[i].emphasize),
+            ),
+          for (final row in rows)
+            measure.width(row.values[i], styles.value(row.highlights[i])),
+        ].fold<double>(0, (a, b) => a > b ? a : b)),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    final headerStyle = tt.labelSmall?.copyWith(
-      color: cs.onSurfaceVariant,
-      letterSpacing: 1.5,
-      fontWeight: FontWeight.w900,
-    );
-    final categoryStyle = tt.labelSmall?.copyWith(
-      color: cs.onSurfaceVariant,
-      letterSpacing: 1.5,
-      fontWeight: FontWeight.w700,
-    );
-    const cellPadding = EdgeInsets.symmetric(horizontal: 16, vertical: 12);
+    final styles = _BreakdownStyles(context);
+    final cs = styles.cs;
+    final floors = columnFloors;
 
     return Table(
-      defaultColumnWidth: flexColumns
-          ? const FlexColumnWidth()
-          : const IntrinsicColumnWidth(),
+      defaultColumnWidth: const IntrinsicColumnWidth(),
+      columnWidths: floors == null
+          ? null
+          : {
+              for (var i = 0; i < floors.length; i++)
+                i: MaxColumnWidth(
+                  FixedColumnWidth(floors[i]),
+                  const FlexColumnWidth(),
+                ),
+            },
       border: TableBorder(
         horizontalInside: BorderSide(
           color: cs.outlineVariant.withValues(alpha: 0.08),
@@ -228,7 +379,7 @@ class _BreakdownTable extends StatelessWidget {
           ),
           children: [
             Padding(
-              padding: cellPadding,
+              padding: _kCellPadding,
               // Scale down rather than wrap: the letter-spaced upper-case
               // header broke mid-word ("CATEGOR" / "Y") in a ~95 px flex
               // cell (3 players on a phone), and longer locales are wider.
@@ -237,73 +388,93 @@ class _BreakdownTable extends StatelessWidget {
                 alignment: AlignmentDirectional.centerStart,
                 child: Text(
                   categoryHeader,
-                  style: headerStyle,
+                  style: styles.header,
                   maxLines: 1,
                   softWrap: false,
                 ),
               ),
             ),
-            ...columns.map((col) {
-              return Padding(
-                padding: cellPadding,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      col.name,
-                      style: tt.labelMedium?.copyWith(
-                        color: col.emphasize
-                            ? cs.primaryFixed
-                            : cs.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (col.subtitle != null)
-                      Text(
-                        col.subtitle!,
-                        style: tt.labelSmall?.copyWith(
-                          color: col.emphasize
-                              ? cs.primaryFixed.withValues(alpha: 0.7)
-                              : cs.onSurfaceVariant,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            }),
+            for (final col in columns)
+              Padding(
+                padding: _kCellPadding,
+                child: _ColumnName(column: col, styles: styles),
+              ),
           ],
         ),
-        ...rows.map((row) => TableRow(
-              children: [
+        for (final row in rows)
+          TableRow(
+            children: [
+              Padding(
+                padding: _kCellPadding,
+                child: _CategoryLabel(row: row, style: styles.category),
+              ),
+              for (var i = 0; i < columns.length; i++)
                 Padding(
-                  padding: cellPadding,
-                  child: row.term != null
-                      ? GlossaryTermLabel(
-                          label: row.category.toUpperCase(),
-                          term: row.term!,
-                          style: categoryStyle,
-                        )
-                      : Text(
-                          row.category.toUpperCase(),
-                          style: categoryStyle,
-                        ),
+                  padding: _kCellPadding,
+                  child: Text(
+                    row.values[i],
+                    style: styles.value(row.highlights[i]),
+                  ),
                 ),
-                ...List.generate(columns.length, (i) {
-                  final isHighlight = row.highlights[i];
-                  return Padding(
-                    padding: cellPadding,
-                    child: Text(
-                      row.values[i],
-                      style: AppTextStyles.headlineSmall.copyWith(
-                        color: isHighlight ? cs.primaryFixed : cs.onSurface,
-                        fontSize: 20,
-                      ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+/// Fallback for when the table's columns cannot hold their content (large
+/// system text, long names): one block per category, the label on its own
+/// line, then one line per column with its name on the left and its value on
+/// the right. The column header row is dropped; each line carries its name.
+class _StackedBreakdown extends StatelessWidget {
+  const _StackedBreakdown({required this.columns, required this.rows});
+
+  final List<PostGameBreakdownColumn> columns;
+  final List<PostGameBreakdownRow> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final styles = _BreakdownStyles(context);
+    final divider = BorderSide(
+      color: styles.cs.outlineVariant.withValues(alpha: 0.08),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var r = 0; r < rows.length; r++)
+          Container(
+            padding: _kCellPadding,
+            decoration: r == 0
+                ? null
+                : BoxDecoration(border: Border(top: divider)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _CategoryLabel(row: rows[r], style: styles.category),
+                for (var i = 0; i < columns.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.space2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _ColumnName(
+                            column: columns[i],
+                            styles: styles,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.space3),
+                        Text(
+                          rows[r].values[i],
+                          style: styles.value(rows[r].highlights[i]),
+                        ),
+                      ],
                     ),
-                  );
-                }),
+                  ),
               ],
-            )),
+            ),
+          ),
       ],
     );
   }
