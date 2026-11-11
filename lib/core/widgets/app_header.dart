@@ -57,23 +57,32 @@ class AppHeader extends StatelessWidget {
                 // Two-tone brand wordmark matching the marketing landing page
                 // (#692): DART in brand neon, LODGE in the neutral on-surface
                 // colour (theme-adaptive — light text on dark, dark on light).
-                : Text.rich(
-                    // Read as one word by screen readers despite the two spans.
-                    semanticsLabel: 'DARTLODGE',
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'DART',
-                          style: TextStyle(color: cs.primaryFixed),
-                        ),
-                        TextSpan(
-                          text: 'LODGE',
-                          style: TextStyle(color: cs.onSurface),
-                        ),
-                      ],
-                    ),
-                    style: AppTextStyles.headlineMedium.copyWith(
-                      letterSpacing: 1.5,
+                // One line, scaled down when the slot is too narrow: at large
+                // system text the word otherwise broke ("DARTLODG" / "E").
+                : FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text.rich(
+                      // Read as one word by screen readers despite the two
+                      // spans.
+                      semanticsLabel: 'DARTLODGE',
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'DART',
+                            style: TextStyle(color: cs.primaryFixed),
+                          ),
+                          TextSpan(
+                            text: 'LODGE',
+                            style: TextStyle(color: cs.onSurface),
+                          ),
+                        ],
+                      ),
+                      maxLines: 1,
+                      softWrap: false,
+                      style: AppTextStyles.headlineMedium.copyWith(
+                        letterSpacing: 1.5,
+                      ),
                     ),
                   ),
           ),

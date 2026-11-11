@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_text_styles.dart';
 import '../utils/app_theme.dart';
+import 'text_measurer.dart';
 
 /// One row in the right-hand side column of a [PostGameHeroCard].
 class PostGameHeroStat {
@@ -120,11 +121,7 @@ class PostGameHeroCard extends StatelessWidget {
                   // Otherwise (large system text, long names) the stats move
                   // below the header instead of squeezing the name into
                   // mid-word breaks (DESIGN_SYSTEM §13).
-                  final measure = _TextMeasurer(
-                    DefaultTextStyle.of(context).style,
-                    MediaQuery.textScalerOf(context),
-                    Directionality.of(context),
-                  );
+                  final measure = TextMeasurer.of(context);
                   // The Container already deducts the accent border from
                   // these constraints; the + 1 is the stats column's own
                   // left border.
@@ -281,7 +278,7 @@ class PostGameHeroCard extends StatelessWidget {
   /// Narrowest header column (padding included) that fits the pill on one
   /// line and the widest word of the headline and subline.
   double _headerMinWidth(
-    _TextMeasurer measure,
+    TextMeasurer measure,
     ColorScheme cs,
     TextTheme tt,
     Color onAccent,
@@ -305,7 +302,7 @@ class PostGameHeroCard extends StatelessWidget {
   }
 
   /// Width the side stats column takes when laid out at its natural size.
-  double _sideColumnWidth(_TextMeasurer measure, ColorScheme cs, TextTheme tt) {
+  double _sideColumnWidth(TextMeasurer measure, ColorScheme cs, TextTheme tt) {
     var content = 48.0; // divider
     for (final stat in sideStats) {
       final label = measure.width(stat.label, _SideStat.labelStyle(tt, cs));
@@ -314,39 +311,6 @@ class PostGameHeroCard extends StatelessWidget {
       if (value > content) content = value;
     }
     return content + 2 * _padding;
-  }
-}
-
-/// Single-line text widths at the ambient text scale, with each style
-/// merged over the ambient [DefaultTextStyle] the same way [Text] does
-/// (e.g. Material's default letterSpacing).
-class _TextMeasurer {
-  _TextMeasurer(this.defaultStyle, this.textScaler, this.textDirection);
-
-  final TextStyle defaultStyle;
-  final TextScaler textScaler;
-  final TextDirection textDirection;
-
-  double width(String text, TextStyle? style) {
-    final painter = TextPainter(
-      text: TextSpan(text: text, style: defaultStyle.merge(style)),
-      textScaler: textScaler,
-      textDirection: textDirection,
-      maxLines: 1,
-    )..layout();
-    final w = painter.width;
-    painter.dispose();
-    return w;
-  }
-
-  double widestWord(String text, TextStyle? style) {
-    var widest = 0.0;
-    for (final word in text.split(' ')) {
-      if (word.isEmpty) continue;
-      final w = width(word, style);
-      if (w > widest) widest = w;
-    }
-    return widest;
   }
 }
 

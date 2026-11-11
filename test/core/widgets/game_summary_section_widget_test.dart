@@ -6,6 +6,7 @@ import 'package:dart_lodge/l10n/supported_locales.dart';
 
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/widgets/game_summary_section_widget.dart';
 import 'package:dart_lodge/core/widgets/post_game_hero_card_widget.dart';
 import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
@@ -339,6 +340,101 @@ void main() {
       );
     });
   });
+
+  group('PostGameStatsBreakdown — large text (DESIGN_SYSTEM §13)', () {
+    final fixtures = <String, GameStats Function()>{
+      'X01': () => _statsForX01Named('Alexandra', 'Bartholomew'),
+      'Cricket': _statsForCricketNamed,
+    };
+    for (final entry in fixtures.entries) {
+      for (final locale in const [Locale('en'), Locale('de')]) {
+        for (final scale in const [1.0, 1.4, 2.0]) {
+          testWidgets('${entry.key} breakdown never overflows or breaks a word '
+              '(${locale.languageCode}, ${scale}x, 412 px)', (tester) async {
+            await _pumpScaled(
+              tester,
+              gameStats: entry.value(),
+              locale: locale,
+              scale: scale,
+            );
+            expect(tester.takeException(), isNull);
+            _expectTextIntact(tester, find.byType(PostGameStatsBreakdown));
+          });
+        }
+      }
+    }
+
+    testWidgets('keeps the column table when it fits', (tester) async {
+      await _pumpScaled(
+        tester,
+        gameStats: _statsForX01Named('Alexandra', 'Bartholomew'),
+        width: 900,
+      );
+      _expectTextIntact(tester, find.byType(PostGameStatsBreakdown));
+      // The table's CATEGORY header and one value cell per player and row.
+      expect(find.text('CATEGORY'), findsOneWidget);
+      expect(find.byType(Table), findsOneWidget);
+    });
+
+    testWidgets('stacks one block per category when the columns cannot fit',
+        (tester) async {
+      await _pumpScaled(
+        tester,
+        gameStats: _statsForX01Named('Alexandra', 'Bartholomew'),
+        scale: 2.0,
+      );
+      final breakdown = find.byType(PostGameStatsBreakdown);
+      expect(
+        find.descendant(of: breakdown, matching: find.byType(Table)),
+        findsNothing,
+      );
+      expect(find.text('CATEGORY'), findsNothing);
+      // Each category block names both players next to their values.
+      final rowCount = tester
+          .widget<PostGameStatsBreakdown>(breakdown)
+          .rows
+          .length;
+      expect(
+        find.descendant(of: breakdown, matching: find.text('Alexandra')),
+        findsNWidgets(rowCount),
+      );
+      final label = tester.getRect(
+        find.descendant(of: breakdown, matching: find.text('AVG PPR')),
+      );
+      final value = tester.getRect(
+        find.descendant(of: breakdown, matching: find.text('75.5')),
+      );
+      expect(value.top, greaterThanOrEqualTo(label.bottom));
+    });
+
+    testWidgets('the DARTLODGE wordmark stays on one line at 2.0x',
+        (tester) async {
+      await _pumpScaled(
+        tester,
+        scale: 2.0,
+        width: 200,
+        child: const AppHeader(trailing: Icon(Icons.close, size: 48)),
+      );
+      expect(tester.takeException(), isNull);
+      _expectTextIntact(tester, find.byType(AppHeader));
+    });
+  });
+}
+
+GameStats _statsForCricketNamed() {
+  final base = _statsForCricket();
+  final winner = base.byCompetitor[0];
+  return base.copyWith(
+    byCompetitor: [
+      winner.copyWith(competitorName: 'Alexandra'),
+      winner.copyWith(
+        competitorId: 'c2',
+        competitorName: 'Bartholomew',
+        marksPerRound: 1.8,
+        legsWon: 0,
+      ),
+    ],
+  );
 }
 
 GameStats _statsForX01Named(String winner, String loser) {
@@ -388,8 +484,14 @@ Future<void> _pumpScaled(
 /// least as wide as its widest word, so no word breaks mid-word. Texts
 /// without a space (the pill, numerals, single-word names) therefore stay
 /// on one line, unclipped.
-void _expectHeroTextIntact(WidgetTester tester) {
-  final cardFinder = find.byType(PostGameHeroCard);
+void _expectHeroTextIntact(WidgetTester tester) =>
+    _expectTextIntact(tester, find.byType(PostGameHeroCard));
+
+/// Every non-icon text under [containerFinder] is painted inside it and laid
+/// out at least as wide as its widest word (no mid-word break, no ellipsis).
+/// Scaled-down text (FittedBox) is checked at its painted size.
+void _expectTextIntact(WidgetTester tester, Finder containerFinder) {
+  final cardFinder = containerFinder;
   final cardRect = tester.getRect(cardFinder);
   // Icons render as RichText too; the decorative background trophy is
   // positioned past the card edge on purpose and clipped, so skip icons.
@@ -427,7 +529,10 @@ void _expectHeroTextIntact(WidgetTester tester) {
           '"$text" is squeezed below its widest word '
           '(${p.size.width} < $widestWord)',
     );
-    final rect = p.localToGlobal(Offset.zero) & p.size;
+    final rect = MatrixUtils.transformRect(
+      p.getTransformTo(null),
+      Offset.zero & p.size,
+    );
     expect(
       rect.left,
       greaterThanOrEqualTo(cardRect.left - 0.5),
