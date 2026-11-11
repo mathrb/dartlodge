@@ -121,11 +121,14 @@ class PostGameHeroCard extends StatelessWidget {
                   // below the header instead of squeezing the name into
                   // mid-word breaks (DESIGN_SYSTEM §13).
                   final measure = _TextMeasurer(
+                    DefaultTextStyle.of(context).style,
                     MediaQuery.textScalerOf(context),
                     Directionality.of(context),
                   );
+                  // The Container already deducts the accent border from
+                  // these constraints; the + 1 is the stats column's own
+                  // left border.
                   final needed =
-                      _accentBorder +
                       _headerMinWidth(measure, cs, tt, onAccent) +
                       _sideColumnWidth(measure, cs, tt) +
                       1;
@@ -314,16 +317,19 @@ class PostGameHeroCard extends StatelessWidget {
   }
 }
 
-/// Single-line text widths at the ambient text scale.
+/// Single-line text widths at the ambient text scale, with each style
+/// merged over the ambient [DefaultTextStyle] the same way [Text] does
+/// (e.g. Material's default letterSpacing).
 class _TextMeasurer {
-  _TextMeasurer(this.textScaler, this.textDirection);
+  _TextMeasurer(this.defaultStyle, this.textScaler, this.textDirection);
 
+  final TextStyle defaultStyle;
   final TextScaler textScaler;
   final TextDirection textDirection;
 
   double width(String text, TextStyle? style) {
     final painter = TextPainter(
-      text: TextSpan(text: text, style: style),
+      text: TextSpan(text: text, style: defaultStyle.merge(style)),
       textScaler: textScaler,
       textDirection: textDirection,
       maxLines: 1,
