@@ -47,6 +47,8 @@
   "homeNavStatistics": "Analyser les données",
   "homeNavHistory": "Sessions",
   "homeNavPlayers": "Effectif",
+  "homeCategoryCasual": "Détente",
+  "homeCategoryPractice": "Entraînement",
   "statisticsBreakdown": "Détail des statistiques",
   "statsPracticeTab": "Entraînement",
   "commonName": "Nom",

@@ -31,7 +31,9 @@ class HistoryFilterBarWidget extends StatelessWidget {
     super.key,
   });
 
-  String _formatDateShort(DateTime d) => DateFormat('d MMM').format(d);
+  String _formatDateShort(BuildContext context, DateTime d) =>
+      DateFormat('d MMM', Localizations.localeOf(context).toLanguageTag())
+          .format(d);
 
   bool get _isFilterActive =>
       selectedGameType != null ||
@@ -59,7 +61,7 @@ class HistoryFilterBarWidget extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final hasRange = selectedDateFrom != null && selectedDateTo != null;
     final dateLabel = hasRange
-        ? '${_formatDateShort(selectedDateFrom!)} – ${_formatDateShort(selectedDateTo!)}'
+        ? '${_formatDateShort(context, selectedDateFrom!)} – ${_formatDateShort(context, selectedDateTo!)}'
         : l10n.historyFilterDateRange;
 
     return Padding(

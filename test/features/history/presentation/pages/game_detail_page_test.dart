@@ -90,6 +90,7 @@ GameDetailState _detail(GameType type, {GameStats? stats}) => GameDetailState(
 Widget _pump({
   required GameType type,
   GameResult? gameResult,
+  Locale? locale,
 }) {
   return ProviderScope(
     overrides: [
@@ -100,6 +101,7 @@ Widget _pump({
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
+      locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: kSupportedLocales,
       home: const GameDetailPage(gameId: 'game-1'),
@@ -312,5 +314,22 @@ void main() {
       expect(find.text('180s'), findsNothing);
       expect(find.text('Best Out'), findsNothing);
     });
+  });
+
+  group('GameDetailPage — date header', () {
+    // _makeGame ends the game on 1 January 2024 at 12:00.
+    for (final (locale, expected) in const [
+      (Locale('en'), '1 Jan 2024, 12:00'),
+      (Locale('fr'), '1 janv. 2024, 12:00'),
+      (Locale('de'), '1 Jan. 2024, 12:00'),
+    ]) {
+      testWidgets('formats the month in ${locale.languageCode}',
+          (tester) async {
+        await tester.pumpWidget(_pump(type: GameType.x01, locale: locale));
+        await tester.pumpAndSettle();
+
+        expect(find.text(expected), findsOneWidget);
+      });
+    }
   });
 }

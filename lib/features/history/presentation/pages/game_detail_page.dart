@@ -29,7 +29,10 @@ class GameDetailPage extends ConsumerWidget {
 
   const GameDetailPage({required this.gameId, super.key});
 
-  String _formatDateTime(DateTime dt) => DateFormat('d MMM y, HH:mm').format(dt);
+  String _formatDateTime(BuildContext context, DateTime dt) => DateFormat(
+        'd MMM y, HH:mm',
+        Localizations.localeOf(context).toLanguageTag(),
+      ).format(dt);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -177,7 +180,7 @@ class GameDetailPage extends ConsumerWidget {
             if (game.endTime != null) ...[
               const SizedBox(height: 6),
               Text(
-                _formatDateTime(game.endTime!),
+                _formatDateTime(context, game.endTime!),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
