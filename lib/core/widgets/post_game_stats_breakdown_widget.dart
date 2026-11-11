@@ -80,7 +80,6 @@ class PostGameStatsBreakdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final resolvedTitle = title ?? l10n.statisticsBreakdown.toUpperCase();
     final resolvedCategoryHeader =
@@ -90,20 +89,7 @@ class PostGameStatsBreakdown extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (showHeader) ...[
-          Row(
-            children: [
-              Container(width: 32, height: 1, color: cs.primaryFixed),
-              const SizedBox(width: 12),
-              Text(
-                resolvedTitle,
-                style: tt.labelSmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                  letterSpacing: 3,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
+          PostGameSectionLabel(resolvedTitle),
           const SizedBox(height: 16),
         ],
         Container(
@@ -150,6 +136,38 @@ class PostGameStatsBreakdown extends StatelessWidget {
                 ),
               );
             },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Section title with a short accent rule on the left, in the tracked
+/// upper-case style of "— STATISTICS BREAKDOWN". Shared so the sections that
+/// follow the breakdown (e.g. the history detail's leg / turn breakdowns)
+/// read as the same page. [text] is rendered as given; callers upper-case it.
+class PostGameSectionLabel extends StatelessWidget {
+  const PostGameSectionLabel(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Container(width: 32, height: 1, color: cs.primaryFixed),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            text,
+            style: tt.labelSmall?.copyWith(
+              color: cs.onSurfaceVariant,
+              letterSpacing: 3,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ),
       ],

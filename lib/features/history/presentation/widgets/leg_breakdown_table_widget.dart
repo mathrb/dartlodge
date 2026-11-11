@@ -7,6 +7,7 @@ import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
@@ -70,16 +71,55 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
         events: widget.events,
       );
 
+  /// True when this leg *is* the whole game: a best-of-1 X01 / Cricket match,
+  /// or Count-Up (no legs config). Then the leg's stats equal the game-level
+  /// Statistics Breakdown shown above, so the leg row and its stats table are
+  /// dropped and only the turn-by-turn log is rendered. An abandoned
+  /// multi-leg game with one finished leg keeps the leg row: its game totals
+  /// also count the unfinished leg, so the per-leg stats still differ.
+  bool get _isSingleLegGame =>
+      _isSingleLeg &&
+      widget.game.config.maybeMap(
+        x01: (c) => c.legsToWin == 1,
+        cricket: (c) => c.legsToWin == 1,
+        countUp: (_) => true,
+        orElse: () => false,
+      );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final legHeading = PostGameSectionLabel(
+      l10n.historyLegBreakdown.toUpperCase(),
+    );
     if (widget.legs.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Text(l10n.historyNoLegs),
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          legHeading,
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(l10n.historyNoLegs),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_isSingleLegGame) {
+      final breakdown = _turnBreakdownByLeg[widget.legs.first.legNumber];
+      if (breakdown == null || breakdown.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PostGameSectionLabel(l10n.historyTurnBreakdown.toUpperCase()),
+          const SizedBox(height: 16),
+          _turnTable(breakdown),
+        ],
       );
     }
 
@@ -91,6 +131,8 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        legHeading,
+        const SizedBox(height: 16),
         _headerRow(theme, l10n),
         for (final leg in widget.legs) ...[
           _legRow(leg, theme),
@@ -100,6 +142,12 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
       ],
     );
   }
+
+  Widget _turnTable(LegTurnBreakdown breakdown) => TurnBreakdownTableWidget(
+        gameType: widget.gameType,
+        breakdown: breakdown,
+        singleCompetitor: widget.competitors.length <= 1,
+      );
 
   Widget _headerRow(ThemeData theme, AppLocalizations l10n) {
     return Container(
@@ -128,8 +176,13 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
 
   Widget _legRow(LegStatsBreakdown leg, ThemeData theme) {
     final isExpanded = _expandedLegs.contains(leg.legNumber);
-    final totalDarts =
-        leg.byCompetitor.fold<int>(0, (s, c) => s + c.dartsThrown);
+    // The winner's own darts for the leg ("won in N darts"), which is what
+    // the "Winner | Darts" pair reads as; a sum over every player did not
+    // match any player's count.
+    final winnerDarts = leg.byCompetitor
+        .where((c) => c.competitorId == leg.winnerCompetitorId)
+        .map((c) => c.dartsThrown)
+        .firstOrNull;
     final row = Container(
       decoration: BoxDecoration(
         border: Border(
@@ -140,7 +193,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
         children: [
           SizedBox(width: _kLegColWidth, child: _cell('${leg.legNumber}')),
           Expanded(child: _cell(leg.winnerName)),
-          SizedBox(width: _kDartsColWidth, child: _cell('$totalDarts')),
+          SizedBox(width: _kDartsColWidth, child: _cell(winnerDarts != null ? '$winnerDarts' : '—')),
           if (_expandable)
             SizedBox(
               width: _kChevronColWidth,
@@ -194,11 +247,7 @@ class _LegBreakdownTableWidgetState extends State<LegBreakdownTableWidget> {
               ),
             ),
             const SizedBox(height: 6),
-            TurnBreakdownTableWidget(
-              gameType: widget.gameType,
-              breakdown: breakdown,
-              singleCompetitor: widget.competitors.length <= 1,
-            ),
+            _turnTable(breakdown),
           ],
         ],
       ),
