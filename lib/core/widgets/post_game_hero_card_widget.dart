@@ -73,13 +73,33 @@ class PostGameHeroCard extends StatelessWidget {
   /// non-celebratory outcomes like Bob's 27 busted-to-zero.
   final bool muted;
 
+  static const double _padding = 20;
+  static const double _accentBorder = 4;
+  static const double _pillHorizontalPadding = 12;
+  static const double _badgeIconGap = 8;
+  static const double _badgeIconSize = 20;
+
+  static TextStyle _headlineStyle(ColorScheme cs) => AppTextStyles.headlineSmall
+      .copyWith(color: cs.onSurface, fontWeight: FontWeight.w900);
+
+  static TextStyle? _badgeStyle(TextTheme tt, Color onAccent) =>
+      tt.labelSmall?.copyWith(color: onAccent, fontWeight: FontWeight.w900);
+
+  static TextStyle? _sublineStyle(TextTheme tt, ColorScheme cs) =>
+      tt.bodySmall?.copyWith(
+        color: cs.onSurfaceVariant,
+        letterSpacing: 1.2,
+        fontWeight: FontWeight.w600,
+      );
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final accent =
-        accentColor ?? (muted ? cs.outlineVariant : cs.primaryFixed);
+    final accent = accentColor ?? (muted ? cs.outlineVariant : cs.primaryFixed);
     final onAccent = muted ? cs.onSurface : cs.onPrimaryFixed;
+
+    final header = _buildHeader(cs, tt, accent, onAccent);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -87,128 +107,246 @@ class PostGameHeroCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: cs.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-          border: Border(left: BorderSide(color: accent, width: 4)),
+          border: Border(
+            left: BorderSide(color: accent, width: _accentBorder),
+          ),
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: sideStats.isEmpty
+            ? SizedBox(width: double.infinity, child: header)
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  // Side by side only while the header column keeps room for
+                  // its widest word and the stats column for its numerals.
+                  // Otherwise (large system text, long names) the stats move
+                  // below the header instead of squeezing the name into
+                  // mid-word breaks (DESIGN_SYSTEM §13).
+                  final measure = _TextMeasurer(
+                    DefaultTextStyle.of(context).style,
+                    MediaQuery.textScalerOf(context),
+                    Directionality.of(context),
+                  );
+                  // The Container already deducts the accent border from
+                  // these constraints; the + 1 is the stats column's own
+                  // left border.
+                  final needed =
+                      _headerMinWidth(measure, cs, tt, onAccent) +
+                      _sideColumnWidth(measure, cs, tt) +
+                      1;
+                  return needed <= constraints.maxWidth
+                      ? _buildSideBySide(cs, accent, header)
+                      : _buildStacked(cs, accent, header);
+                },
+              ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    ColorScheme cs,
+    TextTheme tt,
+    Color accent,
+    Color onAccent,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(_padding),
+      child: Stack(
+        children: [
+          if (backgroundIcon != null)
+            Positioned(
+              right: -24,
+              top: -24,
+              child: Icon(
+                backgroundIcon,
+                size: 120,
+                color: cs.onSurface.withValues(alpha: 0.04),
+              ),
+            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Stack(
-                    children: [
-                      if (backgroundIcon != null)
-                        Positioned(
-                          right: -24,
-                          top: -24,
-                          child: Icon(
-                            backgroundIcon,
-                            size: 120,
-                            color: cs.onSurface.withValues(alpha: 0.04),
-                          ),
-                        ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (badge != null) ...[
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: accent,
-                                    borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusFull),
-                                  ),
-                                  child: Text(
-                                    badge!,
-                                    style: tt.labelSmall?.copyWith(
-                                      color: onAccent,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                                if (badgeIcon != null) ...[
-                                  const SizedBox(width: 8),
-                                  Icon(badgeIcon, color: accent, size: 20),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                          // Long headlines like "Not checked out" used to
-                          // mid-word break on narrow column widths and
-                          // ellipse ("NOT CH / ECKE…"). Allow a third line
-                          // so word-boundary wrapping has room, drop
-                          // `softWrap` to the default true, and keep the
-                          // ellipsis only as a true overflow guard for
-                          // headlines that exceed three lines (#341).
-                          Text(
-                            headline.toUpperCase(),
-                            style: AppTextStyles.headlineSmall.copyWith(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          if (subline != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              subline!,
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                                letterSpacing: 1.2,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ],
+              if (badge != null) ...[
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: _pillHorizontalPadding,
+                        vertical: 4,
                       ),
+                      decoration: BoxDecoration(
+                        color: accent,
+                        borderRadius: BorderRadius.circular(
+                          AppTheme.radiusFull,
+                        ),
+                      ),
+                      child: Text(badge!, style: _badgeStyle(tt, onAccent)),
+                    ),
+                    if (badgeIcon != null) ...[
+                      const SizedBox(width: _badgeIconGap),
+                      Icon(badgeIcon, color: accent, size: _badgeIconSize),
                     ],
-                  ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              // Headlines wrap at word boundaries only: the layout choice in
+              // [build] guarantees the column is at least as wide as the
+              // widest word. Up to three lines fit multi-word status
+              // headlines like "Not checked out"; the ellipsis is only a
+              // last-resort overflow guard (#341).
+              Text(
+                headline.toUpperCase(),
+                style: _headlineStyle(cs),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subline != null) ...[
+                const SizedBox(height: 4),
+                Text(subline!, style: _sublineStyle(tt, cs)),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSideBySide(ColorScheme cs, Color accent, Widget header) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: header),
+          Container(
+            padding: const EdgeInsets.all(_padding),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainer,
+              border: Border(
+                left: BorderSide(
+                  color: cs.outlineVariant.withValues(alpha: 0.15),
                 ),
               ),
-              if (sideStats.isNotEmpty)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainer,
-                    border: Border(
-                      left: BorderSide(
-                        color: cs.outlineVariant.withValues(alpha: 0.15),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < sideStats.length; i++) ...[
+                  if (i > 0) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      height: 1,
+                      width: 48,
+                      color: cs.outlineVariant.withValues(
+                        alpha: AppTheme.opacityGhostBorderStrong,
                       ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (var i = 0; i < sideStats.length; i++) ...[
-                        if (i > 0) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            height: 1,
-                            width: 48,
-                            color: cs.outlineVariant.withValues(
-                                alpha: AppTheme.opacityGhostBorderStrong),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                        _SideStat(
-                          stat: sideStats[i],
-                          accent: accent,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
+                    const SizedBox(height: 16),
+                  ],
+                  _SideStat(stat: sideStats[i], accent: accent),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStacked(ColorScheme cs, Color accent, Widget header) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        Container(
+          padding: const EdgeInsets.all(_padding),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainer,
+            border: Border(
+              top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.15)),
+            ),
+          ),
+          child: Wrap(
+            alignment: WrapAlignment.spaceEvenly,
+            spacing: 24,
+            runSpacing: 16,
+            children: [
+              for (final stat in sideStats)
+                _SideStat(stat: stat, accent: accent),
             ],
           ),
         ),
-      ),
+      ],
     );
+  }
+
+  /// Narrowest header column (padding included) that fits the pill on one
+  /// line and the widest word of the headline and subline.
+  double _headerMinWidth(
+    _TextMeasurer measure,
+    ColorScheme cs,
+    TextTheme tt,
+    Color onAccent,
+  ) {
+    var content = measure.widestWord(
+      headline.toUpperCase(),
+      _headlineStyle(cs),
+    );
+    if (subline != null) {
+      final w = measure.widestWord(subline!, _sublineStyle(tt, cs));
+      if (w > content) content = w;
+    }
+    if (badge != null) {
+      var w =
+          measure.width(badge!, _badgeStyle(tt, onAccent)) +
+          2 * _pillHorizontalPadding;
+      if (badgeIcon != null) w += _badgeIconGap + _badgeIconSize;
+      if (w > content) content = w;
+    }
+    return content + 2 * _padding;
+  }
+
+  /// Width the side stats column takes when laid out at its natural size.
+  double _sideColumnWidth(_TextMeasurer measure, ColorScheme cs, TextTheme tt) {
+    var content = 48.0; // divider
+    for (final stat in sideStats) {
+      final label = measure.width(stat.label, _SideStat.labelStyle(tt, cs));
+      final value = measure.width(stat.value, _SideStat.valueStyle);
+      if (label > content) content = label;
+      if (value > content) content = value;
+    }
+    return content + 2 * _padding;
+  }
+}
+
+/// Single-line text widths at the ambient text scale, with each style
+/// merged over the ambient [DefaultTextStyle] the same way [Text] does
+/// (e.g. Material's default letterSpacing).
+class _TextMeasurer {
+  _TextMeasurer(this.defaultStyle, this.textScaler, this.textDirection);
+
+  final TextStyle defaultStyle;
+  final TextScaler textScaler;
+  final TextDirection textDirection;
+
+  double width(String text, TextStyle? style) {
+    final painter = TextPainter(
+      text: TextSpan(text: text, style: defaultStyle.merge(style)),
+      textScaler: textScaler,
+      textDirection: textDirection,
+      maxLines: 1,
+    )..layout();
+    final w = painter.width;
+    painter.dispose();
+    return w;
+  }
+
+  double widestWord(String text, TextStyle? style) {
+    var widest = 0.0;
+    for (final word in text.split(' ')) {
+      if (word.isEmpty) continue;
+      final w = width(word, style);
+      if (w > widest) widest = w;
+    }
+    return widest;
   }
 }
 
@@ -218,23 +356,22 @@ class _SideStat extends StatelessWidget {
   final PostGameHeroStat stat;
   final Color accent;
 
+  static TextStyle? labelStyle(TextTheme tt, ColorScheme cs) =>
+      tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 1.5);
+
+  static TextStyle get valueStyle => AppTextStyles.scoreMedium;
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Text(
-          stat.label,
-          style: tt.labelSmall?.copyWith(
-            color: cs.onSurfaceVariant,
-            letterSpacing: 1.5,
-          ),
-        ),
+        Text(stat.label, style: labelStyle(tt, cs)),
         const SizedBox(height: 4),
         Text(
           stat.value,
-          style: AppTextStyles.scoreMedium.copyWith(
+          style: valueStyle.copyWith(
             color: stat.danger
                 ? cs.error
                 : (stat.emphasize ? accent : cs.onSurface),
