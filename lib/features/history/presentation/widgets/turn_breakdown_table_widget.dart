@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show precisionErrorTolerance;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/utils/name_formatter.dart';
 import 'package:dart_lodge/core/utils/stat_formatter.dart';
@@ -155,6 +157,7 @@ class _TurnTable extends StatelessWidget {
               color: color, weight: FontWeight.bold),
           Text(
             flag,
+            softWrap: false,
             style: theme.textTheme.labelSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.w900,
@@ -219,6 +222,7 @@ class _TurnTable extends StatelessWidget {
           row.shanghai == true
               ? Text(
                   'SHANGHAI',
+                  softWrap: false,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.w900,
@@ -253,14 +257,15 @@ class _TurnTable extends StatelessWidget {
   }
 
   /// Column indices (within [_columns], BEFORE the optional leading PLAYER
-  /// column) that should flex to absorb leftover width: the dart-chip column
-  /// (chips wrap onto extra lines) and any wide free-text column (X01 /
-  /// Checkout Practice's turn score + BUST/CHECKOUT flag, stacked on two lines
-  /// by turnScoreCell). Every other column is
-  /// a short number or label and sizes to its content. Making only these flex
-  /// keeps the whole table within the parent width — no horizontal scroll, and
-  /// no empty band on narrow tables like Cricket (replaces the old
-  /// scroll-when-cut-off behavior, #309).
+  /// column) that flex to absorb leftover width: the dart-chip column (chips
+  /// wrap onto extra lines) and any wide free-text column (X01 / Checkout
+  /// Practice's turn score + BUST/CHECKOUT flag, stacked on two lines by
+  /// turnScoreCell). Every other column is a short number or label and sizes
+  /// to its content. The flex columns never shrink below their content floor
+  /// (the widest chip, the CHECKOUT flag, their header), so a chip is never
+  /// clipped and a header never breaks mid-word. When the floors do not fit
+  /// the width, [_TableOrStacked] swaps to one stacked block per turn, so the
+  /// layout still fits the parent with no horizontal scroll (#309).
   ({int darts, int? wideText}) _flexColumns() {
     switch (gameType) {
       case GameType.x01:
@@ -279,6 +284,10 @@ class _TurnTable extends StatelessWidget {
     }
   }
 
+  /// Widest share of the row the PLAYER column may take before the name
+  /// ellipsizes in the table layout (the stacked layout shows it in full).
+  static const double _playerColumnMaxFraction = 0.28;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -295,17 +304,6 @@ class _TurnTable extends StatelessWidget {
     final flex = _flexColumns();
     final dartsIdx = flex.darts + offset;
     final wideIdx = flex.wideText == null ? null : flex.wideText! + offset;
-    final columnWidths = <int, TableColumnWidth>{
-      for (var i = 0; i < headers.length; i++)
-        i: i == dartsIdx
-            ? const FlexColumnWidth(1.7)
-            : i == wideIdx
-                // Favor the text column over the chips column so "CHECKOUT"
-                // fits on one line even in the tight multi-player layout
-                // (chips just wrap onto more rows when their column shrinks).
-                ? const FlexColumnWidth(2.6)
-                : const IntrinsicColumnWidth(),
-    };
 
     const cellPadding = EdgeInsets.symmetric(horizontal: 8, vertical: 8);
     final headingStyle = theme.textTheme.labelSmall?.copyWith(
@@ -313,58 +311,237 @@ class _TurnTable extends StatelessWidget {
       fontWeight: FontWeight.w900,
       letterSpacing: 1.1,
     );
+    Widget heading(String h) => Text(
+          h.toUpperCase(),
+          style: headingStyle,
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+        );
+    Widget name(TurnRow row) => Text(
+          NameFormatter.shortName(row.competitorName),
+          maxLines: 1,
+          softWrap: false,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        );
+    // Built once per turn and shared by both layouts below.
+    final cellsByRow = [
+      for (final row in turns) _cellsFor(row, theme, l10n),
+    ];
+    final rowDivider =
+        BorderSide(color: cs.outlineVariant.withValues(alpha: 0.08));
 
-    return Container(
-      decoration: BoxDecoration(
-        color: cs.surfaceContainer,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.18),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      // A width-bounded Table (chips column + wide-text column flex; the rest
-      // intrinsic) fits within the parent — no horizontal scroll (#309 was
-      // solved by scrolling; we now fit instead, per the at-a-glance UX goal).
-      child: Table(
+    return LayoutBuilder(builder: (context, constraints) {
+      const flexFloor = IntrinsicColumnWidth();
+      final columnWidths = <int, TableColumnWidth>{
+        for (var i = 0; i < headers.length; i++)
+          i: i == dartsIdx
+              ? const MaxColumnWidth(FlexColumnWidth(1.7), flexFloor)
+              : i == wideIdx
+                  // Favor the text column over the chips column so
+                  // "CHECKOUT" has room in the tight multi-player layout
+                  // (chips just wrap onto more rows when their column
+                  // shrinks).
+                  ? const MaxColumnWidth(FlexColumnWidth(2.6), flexFloor)
+                  : i == 0 && showCompetitor && constraints.hasBoundedWidth
+                      ? MinColumnWidth(
+                          const IntrinsicColumnWidth(),
+                          FixedColumnWidth(
+                            constraints.maxWidth * _playerColumnMaxFraction,
+                          ),
+                        )
+                      : const IntrinsicColumnWidth(),
+      };
+
+      final table = Table(
         columnWidths: columnWidths,
         defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        border: TableBorder(
-          horizontalInside:
-              BorderSide(color: cs.outlineVariant.withValues(alpha: 0.08)),
-        ),
+        border: TableBorder(horizontalInside: rowDivider),
         children: [
           TableRow(
             decoration: BoxDecoration(color: cs.surfaceContainerLow),
             children: [
               for (final h in headers)
-                Padding(
-                  padding: cellPadding,
-                  child: Text(h.toUpperCase(), style: headingStyle),
-                ),
+                Padding(padding: cellPadding, child: heading(h)),
             ],
           ),
-          for (final row in turns)
+          for (var r = 0; r < turns.length; r++)
             TableRow(
               children: [
                 if (showCompetitor)
-                  Padding(
-                    padding: cellPadding,
-                    child: Text(
-                      NameFormatter.shortName(row.competitorName),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                for (final cell in _cellsFor(row, theme, l10n))
+                  Padding(padding: cellPadding, child: name(turns[r])),
+                for (final cell in cellsByRow[r])
                   Padding(padding: cellPadding, child: cell),
               ],
             ),
         ],
-      ),
-    );
+      );
+
+      // Narrow fallback (large text, long names): one block per turn, each
+      // value under an inline column label. Line 1 holds the short columns,
+      // line 2 the chips and the turn score. Wraps never overflow.
+      Widget labelled(int column, Widget cell) => Wrap(
+            spacing: 6,
+            runSpacing: 2,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [heading(columns[column]), cell],
+          );
+      final stacked = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var r = 0; r < turns.length; r++)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: r == 0 ? null : Border(top: rowDivider),
+              ),
+              child: Padding(
+                padding: cellPadding,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showCompetitor) name(turns[r]),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 4,
+                      children: [
+                        for (var c = 0; c < columns.length; c++)
+                          if (c != flex.darts && c != flex.wideText)
+                            labelled(c, cellsByRow[r][c]),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        labelled(flex.darts, cellsByRow[r][flex.darts]),
+                        if (flex.wideText != null)
+                          labelled(
+                            flex.wideText!,
+                            cellsByRow[r][flex.wideText!],
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      );
+
+      return Container(
+        decoration: BoxDecoration(
+          color: cs.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: cs.outlineVariant.withValues(alpha: 0.18),
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: _TableOrStacked(table: table, stacked: stacked),
+      );
+    });
   }
+}
+
+/// Shows [table] when every column fits at its minimum width (the sum of the
+/// table's column floors), and [stacked] otherwise. Only the chosen child is
+/// laid out, painted, hit-tested and exposed to semantics — and to widget
+/// finders, via [_TableOrStackedElement].
+class _TableOrStacked extends MultiChildRenderObjectWidget {
+  _TableOrStacked({required Widget table, required Widget stacked})
+      : super(children: [table, stacked]);
+
+  @override
+  MultiChildRenderObjectElement createElement() =>
+      _TableOrStackedElement(this);
+
+  @override
+  _RenderTableOrStacked createRenderObject(BuildContext context) =>
+      _RenderTableOrStacked();
+}
+
+class _TableOrStackedElement extends MultiChildRenderObjectElement {
+  _TableOrStackedElement(super.widget);
+
+  @override
+  void debugVisitOnstageChildren(ElementVisitor visitor) {
+    final kids = children.toList();
+    if (kids.length != 2) return super.debugVisitOnstageChildren(visitor);
+    final usesTable = (renderObject as _RenderTableOrStacked).usesTable;
+    visitor(kids[usesTable ? 0 : 1]);
+  }
+}
+
+class _TableOrStackedParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderTableOrStacked extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _TableOrStackedParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _TableOrStackedParentData> {
+  /// Whether the last layout chose the table (true) or the stacked fallback.
+  bool usesTable = true;
+
+  RenderBox get _table => firstChild!;
+  RenderBox get _stacked => lastChild!;
+  RenderBox get _active => usesTable ? _table : _stacked;
+
+  bool _tableFits(double maxWidth) =>
+      _table.getMinIntrinsicWidth(double.infinity) <=
+      maxWidth + precisionErrorTolerance;
+
+  RenderBox _childFor(double maxWidth) =>
+      _tableFits(maxWidth) ? _table : _stacked;
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _TableOrStackedParentData) {
+      child.parentData = _TableOrStackedParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    usesTable = _tableFits(constraints.maxWidth);
+    _active.layout(constraints, parentUsesSize: true);
+    size = constraints.constrain(_active.size);
+  }
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) => constraints
+      .constrain(_childFor(constraints.maxWidth).getDryLayout(constraints));
+
+  @override
+  double computeMinIntrinsicWidth(double height) =>
+      _stacked.getMinIntrinsicWidth(height);
+
+  @override
+  double computeMaxIntrinsicWidth(double height) =>
+      _table.getMaxIntrinsicWidth(height);
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      _childFor(width).getMinIntrinsicHeight(width);
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      _childFor(width).getMaxIntrinsicHeight(width);
+
+  @override
+  void paint(PaintingContext context, Offset offset) =>
+      context.paintChild(_active, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      _active.hitTest(result, position: position);
+
+  @override
+  void visitChildrenForSemantics(RenderObjectVisitor visitor) =>
+      visitor(_active);
 }
 
 class _AtcSegmentTable extends StatelessWidget {
