@@ -118,6 +118,9 @@ void main() {
       expect(find.byType(GameSummarySectionWidget), findsOneWidget);
       expect(find.byType(PracticeSummaryWidget), findsNothing);
       expect(find.byType(ShanghaiSummaryWidget), findsNothing);
+      // Positive control for the practice "no LEG BREAKDOWN" checks below:
+      // with no finished leg, X01 still shows the section label.
+      expect(find.text('LEG BREAKDOWN', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('Cricket renders GameSummarySectionWidget', (tester) async {
@@ -223,7 +226,7 @@ void main() {
       expect(find.text('TARGETS'), findsOneWidget);
       // Practice drills don't play in legs — the "Leg Breakdown / No legs
       // completed" section must be hidden (#294).
-      expect(find.text('Leg Breakdown'), findsNothing);
+      expect(find.text('LEG BREAKDOWN', skipOffstage: false), findsNothing);
     });
 
     testWidgets(
@@ -289,7 +292,7 @@ void main() {
         await tester.pumpWidget(_pump(type: type, gameResult: result));
         await tester.pumpAndSettle();
 
-        expect(find.text('Leg Breakdown'), findsNothing,
+        expect(find.text('LEG BREAKDOWN', skipOffstage: false), findsNothing,
             reason: '$type should not show Leg Breakdown section');
       }
     });

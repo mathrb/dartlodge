@@ -22,6 +22,7 @@ import 'package:dart_lodge/features/history/domain/turn_breakdown.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/leg_breakdown_table_widget.dart';
 import 'package:dart_lodge/features/history/presentation/widgets/turn_breakdown_table_widget.dart';
 import 'package:dart_lodge/core/widgets/game_summary_section_widget.dart';
+import 'package:dart_lodge/core/widgets/post_game_stats_breakdown_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 class GameDetailPage extends ConsumerWidget {
@@ -96,14 +97,10 @@ class GameDetailPage extends ConsumerWidget {
           const SizedBox(height: 16),
           _StatsSection(gameId: gameId, gameStats: detail.gameStats, game: game),
           if (showLegBreakdown) ...[
-            const SizedBox(height: 16),
-            Text(
-              l10n.historyLegBreakdown,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            // Renders its own section label: "LEG BREAKDOWN" for a multi-leg
+            // match, or just "TURN BREAKDOWN" when the only leg is the whole
+            // game (its stats would repeat the breakdown above).
             LegBreakdownTableWidget(
               legs: detail.legStats,
               game: game,
@@ -112,14 +109,9 @@ class GameDetailPage extends ConsumerWidget {
             ),
           ],
           if (showCheckoutRounds) ...[
+            const SizedBox(height: 24),
+            PostGameSectionLabel(l10n.historyRoundBreakdown.toUpperCase()),
             const SizedBox(height: 16),
-            Text(
-              l10n.historyRoundBreakdown,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
             _CheckoutRoundsBreakdown(
               game: game,
               competitors: detail.competitors,
