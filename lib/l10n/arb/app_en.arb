@@ -188,6 +188,14 @@
   "@homeNavPlayers": {
     "description": "Home Players nav-row descriptor (rendered upper-case)"
   },
+  "homeCategoryCasual": "Casual",
+  "@homeCategoryCasual": {
+    "description": "Casual game category (Shanghai, Count-Up): Home card title and variant selection header (rendered upper-case)"
+  },
+  "homeCategoryPractice": "Practice",
+  "@homeCategoryPractice": {
+    "description": "Practice drill category: Home card title and variant selection header (rendered upper-case)"
+  },
   "statisticsBreakdown": "Statistics Breakdown",
   "@statisticsBreakdown": {
     "description": "Post-game stats breakdown table title (rendered upper-case)"

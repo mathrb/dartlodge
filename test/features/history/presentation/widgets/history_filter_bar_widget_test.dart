@@ -6,7 +6,8 @@ import 'package:dart_lodge/features/history/presentation/widgets/history_filter_
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 
-Widget _wrap(Widget child) => MaterialApp(
+Widget _wrap(Widget child, {Locale? locale}) => MaterialApp(
+      locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: kSupportedLocales,
       home: Scaffold(
@@ -70,4 +71,27 @@ void main() {
     )));
     expect(find.byIcon(Icons.clear), findsOneWidget);
   });
+
+  for (final (locale, expected) in const [
+    (Locale('en'), '3 Nov – 10 Nov'),
+    (Locale('fr'), '3 nov. – 10 nov.'),
+  ]) {
+    testWidgets('date-range chip formats months in ${locale.languageCode}',
+        (tester) async {
+      await tester.pumpWidget(_wrap(
+        HistoryFilterBarWidget(
+          selectedGameType: null,
+          selectedDateFrom: DateTime(2026, 11, 3),
+          selectedDateTo: DateTime(2026, 11, 10),
+          onGameTypeChanged: (_) {},
+          onDateRangeChanged: (_, __) {},
+          onClearFilters: () {},
+        ),
+        locale: locale,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text(expected), findsOneWidget);
+    });
+  }
 }

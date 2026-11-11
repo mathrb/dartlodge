@@ -256,11 +256,11 @@ class _PageHeader extends StatelessWidget {
 
   final String category;
 
-  String get _title => switch (category) {
+  String _title(AppLocalizations l10n) => switch (category) {
         'x01' => 'X01',
         'cricket' => 'Cricket',
-        'casual' => 'Casual',
-        'practice' => 'Practice',
+        'casual' => l10n.homeCategoryCasual,
+        'practice' => l10n.homeCategoryPractice,
         _ => category,
       };
 
@@ -286,12 +286,21 @@ class _PageHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          _title.toUpperCase(),
-          style: AppTextStyles.scoreLarge.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: -2.0,
-            color: cs.onSurface,
+        // Translated category names can be far wider than the English ones
+        // ("ENTRENAMIENTO" at 64 px is wider than a phone), so the title
+        // scales down to one line instead of breaking mid-word.
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            _title(AppLocalizations.of(context)).toUpperCase(),
+            maxLines: 1,
+            softWrap: false,
+            style: AppTextStyles.scoreLarge.copyWith(
+              fontWeight: FontWeight.w900,
+              letterSpacing: -2.0,
+              color: cs.onSurface,
+            ),
           ),
         ),
         const SizedBox(height: 8),

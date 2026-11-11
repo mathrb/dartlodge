@@ -51,7 +51,7 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _KineticGameCard(
-                label: 'Casual',
+                label: l10n.homeCategoryCasual,
                 subtitle: l10n.homeSubtitleCasual,
                 icon: Icons.casino,
                 onTap: () {
@@ -61,7 +61,7 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               _KineticGameCard(
-                label: 'Practice',
+                label: l10n.homeCategoryPractice,
                 subtitle: l10n.homeSubtitlePractice,
                 icon: Icons.track_changes,
                 onTap: () {
@@ -71,21 +71,21 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
               _FlatNavRow(
-                label: 'Statistics',
+                label: l10n.statsTitle,
                 descriptor: l10n.homeNavStatistics,
                 icon: Icons.bar_chart,
                 onTap: () => context.push(GameRoutes.stats),
               ),
               const SizedBox(height: 4),
               _FlatNavRow(
-                label: 'History',
+                label: l10n.historyTitle,
                 descriptor: l10n.homeNavHistory,
                 icon: Icons.history,
                 onTap: () => context.push(GameRoutes.history),
               ),
               const SizedBox(height: 4),
               _FlatNavRow(
-                label: 'Players',
+                label: l10n.playersTitle,
                 descriptor: l10n.homeNavPlayers,
                 icon: Icons.group,
                 onTap: () => context.push(GameRoutes.players),

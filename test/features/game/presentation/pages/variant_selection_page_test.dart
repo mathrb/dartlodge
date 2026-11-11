@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -47,6 +48,7 @@ Widget _buildApp(
   String category, {
   GameSetupState? setupState,
   List<String>? pushedRoutes,
+  Locale? locale,
 }) {
   final captured = pushedRoutes ?? [];
   final router = GoRouter(
@@ -75,7 +77,7 @@ Widget _buildApp(
       playerRepositoryProvider.overrideWithValue(_FakePlayerRepository()),
       gameSetupProvider.overrideWith(() => _FixedGameSetupNotifier(initialState)),
     ],
-    child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
+    child: MaterialApp.router(locale: locale, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
 }
 
@@ -209,6 +211,42 @@ void main() {
 
       expect(find.text('Select your match variation to begin'), findsOneWidget);
     });
+  });
+
+  group('VariantSelectionPage — localized category title', () {
+    for (final (category, locale, expected) in const [
+      ('casual', Locale('fr'), 'DÉTENTE'),
+      ('practice', Locale('fr'), 'ENTRAÎNEMENT'),
+      ('practice', Locale('es'), 'ENTRENAMIENTO'),
+      ('practice', Locale('de'), 'ÜBUNG'),
+    ]) {
+      testWidgets(
+          '$category title is "$expected" in ${locale.languageCode} and stays '
+          'on one line on a phone', (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(_buildApp(category, locale: locale));
+        await tester.pumpAndSettle();
+
+        final title = find.text(expected);
+        expect(title, findsOneWidget);
+        expect(find.text(category.toUpperCase()), findsNothing);
+
+        // Laid out at its full one-line width (no mid-word break) and
+        // painted inside the screen.
+        final paragraph = tester.renderObject<RenderParagraph>(title);
+        expect(
+          paragraph.size.width,
+          greaterThanOrEqualTo(
+              paragraph.getMaxIntrinsicWidth(double.infinity) - 0.5),
+        );
+        final rect = tester.getRect(title);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(412));
+      });
+    }
   });
 
   group('VariantSelectionPage — rules info icon', () {

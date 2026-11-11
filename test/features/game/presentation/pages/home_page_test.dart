@@ -171,6 +171,49 @@ void main() {
       expect(find.byTooltip('Paramètres'), findsOneWidget);
     });
 
+    testWidgets('category and nav-row titles are localized (fr)',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(locale: const Locale('fr')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('DÉTENTE'), findsOneWidget);
+      expect(find.text('ENTRAÎNEMENT'), findsOneWidget);
+      expect(find.text('STATISTIQUES'), findsOneWidget);
+      expect(find.text('HISTORIQUE'), findsOneWidget);
+      expect(find.text('JOUEURS'), findsOneWidget);
+      // Game names stay as they are.
+      expect(find.text('X01'), findsOneWidget);
+      expect(find.text('CRICKET'), findsOneWidget);
+      for (final english in [
+        'CASUAL',
+        'PRACTICE',
+        'STATISTICS',
+        'HISTORY',
+        'PLAYERS',
+      ]) {
+        expect(find.text(english), findsNothing, reason: english);
+      }
+    });
+
+    testWidgets('nav-row titles match the destination page titles in every '
+        'locale', (tester) async {
+      for (final locale in kSupportedLocales) {
+        await tester.pumpWidget(_buildApp(locale: locale));
+        await tester.pumpAndSettle();
+        final l10n = await AppLocalizations.delegate.load(locale);
+        for (final title in [
+          l10n.statsTitle,
+          l10n.historyTitle,
+          l10n.playersTitle,
+          l10n.homeCategoryCasual,
+          l10n.homeCategoryPractice,
+        ]) {
+          expect(find.text(title.toUpperCase()), findsOneWidget,
+              reason: '${locale.toLanguageTag()}: $title');
+        }
+      }
+    });
+
     testWidgets('each game card renders its icon', (tester) async {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
