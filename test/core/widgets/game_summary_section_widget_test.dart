@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -211,4 +212,231 @@ void main() {
       expect(find.text('CARA'), findsOneWidget);
     });
   });
+
+  group('PostGameHeroCard — large text (DESIGN_SYSTEM §13)', () {
+    for (final locale in const [Locale('en'), Locale('de')]) {
+      for (final scale in const [1.0, 1.4, 2.0]) {
+        testWidgets('winner hero never breaks a word or clips the pill '
+            '(${locale.languageCode}, ${scale}x, 412 px)', (tester) async {
+          // The hero alone, built with the same localized strings as
+          // GameSummarySectionWidget's winner card.
+          await _pumpScaled(
+            tester,
+            child: Builder(
+              builder: (context) {
+                final l10n = AppLocalizations.of(context);
+                return PostGameHeroCard(
+                  badge: l10n.summaryWinner.toUpperCase(),
+                  badgeIcon: Icons.stars,
+                  backgroundIcon: Icons.emoji_events,
+                  headline: 'Alexandra',
+                  subline: l10n.summaryLegsWon(1).toUpperCase(),
+                  sideStats: [
+                    PostGameHeroStat(
+                      label: l10n.statAvgPpr.toUpperCase(),
+                      value: '75.5',
+                      emphasize: true,
+                    ),
+                    PostGameHeroStat(
+                      label: l10n.summaryDarts.toUpperCase(),
+                      value: '21',
+                    ),
+                  ],
+                );
+              },
+            ),
+            locale: locale,
+            scale: scale,
+          );
+          expect(tester.takeException(), isNull);
+          _expectHeroTextIntact(tester);
+        });
+      }
+    }
+
+    testWidgets('practice hero with a multi-word headline wraps at spaces '
+        'only (1.4x)', (tester) async {
+      await _pumpScaled(
+        tester,
+        scale: 1.4,
+        child: const PostGameHeroCard(
+          badge: 'ENDED EARLY',
+          headline: 'Not checked out',
+          subline: 'Alexandra',
+          muted: true,
+          sideStats: [
+            PostGameHeroStat(label: 'DARTS', value: '27', emphasize: true),
+            PostGameHeroStat(label: 'FROM', value: '170'),
+          ],
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      _expectHeroTextIntact(tester);
+    });
+
+    testWidgets('a hero without side stats still spans the full width',
+        (tester) async {
+      await _pumpScaled(
+        tester,
+        child: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [PostGameHeroCard(headline: 'No winner', muted: true)],
+        ),
+      );
+      expect(tester.getSize(find.byType(PostGameHeroCard)).width, 380);
+    });
+
+    testWidgets('keeps the side-by-side layout when it fits', (tester) async {
+      await _pumpScaled(
+        tester,
+        gameStats: _statsForX01Named('Alexandra', 'Bartholomew'),
+        width: 900,
+      );
+      _expectHeroTextIntact(tester);
+      final card = tester.getRect(find.byType(PostGameHeroCard));
+      final name = tester.getRect(find.text('ALEXANDRA'));
+      final avg = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(PostGameHeroCard),
+              matching: find.text('75.5'),
+            )
+            .first,
+      );
+      expect(
+        avg.left,
+        greaterThan(name.right),
+        reason: 'stats sit to the right of the name',
+      );
+      expect(
+        avg.top,
+        lessThan(card.top + card.height / 2),
+        reason: 'stats share the header row',
+      );
+    });
+
+    testWidgets('stacks the stats below the name when they do not fit', (
+      tester,
+    ) async {
+      await _pumpScaled(
+        tester,
+        gameStats: _statsForX01Named('Alexandra', 'Bartholomew'),
+        scale: 2.0,
+      );
+      final subline = tester.getRect(find.text('1 LEG WON'));
+      final avg = tester.getRect(
+        find
+            .descendant(
+              of: find.byType(PostGameHeroCard),
+              matching: find.text('75.5'),
+            )
+            .first,
+      );
+      expect(
+        avg.top,
+        greaterThanOrEqualTo(subline.bottom),
+        reason: 'stats sit below the whole header block',
+      );
+    });
+  });
+}
+
+GameStats _statsForX01Named(String winner, String loser) {
+  final base = _statsForX01();
+  return base.copyWith(
+    byCompetitor: [
+      base.byCompetitor[0].copyWith(competitorName: winner),
+      base.byCompetitor[1].copyWith(competitorName: loser),
+    ],
+  );
+}
+
+Future<void> _pumpScaled(
+  WidgetTester tester, {
+  GameStats? gameStats,
+  Widget? child,
+  Locale locale = const Locale('en'),
+  double scale = 1.0,
+  double width = 412,
+}) async {
+  tester.view.physicalSize = Size(width, 2000);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      theme: AppTheme.light(),
+      builder: (context, c) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(scale)),
+        child: c!,
+      ),
+      home: Scaffold(
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: child ?? GameSummarySectionWidget(gameStats: gameStats!),
+        ),
+      ),
+    ),
+  );
+}
+
+/// Every text in the hero card stays inside the card, and is laid out at
+/// least as wide as its widest word, so no word breaks mid-word. Texts
+/// without a space (the pill, numerals, single-word names) therefore stay
+/// on one line, unclipped.
+void _expectHeroTextIntact(WidgetTester tester) {
+  final cardFinder = find.byType(PostGameHeroCard);
+  final cardRect = tester.getRect(cardFinder);
+  // Icons render as RichText too; the decorative background trophy is
+  // positioned past the card edge on purpose and clipped, so skip icons.
+  final icons = tester
+      .renderObjectList<RenderParagraph>(
+        find.descendant(
+          of: find.descendant(of: cardFinder, matching: find.byType(Icon)),
+          matching: find.byType(RichText),
+        ),
+      )
+      .toSet();
+  final paragraphs = tester
+      .renderObjectList<RenderParagraph>(
+        find.descendant(of: cardFinder, matching: find.byType(RichText)),
+      )
+      .where((p) => !icons.contains(p))
+      .toList();
+  expect(paragraphs, isNotEmpty);
+  for (final p in paragraphs) {
+    final text = p.text.toPlainText();
+    var widestWord = 0.0;
+    for (final word in text.split(' ').where((w) => w.isNotEmpty)) {
+      final tp = TextPainter(
+        text: TextSpan(text: word, style: p.text.style),
+        textScaler: p.textScaler,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      if (tp.width > widestWord) widestWord = tp.width;
+      tp.dispose();
+    }
+    expect(
+      p.size.width,
+      greaterThanOrEqualTo(widestWord - 0.5),
+      reason:
+          '"$text" is squeezed below its widest word '
+          '(${p.size.width} < $widestWord)',
+    );
+    final rect = p.localToGlobal(Offset.zero) & p.size;
+    expect(
+      rect.left,
+      greaterThanOrEqualTo(cardRect.left - 0.5),
+      reason: '"$text" starts outside the card',
+    );
+    expect(
+      rect.right,
+      lessThanOrEqualTo(cardRect.right + 0.5),
+      reason: '"$text" overflows the card ($rect vs $cardRect)',
+    );
+  }
 }
