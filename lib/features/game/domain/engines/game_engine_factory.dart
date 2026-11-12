@@ -33,23 +33,4 @@ class GameEngineFactory {
         return StatelessCountUpEngine();
     }
   }
-
-  /// Get a list of all supported game types
-  static List<GameType> getSupportedGameTypes() {
-    return [
-      GameType.x01,
-      GameType.cricket,
-      GameType.aroundTheClock,
-      GameType.bobs27,
-      GameType.shanghai,
-      GameType.catch40,
-      GameType.checkoutPractice,
-      GameType.countUp,
-    ];
-  }
-  
-  /// Check if a game type is supported
-  static bool isGameTypeSupported(GameType gameType) {
-    return getSupportedGameTypes().contains(gameType);
-  }
 }
