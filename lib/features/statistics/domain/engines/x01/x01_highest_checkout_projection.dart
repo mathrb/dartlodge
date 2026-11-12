@@ -3,12 +3,20 @@ import 'dart:math';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_finish_tracker.dart';
 
+/// Highest checkout: the largest visit starting score the player finished a
+/// leg from. A leg won on the round cap is not a checkout ([X01FinishTracker]).
 class X01HighestCheckoutProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01_highest_checkout',
     supportedGameTypes: {GameType.x01},
-    consumedEventTypes: {'TurnStarted', 'LegCompleted'},
+    consumedEventTypes: {
+      'TurnStarted',
+      'DartThrown',
+      'TurnEnded',
+      'LegCompleted',
+    },
     scope: ProjectionScope.match,
   );
 
@@ -17,28 +25,24 @@ class X01HighestCheckoutProjection extends ProjectionEngine {
 
   ProjectionContext? _context;
   int _highestCheckout = 0;
-  int _lastPlayerTurnStartingScore = 0;
+  X01FinishTracker _finish = X01FinishTracker(null);
 
   @override
   void init(ProjectionContext context) {
     _context = context;
     _highestCheckout = 0;
-    _lastPlayerTurnStartingScore = 0;
+    _finish = X01FinishTracker(context.playerId);
   }
 
   @override
   void apply(GameEvent event) {
-    switch (event.eventType) {
-      case 'TurnStarted':
-        final playerId = event.payload['player_id'] as String?;
-        if (playerId != _context?.playerId) return;
-        _lastPlayerTurnStartingScore =
-            (event.payload['starting_score'] as num?)?.toInt() ?? 0;
-      case 'LegCompleted':
-        final winnerId = event.payload['winner_player_id'] as String?;
-        if (winnerId != _context?.playerId) return;
-        _highestCheckout = max(_highestCheckout, _lastPlayerTurnStartingScore);
-    }
+    _finish.apply(event);
+    if (event.eventType != 'LegCompleted') return;
+    final winnerId = event.payload['winner_player_id'] as String?;
+    if (winnerId != _context?.playerId) return;
+    if (!_finish.lastVisitCheckedOut) return;
+    _highestCheckout =
+        max(_highestCheckout, _finish.lastVisitStartingScore ?? 0);
   }
 
   @override

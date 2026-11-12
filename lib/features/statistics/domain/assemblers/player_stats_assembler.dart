@@ -46,6 +46,7 @@ import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_checkout_p
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_darts_per_leg_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_double_out_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_dart_in_projection.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_finish_tracker.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_first_nine_ppr_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/games_501_projection.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/x01/nine_darter_projection.dart';
@@ -1164,7 +1165,9 @@ class PlayerStatsAssembler {
   ///   - X01 checkout-% goes through [legCheckoutStatsFromEvents] (real
   ///     successes ÷ attempts) — never the legacy `(1 / attempts) * 100`.
   ///   - X01 `checkoutScore` is the player's most recent `TurnStarted`
-  ///     `starting_score` BEFORE `LegCompleted` IFF that player won the leg.
+  ///     `starting_score` BEFORE `LegCompleted` IFF that player won the leg
+  ///     with a checkout — a leg won on the round cap has none
+  ///     ([X01FinishTracker]).
   ///   - ATC practice score = atcHits / atcDartsAtTarget for current player;
   ///     other practice gametypes use raw leg score. All three ATC variants
   ///     (`standard`, `reverse`, `doublesOnly`) are supported — target
@@ -1237,6 +1240,7 @@ class PlayerStatsAssembler {
 
     // X01 checkout-score tracking.
     int? lastPlayerTurnStartingScore;
+    final x01Finish = X01FinishTracker(playerId);
 
     // Active cricket target set for this game. Resets to the canonical
     // fixed set on each `GameCreated`; replaced by the assigned 6 numbers
@@ -1252,6 +1256,7 @@ class PlayerStatsAssembler {
 
     for (final event in events) {
       currentLegEvents.add(event);
+      x01Finish.apply(event);
       final payload = event.payload;
       // Practice drills never advance the leg index, so their engines end
       // with GameCompleted alone (no LegCompleted). Close the drill on that
@@ -1415,8 +1420,10 @@ class PlayerStatsAssembler {
           );
 
           final winnerPlayerId = payload['winner_player_id'] as String?;
-          final legCheckoutScore =
-              winnerPlayerId == playerId ? lastPlayerTurnStartingScore : null;
+          final legCheckoutScore = winnerPlayerId == playerId &&
+                  (!isX01Leg || x01Finish.lastVisitCheckedOut)
+              ? lastPlayerTurnStartingScore
+              : null;
 
           double? practiceScore;
           if (isPracticeGame) {

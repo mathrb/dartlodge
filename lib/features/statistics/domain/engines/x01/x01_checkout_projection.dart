@@ -2,6 +2,7 @@ import 'package:dart_lodge/core/utils/checkout_table.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_finish_tracker.dart';
 
 /// X01 checkout %: successes / attempts.
 ///
@@ -20,7 +21,8 @@ import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.
 /// still counts as an attempt. The attempt is tallied on the player's
 /// `TurnEnded` (always emitted, including for the leg-winning visit, which the
 /// producer appends before `LegCompleted`) so each visit is counted exactly
-/// once. A SUCCESS is a `LegCompleted` won by the player.
+/// once. A SUCCESS is a `LegCompleted` won by the player whose last visit
+/// finished the leg ([X01FinishTracker]); a leg won on the round cap is not.
 class X01CheckoutProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01_checkout',
@@ -38,6 +40,7 @@ class X01CheckoutProjection extends ProjectionEngine {
   ProjectionDescriptor get descriptor => _kDescriptor;
 
   ProjectionContext? _context;
+  X01FinishTracker _finish = X01FinishTracker(null);
   int _checkoutAttempts = 0;
   int _successfulCheckouts = 0;
 
@@ -52,6 +55,7 @@ class X01CheckoutProjection extends ProjectionEngine {
   @override
   void init(ProjectionContext context) {
     _context = context;
+    _finish = X01FinishTracker(context.playerId);
     _checkoutAttempts = 0;
     _successfulCheckouts = 0;
     _currentTurnRemaining = null;
@@ -60,6 +64,7 @@ class X01CheckoutProjection extends ProjectionEngine {
 
   @override
   void apply(GameEvent event) {
+    _finish.apply(event);
     switch (event.eventType) {
       case 'TurnStarted':
         final playerId = event.payload['player_id'] as String?;
@@ -86,7 +91,10 @@ class X01CheckoutProjection extends ProjectionEngine {
         _currentTurnRemaining = null;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
-        if (winnerId == _context?.playerId) _successfulCheckouts++;
+        // A leg won on the round cap is not a successful checkout.
+        if (winnerId == _context?.playerId && _finish.lastVisitCheckedOut) {
+          _successfulCheckouts++;
+        }
     }
   }
 

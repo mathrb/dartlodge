@@ -2,12 +2,18 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/segment_utils.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_finish_tracker.dart';
 
 class X01DoubleOutProjection extends ProjectionEngine {
   static const _kDescriptor = ProjectionDescriptor(
     id: 'x01.doubleOut',
     supportedGameTypes: {GameType.x01},
-    consumedEventTypes: {'TurnStarted', 'DartThrown', 'LegCompleted'},
+    consumedEventTypes: {
+      'TurnStarted',
+      'DartThrown',
+      'TurnEnded',
+      'LegCompleted',
+    },
     scope: ProjectionScope.leg,
   );
 
@@ -15,6 +21,7 @@ class X01DoubleOutProjection extends ProjectionEngine {
   ProjectionDescriptor get descriptor => _kDescriptor;
 
   ProjectionContext? _context;
+  X01FinishTracker _finish = X01FinishTracker(null);
   int _doubleAttempts = 0;
   int _doubleSuccesses = 0;
 
@@ -29,6 +36,7 @@ class X01DoubleOutProjection extends ProjectionEngine {
   @override
   void init(ProjectionContext context) {
     _context = context;
+    _finish = X01FinishTracker(context.playerId);
     _doubleAttempts = 0;
     _doubleSuccesses = 0;
     _currentTurnRemaining = null;
@@ -46,6 +54,7 @@ class X01DoubleOutProjection extends ProjectionEngine {
   @override
   void apply(GameEvent event) {
     if (!_isActive) return;
+    _finish.apply(event);
     switch (event.eventType) {
       case 'TurnStarted':
         final playerId = event.payload['player_id'] as String?;
@@ -68,7 +77,10 @@ class X01DoubleOutProjection extends ProjectionEngine {
         _currentTurnRemaining = remaining - score;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
-        if (winnerId == _context?.playerId) _doubleSuccesses++;
+        // A leg won on the round cap is not a successful double-out.
+        if (winnerId == _context?.playerId && _finish.lastVisitCheckedOut) {
+          _doubleSuccesses++;
+        }
     }
   }
 
