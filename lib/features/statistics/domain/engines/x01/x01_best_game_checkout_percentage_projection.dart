@@ -2,6 +2,7 @@ import 'package:dart_lodge/core/utils/checkout_table.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
+import 'package:dart_lodge/features/statistics/domain/engines/x01/x01_finish_tracker.dart';
 
 /// Tracks the best single-game checkout percentage across all games.
 ///
@@ -27,6 +28,7 @@ class X01BestGameCheckoutPercentageProjection extends ProjectionEngine {
   ProjectionDescriptor get descriptor => _kDescriptor;
 
   ProjectionContext? _context;
+  X01FinishTracker _finish = X01FinishTracker(null);
 
   // Per-game counters
   int _gameAttempts = 0;
@@ -42,6 +44,7 @@ class X01BestGameCheckoutPercentageProjection extends ProjectionEngine {
   @override
   void init(ProjectionContext context) {
     _context = context;
+    _finish = X01FinishTracker(context.playerId);
     _gameAttempts = 0;
     _gameSuccesses = 0;
     _currentTurnRemaining = null;
@@ -51,6 +54,7 @@ class X01BestGameCheckoutPercentageProjection extends ProjectionEngine {
 
   @override
   void apply(GameEvent event) {
+    _finish.apply(event);
     switch (event.eventType) {
       case 'TurnStarted':
         final playerId = event.payload['player_id'] as String?;
@@ -76,7 +80,10 @@ class X01BestGameCheckoutPercentageProjection extends ProjectionEngine {
         _currentTurnRemaining = null;
       case 'LegCompleted':
         final winnerId = event.payload['winner_player_id'] as String?;
-        if (winnerId == _context?.playerId) _gameSuccesses++;
+        // A leg won on the round cap is not a successful checkout.
+        if (winnerId == _context?.playerId && _finish.lastVisitCheckedOut) {
+          _gameSuccesses++;
+        }
       case 'GameCompleted':
         if (_gameAttempts > 0) {
           final gameCo = _gameSuccesses / _gameAttempts * 100;
