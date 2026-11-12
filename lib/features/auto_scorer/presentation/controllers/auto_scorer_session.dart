@@ -6,10 +6,8 @@ import 'package:dart_lodge/features/auto_scorer/domain/capture/capture_store.dar
 import 'package:dart_lodge/features/auto_scorer/domain/capture/corrected_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/predicted_dart.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/capture/retention_policy.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/detection/dart_detector.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/detection/raw_detection.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/diagnostics/pipeline_timings.dart';
-import 'package:dart_lodge/features/auto_scorer/domain/preprocessing/frame_preprocessor.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_recorder.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace.dart';
 import 'package:dart_lodge/features/auto_scorer/domain/recording/session_trace_store.dart';
@@ -29,8 +27,8 @@ class SessionFrameResult {
   final List<EmittedDart> emittedDarts;
   final TrackerStatus status;
 
-  /// Stage timings for this frame (detect + track measured here; capture is
-  /// filled in by the camera caller). Currently unread — the diagnostics HUD
+  /// Stage timings for this frame (track measured here; capture is left to the
+  /// camera caller). Currently unread — the diagnostics HUD
   /// that surfaced them was removed; kept on the result for now to avoid
   /// churning the session's public shape.
   final PipelineTimings timings;
@@ -60,10 +58,11 @@ class SessionFrameResult {
   });
 }
 
-/// Orchestrates the assist-mode pipeline (#382): a camera frame → [DartDetector]
-/// → [DartTracker] → emitted darts, plus per-dart training capture. Pure glue
-/// over the (web-stubbed) detector and the pure tracker, so it is unit-testable
-/// with a fake detector; the camera plumbing lives in the capture page.
+/// Orchestrates the assist-mode pipeline (#382): a [DetectionFrame] computed by
+/// YOLOView's native streaming inference → [DartTracker] → emitted darts, plus
+/// per-dart training capture. Pure glue over the pure tracker, so it is
+/// unit-testable with synthetic frames; the camera plumbing (YOLOView,
+/// `capturePhoto()`) lives in the widget layer.
 ///
 /// The session never advances the turn and never talks to the game directly —
 /// it returns the darts to emit (and whether a board-clear should auto-advance,
@@ -72,8 +71,6 @@ class SessionFrameResult {
 /// caller.
 class AutoScorerSession {
   AutoScorerSession({
-    DartDetector? detector,
-    FramePreprocessor? preprocessor,
     DartTracker? tracker,
     CaptureStore? captureStore,
     String modelVersion = 'unknown',
@@ -81,15 +78,9 @@ class AutoScorerSession {
     String? recordingSessionId,
     String recordingGameId = '',
     DateTime? recordingStartedAt,
-  })  : _detector = detector,
-        _tracker = tracker ?? DartTracker(),
+  })  : _tracker = tracker ?? DartTracker(),
         _captureStore = captureStore,
-        _preprocessor = preprocessor,
-        _modelVersion = modelVersion,
-        // The detector-backed path ([onFrame]/[captureCurrentFrame]) letterboxes
-        // via the preprocessor, so the two must be provided together.
-        assert(detector == null || preprocessor != null,
-            'a detector-backed session also needs a preprocessor') {
+        _modelVersion = modelVersion {
     // Session-trace recording (#490) is opt-in: only wired when the caller
     // supplies a store + session id. The recorder captures the tracker's config
     // (the same instance this session drives) so a replay reconstructs it.
@@ -107,16 +98,9 @@ class AutoScorerSession {
     }
   }
 
-  /// Predict-detector path (takePicture → [DartDetector.detect]). Null for the
-  /// YOLOView streaming path, which computes [DetectionFrame]s natively and feeds
-  /// them via [processDetectionFrame] — so no predict model is loaded. The
-  /// detector-backed methods ([onFrame]/[detectOnly]/[captureCurrentFrame])
-  /// require it to be non-null.
-  final DartDetector? _detector;
   final DartTracker _tracker;
   final AutoAdvanceGate _autoAdvance = AutoAdvanceGate();
   final CaptureStore? _captureStore;
-  final FramePreprocessor? _preprocessor;
   final String _modelVersion;
 
   /// Session-trace recording (#490), null unless opt-in is on. Accumulates the
@@ -136,140 +120,11 @@ class AutoScorerSession {
   /// bounded; corrected/emitted frames are pruned last (see [RetentionPolicy]).
   static const int _retentionBytes = 250 * 1024 * 1024; // 250 MB
 
-  /// Load the model and prune old captures to stay within the storage cap.
-  /// Returns true on success (false on the web stub).
-  Future<bool> start() async {
-    // YOLOView path has no predict detector (it loads its own model natively),
-    // so a null detector is "loaded": we still prune captures to the cap.
-    final loaded = await _detector?.load() ?? true;
-    if (loaded) {
-      await _captureStore
-          ?.enforceRetention(const RetentionPolicy(maxBytes: _retentionBytes));
-    }
-    return loaded;
-  }
-
-  /// Feed one raw camera frame. [turnOrdinal] is the current 1-based turn; when
-  /// [collectData] is set and a capture store is present, each emitted dart's
-  /// frame + sidecar is stored keyed by `(turn, dart-in-turn)`.
-  Future<SessionFrameResult> onFrame(
-    Uint8List frameBytes, {
-    required int turnOrdinal,
-    required String gameId,
-    bool collectData = false,
-    bool skipPreprocess = false,
-    double calConfidence = 0.25,
-    double dartConfidence = 0.25,
-  }) async {
-    final detectWatch = Stopwatch()..start();
-    final frame = await _detector!.detect(
-      frameBytes,
-      skipPreprocess: skipPreprocess,
-      calConfidence: calConfidence,
-      dartConfidence: dartConfidence,
-    );
-    detectWatch.stop();
-    final trackWatch = Stopwatch()..start();
-    final update = _tracker.processFrame(frame);
-    final cleared = _autoAdvance.onFrame(update);
-    trackWatch.stop();
-
-    if (collectData && _captureStore != null && update.newDarts.isNotEmpty) {
-      // Store the image in the SAME space the detector's coords are normalised
-      // to (raw-capture brief): in skip mode the plugin maps detections to the
-      // raw frame, so store `frameBytes` verbatim (no re-encode); otherwise
-      // store our 800×800 letterbox. The sidecar's frameSpace/dims record which.
-      // Null when no aligned capture is possible (see [_captureFor]).
-      final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
-      if (capture != null) {
-        // The dart-in-turn ordinal of the first new dart this frame (1-based).
-        final firstOrdinal = _tracker.dartsThisTurn - update.newDarts.length + 1;
-        for (var i = 0; i < update.newDarts.length; i++) {
-          await _captureStore.save(
-            _recordFor(
-              frame,
-              gameId,
-              CaptureHandle(
-                  turnOrdinal: turnOrdinal, dartInTurnOrdinal: firstOrdinal + i),
-              capture,
-              trigger: CaptureTrigger.auto,
-            ),
-            capture.bytes,
-          );
-          _countPersisted();
-        }
-      }
-    }
-
-    return SessionFrameResult(
-      emittedDarts: _emittedFrom(update.newDarts),
-      status: update.status,
-      timings: PipelineTimings(
-        detect: detectWatch.elapsed,
-        track: trackWatch.elapsed,
-      ),
-      calConfidences: frame.calConfidences,
-      boardClearedAfterThrow: cleared,
-    );
-  }
-
-  /// Detection-only pass for the aim/framing overlay: runs the model and returns
-  /// its raw [DetectionFrame] (cal points + per-cal best positions/confidences +
-  /// candidates) WITHOUT touching the tracker, emitting darts, or capturing
-  /// frames. The single detection entry point the aim view uses so the widget
-  /// never imports the detector. [skipPreprocess]/[calConfidence]/
-  /// [dartConfidence] thread through exactly as [onFrame].
-  Future<DetectionFrame> detectOnly(
-    Uint8List frameBytes, {
-    bool skipPreprocess = false,
-    double calConfidence = 0.25,
-    double dartConfidence = 0.25,
-  }) {
-    return _detector!.detect(
-      frameBytes,
-      skipPreprocess: skipPreprocess,
-      calConfidence: calConfidence,
-      dartConfidence: dartConfidence,
-    );
-  }
-
-  /// Force-capture the current frame for training data (#382) — for darts the
-  /// model **missed** (no emission), the highest-value samples. Stores the frame
-  /// in the detector's coordinate space (raw in skip mode, 800×800 letterbox
-  /// otherwise — see [onFrame]) + whatever the detector found this frame (often
-  /// empty), under a manual handle. Out-of-band: does not touch the tracker or
-  /// emit. No-op without a capture store. Returns true if a frame was stored.
-  Future<bool> captureCurrentFrame(
-    Uint8List frameBytes, {
-    required int turnOrdinal,
-    required String gameId,
-    bool skipPreprocess = false,
-    double calConfidence = 0.25,
-    double dartConfidence = 0.25,
-  }) async {
-    final store = _captureStore;
-    if (store == null) return false;
-    final frame = await _detector!.detect(
-      frameBytes,
-      skipPreprocess: skipPreprocess,
-      calConfidence: calConfidence,
-      dartConfidence: dartConfidence,
-    );
-    final capture = _captureFor(frameBytes, skipPreprocess: skipPreprocess);
-    if (capture == null) return false;
-    _manualSequence += 1;
-    await store.save(
-      _recordFor(
-        frame,
-        gameId,
-        CaptureHandle.manual(turnOrdinal: turnOrdinal, sequence: _manualSequence),
-        capture,
-        trigger: CaptureTrigger.manual,
-      ),
-      capture.bytes,
-    );
-    _countPersisted();
-    return true;
+  /// Prune old captures to stay within the storage cap. YOLOView loads its own
+  /// model natively, so there is nothing else to start here.
+  Future<void> start() async {
+    await _captureStore
+        ?.enforceRetention(const RetentionPolicy(maxBytes: _retentionBytes));
   }
 
   int _manualSequence = 0;
@@ -317,8 +172,8 @@ class AutoScorerSession {
     return status;
   }
 
-  /// YOLOView path: feed an already-computed [DetectionFrame] (native streaming
-  /// inference) through the tracker — no predict detector. Returns the darts to
+  /// Feed an already-computed [DetectionFrame] (YOLOView native streaming
+  /// inference) through the tracker. Returns the darts to
   /// emit + status + cal confidences. Capture is separate ([persistEmittedDarts])
   /// so `capturePhoto()` is only grabbed on emission, off the hot path.
   SessionFrameResult processDetectionFrame(
@@ -358,8 +213,7 @@ class AutoScorerSession {
   /// `YOLOViewController.capturePhoto(withOverlays: false)` — no baked-in
   /// overlay, no preview-crop. Tagged `FrameSpace.raw` with dims 0 — coord-space
   /// alignment for YOLOView captures is an open question (lab precedent). No-op
-  /// without a capture store or when [count] <= 0. Mirrors the dart-in-turn
-  /// ordinal math in [onFrame].
+  /// without a capture store or when [count] <= 0.
   Future<void> persistEmittedDarts(
     DetectionFrame frame,
     Uint8List bytes, {
@@ -512,7 +366,6 @@ class AutoScorerSession {
 
   Future<void> dispose() async {
     await _flushRecording();
-    await _detector?.dispose();
   }
 
   /// Persist the recorded session trace (#490), then prune to the retention cap.
@@ -530,35 +383,6 @@ class AutoScorerSession {
     } catch (_) {
       // Swallow: recording is a debugging aid, never a scoring dependency.
     }
-  }
-
-  /// Resolve the bytes to store + their coordinate space/dims for the sidecar,
-  /// or null when no capture can be stored with coords that align to the image.
-  /// skip → raw frame verbatim (`raw`); otherwise our 800×800 letterbox
-  /// (`letterbox800`). In non-skip mode the detector's coords are normalised to
-  /// the 800 letterbox, so if the frame can't be re-encoded we return null
-  /// rather than store the raw bytes under a `letterbox800` label (the coords
-  /// would misalign — the very corruption this path avoids). Dims come from the
-  /// codec via the [FramePreprocessor] contract.
-  _Capture? _captureFor(Uint8List frameBytes, {required bool skipPreprocess}) {
-    if (skipPreprocess) {
-      final dims = _preprocessor!.dimensionsOf(frameBytes);
-      return _Capture(
-        bytes: frameBytes,
-        space: FrameSpace.raw,
-        width: dims?.width ?? 0,
-        height: dims?.height ?? 0,
-      );
-    }
-    final letterboxed = _preprocessor!.preprocessEncoded(frameBytes);
-    if (letterboxed == null) return null;
-    final dims = _preprocessor.dimensionsOf(letterboxed);
-    return _Capture(
-      bytes: letterboxed,
-      space: FrameSpace.letterbox800,
-      width: dims?.width ?? 800,
-      height: dims?.height ?? 800,
-    );
   }
 
   CaptureRecord _recordFor(DetectionFrame frame, String gameId,
