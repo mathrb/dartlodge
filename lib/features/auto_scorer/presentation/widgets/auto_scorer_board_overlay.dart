@@ -186,8 +186,8 @@ class _AutoScorerBoardOverlayState
       if (!mounted) return;
       final clearWait = await ref.read(boardClearWaitSettingProvider.future);
       if (!mounted) return;
-      // No predict detector: YOLOView loads its own model. The session just
-      // wires the tracker + capture; start() prunes captures to the cap.
+      // YOLOView loads its own model. The session just wires the tracker +
+      // capture; start() prunes captures to the cap.
       final session = AutoScorerSession(
         tracker: DartTracker(config: DartTrackerConfig(
           emptyFramesToRebaseline: emptyFramesToRebaselineFor(

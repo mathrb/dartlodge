@@ -55,11 +55,9 @@ dependencies:
   # win32 ^6.0.1 (transitive via wakelock_plus).
   share_plus: ^13.1.0
 
-  # Auto-scorer on-device detection (#378). image: 800×800 center-crop/resize
-  # preprocessing parity (already transitive via archive; pinned direct here).
-  # ultralytics_yolo: the first-party YOLO Flutter plugin (mobile only — the
-  # detector impl is web-stubbed behind a conditional import).
-  image: ^4.3.0
+  # Auto-scorer on-device detection (#378). ultralytics_yolo: the first-party
+  # YOLO Flutter plugin (mobile only — the YOLOView impl is web-stubbed behind
+  # a conditional import).
   ultralytics_yolo: ^0.6.4
 
   # Settings / preferences

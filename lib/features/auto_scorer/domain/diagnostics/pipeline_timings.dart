@@ -3,15 +3,13 @@
 /// long each stage took so we can *attribute* perceived slowness to a stage
 /// (still capture, on-device inference, or the tracker) rather than guess.
 ///
-/// Pure data — surfaced only when the diagnostics HUD is enabled. `detect`
-/// covers everything inside [DartDetector.detect] (our 800×800 preprocess +
-/// the native inference round-trip); the "skip preprocessing" A/B toggle is how
-/// we split those two without timing inside the platform plugin.
+/// Pure data. On the YOLOView streaming path inference runs natively inside
+/// the plugin, so only `track` is measured; `capture` and `detect` stay zero.
 class PipelineTimings {
-  /// `takePicture()` + reading the bytes back (the still-capture cost).
+  /// Still-capture cost. Not measured on the YOLOView path.
   final Duration capture;
 
-  /// `DartDetector.detect()` end to end (preprocess + native inference).
+  /// On-device inference. Not measured on the YOLOView path (runs natively).
   final Duration detect;
 
   /// `DartTracker.processFrame()` — expected to be negligible.
