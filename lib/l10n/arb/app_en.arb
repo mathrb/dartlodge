@@ -754,10 +754,6 @@
   "summaryBest": "Best",
   "summaryWeakest": "Weakest",
   "summaryNoData": "No data yet",
-  "commonConfirm": "Confirm",
-  "@commonConfirm": {
-    "description": "Generic confirm button label"
-  },
   "gameMenuEndGame": "End Game",
   "@gameMenuEndGame": {
     "description": "Board menu item / button to end (abandon) the game"
