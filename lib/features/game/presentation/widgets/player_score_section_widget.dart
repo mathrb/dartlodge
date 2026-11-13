@@ -152,7 +152,7 @@ class _PlayerCard extends StatelessWidget {
                             competitor.name.toUpperCase(),
                             style: AppTextStyles.labelMedium.copyWith(
                               color: isActive
-                                  ? cs.primaryFixed
+                                  ? AppTheme.boardAccent(context)
                                   : cs.onSurfaceVariant,
                               letterSpacing: 1.2,
                             ),
@@ -196,7 +196,7 @@ class _PlayerCard extends StatelessWidget {
                     '$roundSum',
                     style: AppTextStyles.bodySmall.copyWith(
                       color: roundSum > 0
-                          ? cs.primaryFixed.withValues(alpha: 0.7)
+                          ? AppTheme.boardAccent(context, darkAlpha: 0.7)
                           : cs.onSurfaceVariant.withValues(alpha: 0.25),
                     ),
                   ),

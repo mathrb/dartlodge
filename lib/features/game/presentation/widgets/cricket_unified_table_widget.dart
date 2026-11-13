@@ -437,7 +437,7 @@ class _MarkCell extends StatelessWidget {
     if (marks == 0) {
       color = cs.onSurfaceVariant.withValues(alpha: 0.20);
     } else if (marks >= 3) {
-      color = cs.primaryFixed;
+      color = AppTheme.boardAccent(context);
     } else {
       // 1–2 marks
       color = isActivePlayer

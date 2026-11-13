@@ -25,7 +25,7 @@ typedef CricketMarksRow = ({
 /// the width remaining after the fixed name and score columns, so the grid
 /// fits any phone width by construction.
 ///
-/// Colour semantics: closed (3+) = `primaryFixed`; 1–2 marks = `onSurface`;
+/// Colour semantics: closed (3+) = `AppTheme.boardAccent`; 1–2 marks = `onSurface`;
 /// unmarked = ghost dot. A **dead** target (closed by every player) renders
 /// its header struck-through and all its marks greyed — at a glance, nowhere
 /// useful to aim.
@@ -126,7 +126,7 @@ class CricketMarksStripWidget extends StatelessWidget {
         <= 0 => cs.onSurfaceVariant
             .withValues(alpha: AppTheme.opacityGhostBorderStrong),
         1 || 2 => cs.onSurface,
-        _ => cs.primaryFixed,
+        _ => AppTheme.boardAccent(context),
       };
     }
 
@@ -166,7 +166,7 @@ class CricketMarksStripWidget extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.labelMedium.copyWith(
                                 color: r.isActive
-                                    ? cs.primaryFixed
+                                    ? AppTheme.boardAccent(context)
                                     : cs.onSurfaceVariant,
                                 letterSpacing: 1.2,
                               ),

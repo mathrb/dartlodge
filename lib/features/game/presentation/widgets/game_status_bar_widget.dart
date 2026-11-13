@@ -211,7 +211,7 @@ class _DartBadge extends StatelessWidget {
       child: Text(
         segment,
         style: AppTextStyles.labelMedium.copyWith(
-          color: cs.primaryFixed,
+          color: AppTheme.boardAccent(context),
         ),
       ),
     );

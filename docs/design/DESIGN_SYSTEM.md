@@ -146,7 +146,8 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 |---|---|---|---|
 | `activePlayerBg` | `surfaceContainerHigh` (`#EAEAEA`) | `surfaceContainerHigh` (`#1E2124`) | Panel background tint for active player — *game board widgets use `cs.surfaceContainerLow` directly* |
 | `inactiveScore` | `onSurfaceVariant` (`#6B6E72`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
-| `cricketClosed` | `primaryFixed` | `primaryFixed` | Cricket number closed indicator |
+| `cricketClosed` | `primary` (`#006D45`) | `primaryFixed` | Cricket number closed indicator — *board widgets use `AppTheme.boardAccent(context)`* |
+| `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots, BULL subtext, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
 | `award` | `#B58A00` | `#FFC957` | Trophy / medal / 1st-place accent — game history winner icons, podium badges |
@@ -154,8 +155,8 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `success` | `#2E7D32` | `#66BB6A` | Positive-outcome accent — ATC "best segment" rates, OK indicators |
 | `onSuccess` | `#FFFFFF` | `#002106` | Text / icon color on `success` fills |
 
-`award` and `success` are brightness-aware. Reach them through the
-`AppTheme.award(context)` / `AppTheme.success(context)` helpers so the
+`award`, `success` and `boardAccent` are brightness-aware. Reach them through the
+`AppTheme.award(context)` / `AppTheme.success(context)` / `AppTheme.boardAccent(context)` helpers so the
 correct value resolves from the active theme at call time.
 
 ### 2.7 Identity Palette (formalized exception)
@@ -255,7 +256,7 @@ Both active and inactive scores scale with player count.
 ### 3.3 Usage Rules
 
 - `headline-md` screen titles use ALL CAPS. Apply via `toUpperCase()` on the string — do not rely on CSS `text-transform`.
-- **Game board player names** use `label-md` (Space Grotesk Bold 12px) rendered ALL CAPS with `letterSpacing: 1.2`. Active players in `primaryFixed`, inactive in `onSurfaceVariant`.
+- **Game board player names** use `label-md` (Space Grotesk Bold 12px) rendered ALL CAPS with `letterSpacing: 1.2`. Active players in `boardAccent` (neon in dark, `primary` in light), inactive in `onSurfaceVariant`.
 - `player-name` (Inter 16px SemiBold) is for player selection roster cells, not the in-game scoreboard.
 - `label-md` is the correct token for all interactive control labels — buttons, chips, tab labels.
 - `label-sm` in `primaryFixed` color is used for "over-line" text (small text above a headline).
@@ -385,10 +386,10 @@ are not interchangeable when the intent differs.
 | Tier | Background | Text color | Dots |
 |---|---|---|---|
 | Singles (10–20) | `surfaceContainerHighest` | `onSurface` | None |
-| Doubles (D1–D20) | `surfaceContainerLow` | `onSurfaceVariant` | 2 × 4dp `primaryFixed` @ 70% |
-| Triples (T1–T20) | `surfaceContainer` | `onSurfaceVariant` | 3 × 4dp `primaryFixed` @ 70% |
+| Doubles (D1–D20) | `surfaceContainerLow` | `onSurfaceVariant` | 2 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
+| Triples (T1–T20) | `surfaceContainer` | `onSurfaceVariant` | 3 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
 | MISS | `surfaceContainerLowest` | `onSurface` | None |
-| Bull 25 (Outer) | `surfaceContainerHighest` | `onSurface` | `primaryFixed` @ 70% subtext |
+| Bull 25 (Outer) | `surfaceContainerHighest` | `onSurface` | `boardAccent` subtext (dark: `primaryFixed` @ 70%) |
 | Bull 50 (Double) | `primaryFixed` | `onPrimaryFixed` | `onPrimaryFixed` subtext |
 
 **Active Player Card**
@@ -397,7 +398,7 @@ are not interchangeable when the intent differs.
 - Left accent bar: 4dp solid `primaryFixed`
 - Border: 1px `primaryFixed` @ 20% opacity
 - Shadow: `Colors.black` @ 50%, blur 24px, offset 4dp down, spread -4dp
-- Player name: `label-md`, ALL CAPS, `letterSpacing: 1.2`, `primaryFixed` color
+- Player name: `label-md`, ALL CAPS, `letterSpacing: 1.2`, `boardAccent` color
 - Score numeral: dynamic sizing (see §3.2), `onSurface`, with `primaryFixed` @ 30% text shadow (10px blur)
 
 **Inactive Player Card**
@@ -416,7 +417,7 @@ are not interchangeable when the intent differs.
 - Text: `label-sm` at 10px, `onSurfaceVariant`, letterSpacing 1.2
 - Separator dots: 4×4dp circular, `outlineVariant` @ 30%
 - Vertical dividers: 1dp × 16dp, `outlineVariant` @ 20%
-- **Dart badges:** bg `primaryFixed` @ 10%, border 1px `primaryFixed` @ 20%, `radiusSmall` (8dp), padding `6h / 2v`, text `label-md` in `primaryFixed`
+- **Dart badges:** bg `primaryFixed` @ 10%, border 1px `primaryFixed` @ 20%, `radiusSmall` (8dp), padding `6h / 2v`, text `label-md` in `boardAccent`
 
 **Checkout Banner**
 - Background: `surfaceContainer`
