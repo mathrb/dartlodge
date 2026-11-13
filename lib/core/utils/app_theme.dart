@@ -185,6 +185,14 @@ abstract final class AppTheme {
         : cs.primary;
   }
 
+  /// `scoreNumeralTextScaler` — text scaler for game-board score numerals
+  /// (`scoreActive` … `scoreSmall`, DESIGN_SYSTEM.md §13). They are already
+  /// large text (36–80 px) and sized to their column, so they ignore the
+  /// user's text scale instead of growing until they wrap ("376" → "37/6").
+  /// Pair with `maxLines: 1, softWrap: false` so a numeral never breaks.
+  static TextScaler scoreNumeralTextScaler(BuildContext context) =>
+      MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.0);
+
   /// Gradient card decoration for primary game cards (Kinetic Architect design).
   /// Endpoints come from the active [ColorScheme] so the card's tonal depth
   /// reads correctly in both light and dark mode (DESIGN_SYSTEM §2.4).

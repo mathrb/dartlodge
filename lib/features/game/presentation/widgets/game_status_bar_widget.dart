@@ -110,19 +110,33 @@ class GameStatusBarWidget extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text(configLabel, style: labelStyle),
-          dot,
-          Text(
-            totalRounds != null
-                ? l10n.gameRoundOf(roundInLeg, totalRounds!)
-                : l10n.gameRound(roundInLeg),
-            style: labelStyle,
+          // The metadata yields to the dart cluster: at large text it scales
+          // down on one line, so the dart badges (the entry point for
+          // correction) are never pushed off-screen.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(configLabel, style: labelStyle),
+                  dot,
+                  Text(
+                    totalRounds != null
+                        ? l10n.gameRoundOf(roundInLeg, totalRounds!)
+                        : l10n.gameRound(roundInLeg),
+                    style: labelStyle,
+                  ),
+                  if (currentLegIndex != null && maxLegs != null) ...[
+                    dot,
+                    Text(l10n.gameLegOf(currentLegIndex! + 1, maxLegs!),
+                        style: labelStyle),
+                  ],
+                ],
+              ),
+            ),
           ),
-          if (currentLegIndex != null && maxLegs != null) ...[
-            dot,
-            Text(l10n.gameLegOf(currentLegIndex! + 1, maxLegs!),
-                style: labelStyle),
-          ],
           if (showDarts) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -145,8 +159,10 @@ class GameStatusBarWidget extends StatelessWidget {
             const SizedBox(width: 8),
             for (int i = 0; i < 3; i++) ...[
               if (i > 0) const SizedBox(width: 4),
-              SizedBox(
-                height: 20,
+              // A minimum, not a fixed height: a badge grows with the text
+              // size instead of being clipped vertically.
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 20),
                 child: Center(
                   // Checkout-practice engine pads bust/checkout turns with an
                   // empty-slot sentinel so `dartThrows.length` stays at 3 for

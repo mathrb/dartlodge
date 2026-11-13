@@ -302,17 +302,24 @@ class _AnimatedScoreState extends State<_AnimatedScore>
     super.dispose();
   }
 
+  // Score numerals never scale with the text size nor wrap (DESIGN_SYSTEM §13).
+  Widget _numeral(BuildContext context, int value) => Text(
+        '$value',
+        style: widget.style,
+        textScaler: AppTheme.scoreNumeralTextScaler(context),
+        maxLines: 1,
+        softWrap: false,
+      );
+
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.of(context).disableAnimations) {
-      return Text('${widget.score}', style: widget.style);
+      return _numeral(context, widget.score);
     }
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) {
-        final value = _tween.evaluate(_controller).round();
-        return Text('$value', style: widget.style);
-      },
+      builder: (context, _) =>
+          _numeral(context, _tween.evaluate(_controller).round()),
     );
   }
 }
