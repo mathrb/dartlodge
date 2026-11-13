@@ -171,6 +171,20 @@ abstract final class AppTheme {
           ? AppColorsDark.onSuccess
           : AppColors.onSuccess;
 
+  /// `boardAccent` — accent FOREGROUND on game-board surfaces: the closed
+  /// Cricket mark, the keypad's double/triple dots, dart-badge text and the
+  /// active player's name. Brightness-aware (DESIGN_SYSTEM.md §2.6):
+  /// dark keeps the brand neon `primaryFixed` (optionally dimmed by
+  /// [darkAlpha]); light resolves to the adaptive `primary` at full opacity,
+  /// because the neon on the light greys is ~1.2:1. Neon FILLS (NEXT, the
+  /// 50 BULL key, accent bars) keep `primaryFixed` in both themes.
+  static Color boardAccent(BuildContext context, {double darkAlpha = 1.0}) {
+    final cs = Theme.of(context).colorScheme;
+    return cs.brightness == Brightness.dark
+        ? cs.primaryFixed.withValues(alpha: darkAlpha)
+        : cs.primary;
+  }
+
   /// Gradient card decoration for primary game cards (Kinetic Architect design).
   /// Endpoints come from the active [ColorScheme] so the card's tonal depth
   /// reads correctly in both light and dark mode (DESIGN_SYSTEM §2.4).

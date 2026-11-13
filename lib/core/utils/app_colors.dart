@@ -76,7 +76,7 @@ abstract final class AppColors {
   // Game-specific semantic tokens (light)
   static const activePlayerBg   = surfaceContainerHigh;
   static const inactiveScore    = onSurfaceVariant;
-  static const cricketClosed    = primaryFixed;
+  static const cricketClosed    = primary; // neon is ~1.2:1 on light greys
   static const win              = primary;
   static const winContainer     = surfaceContainerLow;
 
