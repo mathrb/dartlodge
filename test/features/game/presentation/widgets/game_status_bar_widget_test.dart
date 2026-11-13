@@ -139,4 +139,31 @@ void main() {
     expect(find.bySemanticsLabel('dart not thrown'), findsNothing);
     expect(find.text('100'), findsNothing); // turn sum (T20+T20+20)
   });
+
+  testWidgets('turnMarks replaces the pin sum with the visit marks', (tester) async {
+    await tester.pumpWidget(_wrap(const GameStatusBarWidget(
+      configLabel: 'Standard',
+      roundInLeg: 1,
+      currentTurnDarts: ['T20', '20', 'D19'],
+      turnMarks: 6,
+    )));
+
+    expect(find.text('6 M'), findsOneWidget);
+    // The raw pin sum (60 + 20 + 38) is not a Cricket quantity.
+    expect(find.text('118'), findsNothing);
+    expect(find.text('T20'), findsOneWidget);
+  });
+
+  testWidgets('showTurnTotal:false hides the turn total, keeps the darts',
+      (tester) async {
+    await tester.pumpWidget(_wrap(const GameStatusBarWidget(
+      configLabel: "Bob's 27",
+      roundInLeg: 5,
+      currentTurnDarts: ['20', '20', '20'],
+      showTurnTotal: false,
+    )));
+
+    expect(find.text('60'), findsNothing);
+    expect(find.text('20'), findsNWidgets(3));
+  });
 }

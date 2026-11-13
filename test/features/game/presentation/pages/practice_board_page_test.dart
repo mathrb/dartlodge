@@ -1920,4 +1920,34 @@ void main() {
       );
     });
   });
+
+  group('status bar turn total', () {
+    Finder inBar(String text) => find.descendant(
+        of: find.byType(GameStatusBarWidget), matching: find.text(text));
+
+    for (final (type, shown) in [
+      (GameType.aroundTheClock, false),
+      (GameType.bobs27, false),
+      (GameType.shanghai, false),
+      (GameType.catch40, true),
+      (GameType.checkoutPractice, true),
+    ]) {
+      testWidgets(
+          '${type.name}: pin sum ${shown ? 'shown' : 'hidden'}',
+          (tester) async {
+        _setTallViewport(tester);
+        final gs = _practiceState(
+          gameType: type,
+          dartsThrownInTurn: 2,
+          competitor: _practiceCompetitor(dartThrows: const ['T19', '18']),
+        ).copyWith(turnActive: true);
+        final notifier = _FakeActivePracticeNotifier(_activeState(gameState: gs));
+        await tester.pumpWidget(_buildApp(notifier));
+        await tester.pumpAndSettle();
+
+        expect(inBar('T19'), findsOneWidget);
+        expect(inBar('75'), shown ? findsOneWidget : findsNothing);
+      });
+    }
+  });
 }
