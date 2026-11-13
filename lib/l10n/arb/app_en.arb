@@ -852,6 +852,15 @@
       }
     }
   },
+  "gameTurnMarks": "{marks} M",
+  "@gameTurnMarks": {
+    "description": "Cricket status bar: marks scored in the current visit (M = marks, the unit of MPR)",
+    "placeholders": {
+      "marks": {
+        "type": "int"
+      }
+    }
+  },
   "gameRoundOf": "ROUND {round} / {total}",
   "@gameRoundOf": {
     "description": "Status bar round indicator with a total (uppercase)",

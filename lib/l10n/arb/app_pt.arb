@@ -255,6 +255,7 @@
   "gameLegWonBy": "Leg {leg} ganho por {winner}",
   "gameNextLeg": "Próximo leg",
   "gameRound": "RODADA {round}",
+  "gameTurnMarks": "{marks} M",
   "gameRoundOf": "RODADA {round} / {total}",
   "gameLegOf": "LEG {leg} / {total}",
   "gameLegsWon": "LEGS {count}",

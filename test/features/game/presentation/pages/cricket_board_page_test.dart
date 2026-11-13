@@ -21,6 +21,7 @@ import 'package:dart_lodge/features/game/presentation/state/active_cricket_game_
 import 'package:dart_lodge/features/game/presentation/widgets/camera_first_body_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/cricket_marks_strip_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/cricket_unified_table_widget.dart';
+import 'package:dart_lodge/features/game/presentation/widgets/game_status_bar_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/prominent_dart_band_widget.dart';
 
 // ── Fake notifier ──────────────────────────────────────────────────────────────
@@ -948,5 +949,32 @@ void main() {
                 0.01),
       );
     });
+  });
+
+  testWidgets(
+      'status bar shows the visit marks, not the pin sum (T20 20 D19 = 6 M)',
+      (tester) async {
+    final gs = _cricketState(
+      dartsThrownInTurn: 3,
+      competitors: [
+        _competitor(
+          id: 'c1',
+          name: 'Alice',
+          // An earlier visit, then the current one. SB counts (Bull), 5 does
+          // not (not a target).
+          dartThrows: const ['5', 'SB', 'MISS', 'T20', '20', 'D19'],
+        ),
+        _competitor(id: 'c2', name: 'Bob'),
+      ],
+    );
+    final notifier =
+        _FakeActiveCricketGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    Finder inBar(String text) => find.descendant(
+        of: find.byType(GameStatusBarWidget), matching: find.text(text));
+    expect(inBar('6 M'), findsOneWidget);
+    expect(inBar('118'), findsNothing);
   });
 }

@@ -415,6 +415,7 @@ are not interchangeable when the intent differs.
 - Bottom edge: 1px `outlineVariant` @ 10% opacity (exception to No-Line Rule — structural boundary at top of game area)
 - Horizontal padding: 24dp
 - Text: `label-sm` at 10px, `onSurfaceVariant`, letterSpacing 1.2
+- **Turn total** (before the dart badges), in the unit of the game's own scores: the pin sum on X01, Count-Up, Catch 40 and Checkout Practice; the visit's marks (`6 M`) on Cricket; hidden on Around the Clock, Bob's 27 and Shanghai, whose turn score is not the pin sum
 - Separator dots: 4×4dp circular, `outlineVariant` @ 30%
 - Vertical dividers: 1dp × 16dp, `outlineVariant` @ 20%
 - **Dart badges:** bg `primaryFixed` @ 10%, border 1px `primaryFixed` @ 20%, `radiusSmall` (8dp), padding `6h / 2v`, text `label-md` in `boardAccent`

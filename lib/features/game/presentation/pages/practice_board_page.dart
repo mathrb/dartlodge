@@ -414,6 +414,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                     // Checkout Practice: a busted turn scored 0 — don't show the
                     // raw busted-dart sum in the readout (#604).
                     turnBusted: practiceState.turnBusted,
+                    // The pin sum is the turn's score only in the checkout
+                    // drills (it comes off the remaining). Around the Clock,
+                    // Bob's 27 and Shanghai score differently — hide it.
+                    showTurnTotal: isCatch40 || isCheckout,
                   ),
                   // Camera-first hides the aim dartboard (the camera IS the board).
                   if (!cameraFirst)

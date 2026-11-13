@@ -7,9 +7,14 @@ import '../../domain/models/game_config.dart';
 
 /// Compact status bar shown below the app header on game boards.
 ///
-/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [sum] [dart badges]`.
-/// The trailing `| [sum] [dart badges]` cluster is omitted when [showDarts] is
-/// false (camera-first layouts, where the darts move to the prominent band).
+/// Displays: `[configLabel] · ROUND x [/ y] [· LEG x/y] | [total] [dart badges]`.
+/// The trailing `| [total] [dart badges]` cluster is omitted when [showDarts]
+/// is false (camera-first layouts, where the darts move to the prominent band).
+///
+/// The turn total is the visit's pin sum by default (X01, Count-Up and the
+/// checkout drills, where it is what comes off the remaining). Cricket passes
+/// [turnMarks] instead, and games whose score is not the pin sum set
+/// [showTurnTotal] false.
 ///
 /// [configLabel] is game-type specific — e.g. `'501'` for X01 or `'Standard'`
 /// for Cricket.
@@ -29,6 +34,8 @@ class GameStatusBarWidget extends StatelessWidget {
     this.tapEmptySlots = false,
     this.showDarts = true,
     this.turnBusted = false,
+    this.turnMarks,
+    this.showTurnTotal = true,
     super.key,
   });
 
@@ -52,7 +59,7 @@ class GameStatusBarWidget extends StatelessWidget {
   /// behaviour (only thrown darts are tappable, for correction).
   final bool tapEmptySlots;
 
-  /// When false, the trailing cluster (turn-sum separator, turn sum, and the
+  /// When false, the trailing cluster (separator, turn total, and the
   /// three dart slots) is omitted, leaving a metadata-only bar
   /// (`configLabel · ROUND · LEG`). Camera-first layouts set this false because
   /// the darts move to the prominent dart band; default true keeps the manual
@@ -62,6 +69,16 @@ class GameStatusBarWidget extends StatelessWidget {
   /// When true, the turn-points readout shows 0 instead of the raw dart sum —
   /// a busted turn scored nothing even though its darts landed (#604).
   final bool turnBusted;
+
+  /// Cricket: the marks scored in the current visit. When non-null the turn
+  /// total reads `<marks> M` (the unit of the MPR next to it) instead of the
+  /// pin sum, which is not a Cricket quantity.
+  final int? turnMarks;
+
+  /// When false, the turn total is hidden and only the dart badges remain —
+  /// for games whose turn score is not the pin sum (Around the Clock, Bob's 27,
+  /// Shanghai). Ignored when [showDarts] is false.
+  final bool showTurnTotal;
 
   int get _turnSum => currentTurnDarts.isEmpty
       ? 0
@@ -96,7 +113,9 @@ class GameStatusBarWidget extends StatelessWidget {
     );
 
     // A busted turn scored 0 — show 0, not the raw sum of the busted darts.
-    final turnSum = turnBusted ? 0 : _turnSum;
+    final turnTotal = turnMarks ?? (turnBusted ? 0 : _turnSum);
+    final turnTotalText =
+        turnMarks != null ? l10n.gameTurnMarks(turnMarks!) : '$turnTotal';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
@@ -148,15 +167,17 @@ class GameStatusBarWidget extends StatelessWidget {
                 ),
               ),
             ),
-            Text(
-              '$turnSum',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: turnSum > 0
-                    ? cs.onSurfaceVariant.withValues(alpha: 0.8)
-                    : cs.onSurfaceVariant.withValues(alpha: 0.2),
+            if (showTurnTotal) ...[
+              Text(
+                turnTotalText,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: turnTotal > 0
+                      ? cs.onSurfaceVariant.withValues(alpha: 0.8)
+                      : cs.onSurfaceVariant.withValues(alpha: 0.2),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
+              const SizedBox(width: 8),
+            ],
             for (int i = 0; i < 3; i++) ...[
               if (i > 0) const SizedBox(width: 4),
               // A minimum, not a fixed height: a badge grows with the text

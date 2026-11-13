@@ -10,6 +10,7 @@ import '../../../../core/providers/auto_scorer_providers.dart';
 import '../../../../core/providers/board_camera_preview_provider.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
+import '../../../../core/utils/cricket_segment_utils.dart';
 import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
 import '../../domain/models/game_state.dart';
@@ -324,6 +325,17 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                     roundInLeg: gameState.currentRoundInLeg,
                     totalRounds: gameState.cricketTotalRounds,
                     currentTurnDarts: currentTurnDarts,
+                    // The visit's marks (overflow included, like the live MPR
+                    // beside it) — the pin sum is not a Cricket quantity.
+                    turnMarks: currentTurnDarts.fold<int>(
+                      0,
+                      (sum, s) =>
+                          sum +
+                          cricketMarksForSegment(
+                            s,
+                            targets: {...gameState.cricketTargets, 25},
+                          ),
+                    ),
                     // Manual mode: tap a thrown dart to correct it (#376).
                     // Camera-first (#444) hides the darts here — they move to the
                     // prominent dart band below.
