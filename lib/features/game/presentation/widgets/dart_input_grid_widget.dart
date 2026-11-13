@@ -164,22 +164,28 @@ class DartInputGridWidget extends StatelessWidget {
                               BorderRadius.circular(AppTheme.radiusSmall),
                         ),
                         alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '25',
-                              style: AppTextStyles.segmentButton
-                                  .copyWith(color: cs.onSurface),
-                            ),
-                            Text(
-                              'BULL',
-                              style: AppTextStyles.multiplierLabel.copyWith(
-                                color: AppTheme.boardAccent(context,
-                                    darkAlpha: 0.7),
+                        // Fixed 48 px row: scale down at large text
+                        // rather than overflow the cell.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '25',
+                                style: AppTextStyles.segmentButton
+                                    .copyWith(color: cs.onSurface),
                               ),
-                            ),
-                          ],
+                              Text(
+                                'BULL',
+                                style: AppTextStyles.multiplierLabel.copyWith(
+                                  color: AppTheme.boardAccent(context,
+                                      darkAlpha: 0.7),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -203,21 +209,27 @@ class DartInputGridWidget extends StatelessWidget {
                               BorderRadius.circular(AppTheme.radiusSmall),
                         ),
                         alignment: Alignment.center,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '50',
-                              style: AppTextStyles.segmentButton
-                                  .copyWith(color: AppColors.onPrimaryFixed),
-                            ),
-                            Text(
-                              'BULL',
-                              style: AppTextStyles.multiplierLabel.copyWith(
-                                color: AppColors.onPrimaryFixed,
+                        // Fixed 48 px row: scale down at large text
+                        // rather than overflow the cell.
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                '50',
+                                style: AppTextStyles.segmentButton
+                                    .copyWith(color: AppColors.onPrimaryFixed),
                               ),
-                            ),
-                          ],
+                              Text(
+                                'BULL',
+                                style: AppTextStyles.multiplierLabel.copyWith(
+                                  color: AppColors.onPrimaryFixed,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -318,19 +330,28 @@ class _GridCell extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
           ),
           alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: AppTextStyles.segmentButton.copyWith(color: textColor),
-              ),
-              if (dots > 0) ...[
-                const SizedBox(height: 4),
-                DotRow(count: dots, color: dotColor),
+          // Ten cells per row are narrow, so at large text the label + dots
+          // scale down together on one line instead of stacking "19" as
+          // "1" / "9".
+          padding: const EdgeInsets.symmetric(horizontal: 2),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  style: AppTextStyles.segmentButton.copyWith(color: textColor),
+                  maxLines: 1,
+                  softWrap: false,
+                ),
+                if (dots > 0) ...[
+                  const SizedBox(height: 4),
+                  DotRow(count: dots, color: dotColor),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

@@ -178,11 +178,16 @@ class _PlayerHeaderCell extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Score numerals never scale with the text size nor wrap
+          // (DESIGN_SYSTEM §13).
           Text(
             '${competitor.score}',
             style: AppTextStyles.scoreMedium.copyWith(
               color: isActive ? cs.primary : cs.onSurfaceVariant,
             ),
+            textScaler: AppTheme.scoreNumeralTextScaler(context),
+            maxLines: 1,
+            softWrap: false,
           ),
           const SizedBox(height: 4),
           Text(
@@ -252,26 +257,30 @@ class _MissCell extends StatelessWidget {
       highlightColor: AppTheme.kineticSplashColor,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.block,
-              color: cs.error,
-              size: 18,
-              semanticLabel: '',
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'MISS',
-              style: AppTextStyles.labelLarge.copyWith(
+        // Scales down on one line at large text rather than clipping "MISS".
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.block,
                 color: cs.error,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.5,
+                size: 18,
+                semanticLabel: '',
               ),
-            ),
-          ],
+              const SizedBox(width: 8),
+              Text(
+                'MISS',
+                style: AppTextStyles.labelLarge.copyWith(
+                  color: cs.error,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -506,34 +515,43 @@ class _InputCell extends StatelessWidget {
                   )
                 : null,
             alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  displayLabel,
-                  style: AppTextStyles.segmentButton.copyWith(
-                    color: cs.onSurface,
+            // The columns are narrow (~34 dp with 3 players), so at large
+            // text the label + dots scale down together on one line instead
+            // of stacking "20" as "2" / "0" with the dots over the digits.
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    displayLabel,
+                    style: AppTextStyles.segmentButton.copyWith(
+                      color: cs.onSurface,
+                    ),
+                    maxLines: 1,
+                    softWrap: false,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: List.generate(
-                    dotCount,
-                    (_) => Container(
-                      width: 5,
-                      height: 5,
-                      margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(
-                        color: cs.primary.withValues(alpha: 0.40),
-                        shape: BoxShape.circle,
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      dotCount,
+                      (_) => Container(
+                        width: 5,
+                        height: 5,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          color: cs.primary.withValues(alpha: 0.40),
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

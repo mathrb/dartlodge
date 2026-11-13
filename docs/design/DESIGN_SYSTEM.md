@@ -710,6 +710,9 @@ All icons at 24dp visual size, 48dp touch target. Icon-only buttons must have a 
 - **Semantic labels:** All `IconButton` and image elements include `semanticsLabel`.
 - **Screen reader order:** Scoreboard panels announced in turn order (active player first). Segment grid announces as "Single [number]", "Double [number]", "Triple [number]".
 - **Text scaling:** Layouts must not break at 1.4×. Score numerals may clip at 2.0× — accepted given sport context.
+  - Game-board score numerals (the X01 player cards, the Cricket table header) are already large text, so they ignore the text scale (`AppTheme.scoreNumeralTextScaler`, max 1.0) and render `maxLines: 1, softWrap: false`. They never wrap ("376" → "37/6").
+  - Narrow tap-entry labels (the Cricket S/D/T and MISS cells, the X01 keypad cells and its 48 px bull keys) scale down on one line (`FittedBox(scaleDown)`). They are not score numerals.
+  - In the game status bar, the config/round/leg metadata scales down first, so the dart badges (the correction entry point) stay on screen.
 
 ---
 
