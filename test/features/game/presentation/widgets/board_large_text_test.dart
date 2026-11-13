@@ -72,7 +72,7 @@ RenderParagraph _paragraphWithText(
     _paragraphs(tester, container)
         .firstWhere((p) => p.text.toPlainText() == text);
 
-/// [p] is laid out on one line at its full width (no wrap, no clipped
+/// [p] is laid out on one line at its full width and height (no wrap, no clipped
 /// glyphs) and painted inside [bounds] (a FittedBox scale-down counts at its
 /// painted size).
 void _expectOneLineInside(RenderParagraph p, Rect bounds) {
@@ -93,6 +93,12 @@ void _expectOneLineInside(RenderParagraph p, Rect bounds) {
     p.size.height,
     lessThanOrEqualTo(natural.height + 0.5),
     reason: '"$text" wraps onto several lines',
+  );
+  expect(
+    p.size.height,
+    greaterThanOrEqualTo(natural.height - 0.5),
+    reason: '"$text" is clipped vertically '
+        '(${p.size.height} < ${natural.height})',
   );
   final rect = MatrixUtils.transformRect(
     p.getTransformTo(null),
