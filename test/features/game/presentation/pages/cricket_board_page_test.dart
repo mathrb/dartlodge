@@ -977,4 +977,41 @@ void main() {
     expect(inBar('6 M'), findsOneWidget);
     expect(inBar('118'), findsNothing);
   });
+
+  // ── Leg boundary resets the auto-scorer turn (activeTurnSignal) ─────────────
+
+  testWidgets(
+      'a leg win bumps activeTurnSignal once, before Next Leg is tapped',
+      (tester) async {
+    _setTallViewport(tester);
+    final fakeNotifier = _FakeActiveCricketGameNotifier(
+      _activeState(gameState: _cricketState(dartsThrownInTurn: 1)),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        activeCricketGameProvider.overrideWith(() => fakeNotifier),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+    expect(container.read(activeTurnSignalProvider), 0);
+
+    // Alice wins the leg: the engine opens the next leg with Bob to throw.
+    fakeNotifier.emit(_activeState(
+      gameState: _cricketState(currentTurnIndex: 1),
+      pendingLegWinnerId: 'c1',
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Next Leg'), findsOneWidget);
+    expect(container.read(activeTurnSignalProvider), 1);
+
+    await tester.tap(find.text('Next Leg'));
+    await tester.pumpAndSettle();
+
+    // Dismissing the modal is not a second turn change.
+    expect(container.read(activeTurnSignalProvider), 1);
+  });
 }
