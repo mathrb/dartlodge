@@ -1014,4 +1014,47 @@ void main() {
     // Dismissing the modal is not a second turn change.
     expect(container.read(activeTurnSignalProvider), 1);
   });
+
+  // ── Auto-advance on board-clear (bound DartInputSink) ───────────────────────
+
+  group('camera auto-advance', () {
+    Future<(_FakeActiveCricketGameNotifier, ProviderContainer)> pumpWith(
+        WidgetTester tester, int dartsThrownInTurn) async {
+      _setTallViewport(tester);
+      final fakeNotifier = _FakeActiveCricketGameNotifier(_activeState(
+        gameState: _cricketState(dartsThrownInTurn: dartsThrownInTurn),
+      ));
+      final container = ProviderContainer(
+        overrides: [
+          activeCricketGameProvider.overrideWith(() => fakeNotifier),
+        ],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(_buildAppWithContainer(container));
+      await tester.pumpAndSettle();
+      return (fakeNotifier, container);
+    }
+
+    testWidgets('does not advance a turn with no dart (undone camera dart)',
+        (tester) async {
+      final (notifier, container) = await pumpWith(tester, 0);
+
+      container.read(activeDartInputSinkProvider)!.advanceTurn();
+      await tester.pumpAndSettle();
+
+      expect(notifier.nextPlayerCalls, 0);
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+
+    testWidgets('advances a turn with a dart and bumps activeTurnSignal',
+        (tester) async {
+      final (notifier, container) = await pumpWith(tester, 1);
+
+      container.read(activeDartInputSinkProvider)!.advanceTurn();
+      await tester.pumpAndSettle();
+
+      expect(notifier.nextPlayerCalls, 1);
+      expect(container.read(activeTurnSignalProvider), 1);
+    });
+  });
 }

@@ -54,10 +54,14 @@ class _CricketDartInputSink implements DartInputSink {
     // No-op when a modal/celebration is pending or the game is over, so an
     // auto-advance on board-clear never dismisses a leg/game-win modal. The
     // non-interactive advance intentionally skips Cricket's "<3 darts" confirm
-    // dialog — a detected board clear means the throw is done.
+    // dialog — a detected board clear means the throw is done. Also a no-op
+    // before any dart this turn: the camera can have emitted a dart the player
+    // then undid, and advancing would skip the player with 3 MISS. Same rule
+    // as the manual NEXT PLAYER button and the other boards.
     final s = _ref.read(activeCricketGameProvider(_gameId)).value;
     if (s == null ||
         s.gameState.isComplete ||
+        s.gameState.dartsThrownInTurn == 0 ||
         s.pendingLegWinnerId != null ||
         s.pendingGameWinnerId != null ||
         s.pendingCapSelection) {
