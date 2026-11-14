@@ -191,7 +191,6 @@ void main() {
     test('empty grid produces a fully transparent buffer', () {
       final grid = computeHeatGrid(const [], resolution: 8);
       final rgba = heatGridToRgba(grid);
-      // Every 4th byte (alpha) is 0.
       // Every byte is 0: alpha, and the premultiplied colour channels.
       expect(rgba.every((b) => b == 0), isTrue);
     });
