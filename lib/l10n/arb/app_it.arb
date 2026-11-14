@@ -472,7 +472,7 @@
   "rulesCricketRdVar2Summary": "Il Random Cricket può essere combinato con il punteggio Cut Throat: i punti vanno invece agli avversari.",
   "autoScorerTitle": "Punteggio automatico",
   "autoScorerUseTitle": "Usa il punteggio automatico",
-  "autoScorerUseSubtitle": "Inserimento freccette assistito dalla fotocamera su X01 e Cricket (beta).",
+  "autoScorerUseSubtitle": "Inserimento freccette assistito dalla fotocamera in tutte le partite e gli esercizi (beta).",
   "autoScorerAutoAdvanceTitle": "Avanza il turno automaticamente quando il bersaglio è libero",
   "autoScorerAutoAdvanceSubtitle": "Quando tutte le freccette vengono rimosse, passa automaticamente al giocatore successivo invece di premere NEXT.",
   "autoScorerClearWaitTitle": "Attesa con bersaglio libero",

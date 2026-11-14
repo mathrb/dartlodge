@@ -472,7 +472,7 @@
   "rulesCricketRdVar2Summary": "O Random Cricket pode combinar-se com a pontuação Cut Throat: os pontos vão para os adversários.",
   "autoScorerTitle": "Pontuação automática",
   "autoScorerUseTitle": "Usar pontuação automática",
-  "autoScorerUseSubtitle": "Entrada de dardos assistida por câmera em X01 e Cricket (beta).",
+  "autoScorerUseSubtitle": "Entrada de dardos assistida por câmera em todos os jogos e treinos (beta).",
   "autoScorerAutoAdvanceTitle": "Avançar o turno automaticamente quando o alvo for limpo",
   "autoScorerAutoAdvanceSubtitle": "Quando todos os dardos são removidos, avança para o próximo jogador automaticamente em vez de pressionar NEXT.",
   "autoScorerClearWaitTitle": "Espera com o alvo limpo",

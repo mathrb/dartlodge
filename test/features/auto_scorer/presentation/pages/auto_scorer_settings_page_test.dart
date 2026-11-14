@@ -132,6 +132,25 @@ void main() {
     expect(modeButton(tester).selected, {CaptureMode.all});
   });
 
+  // Every board (X01, Cricket, Count-Up and the practice drills) is
+  // camera-first when auto-scoring is on, so the toggle must not name a
+  // subset of games. The camera assist is always labelled beta.
+  testWidgets('use-auto-scoring subtitle covers every game and keeps beta',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await pump(tester);
+
+    final tile = find.widgetWithText(SwitchListTile, 'Use auto-scoring');
+    expect(tile, findsOneWidget);
+    expect(
+        find.descendant(
+            of: tile,
+            matching: find.text(
+                'Camera-assisted dart entry in every game and practice drill (beta).')),
+        findsOneWidget);
+    expect(find.textContaining('X01 and Cricket'), findsNothing);
+  });
+
   testWidgets('single record toggle defaults off and enables capture when on',
       (tester) async {
     SharedPreferences.setMockInitialValues({});
