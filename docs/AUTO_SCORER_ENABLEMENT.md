@@ -117,6 +117,6 @@ round's metrics) has not cleared the **88.9%** ship bar at 720p, so treat it as
    `dartlodge-export-<ts>.zip`).
 3. In the probe: ingest the zip, annotate/retrain → `dart_round<N+1>_withcal.pt`,
    and **measure per-dart accuracy on a held-out set from your board**.
-4. When it clears your bar, export it (step 1) and ship it (step 2): an OTA
+4. When it clears your bar, export it (section 1) and ship it (section 2): an OTA
    release for Android players now, and the bundled asset for the next app
    release.
