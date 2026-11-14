@@ -54,6 +54,11 @@ class _FakeActiveGameNotifier extends ActiveGameNotifier {
   @override
   Future<void> undoDart() async => undoCalls++;
 
+  int advanceTurnCalls = 0;
+
+  @override
+  Future<void> advanceTurn() async => advanceTurnCalls++;
+
   @override
   Future<void> correctTurnDart(int turnDartIndex, String newSegment) async =>
       correctedDarts.add((index: turnDartIndex, segment: newSegment));
@@ -1631,5 +1636,52 @@ void main() {
 
     // Dismissing the modal is not a second turn change.
     expect(container.read(activeTurnSignalProvider), 1);
+  });
+
+  // ── Auto-advance on board-clear (bound DartInputSink) ───────────────────────
+
+  group('camera auto-advance', () {
+    Future<(_FakeActiveGameNotifier, ProviderContainer)> pumpWith(
+        WidgetTester tester, int dartsThrownInTurn) async {
+      _setPhoneViewport(tester);
+      final fakeNotifier = _FakeActiveGameNotifier(_activeState(
+        gameState: _gameState(
+          dartsThrownInTurn: dartsThrownInTurn,
+          competitors: [
+            _competitor(id: 'a', name: 'Ann'),
+            _competitor(id: 'b', name: 'Ben'),
+          ],
+        ),
+      ));
+      final container = ProviderContainer(
+        overrides: [activeGameProvider.overrideWith(() => fakeNotifier)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(_buildAppWithContainer(container));
+      await tester.pumpAndSettle();
+      return (fakeNotifier, container);
+    }
+
+    testWidgets('does not advance a turn with no dart (undone camera dart)',
+        (tester) async {
+      final (notifier, container) = await pumpWith(tester, 0);
+
+      container.read(activeDartInputSinkProvider)!.advanceTurn();
+      await tester.pumpAndSettle();
+
+      expect(notifier.advanceTurnCalls, 0);
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+
+    testWidgets('advances a turn with a dart and bumps activeTurnSignal',
+        (tester) async {
+      final (notifier, container) = await pumpWith(tester, 1);
+
+      container.read(activeDartInputSinkProvider)!.advanceTurn();
+      await tester.pumpAndSettle();
+
+      expect(notifier.advanceTurnCalls, 1);
+      expect(container.read(activeTurnSignalProvider), 1);
+    });
   });
 }

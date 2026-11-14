@@ -55,9 +55,13 @@ class _X01DartInputSink implements DartInputSink {
     // No-op when a modal/celebration is pending or the game is over: advanceTurn
     // dismisses the bust/leg modals, so an auto-advance on board-clear must not
     // fire past a checkout/leg/game win the player hasn't acknowledged yet.
+    // Also a no-op before any dart this turn: the camera can have emitted a
+    // dart the player then undid, and advancing would pad 3 MISS and skip the
+    // player. Same rule as the manual NEXT button and the other boards.
     final s = _ref.read(activeGameProvider(_gameId)).value;
     if (s == null ||
         s.gameState.isComplete ||
+        s.gameState.dartsThrownInTurn == 0 ||
         s.showBust ||
         s.pendingLegWinnerId != null ||
         s.pendingGameWinnerId != null ||
