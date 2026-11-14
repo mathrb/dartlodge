@@ -4,7 +4,7 @@
 loaded via `kAutoScorerModelAsset`. It is produced from the trained `.pt` by the
 **training repo** (`deep-darts-probe`), not here — see
 [`docs/AUTO_SCORER_ENABLEMENT.md`](../../docs/AUTO_SCORER_ENABLEMENT.md) for the
-export + bundle steps. To refresh it:
+export + ship steps (bundled asset and OTA). To refresh it:
 
 ```bash
 cd ~/git/deep-darts-probe
@@ -27,16 +27,17 @@ confirmed past the **88.9%** ship bar there is **no code-enforced emission
 gate**: treat auto-scoring as assist / data-collection (#381). The app serves
 the raw sensor frame as-is (no app-side rotation), so portrait-held detection
 depends on the model being trained for that orientation (#393) — collect
-portrait frames via the in-app capture button. The CoreML `.mlpackage` (iOS)
-goes to `ios/Runner/` (gitignored).
+portrait frames by playing with **Record for debugging & training** on (captures
+are automatic; the aim view also has a manual capture button). The CoreML
+`.mlpackage` (iOS) goes to `ios/Runner/` (gitignored).
 
-Frames are preprocessed to 800×800 (**letterbox**: scale-to-fit + grey 114
-padding) before inference, so the board's outer calibration points are never
-cropped out. (Was a center-crop, which clipped edge cal points when the board
-filled the frame — see #377 §3.) The probe trained at `imgsz 800`; for best
-results training should letterbox to match (#393). A "Skip preprocessing" toggle
-in settings bypasses our step to feed raw frames to the plugin's own native
-letterbox (faster, near-equivalent input).
+The app does no preprocessing of its own: `YOLOView` passes the raw camera
+analysis frame to the plugin, which letterboxes it natively to 800×800
+(scale-to-fit + padding), so the board's outer calibration points are never
+cropped out. (An app-side letterbox step and an earlier center-crop, which
+clipped edge cal points when the board filled the frame, are both gone — see
+#377 §3, #829.) The probe trained at `imgsz 800`; for best results training
+should letterbox to match (#393).
 
 ## Out-of-band model updates (#715)
 

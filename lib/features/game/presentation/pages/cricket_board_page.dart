@@ -37,7 +37,7 @@ import '../widgets/pulsing_next_button_widget.dart';
 enum _BoardMenuAction { endGame, settings, reportBug }
 
 /// Routes camera-detected darts into the active Cricket game (#382). Bound in
-/// the core [activeDartInputSinkProvider] while the capture page is open, so the
+/// the core [activeDartInputSinkProvider] by this board when it opens, so the
 /// auto_scorer feature emits without importing the game feature.
 class _CricketDartInputSink implements DartInputSink {
   _CricketDartInputSink(this._ref, this._gameId);

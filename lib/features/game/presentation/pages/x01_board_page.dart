@@ -37,8 +37,8 @@ import '../widgets/x01_other_players_strip_widget.dart';
 /// can reach Settings without abandoning their game.
 enum _BoardMenuAction { endGame, settings, reportBug }
 
-/// Routes camera-detected darts into the active X01 game (#382). Registered in
-/// the core [activeDartInputSinkProvider] while the capture page is open, so the
+/// Routes camera-detected darts into the active X01 game (#382). Bound in
+/// the core [activeDartInputSinkProvider] by this board when it opens, so the
 /// auto_scorer feature emits without importing the game feature.
 class _X01DartInputSink implements DartInputSink {
   _X01DartInputSink(this._ref, this._gameId);

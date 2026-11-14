@@ -4,11 +4,11 @@ import 'package:dart_lodge/features/auto_scorer/domain/entities/board_point.dart
 /// points and the candidate dart-tip positions the model found in this frame.
 ///
 /// Coordinates are image-space, normalised 0–1 in the detector's input frame
-/// (#377 §6): the 800×800 letterbox in preprocess mode, or the raw camera frame
-/// in skip-preprocess mode (the default). [calPoints], when present, must be in
-/// DeepDarts order (cal1=5/20 wire, cal2=3/17, cal3=8/11, cal4=13/6); an
-/// incomplete set (the board is occluded or out of view) is reported via
-/// [hasCalibration].
+/// (#377 §6): the raw camera analysis frame YOLOView ran on (the plugin
+/// letterboxes natively; the app has no preprocessing step). [calPoints], when
+/// present, must be in DeepDarts order (cal1=5/20 wire, cal2=3/17, cal3=8/11,
+/// cal4=13/6); an incomplete set (the board is occluded or out of view) is
+/// reported via [hasCalibration].
 class DetectionFrame {
   final List<BoardPoint> calPoints;
   final List<BoardPoint> dartCandidates;
