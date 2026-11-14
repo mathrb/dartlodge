@@ -1584,4 +1584,52 @@ void main() {
 
     expect(find.text('LEG 2 / 2'), findsOneWidget);
   });
+
+  // ── Leg boundary resets the auto-scorer turn (activeTurnSignal) ─────────────
+
+  testWidgets(
+      'a leg win bumps activeTurnSignal once, before Next Leg is tapped',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final competitors = [
+      _competitor(id: 'a', name: 'Ann'),
+      _competitor(id: 'b', name: 'Ben'),
+    ];
+    final fakeNotifier = _FakeActiveGameNotifier(_activeState(
+      gameState: _gameState(
+        legsToWin: 2,
+        dartsThrownInTurn: 1,
+        competitors: competitors,
+      ),
+    ));
+    final container = ProviderContainer(
+      overrides: [activeGameProvider.overrideWith(() => fakeNotifier)],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(_buildAppWithContainer(container));
+    await tester.pumpAndSettle();
+    expect(container.read(activeTurnSignalProvider), 0);
+
+    // Ann checks out: the engine opens leg 2 with Ben to throw, 0 darts.
+    fakeNotifier.emit(_activeState(
+      gameState: _gameState(
+        legsToWin: 2,
+        currentLegIndex: 1,
+        currentTurnIndex: 1,
+        competitors: competitors,
+      ),
+      pendingLegWinnerId: 'a',
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Next Leg'), findsOneWidget);
+    expect(container.read(activeTurnSignalProvider), 1);
+
+    await tester.tap(find.text('Next Leg'));
+    await tester.pumpAndSettle();
+
+    // Dismissing the modal is not a second turn change.
+    expect(container.read(activeTurnSignalProvider), 1);
+  });
 }

@@ -177,6 +177,12 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         );
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!context.mounted) return;
+          // A checkout opens the next leg inside the engine without a NEXT
+          // press, so tell the auto-scorer the turn changed: it resets the
+          // per-turn dart cap and disarms auto-advance for the new starter.
+          // Done here rather than on "Next Leg" because a dart thrown while
+          // the modal is up already scores into the new leg.
+          ref.read(activeTurnSignalProvider.notifier).bump();
           showDialog<void>(
             context: context,
             barrierDismissible: false,
