@@ -64,17 +64,30 @@ double boardSegmentStartAngle(int index) =>
 /// aligned; it changes nothing about stored positions or the scoring frame.
 const double kBoardDisplayRotation = -kBoardSegmentSweep / 2;
 
-// Ring radii as fractions of the total board radius — match
-// DartboardHighlightWidget.
-const double kBoardRDoubleBull = 0.05;
-const double kBoardRSingleBull = 0.115;
-const double kBoardRTripleInner = 0.415;
-const double kBoardRTripleOuter = 0.475;
-const double kBoardRDoubleInner = 0.825;
-
 /// Outer edge of the double ring — the "board radius 1.0" of the canonical
-/// scoring frame, and the circle the four calibration markers sit on.
+/// scoring frame, and the circle the four calibration markers sit on. The band
+/// beyond it (up to the full radius) is the number ring / off-board margin.
 const double kBoardRDoubleOuter = 0.900;
+
+// Ring radii as fractions of the total board radius. They are the BDO
+// proportions the auto-scorer classifies with (`dartboard_scorer.dart`:
+// double 170 mm, treble 107.4 mm, ring width 10 mm, bulls 15.9 / 6.35 mm),
+// scaled so the double ring's outer edge sits at [kBoardRDoubleOuter]. The
+// heatmap plots scorer positions over this face, so a dart scored T20 must land
+// on the painted treble. The millimetre values are duplicated here because
+// `lib/core/` must not import `lib/features/`; a test pins them to the scorer
+// (`test/core/widgets/heatmap_board_alignment_test.dart`).
+const double _bdoDoubleOuterMm = 170.0;
+const double kBoardRDoubleInner =
+    kBoardRDoubleOuter * 160.0 / _bdoDoubleOuterMm;
+const double kBoardRTripleOuter =
+    kBoardRDoubleOuter * 107.4 / _bdoDoubleOuterMm;
+const double kBoardRTripleInner =
+    kBoardRDoubleOuter * 97.4 / _bdoDoubleOuterMm;
+const double kBoardRSingleBull =
+    kBoardRDoubleOuter * 15.9 / _bdoDoubleOuterMm;
+const double kBoardRDoubleBull =
+    kBoardRDoubleOuter * 6.35 / _bdoDoubleOuterMm;
 
 // ── Dartboard segment colours (canonical, NOT theme tokens) ────────────────
 // These mirror the physical-board palette used by DartboardHighlightWidget.

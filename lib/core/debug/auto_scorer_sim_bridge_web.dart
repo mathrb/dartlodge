@@ -41,8 +41,8 @@ class _AutoScorerSimBridgeState extends ConsumerState<AutoScorerSimBridge> {
     final api = JSObject();
     // Emit one detected dart into the active game (no-op if no board is open).
     // Optional normalised x/y (heatmap frame: origin = board centre, radius 1.0
-    // at the double ring, "20 at top") let a Playwright run populate the impact
-    // heatmap (#571); call `emit('T20')` with no coords for a positionless dart
+    // at the double ring, 5/20 wire at top) let a Playwright run populate the
+    // impact heatmap (#571); call `emit('T20')` with no coords for a positionless dart
     // (mirrors manual entry). Missing JS args arrive as null → x/y stay null.
     api.setProperty(
       'emit'.toJS,

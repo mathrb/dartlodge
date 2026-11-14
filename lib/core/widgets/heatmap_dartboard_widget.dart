@@ -159,13 +159,14 @@ class _HeatmapDartboardPainter extends CustomPainter {
 
     paintDartboardFace(canvas, center, radius);
 
-    // The board radius (1.0 canonical) corresponds to the double-ring outer
-    // edge. The density image spans [-extent, +extent] canonical, i.e. a square
-    // of side (2*extent) board-radii. Place it centred on the board, clipped to
-    // the board disc so off-board misses fade at the rim.
+    // Canonical radius 1.0 is the outer edge of the double ring, which the face
+    // paints at kBoardRDoubleOuter of the widget radius (the band beyond it is
+    // the number ring). The density image spans [-extent, +extent] canonical,
+    // i.e. a square of side (2*extent) double-ring radii. Place it centred on
+    // the board, clipped to the board disc so off-board misses fade at the rim.
     final img = image;
     if (img != null) {
-      final half = radius * extent;
+      final half = radius * kBoardRDoubleOuter * extent;
       final dst = Rect.fromCenter(
         center: center,
         width: half * 2,
