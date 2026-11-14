@@ -11,8 +11,8 @@ const double kDartNoiseRadius = 1.5;
 
 /// Normalise a tracker dart's canonical [boardPosition] into the stable
 /// heatmap frame: origin `(0,0)` at the board centre, radius `1.0` at the outer
-/// edge of the double ring, "20 at top" — the same frame the scorer already
-/// classifies in.
+/// edge of the double ring, 5/20 wire at top — the same frame the scorer
+/// already classifies in.
 ///
 /// IMPORTANT (#572 /plan finding): [DartTracker] already normalises
 /// `TrackedDart.boardPosition` to this exact frame before scoring — it applies

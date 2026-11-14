@@ -233,7 +233,8 @@ y                Double?  # optional — heatmap frame; omitted for manual/old d
 > would score it, so a stream rebuilds the state that was actually played.
 
 > `x`/`y` are the dart's normalised impact position in the stable heatmap frame
-> (origin = board centre, radius `1.0` at the double ring, "20 at top"), emitted
+> (origin = board centre, radius `1.0` at the double ring, 5/20 wire at top so
+> segment 20's centre is ~9° clockwise of vertical; see `docs/rules/game-engine.md`), emitted
 > only by the auto-scorer (#571). Both keys are **omitted** when no position is
 > available (manual entry, detection noise, pre-#571 events) — readers treat a
 > missing key as `null`. The same values are written to the `dart_throws.x`/`.y`

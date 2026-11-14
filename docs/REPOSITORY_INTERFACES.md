@@ -141,7 +141,7 @@ class GameStats {
 // A raw recorded dart position for the impact heatmap (#576) — read directly
 // from `dart_throws` (WHERE x IS NOT NULL), never routed through a projection.
 // Coordinates are normalised in the canonical board frame: origin (0,0) =
-// bullseye, radius 1.0 = outer edge of the double ring, "20 up". A miss outside
+// bullseye, radius 1.0 = outer edge of the double ring, 5/20 wire at top. A miss outside
 // the double has r > 1.0. See docs/plans/2026-06-19-heatmap-design.md.
 class DartPosition {
   final double x;
