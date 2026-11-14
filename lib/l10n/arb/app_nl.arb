@@ -472,7 +472,7 @@
   "rulesCricketRdVar2Summary": "Random Cricket kan worden gecombineerd met Cut Throat-scoren: punten gaan juist naar tegenstanders.",
   "autoScorerTitle": "Automatisch scoren",
   "autoScorerUseTitle": "Automatisch scoren gebruiken",
-  "autoScorerUseSubtitle": "Camera-ondersteunde dartinvoer bij X01 en Cricket (beta).",
+  "autoScorerUseSubtitle": "Camera-ondersteunde dartinvoer bij elk spel en elke oefening (beta).",
   "autoScorerAutoAdvanceTitle": "Beurt automatisch doorgeven wanneer het bord leeg is",
   "autoScorerAutoAdvanceSubtitle": "Wanneer alle darts zijn verwijderd, ga automatisch naar de volgende speler in plaats van op NEXT te drukken.",
   "autoScorerClearWaitTitle": "Wachttijd bij leeg bord",

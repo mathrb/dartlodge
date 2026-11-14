@@ -1823,7 +1823,7 @@
   "@autoScorerUseTitle": {
     "description": "Toggle: enable camera auto-scoring"
   },
-  "autoScorerUseSubtitle": "Camera-assisted dart entry on X01 and Cricket (beta).",
+  "autoScorerUseSubtitle": "Camera-assisted dart entry in every game and practice drill (beta).",
   "@autoScorerUseSubtitle": {
     "description": "Subtitle for the use-auto-scoring toggle"
   },

@@ -472,7 +472,7 @@
   "rulesCricketRdVar2Summary": "Random Cricket lässt sich mit Cut-Throat-Punkten kombinieren: Punkte gehen stattdessen an die Gegner.",
   "autoScorerTitle": "Automatische Zählung",
   "autoScorerUseTitle": "Automatische Zählung verwenden",
-  "autoScorerUseSubtitle": "Kameragestützte Dart-Eingabe bei X01 und Cricket (beta).",
+  "autoScorerUseSubtitle": "Kameragestützte Dart-Eingabe in jedem Spiel und jeder Übung (beta).",
   "autoScorerAutoAdvanceTitle": "Aufnahme automatisch weitergeben, wenn das Board frei ist",
   "autoScorerAutoAdvanceSubtitle": "Wenn alle Darts entfernt sind, wird automatisch zum nächsten Spieler gewechselt, statt NEXT zu drücken.",
   "autoScorerClearWaitTitle": "Wartezeit bei freiem Board",

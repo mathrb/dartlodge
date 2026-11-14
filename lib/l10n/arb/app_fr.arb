@@ -472,7 +472,7 @@
   "rulesCricketRdVar2Summary": "Le Cricket Random peut être combiné au scoring Cut Throat : les points vont au contraire aux adversaires.",
   "autoScorerTitle": "Score automatique",
   "autoScorerUseTitle": "Utiliser le score automatique",
-  "autoScorerUseSubtitle": "Saisie des fléchettes assistée par caméra sur X01 et Cricket (beta).",
+  "autoScorerUseSubtitle": "Saisie des fléchettes assistée par caméra dans toutes les parties et tous les entraînements (beta).",
   "autoScorerAutoAdvanceTitle": "Passer la volée automatiquement quand la cible est dégagée",
   "autoScorerAutoAdvanceSubtitle": "Quand toutes les fléchettes sont retirées, passe au joueur suivant automatiquement au lieu d'appuyer sur NEXT.",
   "autoScorerClearWaitTitle": "Délai de cible dégagée",
