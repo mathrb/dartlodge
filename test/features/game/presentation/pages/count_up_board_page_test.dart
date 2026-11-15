@@ -10,6 +10,11 @@ import 'package:dart_lodge/core/providers/auto_scorer_providers.dart';
 import 'package:dart_lodge/core/providers/board_camera_preview_provider.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/core/utils/stat_formatter.dart';
+import 'package:dart_lodge/features/game/domain/engines/base_game_engine.dart';
+import 'package:dart_lodge/features/game/domain/engines/stateless_count_up_engine.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_state.dart';
 import 'package:dart_lodge/features/game/presentation/pages/count_up_board_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/active_count_up_provider.dart';
@@ -170,6 +175,64 @@ Widget _buildApp(_FakeActiveCountUpNotifier notifier,
       routerConfig: router,
     ),
   );
+}
+
+/// Drives the real Count-Up engine through [turns] (competitor id + darts,
+/// one entry per visit; a visit with fewer than 3 darts is left open) so the
+/// board renders the state a live game actually produces.
+GameState _playCountUp(List<(String, List<String>)> turns) {
+  final engine = StatelessCountUpEngine();
+  var seq = 0;
+  GameEvent ev(String type, Map<String, dynamic> payload) => GameEvent(
+        eventId: 'e${++seq}',
+        gameId: 'game-1',
+        eventType: type,
+        localSequence: seq,
+        occurredAt: DateTime.utc(2024, 1, 1),
+        payload: payload,
+        synced: false,
+        actorId: 'test',
+        source: EventSource.client,
+      );
+  var gs = GameState(
+    gameId: 'game-1',
+    gameType: GameType.countUp,
+    competitors: const [
+      CompetitorState(
+          competitorId: 'ann', name: 'Ann', playerIds: ['ann'], score: 0),
+      CompetitorState(
+          competitorId: 'bob',
+          name: 'Bob',
+          playerIds: ['bob'],
+          score: 100,
+          startingScore: 100),
+    ],
+    currentTurnIndex: 0,
+    dartsThrownInTurn: 0,
+    isComplete: false,
+    turnActive: false,
+    status: GameEngineStatus.inProgress,
+    countUpTotalRounds: 8,
+  );
+  for (final (id, darts) in turns) {
+    gs = engine.apply(gs, ev('TurnStarted', {'competitor_id': id})).state;
+    for (final d in darts) {
+      final seg = Segment.parse(d);
+      gs = engine
+          .apply(
+              gs,
+              ev('DartThrown', {
+                'competitor_id': id,
+                'segment': seg.baseNumber,
+                'multiplier': seg.multiplier,
+              }))
+          .state;
+    }
+    if (darts.length == 3) {
+      gs = engine.apply(gs, ev('TurnEnded', {'competitor_id': id})).state;
+    }
+  }
+  return gs;
 }
 
 void main() {
@@ -593,6 +656,47 @@ void main() {
             (body * kMaxCameraRegionFraction).clamp(0, kMinCameraRegionHeight) -
                 0.01),
       );
+    });
+  });
+
+  group('CountUpBoardPage live PPR covers the whole game', () {
+    // Ann 180 then 60; Bob (handicap +100) 60 then 180; Ann has thrown one
+    // dart of her 3rd visit. Both have averaged 120 points per round.
+    final gs = _playCountUp([
+      ('ann', ['T20', 'T20', 'T20']),
+      ('bob', ['20', '20', '20']),
+      ('ann', ['20', '20', '20']),
+      ('bob', ['T20', 'T20', 'T20']),
+      ('ann', ['MISS']),
+    ]);
+    final annPpr = StatFormatter.fmtDouble(240 / 7 * 3);
+    final bobPpr = StatFormatter.fmtDouble(120);
+
+    testWidgets('manual layout: PPR averages every visit, mid-turn too',
+        (tester) async {
+      expect(gs.competitors.map((c) => c.score), [240, 340]);
+      await tester.pumpWidget(_buildApp(
+        _FakeActiveCountUpNotifier(ActiveCountUpState(gameState: gs)),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text(bobPpr), findsOneWidget,
+          reason: 'Bob: 240 points over 2 visits, handicap excluded');
+      expect(find.text(annPpr), findsOneWidget,
+          reason: 'Ann: 240 points over 7 darts, not "—" mid-visit');
+      expect(find.text('—'), findsNothing);
+    });
+
+    testWidgets('camera-first layout: hero and opponents strip agree',
+        (tester) async {
+      await tester.pumpWidget(_buildApp(
+        _FakeActiveCountUpNotifier(ActiveCountUpState(gameState: gs)),
+        cameraFirst: true,
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PPR $annPpr'), findsOneWidget);
+      expect(find.text('PPR $bobPpr'), findsOneWidget);
     });
   });
 }

@@ -615,4 +615,34 @@ void main() {
       expect(state.isComplete, isTrue);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // dartThrows spans the whole game (the board's live PPR averages it)
+  // ---------------------------------------------------------------------------
+  group('dartThrows is game-long', () {
+    test('TurnStarted keeps earlier visits; darts append across turns', () {
+      var state = _makeState(competitors: [_comp('A'), _comp('B', score: 100)]);
+      state = _applyTurn(engine, state, ['T20', 'T20', 'T20'],
+              competitorId: 'A')
+          .state;
+      state = _applyTurn(engine, state, ['20', '20', '20'], competitorId: 'B')
+          .state;
+      state = _applyTurn(engine, state, ['20', '20', '20'], competitorId: 'A')
+          .state;
+
+      expect(state.competitors[0].dartThrows,
+          ['T20', 'T20', 'T20', '20', '20', '20']);
+      expect(state.competitors[0].score, 240);
+      expect(state.competitors[1].dartThrows, ['20', '20', '20']);
+
+      // A new visit starts without wiping the list; the current turn is the
+      // trailing dartsThrownInTurn entries.
+      state = engine.apply(state, _turnStarted('B')).state;
+      state = engine
+          .apply(state, _dartThrown(competitorId: 'B', segment: 0, multiplier: 1))
+          .state;
+      expect(state.competitors[1].dartThrows, ['20', '20', '20', 'MISS']);
+      expect(state.dartsThrownInTurn, 1);
+    });
+  });
 }
