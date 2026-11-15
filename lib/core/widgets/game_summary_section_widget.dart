@@ -72,7 +72,7 @@ class GameSummarySectionWidget extends StatelessWidget {
               if (winner.finalScore != null)
                 PostGameHeroStat(
                   label: l10n.summaryScore.toUpperCase(),
-                  value: '${winner.finalScore}',
+                  value: StatFormatter.fmtInt(winner.finalScore),
                   emphasize: true,
                 ),
               PostGameHeroStat(
@@ -172,7 +172,7 @@ class GameSummarySectionWidget extends StatelessWidget {
           PostGameBreakdownRow(
             category: l10n.summaryScore,
             values: allCompetitors
-                .map((c) => c.finalScore != null ? '${c.finalScore}' : '—')
+                .map((c) => StatFormatter.fmtInt(c.finalScore))
                 .toList(),
             highlights: winnerHighlights,
           ),
@@ -403,7 +403,7 @@ class _OpponentCard extends StatelessWidget {
               stats.finalScore != null
                   ? _SmallStat(
                       label: l10n.summaryScore.toUpperCase(),
-                      value: '${stats.finalScore}',
+                      value: StatFormatter.fmtInt(stats.finalScore),
                     )
                   : _SmallStat(
                       label: l10n.summaryDarts.toUpperCase(),
