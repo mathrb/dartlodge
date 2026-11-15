@@ -40,6 +40,9 @@ abstract class CompetitorStats with _$CompetitorStats {
     @Default(0) int sevenMarkTurns,
     @Default(0) int eightMarkTurns,
     @Default(0) int nineMarkTurns,
+    // Count-Up only: the game's final score (handicap + every dart scored),
+    // the number that decides the result. Null for every other game type.
+    int? finalScore,
   }) = _CompetitorStats;
 
   factory CompetitorStats.fromJson(Map<String, dynamic> json) =>

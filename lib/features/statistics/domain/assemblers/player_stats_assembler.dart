@@ -573,6 +573,9 @@ class PlayerStatsAssembler {
   /// [throws] is a flat list of dart throws across all competitors and
   /// players in the game. The assembler groups them itself.
   /// [competitorNames] maps competitorId → display name (for output only).
+  /// [handicaps] maps competitorId → Count-Up starting score (the config's
+  /// `handicaps`; omitted competitors start at 0). Only read for Count-Up,
+  /// where it feeds [CompetitorStats.finalScore].
   GameStats gameStatsFromEvents({
     required String gameId,
     required GameType gameType,
@@ -580,6 +583,7 @@ class PlayerStatsAssembler {
     required Map<String, String> competitorNames,
     required List<GameEvent> events,
     String outStrategy = 'double',
+    Map<String, int> handicaps = const {},
   }) {
     if (throws.isEmpty) {
       return GameStats(
@@ -851,6 +855,11 @@ class PlayerStatsAssembler {
         sevenMarkTurns: cricketSevenMark,
         eightMarkTurns: cricketEightMark,
         nineMarkTurns: cricketNineMark,
+        // Count-Up has no busts, so the score is the handicap plus the raw
+        // dart sum (count-up.md §3: score starts at the handicap).
+        finalScore: isCountUp
+            ? (handicaps[competitorId] ?? 0) + competitorDartSum
+            : null,
       ));
     }
 

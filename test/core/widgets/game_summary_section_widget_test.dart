@@ -213,6 +213,83 @@ void main() {
       expect(find.text('CARA'), findsOneWidget);
     });
 
+    // With handicaps, PPR and final score disagree: Bob (+200) scored the
+    // fewest points per visit but finished 2nd. The ranking follows the
+    // final score, and the score itself is shown on every card and in
+    // the breakdown.
+    testWidgets('count-up ranks runner-ups by final score, not PPR',
+        (tester) async {
+      await tester.pumpWidget(_wrap(GameSummarySectionWidget(
+        gameStats: GameStats(
+          gameId: 'g1',
+          gameType: GameType.countUp.name,
+          byCompetitor: [
+            CompetitorStats(
+              competitorId: 'c1',
+              competitorName: 'Ann',
+              byPlayer: const [],
+              threeDartAverage: 80.0,
+              legsWon: 1,
+              totalDartsThrown: 24,
+              finalScore: 640,
+            ),
+            CompetitorStats(
+              competitorId: 'c2',
+              competitorName: 'Bob',
+              byPlayer: const [],
+              threeDartAverage: 50.0,
+              legsWon: 0,
+              totalDartsThrown: 24,
+              finalScore: 600,
+            ),
+            CompetitorStats(
+              competitorId: 'c3',
+              competitorName: 'Cy',
+              byPlayer: const [],
+              threeDartAverage: 70.0,
+              legsWon: 0,
+              totalDartsThrown: 24,
+              finalScore: 560,
+            ),
+          ],
+        ),
+      )));
+
+      // Opponent cards: Bob is #2 and comes before Cy (#3).
+      final bobCard = find.ancestor(
+        of: find.text('BOB'),
+        matching: find.byType(Container),
+      );
+      expect(
+        find.descendant(of: bobCard.first, matching: find.text('#2')),
+        findsOneWidget,
+      );
+      final cyCard = find.ancestor(
+        of: find.text('CY'),
+        matching: find.byType(Container),
+      );
+      expect(
+        find.descendant(of: cyCard.first, matching: find.text('#3')),
+        findsOneWidget,
+      );
+      expect(tester.getTopLeft(find.text('BOB')).dy,
+          lessThan(tester.getTopLeft(find.text('CY')).dy));
+
+      // Breakdown columns follow the same order: Ann, Bob, Cy.
+      final ann = tester.getTopLeft(find.text('Ann')).dx;
+      final bob = tester.getTopLeft(find.text('Bob')).dx;
+      final cy = tester.getTopLeft(find.text('Cy')).dx;
+      expect(ann, lessThan(bob));
+      expect(bob, lessThan(cy));
+
+      // Each final score shows on its card and in the Score row.
+      expect(find.text('640'), findsNWidgets(2));
+      expect(find.text('600'), findsNWidgets(2));
+      expect(find.text('560'), findsNWidgets(2));
+      // Hero + 2 opponent cards + the breakdown row label.
+      expect(find.text('SCORE'), findsNWidgets(4));
+    });
+
     // A Count-Up tie has no winner, so the opponents list is every
     // competitor. Sorting it used to mutate the unmodifiable
     // `byCompetitor` list and threw during build (grey error box on the
