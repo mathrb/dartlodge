@@ -18,6 +18,14 @@ class GameSummarySectionWidget extends StatelessWidget {
 
   final GameStats gameStats;
 
+  /// Count-Up order: final score descending, then PPR. Without a final
+  /// score every competitor ties on it and PPR decides alone.
+  static int _byCountUpRank(CompetitorStats a, CompetitorStats b) {
+    final byScore = (b.finalScore ?? 0).compareTo(a.finalScore ?? 0);
+    if (byScore != 0) return byScore;
+    return b.threeDartAverage.compareTo(a.threeDartAverage);
+  }
+
   CompetitorStats? _findWinner() {
     if (gameStats.byCompetitor.isEmpty) return null;
     final maxLegs = gameStats.byCompetitor
@@ -43,16 +51,10 @@ class GameSummarySectionWidget extends StatelessWidget {
         : gameStats.byCompetitor
             .where((c) => c.competitorId != winner.competitorId)
             .toList();
-    // Count-Up's runner-ups all get "OPPONENT" today — but they're really
-    // 2nd, 3rd, … by total score. Every competitor throws the same number
-    // of darts (the configured round count × 3), so `threeDartAverage`
-    // (PPR = totalScore / totalDarts × 3) is a faithful proxy for total
-    // score and sorts the same way. Drives the per-card ordinal label
-    // below (#261).
-    if (isCountUp) {
-      opponents.sort(
-          (a, b) => b.threeDartAverage.compareTo(a.threeDartAverage));
-    }
+    // Count-Up runner-ups are 2nd, 3rd, … by final score, which includes
+    // the handicap; PPR doesn't, so it is only the tie-break. Drives the
+    // per-card ordinal label below (#261).
+    if (isCountUp) opponents.sort(_byCountUpRank);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,6 +69,12 @@ class GameSummarySectionWidget extends StatelessWidget {
                 ? null
                 : l10n.summaryLegsWon(winner.legsWon).toUpperCase(),
             sideStats: [
+              if (winner.finalScore != null)
+                PostGameHeroStat(
+                  label: l10n.summaryScore.toUpperCase(),
+                  value: '${winner.finalScore}',
+                  emphasize: true,
+                ),
               PostGameHeroStat(
                 label: (isCricket ? l10n.statAvgMpr : l10n.statAvgPpr)
                     .toUpperCase(),
@@ -74,7 +82,7 @@ class GameSummarySectionWidget extends StatelessWidget {
                     ? StatFormatter.fmtDouble(winner.marksPerRound,
                         decimals: 2)
                     : StatFormatter.fmtDouble(winner.threeDartAverage),
-                emphasize: true,
+                emphasize: winner.finalScore == null,
               ),
               PostGameHeroStat(
                 label: l10n.summaryDarts.toUpperCase(),
@@ -105,7 +113,7 @@ class GameSummarySectionWidget extends StatelessWidget {
           const SizedBox(height: 16),
         ],
         Builder(builder: (_) {
-          // Count-Up: order competitors by score (PPR proxy) descending so
+          // Count-Up: order competitors by final score descending so
           // columns appear left → right in the same order as the ordinal-
           // labelled cards above. CRITICAL: the same ordering must drive
           // BOTH columns and rows — `PostGameBreakdownRow.values` is
@@ -114,9 +122,7 @@ class GameSummarySectionWidget extends StatelessWidget {
           // column header. Other modes keep the original order with a
           // binary WINNER / OPPONENT subtitle.
           final ordered = isCountUp
-              ? ([...gameStats.byCompetitor]
-                ..sort((a, b) =>
-                    b.threeDartAverage.compareTo(a.threeDartAverage)))
+              ? ([...gameStats.byCompetitor]..sort(_byCountUpRank))
               : gameStats.byCompetitor;
           return PostGameStatsBreakdown(
             columns: ordered.asMap().entries.map((entry) {
@@ -162,6 +168,14 @@ class GameSummarySectionWidget extends StatelessWidget {
 
     if (isCountUp) {
       return [
+        if (allCompetitors.any((c) => c.finalScore != null))
+          PostGameBreakdownRow(
+            category: l10n.summaryScore,
+            values: allCompetitors
+                .map((c) => c.finalScore != null ? '${c.finalScore}' : '—')
+                .toList(),
+            highlights: winnerHighlights,
+          ),
         PostGameBreakdownRow(
           category: l10n.statAvgPpr,
           term: StatTerm.ppr,
@@ -384,10 +398,17 @@ class _OpponentCard extends StatelessWidget {
                     : StatFormatter.fmtDouble(stats.threeDartAverage),
               ),
               const SizedBox(width: 24),
-              _SmallStat(
-                label: l10n.summaryDarts.toUpperCase(),
-                value: '${stats.totalDartsThrown}',
-              ),
+              // Count-Up: every competitor throws the same darts, so the
+              // card's second stat is the final score that ranks them.
+              stats.finalScore != null
+                  ? _SmallStat(
+                      label: l10n.summaryScore.toUpperCase(),
+                      value: '${stats.finalScore}',
+                    )
+                  : _SmallStat(
+                      label: l10n.summaryDarts.toUpperCase(),
+                      value: '${stats.totalDartsThrown}',
+                    ),
             ],
           ),
         ],

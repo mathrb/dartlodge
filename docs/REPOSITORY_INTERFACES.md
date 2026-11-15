@@ -156,6 +156,8 @@ class CompetitorStats {
   final double threeDartAverage;
   final int legsWon;
   final int totalDartsThrown;
+  final int? finalScore;   // Count-Up only: handicap + darts scored; ranks
+                           // the post-game summary. Null for other types.
 }
 
 class PlayerTurnStats {

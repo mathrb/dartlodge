@@ -45,6 +45,7 @@ _CompetitorStats _$CompetitorStatsFromJson(Map<String, dynamic> json) =>
       sevenMarkTurns: (json['sevenMarkTurns'] as num?)?.toInt() ?? 0,
       eightMarkTurns: (json['eightMarkTurns'] as num?)?.toInt() ?? 0,
       nineMarkTurns: (json['nineMarkTurns'] as num?)?.toInt() ?? 0,
+      finalScore: (json['finalScore'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$CompetitorStatsToJson(_CompetitorStats instance) =>
@@ -68,6 +69,7 @@ Map<String, dynamic> _$CompetitorStatsToJson(_CompetitorStats instance) =>
       'sevenMarkTurns': instance.sevenMarkTurns,
       'eightMarkTurns': instance.eightMarkTurns,
       'nineMarkTurns': instance.nineMarkTurns,
+      'finalScore': instance.finalScore,
     };
 
 _PlayerTurnStats _$PlayerTurnStatsFromJson(Map<String, dynamic> json) =>

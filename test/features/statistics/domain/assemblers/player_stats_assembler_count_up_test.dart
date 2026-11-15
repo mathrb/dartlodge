@@ -196,6 +196,52 @@ void main() {
       expect(cs.checkoutPercentage, isNull);
       expect(cs.highestCheckout, isNull);
     });
+
+    test('finalScore = handicap + darts scored; PPR leaves the handicap out',
+        () {
+      const ann = 'p1', bob = 'p2';
+      final events = [
+        ...turn(ann, [(s: 20, m: 3), (s: 20, m: 1), (s: 0, m: 0)]),
+        ...turn(bob, [(s: 20, m: 1), (s: 20, m: 1), (s: 10, m: 1)]),
+        gameCompleted(),
+      ];
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.countUp,
+        throws: [
+          (competitorId: 'c_$ann', playerId: ann, score: 60),
+          (competitorId: 'c_$ann', playerId: ann, score: 20),
+          (competitorId: 'c_$ann', playerId: ann, score: 0),
+          (competitorId: 'c_$bob', playerId: bob, score: 20),
+          (competitorId: 'c_$bob', playerId: bob, score: 20),
+          (competitorId: 'c_$bob', playerId: bob, score: 10),
+        ],
+        competitorNames: const {'c_$ann': 'Ann', 'c_$bob': 'Bob'},
+        events: events,
+        // Ann is omitted from the map, so she starts at 0.
+        handicaps: const {'c_$bob': 200},
+      );
+
+      final byId = {for (final c in stats.byCompetitor) c.competitorId: c};
+      expect(byId['c_$ann']!.finalScore, 80);
+      expect(byId['c_$ann']!.threeDartAverage, 80.0);
+      expect(byId['c_$bob']!.finalScore, 250);
+      expect(byId['c_$bob']!.threeDartAverage, 50.0);
+    });
+
+    test('finalScore stays null for X01', () {
+      final stats = assembler.gameStatsFromEvents(
+        gameId: gameId,
+        gameType: GameType.x01,
+        throws: [
+          (competitorId: 'c_$playerId', playerId: playerId, score: 60),
+        ],
+        competitorNames: const {'c_$playerId': 'P1'},
+        events: turn(playerId, [(s: 20, m: 3)]),
+        handicaps: const {'c_$playerId': 100},
+      );
+      expect(stats.byCompetitor.single.finalScore, isNull);
+    });
   });
 
   group('legCompetitorStatsFromEvents', () {

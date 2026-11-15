@@ -37,6 +37,23 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
     }
   }
 
+  /// The config's `handicaps` map (competitorId → int), or empty when the
+  /// config has none or can't be parsed.
+  static Map<String, int> _handicapsFromConfig(String? configJson) {
+    if (configJson == null) return const {};
+    try {
+      final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+      final raw = cfg['handicaps'];
+      if (raw is! Map) return const {};
+      return {
+        for (final e in raw.entries)
+          if (e.value is num) e.key as String: (e.value as num).toInt(),
+      };
+    } catch (_) {
+      return const {};
+    }
+  }
+
   @override
   Future<GameStats> getGameStats(String gameId) async {
     try {
@@ -113,6 +130,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         competitorNames: competitorNames,
         events: events,
         outStrategy: _outStrategyFromConfig(gameRow.configJson),
+        handicaps: _handicapsFromConfig(gameRow.configJson),
       );
     } on RepositoryException {
       rethrow;

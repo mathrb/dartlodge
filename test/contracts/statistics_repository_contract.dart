@@ -83,6 +83,63 @@ void runStatisticsRepositoryContractTests(DriftTestBase base) {
       expect(c.sixMarkTurns, 1);
       expect(c.nineMarkTurns, 1);
     });
+
+    test('count-up finalScore adds the config handicap to the darts scored',
+        () async {
+      await _createPlayer(playerRepo, 'p1');
+      await _createPlayer(playerRepo, 'p2');
+      await gameRepo.createGame(
+        Game(
+          gameId: 'g1',
+          gameType: GameType.countUp,
+          config: const GameConfig.countUp(handicaps: {'c2': 200}),
+          startTime: DateTime.now(),
+          isComplete: false,
+        ),
+        [
+          Competitor(
+            competitorId: 'c1',
+            gameId: 'g1',
+            type: CompetitorType.solo,
+            name: 'Ann',
+            players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+          ),
+          Competitor(
+            competitorId: 'c2',
+            gameId: 'g1',
+            type: CompetitorType.solo,
+            name: 'Bob',
+            players: [CompetitorPlayer(playerId: 'p2', rotationPosition: 1)],
+          ),
+        ],
+      );
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60);
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd2', gameId: 'g1', competitorId: 'c2', playerId: 'p2',
+          score: 20, segment: '20');
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c2', endTime: DateTime.now());
+
+      final stats = await statsRepo.getGameStats('g1');
+      final byId = {for (final c in stats.byCompetitor) c.competitorId: c};
+      expect(byId['c1']!.finalScore, 60);
+      expect(byId['c2']!.finalScore, 220);
+    });
+
+    test('finalScore is null outside count-up', () async {
+      await _createPlayerAndGame(playerRepo, gameRepo,
+          playerId: 'p1', gameId: 'g1');
+      await _createDartThrow(dartThrowRepo,
+          dartId: 'd1', gameId: 'g1', competitorId: 'c1', playerId: 'p1',
+          score: 60);
+      await gameRepo.completeGame(
+          gameId: 'g1', winnerCompetitorId: 'c1', endTime: DateTime.now());
+
+      final stats = await statsRepo.getGameStats('g1');
+      expect(stats.byCompetitor.single.finalScore, isNull);
+    });
   });
 
   // ── getPlayerStats ────────────────────────────────────────────────────────
