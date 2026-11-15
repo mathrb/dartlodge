@@ -35,8 +35,11 @@ class GameSummarySectionWidget extends StatelessWidget {
     final winner = _findWinner();
     final isCricket = gameStats.gameType == GameType.cricket.name;
     final isCountUp = gameStats.gameType == GameType.countUp.name;
+    // Always a copy: `byCompetitor` is unmodifiable and the Count-Up
+    // branch below sorts in place (a tie has no winner, so every
+    // competitor lands here).
     final opponents = winner == null
-        ? gameStats.byCompetitor
+        ? gameStats.byCompetitor.toList()
         : gameStats.byCompetitor
             .where((c) => c.competitorId != winner.competitorId)
             .toList();
@@ -90,10 +93,11 @@ class GameSummarySectionWidget extends StatelessWidget {
                 stats: entry.value,
                 isCricket: isCricket,
                 // Count-Up: opponents are sorted by score above, so index 0
-                // is 2nd place, index 1 is 3rd, etc. Other modes keep the
-                // generic "OPPONENT" subtitle.
+                // is 2nd place behind the winner card, or 1st when there is
+                // no winner (a tie), matching the breakdown columns. Other
+                // modes keep the generic "OPPONENT" subtitle.
                 label: isCountUp
-                    ? '#${rank + 2}'
+                    ? '#${rank + (winner == null ? 1 : 2)}'
                     : l10n.summaryOpponent.toUpperCase(),
               ),
             );
