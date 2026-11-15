@@ -212,6 +212,49 @@ void main() {
       expect(find.text('BOB'), findsOneWidget);
       expect(find.text('CARA'), findsOneWidget);
     });
+
+    // A Count-Up tie has no winner, so the opponents list is every
+    // competitor. Sorting it used to mutate the unmodifiable
+    // `byCompetitor` list and threw during build (grey error box on the
+    // post-game summary and on History game detail).
+    testWidgets('count-up tie renders every competitor ranked from #1',
+        (tester) async {
+      await tester.pumpWidget(_wrap(GameSummarySectionWidget(
+        gameStats: GameStats(
+          gameId: 'g1',
+          gameType: GameType.countUp.name,
+          byCompetitor: List.unmodifiable([
+            CompetitorStats(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              byPlayer: const [],
+              threeDartAverage: 60.0,
+              legsWon: 0,
+              totalDartsThrown: 24,
+            ),
+            CompetitorStats(
+              competitorId: 'c2',
+              competitorName: 'Bob',
+              byPlayer: const [],
+              threeDartAverage: 72.5,
+              legsWon: 0,
+              totalDartsThrown: 24,
+            ),
+          ]),
+        ),
+      )));
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(PostGameHeroCard), findsNothing);
+      expect(find.text('WINNER'), findsNothing);
+      expect(find.text('ALICE'), findsOneWidget);
+      expect(find.text('BOB'), findsOneWidget);
+      // No winner card, so the cards number from #1 like the breakdown
+      // columns do: one card + one column each.
+      expect(find.text('#1'), findsNWidgets(2));
+      expect(find.text('#2'), findsNWidgets(2));
+      expect(find.text('#3'), findsNothing);
+    });
   });
 
   group('PostGameHeroCard — large text (DESIGN_SYSTEM §13)', () {

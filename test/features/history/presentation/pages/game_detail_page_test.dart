@@ -90,12 +90,13 @@ GameDetailState _detail(GameType type, {GameStats? stats}) => GameDetailState(
 Widget _pump({
   required GameType type,
   GameResult? gameResult,
+  GameStats? stats,
   Locale? locale,
 }) {
   return ProviderScope(
     overrides: [
-      gameDetailProvider('game-1')
-          .overrideWith(() => _StubGameDetailNotifier(_detail(type))),
+      gameDetailProvider('game-1').overrideWith(
+          () => _StubGameDetailNotifier(_detail(type, stats: stats))),
       if (gameResult != null)
         gameResultProvider('game-1').overrideWith((_) async => gameResult),
     ],
@@ -138,6 +139,37 @@ void main() {
 
       expect(find.byType(GameSummarySectionWidget), findsOneWidget);
       expect(find.byType(PracticeSummaryWidget), findsNothing);
+    });
+
+    testWidgets('a tied Count-up game renders its summary without an error',
+        (tester) async {
+      CompetitorStats competitor(String id, String name, double ppr) =>
+          CompetitorStats(
+            competitorId: id,
+            competitorName: name,
+            byPlayer: const [],
+            threeDartAverage: ppr,
+            legsWon: 0,
+            totalDartsThrown: 24,
+          );
+      await tester.pumpWidget(_pump(
+        type: GameType.countUp,
+        stats: GameStats(
+          gameId: 'game-1',
+          gameType: GameType.countUp.name,
+          byCompetitor: [
+            competitor('c1', 'Alice', 60.0),
+            competitor('c2', 'Bob', 72.5),
+          ],
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ErrorWidget), findsNothing);
+      expect(find.byType(GameSummarySectionWidget), findsOneWidget);
+      expect(find.text('ALICE'), findsOneWidget);
+      expect(find.text('BOB'), findsOneWidget);
     });
 
     testWidgets(
