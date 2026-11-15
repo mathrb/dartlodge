@@ -241,16 +241,23 @@ int _lerpByte(int a, int b, double f) =>
 /// Renders a [HeatGrid] into a tightly-packed RGBA byte buffer of size
 /// `resolution * resolution * 4`, applying [heatColor] per cell. Row-major,
 /// matching the grid layout. The widget wraps this in a `ui.Image`.
+///
+/// The buffer is **premultiplied**: each colour channel is scaled by the
+/// cell's alpha. `ui.decodeImageFromPixels` with `PixelFormat.rgba8888` reads
+/// premultiplied pixels, so packing [heatColor]'s straight values would turn
+/// a transparent cell `(0, 0, 255, 0)` into additive blue over the board.
 Uint8List heatGridToRgba(HeatGrid grid) {
   final n = grid.resolution;
   final out = Uint8List(n * n * 4);
   for (var i = 0; i < grid.values.length; i++) {
     final c = heatColor(grid.values[i]);
     final o = i * 4;
-    out[o] = c.r;
-    out[o + 1] = c.g;
-    out[o + 2] = c.b;
+    out[o] = _premultiply(c.r, c.a);
+    out[o + 1] = _premultiply(c.g, c.a);
+    out[o + 2] = _premultiply(c.b, c.a);
     out[o + 3] = c.a;
   }
   return out;
 }
+
+int _premultiply(int channel, int alpha) => (channel * alpha / 255).round();

@@ -142,4 +142,31 @@ void main() {
           inInclusiveRange(kBoardRTripleOuter, kBoardRDoubleInner));
     });
   });
+
+  group('the density overlay leaves dart-free areas untouched', () {
+    // Pixel at [fraction] of the widget radius, [deg] degrees clockwise from
+    // the top of the displayed board (20 at top, so 90 = 6, 180 = 3, 270 = 11).
+    String pixelAt(Uint8List bytes, double fraction, double deg) {
+      final a = deg * math.pi / 180;
+      const c = _size / 2;
+      final col = (c + fraction * c * math.sin(a)).floor();
+      final row = (c - fraction * c * math.cos(a)).floor();
+      final i = (row * _size.toInt() + col) * 4;
+      return [bytes[i], bytes[i + 1], bytes[i + 2]]
+          .map((v) => v.toRadixString(16).padLeft(2, '0'))
+          .join();
+    }
+
+    testWidgets('outer singles far from a T20 cluster keep the face colour',
+        (tester) async {
+      final bytes = await _render(tester, List.filled(40, _on20(0.6024)));
+      // Middle of the outer single band, in wedge centres away from the 20.
+      final r = (kBoardRTripleOuter + kBoardRDoubleInner) / 2;
+      const faceColours = {'212121', 'e0d5c1'}; // segment black / cream
+      for (final deg in [90.0, 180.0, 270.0]) {
+        expect(faceColours, contains(pixelAt(bytes, r, deg)),
+            reason: 'pixel at $deg degrees');
+      }
+    });
+  });
 }

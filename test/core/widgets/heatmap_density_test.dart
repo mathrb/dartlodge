@@ -153,13 +153,46 @@ void main() {
       expect(rgba.length, 16 * 16 * 4);
     });
 
+    test('packs premultiplied alpha (no colour channel exceeds alpha)', () {
+      // decodeImageFromPixels(rgba8888) reads premultiplied pixels, so a
+      // straight (0, 0, 255, 0) would add full blue to the board.
+      final grid = computeHeatGrid(
+        const [(x: 0.0, y: 0.0), (x: 0.3, y: -0.2)],
+        resolution: 32,
+      );
+      final rgba = heatGridToRgba(grid);
+      var sawPartial = false;
+      for (var o = 0; o < rgba.length; o += 4) {
+        final a = rgba[o + 3];
+        expect(rgba[o], lessThanOrEqualTo(a));
+        expect(rgba[o + 1], lessThanOrEqualTo(a));
+        expect(rgba[o + 2], lessThanOrEqualTo(a));
+        if (a > 0 && a < 255) sawPartial = true;
+      }
+      expect(sawPartial, isTrue);
+    });
+
+    test('each pixel is the colormap colour scaled by its alpha', () {
+      final grid = computeHeatGrid(
+        const [(x: 0.0, y: 0.0)],
+        resolution: 16,
+      );
+      final rgba = heatGridToRgba(grid);
+      for (var i = 0; i < grid.values.length; i++) {
+        final c = heatColor(grid.values[i]);
+        final o = i * 4;
+        expect(rgba[o + 3], c.a);
+        expect(rgba[o], (c.r * c.a / 255).round());
+        expect(rgba[o + 1], (c.g * c.a / 255).round());
+        expect(rgba[o + 2], (c.b * c.a / 255).round());
+      }
+    });
+
     test('empty grid produces a fully transparent buffer', () {
       final grid = computeHeatGrid(const [], resolution: 8);
       final rgba = heatGridToRgba(grid);
-      // Every 4th byte (alpha) is 0.
-      for (var i = 3; i < rgba.length; i += 4) {
-        expect(rgba[i], 0);
-      }
+      // Every byte is 0: alpha, and the premultiplied colour channels.
+      expect(rgba.every((b) => b == 0), isTrue);
     });
   });
 }
