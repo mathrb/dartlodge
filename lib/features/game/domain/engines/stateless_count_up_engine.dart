@@ -63,12 +63,13 @@ class StatelessCountUpEngine implements GameEngine {
         : -1;
     final turnIndex = resolvedIndex >= 0 ? resolvedIndex : state.currentTurnIndex;
 
+    // `dartThrows` is NOT cleared here: it spans the whole game (Count-Up is
+    // a single leg), like X01's leg-long list, so the board's live PPR
+    // averages every visit. The current turn is the trailing
+    // `dartsThrownInTurn` entries.
     final updated = List<CompetitorState>.from(state.competitors);
     final cur = updated[turnIndex];
-    updated[turnIndex] = cur.copyWith(
-      turnStartScore: cur.score,
-      dartThrows: const [],
-    );
+    updated[turnIndex] = cur.copyWith(turnStartScore: cur.score);
 
     return state.copyWith(
       competitors: updated,
