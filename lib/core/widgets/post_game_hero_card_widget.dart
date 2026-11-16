@@ -62,8 +62,9 @@ class PostGameHeroCard extends StatelessWidget {
   final List<PostGameHeroStat> sideStats;
 
   /// Override for the left border + badge background + emphasized stat
-  /// color. Defaults to `cs.primaryFixed` (or `cs.outlineVariant` when
-  /// [muted] is true).
+  /// color. Defaults to `cs.primaryFixed` for the fills and
+  /// `AppTheme.accentForeground` for the emphasized stat and badge icon (or
+  /// `cs.outlineVariant` for both when [muted] is true).
   final Color? accentColor;
 
   /// Decorative outline icon in the top-right of the headline area
@@ -98,9 +99,13 @@ class PostGameHeroCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final accent = accentColor ?? (muted ? cs.outlineVariant : cs.primaryFixed);
+    // Text and icons need the theme-aware accent: the neon fill colour is
+    // ~1.2:1 on the light surfaces (DESIGN_SYSTEM §2.6).
+    final accentText = accentColor ??
+        (muted ? cs.outlineVariant : AppTheme.accentForeground(context));
     final onAccent = muted ? cs.onSurface : cs.onPrimaryFixed;
 
-    final header = _buildHeader(cs, tt, accent, onAccent);
+    final header = _buildHeader(cs, tt, accent, accentText, onAccent);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
@@ -130,8 +135,8 @@ class PostGameHeroCard extends StatelessWidget {
                       _sideColumnWidth(measure, cs, tt) +
                       1;
                   return needed <= constraints.maxWidth
-                      ? _buildSideBySide(cs, accent, header)
-                      : _buildStacked(cs, accent, header);
+                      ? _buildSideBySide(cs, accentText, header)
+                      : _buildStacked(cs, accentText, header);
                 },
               ),
       ),
@@ -142,6 +147,7 @@ class PostGameHeroCard extends StatelessWidget {
     ColorScheme cs,
     TextTheme tt,
     Color accent,
+    Color accentText,
     Color onAccent,
   ) {
     return Padding(
@@ -179,7 +185,7 @@ class PostGameHeroCard extends StatelessWidget {
                     ),
                     if (badgeIcon != null) ...[
                       const SizedBox(width: _badgeIconGap),
-                      Icon(badgeIcon, color: accent, size: _badgeIconSize),
+                      Icon(badgeIcon, color: accentText, size: _badgeIconSize),
                     ],
                   ],
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/app_spacing.dart';
+import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/widgets/heatmap_dartboard_widget.dart';
@@ -64,7 +65,6 @@ class StatsHeatmapSectionWidget extends ConsumerWidget {
         ];
 
         final l10n = AppLocalizations.of(context);
-        final cs = Theme.of(context).colorScheme;
 
         return Padding(
           padding: const EdgeInsets.fromLTRB(
@@ -79,7 +79,7 @@ class StatsHeatmapSectionWidget extends ConsumerWidget {
               Text(
                 l10n.statsHeatmapTitle.toUpperCase(),
                 style: AppTextStyles.labelSmall.copyWith(
-                  color: cs.primaryFixed,
+                  color: AppTheme.accentForeground(context),
                   letterSpacing: 1.2,
                 ),
               ),
