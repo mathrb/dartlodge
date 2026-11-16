@@ -107,20 +107,12 @@ class StatsTableWidget extends StatelessWidget {
             const Expanded(child: SizedBox.shrink()),
           SizedBox(
             width: valueColumnWidth,
-            child: Text(
-              row.col1,
-              style: labelStyle,
-              textAlign: TextAlign.end,
-            ),
+            child: _ValueCell(row.col1, style: labelStyle),
           ),
           if (row.col2 != null)
             SizedBox(
               width: valueColumnWidth,
-              child: Text(
-                row.col2!,
-                style: labelStyle,
-                textAlign: TextAlign.end,
-              ),
+              child: _ValueCell(row.col2!, style: labelStyle),
             ),
         ],
       ),
@@ -157,25 +149,44 @@ class StatsTableWidget extends StatelessWidget {
           ),
           SizedBox(
             width: valueColumnWidth,
-            child: Text(
+            child: _ValueCell(
               row.col1,
               style: theme.textTheme.bodyMedium?.copyWith(color: cs.primary),
-              textAlign: TextAlign.end,
             ),
           ),
           if (row.col2 != null)
             SizedBox(
               width: valueColumnWidth,
-              child: Text(
+              child: _ValueCell(
                 row.col2!,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: bestColumnColor(cs),
                 ),
-                textAlign: TextAlign.end,
               ),
             ),
         ],
       ),
     );
   }
+}
+
+/// A value-column cell (header or value): end-aligned on one line, kept
+/// [AppSpacing.space2] clear of the column before it, and scaled down rather
+/// than broken or run into its neighbour when the column is too narrow (long
+/// locales, large system text — DESIGN_SYSTEM §13).
+class _ValueCell extends StatelessWidget {
+  const _ValueCell(this.text, {required this.style});
+
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.space2),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerEnd,
+          child: Text(text, style: style, maxLines: 1, softWrap: false),
+        ),
+      );
 }

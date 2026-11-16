@@ -715,6 +715,7 @@ All icons at 24dp visual size, 48dp touch target. Icon-only buttons must have a 
   - Game-board score numerals (the X01 player cards, the Cricket table header) are already large text, so they ignore the text scale (`AppTheme.scoreNumeralTextScaler`, max 1.0) and render `maxLines: 1, softWrap: false`. They never wrap ("376" → "37/6").
   - Narrow tap-entry labels (the Cricket S/D/T and MISS cells, the X01 keypad cells and its 48 px bull keys) scale down on one line (`FittedBox(scaleDown)`). They are not score numerals.
   - In the game status bar, the config/round/leg metadata scales down first, so the dart badges (the correction entry point) stay on screen.
+  - Player stats page: the tab row keeps equal-width tabs while every label fits its share and scrolls (start-aligned) otherwise; the summary cards stack full-width when a card cannot fit its share without breaking a label word; time-range segment labels and stats-table value cells (headers and values) scale down on one line, with a `space2` gap between value columns.
 
 ---
 

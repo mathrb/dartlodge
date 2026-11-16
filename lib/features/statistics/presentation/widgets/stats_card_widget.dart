@@ -20,36 +20,47 @@ class StatsCardWidget extends StatelessWidget {
 
   static String formatInt(int? v) => StatFormatter.fmtInt(v);
 
+  /// Inner padding of the card.
+  static const padding = EdgeInsets.all(12);
+
+  static TextStyle? labelStyle(ThemeData theme) =>
+      theme.textTheme.labelMedium?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      );
+
+  static TextStyle valueStyle(ThemeData theme) =>
+      AppTextStyles.scoreSmall.copyWith(color: theme.colorScheme.primary);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: padding,
+        // Label at the top, value at the bottom: when the card is stretched
+        // to a taller sibling (StatsCardRowWidget), the numerals of a row
+        // line up even if the labels wrap to different line counts. Under
+        // unbounded height the column keeps its content size.
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Text(label, style: labelStyle(theme)),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 4),
+                Text(value, style: valueStyle(theme)),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: AppTextStyles.scoreSmall.copyWith(
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                subtitle!,
-                style: theme.textTheme.bodySmall,
-              ),
-            ],
           ],
         ),
       ),

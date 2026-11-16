@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dart_lodge/core/utils/app_spacing.dart';
 import 'package:dart_lodge/core/utils/app_text_styles.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 /// App-wide top header row: logo (or a page [title]), optional back button,
 /// and trailing action slot.
@@ -41,7 +42,10 @@ class AppHeader extends StatelessWidget {
         children: [
           if (showBack)
             IconButton(
-              icon: const Icon(Icons.arrow_back, semanticLabel: 'Back'),
+              icon: Icon(
+                Icons.arrow_back,
+                semanticLabel: AppLocalizations.of(context).commonBack,
+              ),
               color: cs.onSurface,
               onPressed: onBack ?? () => Navigator.of(context).maybePop(),
             ),

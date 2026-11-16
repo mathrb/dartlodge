@@ -43,13 +43,10 @@ class GlossaryTermLabel extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Wraps at word boundaries like a plain label, instead of
+            // ellipsizing "Checkout-Pu…" at large system text.
             Flexible(
-              child: Text(
-                label,
-                style: style,
-                textAlign: textAlign,
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(label, style: style, textAlign: textAlign),
             ),
             const SizedBox(width: AppSpacing.space1),
             Icon(Icons.info_outline, size: 14, color: cs.primary),
