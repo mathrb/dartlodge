@@ -49,6 +49,12 @@ class StatsTableWidget extends StatelessWidget {
   /// single-column layout.
   final double valueColumnWidth;
 
+  /// Text colour of the second (BEST) value column: `secondary` in dark;
+  /// `onSurfaceVariant` in light, where `secondary` is only ~2.2:1 on the
+  /// light surfaces (WCAG 1.4.3 asks for 4.5:1).
+  static Color bestColumnColor(ColorScheme cs) =>
+      cs.brightness == Brightness.dark ? cs.secondary : cs.onSurfaceVariant;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -162,8 +168,9 @@ class StatsTableWidget extends StatelessWidget {
               width: valueColumnWidth,
               child: Text(
                 row.col2!,
-                style:
-                    theme.textTheme.bodyMedium?.copyWith(color: cs.secondary),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: bestColumnColor(cs),
+                ),
                 textAlign: TextAlign.end,
               ),
             ),

@@ -148,6 +148,7 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `inactiveScore` | `onSurfaceVariant` (`#6B6E72`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
 | `cricketClosed` | `primary` (`#006D45`) | `primaryFixed` | Cricket number closed indicator — *board widgets use `AppTheme.boardAccent(context)`* |
 | `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots, BULL subtext, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
+| `accentForeground` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent text / icons on plain surfaces: post-game hero emphasised stat and badge icon, breakdown winner column, selected stats tab label, section titles such as the impact heatmap title. Same rule as `boardAccent` (which delegates to it); neon fills (pills, accent bars, tab indicators) stay `primaryFixed` |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
 | `award` | `#B58A00` | `#FFC957` | Trophy / medal / 1st-place accent — game history winner icons, podium badges |
@@ -155,8 +156,8 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `success` | `#2E7D32` | `#66BB6A` | Positive-outcome accent — ATC "best segment" rates, OK indicators |
 | `onSuccess` | `#FFFFFF` | `#002106` | Text / icon color on `success` fills |
 
-`award`, `success` and `boardAccent` are brightness-aware. Reach them through the
-`AppTheme.award(context)` / `AppTheme.success(context)` / `AppTheme.boardAccent(context)` helpers so the
+`award`, `success`, `accentForeground` and `boardAccent` are brightness-aware. Reach them through the
+`AppTheme.award(context)` / `AppTheme.success(context)` / `AppTheme.accentForeground(context)` / `AppTheme.boardAccent(context)` helpers so the
 correct value resolves from the active theme at call time.
 
 ### 2.7 Identity Palette (formalized exception)

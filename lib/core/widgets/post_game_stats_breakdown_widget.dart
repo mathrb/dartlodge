@@ -214,10 +214,15 @@ const double _kGlossaryGlyphWidth = AppSpacing.space1 + 14;
 class _BreakdownStyles {
   _BreakdownStyles(BuildContext context)
       : cs = Theme.of(context).colorScheme,
-        tt = Theme.of(context).textTheme;
+        tt = Theme.of(context).textTheme,
+        accent = AppTheme.accentForeground(context);
 
   final ColorScheme cs;
   final TextTheme tt;
+
+  /// Winner-column text colour: neon in dark, `primary` in light
+  /// (DESIGN_SYSTEM §2.6).
+  final Color accent;
 
   TextStyle? get header => tt.labelSmall?.copyWith(
         color: cs.onSurfaceVariant,
@@ -232,19 +237,19 @@ class _BreakdownStyles {
       );
 
   TextStyle? name(bool emphasize) => tt.labelMedium?.copyWith(
-        color: emphasize ? cs.primaryFixed : cs.onSurface,
+        color: emphasize ? accent : cs.onSurface,
         fontWeight: FontWeight.w700,
       );
 
   TextStyle? subtitle(bool emphasize) => tt.labelSmall?.copyWith(
         color: emphasize
-            ? cs.primaryFixed.withValues(alpha: 0.7)
+            ? accent.withValues(alpha: 0.7)
             : cs.onSurfaceVariant,
         letterSpacing: 1.2,
       );
 
   TextStyle value(bool highlight) => AppTextStyles.headlineSmall.copyWith(
-        color: highlight ? cs.primaryFixed : cs.onSurface,
+        color: highlight ? accent : cs.onSurface,
         fontSize: 20,
       );
 }

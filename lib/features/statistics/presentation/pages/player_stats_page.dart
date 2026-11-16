@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/app_spacing.dart';
+import '../../../../core/utils/app_theme.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../../../core/utils/app_text_styles.dart';
@@ -123,7 +124,7 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
               tabs: tabs,
               indicatorColor: cs.primaryFixed,
               indicatorWeight: 2,
-              labelColor: cs.primaryFixed,
+              labelColor: AppTheme.accentForeground(context),
               unselectedLabelColor: cs.onSurfaceVariant,
               labelStyle: AppTextStyles.labelLarge,
               unselectedLabelStyle: AppTextStyles.labelLarge,

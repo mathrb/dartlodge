@@ -171,19 +171,29 @@ abstract final class AppTheme {
           ? AppColorsDark.onSuccess
           : AppColors.onSuccess;
 
-  /// `boardAccent` — accent FOREGROUND on game-board surfaces: the closed
-  /// Cricket mark, the keypad's double/triple dots, dart-badge text and the
-  /// active player's name. Brightness-aware (DESIGN_SYSTEM.md §2.6):
+  /// `accentForeground` — accent colour for TEXT and icons drawn on the
+  /// plain surfaces (post-game hero and breakdown winner column, the stats
+  /// tab label, section titles). Brightness-aware (DESIGN_SYSTEM.md §2.6):
   /// dark keeps the brand neon `primaryFixed` (optionally dimmed by
   /// [darkAlpha]); light resolves to the adaptive `primary` at full opacity,
-  /// because the neon on the light greys is ~1.2:1. Neon FILLS (NEXT, the
-  /// 50 BULL key, accent bars) keep `primaryFixed` in both themes.
-  static Color boardAccent(BuildContext context, {double darkAlpha = 1.0}) {
+  /// because the neon on the light greys is ~1.2:1. Neon FILLS (pills,
+  /// NEXT, the 50 BULL key, accent bars, tab indicators) keep
+  /// `primaryFixed` in both themes.
+  static Color accentForeground(
+    BuildContext context, {
+    double darkAlpha = 1.0,
+  }) {
     final cs = Theme.of(context).colorScheme;
     return cs.brightness == Brightness.dark
         ? cs.primaryFixed.withValues(alpha: darkAlpha)
         : cs.primary;
   }
+
+  /// `boardAccent` — [accentForeground] on game-board surfaces: the closed
+  /// Cricket mark, the keypad's double/triple dots, dart-badge text and the
+  /// active player's name.
+  static Color boardAccent(BuildContext context, {double darkAlpha = 1.0}) =>
+      accentForeground(context, darkAlpha: darkAlpha);
 
   /// `scoreNumeralTextScaler` — text scaler for game-board score numerals
   /// (`scoreActive` … `scoreSmall`, DESIGN_SYSTEM.md §13). They are already
