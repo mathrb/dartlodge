@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
@@ -21,6 +23,7 @@ class DartInputGridWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(2),
       child: Column(
@@ -124,7 +127,7 @@ class DartInputGridWidget extends StatelessWidget {
                 Expanded(
                   flex: 2,
                   child: Semantics(
-                    label: 'Miss',
+                    label: l10n.gameSegmentMiss,
                     child: InkWell(
                       onTap: enabled ? () => onSegmentTapped('MISS') : null,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -151,7 +154,7 @@ class DartInputGridWidget extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: Semantics(
-                    label: 'Single Bull',
+                    label: l10n.gameSegmentSingleBull,
                     child: InkWell(
                       onTap: enabled ? () => onSegmentTapped('SB') : null,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -196,7 +199,7 @@ class DartInputGridWidget extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: Semantics(
-                    label: 'Double Bull',
+                    label: l10n.gameSegmentDoubleBull,
                     child: InkWell(
                       onTap: enabled ? () => onSegmentTapped('DB') : null,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
@@ -267,6 +270,12 @@ class _NumberRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final semanticLabelFor = switch (prefix) {
+      '' => l10n.gameSegmentSingle,
+      'D' => l10n.gameSegmentDouble,
+      _ => l10n.gameSegmentTriple,
+    };
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -276,8 +285,7 @@ class _NumberRow extends StatelessWidget {
             child: _GridCell(
               label: '${numbers[i]}',
               segment: '$prefix${numbers[i]}',
-              semanticLabel:
-                  '${prefix.isEmpty ? 'Single' : prefix == 'D' ? 'Double' : 'Triple'} ${numbers[i]}',
+              semanticLabel: semanticLabelFor(numbers[i]),
               bgColor: bgColor,
               textColor: textColor,
               dots: dots,

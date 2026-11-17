@@ -319,6 +319,7 @@ class _CricketNumberRow extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     // In correction mode (#590) closed rows stay tappable; the "closed" tooltip
     // is suppressed. The closed background styling below is unaffected.
+    final l10n = AppLocalizations.of(context);
     final inputEnabled = allowClosedRows || !isRowClosed;
     final showClosedTooltip = isRowClosed && !allowClosedRows;
     return Container(
@@ -365,7 +366,7 @@ class _CricketNumberRow extends StatelessWidget {
               child: _InputCell(
                 displayLabel: '$target',
                 dotCount: 1,
-                semanticLabel: 'Single $target',
+                semanticLabel: l10n.gameSegmentSingle(target),
                 onTap: inputEnabled
                     ? () => onSegmentTapped(_singleSegment(target))
                     : null,
@@ -378,7 +379,7 @@ class _CricketNumberRow extends StatelessWidget {
               child: _InputCell(
                 displayLabel: '$target',
                 dotCount: 2,
-                semanticLabel: 'Double $target',
+                semanticLabel: l10n.gameSegmentDouble(target),
                 onTap: inputEnabled
                     ? () => onSegmentTapped(_doubleSegment(target))
                     : null,
@@ -391,7 +392,7 @@ class _CricketNumberRow extends StatelessWidget {
               child: _InputCell(
                 displayLabel: '$target',
                 dotCount: 3,
-                semanticLabel: 'Triple $target',
+                semanticLabel: l10n.gameSegmentTriple(target),
                 onTap: inputEnabled
                     ? () => onSegmentTapped(_tripleSegment(target))
                     : null,
@@ -406,7 +407,7 @@ class _CricketNumberRow extends StatelessWidget {
               child: _InputCell(
                 displayLabel: 'SB',
                 dotCount: 1,
-                semanticLabel: 'Single Bull',
+                semanticLabel: l10n.gameSegmentSingleBull,
                 onTap: inputEnabled ? () => onSegmentTapped('SB') : null,
                 isRowClosed: showClosedTooltip,
                 hasBorderRight: true,
@@ -417,7 +418,7 @@ class _CricketNumberRow extends StatelessWidget {
               child: _InputCell(
                 displayLabel: 'DB',
                 dotCount: 2,
-                semanticLabel: 'Double Bull',
+                semanticLabel: l10n.gameSegmentDoubleBull,
                 onTap: inputEnabled ? () => onSegmentTapped('DB') : null,
                 isRowClosed: showClosedTooltip,
                 hasBorderRight: false,

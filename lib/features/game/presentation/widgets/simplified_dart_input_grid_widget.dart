@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
+
 import '../../../../core/utils/app_colors.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/app_theme.dart';
@@ -93,6 +95,7 @@ class _SimplifiedDartInputGridWidgetState
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(2),
       child: Column(
@@ -118,7 +121,7 @@ class _SimplifiedDartInputGridWidgetState
               children: [
                 Expanded(
                   child: _specialButton(
-                    semanticLabel: 'Miss',
+                    semanticLabel: l10n.gameSegmentMiss,
                     bgColor: cs.surfaceContainerLowest,
                     onTap: () => _tapSpecial('MISS'),
                     child: Text(
@@ -131,7 +134,7 @@ class _SimplifiedDartInputGridWidgetState
                 const SizedBox(width: 4),
                 Expanded(
                   child: _multiplierButton(
-                    label: 'Double',
+                    label: l10n.gameMultiplierDouble,
                     armed: _armed == _Armed.double,
                     onTap: () => _toggle(_Armed.double),
                     cs: cs,
@@ -140,7 +143,7 @@ class _SimplifiedDartInputGridWidgetState
                 const SizedBox(width: 4),
                 Expanded(
                   child: _multiplierButton(
-                    label: 'Triple',
+                    label: l10n.gameMultiplierTriple,
                     armed: _armed == _Armed.triple,
                     onTap: () => _toggle(_Armed.triple),
                     cs: cs,
@@ -274,7 +277,7 @@ class _SimplifiedDartInputGridWidgetState
     }
 
     return Semantics(
-      label: 'Bull',
+      label: AppLocalizations.of(context).gameSegmentBull,
       button: true,
       selected: _armed == _Armed.double,
       enabled: widget.enabled && !disabled,

@@ -641,5 +641,16 @@
   "glossaryCheckoutPctTitle": "Checkout %",
   "glossaryCheckoutPctBody": "La fréquence à laquelle vous terminez la manche lorsque vous avez une occasion sur un double : checkouts réussis divisés par le nombre d'occasions.",
   "glossaryCheckoutScoreTitle": "Score de checkout",
-  "glossaryCheckoutScoreBody": "Le score sur lequel vous avez terminé une manche : le total sorti lors de votre volée gagnante. Un checkout élevé est une fin plus difficile."
+  "glossaryCheckoutScoreBody": "Le score sur lequel vous avez terminé une manche : le total sorti lors de votre volée gagnante. Un checkout élevé est une fin plus difficile.",
+  "gameSegmentSingle": "Simple {number}",
+  "gameSegmentDouble": "Double {number}",
+  "gameSegmentTriple": "Triple {number}",
+  "gameSegmentMiss": "Miss",
+  "gameSegmentBull": "Bull",
+  "gameSegmentSingleBull": "Outer bull",
+  "gameSegmentDoubleBull": "Double bull",
+  "gameMultiplierDouble": "Double",
+  "gameMultiplierTriple": "Triple",
+  "gameTurnBust": "BUST",
+  "gameTurnCheckout": "CHECKOUT"
 }

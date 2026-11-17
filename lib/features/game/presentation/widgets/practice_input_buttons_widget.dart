@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 import 'manual_scoring_input.dart';
@@ -217,7 +219,9 @@ class _Bobs27InputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final num = n ?? 1;
-    final label = num == 25 ? 'Double Bull' : 'Double $num';
+    final l10n = AppLocalizations.of(context);
+    final label =
+        num == 25 ? l10n.gameSegmentDoubleBull : l10n.gameSegmentDouble(num);
     final segment = num == 25 ? 'DB' : 'D$num';
 
     return DecoratedBox(

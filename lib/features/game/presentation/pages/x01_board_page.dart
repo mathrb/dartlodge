@@ -144,7 +144,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
             backgroundColor: cs.errorContainer,
             duration: const Duration(seconds: 2),
             content: Text(
-              'BUST',
+              AppLocalizations.of(context).gameTurnBust,
               style: AppTextStyles.headlineSmall.copyWith(
                 color: cs.onErrorContainer,
               ),

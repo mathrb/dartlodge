@@ -641,5 +641,16 @@
   "glossaryCheckoutPctTitle": "Checkout %",
   "glossaryCheckoutPctBody": "A frequência com que fechas o leg quando tens hipótese a um duplo: checkouts conseguidos a dividir pelo número de oportunidades.",
   "glossaryCheckoutScoreTitle": "Pontuação de checkout",
-  "glossaryCheckoutScoreBody": "A pontuação com que terminaste um leg: o total que eliminaste na tua jogada vencedora. Um checkout mais alto é um remate mais difícil."
+  "glossaryCheckoutScoreBody": "A pontuação com que terminaste um leg: o total que eliminaste na tua jogada vencedora. Um checkout mais alto é um remate mais difícil.",
+  "gameSegmentSingle": "Simples {number}",
+  "gameSegmentDouble": "Duplo {number}",
+  "gameSegmentTriple": "Triplo {number}",
+  "gameSegmentMiss": "Miss",
+  "gameSegmentBull": "Bull",
+  "gameSegmentSingleBull": "Outer bull",
+  "gameSegmentDoubleBull": "Duplo bull",
+  "gameMultiplierDouble": "Duplo",
+  "gameMultiplierTriple": "Triplo",
+  "gameTurnBust": "BUST",
+  "gameTurnCheckout": "CHECKOUT"
 }
