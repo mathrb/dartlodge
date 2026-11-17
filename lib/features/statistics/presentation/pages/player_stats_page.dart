@@ -10,6 +10,7 @@ import '../../../../core/utils/app_text_styles.dart';
 import '../../../../core/utils/constants.dart';
 import '../../../../core/utils/stat_formatter.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../../../core/widgets/text_measurer.dart';
 import 'package:dart_lodge/app/app_router.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
@@ -26,6 +27,7 @@ import '../widgets/practice_game_type_chip_selector_widget.dart';
 import '../widgets/practice_stats_detail_table_widget.dart';
 import '../widgets/practice_trend_chart_widget.dart';
 import '../widgets/ppr_trend_chart_widget.dart';
+import '../widgets/stats_card_row_widget.dart';
 import '../widgets/stats_card_widget.dart';
 import '../widgets/stats_detail_table_widget.dart';
 import '../widgets/stats_heatmap_section_widget.dart';
@@ -119,15 +121,32 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
                 ),
               ),
             ),
-            TabBar(
-              controller: _tabController,
-              tabs: tabs,
-              indicatorColor: cs.primaryFixed,
-              indicatorWeight: 2,
-              labelColor: AppTheme.accentForeground(context),
-              unselectedLabelColor: cs.onSurfaceVariant,
-              labelStyle: AppTextStyles.labelLarge,
-              unselectedLabelStyle: AppTextStyles.labelLarge,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // Equal-width tabs while every label fits its share of the
+                // row; otherwise (long locales, large system text) the row
+                // scrolls so no label is clipped (DESIGN_SYSTEM §13).
+                final measure = TextMeasurer.of(context);
+                final share = constraints.maxWidth / tabs.length;
+                final fits = tabs.every(
+                  (t) =>
+                      measure.width(t.text!, AppTextStyles.labelLarge) +
+                          kTabLabelPadding.horizontal <=
+                      share,
+                );
+                return TabBar(
+                  controller: _tabController,
+                  tabs: tabs,
+                  isScrollable: !fits,
+                  tabAlignment: fits ? null : TabAlignment.start,
+                  indicatorColor: cs.primaryFixed,
+                  indicatorWeight: 2,
+                  labelColor: AppTheme.accentForeground(context),
+                  unselectedLabelColor: cs.onSurfaceVariant,
+                  labelStyle: AppTextStyles.labelLarge,
+                  unselectedLabelStyle: AppTextStyles.labelLarge,
+                );
+              },
             ),
             Expanded(
               child: TabBarView(
@@ -415,11 +434,11 @@ class _PracticeSummaryCards extends StatelessWidget {
         ),
     };
 
-    return Row(
-      children: [
-        Expanded(child: StatsCardWidget(label: label1, value: val1)),
-        Expanded(child: StatsCardWidget(label: label2, value: val2)),
-        Expanded(child: StatsCardWidget(label: label3, value: val3)),
+    return StatsCardRowWidget(
+      cards: [
+        StatsCardWidget(label: label1, value: val1),
+        StatsCardWidget(label: label2, value: val2),
+        StatsCardWidget(label: label3, value: val3),
       ],
     );
   }
