@@ -13,25 +13,62 @@ class EventLegLimiter {
   /// Returns [events] trimmed to the last [legLimit] completed legs.
   ///
   /// Returns [events] unchanged if [legLimit] is null, ≤ 0, or if the input
-  /// contains fewer than [legLimit] `LegCompleted` events.
+  /// contains no more than [legLimit] completed legs.
   ///
-  /// Caller MUST pass events ordered by `(game_id, local_sequence)` so that
-  /// each game's events are contiguous — the trim slices on a global event
-  /// index, not on per-game leg counts.
-  static List<GameEvent> trim(List<GameEvent> events, int? legLimit) {
+  /// A leg closes on `LegCompleted`. Practice drills end with `GameCompleted`
+  /// alone (their engines never advance the leg index), so when
+  /// [closeLegOnGameCompleted] is true a `GameCompleted` also closes the open
+  /// leg, unless that leg was already closed by a `LegCompleted` (so it is
+  /// never counted twice). This mirrors
+  /// `PlayerStatsAssembler.legHistoryFromEvents`, which feeds the trend chart.
+  ///
+  /// When the cut falls on the last leg of a game, that game's trailing
+  /// `GameCompleted` is dropped too: it belongs to no leg in the window and
+  /// would otherwise count the game in game-level projections (win rate).
+  ///
+  /// Caller MUST pass events in chronological game order (oldest game first)
+  /// with each game's events contiguous and sorted by `local_sequence` — the
+  /// trim keeps the events after a global index, so "last N" is only "most
+  /// recent N" when the games are ordered by when they were played.
+  static List<GameEvent> trim(
+    List<GameEvent> events,
+    int? legLimit, {
+    bool closeLegOnGameCompleted = false,
+  }) {
     if (legLimit == null || legLimit <= 0) return events;
 
-    final legCompletedIndices = <int>[];
+    final legEndIndices = <int>[];
+    // True while the current game has an open (not yet closed) leg.
+    bool legOpen = false;
+    String? currentGameId;
     for (int i = 0; i < events.length; i++) {
-      if (events[i].eventType == 'LegCompleted') {
-        legCompletedIndices.add(i);
+      final e = events[i];
+      if (e.gameId != currentGameId) {
+        currentGameId = e.gameId;
+        legOpen = false;
+      }
+      if (e.eventType == 'LegCompleted') {
+        legEndIndices.add(i);
+        legOpen = false;
+      } else if (e.eventType == 'GameCompleted') {
+        if (closeLegOnGameCompleted && legOpen) legEndIndices.add(i);
+        legOpen = false;
+      } else {
+        legOpen = true;
       }
     }
-    if (legCompletedIndices.length <= legLimit) return events;
+    if (legEndIndices.length <= legLimit) return events;
 
-    // Slice from the event after the (N - legLimit)th LegCompleted.
-    final prevLegCompletedIdx =
-        legCompletedIndices[legCompletedIndices.length - legLimit - 1];
-    return events.sublist(prevLegCompletedIdx + 1);
+    // Slice from the event after the (N - legLimit)th leg end, skipping the
+    // cut game's trailing GameCompleted.
+    final cutIdx = legEndIndices[legEndIndices.length - legLimit - 1];
+    final cutGameId = events[cutIdx].gameId;
+    var start = cutIdx + 1;
+    while (start < events.length &&
+        events[start].gameId == cutGameId &&
+        events[start].eventType == 'GameCompleted') {
+      start++;
+    }
+    return events.sublist(start);
   }
 }

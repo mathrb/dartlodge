@@ -502,6 +502,9 @@ abstract interface class StatisticsRepository {
   /// [startingScore] / [variant] / [legLimit] narrow the cohort further, and
   /// [cricketTargetMode] selects the cricket target-mode cohort
   /// (`fixed` / `random` / `crazy`, default `fixed`).
+  /// [legLimit] keeps only the player's most recent [legLimit] legs, by game
+  /// `start_time` (a practice drill counts as one leg); `totalGames` and the
+  /// win rate then count only the games in that window.
   /// Throws [PlayerNotFoundException] if [playerId] does not exist.
   Future<PlayerStats> getPlayerStats(
     String playerId, {

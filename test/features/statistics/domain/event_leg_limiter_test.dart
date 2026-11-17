@@ -5,11 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   int seq = 0;
-  GameEvent event(String type) {
+  GameEvent event(String type, {String gameId = 'g'}) {
     seq++;
     return GameEvent(
       eventId: 'e$seq',
-      gameId: 'g',
+      gameId: gameId,
       eventType: type,
       localSequence: seq,
       occurredAt: DateTime.utc(2026, 1, 1),
@@ -90,5 +90,79 @@ void main() {
     expect(result.length, 4);
     expect(result.first.eventType, 'TurnStarted');
     expect(result[1].eventType, 'LegCompleted');
+  });
+
+  test('drops the cut game\'s trailing GameCompleted', () {
+    // Game a's only leg is outside a Last 1 window, so its GameCompleted
+    // must not leak into the window (win rate counts GameCompleted).
+    final events = [
+      event('TurnStarted', gameId: 'a'),
+      event('LegCompleted', gameId: 'a'),
+      event('GameCompleted', gameId: 'a'),
+      event('TurnStarted', gameId: 'b'),
+      event('LegCompleted', gameId: 'b'),
+      event('GameCompleted', gameId: 'b'),
+    ];
+
+    final result = EventLegLimiter.trim(events, 1);
+
+    expect(result.map((e) => e.gameId).toSet(), {'b'});
+    expect(result.map((e) => e.eventType).toList(),
+        ['TurnStarted', 'LegCompleted', 'GameCompleted']);
+  });
+
+  test('match types ignore GameCompleted as a leg end by default', () {
+    // An abandoned game ends on GameCompleted with an open leg: not a leg.
+    final events = [
+      event('TurnStarted', gameId: 'a'),
+      event('GameCompleted', gameId: 'a'),
+      event('TurnStarted', gameId: 'b'),
+      event('LegCompleted', gameId: 'b'),
+      event('GameCompleted', gameId: 'b'),
+    ];
+    expect(EventLegLimiter.trim(events, 1), same(events));
+  });
+
+  group('closeLegOnGameCompleted (practice drills)', () {
+    test('each drill ending on GameCompleted counts as one leg', () {
+      final events = [
+        event('TurnStarted', gameId: 'a'),
+        event('DartThrown', gameId: 'a'),
+        event('GameCompleted', gameId: 'a'),
+        event('TurnStarted', gameId: 'b'),
+        event('DartThrown', gameId: 'b'),
+        event('GameCompleted', gameId: 'b'),
+      ];
+
+      final result =
+          EventLegLimiter.trim(events, 1, closeLegOnGameCompleted: true);
+
+      expect(result.map((e) => e.gameId).toSet(), {'b'});
+      expect(result.length, 3);
+    });
+
+    test('a GameCompleted right after LegCompleted is not a second leg', () {
+      // Game a: two legs (LegCompleted, then the final GameCompleted closes
+      // the second). Game b: one leg closed by LegCompleted + GameCompleted.
+      final events = [
+        event('TurnStarted', gameId: 'a'),
+        event('LegCompleted', gameId: 'a'),
+        event('TurnStarted', gameId: 'a'),
+        event('GameCompleted', gameId: 'a'),
+        event('TurnStarted', gameId: 'b'),
+        event('LegCompleted', gameId: 'b'),
+        event('GameCompleted', gameId: 'b'),
+      ];
+
+      // 3 legs in total; Last 2 keeps a's second leg and b.
+      final result =
+          EventLegLimiter.trim(events, 2, closeLegOnGameCompleted: true);
+      expect(result.length, 5);
+      expect(result.first.localSequence, 3);
+      // Last 3 keeps everything.
+      expect(
+          EventLegLimiter.trim(events, 3, closeLegOnGameCompleted: true),
+          same(events));
+    });
   });
 }

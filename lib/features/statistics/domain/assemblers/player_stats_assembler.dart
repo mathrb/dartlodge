@@ -84,6 +84,11 @@ class PlayerStatsAssembler {
     GameType.checkoutPractice,
   };
 
+  /// True for the practice drill types, whose engines end a drill with
+  /// `GameCompleted` alone (no `LegCompleted`).
+  static bool isPracticeGameType(GameType gameType) =>
+      _practiceGameTypes.contains(gameType);
+
   /// Computes the cross-type achievement metric bundle for [playerId] (#524).
   ///
   /// [events] is the player's full history across ALL game types, sorted
