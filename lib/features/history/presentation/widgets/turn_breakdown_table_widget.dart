@@ -143,9 +143,9 @@ class _TurnTable extends StatelessWidget {
     // "121 · CHECKOUT" string did once the table was made to fit the width.
     Widget turnScoreCell() {
       final flag = row.bust
-          ? 'BUST'
+          ? l10n.gameTurnBust
           : row.checkout
-              ? 'CHECKOUT'
+              ? l10n.gameTurnCheckout
               : null;
       if (flag == null) return txt(StatFormatter.fmtInt(row.turnScore));
       final color = row.bust ? cs.error : cs.primary;

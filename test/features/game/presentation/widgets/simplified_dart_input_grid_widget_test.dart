@@ -10,10 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dot_row_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 Widget _wrap(Widget child) {
   return MaterialApp(
     theme: AppTheme.light(),
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
   );
 }

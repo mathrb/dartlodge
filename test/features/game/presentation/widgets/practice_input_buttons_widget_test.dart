@@ -14,6 +14,7 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dart_input_grid_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/practice_input_buttons_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
+import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
 /// Forces the simplified keypad on without touching SharedPreferences.
 class _FakeSimplifiedInputEnabled extends SimplifiedInputEnabled {
@@ -30,6 +31,8 @@ Widget _wrap(Widget child, {bool simplified = false}) {
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(body: child),
     ),
   );

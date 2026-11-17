@@ -641,5 +641,16 @@
   "glossaryCheckoutPctTitle": "Checkout %",
   "glossaryCheckoutPctBody": "Con qué frecuencia cierras la manga cuando tienes opción a un doble: cierres logrados divididos entre las oportunidades que tuviste.",
   "glossaryCheckoutScoreTitle": "Puntuación de cierre",
-  "glossaryCheckoutScoreBody": "La puntuación con la que cerraste una manga: el total que eliminaste en tu tanda ganadora. Un cierre más alto es un final más difícil."
+  "glossaryCheckoutScoreBody": "La puntuación con la que cerraste una manga: el total que eliminaste en tu tanda ganadora. Un cierre más alto es un final más difícil.",
+  "gameSegmentSingle": "Sencillo {number}",
+  "gameSegmentDouble": "Doble {number}",
+  "gameSegmentTriple": "Triple {number}",
+  "gameSegmentMiss": "Fallo",
+  "gameSegmentBull": "Bull",
+  "gameSegmentSingleBull": "Bull exterior",
+  "gameSegmentDoubleBull": "Doble bull",
+  "gameMultiplierDouble": "Doble",
+  "gameMultiplierTriple": "Triple",
+  "gameTurnBust": "BUST",
+  "gameTurnCheckout": "CHECKOUT"
 }

@@ -641,5 +641,16 @@
   "glossaryCheckoutPctTitle": "Checkout %",
   "glossaryCheckoutPctBody": "Hoe vaak je de leg uitgooit als je een kans op een dubbel hebt: geraakte checkouts gedeeld door het aantal kansen.",
   "glossaryCheckoutScoreTitle": "Checkoutscore",
-  "glossaryCheckoutScoreBody": "De score waarmee je een leg hebt uitgegooid: het totaal dat je met je winnende beurt wegwerkte. Een hogere checkout is een moeilijkere finish."
+  "glossaryCheckoutScoreBody": "De score waarmee je een leg hebt uitgegooid: het totaal dat je met je winnende beurt wegwerkte. Een hogere checkout is een moeilijkere finish.",
+  "gameSegmentSingle": "Single {number}",
+  "gameSegmentDouble": "Dubbel {number}",
+  "gameSegmentTriple": "Triple {number}",
+  "gameSegmentMiss": "Misser",
+  "gameSegmentBull": "Bull",
+  "gameSegmentSingleBull": "Outer bull",
+  "gameSegmentDoubleBull": "Dubbele bull",
+  "gameMultiplierDouble": "Dubbel",
+  "gameMultiplierTriple": "Triple",
+  "gameTurnBust": "BUST",
+  "gameTurnCheckout": "CHECKOUT"
 }

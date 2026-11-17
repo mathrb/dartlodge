@@ -641,5 +641,16 @@
   "glossaryCheckoutPctTitle": "Checkout %",
   "glossaryCheckoutPctBody": "Quanto spesso chiudi il leg quando hai un tiro utile a un doppio: checkout riusciti divisi per le occasioni avute.",
   "glossaryCheckoutScoreTitle": "Punteggio di checkout",
-  "glossaryCheckoutScoreBody": "Il punteggio con cui hai chiuso un leg: il totale che hai eliminato nel turno vincente. Un checkout più alto è una chiusura più difficile."
+  "glossaryCheckoutScoreBody": "Il punteggio con cui hai chiuso un leg: il totale che hai eliminato nel turno vincente. Un checkout più alto è una chiusura più difficile.",
+  "gameSegmentSingle": "Singolo {number}",
+  "gameSegmentDouble": "Doppio {number}",
+  "gameSegmentTriple": "Triplo {number}",
+  "gameSegmentMiss": "Errore",
+  "gameSegmentBull": "Bull",
+  "gameSegmentSingleBull": "Outer bull",
+  "gameSegmentDoubleBull": "Doppio bull",
+  "gameMultiplierDouble": "Doppio",
+  "gameMultiplierTriple": "Triplo",
+  "gameTurnBust": "BUST",
+  "gameTurnCheckout": "CHECKOUT"
 }

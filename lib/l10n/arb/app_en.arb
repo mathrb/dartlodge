@@ -2566,5 +2566,64 @@
   "glossaryCheckoutScoreBody": "The score you finished a leg on: the total you took out with your winning turn. A higher checkout is a harder finish.",
   "@glossaryCheckoutScoreBody": {
     "description": "Plain-language definition of the checkout score statistic"
+  },
+  "gameSegmentSingle": "Single {number}",
+  "@gameSegmentSingle": {
+    "description": "Screen-reader label of a single-segment key on the scoring keypads, e.g. \"Single 20\"",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameSegmentDouble": "Double {number}",
+  "@gameSegmentDouble": {
+    "description": "Label of a double-segment key on the scoring keypads (screen reader; visible on the Bob's 27 bar), e.g. \"Double 20\"",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameSegmentTriple": "Triple {number}",
+  "@gameSegmentTriple": {
+    "description": "Screen-reader label of a triple-segment key on the scoring keypads, e.g. \"Triple 20\"",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "gameSegmentMiss": "Miss",
+  "@gameSegmentMiss": {
+    "description": "Screen-reader label of the MISS key on the scoring keypads"
+  },
+  "gameSegmentBull": "Bull",
+  "@gameSegmentBull": {
+    "description": "Screen-reader label of the bull key on the simplified keypad (single or double depending on the armed multiplier)"
+  },
+  "gameSegmentSingleBull": "Single Bull",
+  "@gameSegmentSingleBull": {
+    "description": "Screen-reader label of the single (outer) bull key, worth 25"
+  },
+  "gameSegmentDoubleBull": "Double Bull",
+  "@gameSegmentDoubleBull": {
+    "description": "Label of the double (inner) bull key, worth 50 (screen reader; visible on the Bob's 27 bull round)"
+  },
+  "gameMultiplierDouble": "Double",
+  "@gameMultiplierDouble": {
+    "description": "Simplified keypad: toggle that arms a double for the next number tapped"
+  },
+  "gameMultiplierTriple": "Triple",
+  "@gameMultiplierTriple": {
+    "description": "Simplified keypad: toggle that arms a triple for the next number tapped"
+  },
+  "gameTurnBust": "BUST",
+  "@gameTurnBust": {
+    "description": "Short flag for a busted visit (X01 board banner, game-detail turn breakdown)"
+  },
+  "gameTurnCheckout": "CHECKOUT",
+  "@gameTurnCheckout": {
+    "description": "Short flag for the visit that checked out (game-detail turn breakdown)"
   }
 }
