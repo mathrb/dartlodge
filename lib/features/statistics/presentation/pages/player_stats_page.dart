@@ -48,9 +48,9 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
-  // X01/Cricket/Practice are fixed game-type names; "Others" is localized
-  // (built in build()).
-  static const _tabCount = 4;
+  // One tab per StatsTabIndex. X01/Cricket are fixed game-type names;
+  // Practice is localized (built in build()).
+  static const _tabCount = 3;
 
   @override
   void initState() {
@@ -81,7 +81,6 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
       const Tab(text: 'X01'),
       const Tab(text: 'Cricket'),
       Tab(text: l10n.statsPracticeTab),
-      Tab(text: l10n.statsOthersTab),
     ];
 
     return Scaffold(
@@ -155,7 +154,6 @@ class _PlayerStatsPageState extends ConsumerState<PlayerStatsPage>
                   _X01TabContent(playerId: widget.playerId),
                   _CricketTabContent(playerId: widget.playerId),
                   _PracticeTabContent(playerId: widget.playerId),
-                  _ComingSoonTab(label: l10n.statsOthersTab),
                 ],
               ),
             ),
@@ -191,17 +189,14 @@ class _X01TabContent extends ConsumerWidget {
                 onRetry: () =>
                     ref.invalidate(filteredPlayerStatsProvider(playerId)),
               ),
-              data: (stats) => SummaryCardsRowWidget(stats: stats),
+              data: (stats) => stats.totalGames == 0
+                  ? const SizedBox.shrink()
+                  : SummaryCardsRowWidget(stats: stats),
             ),
           ),
           VariantChipSelectorWidget(playerId: playerId),
           TimeRangeSelectorWidget(playerId: playerId),
           const SizedBox(height: AppSpacing.space2),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-            child: PprTrendChartWidget(playerId: playerId),
-          ),
-          const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
             loading: () => const LoadingSpinnerWidget(height: 200),
             error: (e, _) => ErrorRetryWidget(
@@ -209,11 +204,25 @@ class _X01TabContent extends ConsumerWidget {
               onRetry: () =>
                   ref.invalidate(filteredPlayerStatsProvider(playerId)),
             ),
-            data: (stats) => StatsDetailTableWidget(stats: stats),
-          ),
-          StatsHeatmapSectionWidget(
-            playerId: playerId,
-            gameType: GameType.x01,
+            data: (stats) => stats.totalGames == 0
+                ? const _NoGamesState(gameType: 'X01')
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.space4,
+                        ),
+                        child: PprTrendChartWidget(playerId: playerId),
+                      ),
+                      const SizedBox(height: AppSpacing.space4),
+                      StatsDetailTableWidget(stats: stats),
+                      StatsHeatmapSectionWidget(
+                        playerId: playerId,
+                        gameType: GameType.x01,
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -246,18 +255,15 @@ class _CricketTabContent extends ConsumerWidget {
                 onRetry: () =>
                     ref.invalidate(filteredCricketStatsProvider(playerId)),
               ),
-              data: (stats) => SummaryCardsRowWidget(stats: stats),
+              data: (stats) => stats.totalGames == 0
+                  ? const SizedBox.shrink()
+                  : SummaryCardsRowWidget(stats: stats),
             ),
           ),
           CricketTargetModeChipSelectorWidget(playerId: playerId),
           CricketVariantChipSelectorWidget(playerId: playerId),
           TimeRangeSelectorWidget(playerId: playerId),
           const SizedBox(height: AppSpacing.space2),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-            child: MptTrendChartWidget(playerId: playerId),
-          ),
-          const SizedBox(height: AppSpacing.space4),
           asyncStats.when(
             loading: () => const LoadingSpinnerWidget(height: 200),
             error: (e, _) => ErrorRetryWidget(
@@ -265,11 +271,25 @@ class _CricketTabContent extends ConsumerWidget {
               onRetry: () =>
                   ref.invalidate(filteredCricketStatsProvider(playerId)),
             ),
-            data: (stats) => CricketStatsDetailTableWidget(stats: stats),
-          ),
-          StatsHeatmapSectionWidget(
-            playerId: playerId,
-            gameType: GameType.cricket,
+            data: (stats) => stats.totalGames == 0
+                ? const _NoGamesState(gameType: 'Cricket')
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.space4,
+                        ),
+                        child: MptTrendChartWidget(playerId: playerId),
+                      ),
+                      const SizedBox(height: AppSpacing.space4),
+                      CricketStatsDetailTableWidget(stats: stats),
+                      StatsHeatmapSectionWidget(
+                        playerId: playerId,
+                        gameType: GameType.cricket,
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),
@@ -306,7 +326,9 @@ class _PracticeTabContent extends ConsumerWidget {
                 onRetry: () =>
                     ref.invalidate(filteredPracticeStatsProvider(playerId)),
               ),
-              data: (stats) => _PracticeSummaryCards(stats: stats),
+              data: (stats) => stats.totalGames == 0
+                  ? const SizedBox.shrink()
+                  : _PracticeSummaryCards(stats: stats),
             ),
           ),
           TimeRangeSelectorWidget(playerId: playerId),
@@ -318,23 +340,36 @@ class _PracticeTabContent extends ConsumerWidget {
               onRetry: () =>
                   ref.invalidate(filteredPracticeStatsProvider(playerId)),
             ),
-            data: (stats) => isAtc
-                ? _AtcBoardAndSummary(stats: stats)
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-                        child: PracticeTrendChartWidget(playerId: playerId),
-                      ),
-                      const SizedBox(height: AppSpacing.space4),
-                      PracticeStatsDetailTableWidget(stats: stats),
-                    ],
+            data: (stats) {
+              if (stats.totalGames == 0) {
+                return _NoGamesState(
+                  gameType: PracticeGameTypeChipSelectorWidget.labelFor(
+                    pageState.selectedPracticeGameType,
                   ),
-          ),
-          StatsHeatmapSectionWidget(
-            playerId: playerId,
-            gameType: pageState.selectedPracticeGameType,
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (isAtc)
+                    _AtcBoardAndSummary(stats: stats)
+                  else ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.space4,
+                      ),
+                      child: PracticeTrendChartWidget(playerId: playerId),
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+                    PracticeStatsDetailTableWidget(stats: stats),
+                  ],
+                  StatsHeatmapSectionWidget(
+                    playerId: playerId,
+                    gameType: pageState.selectedPracticeGameType,
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -444,40 +479,34 @@ class _PracticeSummaryCards extends StatelessWidget {
   }
 }
 
-class _ComingSoonTab extends StatelessWidget {
-  final String label;
+/// A stats tab with no games for the selected game type and filters: one
+/// line instead of a table of dashes (the filters above stay usable).
+class _NoGamesState extends StatelessWidget {
+  final String gameType;
 
-  const _ComingSoonTab({required this.label});
+  const _NoGamesState({required this.gameType});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context);
-    return Opacity(
-      opacity: 0.6,
-      child: Container(
-        color: colorScheme.surfaceContainerHighest,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.bar_chart_outlined,
-                size: 64,
-                color: colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(height: AppSpacing.space4),
-              Text(
-                l10n.statsComingSoon(label),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-              ),
-            ],
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space4,
+        vertical: AppSpacing.space8,
+      ),
+      child: Column(
+        children: [
+          Icon(Icons.bar_chart_outlined, size: 48, color: cs.onSurfaceVariant),
+          const SizedBox(height: AppSpacing.space4),
+          Text(
+            AppLocalizations.of(context).statsNoGamesToShow(gameType),
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
-

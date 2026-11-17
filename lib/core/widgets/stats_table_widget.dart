@@ -28,6 +28,9 @@ class StatsTableHeader extends StatsTableRow {
 class StatsTableDataRow extends StatsTableRow {
   final String label;
   final String col1;
+  /// Second value column (BEST / PER LEG). `null` drops the column from the
+  /// row; `''` keeps the column but leaves the cell blank, for a stat that
+  /// has no such value (e.g. Win % has no best).
   final String? col2;
 
   /// When set, [label] renders as a tappable glossary term (info glyph +
@@ -157,12 +160,14 @@ class StatsTableWidget extends StatelessWidget {
           if (row.col2 != null)
             SizedBox(
               width: valueColumnWidth,
-              child: _ValueCell(
-                row.col2!,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: bestColumnColor(cs),
-                ),
-              ),
+              child: row.col2!.isEmpty
+                  ? null
+                  : _ValueCell(
+                      row.col2!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: bestColumnColor(cs),
+                      ),
+                    ),
             ),
         ],
       ),

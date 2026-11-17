@@ -171,6 +171,13 @@ class _EmptyState extends StatelessWidget {
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
           ),
+          const SizedBox(height: AppSpacing.space4),
+          ElevatedButton(
+            // push, not go: Back from player creation returns here, and the
+            // roster (allPlayersProvider) refreshes with the new player.
+            onPressed: () => context.push(GameRoutes.addPlayer),
+            child: Text(l10n.playersAddFirstPlayer),
+          ),
         ],
       ),
     );

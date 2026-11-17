@@ -4,7 +4,7 @@ import '../../../../core/utils/constants.dart';
 
 part 'player_stats_page_state.freezed.dart';
 
-enum StatsTabIndex { x01, cricket, practice, others }
+enum StatsTabIndex { x01, cricket, practice }
 
 enum StatsTimeRange { last10, last100, all }
 

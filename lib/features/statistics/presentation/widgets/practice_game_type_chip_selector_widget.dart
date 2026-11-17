@@ -19,7 +19,8 @@ class PracticeGameTypeChipSelectorWidget extends ConsumerWidget {
     GameType.checkoutPractice,
   ];
 
-  static String _label(GameType type) => switch (type) {
+  /// Display name of a practice game type (chips and the empty state).
+  static String labelFor(GameType type) => switch (type) {
         GameType.aroundTheClock => 'Around the Clock',
         GameType.bobs27 => "Bob's 27",
         GameType.shanghai => 'Shanghai',
@@ -38,7 +39,7 @@ class PracticeGameTypeChipSelectorWidget extends ConsumerWidget {
     return FilterChipRowWidget<GameType>(
       items: _practiceTypes,
       selected: pageState.selectedPracticeGameType,
-      labelBuilder: _label,
+      labelBuilder: labelFor,
       onSelected: (type) {
         if (type != null) notifier.setPracticeGameType(type);
       },

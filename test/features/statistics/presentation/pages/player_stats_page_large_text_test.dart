@@ -39,6 +39,7 @@ const _stats = PlayerStats(
   gamesWon: 7,
   winRate: 0.583,
   threeDartAverage: 100.5,
+  checkoutPercentage: 42.5,
   highestTurnScore: 180,
   totalDartsThrown: 900,
   dartsPerLeg: 18.4,
@@ -279,11 +280,10 @@ void main() {
     testWidgets('stacks the summary cards when one cannot fit its share',
         (tester) async {
       await _pumpPage(tester, locale: const Locale('de'), scale: 2.0);
-      final values = ['128', '104', '12']
+      final values = ['100.5', '42.5%']
           .map((v) => tester.getRect(find.text(v).first))
           .toList();
       expect(values[1].top, greaterThan(values[0].bottom));
-      expect(values[2].top, greaterThan(values[1].bottom));
     });
 
     testWidgets('keeps the fixed-width tab row when the labels fit',
@@ -295,20 +295,19 @@ void main() {
 
     testWidgets('scrolls the tab row when a label does not fit',
         (tester) async {
-      await _pumpPage(tester, locale: const Locale('fr'));
+      await _pumpPage(tester, locale: const Locale('fr'), scale: 1.4);
       final bar = tester.widget<TabBar>(find.byType(TabBar));
       expect(bar.isScrollable, isTrue);
       expect(bar.tabAlignment, TabAlignment.start);
     });
 
-    testWidgets('keeps the three summary cards side by side at 1.0x',
+    testWidgets('keeps the headline cards side by side at 1.0x',
         (tester) async {
       await _pumpPage(tester, locale: const Locale('de'));
-      final values = ['128', '104', '12']
+      final values = ['100.5', '42.5%']
           .map((v) => tester.getRect(find.text(v).first))
           .toList();
       expect(values[1].left, greaterThan(values[0].right));
-      expect(values[2].left, greaterThan(values[1].right));
     });
   });
 

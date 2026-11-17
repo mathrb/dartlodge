@@ -31,39 +31,33 @@ class MptTrendChartWidget extends ConsumerWidget {
           onRetry: () => ref.invalidate(cricketLegHistoryProvider(playerId)),
         ),
       ),
-      data: (history) => TrendChartShellWidget(
-        hasEnoughData: history.length >= 2,
-        child: _buildChart(context, history),
-      ),
+      data: (history) {
+        final mptSpots = _mptSpots(history);
+        return TrendChartShellWidget(
+          // Legs without an MPR value draw no point, so gate on the spots
+          // rather than the leg count.
+          hasEnoughData: mptSpots.length >= 2,
+          child: _buildChart(context, history, mptSpots),
+        );
+      },
     );
   }
 
-  Widget _buildChart(BuildContext context, List<PlayerLegSnapshot> history) {
+  static List<FlSpot> _mptSpots(List<PlayerLegSnapshot> history) => history
+      .asMap()
+      .entries
+      .where((e) => e.value.mpt != null)
+      .map((e) => FlSpot(e.key.toDouble(), e.value.mpt!))
+      .toList();
+
+  Widget _buildChart(
+    BuildContext context,
+    List<PlayerLegSnapshot> history,
+    List<FlSpot> mptSpots,
+  ) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context);
     final primary = theme.colorScheme.primary;
     final primaryContainer = theme.colorScheme.primaryContainer;
-
-    final mptSpots = history
-        .asMap()
-        .entries
-        .where((e) => e.value.mpt != null)
-        .map((e) => FlSpot(e.key.toDouble(), e.value.mpt!))
-        .toList();
-
-    if (mptSpots.length < 2) {
-      return Center(
-        child: Text(
-          // Match the wording in `TrendChartShellWidget` — chart needs
-          // ≥2 games to draw a line, so the previous "Not enough data
-          // yet" misread as contradicting populated stats below (#287).
-          l10n.statsNeedTwoGames,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-      );
-    }
 
     return LineChart(
       LineChartData(
