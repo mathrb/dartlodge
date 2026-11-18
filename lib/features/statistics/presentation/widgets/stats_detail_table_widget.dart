@@ -32,7 +32,14 @@ class StatsDetailTableWidget extends StatelessWidget {
         StatFormatter.fmtInt(stats.highestCheckout),
         StatTerm.checkoutScore,
       ),
-      StatsTableDataRow(l10n.statsWinPct, StatFormatter.fmtPct(stats.winRate), '—'),
+      // No games → no win rate ("0%" would claim a result). A win rate has
+      // no best value: the BEST cell stays blank, keeping the AVERAGE
+      // value in its column.
+      StatsTableDataRow(
+        l10n.statsWinPct,
+        stats.totalGames == 0 ? '—' : StatFormatter.fmtPct(stats.winRate),
+        '',
+      ),
       StatsTableHeader(l10n.statsColTotal, col2: l10n.statsColPerLeg),
       // High-score buckets are mutually exclusive (see
       // `X01HighScoreBucketsProjection`): 180 → oneEightyTurns,

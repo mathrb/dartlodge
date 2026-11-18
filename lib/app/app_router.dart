@@ -45,6 +45,7 @@ abstract final class GameRoutes {
   static const stats            = '/stats';
   static const settings         = '/settings';
   static const players          = '/players';
+  static const addPlayer        = '/players/add';
   static const variantSelection = '/game/variant-selection';
   static const playerSelection  = '/game/player-selection';
   static const activeX01        = '/game/active/x01';

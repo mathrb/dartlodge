@@ -25,7 +25,14 @@ class CricketStatsDetailTableWidget extends StatelessWidget {
       StatsTableDataRow(l10n.statsHitRate,
           StatFormatter.fmtPct(stats.hitRate),
           StatFormatter.fmtPct(stats.bestGameHitRate)),
-      StatsTableDataRow(l10n.statsWinPct, StatFormatter.fmtPct(stats.winRate), '—'),
+      // No games → no win rate ("0%" would claim a result). A win rate has
+      // no best value: the BEST cell stays blank, keeping the AVERAGE
+      // value in its column.
+      StatsTableDataRow(
+        l10n.statsWinPct,
+        stats.totalGames == 0 ? '—' : StatFormatter.fmtPct(stats.winRate),
+        '',
+      ),
       StatsTableHeader(l10n.statsColTotal, col2: l10n.statsColPerLeg),
       // Mark-turn buckets are ≥-N counts here (career view); per-game
       // stats surface exact-N counts via the same fields — see CLAUDE.md

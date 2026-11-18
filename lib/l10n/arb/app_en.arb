@@ -597,7 +597,6 @@
       }
     }
   },
-  "statsOthersTab": "Others",
   "statsTitle": "Statistics",
   "@statsTitle": {
     "description": "Statistics page header title"
@@ -607,14 +606,6 @@
   "@statsLoadFailed": {
     "placeholders": {
       "error": {
-        "type": "String"
-      }
-    }
-  },
-  "statsComingSoon": "Stats for {section} coming soon",
-  "@statsComingSoon": {
-    "placeholders": {
-      "section": {
         "type": "String"
       }
     }
@@ -652,6 +643,36 @@
   "statsPlayAgain": "Play again",
   "statsLegsPlayed": "Legs Played",
   "statsLegsWon": "Legs Won",
+  "statsLegsWonOfPlayed": "Legs won {won}/{played}",
+  "@statsLegsWonOfPlayed": {
+    "description": "Line under the headline stat cards, e.g. Legs won 7/14",
+    "placeholders": {
+      "won": {
+        "type": "int"
+      },
+      "played": {
+        "type": "int"
+      }
+    }
+  },
+  "statsGamesCount": "{count, plural, =1{1 game} other{{count} games}}",
+  "@statsGamesCount": {
+    "description": "Number of games behind the stats, after the legs line, e.g. 5 games",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsNoGamesToShow": "No {gameType} games to show",
+  "@statsNoGamesToShow": {
+    "description": "Empty state of a stats tab with no games for the selected filters, e.g. No Cricket games to show",
+    "placeholders": {
+      "gameType": {
+        "type": "String"
+      }
+    }
+  },
   "statsColAverage": "AVERAGE",
   "statsColBest": "BEST",
   "statsColTotal": "TOTAL",

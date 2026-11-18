@@ -384,15 +384,16 @@ Edits an existing player's name. Reached from Player Detail (the name is the edi
 │  [←]                     🏆 │  ← AppHeader: back + trophy → Achievements
 │  ALICE                      │
 ├─────────────────────────────┤
-│  [X01] [Cricket] [Practice] [Others] │  ← 4 game-type tabs
+│  [X01] [Cricket] [Practice] │  ← 3 game-type tabs
 ├─────────────────────────────┤
-│  [Legs Played] [Legs Won] [Solo Games]  ← 3 summary cards
+│  [PPR 51.8] [Checkout % 30%]│  ← 2 headline cards (Cricket: MPR, Hit Rate)
+│  Legs won 7/14 · 5 games    │
 ├─────────────────────────────┤
 │  [All X01▾][501][301] …    │  ← variant chip selector (X01 tab only)
 ├─────────────────────────────┤
 │  [Last 10] [Last 100] [All] │  ← time range segmented button
 ├─────────────────────────────┤
-│  PPR trend (line chart)     │
+│  PPR trend (line chart)     │  ← one-line "Need ≥2 games" note below 2 games
 ├─────────────────────────────┤
 │  Detail table               │
 │  PPR | First9 PPR | CO% | … │
@@ -401,7 +402,9 @@ Edits an existing player's name. Reached from Player Detail (the name is the edi
 └─────────────────────────────┘
 ```
 
-- **Four tabs:** X01, Cricket, Practice, Others. X01 / Cricket / Practice each render full stats (summary cards, selectors, trend chart, detail table) — they are NOT "coming soon". Only the **Others** tab is a coming-soon placeholder. (The Cricket tab adds a target-mode + variant chip selector; the Practice tab adds a game-type chip selector and an annotated dartboard for Around the Clock.)
+- **Three tabs:** X01, Cricket, Practice, each rendering full stats (headline, selectors, trend chart, detail table). There is no placeholder tab. (The Cricket tab adds a target-mode + variant chip selector; the Practice tab adds a game-type chip selector and an annotated dartboard for Around the Clock.)
+- **Headline first:** X01 opens on the 3-dart average (PPR) and checkout %; Cricket on MPR and hit rate; a line below gives legs won / played and the game count. Practice keeps its three per-drill cards.
+- **No games for the selection:** the headline, trend, table and heatmap give way to one line ("No Cricket games to show"); the selectors stay so the filter can be widened. Win % shows "—" without games and has no BEST value.
 - **Achievements trophy** (🏆) in the AppHeader trailing action → `/achievements/:playerId` (Screen 14a).
 - **All-time impact heatmap** (`StatsHeatmapSectionWidget`) at the bottom of the X01 / Cricket / Practice tabs — see "Heatmap surfaces" below. It is **aggregated all-time per gameType** and explicitly **ignores** the Last 10 / Last 100 / All time-range selector. Auto-hidden when the player has no located darts for that gameType.
 - Reached from the Home Statistics row (via the `/stats` player picker) or "VIEW STATISTICS" on Player Detail.
