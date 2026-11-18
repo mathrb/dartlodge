@@ -48,15 +48,25 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           # Need existing rc tags locally to compute the next-available N.
           fetch-tags: true
+          # Full history: the "newer commit already tagged" check below walks
+          # ancestry, which a depth-1 clone cannot see.
+          fetch-depth: 0
 
-      - name: Skip if this commit already has an RC tag
+      - name: Skip if this commit or a newer one already has an RC tag
         id: existing
         run: |
           # Re-running a green Test run (or a failed one that then passes)
           # fires this workflow again for the same commit.
           EXISTING=$(git tag --points-at "$HEAD_SHA" -l 'v*-rc*' | head -1)
+          # Test runs for quick merges run in parallel and can finish out of
+          # order. Tagging an older commit after a newer one would give older
+          # code the higher rc number (and release.yml the higher versionCode).
+          NEWER=$(git tag --contains "$HEAD_SHA" -l 'v*-rc*' | head -1)
           if [ -n "$EXISTING" ]; then
             echo "$HEAD_SHA is already tagged $EXISTING; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$NEWER" ]; then
+            echo "A newer main commit is already tagged $NEWER; skipping $HEAD_SHA."
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"

@@ -89,7 +89,7 @@ Releases are tag-driven. There is no manual upload step — pushing a tag cuts a
 
 Every push to `main` (i.e. every squash-merged PR) runs `test.yml`. When that run completes, `auto-rc.yml` starts (`workflow_run` trigger). It does nothing unless the run passed and was a push to `main`, so a commit that turns `main` red never gets an RC (two individually green PRs can still break `main` together, because branch protection does not require up-to-date branches, and the macos leg only runs after the merge). Otherwise it:
 
-1. Checks out the tested commit (`workflow_run.head_sha`; `GITHUB_SHA` on this trigger is the newest `main` commit, which may be a later one) and stops if it already carries an rc tag, so re-running a `Test` run does not cut a second RC.
+1. Checks out the tested commit (`workflow_run.head_sha`; `GITHUB_SHA` on this trigger is the newest `main` commit, which may be a later one) and stops if it, or a newer `main` commit, already carries an rc tag. Re-running a `Test` run therefore does not cut a second RC, and a commit whose `Test` run finishes after a newer commit's (the runs for quick merges overlap) never gets a higher rc number than newer code.
 2. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
 3. Scans existing `v<version>-rc*` tags and computes the next-available rc number (highest existing + 1). This avoids collisions with rc tags pushed before the workflow shipped — early in the project lifecycle `v0.1.0-rc1` through `v0.1.0-rc8` were created by hand.
 4. Creates the tag `v<version>-rc<N>` (e.g. `v0.1.0-rc9`) on the tested merge commit.
@@ -99,7 +99,7 @@ Concurrent `auto-rc.yml` runs are serialized via the workflow's `concurrency: au
 
 GitHub blocks token-triggered workflow chains, so `auto-rc.yml` uses `workflow_dispatch` instead of relying on `push: tags:` to fire `release.yml`. The "tag is reachable from main" guard still passes because the tag points at the main merge commit.
 
-You don't need to do anything to get an RC build — merge a PR, wait for its `Test` run on `main` to pass (the macos leg is the slow one) plus ~5 minutes, and the pre-release appears under `Releases`. If that run fails, there is no RC for the commit; the next green commit gets the next rc number. To get an RC after a flaky failure, re-run the failed `Test` jobs: a passing re-run triggers `auto-rc.yml` again. Stable releases (`vX.Y.Z` without a hyphen) remain a manual tag-push step.
+You don't need to do anything to get an RC build — merge a PR, wait for its `Test` run on `main` to pass (the macos leg is the slow one) plus ~5 minutes, and the pre-release appears under `Releases`. If that run fails, there is no RC for the commit; the next green commit gets the next rc number. To get an RC after a flaky failure, re-run the failed `Test` jobs: a passing re-run triggers `auto-rc.yml` again (this only cuts an RC while no newer commit has one; otherwise wait for the next merge). Stable releases (`vX.Y.Z` without a hyphen) remain a manual tag-push step.
 
 ### Versioning scheme
 
