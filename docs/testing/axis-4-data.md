@@ -34,7 +34,7 @@ from `game_events`; history/achievements/heatmap faithfully reflect the games.
 
 ### 2.2 Reset scope & event order
 **Exploratory charter** — *Missions*
-1. **Exact reset boundaries.** Turn on `TurnStarted` (NOT TurnEnded), Leg on `LegCompleted`, Match on `GameCompleted`; nothing else. Runner: Turn reset **before** `apply`, Leg/Match **after** — a reset on the wrong edge corrupts the snapshot of the boundary dart.
+1. **Exact reset boundaries.** Turn on `TurnStarted` (NOT TurnEnded), Leg on `LegCompleted`, Match on `GameCompleted`, Leg + Match on a `game_id` change (before the new game's first event, #280); nothing else. Runner: Turn reset **before** `apply`, Leg/Match **after** — a reset on the wrong edge corrupts the snapshot of the boundary dart.
 2. **No turn→turn leak.** Turn N (180) then an empty turn: snapshot N+1 without residue; a non-`DartThrown` event between turns doesn't reset the Turn prematurely.
 3. **Multi-game `(game_id, local_sequence)` sort.** `local_sequence` restarts at 1 per game → overlapping ranges; check that `getPlayerStats`/`achievementMetricsForPlayer`/`getPlayerLegHistory` sort by both, and that `ProjectionRunner` re-imposes the sort.
 4. **No cross-game/leg pollution.** Multi-leg match + multiple games: Match counters don't overflow, Leg doesn't survive `LegCompleted` (test-matrix XG1/XG2).

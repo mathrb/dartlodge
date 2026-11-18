@@ -26,7 +26,19 @@ class ProjectionRunner {
         return a.localSequence.compareTo(b.localSequence);
       });
 
+    String? previousGameId;
     for (final event in sorted) {
+      // A new game always opens a new leg and match. Most games end with
+      // GameCompleted (which already reset match scope), but games stored
+      // before the lazy-abandon path wrote one have no terminating event, so
+      // their darts would otherwise bleed into the next game (#280). Engine
+      // resets only clear scratch state, so a second reset is harmless.
+      if (previousGameId != null && event.gameId != previousGameId) {
+        for (final engine in _engines) engine.reset(ProjectionScope.leg);
+        for (final engine in _engines) engine.reset(ProjectionScope.match);
+      }
+      previousGameId = event.gameId;
+
       // Before apply: TurnStarted resets turn scope
       if (event.eventType == 'TurnStarted') {
         for (final engine in _engines) engine.reset(ProjectionScope.turn);

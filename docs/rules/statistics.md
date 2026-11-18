@@ -3,7 +3,7 @@
 > Loaded on demand. CLAUDE.md's Rules Index points here before touching stats, projections, or formatters.
 
 ### Statistics scope resets
-Turn resets on `TurnStarted`, Leg resets on `LegCompleted`, Match resets on `GameCompleted`. No other reset points.
+Turn resets on `TurnStarted`, Leg resets on `LegCompleted`, Match resets on `GameCompleted`. A `game_id` change also resets Leg + Match (before the new game's first event): games closed by the old lazy-abandon path have no terminating event (#280). No other reset points. Hand-rolled practice loops in the assembler reset their per-drill state on a `game_id` change for the same reason.
 
 ### Computing stats over an event slice
 All projection wiring lives in `PlayerStatsAssembler` (`lib/features/statistics/domain/assemblers/`). Use the method that matches the scope: `fromEvents` (career), `gameStatsFromEvents` (per-game), `playerStatsForGameFromEvents` (per-player-per-game), `legCompetitorStatsFromEvents` (per-leg). Repos and use cases load events and delegate. If you need a new projection bundle, add it to the assembler — do not re-wire `ProjectionRunner` directly in repos or use cases. Snapshot keys: `x01_average`, `x01_checkout`, `x01_highest_checkout`, `x01.highScoreBuckets`, `cricket.mpt`, `cricket.markBuckets`, `cricket.firstNineMpr`. First-nine projections (`cricket.firstNineMpr`, X01 first-nine PPR) only count when `TurnStarted` events are present — fixtures emitting just `DartThrown`/`TurnEnded` silently produce null first-nine stats.

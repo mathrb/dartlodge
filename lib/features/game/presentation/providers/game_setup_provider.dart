@@ -6,6 +6,7 @@ import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
+import 'package:dart_lodge/features/game/domain/usecases/game_use_case_helpers.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 
 part 'game_setup_provider.g.dart';
@@ -244,14 +245,10 @@ class GameSetupNotifier extends _$GameSetupNotifier {
       startTime: DateTime.now(),
     );
 
-    // Abandon any lingering active game (e.g. user navigated away mid-game)
+    // Abandon any lingering active game (page reload, app killed mid-game).
     final activeGame = await ref.read(gameRepositoryProvider).getActiveGame();
     if (activeGame != null) {
-      await ref.read(gameRepositoryProvider).completeGame(
-        gameId: activeGame.gameId,
-        winnerCompetitorId: null,
-        endTime: DateTime.now(),
-      );
+      await _abandonLingeringGame(activeGame.gameId);
     }
 
     try {
@@ -266,6 +263,44 @@ class GameSetupNotifier extends _$GameSetupNotifier {
       return result.gameId;
     } on ValidationException {
       return null;
+    }
+  }
+
+  /// Closes a game that was left active, the same way the End Game / End
+  /// Drill menus do: `GameCompleted(winner=null)` is appended and the game is
+  /// marked complete in one transaction. Without the event, the stats replay
+  /// never sees a match boundary and the abandoned game's darts bleed into
+  /// the next game's legs (#280).
+  ///
+  /// `endTime` is the abandoned game's last event, not "now": the game may
+  /// have been left days before the next one starts, and History dates and
+  /// sorts by it.
+  Future<void> _abandonLingeringGame(String gameId) async {
+    final events =
+        await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
+    var latestSequence = 0;
+    DateTime? lastPlayedAt;
+    for (final e in events) {
+      if (e.localSequence > latestSequence) latestSequence = e.localSequence;
+      if (lastPlayedAt == null || e.occurredAt.isAfter(lastPlayedAt)) {
+        lastPlayedAt = e.occurredAt;
+      }
+    }
+    try {
+      await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
+        events: [
+          buildGameCompletedEvent(
+            gameId: gameId,
+            winnerCompetitorId: null,
+            localSequence: latestSequence + 1,
+          ),
+        ],
+        gameId: gameId,
+        winnerCompetitorId: null,
+        endTime: lastPlayedAt ?? DateTime.now(),
+      );
+    } on GameAlreadyCompleteException {
+      // Idempotent: another path already closed the game.
     }
   }
 
