@@ -1182,11 +1182,13 @@ class PlayerStatsAssembler {
   ///     `starting_score` BEFORE `LegCompleted` IFF that player won the leg
   ///     with a checkout — a leg won on the round cap has none
   ///     ([X01FinishTracker]).
-  ///   - ATC practice score = atcHits / atcDartsAtTarget for current player;
-  ///     other practice gametypes use raw leg score. All three ATC variants
-  ///     (`standard`, `reverse`, `doublesOnly`) are supported — target
-  ///     progression and hit detection mirror
+  ///   - ATC practice score = atcHits / atcDartsAtTarget for current player.
+  ///     All three ATC variants (`standard`, `reverse`, `doublesOnly`) are
+  ///     supported — target progression and hit detection mirror
   ///     `StatelessAroundTheClockEngine` (issue #157).
+  ///   - Checkout Practice score = the drill's success rate, successes /
+  ///     attempts (null with no attempt). The other practice types use their
+  ///     canonical drill score (see the switch at the snapshot).
   ///
   /// A leg closes on `LegCompleted`. Practice drills write no
   /// `LegCompleted` (their engines never advance the leg index), so a
@@ -1455,9 +1457,9 @@ class PlayerStatsAssembler {
             //   (matches _computeShanghaiStats and the engine).
             // - catch40: checkout points (matches _computeCatch40Stats and
             //   the engine's 3/2/1 table); raw dart sum is WRONG.
-            // - checkoutPractice: no per-leg score concept; the canonical
-            //   metric is attempts/successes (consumer should pivot to
-            //   _computeCheckoutStats for that).
+            // - checkoutPractice: the drill's success rate, successes /
+            //   attempts, counted as _computeCheckoutStats counts them (#635
+            //   attempt rule). Null when the drill had no attempt.
             switch (gameType) {
               case GameType.aroundTheClock:
                 practiceScore =
@@ -1472,7 +1474,9 @@ class PlayerStatsAssembler {
                 practiceScore =
                     _catch40DrillScore(currentLegEvents, playerId)?.toDouble();
               case GameType.checkoutPractice:
-                practiceScore = null;
+                final (:attempts, :successes) =
+                    _checkoutAttempts(playerId, currentLegEvents);
+                practiceScore = attempts > 0 ? successes / attempts : null;
               case GameType.x01:
               case GameType.cricket:
               case GameType.countUp:
@@ -2212,6 +2216,29 @@ class PlayerStatsAssembler {
     int totalGames,
     int totalDartsThrown,
   ) {
+    final (:attempts, :successes) = _checkoutAttempts(playerId, events);
+    final successRate = attempts > 0 ? successes / attempts : null;
+
+    return _emptyPracticeStats(
+      playerId,
+      GameType.checkoutPractice,
+      totalGames,
+      totalDartsThrown,
+    ).copyWith(
+      checkoutAttempts: attempts,
+      checkoutSuccesses: successes,
+      checkoutSuccessRate: successRate,
+    );
+  }
+
+  /// Checkout Practice attempts and successes for [playerId] over [events].
+  ///
+  /// Shared by the career summary ([_computeCheckoutStats]) and the per-drill
+  /// trend score ([legHistoryFromEvents]) so both count the same way.
+  ({int attempts, int successes}) _checkoutAttempts(
+    String playerId,
+    List<GameEvent> events,
+  ) {
     // #635: a checkout ATTEMPT is a visit in which the player threw at a
     // finishing double (the running score reached a single-dart double-out
     // position), not every visit. Setup/scoring visits don't count, so one
@@ -2266,17 +2293,6 @@ class PlayerStatsAssembler {
       }
     }
 
-    final successRate = attempts > 0 ? successes / attempts : null;
-
-    return _emptyPracticeStats(
-      playerId,
-      GameType.checkoutPractice,
-      totalGames,
-      totalDartsThrown,
-    ).copyWith(
-      checkoutAttempts: attempts,
-      checkoutSuccesses: successes,
-      checkoutSuccessRate: successRate,
-    );
+    return (attempts: attempts, successes: successes);
   }
 }
