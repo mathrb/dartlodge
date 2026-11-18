@@ -76,9 +76,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final l10n = AppLocalizations.of(context);
     final themeMode =
         ref.watch(settingsProvider).value ?? ThemeMode.system;
-    final notifier = ref.read(settingsProvider.notifier);
     final locale = ref.watch(localeSettingProvider).value; // Locale? — null = system
-    final localeNotifier = ref.read(localeSettingProvider.notifier);
     final soundEnabled = ref.watch(soundEnabledProvider).value ?? true;
     final simplifiedInput =
         ref.watch(simplifiedInputEnabledProvider).value ?? false;
@@ -109,13 +107,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           _SectionHeader(label: l10n.settingsThemeSection, cs: cs, tt: tt),
           _ThemeModeSelector(
             value: themeMode,
-            onChanged: notifier.setThemeMode,
+            onChanged: (mode) =>
+                ref.read(settingsProvider.notifier).setThemeMode(mode),
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsLanguageLabel, cs: cs, tt: tt),
           LanguageSelector(
             value: locale,
-            onChanged: localeNotifier.setLocale,
+            onChanged: (locale) =>
+                ref.read(localeSettingProvider.notifier).setLocale(locale),
           ),
           const Divider(height: 1),
           _SectionHeader(label: l10n.settingsSoundSection, cs: cs, tt: tt),

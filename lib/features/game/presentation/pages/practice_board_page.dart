@@ -80,6 +80,10 @@ class PracticeBoardPage extends ConsumerStatefulWidget {
 }
 
 class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
+  /// Read lazily so widget callbacks never capture a notifier during build.
+  ActivePracticeNotifier get _notifier =>
+      ref.read(activePracticeProvider(widget.gameId).notifier);
+
   @override
   void initState() {
     super.initState();
@@ -212,9 +216,6 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
         }
 
         final gs = practiceState.gameState;
-        final notifier = ref.read(
-          activePracticeProvider(widget.gameId).notifier,
-        );
         final cameraFirst = autoScoringOn && cameraPreview != null;
         final competitor = gs.competitors[gs.currentTurnIndex];
         final allDarts = competitor.dartThrows;
@@ -337,7 +338,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       onSelected: (action) async {
                         switch (action) {
                           case _DrillAction.endDrill:
-                            await notifier.endDrill();
+                            await _notifier.endDrill();
                             // After endDrill() the game is is_complete=true,
                             // so route to the post-game summary the same way
                             // a natural completion does — gives the user the
@@ -500,7 +501,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                             !gs.isComplete &&
                             gs.dartsThrownInTurn < 3 &&
                             gs.turnActive,
-                        onDartThrown: (seg) => notifier.processDart(seg),
+                        onDartThrown: (seg) => _notifier.processDart(seg),
                       ),
                     )
                   else
@@ -509,7 +510,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                       currentTarget: effectiveTarget,
                       doublesOnly: doublesOnly,
                       enabled: !gs.isComplete && gs.dartsThrownInTurn < 3,
-                      onDartThrown: (seg) => notifier.processDart(seg),
+                      onDartThrown: (seg) => _notifier.processDart(seg),
                     ),
                   _BottomBar(
                     gameType: gs.gameType,
@@ -532,9 +533,9 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                             gs.catch40DartsOnTarget >= 6) &&
                         !gs.isComplete,
                     pulseNext: !gs.isComplete && !gs.turnActive,
-                    onUndo: notifier.undoDart,
+                    onUndo: () => _notifier.undoDart(),
                     onNextRound: () async {
-                      await notifier.startNextTurn();
+                      await _notifier.startNextTurn();
                       // Reset the auto-scorer's per-turn cap in lock-step (#380).
                       ref.read(activeTurnSignalProvider.notifier).bump();
                     },

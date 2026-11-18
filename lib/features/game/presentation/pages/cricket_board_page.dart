@@ -82,6 +82,10 @@ class CricketBoardPage extends ConsumerStatefulWidget {
 }
 
 class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
+  /// Read lazily so widget callbacks never capture a notifier during build.
+  ActiveCricketGameNotifier get _notifier =>
+      ref.read(activeCricketGameProvider(widget.gameId).notifier);
+
   @override
   void initState() {
     super.initState();
@@ -230,10 +234,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
         final currentTurnDarts = n == 0 || allDarts.length < n
             ? <String>[]
             : allDarts.sublist(allDarts.length - n);
-
-        final notifier = ref.read(
-          activeCricketGameProvider(widget.gameId).notifier,
-        );
 
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
         final canUndo =
@@ -429,12 +429,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                                   (gameState.isComplete ||
                                       !gameState.turnActive)
                                   ? (_) {}
-                                  : (segment) => notifier.processDart(segment),
+                                  : (segment) => _notifier.processDart(segment),
                               onMiss:
                                   (gameState.isComplete ||
                                       !gameState.turnActive)
                                   ? () {}
-                                  : () => notifier.processDart('MISS'),
+                                  : () => _notifier.processDart('MISS'),
                             ),
                           ),
                         ),
@@ -446,9 +446,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                     isMultiplayer: gameState.competitors.length > 1,
                     dartsThrownInTurn: dartsThrownInTurn,
                     pulseNext: canNext && !gameState.turnActive,
-                    onUndo: () => notifier.undoDart(),
+                    onUndo: () => _notifier.undoDart(),
                     onNextRound: () {
-                      notifier.nextPlayer();
+                      _notifier.nextPlayer();
                       // Reset the auto-scorer's per-turn cap in lock-step (#380).
                       ref.read(activeTurnSignalProvider.notifier).bump();
                     },
@@ -556,9 +556,6 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                       .watch(activeCricketGameProvider(widget.gameId))
                       .value;
                   if (s == null) return const SizedBox.shrink();
-                  final notifier = ref.read(
-                    activeCricketGameProvider(widget.gameId).notifier,
-                  );
                   final active =
                       !s.gameState.isComplete && s.gameState.turnActive;
                   return CricketUnifiedTableWidget(
@@ -570,7 +567,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                             ref
                                 .read(activeCaptureCorrectionSinkProvider)
                                 ?.captureManualEntry(segment: segment);
-                            notifier.processDart(segment);
+                            _notifier.processDart(segment);
                             Navigator.of(sheetContext).pop();
                           }
                         : (_) {},
@@ -579,7 +576,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                             ref
                                 .read(activeCaptureCorrectionSinkProvider)
                                 ?.captureManualEntry(segment: 'MISS');
-                            notifier.processDart('MISS');
+                            _notifier.processDart('MISS');
                             Navigator.of(sheetContext).pop();
                           }
                         : () {},

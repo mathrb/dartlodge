@@ -132,7 +132,6 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
     final tt = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
     final setupState = ref.watch(gameSetupProvider);
-    final notifier = ref.read(gameSetupProvider.notifier);
 
     final selectedIds = setupState.maybeMap(
       selectingPlayers: (s) => s.selectedPlayerIds,
@@ -168,7 +167,8 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             : const <int>[];
     final showHandicap = isX01 || isCountUp;
 
-    final canStart = notifier.canStart;
+    // Same rule as GameSetupNotifier.canStart, derived from the watched state.
+    final canStart = selectedIds.isNotEmpty;
     final maxPlayers = gameType != null ? gameType.maxPlayers : null;
 
     final playersAsync = ref.watch(allPlayersProvider);
@@ -251,11 +251,16 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             _ActiveLineup(
               selectedPlayerIds: selectedIds,
               players: players,
-              onReorder: notifier.reorderPlayers,
-              onRemove: (id) => notifier.togglePlayer(id),
+              onReorder: (oldIndex, newIndex) => ref
+                  .read(gameSetupProvider.notifier)
+                  .reorderPlayers(oldIndex, newIndex),
+              onRemove: (id) =>
+                  ref.read(gameSetupProvider.notifier).togglePlayer(id),
               playerHandicaps: playerHandicaps,
               onHandicapChanged: showHandicap
-                  ? (id, h) => notifier.setPlayerHandicap(id, h)
+                  ? (id, h) => ref
+                      .read(gameSetupProvider.notifier)
+                      .setPlayerHandicap(id, h)
                   : null,
               handicapValues: handicapValues,
             ),
@@ -322,11 +327,13 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                     onTapPlayer: (id) {
                       final isSelected = selectedIds.contains(id);
                       if (isSelected) {
-                        notifier.togglePlayer(id);
+                        ref.read(gameSetupProvider.notifier).togglePlayer(id);
                       } else {
                         final atMax = maxPlayers != null &&
                             selectedIds.length >= maxPlayers;
-                        if (!atMax) notifier.togglePlayer(id);
+                        if (!atMax) {
+                          ref.read(gameSetupProvider.notifier).togglePlayer(id);
+                        }
                       }
                     },
                   ),
@@ -371,7 +378,11 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                       ),
                     ),
                     onPressed: (canStart && !_isStarting)
-                        ? () => _onStartGame(context, notifier, gameType)
+                        ? () => _onStartGame(
+                              context,
+                              ref.read(gameSetupProvider.notifier),
+                              gameType,
+                            )
                         : null,
                     icon: _isStarting
                         ? const SizedBox(

@@ -13,7 +13,6 @@ class TimeRangeSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
-    final notifier = ref.read(playerStatsPageProvider(playerId).notifier);
     final l10n = AppLocalizations.of(context);
 
     return Padding(
@@ -37,7 +36,9 @@ class TimeRangeSelectorWidget extends ConsumerWidget {
           ),
         ],
         selected: {pageState.timeRange},
-        onSelectionChanged: (selection) => notifier.setTimeRange(selection.first),
+        onSelectionChanged: (selection) => ref
+            .read(playerStatsPageProvider(playerId).notifier)
+            .setTimeRange(selection.first),
       ),
     );
   }

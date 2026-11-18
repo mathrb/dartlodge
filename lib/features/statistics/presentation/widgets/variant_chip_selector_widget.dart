@@ -14,7 +14,6 @@ class VariantChipSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
-    final notifier = ref.read(playerStatsPageProvider(playerId).notifier);
     final asyncScores = ref.watch(playerX01StartingScoresProvider(playerId));
 
     if (pageState.activeTab != StatsTabIndex.x01) return const SizedBox.shrink();
@@ -28,7 +27,9 @@ class VariantChipSelectorWidget extends ConsumerWidget {
           items: scores,
           selected: pageState.selectedStartingScore,
           labelBuilder: (score) => '$score',
-          onSelected: notifier.setStartingScore,
+          onSelected: (score) => ref
+              .read(playerStatsPageProvider(playerId).notifier)
+              .setStartingScore(score),
           allLabel: AppLocalizations.of(context).statsAllX01,
         );
       },
