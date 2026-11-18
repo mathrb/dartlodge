@@ -64,7 +64,7 @@ Four workflows in `.github/workflows/`:
 |---|---|---|
 | `test.yml` | PR + push to `main` | `flutter analyze` + `flutter test --coverage`. Matrix is ubuntu-only on PRs; ubuntu + macos on push to main. Codecov upload on push only. |
 | `build-apk.yml` | PR + push to `main` + manual | PRs build a debug APK as a compile check (no upload). Push to main builds a release APK and uploads it as a 7-day artifact for internal testing. |
-| `auto-rc.yml` | Push to `main` | Creates tag `v<pubspec-version>-rc<N>` (N = next-available rc number for the current version) on the merge commit and dispatches `release.yml` to publish a pre-release. |
+| `auto-rc.yml` | `Test` run on a push to `main` completes | If that run passed, creates tag `v<pubspec-version>-rc<N>` (N = next-available rc number for the current version) on the tested merge commit and dispatches `release.yml` to publish a pre-release. |
 | `release.yml` | Tag push `v*` + manual | Builds a signed release APK **and AAB** from the tag and publishes both to GitHub Releases with auto-generated notes. The AAB is the artifact uploaded to Google Play. |
 
 **Required checks for merge:** `Test (ubuntu-latest)` and `Build APK`. macos tests run post-merge but don't block PRs.
@@ -77,7 +77,7 @@ If you change a `@freezed`, `@riverpod`, or `@GenerateMocks` annotation, run `da
 
 ### Trusting `main` on tag push
 
-`release.yml` does **not** re-run the test suite on tag push. It does verify the tag's commit is reachable from `main` (`git merge-base --is-ancestor`) and refuses to build otherwise. If `main` was green when you tagged, the tag is green by construction.
+`release.yml` does **not** re-run the test suite on tag push. It does verify the tag's commit is reachable from `main` (`git merge-base --is-ancestor`) and refuses to build otherwise. If `main` was green when you tagged, the tag is green by construction. Auto RC tags only exist on commits whose push-to-`main` `Test` run (ubuntu + macos) passed; for a manual stable tag, check the commit's `Test` run yourself before pushing it.
 
 ---
 
@@ -87,18 +87,19 @@ Releases are tag-driven. There is no manual upload step — pushing a tag cuts a
 
 ### Automatic RC pre-releases on every merge
 
-Every push to `main` (i.e. every squash-merged PR) triggers `auto-rc.yml`, which:
+Every push to `main` (i.e. every squash-merged PR) runs `test.yml`. When that run completes, `auto-rc.yml` starts (`workflow_run` trigger). It does nothing unless the run passed and was a push to `main`, so a commit that turns `main` red never gets an RC (two individually green PRs can still break `main` together, because branch protection does not require up-to-date branches, and the macos leg only runs after the merge). Otherwise it:
 
-1. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
-2. Scans existing `v<version>-rc*` tags and computes the next-available rc number (highest existing + 1). This avoids collisions with rc tags pushed before the workflow shipped — early in the project lifecycle `v0.1.0-rc1` through `v0.1.0-rc8` were created by hand.
-3. Creates the tag `v<version>-rc<N>` (e.g. `v0.1.0-rc9`) on the merge commit.
-4. Dispatches `release.yml` against the new tag, producing a signed pre-release APK and AAB + checksums.
+1. Checks out the tested commit (`workflow_run.head_sha`; `GITHUB_SHA` on this trigger is the newest `main` commit, which may be a later one) and stops if it already carries an rc tag, so re-running a `Test` run does not cut a second RC.
+2. Reads `version:` from `pubspec.yaml` and strips the `+N` build-metadata suffix.
+3. Scans existing `v<version>-rc*` tags and computes the next-available rc number (highest existing + 1). This avoids collisions with rc tags pushed before the workflow shipped — early in the project lifecycle `v0.1.0-rc1` through `v0.1.0-rc8` were created by hand.
+4. Creates the tag `v<version>-rc<N>` (e.g. `v0.1.0-rc9`) on the tested merge commit.
+5. Dispatches `release.yml` against the new tag, producing a signed pre-release APK and AAB + checksums.
 
-Concurrent pushes to `main` are serialized via the workflow's `concurrency: auto-rc` group so two quick merges can't compute the same next-N before either has pushed.
+Concurrent `auto-rc.yml` runs are serialized via the workflow's `concurrency: auto-rc` group so two quick merges can't compute the same next-N before either has pushed.
 
 GitHub blocks token-triggered workflow chains, so `auto-rc.yml` uses `workflow_dispatch` instead of relying on `push: tags:` to fire `release.yml`. The "tag is reachable from main" guard still passes because the tag points at the main merge commit.
 
-You don't need to do anything to get an RC build — merge a PR, wait ~5 minutes, the pre-release appears under `Releases`. Stable releases (`vX.Y.Z` without a hyphen) remain a manual tag-push step.
+You don't need to do anything to get an RC build — merge a PR, wait for its `Test` run on `main` to pass (the macos leg is the slow one) plus ~5 minutes, and the pre-release appears under `Releases`. If that run fails, there is no RC for the commit; the next green commit gets the next rc number. To get an RC after a flaky failure, re-run the failed `Test` jobs: a passing re-run triggers `auto-rc.yml` again. Stable releases (`vX.Y.Z` without a hyphen) remain a manual tag-push step.
 
 ### Versioning scheme
 
@@ -136,7 +137,7 @@ git commit -am "chore: bump version to 0.2.0"
 gh pr create --fill && gh pr merge --squash
 ```
 
-After the merge, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK + AAB ~5 min later at:
+After the merge and a green `Test` run, `auto-rc.yml` tags the merge commit as `v0.2.0-rc<N>` (next-available N for the new version) and `release.yml` publishes the pre-release APK + AAB ~5 min later at:
 
 ```
 https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc<N>
@@ -233,7 +234,7 @@ git checkout -b feat/my-thing
 # ...work, commit, push...
 gh pr create --fill
 
-# RC pre-releases are created automatically on every merge to main (see auto-rc.yml).
+# RC pre-releases are created automatically for every merge to main that passes Test (see auto-rc.yml).
 
 # Cut a stable release
 git tag v0.2.0 && git push origin v0.2.0
