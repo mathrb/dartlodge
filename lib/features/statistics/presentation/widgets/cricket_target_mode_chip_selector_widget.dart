@@ -35,7 +35,6 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
-    final notifier = ref.read(playerStatsPageProvider(playerId).notifier);
 
     if (pageState.activeTab != StatsTabIndex.cricket) {
       return const SizedBox.shrink();
@@ -70,7 +69,9 @@ class CricketTargetModeChipSelectorWidget extends ConsumerWidget {
                     ? cs.onPrimaryContainer
                     : cs.onSurfaceVariant,
               ),
-              onSelected: (_) => notifier.setCricketTargetMode(mode),
+              onSelected: (_) => ref
+                  .read(playerStatsPageProvider(playerId).notifier)
+                  .setCricketTargetMode(mode),
             ),
         ],
       ),

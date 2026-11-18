@@ -31,7 +31,6 @@ class PracticeGameTypeChipSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
-    final notifier = ref.read(playerStatsPageProvider(playerId).notifier);
 
     if (pageState.activeTab != StatsTabIndex.practice) return const SizedBox.shrink();
 
@@ -40,7 +39,10 @@ class PracticeGameTypeChipSelectorWidget extends ConsumerWidget {
       selected: pageState.selectedPracticeGameType,
       labelBuilder: _label,
       onSelected: (type) {
-        if (type != null) notifier.setPracticeGameType(type);
+        if (type == null) return;
+        ref
+            .read(playerStatsPageProvider(playerId).notifier)
+            .setPracticeGameType(type);
       },
     );
   }

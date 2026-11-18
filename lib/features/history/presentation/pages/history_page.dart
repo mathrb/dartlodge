@@ -42,7 +42,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final asyncState = ref.watch(gameHistoryProvider);
-    final notifier = ref.read(gameHistoryProvider.notifier);
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
@@ -70,9 +69,14 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               selectedGameType: historyState.filterGameType,
               selectedDateFrom: historyState.filterDateFrom,
               selectedDateTo: historyState.filterDateTo,
-              onGameTypeChanged: notifier.setGameTypeFilter,
-              onDateRangeChanged: notifier.setDateRange,
-              onClearFilters: notifier.clearFilters,
+              onGameTypeChanged: (type) => ref
+                  .read(gameHistoryProvider.notifier)
+                  .setGameTypeFilter(type),
+              onDateRangeChanged: (from, to) => ref
+                  .read(gameHistoryProvider.notifier)
+                  .setDateRange(from, to),
+              onClearFilters: () =>
+                  ref.read(gameHistoryProvider.notifier).clearFilters(),
             ),
             Expanded(
               child: historyState.games.isEmpty
@@ -93,7 +97,8 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: notifier.refresh,
+                      onRefresh: () =>
+                          ref.read(gameHistoryProvider.notifier).refresh(),
                       child: ListView.builder(
                         controller: _scrollController,
                         padding: const EdgeInsets.all(8),

@@ -159,7 +159,7 @@ Platform selection (native SQLite vs WASM) happens once in the Drift factory. Ev
 Follow `docs/STATE_MANAGEMENT.md` exactly. Rules that are easiest to violate:
 - Provider names strip the `Notifier` suffix: `FooNotifier` → `fooProvider`; family variant `FooNotifier.build(String id)` → `fooProvider('id')`.
 - The same suffix stripping applies to **function-style** providers: `@riverpod Foo fooNotifier(Ref ref)` generates `fooProvider`, not `fooNotifierProvider`. Don't reach for `xxxNotifierProvider` — grep the `.g.dart` if unsure.
-- Use `ref.watch()` inside `build()`. Use `ref.read()` only in event handlers and notifier methods.
+- Use `ref.watch()` inside `build()`. Use `ref.read()` only in event handlers and notifier methods — read `x.notifier` inside the callback that uses it, not into a local in `build()` (gated by `test/app/no_notifier_read_in_build_test.dart`).
 - Never touch `ref` in `State.dispose()` (unsafe once deactivated) — capture the notifier in a field during `initState` if you need it later. Never *mutate* a provider during `build` / the `initState` body / `dispose` (→ "modified during build" / "ref unsafe" errors); do binds/bumps from an `addPostFrameCallback` or an event handler. `ref.listen()` belongs in `build()`.
 - Handle all three `AsyncValue` states in every widget: `data`, `loading`, `error`. Never use `.value!` without fallbacks.
 - Use `AsyncValue.value` (returns `T?`) — not `valueOrNull` — in Riverpod 3.x.

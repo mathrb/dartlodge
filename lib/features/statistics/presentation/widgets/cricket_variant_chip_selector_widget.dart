@@ -23,7 +23,6 @@ class CricketVariantChipSelectorWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageState = ref.watch(playerStatsPageProvider(playerId));
-    final notifier = ref.read(playerStatsPageProvider(playerId).notifier);
     final asyncVariants = ref.watch(playerCricketVariantsProvider(playerId));
     final l10n = AppLocalizations.of(context);
 
@@ -38,7 +37,9 @@ class CricketVariantChipSelectorWidget extends ConsumerWidget {
           items: variants,
           selected: pageState.selectedCricketVariant,
           labelBuilder: (v) => _displayLabel(l10n, v),
-          onSelected: notifier.setCricketVariant,
+          onSelected: (variant) => ref
+              .read(playerStatsPageProvider(playerId).notifier)
+              .setCricketVariant(variant),
           allLabel: l10n.statsAllCricket,
         );
       },
