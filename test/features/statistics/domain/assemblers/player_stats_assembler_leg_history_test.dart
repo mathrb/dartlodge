@@ -7,6 +7,7 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/assemblers/player_stats_assembler.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapshot.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -656,31 +657,104 @@ void main() {
               'engine and the end screen count it');
     });
 
-    test(
-        'Checkout Practice: practiceScore is null (no per-leg score concept)',
+    // A Checkout Practice run starts at its `from_score` stamp (#636).
+    GameEvent checkoutRunStart(int fromScore, {int turnNumber = 1}) =>
+        event('TurnStarted', {
+          'player_id': playerId,
+          'turn_number': turnNumber,
+          'from_score': fromScore,
+        });
+
+    List<PlayerLegSnapshot> checkoutSnaps(List<GameEvent> events) =>
+        assembler.legHistoryFromEvents(
+          playerId: playerId,
+          gameId: gameId,
+          gameDate: gameDate,
+          gameType: GameType.checkoutPractice,
+          startingScore: null,
+          events: events,
+        );
+
+    test('Checkout Practice: practiceScore is the drill success rate', () {
+      final snaps = checkoutSnaps([
+        checkoutRunStart(170),
+        dart(20, 3), // 110
+        dart(20, 3), // 50: on a double finish
+        dart(25, 2), // DB out
+        turnEnded(reason: 'checkout'), // attempt 1, success 1
+        checkoutRunStart(40, turnNumber: 2),
+        dart(5, 1), // at 40 (D20): attempt
+        dart(1, 1),
+        dart(1, 1),
+        turnEnded(), // attempt 2, no success
+        gameCompleted(),
+      ]);
+
+      expect(snaps.single.practiceScore, 0.5,
+          reason: '1 success in 2 attempts');
+    });
+
+    test('Checkout Practice: setup visits are not attempts (#635)', () {
+      final snaps = checkoutSnaps([
+        checkoutRunStart(170),
+        dart(1, 1),
+        dart(1, 1),
+        dart(1, 1), // 167: never on a double finish, not an attempt
+        turnEnded(),
+        turnStarted(turnNumber: 2),
+        dart(20, 3), // 107
+        dart(19, 3), // 50
+        dart(25, 2), // DB out
+        turnEnded(reason: 'checkout'), // attempt 1, success 1
+        gameCompleted(),
+      ]);
+
+      expect(snaps.single.practiceScore, 1.0,
+          reason: 'one checkout in two visits is 1/1, not 1/2');
+    });
+
+    test('Checkout Practice: a drill with no attempt has a null score', () {
+      final snaps = checkoutSnaps([
+        checkoutRunStart(170),
+        dart(1, 1),
+        dart(1, 1),
+        dart(1, 1), // 167: never on a double finish
+        turnEnded(),
+        gameCompleted(),
+      ]);
+
+      expect(snaps.single.practiceScore, isNull,
+          reason: 'no attempt is not a 0% drill');
+    });
+
+    test('Checkout Practice: the drill score matches the summary success rate',
         () {
-      // Checkout practice has no canonical per-leg score — only attempts /
-      // successes. Pre-fix legHistoryFromEvents emitted a meaningless raw
-      // dart sum here; post-fix should be null.
       final events = [
-        turnStarted(),
-        dart(20, 3), // T20 = 60
-        dart(20, 3), // T20 = 60
-        dart(25, 2), // DB = 50
-        turnEnded(reason: 'checkout'),
+        checkoutRunStart(61),
+        dart(11, 1), // 50: attempt
+        dart(0, 1),
+        dart(0, 1),
+        turnEnded(), // attempt 1
+        turnStarted(turnNumber: 2),
+        dart(25, 2), // DB out
+        turnEnded(reason: 'checkout'), // attempt 2, success 1
+        checkoutRunStart(32, turnNumber: 3),
+        dart(16, 2), // D16 out
+        turnEnded(reason: 'checkout'), // attempt 3, success 2
         gameCompleted(),
       ];
 
-      final snaps = assembler.legHistoryFromEvents(
+      final summary = assembler.fromEvents(
         playerId: playerId,
-        gameId: gameId,
-        gameDate: gameDate,
         gameType: GameType.checkoutPractice,
-        startingScore: null,
         events: events,
+        totalGames: 1,
+        totalDartsThrown: 6,
       );
-      expect(snaps.single.practiceScore, isNull,
-          reason: 'Checkout Practice has no per-leg score');
+
+      expect(summary.checkoutSuccessRate, closeTo(2 / 3, 1e-9));
+      expect(checkoutSnaps(events).single.practiceScore,
+          summary.checkoutSuccessRate);
     });
   });
 
