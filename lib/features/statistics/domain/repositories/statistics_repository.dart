@@ -36,6 +36,10 @@ abstract interface class StatisticsRepository {
   /// call cannot mix game types coherently.
   ///
   /// [from] and [to] are inclusive date-range filters applied to [start_time].
+  /// [legLimit] keeps only the player's most recent [legLimit] legs, by game
+  /// `start_time` (a practice drill's last leg ends on its `GameCompleted`,
+  /// so a single-leg drill counts as one leg); `totalGames` and the win rate
+  /// then count only the games in that window.
   /// Throws [PlayerNotFoundException] if [playerId] does not exist.
   Future<PlayerStats> getPlayerStats(
     String playerId, {

@@ -14,6 +14,7 @@ import 'package:dart_lodge/features/statistics/domain/entities/player_leg_snapsh
 import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 import 'package:dart_lodge/features/statistics/domain/repositories/statistics_repository.dart';
 import 'package:dart_lodge/features/statistics/presentation/providers/player_stats_page_provider.dart';
+import 'package:dart_lodge/features/statistics/presentation/state/player_stats_page_state.dart';
 
 import 'player_stats_page_provider_test.mocks.dart';
 
@@ -139,5 +140,62 @@ void main() {
       limit: anyNamed('limit'),
       cricketTargetMode: 'crazy',
     )).called(1);
+  });
+
+  group('time range forwards the leg window to the repository', () {
+    test('All passes no leg limit', () async {
+      await container.read(filteredPlayerStatsProvider('p1').future);
+
+      verify(repo.getPlayerStats(
+        'p1',
+        gameType: GameType.x01,
+        startingScore: anyNamed('startingScore'),
+        legLimit: null,
+      )).called(1);
+    });
+
+    test('Last 10 limits X01 stats and leg history to 10 legs', () async {
+      container
+          .read(playerStatsPageProvider('p1').notifier)
+          .setTimeRange(StatsTimeRange.last10);
+
+      await container.read(filteredPlayerStatsProvider('p1').future);
+      await container.read(playerLegHistoryProvider('p1').future);
+
+      verify(repo.getPlayerStats(
+        'p1',
+        gameType: GameType.x01,
+        startingScore: anyNamed('startingScore'),
+        legLimit: 10,
+      )).called(1);
+      verify(repo.getPlayerLegHistory(
+        'p1',
+        gameType: GameType.x01,
+        startingScore: anyNamed('startingScore'),
+        limit: 10,
+      )).called(1);
+    });
+
+    test('Last 100 limits Cricket and Practice stats to 100 legs', () async {
+      container
+          .read(playerStatsPageProvider('p1').notifier)
+          .setTimeRange(StatsTimeRange.last100);
+
+      await container.read(filteredCricketStatsProvider('p1').future);
+      await container.read(filteredPracticeStatsProvider('p1').future);
+
+      verify(repo.getPlayerStats(
+        'p1',
+        gameType: GameType.cricket,
+        variant: anyNamed('variant'),
+        legLimit: 100,
+        cricketTargetMode: anyNamed('cricketTargetMode'),
+      )).called(1);
+      verify(repo.getPlayerStats(
+        'p1',
+        gameType: argThat(isNot(GameType.cricket), named: 'gameType'),
+        legLimit: 100,
+      )).called(1);
+    });
   });
 }

@@ -270,7 +270,6 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       }
 
       final gameIds = games.map((g) => g.gameId).toList();
-      final totalGames = gameIds.length;
 
       // Identify solo (single-competitor) games so leg projections can exclude
       // them — legs played/won is a multiplayer-only metric (see issue #106).
@@ -304,7 +303,9 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
       // 5. Load events ordered by (game_id, local_sequence) — local_sequence
       //    is per-game and starts at 1 for each game, so ordering by it alone
       //    interleaves events from different games and corrupts projection
-      //    state. Trim to the requested leg window.
+      //    state. Then order the games chronologically (start_time, game_id;
+      //    game ids are random UUIDs) so the leg window below keeps the most
+      //    recent legs. Each game's events stay contiguous.
       final eventRows = await (_db.select(_db.gameEvents)
             ..where((e) => e.gameId.isIn(gameIds))
             ..orderBy([
@@ -312,9 +313,16 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
               (e) => OrderingTerm.asc(e.localSequence),
             ]))
           .get();
-      final events = EventLegLimiter.trim(
-        eventRows
-            .map((row) => domain.GameEvent(
+      final chronologicalGames = [...games]..sort((a, b) {
+          final byStart = a.startTime.compareTo(b.startTime);
+          return byStart != 0 ? byStart : a.gameId.compareTo(b.gameId);
+        });
+      final gameRank = {
+        for (var i = 0; i < chronologicalGames.length; i++)
+          chronologicalGames[i].gameId: i,
+      };
+      final allEvents = eventRows
+          .map((row) => domain.GameEvent(
                   eventId: row.eventId,
                   gameId: row.gameId,
                   eventType: row.eventType,
@@ -327,9 +335,27 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
                   globalSequence: row.globalSequence,
                   source: parseEventSourceFromColumn(row.source),
                 ))
-            .toList(),
+          .toList()
+        ..sort((a, b) {
+          final byGame = gameRank[a.gameId]!.compareTo(gameRank[b.gameId]!);
+          return byGame != 0
+              ? byGame
+              : a.localSequence.compareTo(b.localSequence);
+        });
+      // Practice drills write no LegCompleted: each drill closes on its
+      // GameCompleted, so "Last N" counts drills there.
+      final events = EventLegLimiter.trim(
+        allEvents,
         legLimit,
+        closeLegOnGameCompleted:
+            PlayerStatsAssembler.isPracticeGameType(gameType),
       );
+      // Under a leg window the game count follows the window: a game counts
+      // when any of its events are kept. (totalDartsThrown stays the cohort
+      // total; the stats page does not display it.)
+      final totalGames = identical(events, allEvents)
+          ? gameIds.length
+          : events.map((e) => e.gameId).toSet().length;
 
       // 6. Extract in/out strategy + ATC variant from latest game's config.
       String inStrategy = 'straight';
