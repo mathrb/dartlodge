@@ -1,11 +1,21 @@
 name: Auto RC
 
-# Tags every push to main as `v<pubspec-version>-rc<N>` and triggers
-# release.yml to build a pre-release APK. Manual `vX.Y.Z` tags continue to
-# work unchanged via release.yml's own `push: tags: ['v*']` trigger.
+# Tags every main commit whose Test run passed as `v<pubspec-version>-rc<N>`
+# and triggers release.yml to build a pre-release APK. Manual `vX.Y.Z` tags
+# continue to work unchanged via release.yml's own `push: tags: ['v*']`
+# trigger.
+#
+# Triggered by the Test workflow finishing, not by the push itself, so a
+# commit that turns main red (e.g. two individually green PRs that conflict
+# semantically, or a macOS-only failure) never gets a signed RC.
+# workflow_run fires regardless of the Test conclusion, hence the job-level
+# `if`. Note: on workflow_run GITHUB_SHA is the latest default-branch commit,
+# not the tested one, so every step uses workflow_run.head_sha instead.
 
 on:
-  push:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
     branches: [main]
 
 permissions:
@@ -22,15 +32,48 @@ jobs:
   tag-and-release:
     name: Tag main as RC and dispatch release
     runs-on: ubuntu-latest
+    # Only green Test runs of a push to main. The `branches` filter alone also
+    # matches a pull_request run whose head branch is named `main` (a fork).
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    env:
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          # The tested commit, so the version is read from its pubspec.yaml.
+          ref: ${{ github.event.workflow_run.head_sha }}
           # Need existing rc tags locally to compute the next-available N.
           fetch-tags: true
+          # Full history: the "newer commit already tagged" check below walks
+          # ancestry, which a depth-1 clone cannot see.
+          fetch-depth: 0
+
+      - name: Skip if this commit or a newer one already has an RC tag
+        id: existing
+        run: |
+          # Re-running a green Test run (or a failed one that then passes)
+          # fires this workflow again for the same commit.
+          EXISTING=$(git tag --points-at "$HEAD_SHA" -l 'v*-rc*' | head -1)
+          # Test runs for quick merges run in parallel and can finish out of
+          # order. Tagging an older commit after a newer one would give older
+          # code the higher rc number (and release.yml the higher versionCode).
+          NEWER=$(git tag --contains "$HEAD_SHA" -l 'v*-rc*' | head -1)
+          if [ -n "$EXISTING" ]; then
+            echo "$HEAD_SHA is already tagged $EXISTING; nothing to do."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$NEWER" ]; then
+            echo "A newer main commit is already tagged $NEWER; skipping $HEAD_SHA."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Derive RC tag
+        if: steps.existing.outputs.skip != 'true'
         id: tag
         run: |
           VERSION_RAW=$(grep -E '^version:' pubspec.yaml | awk '{print $2}')
@@ -47,16 +90,18 @@ jobs:
           NEXT=$(( ${HIGHEST:-0} + 1 ))
           TAG="v${VERSION}-rc${NEXT}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Tagging $GITHUB_SHA as $TAG (highest existing: ${HIGHEST:-none})"
+          echo "Tagging $HEAD_SHA as $TAG (highest existing: ${HIGHEST:-none})"
 
       - name: Create and push tag
+        if: steps.existing.outputs.skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag "${{ steps.tag.outputs.tag }}"
+          git tag "${{ steps.tag.outputs.tag }}" "$HEAD_SHA"
           git push origin "${{ steps.tag.outputs.tag }}"
 
       - name: Dispatch release workflow
+        if: steps.existing.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
