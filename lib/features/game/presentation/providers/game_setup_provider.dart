@@ -5,6 +5,7 @@ import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/core/error/repository_exception.dart';
 import 'package:dart_lodge/features/game/domain/entities/game.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/usecases/game_use_case_helpers.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
@@ -275,18 +276,37 @@ class GameSetupNotifier extends _$GameSetupNotifier {
   /// `endTime` is the abandoned game's last event, not "now": the game may
   /// have been left days before the next one starts, and History dates and
   /// sorts by it.
+  ///
+  /// A game can already hold its GameCompleted while still active: the win
+  /// paths append the final events and mark the game complete in two steps,
+  /// so an app kill in between leaves it that way. That game is only marked
+  /// complete, with the recorded winner; a second GameCompleted would count
+  /// it twice in the stats.
   Future<void> _abandonLingeringGame(String gameId) async {
     final events =
         await ref.read(gameEventRepositoryProvider).getEventsForGame(gameId);
     var latestSequence = 0;
     DateTime? lastPlayedAt;
+    GameEvent? recordedCompletion;
     for (final e in events) {
       if (e.localSequence > latestSequence) latestSequence = e.localSequence;
       if (lastPlayedAt == null || e.occurredAt.isAfter(lastPlayedAt)) {
         lastPlayedAt = e.occurredAt;
       }
+      if (e.eventType == 'GameCompleted') recordedCompletion = e;
     }
+    final endTime = lastPlayedAt ?? DateTime.now();
     try {
+      if (recordedCompletion != null) {
+        final payload = recordedCompletion.payload;
+        await ref.read(gameRepositoryProvider).completeGame(
+              gameId: gameId,
+              winnerCompetitorId: (payload['winner_competitor_id'] ??
+                  payload['winner_id']) as String?,
+              endTime: endTime,
+            );
+        return;
+      }
       await ref.read(gameRepositoryProvider).appendEventsAndCompleteGame(
         events: [
           buildGameCompletedEvent(
@@ -297,7 +317,7 @@ class GameSetupNotifier extends _$GameSetupNotifier {
         ],
         gameId: gameId,
         winnerCompetitorId: null,
-        endTime: lastPlayedAt ?? DateTime.now(),
+        endTime: endTime,
       );
     } on GameAlreadyCompleteException {
       // Idempotent: another path already closed the game.

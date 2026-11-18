@@ -827,6 +827,50 @@ void main() {
         ));
       });
 
+      test(
+          'only marks complete, with the recorded winner, when the game '
+          'already holds its GameCompleted', () async {
+        // A win whose events were written but whose completeGame() never ran
+        // (app killed between the two steps).
+        final wonAt = DateTime(2026, 11, 10, 21, 30);
+        when(mockEventRepo.getEventsForGame('g-stale')).thenAnswer(
+          (_) async => [
+            storedEvent(1, 'GameCreated', DateTime(2026, 11, 10, 21)),
+            storedEvent(2, 'LegCompleted', wonAt),
+            GameEvent(
+              eventId: 'old-e3',
+              gameId: 'g-stale',
+              eventType: 'GameCompleted',
+              localSequence: 3,
+              occurredAt: wonAt,
+              payload: const {'winner_competitor_id': 'c-winner'},
+              synced: false,
+              actorId: 'system',
+              source: EventSource.client,
+            ),
+          ],
+        );
+        when(mockGameRepo.completeGame(
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        )).thenAnswer((_) async {});
+
+        expect(await start(), 'g-new');
+
+        verify(mockGameRepo.completeGame(
+          gameId: 'g-stale',
+          winnerCompetitorId: 'c-winner',
+          endTime: wonAt,
+        )).called(1);
+        verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+          events: anyNamed('events'),
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        ));
+      });
+
       test('still starts the new game when the stale one is already complete',
           () async {
         when(mockGameRepo.appendEventsAndCompleteGame(
