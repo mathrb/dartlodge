@@ -5,9 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// Guards the CLAUDE.md rule "Call ref.read() inside a widget's build()
 /// method" (Things You Must Not Do).
 ///
-/// A `final x = ref.read(...)` statement whose closest enclosing block is a
-/// `build(` method or a builder-style closure (`data:`, `builder:`) runs on
-/// every rebuild, so it is flagged. The same read inside an event handler
+/// A `final`/`var` local initialised from `ref.read(...)` whose closest
+/// enclosing block is a `build(` method or a builder-style closure (`data:`,
+/// `loading:`, `error:`, `builder:`, `itemBuilder:`, ...) runs on every
+/// rebuild, so it is flagged. The same read inside an event handler
 /// (`onPressed: () { ... }`, a private method) is allowed: that is where
 /// CLAUDE.md wants `ref.read`.
 ///
@@ -16,8 +17,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// enclosing block.
 void main() {
   final buildOpener = RegExp(r'\bWidget build\(');
-  final builderOpener = RegExp(r'\b(data|builder):\s*\(');
-  final readAssignment = RegExp(r'^\s*final \w+ = ref\s*\.read\(');
+  final builderOpener =
+      RegExp(r'\b(data|loading|error|\w*[bB]uilder):\s*\(');
+  final readAssignment = RegExp(
+    r'^\s*(final|var)\s+(\w+(<.*>)?\??\s+)?\w+\s*=\s*ref\s*\.read\(',
+  );
 
   int indentOf(String line) => line.length - line.trimLeft().length;
 
@@ -77,6 +81,10 @@ class A extends ConsumerWidget {
           },
         );
       },
+      loading: () {
+        final FooNotifier typed = ref.read(fooProvider.notifier);
+        return const SizedBox();
+      },
     );
   }
 
@@ -89,6 +97,7 @@ class A extends ConsumerWidget {
     expect(offenders, [
       'a.dart:4: final notifier = ref.read(fooProvider.notifier);',
       'a.dart:7: final other = ref.read(barProvider.notifier);',
+      'a.dart:15: final FooNotifier typed = ref.read(fooProvider.notifier);',
     ]);
   });
 }
