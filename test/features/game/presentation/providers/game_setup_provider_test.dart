@@ -11,6 +11,8 @@ import 'package:dart_lodge/features/game/domain/usecases/create_game_use_case.da
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
+import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart';
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart';
 import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 import 'package:riverpod/riverpod.dart';
@@ -18,7 +20,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'game_setup_provider_test.mocks.dart';
 
-@GenerateMocks([PlayerRepository, CreateGameUseCase, GameRepository])
+@GenerateMocks([
+  PlayerRepository,
+  CreateGameUseCase,
+  GameRepository,
+  GameEventRepository,
+])
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late ProviderContainer container;
@@ -734,6 +741,148 @@ void main() {
       n.togglePlayer('p1');
 
       expect(n.startGame(), throwsA(isA<DatabaseException>()));
+    });
+
+    group('abandons a lingering active game', () {
+      late MockGameEventRepository mockEventRepo;
+      late ProviderContainer abandonContainer;
+      final lastPlayedAt = DateTime(2026, 11, 10, 21, 5);
+
+      GameEvent storedEvent(int seq, String type, DateTime at) => GameEvent(
+            eventId: 'old-e$seq',
+            gameId: 'g-stale',
+            eventType: type,
+            localSequence: seq,
+            occurredAt: at,
+            payload: const {},
+            synced: false,
+            actorId: 'p1',
+            source: EventSource.client,
+          );
+
+      setUp(() {
+        mockEventRepo = MockGameEventRepository();
+        when(mockGameRepo.getActiveGame()).thenAnswer((_) async => Game(
+              gameId: 'g-stale',
+              gameType: GameType.x01,
+              config: x01Config,
+              startTime: DateTime(2026, 11, 10, 21),
+            ));
+        when(mockEventRepo.getEventsForGame('g-stale')).thenAnswer(
+          (_) async => [
+            storedEvent(1, 'GameCreated', DateTime(2026, 11, 10, 21)),
+            storedEvent(2, 'TurnStarted', DateTime(2026, 11, 10, 21, 1)),
+            storedEvent(3, 'DartThrown', lastPlayedAt),
+          ],
+        );
+        when(mockGameRepo.appendEventsAndCompleteGame(
+          events: anyNamed('events'),
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        )).thenAnswer((_) async {});
+        when(mockCreateGameUseCase.execute(any, any))
+            .thenAnswer((_) async => _fakeGame('g-new'));
+        abandonContainer = ProviderContainer(
+          overrides: [
+            playerRepositoryProvider.overrideWithValue(mockPlayerRepo),
+            createGameUseCaseProvider.overrideWithValue(mockCreateGameUseCase),
+            gameRepositoryProvider.overrideWithValue(mockGameRepo),
+            gameEventRepositoryProvider.overrideWithValue(mockEventRepo),
+          ],
+        );
+      });
+
+      tearDown(() => abandonContainer.dispose());
+
+      Future<String?> start() {
+        final n = abandonContainer.read(gameSetupProvider.notifier);
+        n.selectVariant(x01Config);
+        n.togglePlayer('p1');
+        return n.startGame();
+      }
+
+      test(
+          'writes GameCompleted(winner=null) after its last event, '
+          'dated at its last event', () async {
+        expect(await start(), 'g-new');
+
+        final captured = verify(mockGameRepo.appendEventsAndCompleteGame(
+          events: captureAnyNamed('events'),
+          gameId: 'g-stale',
+          winnerCompetitorId: null,
+          endTime: captureAnyNamed('endTime'),
+        )).captured;
+        final events = captured[0] as List<GameEvent>;
+        expect(events, hasLength(1));
+        expect(events.single.eventType, 'GameCompleted');
+        expect(events.single.gameId, 'g-stale');
+        expect(events.single.localSequence, 4);
+        expect(events.single.payload['winner_competitor_id'], isNull);
+        expect(captured[1], lastPlayedAt);
+        verifyNever(mockGameRepo.completeGame(
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        ));
+      });
+
+      test(
+          'only marks complete, with the recorded winner, when the game '
+          'already holds its GameCompleted', () async {
+        // A win whose events were written but whose completeGame() never ran
+        // (app killed between the two steps).
+        final wonAt = DateTime(2026, 11, 10, 21, 30);
+        when(mockEventRepo.getEventsForGame('g-stale')).thenAnswer(
+          (_) async => [
+            storedEvent(1, 'GameCreated', DateTime(2026, 11, 10, 21)),
+            storedEvent(2, 'LegCompleted', wonAt),
+            GameEvent(
+              eventId: 'old-e3',
+              gameId: 'g-stale',
+              eventType: 'GameCompleted',
+              localSequence: 3,
+              occurredAt: wonAt,
+              payload: const {'winner_competitor_id': 'c-winner'},
+              synced: false,
+              actorId: 'system',
+              source: EventSource.client,
+            ),
+          ],
+        );
+        when(mockGameRepo.completeGame(
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        )).thenAnswer((_) async {});
+
+        expect(await start(), 'g-new');
+
+        verify(mockGameRepo.completeGame(
+          gameId: 'g-stale',
+          winnerCompetitorId: 'c-winner',
+          endTime: wonAt,
+        )).called(1);
+        verifyNever(mockGameRepo.appendEventsAndCompleteGame(
+          events: anyNamed('events'),
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        ));
+      });
+
+      test('still starts the new game when the stale one is already complete',
+          () async {
+        when(mockGameRepo.appendEventsAndCompleteGame(
+          events: anyNamed('events'),
+          gameId: anyNamed('gameId'),
+          winnerCompetitorId: anyNamed('winnerCompetitorId'),
+          endTime: anyNamed('endTime'),
+        )).thenThrow(const GameAlreadyCompleteException('g-stale'));
+
+        expect(await start(), 'g-new');
+        verify(mockCreateGameUseCase.execute(any, any)).called(1);
+      });
     });
   });
 }

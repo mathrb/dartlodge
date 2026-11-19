@@ -98,7 +98,7 @@ Exploratory charter (per game) = **missions** ("explore X, note everything that 
 - `turn_score` delta (#318) vs per-dart sum: any path omitting `turn_score` falls back to the legacy convention; bust turns and "Double-In not yet in" turns must contribute 0.
 - Missing `TurnStarted` → first-dart-in / checkout-attempts / nine-darter / 501 silently null/0 (§10) — check both rails.
 - Boundary thresholds: `== 1` → bust (not 0); exactly 170 = in range; exactly 180/140/100; Bull=50 = double for in/out.
-- Projection reset boundaries: Turn on `TurnStarted`, Leg on `LegCompleted`, Match on `GameCompleted` — a counter that doesn't reset leaks from one leg to the next.
+- Projection reset boundaries: Turn on `TurnStarted`, Leg on `LegCompleted`, Match on `GameCompleted`, Leg + Match on a `game_id` change — a counter that doesn't reset leaks from one leg to the next.
 - `DartCorrected` forces recomputation from the corrected dart (§9) — probe a checkout or bucket changed by a correction.
 
 - **Critical scripted cases** — _[to fill: pass 2]_

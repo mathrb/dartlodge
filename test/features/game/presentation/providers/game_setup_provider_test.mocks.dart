@@ -11,6 +11,8 @@ import 'package:dart_lodge/features/game/domain/entities/competitor.dart'
 import 'package:dart_lodge/features/game/domain/entities/game.dart' as _i2;
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart'
     as _i10;
+import 'package:dart_lodge/features/game/domain/repositories/game_event_repository.dart'
+    as _i11;
 import 'package:dart_lodge/features/game/domain/repositories/game_repository.dart'
     as _i8;
 import 'package:dart_lodge/features/game/domain/usecases/create_game_use_case.dart'
@@ -255,4 +257,99 @@ class MockGameRepository extends _i1.Mock implements _i8.GameRepository {
             returnValue: _i4.Stream<List<_i2.Game>>.empty(),
           )
           as _i4.Stream<List<_i2.Game>>);
+}
+
+/// A class which mocks [GameEventRepository].
+///
+/// See the documentation for Mockito's code generation for more information.
+class MockGameEventRepository extends _i1.Mock
+    implements _i11.GameEventRepository {
+  MockGameEventRepository() {
+    _i1.throwOnMissingStub(this);
+  }
+
+  @override
+  _i4.Future<List<_i10.GameEvent>> getEventsForGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getEventsForGame, [gameId]),
+            returnValue: _i4.Future<List<_i10.GameEvent>>.value(
+              <_i10.GameEvent>[],
+            ),
+          )
+          as _i4.Future<List<_i10.GameEvent>>);
+
+  @override
+  _i4.Future<List<_i10.GameEvent>> getEventsSince(
+    String? gameId,
+    int? afterSequence,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#getEventsSince, [gameId, afterSequence]),
+            returnValue: _i4.Future<List<_i10.GameEvent>>.value(
+              <_i10.GameEvent>[],
+            ),
+          )
+          as _i4.Future<List<_i10.GameEvent>>);
+
+  @override
+  _i4.Future<List<_i10.GameEvent>> getUnsyncedEvents() =>
+      (super.noSuchMethod(
+            Invocation.method(#getUnsyncedEvents, []),
+            returnValue: _i4.Future<List<_i10.GameEvent>>.value(
+              <_i10.GameEvent>[],
+            ),
+          )
+          as _i4.Future<List<_i10.GameEvent>>);
+
+  @override
+  _i4.Future<int> getLatestSequence(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#getLatestSequence, [gameId]),
+            returnValue: _i4.Future<int>.value(0),
+          )
+          as _i4.Future<int>);
+
+  @override
+  _i4.Future<void> appendEvent(_i10.GameEvent? event) =>
+      (super.noSuchMethod(
+            Invocation.method(#appendEvent, [event]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> appendEvents(List<_i10.GameEvent>? events) =>
+      (super.noSuchMethod(
+            Invocation.method(#appendEvents, [events]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> markSynced(List<String>? eventIds) =>
+      (super.noSuchMethod(
+            Invocation.method(#markSynced, [eventIds]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Future<void> updateGlobalSequences(Map<String, int>? eventIdToSequence) =>
+      (super.noSuchMethod(
+            Invocation.method(#updateGlobalSequences, [eventIdToSequence]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
+
+  @override
+  _i4.Stream<List<_i10.GameEvent>> watchEventsForGame(String? gameId) =>
+      (super.noSuchMethod(
+            Invocation.method(#watchEventsForGame, [gameId]),
+            returnValue: _i4.Stream<List<_i10.GameEvent>>.empty(),
+          )
+          as _i4.Stream<List<_i10.GameEvent>>);
 }

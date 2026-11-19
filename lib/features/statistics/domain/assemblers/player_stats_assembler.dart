@@ -1739,7 +1739,20 @@ class PlayerStatsAssembler {
       });
     final allEngines = perPlayerEngines.expand((e) => e).toList(growable: false);
 
+    String? previousGameId;
     for (final event in sorted) {
+      // Game boundary = leg + match boundary, even when the previous game has
+      // no terminating GameCompleted (abandoned before that event was
+      // written; mirrors ProjectionRunner.run, #280).
+      if (previousGameId != null && event.gameId != previousGameId) {
+        for (final engine in allEngines) {
+          engine.reset(ProjectionScope.leg);
+        }
+        for (final engine in allEngines) {
+          engine.reset(ProjectionScope.match);
+        }
+      }
+      previousGameId = event.gameId;
       if (event.eventType == 'TurnStarted') {
         for (final engine in allEngines) {
           engine.reset(ProjectionScope.turn);
@@ -1830,8 +1843,18 @@ class PlayerStatsAssembler {
     int currentTarget = initialTarget;
     int gameTurns = 0;
     bool inPlayerTurn = false;
+    String? currentGameId;
 
     for (final event in events) {
+      // A new drill starts from the first target even when the previous one
+      // has no terminating event (abandoned before GameCompleted was
+      // written, #280).
+      if (event.gameId != currentGameId) {
+        currentGameId = event.gameId;
+        currentTarget = initialTarget;
+        gameTurns = 0;
+        inPlayerTurn = false;
+      }
       // Gate per-player events on payload.player_id so the loop ignores
       // events from other competitors. ATC is solo-only today, but a
       // future multi-competitor ATC variant (or any shared-event load
@@ -1934,7 +1957,16 @@ class PlayerStatsAssembler {
       currentRound++;
     }
 
+    String? currentGameId;
     for (final event in events) {
+      // Same drill reset as GameCompleted below, for a drill abandoned before
+      // that event was written (#280). Such a drill is not scored.
+      if (event.gameId != currentGameId) {
+        currentGameId = event.gameId;
+        currentRound = 1;
+        currentScore = 27;
+        inPlayerTurn = false;
+      }
       final epid = event.payload['player_id'] as String?;
       switch (event.eventType) {
         case 'TurnStarted':
