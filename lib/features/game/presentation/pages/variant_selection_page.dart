@@ -8,6 +8,7 @@ import 'package:dart_lodge/core/utils/app_text_styles.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/cricket_variant_label.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/models/match_format.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
@@ -390,23 +391,10 @@ class _LastPlayedCard extends StatelessWidget {
 
   String get _displayTitle => config.maybeMap(
         x01: (c) => '${c.startingScore}',
-        cricket: (c) {
-          final scoringLabel = switch (c.scoring) {
-            'cut-throat' => 'Cut Throat',
-            'no-score' => 'No Score',
-            _ => 'Standard',
-          };
-          final modeLabel = switch (c.targetMode) {
-            'random' => 'Random',
-            'crazy' => 'Crazy',
-            _ => null,
-          };
-          // Random/Crazy default to standard scoring — show just the mode
-          // label unless the user explicitly picked a non-standard scoring
-          // axis, in which case `Mode · Scoring` is shown together.
-          if (modeLabel != null && c.scoring == 'standard') return modeLabel;
-          return modeLabel == null ? scoringLabel : '$modeLabel · $scoringLabel';
-        },
+        cricket: (c) => cricketVariantLabel(
+              scoring: c.scoring,
+              targetMode: c.targetMode,
+            ),
         orElse: () => '',
       );
 }
