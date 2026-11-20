@@ -17,8 +17,10 @@ class LegCompleteModalWidget extends StatelessWidget {
   final VoidCallback onNextLeg;
 
   /// Undoes the leg-winning dart (closing the modal first), which reopens the
-  /// won leg mid-turn. Lets a mis-tap or a camera misread on the deciding dart
-  /// be corrected. The action is hidden when null.
+  /// won leg mid-turn; the boards wire it to `undoLegWinningDart`, which also
+  /// takes back any dart scored into the new leg while the modal was open.
+  /// Lets a mis-tap or a camera misread on the deciding dart be corrected.
+  /// The action is hidden when null.
   final VoidCallback? onUndo;
 
   @override

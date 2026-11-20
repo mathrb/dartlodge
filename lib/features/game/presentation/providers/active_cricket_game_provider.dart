@@ -115,6 +115,24 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
     });
   }
 
+  /// Undo from the leg-complete modal: takes back the dart that won the leg,
+  /// reopening it with the winner mid-turn. A dart scored into the new leg
+  /// while the modal was open (camera auto-scoring) is newer than the winning
+  /// dart, so it is undone first. Stops once the leg index drops below the one
+  /// the win opened, when nothing is left to undo, or on an error.
+  Future<void> undoLegWinningDart() =>
+      _serializer.run(_undoLegWinningDartImpl);
+
+  Future<void> _undoLegWinningDartImpl() async {
+    final openedLeg = state.value?.gameState.currentLegIndex ?? 0;
+    if (openedLeg == 0) return;
+    while (!state.hasError &&
+        canUndo &&
+        (state.value?.gameState.currentLegIndex ?? 0) >= openedLeg) {
+      await _undoDartImpl();
+    }
+  }
+
   /// Per-dart correction (#376): replaces dart [turnDartIndex] of the active
   /// turn (0-based, throw order) with [newSegment]. Resolves the dart's
   /// `DartThrown` event id on demand from the log, then delegates to

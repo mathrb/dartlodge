@@ -127,4 +127,39 @@ void main() {
     expect(undone.gameState.competitors[0].score, 20);
     expect(undone.gameState.competitors[0].legsWon, 0);
   });
+  test('undoLegWinningDart also takes back a dart scored into the new leg '
+      'while the modal was open', () async {
+    await container.read(activeGameProvider('g1').future);
+    final notifier = container.read(activeGameProvider('g1').notifier);
+
+    await notifier.processDart('20');
+    await notifier.processDart('D10');
+    // A camera dart scored under the open modal lands in leg 2.
+    await notifier.processDart('5');
+    expect(
+      container.read(activeGameProvider('g1')).value!.gameState.currentLegIndex,
+      1,
+    );
+
+    await notifier.undoLegWinningDart();
+
+    final undone = container.read(activeGameProvider('g1')).value!.gameState;
+    expect(undone.currentLegIndex, 0);
+    expect(undone.dartsThrownInTurn, 1);
+    expect(undone.competitors[0].score, 20);
+    expect(undone.competitors[0].legsWon, 0);
+    expect(undone.competitors[1].score, 40);
+  });
+
+  test('undoLegWinningDart is a no-op in the first leg', () async {
+    await container.read(activeGameProvider('g1').future);
+    final notifier = container.read(activeGameProvider('g1').notifier);
+
+    await notifier.processDart('20');
+    await notifier.undoLegWinningDart();
+
+    final gs = container.read(activeGameProvider('g1')).value!.gameState;
+    expect(gs.dartsThrownInTurn, 1);
+    expect(gs.competitors[0].score, 20);
+  });
 }

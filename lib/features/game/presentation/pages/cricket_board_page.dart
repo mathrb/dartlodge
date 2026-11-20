@@ -172,7 +172,7 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
                   .dismissLegModal(),
               onUndo: () => ref
                   .read(activeCricketGameProvider(widget.gameId).notifier)
-                  .undoDart(),
+                  .undoLegWinningDart(),
             ),
           );
         });

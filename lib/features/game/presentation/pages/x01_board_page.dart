@@ -199,7 +199,7 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
                   .dismissLegModal(),
               onUndo: () => ref
                   .read(activeGameProvider(widget.gameId).notifier)
-                  .undoDart(),
+                  .undoLegWinningDart(),
             ),
           );
         });
