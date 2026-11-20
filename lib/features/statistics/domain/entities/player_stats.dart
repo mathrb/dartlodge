@@ -53,6 +53,8 @@ abstract class PlayerStats with _$PlayerStats {
     double? bestGameHitRate,
     // Average marks in the first 9 darts (first 3 turns) per leg (#286).
     double? firstNineMpr,
+    // Best single-leg first-9 MPR (legs with at least 3 turns started).
+    double? bestFirstNineMpr,
     // ATC practice fields
     @Default(0) int atcCompletions,
     double? atcHitRate,

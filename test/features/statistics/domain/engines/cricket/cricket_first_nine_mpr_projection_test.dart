@@ -4,61 +4,117 @@ import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/cricket/cricket_first_nine_mpr_projection.dart';
 
-var _seq = 0;
-
-GameEvent _e(String type, Map<String, dynamic> payload) {
-  _seq++;
-  return GameEvent(
-    eventId: 'evt-$_seq',
-    gameId: 'g',
-    eventType: type,
-    localSequence: _seq,
-    occurredAt: DateTime(2024),
-    payload: payload,
-    synced: false,
-    actorId: 'p1',
-    source: EventSource.client,
-  );
-}
-
-const _ctx = ProjectionContext(
-  playerId: 'p1',
-  gameType: GameType.cricket,
-  inStrategy: 'straight',
-  outStrategy: 'straight',
-);
-
-void _visit(CricketFirstNineMprProjection engine, List<String> segments) {
-  engine.apply(_e('TurnStarted', {'player_id': 'p1'}));
-  for (final s in segments) {
-    engine.apply(_e('DartThrown', {'player_id': 'p1', 'segment': s}));
-  }
-  engine.apply(_e('TurnEnded', {'player_id': 'p1'}));
-}
-
-void _legEnd(CricketFirstNineMprProjection engine) {
-  engine.apply(_e('LegCompleted', {'winner_competitor_id': 'c1'}));
-  engine.reset(ProjectionScope.leg);
-}
-
-/// A completed leg of three 3-mark visits → First 9 MPR 3.0.
-void _threeMarkLeg(CricketFirstNineMprProjection engine) {
-  _visit(engine, ['T20', 'MISS', 'MISS']);
-  _visit(engine, ['T19', 'MISS', 'MISS']);
-  _visit(engine, ['T18', 'MISS', 'MISS']);
-  _legEnd(engine);
-}
-
 void main() {
   late CricketFirstNineMprProjection engine;
+  var seq = 0;
+
+  GameEvent event(String type, Map<String, dynamic> payload) {
+    seq++;
+    return GameEvent(
+      eventId: 'evt-$seq-$type',
+      gameId: 'game-1',
+      eventType: type,
+      localSequence: seq,
+      occurredAt: DateTime(2024),
+      payload: payload,
+      synced: false,
+      actorId: 'p1',
+      source: EventSource.client,
+    );
+  }
+
+  /// One full visit for [playerId]: TurnStarted, 3 darts, TurnEnded.
+  void visit(List<String> segments, {String playerId = 'p1'}) {
+    engine.apply(event('TurnStarted', {'player_id': playerId}));
+    for (final s in segments) {
+      engine.apply(event('DartThrown', {'player_id': playerId, 'segment': s}));
+    }
+    engine.apply(event('TurnEnded', {'player_id': playerId}));
+  }
+
+  /// Ends the leg the way ProjectionRunner does: apply, then a leg reset.
+  void endLeg() {
+    engine.apply(event('LegCompleted', {'winner_player_id': 'p1'}));
+    engine.reset(ProjectionScope.leg);
+  }
+
+  /// A completed leg of three 3-mark visits → First 9 MPR 3.0.
+  void threeMarkLeg() {
+    visit(['T20', 'MISS', 'MISS']);
+    visit(['T19', 'MISS', 'MISS']);
+    visit(['T18', 'MISS', 'MISS']);
+    endLeg();
+  }
 
   setUp(() {
-    _seq = 0;
-    engine = CricketFirstNineMprProjection()..init(_ctx);
+    seq = 0;
+    engine = CricketFirstNineMprProjection();
+    engine.init(const ProjectionContext(
+      playerId: 'p1',
+      gameType: GameType.cricket,
+      inStrategy: 'straight',
+      outStrategy: 'straight',
+    ));
+  });
+
+  test('init: no first-nine average and no best', () {
+    final s = engine.snapshot();
+    expect(s['firstNineMpr'], isNull);
+    expect(s['bestFirstNineMpr'], isNull);
+  });
+
+  test('bestFirstNineMpr is the best single-leg first-9 MPR', () {
+    // Leg 1: 3 + 3 + 3 marks in the first 3 visits → 3.0.
+    visit(['T20', 'MISS', 'MISS']);
+    visit(['T19', 'MISS', 'MISS']);
+    visit(['T18', 'MISS', 'MISS']);
+    endLeg();
+    // Leg 2: 9 + 6 + 0 marks → 5.0. The 4th visit is outside the window.
+    visit(['T20', 'T19', 'T18']);
+    visit(['T17', 'T16', 'MISS']);
+    visit(['MISS', 'MISS', 'MISS']);
+    visit(['T15', 'DB', 'DB']);
+    endLeg();
+
+    final s = engine.snapshot();
+    expect(s['bestFirstNineMpr'], closeTo(5.0, 1e-9));
+    expect(s['firstNineMpr'], closeTo(24 / 6, 1e-9));
+  });
+
+  test('a later weaker leg does not lower the best', () {
+    visit(['T20', 'T19', 'T18']);
+    visit(['T17', 'T16', 'T15']);
+    visit(['DB', 'SB', 'MISS']);
+    endLeg(); // 21 marks → 7.0
+    visit(['20', 'MISS', 'MISS']);
+    visit(['19', 'MISS', 'MISS']);
+    visit(['18', 'MISS', 'MISS']);
+    endLeg(); // 3 marks → 1.0
+
+    expect(engine.snapshot()['bestFirstNineMpr'], closeTo(7.0, 1e-9));
+  });
+
+  test('a leg with fewer than 3 visits never sets the best (#290 gate)', () {
+    visit(['T20', 'T19', 'T18']);
+    visit(['T17', 'T16', 'T15']);
+    endLeg();
+
+    expect(engine.snapshot()['bestFirstNineMpr'], isNull);
+  });
+
+  test("an opponent's visits do not count towards the best", () {
+    visit(['T20', 'MISS', 'MISS']);
+    visit(['T19', 'T18', 'T17'], playerId: 'p2');
+    visit(['MISS', 'MISS', 'MISS']);
+    visit(['T16', 'T15', 'DB'], playerId: 'p2');
+    visit(['MISS', 'MISS', 'MISS']);
+    endLeg();
+
+    expect(engine.snapshot()['bestFirstNineMpr'], closeTo(1.0, 1e-9));
   });
 
   test('a completed leg of three 3-mark visits reads 3.0', () {
-    _threeMarkLeg(engine);
+    threeMarkLeg();
     final snap = engine.snapshot();
     expect(snap['firstNineMpr'], closeTo(3.0, 1e-9));
     expect(snap['totalFirstNineMarks'], 9);
@@ -66,8 +122,8 @@ void main() {
   });
 
   test('an abandoned leg (no LegCompleted) adds no marks', () {
-    _threeMarkLeg(engine);
-    _visit(engine, ['T17', 'T16', 'T15']);
+    threeMarkLeg();
+    visit(['T17', 'T16', 'T15']);
     engine.reset(ProjectionScope.leg);
     engine.reset(ProjectionScope.match);
     final snap = engine.snapshot();
@@ -77,10 +133,10 @@ void main() {
   });
 
   test('a leg completed in 2 visits adds neither marks nor a leg', () {
-    _threeMarkLeg(engine);
-    _visit(engine, ['T20', 'T19', 'T18']);
-    _visit(engine, ['T17', 'T16', 'T15']);
-    _legEnd(engine);
+    threeMarkLeg();
+    visit(['T20', 'T19', 'T18']);
+    visit(['T17', 'T16', 'T15']);
+    endLeg();
     final snap = engine.snapshot();
     expect(snap['firstNineMpr'], closeTo(3.0, 1e-9));
     expect(snap['totalFirstNineMarks'], 9);
@@ -88,7 +144,7 @@ void main() {
   });
 
   test('only abandoned legs leave the average null and the marks at 0', () {
-    _visit(engine, ['T20', 'T19', 'T18']);
+    visit(['T20', 'T19', 'T18']);
     engine.reset(ProjectionScope.leg);
     engine.reset(ProjectionScope.match);
     final snap = engine.snapshot();

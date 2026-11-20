@@ -220,7 +220,7 @@ Used in `dart_throws.segment`, `DartThrown` event payloads, and all engine logic
 
 | Before you touch… | Read first | ⚠️ Top tripwires |
 |---|---|---|
-| Cricket scoring / variants / labels | `docs/rules/cricket.md` | Variant labels live in **3 aligned places**; adding a variant = **4 edits incl. a registry test**; scoring × targetMode are orthogonal — **never hardcode `[15..20]`** |
+| Cricket scoring / variants / labels | `docs/rules/cricket.md` | Variant labels come from **`cricketVariantLabel()`** plus the lowercase history list; adding a variant = **4 edits incl. a registry test**; scoring × targetMode are orthogonal — **never hardcode `[15..20]`** |
 | X01 scoring / strategy / turn_score | `docs/rules/x01.md` | Strategy values are lowercase (`'straight'`/`'double'`/`'master'`); `TurnEnded` must carry `turn_score` |
 | Game events / config dispatch / rounds / payloads / RNG | `docs/rules/game-engine.md` | `GameConfig` dispatch uses `maybeMap`, **not** `maybeWhen`; `local_sequence` is **per-game** — sort by `(game_id, local_sequence)`; a "round" = full rotation (`totalRounds`); `DartCorrected` key is `original_event_id`; `endGame/endDrill` don't mutate `gameState.isComplete` |
 | Stats / projections / formatters | `docs/rules/statistics.md` | All projection wiring lives in `PlayerStatsAssembler`; `GameStats.gameType` is load-bearing; snapshots are two-level |

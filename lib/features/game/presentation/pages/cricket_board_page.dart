@@ -13,6 +13,7 @@ import '../../../../core/utils/app_theme.dart';
 import '../../../../core/utils/cricket_segment_utils.dart';
 import '../../../../core/utils/screen_wakelock.dart';
 import '../../../../core/widgets/app_header.dart';
+import '../../domain/models/cricket_variant_label.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/models/match_format.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
@@ -205,27 +206,12 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
 
         // Header label composes scoring + target mode so players can tell
         // at a glance whether they're on Random / Crazy / Fixed targets in
-        // addition to the scoring variant (#332). Match the format the
-        // variant picker uses (`variant_selection_page.dart`):
-        //   - Fixed scoring=cut-throat/no-score → "Cut Throat" / "No Score"
-        //   - Fixed scoring=standard            → "Standard"
-        //   - Random/Crazy + standard scoring   → "Random" / "Crazy"
-        //   - Random/Crazy + non-standard      → "Random · Cut Throat", …
-        final scoringLabel = switch (gameState.cricketScoring) {
-          'cut-throat' => 'Cut Throat',
-          'no-score' => 'No Score',
-          _ => 'Standard',
-        };
-        final targetModeLabel = switch (gameState.cricketTargetMode) {
-          'random' => 'Random',
-          'crazy' => 'Crazy',
-          _ => null,
-        };
-        final variantLabel = targetModeLabel == null
-            ? scoringLabel
-            : (gameState.cricketScoring == 'standard'
-                  ? targetModeLabel
-                  : '$targetModeLabel · $scoringLabel');
+        // addition to the scoring variant (#332). Shared with the variant
+        // picker and the setup config chip.
+        final variantLabel = cricketVariantLabel(
+          scoring: gameState.cricketScoring,
+          targetMode: gameState.cricketTargetMode,
+        );
 
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];

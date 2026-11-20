@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/engines/projection_engine.dart';
@@ -5,6 +7,9 @@ import 'cricket_targets_mixin.dart';
 
 /// Computes Marks Per Round (MPR) for the first 9 darts (first 3 turns) of each leg.
 /// Mirrors X01FirstNinePprProjection but counts cricket marks instead of score.
+///
+/// Also tracks the best single-leg first-9 MPR (`bestFirstNineMpr`), with the
+/// same #290 gate as the average: a leg only counts once 3 turns were started.
 class CricketFirstNineMprProjection extends ProjectionEngine
     with CricketTargetsTracker {
   static const _kDescriptor = ProjectionDescriptor(
@@ -37,6 +42,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
   int _legFirstNineMarks = 0;
   int _totalFirstNineMarks = 0;
   int _totalFirstNineLegs = 0;
+  double? _bestFirstNineMpr;
 
   @override
   void init(ProjectionContext context) {
@@ -44,9 +50,10 @@ class CricketFirstNineMprProjection extends ProjectionEngine
     _turnIndexInLeg = 0;
     _inFirstNine = false;
     _currentTurnMarks = 0;
-    _legFirstNineMarks = 0;
     _totalFirstNineMarks = 0;
     _totalFirstNineLegs = 0;
+    _legFirstNineMarks = 0;
+    _bestFirstNineMpr = null;
     resetCricketTargets();
   }
 
@@ -82,11 +89,15 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         if (_turnIndexInLeg >= 3) {
           _totalFirstNineLegs++;
           _totalFirstNineMarks += _legFirstNineMarks;
+          final legMpr = _legFirstNineMarks / 3;
+          _bestFirstNineMpr = _bestFirstNineMpr == null
+              ? legMpr
+              : max(_bestFirstNineMpr!, legMpr);
         }
         _turnIndexInLeg = 0;
+        _legFirstNineMarks = 0;
         _inFirstNine = false;
         _currentTurnMarks = 0;
-        _legFirstNineMarks = 0;
     }
   }
 
@@ -114,6 +125,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         : null;
     return {
       'firstNineMpr': mpr,
+      'bestFirstNineMpr': _bestFirstNineMpr,
       'totalFirstNineMarks': _totalFirstNineMarks,
       'totalFirstNineLegs': _totalFirstNineLegs,
     };

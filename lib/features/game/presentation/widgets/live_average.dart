@@ -25,13 +25,20 @@ String x01LivePprDisplay(CompetitorState cs) {
 /// Cricket marks-per-round for [cs] mid-leg, counting marks on the game's
 /// actual target set [targets] (Fixed = 15–20 + Bull, Random/Crazy = the
 /// assigned set + Bull) so Random/Crazy hits aren't scored as zero marks
-/// (#320). Total marks (incl. overflow on closed numbers) ÷ rounds, where a
-/// round is a full 3-dart visit; `0` until the first visit completes.
+/// (#320). Marks (incl. overflow on closed numbers) of the completed 3-dart
+/// visits ÷ those visits; `0` until the first visit completes.
+///
+/// The visit in progress is left out of BOTH the numerator and the
+/// denominator, so the figure holds still during a visit and updates once its
+/// 3rd dart lands. Counting its marks over completed visits only would read
+/// above the physical maximum of 9 (e.g. 12 after T20 T20 MISS, T19 T19).
 double cricketLiveMpr(CompetitorState cs, {required Set<int> targets}) {
-  final totalMarks = cs.dartThrows
-      .fold(0, (sum, s) => sum + cricketMarksForSegment(s, targets: targets));
   final rounds = cs.dartThrows.length ~/ 3;
-  return rounds > 0 ? totalMarks / rounds : 0.0;
+  if (rounds == 0) return 0.0;
+  final totalMarks = cs.dartThrows
+      .take(rounds * 3)
+      .fold(0, (sum, s) => sum + cricketMarksForSegment(s, targets: targets));
+  return totalMarks / rounds;
 }
 
 /// [cricketLiveMpr] formatted for display.
