@@ -1954,8 +1954,12 @@ void main() {
   // ── Manual layout: standings + score readable from the oche ──────────────────
 
   group('Manual layout shows every player and a headline score', () {
-    void setPhoneViewport(WidgetTester tester, {double textScale = 1.0}) {
-      tester.view.physicalSize = const Size(412, 915);
+    void setPhoneViewport(
+      WidgetTester tester, {
+      double textScale = 1.0,
+      Size size = const Size(412, 915),
+    }) {
+      tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1.0;
       tester.platformDispatcher.textScaleFactorTestValue = textScale;
       addTearDown(tester.view.reset);
@@ -2080,5 +2084,32 @@ void main() {
       expect(inStrip('BOB'), findsOneWidget);
       expect(find.text('Score: 1 | Round 3/7'), findsOneWidget);
     });
+
+    // Small phone at 2.0x text: the dartboard is the only flex child, so the
+    // strip and the score line must not grow with the text scale.
+    for (final type in [
+      GameType.shanghai,
+      GameType.aroundTheClock,
+      GameType.bobs27,
+    ]) {
+      testWidgets('$type fits a 360x640 phone at 2.0x text', (tester) async {
+        setPhoneViewport(tester, textScale: 2.0, size: const Size(360, 640));
+        final gs = type == GameType.bobs27
+            ? _practiceState(
+                gameType: type,
+                competitor:
+                    _practiceCompetitor(currentTarget: 1, practiceRound: 1)
+                        .copyWith(score: 27),
+              )
+            : threePlayers(type);
+        final notifier =
+            _FakeActivePracticeNotifier(_activeState(gameState: gs));
+        await tester.pumpWidget(_buildApp(notifier));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('MISS'), findsOneWidget);
+      });
+    }
   });
 }

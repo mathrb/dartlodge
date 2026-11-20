@@ -54,7 +54,13 @@ class PracticePlayersStripWidget extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${p.value}',
+                    // A game-board score numeral: it ignores the user's text
+                    // scale (DESIGN_SYSTEM §13) so the strip stays one chip
+                    // row tall on the manual board, whose only flex is the
+                    // dartboard.
+                    textScaler: AppTheme.scoreNumeralTextScaler(context),
                     maxLines: 1,
+                    softWrap: false,
                     style: AppTextStyles.scoreSmall.copyWith(
                       color: cs.onSurfaceVariant,
                     ),

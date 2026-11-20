@@ -158,6 +158,13 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
         Text(
           _secondaryMetric(l10n),
           style: secondaryStyle?.copyWith(color: secondaryColor),
+          // The 28 px score headline is already the size the 14 px caption
+          // reached at 2.0x, so it does not grow further: on a small phone
+          // the manual board's only flex child is the dartboard, and a
+          // scaled headline overflowed the column.
+          textScaler: scoreIsPrimary
+              ? MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.0)
+              : null,
           textAlign: TextAlign.center,
         ),
       ],
