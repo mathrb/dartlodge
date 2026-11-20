@@ -1950,4 +1950,166 @@ void main() {
       });
     }
   });
+
+  // ── Manual layout: standings + score readable from the oche ──────────────────
+
+  group('Manual layout shows every player and a headline score', () {
+    void setPhoneViewport(
+      WidgetTester tester, {
+      double textScale = 1.0,
+      Size size = const Size(412, 915),
+    }) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1.0;
+      tester.platformDispatcher.textScaleFactorTestValue = textScale;
+      addTearDown(tester.view.reset);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    }
+
+    GameState threePlayers(GameType type) =>
+        _practiceState(gameType: type).copyWith(
+          competitors: [
+            _practiceCompetitor(id: 'c1', name: 'Alice', currentTarget: 4)
+                .copyWith(score: 8),
+            _practiceCompetitor(id: 'c2', name: 'Bob', currentTarget: 7)
+                .copyWith(score: 21),
+            _practiceCompetitor(id: 'c3', name: 'Cid', currentTarget: 1)
+                .copyWith(score: 1),
+          ],
+          // Cid is up: Alice and Bob are the opponents.
+          currentTurnIndex: 2,
+        );
+
+    Finder inStrip(String text) => find.descendant(
+          of: find.byType(PracticePlayersStripWidget),
+          matching: find.text(text),
+        );
+
+    testWidgets('3-player ATC shows both opponents\' targets', (tester) async {
+      setPhoneViewport(tester);
+      final notifier = _FakeActivePracticeNotifier(
+        _activeState(gameState: threePlayers(GameType.aroundTheClock)),
+      );
+      await tester.pumpWidget(_buildApp(notifier));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PracticePlayersStripWidget), findsOneWidget);
+      expect(inStrip('ALICE'), findsOneWidget);
+      expect(inStrip('4'), findsOneWidget);
+      expect(inStrip('BOB'), findsOneWidget);
+      expect(inStrip('7'), findsOneWidget);
+      // The active player is the hero, not a chip.
+      expect(inStrip('CID'), findsNothing);
+      // Manual entry still works next to the strip.
+      expect(find.byType(DartboardHighlightWidget), findsOneWidget);
+      expect(find.byType(PracticeInputButtonsWidget), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('3-player Shanghai shows both opponents\' scores',
+        (tester) async {
+      setPhoneViewport(tester);
+      final notifier = _FakeActivePracticeNotifier(
+        _activeState(gameState: threePlayers(GameType.shanghai)),
+      );
+      await tester.pumpWidget(_buildApp(notifier));
+      await tester.pumpAndSettle();
+
+      expect(inStrip('ALICE'), findsOneWidget);
+      expect(inStrip('8'), findsOneWidget);
+      expect(inStrip('BOB'), findsOneWidget);
+      expect(inStrip('21'), findsOneWidget);
+      expect(inStrip('CID'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('solo drill shows no strip', (tester) async {
+      setPhoneViewport(tester);
+      final notifier = _FakeActivePracticeNotifier(
+        _activeState(
+          gameState: _practiceState(gameType: GameType.aroundTheClock),
+        ),
+      );
+      await tester.pumpWidget(_buildApp(notifier));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PracticePlayersStripWidget), findsNothing);
+    });
+
+    for (final scale in [1.0, 2.0]) {
+      testWidgets(
+          'Bob\'s 27 score is a full-contrast headline and the inputs fit '
+          'at ${scale}x text', (tester) async {
+        setPhoneViewport(tester, textScale: scale);
+        final gs = _practiceState(
+          gameType: GameType.bobs27,
+          competitor: _practiceCompetitor(currentTarget: 1, practiceRound: 1)
+              .copyWith(score: 27),
+        );
+        final notifier =
+            _FakeActivePracticeNotifier(_activeState(gameState: gs));
+        await tester.pumpWidget(_buildApp(notifier));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        final scoreText = tester.widget<Text>(find.text('Score: 27'));
+        final theme = Theme.of(tester.element(find.text('Score: 27')));
+        expect(scoreText.style?.fontSize, 28);
+        expect(scoreText.style?.color, theme.colorScheme.onSurface);
+
+        // The score and both inputs sit fully inside the viewport.
+        const screen = Rect.fromLTWH(0, 0, 412, 915);
+        for (final f in [
+          find.text('Score: 27'),
+          find.text('MISS'),
+          find.text('Double 1'),
+        ]) {
+          final r = tester.getRect(f);
+          expect(screen.contains(r.topLeft) && screen.contains(r.bottomRight),
+              isTrue,
+              reason: '$f must be on screen, got $r');
+        }
+      });
+    }
+
+    testWidgets('3-player Shanghai fits at 2.0x text', (tester) async {
+      setPhoneViewport(tester, textScale: 2.0);
+      final notifier = _FakeActivePracticeNotifier(
+        _activeState(gameState: threePlayers(GameType.shanghai)),
+      );
+      await tester.pumpWidget(_buildApp(notifier));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(inStrip('BOB'), findsOneWidget);
+      expect(find.text('Score: 1 | Round 3/7'), findsOneWidget);
+    });
+
+    // Small phone at 2.0x text: the dartboard is the only flex child, so the
+    // strip and the score line must not grow with the text scale.
+    for (final type in [
+      GameType.shanghai,
+      GameType.aroundTheClock,
+      GameType.bobs27,
+    ]) {
+      testWidgets('$type fits a 360x640 phone at 2.0x text', (tester) async {
+        setPhoneViewport(tester, textScale: 2.0, size: const Size(360, 640));
+        final gs = type == GameType.bobs27
+            ? _practiceState(
+                gameType: type,
+                competitor:
+                    _practiceCompetitor(currentTarget: 1, practiceRound: 1)
+                        .copyWith(score: 27),
+              )
+            : threePlayers(type);
+        final notifier =
+            _FakeActivePracticeNotifier(_activeState(gameState: gs));
+        await tester.pumpWidget(_buildApp(notifier));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('MISS'), findsOneWidget);
+      });
+    }
+  });
 }

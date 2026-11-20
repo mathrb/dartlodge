@@ -319,6 +319,25 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           catch40TargetRemaining: gs.catch40TargetRemaining,
         );
 
+        // Multi-player ATC / Shanghai: the non-active players' progress (ATC
+        // current target, Shanghai score). Null for solo drills.
+        final playersStrip = (isAtc || isShanghai) && gs.competitors.length > 1
+            ? PracticePlayersStripWidget(
+                players: [
+                  for (int i = 0; i < gs.competitors.length; i++)
+                    if (i != gs.currentTurnIndex)
+                      (
+                        name: gs.competitors[i].name,
+                        value: isAtc
+                            // ATC initialises currentTarget to 1; 0 is not
+                            // a valid target, so fall back to the first.
+                            ? (gs.competitors[i].currentTarget ?? 1)
+                            : gs.competitors[i].score,
+                      ),
+                ],
+              )
+            : null;
+
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (_, __) => _confirmBack(context),
@@ -438,6 +457,10 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                   if (!cameraFirst) targetDisplay,
                   if (isShanghai && !cameraFirst)
                     _ShanghaiBonus(show: practiceState.showShanghaiBonus),
+                  // The other players' standing is on screen in both layouts:
+                  // the board is read from the oche, so manual entry must not
+                  // hide who is ahead (the X01 board shows every player too).
+                  if (!cameraFirst) ?playersStrip,
                   // Camera-first (#445): the multi-player progress strip (ATC /
                   // Shanghai) → the prominent dart band → the camera region, which
                   // fills whatever height is left (#760). Manual entry / correction
@@ -455,23 +478,7 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
                             _ShanghaiBonus(
                               show: practiceState.showShanghaiBonus,
                             ),
-                          if ((isAtc || isShanghai) &&
-                              gs.competitors.length > 1)
-                            PracticePlayersStripWidget(
-                              players: [
-                                for (int i = 0; i < gs.competitors.length; i++)
-                                  if (i != gs.currentTurnIndex)
-                                    (
-                                      name: gs.competitors[i].name,
-                                      value: isAtc
-                                          // ATC initialises currentTarget to 1; 0 is not
-                                          // a valid target, so fall back to the first.
-                                          ? (gs.competitors[i].currentTarget ??
-                                                1)
-                                          : gs.competitors[i].score,
-                                    ),
-                              ],
-                            ),
+                          ?playersStrip,
                           ProminentDartBandWidget(
                             currentTurnDarts: currentTurnDarts,
                             // A thrown slot opens correction; an empty slot opens manual

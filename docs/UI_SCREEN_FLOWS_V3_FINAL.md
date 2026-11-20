@@ -288,7 +288,9 @@ Dart indicator: [60] [T20] [○] [○]
   current target highlighted colorPrimary; others 35% opacity
 ────────────────────────────────────────────────────
   Target label (48sp Oswald, colorPrimary)
-  Secondary metric (textBodyMedium, colorOnSurfaceVariant)
+  Secondary metric (textBodyMedium, colorOnSurfaceVariant;
+    Bob's 27 / Shanghai score: headlineMedium, colorOnSurface)
+  PracticePlayersStripWidget (ATC / Shanghai, 2+ players: the others' target / score)
 ────────────────────────────────────────────────────
   Input buttons (varies per sub-type — see below)
 ────────────────────────────────────────────────────
