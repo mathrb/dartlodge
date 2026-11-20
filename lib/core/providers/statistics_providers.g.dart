@@ -17,6 +17,8 @@ part of 'statistics_providers.dart';
 /// `lib/features/statistics/presentation/providers/player_stats_page_provider.dart`
 /// so that `features/statistics/` presentation types are not imported from
 /// `core/` (which would invert the architecture's dependency direction).
+/// A player's all-time stats for one [gameType]. The player picker reads
+/// it for the lineup figure: X01 three-dart average, Cricket MPR.
 
 @ProviderFor(playerStats)
 final playerStatsProvider = PlayerStatsFamily._();
@@ -30,6 +32,8 @@ final playerStatsProvider = PlayerStatsFamily._();
 /// `lib/features/statistics/presentation/providers/player_stats_page_provider.dart`
 /// so that `features/statistics/` presentation types are not imported from
 /// `core/` (which would invert the architecture's dependency direction).
+/// A player's all-time stats for one [gameType]. The player picker reads
+/// it for the lineup figure: X01 three-dart average, Cricket MPR.
 
 final class PlayerStatsProvider
     extends
@@ -48,9 +52,11 @@ final class PlayerStatsProvider
   /// `lib/features/statistics/presentation/providers/player_stats_page_provider.dart`
   /// so that `features/statistics/` presentation types are not imported from
   /// `core/` (which would invert the architecture's dependency direction).
+  /// A player's all-time stats for one [gameType]. The player picker reads
+  /// it for the lineup figure: X01 three-dart average, Cricket MPR.
   PlayerStatsProvider._({
     required PlayerStatsFamily super.from,
-    required String super.argument,
+    required (String, GameType) super.argument,
   }) : super(
          retry: null,
          name: r'playerStatsProvider',
@@ -66,7 +72,7 @@ final class PlayerStatsProvider
   String toString() {
     return r'playerStatsProvider'
         ''
-        '($argument)';
+        '$argument';
   }
 
   @$internal
@@ -77,8 +83,8 @@ final class PlayerStatsProvider
 
   @override
   Stream<PlayerStats> create(Ref ref) {
-    final argument = this.argument as String;
-    return playerStats(ref, argument);
+    final argument = this.argument as (String, GameType);
+    return playerStats(ref, argument.$1, argument.$2);
   }
 
   @override
@@ -92,7 +98,7 @@ final class PlayerStatsProvider
   }
 }
 
-String _$playerStatsHash() => r'c2b7717ab6faabf59bd007b745ef5032d5daec3a';
+String _$playerStatsHash() => r'e384934a66af87c34adde8f732c448229dd3c166';
 
 /// Cross-feature read providers exposing statistics data to callers outside
 /// the statistics feature (e.g. the game player-picker AVG badge, in-game
@@ -103,9 +109,11 @@ String _$playerStatsHash() => r'c2b7717ab6faabf59bd007b745ef5032d5daec3a';
 /// `lib/features/statistics/presentation/providers/player_stats_page_provider.dart`
 /// so that `features/statistics/` presentation types are not imported from
 /// `core/` (which would invert the architecture's dependency direction).
+/// A player's all-time stats for one [gameType]. The player picker reads
+/// it for the lineup figure: X01 three-dart average, Cricket MPR.
 
 final class PlayerStatsFamily extends $Family
-    with $FunctionalFamilyOverride<Stream<PlayerStats>, String> {
+    with $FunctionalFamilyOverride<Stream<PlayerStats>, (String, GameType)> {
   PlayerStatsFamily._()
     : super(
         retry: null,
@@ -124,9 +132,11 @@ final class PlayerStatsFamily extends $Family
   /// `lib/features/statistics/presentation/providers/player_stats_page_provider.dart`
   /// so that `features/statistics/` presentation types are not imported from
   /// `core/` (which would invert the architecture's dependency direction).
+  /// A player's all-time stats for one [gameType]. The player picker reads
+  /// it for the lineup figure: X01 three-dart average, Cricket MPR.
 
-  PlayerStatsProvider call(String playerId) =>
-      PlayerStatsProvider._(argument: playerId, from: this);
+  PlayerStatsProvider call(String playerId, GameType gameType) =>
+      PlayerStatsProvider._(argument: (playerId, gameType), from: this);
 
   @override
   String toString() => r'playerStatsProvider';
