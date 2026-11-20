@@ -324,6 +324,81 @@ void main() {
     });
   });
 
+  group('undone leg-winning dart', () {
+    test('a superseded LegCompleted is not a leg, and leg numbers hold', () {
+      // c1 "checks out" with a mis-tap and wins leg 1, then the dart is
+      // undone: the DartCorrected supersedes the turn end, the LegCompleted
+      // and the next leg's TurnStarted. c2 then wins leg 1 for real, and c1
+      // wins leg 2.
+      final voidedTurn = _turn(
+        competitorId: 'c1',
+        playerId: 'p1',
+        startingScore: 40,
+        darts: [(segment: 20, multiplier: 2)],
+      );
+      final voidedDart = voidedTurn[1];
+      final voidedTurnEnd = voidedTurn[2];
+      final voidedLeg =
+          _legCompleted(winnerCompetitorId: 'c1', winnerPlayerId: 'p1');
+      final voidedNextLeg = _event('TurnStarted', {
+        'competitor_id': 'c2',
+        'player_id': 'p2',
+        'starting_score': 40,
+      });
+      final correction = _event('DartCorrected', {
+        'original_event_id': voidedDart.eventId,
+        'corrected_dart_id': voidedDart.eventId,
+        'superseded_event_ids': [
+          voidedTurnEnd.eventId,
+          voidedLeg.eventId,
+          voidedNextLeg.eventId,
+        ],
+      });
+      final events = <GameEvent>[
+        voidedTurn[0],
+        voidedDart,
+        voidedTurnEnd,
+        voidedLeg,
+        voidedNextLeg,
+        correction,
+        _event('DartThrown', {
+          'competitor_id': 'c1',
+          'player_id': 'p1',
+          'segment': 0,
+          'multiplier': 0,
+          'score': 0,
+          'input_method': 'manual',
+        }),
+        _event('TurnEnded', {'competitor_id': 'c1', 'player_id': 'p1'}),
+        ..._turn(
+          competitorId: 'c2',
+          playerId: 'p2',
+          startingScore: 40,
+          darts: [(segment: 20, multiplier: 2)],
+        ),
+        _legCompleted(winnerCompetitorId: 'c2', winnerPlayerId: 'p2'),
+        ..._turn(
+          competitorId: 'c1',
+          playerId: 'p1',
+          startingScore: 40,
+          darts: [(segment: 20, multiplier: 2)],
+        ),
+        _legCompleted(winnerCompetitorId: 'c1', winnerPlayerId: 'p1'),
+      ];
+
+      final result = useCase.execute(
+        events: events,
+        competitors: [c1, c2],
+        gameType: GameType.x01,
+      );
+
+      expect(
+        result.map((l) => (l.legNumber, l.winnerCompetitorId)).toList(),
+        [(1, 'c2'), (2, 'c1')],
+      );
+    });
+  });
+
   group('cricket game', () {
     test('computes per-leg MPR and mark buckets', () {
       // Cricket, single leg. p1 throws T20 T20 T20 (9 marks), T19 T19 T19

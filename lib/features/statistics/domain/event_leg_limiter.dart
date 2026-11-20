@@ -5,6 +5,7 @@
 // Lives in domain/ so both backends can share the implementation; the trim
 // logic is pure event-list processing with no DB or Flutter dependency.
 
+import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 
 class EventLegLimiter {
@@ -13,7 +14,8 @@ class EventLegLimiter {
   /// Returns [events] trimmed to the last [legLimit] completed legs.
   ///
   /// Returns [events] unchanged if [legLimit] is null, ≤ 0, or if the input
-  /// contains no more than [legLimit] completed legs.
+  /// contains no more than [legLimit] completed legs. A trimmed result has the
+  /// events superseded by an undo removed (see [stripSupersededEvents]).
   ///
   /// A leg closes on `LegCompleted`. Practice drills end with `GameCompleted`
   /// alone (their engines never advance the leg index), so when
@@ -37,12 +39,16 @@ class EventLegLimiter {
   }) {
     if (legLimit == null || legLimit <= 0) return events;
 
+    // A `LegCompleted` superseded by an undo (the leg-winning dart was taken
+    // back) closes no leg, so count and cut on the surviving events.
+    final live = stripSupersededEvents(events);
+
     final legEndIndices = <int>[];
     // True while the current game has an open (not yet closed) leg.
     bool legOpen = false;
     String? currentGameId;
-    for (int i = 0; i < events.length; i++) {
-      final e = events[i];
+    for (int i = 0; i < live.length; i++) {
+      final e = live[i];
       if (e.gameId != currentGameId) {
         currentGameId = e.gameId;
         legOpen = false;
@@ -62,13 +68,13 @@ class EventLegLimiter {
     // Slice from the event after the (N - legLimit)th leg end, skipping the
     // cut game's trailing GameCompleted.
     final cutIdx = legEndIndices[legEndIndices.length - legLimit - 1];
-    final cutGameId = events[cutIdx].gameId;
+    final cutGameId = live[cutIdx].gameId;
     var start = cutIdx + 1;
-    while (start < events.length &&
-        events[start].gameId == cutGameId &&
-        events[start].eventType == 'GameCompleted') {
+    while (start < live.length &&
+        live[start].gameId == cutGameId &&
+        live[start].eventType == 'GameCompleted') {
       start++;
     }
-    return events.sublist(start);
+    return live.sublist(start);
   }
 }
