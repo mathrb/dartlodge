@@ -111,9 +111,20 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
+    // Bob's 27 and Shanghai: the secondary line carries the score that decides
+    // the game, so it is read from the oche like the target — a headline in
+    // the full-contrast foreground, not a grey caption. The other drills keep
+    // the caption (round / progress counters).
+    final scoreIsPrimary =
+        gameType == GameType.bobs27 || gameType == GameType.shanghai;
     final secondaryColor = (gameType == GameType.bobs27 && score < 0)
-            ? colorScheme.error
+        ? colorScheme.error
+        : scoreIsPrimary
+            ? colorScheme.onSurface
             : colorScheme.onSurfaceVariant;
+    final secondaryStyle = scoreIsPrimary
+        ? AppTextStyles.headlineMedium
+        : Theme.of(context).textTheme.bodyMedium;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -146,9 +157,7 @@ class PracticeTargetDisplayWidget extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           _secondaryMetric(l10n),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: secondaryColor,
-          ),
+          style: secondaryStyle?.copyWith(color: secondaryColor),
           textAlign: TextAlign.center,
         ),
       ],

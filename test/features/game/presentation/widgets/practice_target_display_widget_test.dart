@@ -137,4 +137,56 @@ void main() {
       expect(find.text('14'), findsOneWidget);
     });
   });
+
+  group('PracticeTargetDisplayWidget — score line weight', () {
+    Future<Text> secondary(
+      WidgetTester tester,
+      GameType type,
+      String text, {
+      int score = 0,
+    }) async {
+      await tester.pumpWidget(_wrap(PracticeTargetDisplayWidget(
+        gameType: type,
+        currentTarget: 3,
+        practiceRound: 3,
+        totalRounds: 7,
+        score: score,
+        practiceAttempts: 0,
+        practiceSuccesses: 0,
+      )));
+      return tester.widget<Text>(find.text(text));
+    }
+
+    testWidgets('Shanghai score is a full-contrast headline', (tester) async {
+      final t = await secondary(
+        tester,
+        GameType.shanghai,
+        'Score: 12 | Round 3/7',
+        score: 12,
+      );
+      final cs = Theme.of(tester.element(find.byWidget(t))).colorScheme;
+      expect(t.style?.fontSize, 28);
+      expect(t.style?.color, cs.onSurface);
+    });
+
+    testWidgets('negative Bob\'s 27 score keeps the error colour',
+        (tester) async {
+      final t = await secondary(
+        tester,
+        GameType.bobs27,
+        'Score: -5',
+        score: -5,
+      );
+      final cs = Theme.of(tester.element(find.byWidget(t))).colorScheme;
+      expect(t.style?.fontSize, 28);
+      expect(t.style?.color, cs.error);
+    });
+
+    testWidgets('ATC round counter stays a caption', (tester) async {
+      final t = await secondary(tester, GameType.aroundTheClock, 'Round 3');
+      final cs = Theme.of(tester.element(find.byWidget(t))).colorScheme;
+      expect(t.style?.fontSize, 14);
+      expect(t.style?.color, cs.onSurfaceVariant);
+    });
+  });
 }
