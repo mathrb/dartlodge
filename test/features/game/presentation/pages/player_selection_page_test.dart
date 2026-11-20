@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,8 @@ import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/presentation/pages/player_selection_page.dart';
@@ -79,6 +82,7 @@ Widget _buildApp({
   required GameSetupState setupState,
   List<Player> players = const [],
   List<String> capturedRoutes = const [],
+  ThemeData? theme,
   List<Override> extraOverrides = const [],
 }) {
   final router = GoRouter(
@@ -125,7 +129,7 @@ Widget _buildApp({
       ),
       ...extraOverrides,
     ],
-    child: MaterialApp.router(localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
+    child: MaterialApp.router(theme: theme, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
 }
 
@@ -142,11 +146,13 @@ GameSetupState _selectingPlayersState({
   GameConfig config = _x01Config,
   GameType gameType = GameType.x01,
   List<String> selectedPlayerIds = const [],
+  Map<String, int> playerHandicaps = const {},
 }) {
   return GameSetupState.selectingPlayers(
     gameType: gameType,
     config: config,
     selectedPlayerIds: selectedPlayerIds,
+    playerHandicaps: playerHandicaps,
   );
 }
 
@@ -1046,6 +1052,125 @@ void main() {
 
     expect(tester.takeException(), isNull);
     expect(find.text('home'), findsOneWidget);
+  });
+
+  // ── 24–28. Roster header link, names and empty state (phone, light) ────────
+
+  group('roster on a 412 px phone, light theme', () {
+    void usePhoneView(WidgetTester tester) {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+    }
+
+    // The surfaces the header link can sit on (page and roster box).
+    const lightSurfaces = [AppColors.surface, AppColors.surfaceContainerLow];
+
+    double contrast(Color fg, Color bg) {
+      final a = Color.alphaBlend(fg, bg).computeLuminance();
+      final b = bg.computeLuminance();
+      final hi = a > b ? a : b;
+      final lo = a > b ? b : a;
+      return (hi + 0.05) / (lo + 0.05);
+    }
+
+    testWidgets('24. NEW PLAYER link text and icon meet 4.5:1', (tester) async {
+      usePhoneView(tester);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(),
+        players: [_fakePlayer('p1', 'Ann')],
+        theme: AppTheme.light(),
+      ));
+      await tester.pumpAndSettle();
+
+      final text = tester.widget<Text>(find.text('NEW PLAYER')).style!.color!;
+      final link = find
+          .ancestor(of: find.text('NEW PLAYER'), matching: find.byType(InkWell))
+          .first;
+      final icon = tester
+          .widget<Icon>(find.descendant(
+              of: link, matching: find.byIcon(Icons.person_add_outlined)))
+          .color!;
+      expect(text, AppColors.primary);
+      expect(icon, AppColors.primary);
+      for (final bg in lightSurfaces) {
+        expect(contrast(text, bg), greaterThanOrEqualTo(4.5),
+            reason: 'NEW PLAYER on $bg');
+      }
+    });
+
+    testWidgets('25. NEW PLAYER hit area is at least 48 dp tall',
+        (tester) async {
+      usePhoneView(tester);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(),
+        players: [_fakePlayer('p1', 'Ann')],
+        theme: AppTheme.light(),
+      ));
+      await tester.pumpAndSettle();
+
+      final inkWell = find
+          .ancestor(of: find.text('NEW PLAYER'), matching: find.byType(InkWell))
+          .first;
+      expect(tester.getSize(inkWell).height,
+          greaterThanOrEqualTo(kMinInteractiveDimension));
+    });
+
+    testWidgets('26. a 9-character name is shown in full in a roster cell',
+        (tester) async {
+      usePhoneView(tester);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(),
+        players: [_fakePlayer('p1', 'Alexandra')],
+        theme: AppTheme.light(),
+      ));
+      await tester.pumpAndSettle();
+
+      final name = find.text('Alexandra');
+      expect(name, findsOneWidget);
+      expect(find.textContaining('…'), findsNothing);
+      final paragraph = tester.renderObject<RenderParagraph>(name);
+      expect(paragraph.didExceedMaxLines, isFalse);
+    });
+
+    testWidgets('27. empty roster shows a hint and an add button that opens '
+        'the create sheet', (tester) async {
+      usePhoneView(tester);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(),
+        theme: AppTheme.light(),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No players yet'), findsOneWidget);
+      final button = find.widgetWithText(OutlinedButton, 'Add new player');
+      expect(button, findsOneWidget);
+      expect(tester.getSize(button).height,
+          greaterThanOrEqualTo(kMinInteractiveDimension));
+
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(find.text('CREATE PLAYER'), findsOneWidget);
+    });
+
+    testWidgets('28. active HCP chip text uses the readable accent',
+        (tester) async {
+      usePhoneView(tester);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(
+          selectedPlayerIds: ['p1'],
+          playerHandicaps: {'p1': 2},
+        ),
+        players: [_fakePlayer('p1', 'Ann')],
+        theme: AppTheme.light(),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<Text>(find.text('HCP')).style!.color,
+          AppColors.primary);
+      expect(tester.widget<Text>(find.text('+2')).style!.color,
+          AppColors.primary);
+    });
   });
 }
 
