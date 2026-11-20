@@ -288,26 +288,35 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                     splashColor: AppTheme.kineticSplashColor,
                     highlightColor: AppTheme.kineticSplashColor,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.space3,
-                        vertical: AppSpacing.space1,
+                    // 48 dp minimum hit area (the label alone is ~16 px).
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: kMinInteractiveDimension,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.person_add_outlined,
-                            size: 14,
-                            color: cs.primaryFixed,
-                            semanticLabel: l10n.setupAddNewPlayer,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            l10n.playersNewPlayer.toUpperCase(),
-                            style: tt.labelSmall?.copyWith(color: cs.primaryFixed),
-                          ),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.space3,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Accent TEXT on a plain surface: the neon
+                            // `primaryFixed` is ~1.3:1 on the light greys.
+                            Icon(
+                              Icons.person_add_outlined,
+                              size: 14,
+                              color: AppTheme.accentForeground(context),
+                              semanticLabel: l10n.setupAddNewPlayer,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              l10n.playersNewPlayer.toUpperCase(),
+                              style: tt.labelSmall?.copyWith(
+                                color: AppTheme.accentForeground(context),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -322,6 +331,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
                 child: playersAsync.when(
                   data: (playerList) => _RosterGrid(
                     players: playerList,
+                    onAddPlayer: () => _openCreatePlayerSheet(context),
                     selectedIds: selectedIds.toSet(),
                     maxPlayers: maxPlayers,
                     onTapPlayer: (id) {
@@ -848,7 +858,9 @@ class _HandicapChip extends StatelessWidget {
               'HCP',
               style: tt.labelSmall?.copyWith(
                 fontSize: 9,
-                color: isActive ? cs.primaryFixed : cs.onSurfaceVariant,
+                color: isActive
+                    ? AppTheme.accentForeground(context)
+                    : cs.onSurfaceVariant,
                 letterSpacing: 0.5,
               ),
             ),
@@ -857,7 +869,9 @@ class _HandicapChip extends StatelessWidget {
               _label(handicap),
               style: tt.labelSmall?.copyWith(
                 fontWeight: FontWeight.w700,
-                color: isActive ? cs.primaryFixed : cs.onSurface,
+                color: isActive
+                    ? AppTheme.accentForeground(context)
+                    : cs.onSurface,
               ),
             ),
           ],
@@ -883,12 +897,14 @@ class _RosterGrid extends StatelessWidget {
     required this.selectedIds,
     required this.maxPlayers,
     required this.onTapPlayer,
+    required this.onAddPlayer,
   });
 
   final List<Player> players;
   final Set<String> selectedIds;
   final int? maxPlayers;
   final void Function(String id) onTapPlayer;
+  final VoidCallback onAddPlayer;
 
   @override
   Widget build(BuildContext context) {
@@ -904,27 +920,29 @@ class _RosterGrid extends StatelessWidget {
           final cellHeight = constraints.maxWidth / 4;
           return SizedBox(
             height: cellHeight * 2.33,
-            child: GridView.builder(
-              physics: const ClampingScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-              ),
-              itemCount: itemCount,
-              itemBuilder: (context, index) {
-                final player = players[index];
-                final isSelected = selectedIds.contains(player.playerId);
-                final atMax = maxPlayers != null &&
-                    selectedIds.length >= maxPlayers! &&
-                    !isSelected;
-                return _PlayerRosterCell(
-                  name: player.name,
-                  isSelected: isSelected,
-                  isDisabled: atMax,
-                  maxPlayers: maxPlayers,
-                  onTap: () => onTapPlayer(player.playerId),
-                );
-              },
-            ),
+            child: players.isEmpty
+                ? _EmptyRoster(onAddPlayer: onAddPlayer)
+                : GridView.builder(
+                    physics: const ClampingScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                    ),
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      final player = players[index];
+                      final isSelected = selectedIds.contains(player.playerId);
+                      final atMax = maxPlayers != null &&
+                          selectedIds.length >= maxPlayers! &&
+                          !isSelected;
+                      return _PlayerRosterCell(
+                        name: player.name,
+                        isSelected: isSelected,
+                        isDisabled: atMax,
+                        maxPlayers: maxPlayers,
+                        onTap: () => onTapPlayer(player.playerId),
+                      );
+                    },
+                  ),
           );
         },
       ),
@@ -932,6 +950,48 @@ class _RosterGrid extends StatelessWidget {
   }
 }
 
+/// Shown inside the roster box when no player exists yet (first launch), so
+/// the way to add one is in the box itself and not only in the small header
+/// link above it.
+class _EmptyRoster extends StatelessWidget {
+  const _EmptyRoster({required this.onAddPlayer});
+
+  final VoidCallback onAddPlayer;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
+    final accent = AppTheme.accentForeground(context);
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.space4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.playersNoPlayersYet,
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.space3),
+            OutlinedButton.icon(
+              onPressed: onAddPlayer,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: accent,
+                side: BorderSide(color: accent),
+                minimumSize: const Size(0, kMinInteractiveDimension),
+              ),
+              icon: const Icon(Icons.person_add_outlined),
+              label: Text(l10n.setupAddNewPlayer),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _PlayerRosterCell extends StatelessWidget {
   const _PlayerRosterCell({
@@ -953,7 +1013,6 @@ class _PlayerRosterCell extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final initials = _initials(name);
-    final truncated = name.length > 8 ? '${name.substring(0, 7)}…' : name;
 
     Widget cell = InkWell(
       onTap: isDisabled ? null : onTap,
@@ -989,15 +1048,23 @@ class _PlayerRosterCell extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              truncated,
-              style: tt.labelSmall?.copyWith(
-                color: isDisabled && !isSelected
-                    ? cs.onSurfaceVariant
-                    : cs.onSurface,
+            // The full name, ellipsized at the cell width (not at a fixed
+            // character count, which cut "Alexandra" in a cell that fits it).
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              child: Text(
+                name,
+                style: tt.labelSmall?.copyWith(
+                  color: isDisabled && !isSelected
+                      ? cs.onSurfaceVariant
+                      : cs.onSurface,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             ),
           ],
         ),
