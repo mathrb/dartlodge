@@ -165,4 +165,31 @@ void main() {
           same(events));
     });
   });
+  test('a LegCompleted superseded by an undo does not count as a leg', () {
+    final voidedDart = event('DartThrown');
+    final voidedLeg = event('LegCompleted');
+    final voidedNextLeg = event('TurnStarted');
+    final events = [
+      event('TurnStarted'),
+      voidedDart,
+      voidedLeg,
+      voidedNextLeg,
+      event('DartCorrected').copyWith(payload: {
+        'original_event_id': voidedDart.eventId,
+        'superseded_event_ids': [voidedLeg.eventId, voidedNextLeg.eventId],
+      }),
+      event('DartThrown'),
+      event('LegCompleted'), // real leg 1 (e7)
+      event('TurnStarted'),
+      event('LegCompleted'), // real leg 2 (e9)
+    ];
+
+    // Two real legs: Last 2 keeps everything.
+    expect(EventLegLimiter.trim(events, 2), same(events));
+    // Last 1 keeps only the second real leg.
+    expect(
+      EventLegLimiter.trim(events, 1).map((e) => e.eventId).toList(),
+      ['e8', 'e9'],
+    );
+  });
 }

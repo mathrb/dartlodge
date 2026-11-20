@@ -16,6 +16,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../../domain/models/match_format.dart';
+import '../../domain/models/undo_availability.dart';
 import '../providers/active_game_provider.dart';
 import '../sound/wire_game_sounds.dart';
 import '../widgets/camera_first_body_widget.dart';
@@ -196,6 +197,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
               onNextLeg: () => ref
                   .read(activeGameProvider(widget.gameId).notifier)
                   .dismissLegModal(),
+              onUndo: () => ref
+                  .read(activeGameProvider(widget.gameId).notifier)
+                  .undoLegWinningDart(),
             ),
           );
         });
@@ -245,9 +249,9 @@ class _X01BoardPageState extends ConsumerState<X01BoardPage>
         final activeCompetitor =
             gameState.competitors[gameState.currentTurnIndex];
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
-        final canUndo =
-            dartsThrownInTurn > 0 ||
-            gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
+        // Also true at the start of a new leg: the leg-winning dart can be
+        // undone, which reopens the won leg.
+        final canUndo = canUndoLastDart(gameState);
         // #627: NEXT gated on ≥1 dart (mis-tap guard, consistent across boards);
         // 1–2 darts advance silently with MISS-fill, no confirmation.
         final canNext =

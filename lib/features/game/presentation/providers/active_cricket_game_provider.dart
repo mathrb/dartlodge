@@ -8,6 +8,7 @@ import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import '../../domain/models/undo_availability.dart';
 import '../../domain/turn_dart_resolver.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_cricket_game_state.dart';
@@ -96,9 +97,7 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   bool get canUndo {
     final s = state.value;
     if (s == null) return false;
-    final gs = s.gameState;
-    return gs.dartsThrownInTurn > 0 ||
-        gs.competitors.any((c) => c.dartThrows.isNotEmpty);
+    return canUndoLastDart(s.gameState);
   }
 
   Future<void> undoDart() => _serializer.run(_undoDartImpl);
@@ -114,6 +113,24 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
           .execute(current.gameState);
       return ActiveCricketGameState(gameState: newGs);
     });
+  }
+
+  /// Undo from the leg-complete modal: takes back the dart that won the leg,
+  /// reopening it with the winner mid-turn. A dart scored into the new leg
+  /// while the modal was open (camera auto-scoring) is newer than the winning
+  /// dart, so it is undone first. Stops once the leg index drops below the one
+  /// the win opened, when nothing is left to undo, or on an error.
+  Future<void> undoLegWinningDart() =>
+      _serializer.run(_undoLegWinningDartImpl);
+
+  Future<void> _undoLegWinningDartImpl() async {
+    final openedLeg = state.value?.gameState.currentLegIndex ?? 0;
+    if (openedLeg == 0) return;
+    while (!state.hasError &&
+        canUndo &&
+        (state.value?.gameState.currentLegIndex ?? 0) >= openedLeg) {
+      await _undoDartImpl();
+    }
   }
 
   /// Per-dart correction (#376): replaces dart [turnDartIndex] of the active

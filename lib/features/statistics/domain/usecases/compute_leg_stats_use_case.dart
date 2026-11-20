@@ -1,5 +1,6 @@
 import 'package:dart_lodge/core/utils/constants.dart';
 import 'package:dart_lodge/features/game/domain/entities/competitor.dart';
+import 'package:dart_lodge/features/game/domain/engines/event_replay.dart';
 import 'package:dart_lodge/features/game/domain/entities/game_event.dart';
 import 'package:dart_lodge/features/statistics/domain/assemblers/player_stats_assembler.dart';
 import 'package:dart_lodge/features/statistics/domain/entities/leg_stats_breakdown.dart';
@@ -36,14 +37,18 @@ class ComputeLegStatsUseCase {
     // (leg 2+ slices carry no GameCreated to auto-capture it).
     final allCompetitorIds = {for (final c in competitors) c.competitorId};
 
+    // An undone leg-winning dart leaves its LegCompleted in the log, listed
+    // in the DartCorrected's superseded ids. Split on the surviving leg ends
+    // only, or the voided win shows as an extra leg and renumbers the rest.
+    final liveEvents = stripSupersededEvents(events);
     final legs = <LegStatsBreakdown>[];
     var legNumber = 1;
     var legStart = 0;
-    for (var i = 0; i < events.length; i++) {
-      final event = events[i];
+    for (var i = 0; i < liveEvents.length; i++) {
+      final event = liveEvents[i];
       if (event.eventType != 'LegCompleted') continue;
 
-      final legEvents = events.sublist(legStart, i + 1);
+      final legEvents = liveEvents.sublist(legStart, i + 1);
       final winnerCompetitorId =
           event.payload['winner_competitor_id'] as String?;
       final winnerName = competitors
