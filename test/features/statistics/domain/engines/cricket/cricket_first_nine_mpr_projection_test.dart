@@ -38,6 +38,14 @@ void main() {
     engine.reset(ProjectionScope.leg);
   }
 
+  /// A completed leg of three 3-mark visits → First 9 MPR 3.0.
+  void threeMarkLeg() {
+    visit(['T20', 'MISS', 'MISS']);
+    visit(['T19', 'MISS', 'MISS']);
+    visit(['T18', 'MISS', 'MISS']);
+    endLeg();
+  }
+
   setUp(() {
     seq = 0;
     engine = CricketFirstNineMprProjection();
@@ -103,5 +111,45 @@ void main() {
     endLeg();
 
     expect(engine.snapshot()['bestFirstNineMpr'], closeTo(1.0, 1e-9));
+  });
+
+  test('a completed leg of three 3-mark visits reads 3.0', () {
+    threeMarkLeg();
+    final snap = engine.snapshot();
+    expect(snap['firstNineMpr'], closeTo(3.0, 1e-9));
+    expect(snap['totalFirstNineMarks'], 9);
+    expect(snap['totalFirstNineLegs'], 1);
+  });
+
+  test('an abandoned leg (no LegCompleted) adds no marks', () {
+    threeMarkLeg();
+    visit(['T17', 'T16', 'T15']);
+    engine.reset(ProjectionScope.leg);
+    engine.reset(ProjectionScope.match);
+    final snap = engine.snapshot();
+    expect(snap['firstNineMpr'], closeTo(3.0, 1e-9));
+    expect(snap['totalFirstNineMarks'], 9);
+    expect(snap['totalFirstNineLegs'], 1);
+  });
+
+  test('a leg completed in 2 visits adds neither marks nor a leg', () {
+    threeMarkLeg();
+    visit(['T20', 'T19', 'T18']);
+    visit(['T17', 'T16', 'T15']);
+    endLeg();
+    final snap = engine.snapshot();
+    expect(snap['firstNineMpr'], closeTo(3.0, 1e-9));
+    expect(snap['totalFirstNineMarks'], 9);
+    expect(snap['totalFirstNineLegs'], 1);
+  });
+
+  test('only abandoned legs leave the average null and the marks at 0', () {
+    visit(['T20', 'T19', 'T18']);
+    engine.reset(ProjectionScope.leg);
+    engine.reset(ProjectionScope.match);
+    final snap = engine.snapshot();
+    expect(snap['firstNineMpr'], isNull);
+    expect(snap['totalFirstNineMarks'], 0);
+    expect(snap['totalFirstNineLegs'], 0);
   });
 }

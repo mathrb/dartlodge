@@ -21,6 +21,11 @@ class CountUpFirstNinePprProjection extends ProjectionEngine {
   int _turnIndexInLeg = 0;
   bool _inFirstNine = false;
   int _currentTurnScore = 0;
+  // First-nine points of the leg in progress, folded into the total only on
+  // `LegCompleted`, so an abandoned game (closed by `GameCompleted`, no
+  // `LegCompleted`) adds nothing to the numerator it never adds to the
+  // denominator.
+  int _legFirstNinePoints = 0;
   int _totalFirstNinePoints = 0;
   int _totalFirstNineLegs = 0;
 
@@ -30,6 +35,7 @@ class CountUpFirstNinePprProjection extends ProjectionEngine {
     _turnIndexInLeg = 0;
     _inFirstNine = false;
     _currentTurnScore = 0;
+    _legFirstNinePoints = 0;
     _totalFirstNinePoints = 0;
     _totalFirstNineLegs = 0;
   }
@@ -57,15 +63,17 @@ class CountUpFirstNinePprProjection extends ProjectionEngine {
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        _totalFirstNinePoints += _currentTurnScore;
+        _legFirstNinePoints += _currentTurnScore;
         _currentTurnScore = 0;
       case 'LegCompleted':
         if (_turnIndexInLeg >= 1) {
           _totalFirstNineLegs++;
+          _totalFirstNinePoints += _legFirstNinePoints;
         }
         _turnIndexInLeg = 0;
         _inFirstNine = false;
         _currentTurnScore = 0;
+        _legFirstNinePoints = 0;
     }
   }
 
@@ -81,6 +89,7 @@ class CountUpFirstNinePprProjection extends ProjectionEngine {
       _turnIndexInLeg = 0;
       _inFirstNine = false;
       _currentTurnScore = 0;
+      _legFirstNinePoints = 0;
     }
   }
 
