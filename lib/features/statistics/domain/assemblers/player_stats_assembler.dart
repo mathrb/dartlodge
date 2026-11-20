@@ -517,6 +517,8 @@ class PlayerStatsAssembler {
         bestGameHitRate:
             (bestGameHitRateSnap['bestGameHitRate'] as num?)?.toDouble(),
         firstNineMpr: (firstNineSnap['firstNineMpr'] as num?)?.toDouble(),
+        bestFirstNineMpr:
+            (firstNineSnap['bestFirstNineMpr'] as num?)?.toDouble(),
       );
     }
 
