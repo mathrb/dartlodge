@@ -12,6 +12,7 @@ import 'package:dart_lodge/core/utils/stat_formatter.dart';
 import 'package:dart_lodge/core/widgets/app_header.dart';
 import 'package:dart_lodge/core/widgets/error_retry_widget.dart';
 import 'package:dart_lodge/core/widgets/loading_spinner_widget.dart';
+import 'package:dart_lodge/features/game/domain/models/cricket_variant_label.dart';
 import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/domain/models/match_format.dart';
 import 'package:dart_lodge/features/game/presentation/pages/game_config_page.dart';
@@ -65,8 +66,10 @@ String _configSummaryFor(
           : '${_strategyLabel(c.inStrategy)} In · ';
       return '${c.startingScore} · $inLabel${_strategyLabel(c.outStrategy)} Out · ${_roundsLabel(l10n, c.totalRounds)} · ${_legsLabel(l10n, c.legsToWin, playerCount)}';
     },
+    // Same scoring × target mode label as the variant picker and the
+    // board header, so a Random or Crazy pick is visible on the chip.
     cricket: (c) =>
-        '${c.scoring} · ${_roundsLabel(l10n, c.totalRounds)} · ${_legsLabel(l10n, c.legsToWin, playerCount)}',
+        '${cricketVariantLabel(scoring: c.scoring, targetMode: c.targetMode)} · ${_roundsLabel(l10n, c.totalRounds)} · ${_legsLabel(l10n, c.legsToWin, playerCount)}',
     aroundTheClock: (_) => 'Around the Clock',
     catch40: (_) => 'Catch 40',
     bobs27: (_) => "Bob's 27",
@@ -90,6 +93,28 @@ bool _configHasEditableFields(GameConfig config) {
     bobs27: (_) => false,
     orElse: () => true,
   );
+}
+
+/// Stats bucket behind the lineup figure: Cricket shows the player's MPR
+/// (fixed-target cohort, the stats page default); every other setup keeps
+/// the X01 three-dart average as the general skill figure.
+GameType _lineupStatType(GameType gameType) =>
+    gameType == GameType.cricket ? GameType.cricket : GameType.x01;
+
+/// Lineup figure for a player: "MPR 2.75" in a Cricket setup, "AVG 51.2"
+/// elsewhere. A player with no game of that type ([totalGames] 0, or stats
+/// still loading = null) reads "—", never a placeholder 0.
+String _lineupStatLabel(
+  GameType gameType, {
+  required int? totalGames,
+  required double? threeDartAverage,
+  required double? marksPerTurn,
+}) {
+  final hasData = (totalGames ?? 0) > 0;
+  if (_lineupStatType(gameType) == GameType.cricket) {
+    return 'MPR ${StatFormatter.fmtDouble(hasData ? marksPerTurn : null, decimals: 2)}';
+  }
+  return 'AVG ${StatFormatter.fmtDouble(hasData ? threeDartAverage : null)}';
 }
 
 String _initials(String name) {
@@ -250,6 +275,7 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             // Active lineup cards
             _ActiveLineup(
               selectedPlayerIds: selectedIds,
+              gameType: gameType ?? GameType.x01,
               players: players,
               onReorder: (oldIndex, newIndex) => ref
                   .read(gameSetupProvider.notifier)
@@ -579,6 +605,7 @@ class _ConfigSummaryChip extends StatelessWidget {
 class _ActiveLineup extends StatelessWidget {
   const _ActiveLineup({
     required this.selectedPlayerIds,
+    required this.gameType,
     required this.players,
     required this.onReorder,
     required this.onRemove,
@@ -588,6 +615,7 @@ class _ActiveLineup extends StatelessWidget {
   });
 
   final List<String> selectedPlayerIds;
+  final GameType gameType;
   final List<Player> players;
   final void Function(int oldIndex, int newIndex) onReorder;
   final void Function(String id) onRemove;
@@ -652,6 +680,7 @@ class _ActiveLineup extends StatelessWidget {
             key: ValueKey(id),
             index: index,
             player: player,
+            gameType: gameType,
             onRemove: () => onRemove(id),
             handicap: playerHandicaps[id] ?? 0,
             onHandicapChanged: onHandicapChanged != null
@@ -670,6 +699,7 @@ class _ActivePlayerCard extends ConsumerWidget {
     super.key,
     required this.index,
     required this.player,
+    required this.gameType,
     required this.onRemove,
     this.handicap = 0,
     this.onHandicapChanged,
@@ -678,6 +708,7 @@ class _ActivePlayerCard extends ConsumerWidget {
 
   final int index;
   final Player player;
+  final GameType gameType;
   final VoidCallback onRemove;
   final int handicap;
   final ValueChanged<int>? onHandicapChanged;
@@ -690,9 +721,15 @@ class _ActivePlayerCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final initials = _initials(player.name);
 
-    final statsAsync = ref.watch(playerStatsProvider(player.playerId));
-    final avg = statsAsync.value?.threeDartAverage;
-    final avgLabel = 'AVG ${StatFormatter.fmtDouble(avg)}';
+    final stats = ref
+        .watch(playerStatsProvider(player.playerId, _lineupStatType(gameType)))
+        .value;
+    final avgLabel = _lineupStatLabel(
+      gameType,
+      totalGames: stats?.totalGames,
+      threeDartAverage: stats?.threeDartAverage,
+      marksPerTurn: stats?.marksPerTurn,
+    );
 
     final isFirst = index == 0;
     final badgeBg = isFirst ? cs.primaryFixed : cs.surfaceContainerHighest;

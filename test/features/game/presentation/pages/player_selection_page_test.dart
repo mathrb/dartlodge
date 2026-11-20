@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -18,6 +19,8 @@ import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dar
 import 'package:dart_lodge/features/players/domain/entities/player.dart';
 import 'package:dart_lodge/features/players/domain/repositories/player_repository.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
+import 'package:dart_lodge/core/providers/statistics_providers.dart';
+import 'package:dart_lodge/features/statistics/domain/entities/player_stats.dart';
 
 // ── Fakes ─────────────────────────────────────────────────────────────────────
 
@@ -80,6 +83,7 @@ Widget _buildApp({
   List<Player> players = const [],
   List<String> capturedRoutes = const [],
   ThemeData? theme,
+  List<Override> extraOverrides = const [],
 }) {
   final router = GoRouter(
     initialLocation: '/game/player-selection',
@@ -123,6 +127,7 @@ Widget _buildApp({
       allPlayersProvider.overrideWith(
         () => _FakeAllPlayersNotifier(players),
       ),
+      ...extraOverrides,
     ],
     child: MaterialApp.router(theme: theme, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
@@ -285,7 +290,124 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('standard · ∞ Rounds · 1 leg'), findsOneWidget);
+    expect(find.text('Standard · ∞ Rounds · 1 leg'), findsOneWidget);
+  });
+
+  testWidgets('2b. Config chip names the Random target mode for Cricket',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.cricket(
+          scoring: 'standard',
+          targetMode: 'random',
+          numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+          legsToWin: 1,
+        ),
+        gameType: GameType.cricket,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Random · ∞ Rounds · 1 leg'), findsOneWidget);
+  });
+
+  testWidgets(
+      '2c. Config chip shows "Crazy · Cut Throat" for Crazy with Cut Throat scoring',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: const GameConfig.cricket(
+          scoring: 'cut-throat',
+          targetMode: 'crazy',
+          numbers: ['15', '16', '17', '18', '19', '20', 'bull'],
+          legsToWin: 1,
+        ),
+        gameType: GameType.cricket,
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Crazy · Cut Throat · ∞ Rounds · 1 leg'), findsOneWidget);
+  });
+
+  // ── 2d. Lineup figure follows the game type ──────────────────────────────
+
+  PlayerStats stats(
+    GameType type, {
+    int totalGames = 1,
+    double threeDartAverage = 0,
+    double? marksPerTurn,
+  }) =>
+      PlayerStats(
+        playerId: 'p1',
+        gameType: type,
+        totalGames: totalGames,
+        gamesWon: 0,
+        winRate: 0,
+        threeDartAverage: threeDartAverage,
+        highestTurnScore: 0,
+        totalDartsThrown: 0,
+        dartsPerLeg: 0,
+        bustRate: 0,
+        marksPerTurn: marksPerTurn,
+      );
+
+  testWidgets('2d. Cricket lineup shows the player\'s Cricket MPR, not AVG',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(
+        config: _cricketConfig,
+        gameType: GameType.cricket,
+        selectedPlayerIds: ['p1'],
+      ),
+      players: [_fakePlayer('p1', 'Ann')],
+      extraOverrides: [
+        playerStatsProvider('p1', GameType.cricket).overrideWith(
+          (ref) => Stream.value(
+            stats(GameType.cricket, marksPerTurn: 4.15),
+          ),
+        ),
+        playerStatsProvider('p1', GameType.x01).overrideWith(
+          (ref) => Stream.value(stats(GameType.x01, threeDartAverage: 51.2)),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('MPR 4.15'), findsOneWidget);
+    expect(find.textContaining('AVG'), findsNothing);
+  });
+
+  testWidgets('2e. X01 lineup shows the three-dart average', (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(selectedPlayerIds: ['p1']),
+      players: [_fakePlayer('p1', 'Ann')],
+      extraOverrides: [
+        playerStatsProvider('p1', GameType.x01).overrideWith(
+          (ref) => Stream.value(stats(GameType.x01, threeDartAverage: 51.2)),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AVG 51.2'), findsOneWidget);
+  });
+
+  testWidgets('2f. A player with no game of the type reads a dash, not 0',
+      (tester) async {
+    await tester.pumpWidget(_buildApp(
+      setupState: _selectingPlayersState(selectedPlayerIds: ['p1']),
+      players: [_fakePlayer('p1', 'Ann')],
+      extraOverrides: [
+        playerStatsProvider('p1', GameType.x01).overrideWith(
+          (ref) => Stream.value(stats(GameType.x01, totalGames: 0)),
+        ),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AVG —'), findsOneWidget);
+    expect(find.text('AVG 0'), findsNothing);
   });
 
   // ── 3. Config chip ATC ───────────────────────────────────────────────────

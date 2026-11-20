@@ -46,6 +46,34 @@ void main() {
       );
     });
 
+    test('leaves the visit in progress out, so it never exceeds 9', () {
+      // Round 1: T20 T20 MISS (6 marks). Round 2 so far: T19 T19 (6 marks).
+      // The partial round must not be divided by the single full round
+      // (that read 12).
+      expect(
+        cricketLiveMpr(_cs(const ['T20', 'T20', 'MISS', 'T19', 'T19']),
+            targets: fixed),
+        6.0,
+      );
+      expect(
+        cricketLiveMpr(_cs(const ['T20', 'T20', 'MISS', 'T19']),
+            targets: fixed),
+        6.0,
+      );
+      // Once the 3rd dart lands the visit counts: 12 marks / 2 rounds.
+      expect(
+        cricketLiveMpr(_cs(const ['T20', 'T20', 'MISS', 'T19', 'T19', 'MISS']),
+            targets: fixed),
+        6.0,
+      );
+      // Worst case: a 9-mark round, then two more triples mid-visit.
+      expect(
+        cricketLiveMpr(_cs(const ['T20', 'T20', 'T20', 'T19', 'T19']),
+            targets: fixed),
+        9.0,
+      );
+    });
+
     test('respects a non-fixed target set (Random/Crazy)', () {
       final crazy = {10, 11, 12, 13, 14, 25};
       // T10 is a target here (3 marks); T20 is NOT → 0 marks.

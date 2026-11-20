@@ -21,7 +21,7 @@ class CricketStatsDetailTableWidget extends StatelessWidget {
           StatFormatter.fmtDouble(stats.bestLegMpt, decimals: 2), StatTerm.mpr),
       StatsTableDataRow(l10n.statFirst9Mpr,
           StatFormatter.fmtDouble(stats.firstNineMpr, decimals: 2),
-          '—'),
+          StatFormatter.fmtDouble(stats.bestFirstNineMpr, decimals: 2)),
       StatsTableDataRow(l10n.statsHitRate,
           StatFormatter.fmtPct(stats.hitRate),
           StatFormatter.fmtPct(stats.bestGameHitRate)),
