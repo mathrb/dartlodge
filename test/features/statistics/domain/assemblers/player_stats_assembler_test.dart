@@ -283,6 +283,49 @@ void main() {
       expect(stats.nineMarkTurns, 1);
     });
 
+    test('fromEvents wires bestFirstNineMpr from cricket.firstNineMpr', () {
+      // Leg 1: 3 visits of 3 marks → first-9 MPR 3.0.
+      // Leg 2: 9 + 6 + 0 marks → first-9 MPR 5.0 (the best).
+      final events = [
+        for (final t in [20, 19, 18]) ...[
+          turnStarted(),
+          dart(t, 3),
+          dart(1, 1),
+          dart(1, 1),
+          turnEnded(),
+        ],
+        legCompleted(winnerPlayerId: playerId),
+        turnStarted(),
+        dart(20, 3),
+        dart(19, 3),
+        dart(18, 3),
+        turnEnded(),
+        turnStarted(),
+        dart(17, 3),
+        dart(16, 3),
+        dart(1, 1),
+        turnEnded(),
+        turnStarted(),
+        dart(1, 1),
+        dart(1, 1),
+        dart(1, 1),
+        turnEnded(),
+        legCompleted(winnerPlayerId: playerId),
+        gameCompleted(winnerPlayerId: playerId),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.cricket,
+        events: events,
+        totalGames: 1,
+        totalDartsThrown: 18,
+      );
+
+      expect(stats.firstNineMpr, closeTo(24 / 6, 1e-9));
+      expect(stats.bestFirstNineMpr, closeTo(5.0, 1e-9));
+    });
+
     test(
         'playerStatsForGameFromEvents branches on cricket — cricket fields '
         'populated, X01-shaped fields stay default (refs #129 sub-task 5)',
