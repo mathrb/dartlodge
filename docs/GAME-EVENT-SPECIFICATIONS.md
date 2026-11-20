@@ -271,6 +271,12 @@ superseded_event_ids  List<UUID>   Other events cancelled by this undo
   audit trail stays complete), deletes the physical dart record, then fully
   replays. Replay **skips** every event referenced by `original_event_id` /
   `superseded_event_ids`. (`actor_id = "system"`, `source = client`.)
+* Undo crosses a won leg (X01 / Cricket): when the last dart is the one that
+  won a leg, its `TurnEnded`, `LegCompleted` and the next leg's `TurnStarted`
+  (plus a Crazy `CrazyTargetsRolled`) go into `superseded_event_ids`, so the
+  replay reopens the leg with the winner mid-turn. The board offers it from the
+  leg-complete modal and at the start of the next leg (`canUndoLastDart`).
+  A won **game** is not undoable: completed games are read-only.
 
 **Invariant**
 

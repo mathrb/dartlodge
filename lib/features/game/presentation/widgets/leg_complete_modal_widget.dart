@@ -8,6 +8,7 @@ class LegCompleteModalWidget extends StatelessWidget {
     required this.winnerName,
     required this.legNumber,
     required this.onNextLeg,
+    this.onUndo,
     super.key,
   });
 
@@ -15,12 +16,24 @@ class LegCompleteModalWidget extends StatelessWidget {
   final int legNumber;
   final VoidCallback onNextLeg;
 
+  /// Undoes the leg-winning dart (closing the modal first), which reopens the
+  /// won leg mid-turn. Lets a mis-tap or a camera misread on the deciding dart
+  /// be corrected. The action is hidden when null.
+  final VoidCallback? onUndo;
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final undo = onUndo;
     return AppDialogWidget(
       title: l10n.gameLegWonBy(legNumber, winnerName),
       actions: [
+        if (undo != null)
+          DialogAction(
+            label: l10n.gameUndoLastDart,
+            onPressed: undo,
+            autoClose: true,
+          ),
         DialogAction(
           label: l10n.gameNextLeg,
           onPressed: onNextLeg,

@@ -8,6 +8,7 @@ import '../../domain/entities/dart_throw.dart';
 import '../../domain/entities/game_event.dart';
 import '../../domain/models/game_config.dart';
 import '../../domain/models/game_state.dart';
+import '../../domain/models/undo_availability.dart';
 import '../../domain/turn_dart_resolver.dart';
 import '../../domain/usecases/game_use_case_helpers.dart';
 import '../state/active_cricket_game_state.dart';
@@ -96,9 +97,7 @@ class ActiveCricketGameNotifier extends _$ActiveCricketGameNotifier {
   bool get canUndo {
     final s = state.value;
     if (s == null) return false;
-    final gs = s.gameState;
-    return gs.dartsThrownInTurn > 0 ||
-        gs.competitors.any((c) => c.dartThrows.isNotEmpty);
+    return canUndoLastDart(s.gameState);
   }
 
   Future<void> undoDart() => _serializer.run(_undoDartImpl);

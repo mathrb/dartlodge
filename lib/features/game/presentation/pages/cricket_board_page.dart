@@ -16,6 +16,7 @@ import '../../../../core/widgets/app_header.dart';
 import '../../domain/models/cricket_variant_label.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/models/match_format.dart';
+import '../../domain/models/undo_availability.dart';
 import '../../../../core/widgets/error_retry_widget.dart';
 import '../../../../core/widgets/loading_spinner_widget.dart';
 import '../providers/active_cricket_game_provider.dart';
@@ -169,6 +170,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
               onNextLeg: () => ref
                   .read(activeCricketGameProvider(widget.gameId).notifier)
                   .dismissLegModal(),
+              onUndo: () => ref
+                  .read(activeCricketGameProvider(widget.gameId).notifier)
+                  .undoDart(),
             ),
           );
         });
@@ -222,9 +226,9 @@ class _CricketBoardPageState extends ConsumerState<CricketBoardPage> {
             : allDarts.sublist(allDarts.length - n);
 
         final dartsThrownInTurn = gameState.dartsThrownInTurn;
-        final canUndo =
-            dartsThrownInTurn > 0 ||
-            gameState.competitors.any((c) => c.dartThrows.isNotEmpty);
+        // Also true at the start of a new leg: the leg-winning dart can be
+        // undone, which reopens the won leg.
+        final canUndo = canUndoLastDart(gameState);
         final canNext = !gameState.isComplete;
         final cameraFirst = autoScoringOn && cameraPreview != null;
 
