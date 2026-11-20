@@ -29,6 +29,12 @@ class CricketFirstNineMprProjection extends ProjectionEngine
   int _turnIndexInLeg = 0;
   bool _inFirstNine = false;
   int _currentTurnMarks = 0;
+  // First-nine marks of the leg in progress. Folded into
+  // `_totalFirstNineMarks` only when `LegCompleted` passes the ≥3-turn gate,
+  // so the numerator and the `legs × 3` denominator always describe the same
+  // legs. A leg the gate skips or that never completes (an abandoned game
+  // closed by `GameCompleted`) adds nothing.
+  int _legFirstNineMarks = 0;
   int _totalFirstNineMarks = 0;
   int _totalFirstNineLegs = 0;
 
@@ -38,6 +44,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
     _turnIndexInLeg = 0;
     _inFirstNine = false;
     _currentTurnMarks = 0;
+    _legFirstNineMarks = 0;
     _totalFirstNineMarks = 0;
     _totalFirstNineLegs = 0;
     resetCricketTargets();
@@ -64,7 +71,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         if (!_inFirstNine) return;
         final playerId = event.payload['player_id'] as String?;
         if (playerId != _context?.playerId) return;
-        _totalFirstNineMarks += _currentTurnMarks;
+        _legFirstNineMarks += _currentTurnMarks;
         _currentTurnMarks = 0;
       case 'LegCompleted':
         // First-9 MPR divides total first-nine marks by `legs × 3`. Only
@@ -74,10 +81,12 @@ class CricketFirstNineMprProjection extends ProjectionEngine
         // `X01FirstNinePprProjection` gate from #290.
         if (_turnIndexInLeg >= 3) {
           _totalFirstNineLegs++;
+          _totalFirstNineMarks += _legFirstNineMarks;
         }
         _turnIndexInLeg = 0;
         _inFirstNine = false;
         _currentTurnMarks = 0;
+        _legFirstNineMarks = 0;
     }
   }
 
@@ -93,6 +102,7 @@ class CricketFirstNineMprProjection extends ProjectionEngine
       _turnIndexInLeg = 0;
       _inFirstNine = false;
       _currentTurnMarks = 0;
+      _legFirstNineMarks = 0;
       resetCricketClosureForLeg(); // #638
     }
   }

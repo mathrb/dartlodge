@@ -153,6 +153,30 @@ void main() {
     expect(engine.snapshot()['firstNinePpr'], 60.0);
   });
 
+  test('an abandoned game (no LegCompleted) adds no first-nine points', () {
+    engine.init(_ctx());
+    var s = 1;
+    for (var i = 0; i < 3; i++) {
+      s = _applyTurn(engine, 'p1', [
+        (seg: 20, mult: 1),
+        (seg: 20, mult: 1),
+        (seg: 20, mult: 1),
+      ], s);
+    }
+    engine.apply(_legCompleted(seq: s++));
+    engine.reset(ProjectionScope.leg);
+    // Second game abandoned after one T20 visit: closed by GameCompleted only.
+    s = _applyTurn(engine, 'p1', [
+      (seg: 20, mult: 3),
+      (seg: 20, mult: 3),
+      (seg: 20, mult: 3),
+    ], s);
+    engine.reset(ProjectionScope.leg);
+    engine.reset(ProjectionScope.match);
+    expect(engine.snapshot()['firstNinePpr'], 60.0);
+    expect(engine.snapshot()['totalFirstNineLegs'], 1);
+  });
+
   test('LegCompleted with no turns recorded does not increment totalFirstNineLegs', () {
     engine.init(_ctx());
     engine.apply(_legCompleted(seq: 1));

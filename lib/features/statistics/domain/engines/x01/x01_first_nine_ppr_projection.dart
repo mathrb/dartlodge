@@ -17,6 +17,12 @@ class X01FirstNinePprProjection extends ProjectionEngine {
   int _turnIndexInLeg = 0;
   bool _inFirstNine = false;
   int _currentTurnScore = 0;
+  // First-nine points of the leg in progress. Folded into
+  // `_totalFirstNinePoints` only when `LegCompleted` passes the ≥3-turn gate,
+  // so the numerator and the `legs × 9` denominator always describe the same
+  // legs. A leg the gate skips (a 2-visit checkout) or that never completes
+  // (an abandoned game closed by `GameCompleted`) adds nothing.
+  int _legFirstNinePoints = 0;
   int _totalFirstNinePoints = 0;
   int _totalFirstNineLegs = 0;
 
@@ -26,6 +32,7 @@ class X01FirstNinePprProjection extends ProjectionEngine {
     _turnIndexInLeg = 0;
     _inFirstNine = false;
     _currentTurnScore = 0;
+    _legFirstNinePoints = 0;
     _totalFirstNinePoints = 0;
     _totalFirstNineLegs = 0;
   }
@@ -58,7 +65,7 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         // legacy events lacking the field (#318/#610).
         final delta =
             (event.payload['turn_score'] as num?)?.toInt() ?? _currentTurnScore;
-        _totalFirstNinePoints += delta;
+        _legFirstNinePoints += delta;
         _currentTurnScore = 0;
       case 'LegCompleted':
         // First-9 PPR divides total first-nine points by `legs × 9`. Only
@@ -70,10 +77,12 @@ class X01FirstNinePprProjection extends ProjectionEngine {
         // `X01BestLegPprProjection` for its first-9 best (#290).
         if (_turnIndexInLeg >= 3) {
           _totalFirstNineLegs++;
+          _totalFirstNinePoints += _legFirstNinePoints;
         }
         _turnIndexInLeg = 0;
         _inFirstNine = false;
         _currentTurnScore = 0;
+        _legFirstNinePoints = 0;
     }
   }
 
@@ -89,6 +98,7 @@ class X01FirstNinePprProjection extends ProjectionEngine {
       _turnIndexInLeg = 0;
       _inFirstNine = false;
       _currentTurnScore = 0;
+      _legFirstNinePoints = 0;
     }
   }
 
