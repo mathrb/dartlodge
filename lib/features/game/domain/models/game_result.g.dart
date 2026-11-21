@@ -31,6 +31,7 @@ Catch40Result _$Catch40ResultFromJson(Map<String, dynamic> json) =>
       competitorName: json['competitorName'] as String,
       score: (json['score'] as num).toInt(),
       targetsCleared: (json['targetsCleared'] as num).toInt(),
+      endedEarly: json['endedEarly'] as bool? ?? false,
       $type: json['runtimeType'] as String?,
     );
 
@@ -39,6 +40,7 @@ Map<String, dynamic> _$Catch40ResultToJson(Catch40Result instance) =>
       'competitorName': instance.competitorName,
       'score': instance.score,
       'targetsCleared': instance.targetsCleared,
+      'endedEarly': instance.endedEarly,
       'runtimeType': instance.$type,
     };
 
@@ -47,6 +49,7 @@ Bobs27Result _$Bobs27ResultFromJson(Map<String, dynamic> json) => Bobs27Result(
   finalScore: (json['finalScore'] as num).toInt(),
   roundReached: (json['roundReached'] as num).toInt(),
   bustedToZero: json['bustedToZero'] as bool,
+  endedEarly: json['endedEarly'] as bool? ?? false,
   $type: json['runtimeType'] as String?,
 );
 
@@ -56,6 +59,7 @@ Map<String, dynamic> _$Bobs27ResultToJson(Bobs27Result instance) =>
       'finalScore': instance.finalScore,
       'roundReached': instance.roundReached,
       'bustedToZero': instance.bustedToZero,
+      'endedEarly': instance.endedEarly,
       'runtimeType': instance.$type,
     };
 

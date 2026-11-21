@@ -99,16 +99,44 @@ class GetGameResultUseCase {
       GameType.catch40 ||
       GameType.bobs27 ||
       GameType.checkoutPractice =>
-        _buildSoloResult(game.gameType, finalState, events),
+        _buildSoloResult(
+          game.gameType,
+          finalState,
+          events,
+          // Checkout Practice has no flag: its headline already reads the
+          // result off the success count.
+          endedEarly: game.gameType != GameType.checkoutPractice &&
+              _endedEarly(initial, events, engine),
+        ),
       _ => null,
     };
+  }
+
+  /// Whether the drill was closed from the menu before the engine completed
+  /// it. A natural end (Bob's 27 bust or round-21 finale, Catch 40's 40th
+  /// target) is decided by the engine on a dart / turn event, BEFORE the
+  /// closing `GameCompleted`; "End drill" (`EndPracticeUseCase`) only appends
+  /// that `GameCompleted`. So replaying without `GameCompleted` reaches
+  /// `isComplete` only for a natural end.
+  bool _endedEarly(
+    GameState initial,
+    List<GameEvent> events,
+    GameEngine engine,
+  ) {
+    final withoutClose = [
+      for (final e in events)
+        if (e.eventType != 'GameCompleted') e,
+    ];
+    return !replayEvents(initial: initial, events: withoutClose, engine: engine)
+        .isComplete;
   }
 
   GameResult? _buildSoloResult(
     GameType gameType,
     GameState finalState,
-    List<GameEvent> events,
-  ) {
+    List<GameEvent> events, {
+    required bool endedEarly,
+  }) {
     final subject = _subjectCompetitor(finalState);
     if (subject == null) return null;
     return switch (gameType) {
@@ -116,6 +144,7 @@ class GetGameResultUseCase {
           competitorName: subject.name,
           score: subject.score,
           targetsCleared: subject.practiceSuccesses,
+          endedEarly: endedEarly,
         ),
       GameType.bobs27 => GameResult.bobs27(
           competitorName: subject.name,
@@ -125,6 +154,7 @@ class GetGameResultUseCase {
           // actually played (1..21 — round 21 is the Double-Bull finale, #588).
           roundReached: math.max(1, subject.practiceRound - 1).clamp(1, 21),
           bustedToZero: subject.score <= 0,
+          endedEarly: endedEarly,
         ),
       GameType.checkoutPractice => GameResult.checkoutPractice(
           competitorName: subject.name,

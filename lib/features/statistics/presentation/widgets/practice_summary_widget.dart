@@ -23,15 +23,24 @@ class PracticeSummaryWidget extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return switch (result) {
       AroundTheClockResult() => _AtcSummary(result: result as AroundTheClockResult),
-      Catch40Result(:final competitorName, :final score, :final targetsCleared) =>
+      Catch40Result(
+        :final competitorName,
+        :final score,
+        :final targetsCleared,
+        :final endedEarly,
+      ) =>
         PostGameHeroCard(
+          // A drill closed from the menu is not a result: badge it and mute
+          // the card instead of celebrating a partial score.
+          badge: endedEarly ? l10n.summaryEndedEarly.toUpperCase() : null,
           headline: competitorName,
           subline: 'Catch 40',
+          muted: endedEarly,
           sideStats: [
             PostGameHeroStat(
               label: l10n.summaryScore.toUpperCase(),
               value: '$score / 120',
-              emphasize: true,
+              emphasize: !endedEarly,
             ),
             PostGameHeroStat(
               label: l10n.summaryTargets.toUpperCase(),
@@ -44,17 +53,22 @@ class PracticeSummaryWidget extends StatelessWidget {
         :final finalScore,
         :final roundReached,
         :final bustedToZero,
+        :final endedEarly,
       ) =>
         PostGameHeroCard(
-          badge: bustedToZero ? l10n.bobs27BustedBadge.toUpperCase() : null,
+          badge: bustedToZero
+              ? l10n.bobs27BustedBadge.toUpperCase()
+              : (endedEarly ? l10n.summaryEndedEarly.toUpperCase() : null),
           headline: competitorName,
           subline: bustedToZero ? l10n.bobs27BustedSubline : "Bob's 27",
-          muted: bustedToZero,
+          // Ended from the menu: the score is wherever the drill stopped,
+          // not a final result, so it is not green-celebrated.
+          muted: bustedToZero || endedEarly,
           sideStats: [
             PostGameHeroStat(
               label: l10n.summaryFinalScore.toUpperCase(),
               value: '$finalScore',
-              emphasize: !bustedToZero,
+              emphasize: !bustedToZero && !endedEarly,
               // Negative finals (drill ended on a missed double in the
               // late rounds) flagged in error colour to match the
               // in-game red treatment instead of green-celebrating
@@ -217,28 +231,33 @@ class _AtcSummary extends StatelessWidget {
 
     if (lead == null) return const SizedBox.shrink();
 
-    // Abandoned drill (no winner, no darts thrown by any competitor)
-    // used to render the first player as "winner" with 0/0 stats (#335).
-    // Show a neutral "no winner" hero instead — the competitor breakdown
-    // below (multi-player path) still surfaces the zeroed stats.
+    // A natural end always records a winner (the first player to clear the
+    // last target), so no winner means the drill was ended from the menu.
+    // It used to render the first-listed player as the winner (#335 only
+    // covered the zero-dart case). Badge it "ended early" and mute the card.
+    final endedEarly = winnerId == null;
+    // Nobody to headline: every competitor in a multi-player drill, or a solo
+    // drill with no darts. The breakdown below (multi-player path) still
+    // surfaces each player's progress.
     final totalDartsAllCompetitors =
         competitors.fold<int>(0, (sum, c) => sum + c.totalDarts);
-    final isAbandoned = winnerId == null && totalDartsAllCompetitors == 0;
+    final noHeadliner =
+        endedEarly && (!isSolo || totalDartsAllCompetitors == 0);
 
     final hero = PostGameHeroCard(
-      badge: isAbandoned
+      badge: endedEarly
           ? l10n.summaryEndedEarly.toUpperCase()
           : (result.doublesOnly ? l10n.summaryDoublesOnly.toUpperCase() : null),
-      headline: isAbandoned ? l10n.summaryNoWinner : lead.competitorName,
+      headline: noHeadliner ? l10n.summaryNoWinner : lead.competitorName,
       subline: 'Around the Clock',
-      muted: isAbandoned,
-      sideStats: isAbandoned
+      muted: endedEarly,
+      sideStats: noHeadliner
           ? const <PostGameHeroStat>[]
           : [
               PostGameHeroStat(
                 label: l10n.summaryTurns.toUpperCase(),
                 value: '${lead.turnsCompleted}',
-                emphasize: true,
+                emphasize: !endedEarly,
               ),
               PostGameHeroStat(
                   label: l10n.summaryDarts.toUpperCase(),
