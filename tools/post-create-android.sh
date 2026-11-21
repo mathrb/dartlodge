@@ -25,7 +25,7 @@ sed -i 's/flutter\.minSdkVersion/23/g' "$GRADLE"
 # targetSdk / compileSdk are deliberately NOT pinned here. The scaffold leaves
 # them as the `flutter.targetSdkVersion` / `flutter.compileSdkVersion`
 # placeholders, which Flutter resolves to its default — "always the latest
-# available stable version" (FlutterExtension.kt). On the pinned Flutter 3.44.2
+# available stable version" (FlutterExtension.kt). On the pinned Flutter 3.44.9
 # that is API 36, which already satisfies Google Play's target-API floor
 # (API 35 today, API 36 from 2026-08-31 for new apps/updates). Leaving it
 # floating means it auto-tracks future Play floors when Flutter is bumped;

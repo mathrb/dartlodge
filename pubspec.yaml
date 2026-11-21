@@ -4,7 +4,7 @@ version: 1.0.0+0
 
 environment:
   # Dart 3.12 floor: drift 2.34 / sqlite3 3.x need ≥3.10, and the toolchain is
-  # pinned to Flutter 3.44.2 (Dart 3.12.2) locally and in CI.
+  # pinned to Flutter 3.44.9 (Dart 3.12.2) locally and in CI.
   # Ships with Flutter 3.44+.
   sdk: ">=3.12.0 <4.0.0"
 
@@ -86,11 +86,13 @@ dev_dependencies:
   # Code generation
   build_runner: ^2.11.1
   riverpod_generator: ^4.0.4
-  # Resolves to a 3.2.6-dev prerelease: the latest freezed stable (3.2.5) caps
+  # Resolves to a 3.2.6-dev prerelease: the last 3.x freezed stable (3.2.5) caps
   # analyzer below 12, but drift_dev 2.34 + riverpod_generator 4.0.4 require
   # analyzer 12. freezed is a build-time-only codegen dep and its output is
-  # committed + covered by the test suite; drop the prerelease once a freezed
-  # stable supports analyzer 12 (#126).
+  # committed + covered by the test suite. No freezed stable will support
+  # analyzer 12: freezed 4.x needs analyzer 13+ and Dart 3.13 (Flutter 3.47+).
+  # The prerelease goes away with that toolchain bump, together with
+  # riverpod_generator / drift_dev releases on the same analyzer (#126).
   freezed: ^3.2.5
   json_serializable: ^6.12.0
   drift_dev: ^2.34.0
