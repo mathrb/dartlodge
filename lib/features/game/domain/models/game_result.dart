@@ -35,6 +35,10 @@ sealed class GameResult with _$GameResult {
     required String competitorName,
     required int score,
     required int targetsCleared,
+
+    /// True when the drill was closed from the menu before the engine reached
+    /// its natural end (all 40 targets played). See [GameResult.bobs27].
+    @Default(false) bool endedEarly,
   }) = Catch40Result;
 
   const factory GameResult.bobs27({
@@ -42,6 +46,14 @@ sealed class GameResult with _$GameResult {
     required int finalScore,
     required int roundReached,
     required bool bustedToZero,
+
+    /// True when the drill was closed from the menu ("End drill") before the
+    /// engine completed it (bust to zero or the round-21 finale). Derived from
+    /// the event log: the engine did not complete the game before the closing
+    /// `GameCompleted` event. Around the Clock needs no flag: a natural end
+    /// always records a winner, so `winnerCompetitorId == null` already means
+    /// the drill was ended early.
+    @Default(false) bool endedEarly,
   }) = Bobs27Result;
 
   const factory GameResult.checkoutPractice({

@@ -31,7 +31,7 @@ void main() {
               finished: true,
             ),
           ],
-          winnerCompetitorId: null,
+          winnerCompetitorId: 'c1',
           doublesOnly: false,
         ),
       )));
@@ -61,7 +61,7 @@ void main() {
               finished: true,
             ),
           ],
-          winnerCompetitorId: null,
+          winnerCompetitorId: 'c1',
           doublesOnly: true,
         ),
       )));
@@ -242,6 +242,136 @@ void main() {
       // The hero's WINNER subtitle column should not appear when no winner
       // (the breakdown table below still shows zeroed stats per player).
       expect(find.text('WINNER'), findsNothing);
+    });
+
+    group('drill ended early from the menu', () {
+      Color onSurface() => AppTheme.light().colorScheme.onSurface;
+
+      testWidgets(
+          'Around the Clock, 3 players with darts thrown: no player is '
+          'presented as the winner', (tester) async {
+        await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+          result: GameResult.aroundTheClock(
+            competitors: [
+              AtcCompetitorResult(
+                competitorId: 'c1',
+                competitorName: 'Alexandra',
+                turnsCompleted: 1,
+                totalDarts: 3,
+                lastTargetHit: 3,
+                finished: false,
+              ),
+              AtcCompetitorResult(
+                competitorId: 'c3',
+                competitorName: 'Bo',
+                turnsCompleted: 1,
+                totalDarts: 2,
+                lastTargetHit: 2,
+                finished: false,
+              ),
+              AtcCompetitorResult(
+                competitorId: 'c2',
+                competitorName: 'Jean-Baptiste',
+                turnsCompleted: 1,
+                totalDarts: 3,
+                lastTargetHit: 0,
+                finished: false,
+              ),
+            ],
+            winnerCompetitorId: null,
+            doublesOnly: false,
+          ),
+        )));
+
+        expect(find.text('ENDED EARLY'), findsOneWidget);
+        expect(find.text('NO WINNER'), findsOneWidget);
+        // The hero uppercases its headline; the breakdown keeps names as-is.
+        expect(find.text('ALEXANDRA'), findsNothing,
+            reason: 'the first-listed player must not headline the hero');
+        expect(find.text('Alexandra'), findsOneWidget);
+        expect(find.text('WINNER'), findsNothing);
+        // Each player's progress is still in the breakdown.
+        expect(find.text('LAST TARGET HIT'), findsOneWidget);
+      });
+
+      testWidgets(
+          'Around the Clock solo with darts thrown: badge, muted stats, '
+          'player still named', (tester) async {
+        await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+          result: GameResult.aroundTheClock(
+            competitors: [
+              AtcCompetitorResult(
+                competitorId: 'c1',
+                competitorName: 'Alice',
+                turnsCompleted: 4,
+                totalDarts: 12,
+                lastTargetHit: 7,
+                finished: false,
+              ),
+            ],
+            winnerCompetitorId: null,
+            doublesOnly: true,
+          ),
+        )));
+
+        expect(find.text('ENDED EARLY'), findsOneWidget);
+        expect(find.text('DOUBLES ONLY'), findsNothing,
+            reason: 'one badge slot: ended early wins');
+        expect(find.text('ALICE'), findsOneWidget);
+        final turns = tester.widget<Text>(find.text('4'));
+        expect(turns.style?.color, onSurface(),
+            reason: 'the turns stat must not be accent-emphasised');
+      });
+
+      testWidgets("Bob's 27 ended at round 1: badge, no green emphasis",
+          (tester) async {
+        await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+          result: GameResult.bobs27(
+            competitorName: 'Alexandra',
+            finalScore: 27,
+            roundReached: 1,
+            bustedToZero: false,
+            endedEarly: true,
+          ),
+        )));
+
+        expect(find.text('ENDED EARLY'), findsOneWidget);
+        expect(find.text('BUSTED'), findsNothing);
+        expect(find.text("Bob's 27"), findsOneWidget);
+        final score = tester.widget<Text>(find.text('27'));
+        expect(score.style?.color, onSurface());
+      });
+
+      testWidgets("Bob's 27 finished naturally keeps the emphasised score",
+          (tester) async {
+        await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+          result: GameResult.bobs27(
+            competitorName: 'Alexandra',
+            finalScore: 162,
+            roundReached: 21,
+            bustedToZero: false,
+          ),
+        )));
+
+        expect(find.text('ENDED EARLY'), findsNothing);
+        final score = tester.widget<Text>(find.text('162'));
+        expect(score.style?.color, isNot(onSurface()));
+      });
+
+      testWidgets('Catch 40 ended early: badge, no emphasis', (tester) async {
+        await tester.pumpWidget(_wrap(const PracticeSummaryWidget(
+          result: GameResult.catch40(
+            competitorName: 'Alice',
+            score: 3,
+            targetsCleared: 1,
+            endedEarly: true,
+          ),
+        )));
+
+        expect(find.text('ENDED EARLY'), findsOneWidget);
+        final score = tester.widget<Text>(find.text('3 / 120'));
+        expect(score.style?.color, onSurface());
+      });
     });
 
     testWidgets("Bob's 27 negative final score renders in error colour (#339)",

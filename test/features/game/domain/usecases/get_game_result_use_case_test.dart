@@ -477,6 +477,55 @@ void main() {
       expect(c40.competitorName, 'Bob');
       expect(c40.targetsCleared, 1);
       expect(c40.score, 3);
+      // Closed after round 1 of 40 → ended early, not a result.
+      expect(c40.endedEarly, isTrue);
+    }));
+
+    test('catch40: all 40 targets played is a natural end (endedEarly false)',
+        (() async {
+      const gameId = 'g-catch40-full';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.catch40,
+        config: const GameConfig.catch40(),
+        playerId: playerId,
+        playerName: 'Bob',
+        competitorId: competitorId,
+      );
+      final events = <GameEvent>[];
+      var seq = 1;
+      // Missing every dart: each target gets its 6-dart allowance (two
+      // turns), so 40 targets = 80 turns.
+      for (var turn = 1; turn <= 80; turn++) {
+        events.add(buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ));
+        for (var d = 0; d < 3; d++) {
+          events.add(dart(gameId, competitorId, playerId, seq++, 0, 1));
+        }
+        events.add(buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+        ));
+      }
+      events.add(buildGameCompletedEvent(
+        gameId: gameId,
+        winnerCompetitorId: null,
+        localSequence: seq++,
+      ));
+      await completeWithEvents(gameId, null, events);
+
+      final c40 = await useCase.execute(gameId) as Catch40Result;
+      expect(c40.endedEarly, isFalse);
     }));
 
     test("bobs27: completes 20 rounds, finalScore and roundReached map",
@@ -536,6 +585,8 @@ void main() {
       expect(b27.bustedToZero, isTrue);
       // Engine completed game at round 5; practiceRound is then 6.
       expect(b27.roundReached, 5);
+      // A bust to zero is the drill's own end, not an early exit.
+      expect(b27.endedEarly, isFalse);
     }));
 
     test("bobs27: full 21-round game (Double-Bull finale) → roundReached 21",
@@ -590,6 +641,57 @@ void main() {
       // The Double-Bull finale is round 21 — roundReached must reach 21, not
       // be clamped to 20 (#588/#600).
       expect(b27.roundReached, 21);
+      expect(b27.endedEarly, isFalse);
+    }));
+
+    test("bobs27: End drill before any dart / mid-drill → endedEarly",
+        (() async {
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      // (a) closed before the first dart, (b) closed after two rounds.
+      for (final (gameId, rounds) in [('g-b27-0', 0), ('g-b27-2', 2)]) {
+        await seedGame(
+          gameId: gameId,
+          gameType: GameType.bobs27,
+          config: const GameConfig.bobs27(),
+          playerId: '$playerId-$gameId',
+          playerName: 'Alexandra',
+          competitorId: '$competitorId-$gameId',
+        );
+        final events = <GameEvent>[];
+        var seq = 1;
+        for (var round = 1; round <= rounds; round++) {
+          events.add(buildTurnStartedEvent(
+            gameId: gameId,
+            competitorId: '$competitorId-$gameId',
+            playerId: '$playerId-$gameId',
+            localSequence: seq++,
+            turnIndex: 0,
+            legIndex: 0,
+          ));
+          for (var d = 0; d < 3; d++) {
+            events.add(dart(gameId, '$competitorId-$gameId',
+                '$playerId-$gameId', seq++, round, 2));
+          }
+          events.add(buildTurnEndedEvent(
+            gameId: gameId,
+            competitorId: '$competitorId-$gameId',
+            playerId: '$playerId-$gameId',
+            localSequence: seq++,
+          ));
+        }
+        // What EndPracticeUseCase appends: GameCompleted with no winner.
+        events.add(buildGameCompletedEvent(
+          gameId: gameId,
+          winnerCompetitorId: null,
+          localSequence: seq++,
+        ));
+        await completeWithEvents(gameId, null, events);
+
+        final b27 = await useCase.execute(gameId) as Bobs27Result;
+        expect(b27.endedEarly, isTrue, reason: 'closed after $rounds rounds');
+        expect(b27.bustedToZero, isFalse);
+      }
     }));
 
     test('checkoutPractice: successful checkout records darts and remaining=0',
