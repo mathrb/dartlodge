@@ -7,6 +7,7 @@ android/
 releases/
 tools/apk-server/
 .claude/*
+!.claude/settings.json
 !.claude/skills/
 .claude/skills/*
 !.claude/skills/refine-issue/
