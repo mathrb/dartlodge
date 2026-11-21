@@ -15,7 +15,7 @@ from `game_events`; history/achievements/heatmap faithfully reflect the games.
 - Oracles: `docs/statistics/{x01.projections,statistics.architecture,projection-test-matrix}.md`
   (realigned #585), `docs/DATABASE_DDL.md`, `docs/DATA.md`, `docs/GAME-EVENT-SPECIFICATIONS.md`,
   `docs/REPOSITORY_INTERFACES.md` (#586) + `PlayerStatsAssembler` / `ProjectionRunner`.
-- Rail: almost all `[web]` (drift/IndexedDB ≈ native); `[device]` for the sqlite3 minSdk23 runtime.
+- Rail: almost all `[web]` (drift/IndexedDB ≈ native); `[device]` for the sqlite3 runtime on the oldest supported Android (minSdk 24).
 
 ---
 
