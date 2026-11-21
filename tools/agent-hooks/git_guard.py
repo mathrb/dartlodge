@@ -57,10 +57,42 @@ def strip_heredocs(command):
     return "\n".join(out)
 
 
+def strip_comments(command):
+    """Drop shell comments the way bash does: a `#` that starts a word,
+    outside quotes, up to the end of its line. (shlex's own comment handling
+    also fires mid-word, and after the newline join below a comment would
+    swallow the rest of the whole command.)"""
+    out, quote, i, n = [], None, 0, len(command)
+    while i < n:
+        ch = command[i]
+        if quote:
+            out.append(ch)
+            if ch == "\\" and quote == '"' and i + 1 < n:
+                out.append(command[i + 1])
+                i += 1
+            elif ch == quote:
+                quote = None
+        elif ch == "\\" and i + 1 < n:
+            out.append(ch + command[i + 1])
+            i += 1
+        elif ch in "'\"":
+            quote = ch
+            out.append(ch)
+        elif ch == "#" and (i == 0 or command[i - 1] in " \t\n;&|(){}"):
+            while i < n and command[i] != "\n":
+                i += 1
+            continue
+        else:
+            out.append(ch)
+        i += 1
+    return "".join(out)
+
+
 def segments(command):
     """Yield token lists, one per simple command."""
-    lex = shlex.shlex(strip_heredocs(command).replace("\n", " ; "),
-                      posix=True, punctuation_chars=";&|(){}")
+    text = strip_comments(strip_heredocs(command)).replace("\n", " ; ")
+    lex = shlex.shlex(text, posix=True, punctuation_chars=";&|(){}")
+    lex.commenters = ""
     lex.whitespace_split = True
     current = []
     for tok in lex:
