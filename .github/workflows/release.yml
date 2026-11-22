@@ -27,6 +27,12 @@ on:
 permissions:
   contents: read
 
+# Explicit bash = `bash -eo pipefail`. The implicit default is `bash -e`,
+# which lets a failing command before a pipe (e.g. `script | tee`) pass.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   resolve:
     name: Resolve tag
@@ -225,8 +231,10 @@ jobs:
     needs: [resolve, build-rc]
     if: needs.resolve.outputs.is_prerelease == 'true'
     runs-on: ubuntu-latest
-    # One upload at a time. A newer queued RC replaces an older queued one,
-    # which is fine: the newest RC is the one testers should get.
+    # One upload at a time. A newer queued RC replaces an older queued one:
+    # the newest RC is the one testers should get. An RC whose upload was
+    # dropped (or skipped, or failed) can still be promoted: play-promote
+    # uploads its AAB when Play does not have the versionCode.
     concurrency:
       group: play-rc
       cancel-in-progress: false
@@ -395,13 +403,28 @@ jobs:
         with:
           ref: ${{ needs.resolve.outputs.sha }}
 
-      # No upload: Play already has this versionCode from the RC upload. The
-      # release starts as a staged rollout; raise, complete or halt it in the
-      # Play Console.
+      # Only uploaded if Play does not have this versionCode yet (its RC
+      # upload was skipped, dropped from the queue, or failed).
+      - name: Download the stable AAB
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "dartlodge-$VERSION.aab" --dir dist
+
+      # Normally no upload: Play already has this versionCode from the RC
+      # upload. The release starts as a staged rollout; raise, complete or
+      # halt it in the Play Console.
       - name: Start the staged production rollout
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
           VERSION_CODE: ${{ needs.stable-release.outputs.version_code }}
           USER_FRACTION: ${{ vars.PLAY_PRODUCTION_ROLLOUT || '0.1' }}
-        run: bash tools/release/play-promote.sh app.dartlodge "$VERSION_CODE" "$TAG" "$USER_FRACTION" production
+        run: |
+          bash tools/release/play-promote.sh app.dartlodge "$VERSION_CODE" "$TAG" "$USER_FRACTION" \
+            production "dist/dartlodge-$VERSION.aab"

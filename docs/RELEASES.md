@@ -161,7 +161,7 @@ git push origin v0.2.0
 2. Downloads that RC's APK + AAB + checksums from its GitHub pre-release and verifies them.
 3. Reads the RC APK's versionCode and versionName (`aapt2 dump badging`). A versionName other than `0.2.0` fails the run: RCs built before versionName dropped the `-rcN` suffix cannot be promoted.
 4. Publishes the same binaries as `dartlodge-0.2.0.apk` / `.aab` (new `.sha256` files, same hashes) in the stable GitHub release. Notes are generated from the previous stable tag, so they cover every RC since then.
-5. Promotes the RC's versionCode to Play production (see "Google Play tracks").
+5. Promotes the RC's versionCode to Play production, uploading the AAB first if Play does not have it (see "Google Play tracks").
 
 Re-running a failed stable run is safe up to the step that failed; if the GitHub release was already created, delete it first or re-run only the Play job.
 
@@ -187,13 +187,13 @@ Tagging directly off a hotfix branch no longer releases anything: `release.yml` 
 | What | Play track | How |
 |---|---|---|
 | Every RC (`vX.Y.Z-rcN`, i.e. every green merge to `main`) | Closed testing: `alpha`, or the `PLAY_RC_TRACK` repo variable | `play-rc` job: uploads the RC's AAB with [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play), status `completed`, release name = the tag. The newest RC replaces the previous one for testers. |
-| Stable (`vX.Y.Z`) | Production, staged rollout | `play-promote` job: `tools/release/play-promote.sh` assigns the RC's existing versionCode to `production` through the Play Developer API (`edits.insert` → `edits.tracks.update` with `status: inProgress` and `userFraction` = `PLAY_PRODUCTION_ROLLOUT`, default `0.1` → `edits.commit`). Nothing is re-uploaded. |
+| Stable (`vX.Y.Z`) | Production, staged rollout | `play-promote` job: `tools/release/play-promote.sh` assigns the RC's existing versionCode to `production` through the Play Developer API (`edits.insert` → `edits.tracks.update` with `status: inProgress` and `userFraction` = `PLAY_PRODUCTION_ROLLOUT`, default `0.1` → `edits.commit`). Nothing is re-uploaded, unless Play does not have that versionCode (its RC upload was skipped, dropped from the queue or failed): then the stable AAB is uploaded in the same edit first. |
 | Internal testing | unused | — |
 
 - Raising, completing or halting the staged rollout is done by hand in the Play Console.
 - Production access is gated by Google (closed test with ≥12 testers for ≥14 days on a new personal account). Until it is granted, `play-promote` fails with the API error; the stable GitHub release is already published by then.
 - **Both Play jobs skip cleanly while the `PLAY_SERVICE_ACCOUNT_JSON` secret is not set**: the job passes and the run shows the notice "Play upload skipped" / "Play promotion skipped". The GitHub release part never depends on Play.
-- The two Play jobs have their own concurrency groups (`play-rc`, `play-production`), so a queued RC upload never displaces a production promotion. A newer queued RC upload can replace an older queued one, which is the intent.
+- The two Play jobs have their own concurrency groups (`play-rc`, `play-production`), so a queued RC upload never displaces a production promotion. A newer queued RC upload can replace an older queued one, which is the intent; such an RC can still be tagged stable, since `play-promote` then uploads its AAB.
 
 **Service account setup (one-time, project owner):**
 
