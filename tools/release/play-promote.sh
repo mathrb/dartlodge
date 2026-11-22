@@ -11,12 +11,16 @@
 #
 # Usage:
 #   PLAY_SERVICE_ACCOUNT_JSON='{...}' play-promote.sh \
-#     <package-name> <version-code> <release-name> <user-fraction> [track] [aab]
+#     <package-name> <version-code> <release-name> <user-fraction> [track] [aab] [notes-dir]
 #
 #   user-fraction  staged rollout share, strictly between 0 and 1 (e.g. 0.1)
 #   track          defaults to "production"
 #   aab            the bundle with that versionCode, uploaded only if Play
-#                  does not have it yet
+#                  does not have it yet (pass "" to give notes-dir without one)
+#   notes-dir      folder of whatsnew-<language> files (e.g. whatsnew-en-US),
+#                  sent as the release's releaseNotes. Each file must be
+#                  non-empty and at most 500 characters (leading and trailing
+#                  whitespace is dropped). Without it no notes are sent.
 #
 # The access token is minted here from the service-account key (OAuth 2.0
 # JWT bearer grant), so no extra Google Cloud role or API is needed beyond
@@ -26,8 +30,8 @@
 # token_uri.
 set -euo pipefail
 
-if [ "$#" -lt 4 ] || [ "$#" -gt 6 ]; then
-  echo "usage: $0 <package-name> <version-code> <release-name> <user-fraction> [track] [aab]" >&2
+if [ "$#" -lt 4 ] || [ "$#" -gt 7 ]; then
+  echo "usage: $0 <package-name> <version-code> <release-name> <user-fraction> [track] [aab] [notes-dir]" >&2
   exit 2
 fi
 
@@ -37,6 +41,7 @@ RELEASE_NAME="$3"
 USER_FRACTION="$4"
 TRACK="${5:-production}"
 AAB="${6:-}"
+NOTES_DIR="${7:-}"
 API_BASE="${PLAY_API_BASE:-https://androidpublisher.googleapis.com/androidpublisher/v3}"
 UPLOAD_BASE="${PLAY_UPLOAD_BASE:-https://androidpublisher.googleapis.com/upload/androidpublisher/v3}"
 SCOPE="https://www.googleapis.com/auth/androidpublisher"
@@ -58,6 +63,27 @@ fi
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 umask 077
+
+# Release notes, checked before anything is sent to Google.
+RELEASE_NOTES=""
+if [ -n "$NOTES_DIR" ]; then
+  [ -d "$NOTES_DIR" ] || fail "release notes folder '$NOTES_DIR' does not exist."
+  shopt -s nullglob
+  NOTE_FILES=("$NOTES_DIR"/whatsnew-*)
+  shopt -u nullglob
+  [ "${#NOTE_FILES[@]}" -gt 0 ] || fail "release notes folder '$NOTES_DIR' has no whatsnew-<language> file."
+  for file in "${NOTE_FILES[@]}"; do
+    language="${file##*/whatsnew-}"
+    [[ "$language" =~ ^[a-z]{2,3}(-[A-Za-z0-9]+)*$ ]] \
+      || fail "release notes file '$file': '$language' is not a language code (e.g. en-US)."
+    jq -n --arg language "$language" --rawfile text "$file" \
+      '{language: $language, text: ($text | sub("\\A\\s+"; "") | sub("\\s+\\z"; ""))}' >"$WORK/note-$language.json"
+    length=$(jq -r '.text | length' "$WORK/note-$language.json")
+    [ "$length" -gt 0 ] || fail "release notes file '$file' is empty."
+    [ "$length" -le 500 ] || fail "release notes file '$file' has $length characters; Play allows 500."
+  done
+  RELEASE_NOTES=$(jq -cs '.' "$WORK"/note-*.json)
+fi
 
 CLIENT_EMAIL=$(jq -er '.client_email' <<<"$PLAY_SERVICE_ACCOUNT_JSON") \
   || fail "PLAY_SERVICE_ACCOUNT_JSON has no client_email."
@@ -141,6 +167,9 @@ fi
 TRACK_BODY=$(jq -cn --arg track "$TRACK" --arg name "$RELEASE_NAME" --arg code "$VERSION_CODE" \
   --argjson fraction "$USER_FRACTION" \
   '{track: $track, releases: [{name: $name, versionCodes: [$code], status: "inProgress", userFraction: $fraction}]}')
+if [ -n "$RELEASE_NOTES" ]; then
+  TRACK_BODY=$(jq -c --argjson notes "$RELEASE_NOTES" '.releases[0].releaseNotes = $notes' <<<"$TRACK_BODY")
+fi
 call "tracks.update" PUT "$API_BASE/applications/$PACKAGE/edits/$EDIT_ID/tracks/$TRACK" "$TRACK_BODY" >/dev/null
 
 call "edits.commit" POST "$API_BASE/applications/$PACKAGE/edits/$EDIT_ID:commit" >/dev/null

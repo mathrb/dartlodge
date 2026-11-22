@@ -58,6 +58,13 @@ jobs:
             exit 1
           fi
 
+      - name: Play release notes gate
+        # distribution/whatsnew must hold non-empty notes of at most 500
+        # characters for every app language, so a stable tag never fails on
+        # them. Content-only: one OS is enough. See docs/RELEASES.md.
+        if: runner.os == 'Linux'
+        run: bash tools/release/check-whatsnew.sh distribution/whatsnew
+
       - name: Run tests with coverage
         run: flutter test --coverage
 
