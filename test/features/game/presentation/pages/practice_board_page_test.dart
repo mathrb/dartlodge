@@ -163,6 +163,33 @@ ActivePracticeState _activeState({
       wasEndedManually: wasEndedManually,
     );
 
+/// A Catch 40 state for the second-visit turn-signal tests (#807).
+GameState _catch40State({
+  int dartsOnTarget = 0,
+  int dartsThrownInTurn = 0,
+  bool turnActive = true,
+  bool isComplete = false,
+  int targetRemaining = 61,
+  int currentTarget = 61,
+}) => GameState(
+  gameId: 'game-1',
+  gameType: GameType.catch40,
+  competitors: [
+    _practiceCompetitor(
+      currentTarget: currentTarget,
+      // Keep the throws list in step with the turn's dart count: the
+      // board slices the current turn's darts out of it.
+      dartThrows: List.filled(dartsThrownInTurn, '1'),
+    ),
+  ],
+  currentTurnIndex: 0,
+  dartsThrownInTurn: dartsThrownInTurn,
+  isComplete: isComplete,
+  turnActive: turnActive,
+  catch40DartsOnTarget: dartsOnTarget,
+  catch40TargetRemaining: targetRemaining,
+);
+
 // ── Test app builders ──────────────────────────────────────────────────────────
 
 List<RouteBase> _testRoutes({
@@ -2111,5 +2138,156 @@ void main() {
         expect(find.text('MISS'), findsOneWidget);
       });
     }
+  });
+
+  // ── Catch 40's automatic second visit resets the auto-scorer turn (#807) ──
+
+  group('Catch 40 second visit bumps activeTurnSignal (#807)', () {
+    Future<(ProviderContainer, _FakeActivePracticeNotifier)> pumpBoard(
+      WidgetTester tester,
+      GameState initial,
+    ) async {
+      _setTallViewport(tester);
+      final notifier = _FakeActivePracticeNotifier(
+        _activeState(gameState: initial),
+      );
+      final container = ProviderContainer(
+        overrides: [activePracticeProvider.overrideWith(() => notifier)],
+      );
+      addTearDown(container.dispose);
+      await tester.pumpWidget(_buildAppWithContainer(container));
+      await tester.pumpAndSettle();
+      expect(container.read(activeTurnSignalProvider), 0);
+      return (container, notifier);
+    }
+
+    testWidgets(
+      'the third dart on a target opens visit 2 and bumps the signal once',
+      (tester) async {
+        final (container, notifier) = await pumpBoard(
+          tester,
+          _catch40State(dartsOnTarget: 2, dartsThrownInTurn: 2),
+        );
+
+        // Third dart misses the checkout: processDart starts visit 2 itself.
+        notifier.emit(
+          _activeState(
+            gameState: _catch40State(dartsOnTarget: 3, dartsThrownInTurn: 0),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(container.read(activeTurnSignalProvider), 1);
+      },
+    );
+
+    testWidgets('an ordinary dart within a visit does not bump', (
+      tester,
+    ) async {
+      final (container, notifier) = await pumpBoard(
+        tester,
+        _catch40State(dartsOnTarget: 3, dartsThrownInTurn: 0),
+      );
+
+      notifier.emit(
+        _activeState(
+          gameState: _catch40State(dartsOnTarget: 4, dartsThrownInTurn: 1),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+
+    testWidgets('undoing the first dart of visit 2 does not bump', (
+      tester,
+    ) async {
+      final (container, notifier) = await pumpBoard(
+        tester,
+        _catch40State(dartsOnTarget: 4, dartsThrownInTurn: 1),
+      );
+
+      notifier.emit(
+        _activeState(
+          gameState: _catch40State(dartsOnTarget: 3, dartsThrownInTurn: 0),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+
+    testWidgets('moving to the next target is left to the NEXT TARGET button', (
+      tester,
+    ) async {
+      final (container, notifier) = await pumpBoard(
+        tester,
+        _catch40State(
+          dartsOnTarget: 6,
+          dartsThrownInTurn: 3,
+          turnActive: false,
+        ),
+      );
+
+      notifier.emit(
+        _activeState(
+          gameState: _catch40State(currentTarget: 62, targetRemaining: 62),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+
+    testWidgets('other practice types never bump from a state change', (
+      tester,
+    ) async {
+      final (container, notifier) = await pumpBoard(
+        tester,
+        _practiceState(dartsThrownInTurn: 3),
+      );
+
+      notifier.emit(_activeState(gameState: _practiceState()));
+      await tester.pumpAndSettle();
+
+      expect(container.read(activeTurnSignalProvider), 0);
+    });
+  });
+
+  group('catch40StartedNextVisit (#807)', () {
+    test('true only for a fresh, active turn after a dart on the target', () {
+      expect(
+        catch40StartedNextVisit(
+          _catch40State(dartsOnTarget: 2, dartsThrownInTurn: 2),
+          _catch40State(dartsOnTarget: 3),
+        ),
+        isTrue,
+      );
+    });
+
+    test('false when the drill completed', () {
+      expect(
+        catch40StartedNextVisit(
+          _catch40State(dartsOnTarget: 2, dartsThrownInTurn: 2),
+          _catch40State(dartsOnTarget: 3, isComplete: true),
+        ),
+        isFalse,
+      );
+    });
+
+    test('false on a checkout (turn ended, waiting for NEXT TARGET)', () {
+      expect(
+        catch40StartedNextVisit(
+          _catch40State(dartsOnTarget: 2, dartsThrownInTurn: 2),
+          _catch40State(
+            dartsOnTarget: 3,
+            dartsThrownInTurn: 3,
+            turnActive: false,
+            targetRemaining: 0,
+          ),
+        ),
+        isFalse,
+      );
+    });
   });
 }

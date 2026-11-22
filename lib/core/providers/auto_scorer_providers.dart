@@ -38,8 +38,10 @@ class ActiveDartInputSink extends _$ActiveDartInputSink {
 }
 
 /// A monotonically increasing counter bumped by the game board whenever the
-/// **turn advances** (manual next-turn). The auto-scorer listens so it can reset
-/// the per-turn 3-dart cap in lock-step — without this, advancing via the
+/// **turn advances**: the manual next-turn button, the board-clear auto-advance,
+/// and the turns a game opens on its own — the X01/Cricket leg change and
+/// Catch 40's second visit to a target (#807). The auto-scorer listens so it
+/// can reset the per-turn 3-dart cap in lock-step — without this, advancing via the
 /// board's own next button (which can't reach the tracker) would wedge the cap
 /// and silently block the next player's darts (#380 / #382 rework). Cross-feature
 /// via `core/`, mirroring the sink bridge.

@@ -51,10 +51,12 @@ class _PracticeDartInputSink implements DartInputSink {
     final s = _ref.read(activePracticeProvider(_gameId)).value;
     // No-op when complete, or when the current turn has no darts yet: Catch 40's
     // internal same-target auto-advance (inside processDart) already starts a
-    // fresh turn without bumping activeTurnSignal, so a board-clear here would
-    // otherwise advance again and emit a spurious 0-dart TurnEnded. Skipping
-    // here is safe: the auto-scorer disarms on every board-clear, so a declined
-    // advance can't fire later in the next turn (#805).
+    // fresh turn, so a board-clear here would otherwise advance again and emit
+    // a spurious 0-dart TurnEnded. That advance now bumps activeTurnSignal via
+    // the board's listener (#807), which already disarms auto-advance; this
+    // guard stays as defence in depth. Skipping here is safe: the auto-scorer
+    // disarms on every board-clear, so a declined advance can't fire later in
+    // the next turn (#805).
     if (s == null ||
         s.gameState.isComplete ||
         s.gameState.dartsThrownInTurn == 0) {
@@ -64,6 +66,21 @@ class _PracticeDartInputSink implements DartInputSink {
     _ref.read(activeTurnSignalProvider.notifier).bump();
   }
 }
+
+/// True when Catch 40 opened the second visit to the same target by itself
+/// (#807): a dart was added to the target (darts-on-target went up) and the
+/// turn came back fresh (0 darts, still active). `processDart` does this
+/// without a NEXT tap, so the board must tell the auto-scorer the turn changed
+/// or its 3-dart cap stays full for the whole second visit. Undo moves
+/// darts-on-target down and NEXT TARGET resets it to 0, so neither matches;
+/// a checkout ends the turn (`turnActive: false`) and waits for NEXT TARGET.
+@visibleForTesting
+bool catch40StartedNextVisit(GameState prev, GameState next) =>
+    next.gameType == GameType.catch40 &&
+    !next.isComplete &&
+    next.turnActive &&
+    next.dartsThrownInTurn == 0 &&
+    next.catch40DartsOnTarget > prev.catch40DartsOnTarget;
 
 /// Defer used by the Shanghai-on-final-dart path so the inline `_ShanghaiBonus`
 /// banner (1300ms animation) finishes before we navigate away. All other
@@ -180,6 +197,23 @@ class _PracticeBoardPageState extends ConsumerState<PracticeBoardPage> {
           ref
               .read(activePracticeProvider(widget.gameId).notifier)
               .dismissBust();
+        });
+      },
+    );
+
+    // Catch 40 opens the second visit to a target inside processDart, with no
+    // NEXT tap: tell the auto-scorer the turn changed so its per-turn dart cap
+    // and auto-advance arming reset, like X01's leg-change bump (#807).
+    ref.listen<AsyncValue<ActivePracticeState?>>(
+      activePracticeProvider(widget.gameId),
+      (prev, next) {
+        final prevGs = prev?.value?.gameState;
+        final nextGs = next.value?.gameState;
+        if (prevGs == null || nextGs == null) return;
+        if (!catch40StartedNextVisit(prevGs, nextGs)) return;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          ref.read(activeTurnSignalProvider.notifier).bump();
         });
       },
     );
