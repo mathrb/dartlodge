@@ -1,4 +1,4 @@
-import 'package:dart_lodge/features/auto_scorer/domain/sharing/export_destination.dart';
+import 'package:dart_lodge/core/feedback/contact_email.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -53,7 +53,7 @@ class _AutoScorerPreSendViewState extends State<AutoScorerPreSendView> {
     final l10n = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     await Clipboard.setData(
-        const ClipboardData(text: kAutoScorerExportContact));
+        const ClipboardData(text: kDartLodgeContactEmail));
     messenger.showSnackBar(
         SnackBar(content: Text(l10n.autoScorerPreSendAddressCopied)));
   }
@@ -110,7 +110,7 @@ class _AutoScorerPreSendViewState extends State<AutoScorerPreSendView> {
             // The address is interpolated from one constant, and the reason
             // for the Drive detour is stated: without it, players try to
             // e-mail the zip, fail on the attachment limit, and give up.
-            Text(l10n.autoScorerPreSendStep2(kAutoScorerExportContact),
+            Text(l10n.autoScorerPreSendStep2(kDartLodgeContactEmail),
                 style: body),
             Align(
               alignment: Alignment.centerLeft,

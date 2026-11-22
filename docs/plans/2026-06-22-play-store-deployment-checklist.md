@@ -46,7 +46,7 @@ Verified against current Google Play policy on 2026-06-22 (target API, $25 fee, 
 - [ ] **🤝 BOTH** — App icon 512×512 (already generated via `flutter_launcher_icons` — just export/verify).
 - [ ] **🤝 BOTH** — Feature graphic 1024×500. I can spec/help; final art may be on you.
 - [ ] **🤝 BOTH** — Phone screenshots (min 2). Many already in repo root / `e2e/` — I help select clean ones; you may want fresh device captures.
-- [ ] **🧍 YOU** — Category (Games or Sports), contact email (`mathrb@gmail.com`), entered in Console.
+- [ ] **🧍 YOU** — Category (Games or Sports), contact email (`dartlodge@gmail.com`), entered in Console.
 
 ## 5. Compliance forms (Play Console)
 

@@ -23,6 +23,8 @@
   "settingsReportBugSubtitle": "Avise-nos se algo deu errado",
   "settingsReportBugHint": "Descreva o que deu errado…",
   "settingsReportBugThanks": "Obrigado! Seu comentário foi enviado.",
+  "settingsContact": "Fale conosco",
+  "settingsContactNoMailApp": "Nenhum app de e-mail encontrado. Endereço copiado.",
   "settingsCrashReportingTitle": "Relatórios de falhas",
   "settingsCrashReportingSubtitle": "Enviar diagnósticos de falhas anónimos para ajudar a corrigir erros",
   "settingsCrashReportingRestartNote": "Aplica-se após reiniciar a aplicação",

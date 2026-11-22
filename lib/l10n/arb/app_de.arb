@@ -23,6 +23,8 @@
   "settingsReportBugSubtitle": "Sag uns Bescheid, wenn etwas schiefgelaufen ist",
   "settingsReportBugHint": "Beschreibe, was schiefgelaufen ist…",
   "settingsReportBugThanks": "Danke! Dein Feedback wurde gesendet.",
+  "settingsContact": "Kontakt",
+  "settingsContactNoMailApp": "Keine E-Mail-App gefunden. Adresse kopiert.",
   "settingsCrashReportingTitle": "Absturzberichte",
   "settingsCrashReportingSubtitle": "Anonyme Absturzdiagnosen senden, um Fehler zu beheben",
   "settingsCrashReportingRestartNote": "Wird nach einem Neustart der App wirksam",

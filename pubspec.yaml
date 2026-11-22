@@ -79,6 +79,10 @@ dependencies:
   crypto: ^3.0.0
   connectivity_plus: ^6.1.0
 
+  # Settings "Contact us" row: opens a mailto: draft to the project address.
+  # Already in the tree transitively via ultralytics_yolo.
+  url_launcher: ^6.3.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -51,7 +51,7 @@ collection is automatic**, and the inert button (E7) signals the opposite.
 |---|---|
 | Point 3 objective | Education through copy and visuals — surface the automatic behaviour, do not build a new capture path. |
 | Sharing transport | **Unchanged.** Explain it; do not pick a new transport in this round (see `2026-06-21-auto-assist-data-sharing-options.md`, still undecided). |
-| Destination named in copy | Upload the zip to the player's **own Google Drive**, then share the file with **mathrb@gmail.com**. Rationale to state in the UI: the zip is too large for e-mail attachments. |
+| Destination named in copy | Upload the zip to the player's **own Google Drive**, then share the file with **dartlodge@gmail.com**. Rationale to state in the UI: the zip is too large for e-mail attachments. |
 | Vocabulary | Player language by default; technical vocabulary moves behind an advanced setting. |
 | Native overlay boxes | **Off by default**, restorable via an "Advanced / technical display" setting. |
 | Naming of the uncalibrated state | A mix of "learning mode" and an honest statement of the failure: **"Board not recognised · learning mode"**. Copy must state that this is **not online learning**. |
@@ -171,7 +171,7 @@ states: what is inside (N photos, M sessions, size); what the photos are (your
 board and your room — look before sending); where it goes.
 
 **S3.2 The two-step instruction.** Save the zip to your own Google Drive, then
-share that file with **mathrb@gmail.com** (with a copy-address button) —
+share that file with **dartlodge@gmail.com** (with a copy-address button) —
 **because the zip is too large to e-mail**. Stating the reason prevents the
 player from attempting an attachment and giving up.
 
@@ -207,8 +207,10 @@ deletion: S1.1/S1.2 deliberately avoid that mapping.
 - **The transport is still undecided.** S3 makes the current transport
   understandable; it does not remove the need to decide
   `2026-06-21-auto-assist-data-sharing-options.md`.
-- **Naming a personal e-mail in shipped copy.** `mathrb@gmail.com` goes into the
-  app for lack of a dartlodge address; revisit if a project address appears.
+- **Naming a personal e-mail in shipped copy.** Resolved: the app originally
+  named the maintainer's personal address for lack of a dartlodge one; it now
+  names the project address `dartlodge@gmail.com` (`kDartLodgeContactEmail` in
+  `lib/core/feedback/contact_email.dart`).
 - **BETA labelling** stays mandatory on every user-facing surface touched here.
 
 ## 5. Proposed ticket breakdown

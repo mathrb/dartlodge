@@ -38,4 +38,4 @@ takedown.
 ## Contact
 
 For permission to use the DartLodge name or assets, contact the maintainer
-(mathrb@gmail.com).
+(dartlodge@gmail.com).

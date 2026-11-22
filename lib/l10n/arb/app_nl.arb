@@ -23,6 +23,8 @@
   "settingsReportBugSubtitle": "Laat het ons weten als er iets misging",
   "settingsReportBugHint": "Beschrijf wat er misging…",
   "settingsReportBugThanks": "Bedankt! Je feedback is verzonden.",
+  "settingsContact": "Contact opnemen",
+  "settingsContactNoMailApp": "Geen e-mailapp gevonden. Adres gekopieerd.",
   "settingsCrashReportingTitle": "Crashrapportage",
   "settingsCrashReportingSubtitle": "Anonieme crashdiagnostiek verzenden om bugs te helpen oplossen",
   "settingsCrashReportingRestartNote": "Wordt van kracht na het opnieuw opstarten van de app",

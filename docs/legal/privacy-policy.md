@@ -5,7 +5,7 @@
 > <https://mathrb.github.io/dartlodge/privacy.html> (the Google Play privacy
 > policy URL). **Keep the two in sync** when either changes.
 
-**Effective date:** 2026-09-03
+**Effective date:** 2026-11-22
 
 DartLodge is a local-first, open-source darts scoring and statistics app. This
 policy explains what data the app handles and what (very little) leaves your
@@ -132,4 +132,4 @@ with a new effective date.
 
 ## Contact
 
-Questions about this policy or your data: **mathrb@gmail.com**
+Questions about this policy or your data: **dartlodge@gmail.com**
