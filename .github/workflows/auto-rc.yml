@@ -1,9 +1,10 @@
 name: Auto RC
 
 # Tags every main commit whose Test run passed as `v<pubspec-version>-rc<N>`
-# and triggers release.yml to build a pre-release APK. Manual `vX.Y.Z` tags
-# continue to work unchanged via release.yml's own `push: tags: ['v*']`
-# trigger.
+# and triggers release.yml to build the pre-release APK + AAB (and upload the
+# AAB to Google Play testing). A manual `vX.Y.Z` tag on an RC-tagged commit
+# runs release.yml through its own `push: tags: ['v*']` trigger, which
+# promotes that RC instead of rebuilding.
 #
 # Triggered by the Test workflow finishing, not by the push itself, so a
 # commit that turns main red (e.g. two individually green PRs that conflict
