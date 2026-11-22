@@ -146,7 +146,7 @@ final class ModelUpdateControllerProvider
 }
 
 String _$modelUpdateControllerHash() =>
-    r'98ed42e319e2d3e365364ae34c1f4e7546019350';
+    r'9bfed85d006704a849d538aa7c0866da4d49bde3';
 
 /// Drives + exposes the OTA lifecycle for the settings row and the launch host.
 /// State is the current [ModelUpdateStatus]; [checkNow] runs a background check

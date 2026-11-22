@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'active_practice_state.dart';
@@ -9,6 +9,7 @@ part of 'active_practice_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -45,16 +46,21 @@ $ActivePracticeStateCopyWith<ActivePracticeState> get copyWith => _$ActivePracti
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.turnBusted, turnBusted) || other.turnBusted == turnBusted)&&(identical(other.wasEndedManually, wasEndedManually) || other.wasEndedManually == wasEndedManually));
+  final _this = this as ActivePracticeState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActivePracticeState&&(identical(other.gameState, _this.gameState) || other.gameState == _this.gameState)&&(identical(other.pendingGameWinnerId, _this.pendingGameWinnerId) || other.pendingGameWinnerId == _this.pendingGameWinnerId)&&(identical(other.showShanghaiBonus, _this.showShanghaiBonus) || other.showShanghaiBonus == _this.showShanghaiBonus)&&(identical(other.showBust, _this.showBust) || other.showBust == _this.showBust)&&(identical(other.turnBusted, _this.turnBusted) || other.turnBusted == _this.turnBusted)&&(identical(other.wasEndedManually, _this.wasEndedManually) || other.wasEndedManually == _this.wasEndedManually));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus,showBust,turnBusted,wasEndedManually);
+int get hashCode {
+  final _this = this as ActivePracticeState;
+  return Object.hash(runtimeType,_this.gameState,_this.pendingGameWinnerId,_this.showShanghaiBonus,_this.showBust,_this.turnBusted,_this.wasEndedManually);
+}
 
 @override
 String toString() {
-  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus, showBust: $showBust, turnBusted: $turnBusted, wasEndedManually: $wasEndedManually)';
+  final _this = this as ActivePracticeState;
+  return 'ActivePracticeState(gameState: ${_this.gameState}, pendingGameWinnerId: ${_this.pendingGameWinnerId}, showShanghaiBonus: ${_this.showShanghaiBonus}, showBust: ${_this.showBust}, turnBusted: ${_this.turnBusted}, wasEndedManually: ${_this.wasEndedManually})';
 }
 
 
@@ -83,7 +89,7 @@ class _$ActivePracticeStateCopyWithImpl<$Res>
 /// Create a copy of ActivePracticeState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? pendingGameWinnerId = freezed,Object? showShanghaiBonus = null,Object? showBust = null,Object? turnBusted = null,Object? wasEndedManually = null,}) {
-  return _then(_self.copyWith(
+  return _then(ActivePracticeState(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,pendingGameWinnerId: freezed == pendingGameWinnerId ? _self.pendingGameWinnerId : pendingGameWinnerId // ignore: cast_nullable_to_non_nullable
 as String?,showShanghaiBonus: null == showShanghaiBonus ? _self.showShanghaiBonus : showShanghaiBonus // ignore: cast_nullable_to_non_nullable
@@ -280,16 +286,18 @@ _$ActivePracticeStateCopyWith<_ActivePracticeState> get copyWith => __$ActivePra
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.turnBusted, turnBusted) || other.turnBusted == turnBusted)&&(identical(other.wasEndedManually, wasEndedManually) || other.wasEndedManually == wasEndedManually));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActivePracticeState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.showShanghaiBonus, showShanghaiBonus) || other.showShanghaiBonus == showShanghaiBonus)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.turnBusted, turnBusted) || other.turnBusted == turnBusted)&&(identical(other.wasEndedManually, wasEndedManually) || other.wasEndedManually == wasEndedManually));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus,showBust,turnBusted,wasEndedManually);
+int get hashCode {
+    return Object.hash(runtimeType,gameState,pendingGameWinnerId,showShanghaiBonus,showBust,turnBusted,wasEndedManually);
+}
 
 @override
 String toString() {
-  return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus, showBust: $showBust, turnBusted: $turnBusted, wasEndedManually: $wasEndedManually)';
+    return 'ActivePracticeState(gameState: $gameState, pendingGameWinnerId: $pendingGameWinnerId, showShanghaiBonus: $showShanghaiBonus, showBust: $showBust, turnBusted: $turnBusted, wasEndedManually: $wasEndedManually)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'player.dart';
@@ -9,6 +9,7 @@ part of 'player.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $PlayerCopyWith<Player> get copyWith => _$PlayerCopyWithImpl<Player>(this as Pla
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Player&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActive, lastActive) || other.lastActive == lastActive));
+  final _this = this as Player;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Player&&(identical(other.playerId, _this.playerId) || other.playerId == _this.playerId)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.lastActive, _this.lastActive) || other.lastActive == _this.lastActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,name,createdAt,lastActive);
+int get hashCode {
+  final _this = this as Player;
+  return Object.hash(runtimeType,_this.playerId,_this.name,_this.createdAt,_this.lastActive);
+}
 
 @override
 String toString() {
-  return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
+  final _this = this as Player;
+  return 'Player(playerId: ${_this.playerId}, name: ${_this.name}, createdAt: ${_this.createdAt}, lastActive: ${_this.lastActive})';
 }
 
 
@@ -66,7 +72,7 @@ class _$PlayerCopyWithImpl<$Res>
 /// Create a copy of Player
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? name = null,Object? createdAt = null,Object? lastActive = null,}) {
-  return _then(_self.copyWith(
+  return _then(Player(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Player&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActive, lastActive) || other.lastActive == lastActive));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Player&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.name, name) || other.name == name)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.lastActive, lastActive) || other.lastActive == lastActive));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,name,createdAt,lastActive);
+int get hashCode {
+    return Object.hash(runtimeType,playerId,name,createdAt,lastActive);
+}
 
 @override
 String toString() {
-  return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
+    return 'Player(playerId: $playerId, name: $name, createdAt: $createdAt, lastActive: $lastActive)';
 }
 
 

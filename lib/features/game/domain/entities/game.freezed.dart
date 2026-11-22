@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game.dart';
@@ -9,6 +9,7 @@ part of 'game.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $GameCopyWith<Game> get copyWith => _$GameCopyWithImpl<Game>(this as Game, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+  final _this = this as Game;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Game&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.gameType, _this.gameType) || other.gameType == _this.gameType)&&(identical(other.config, _this.config) || other.config == _this.config)&&(identical(other.startTime, _this.startTime) || other.startTime == _this.startTime)&&(identical(other.endTime, _this.endTime) || other.endTime == _this.endTime)&&(identical(other.winnerCompetitorId, _this.winnerCompetitorId) || other.winnerCompetitorId == _this.winnerCompetitorId)&&(identical(other.isComplete, _this.isComplete) || other.isComplete == _this.isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete);
+int get hashCode {
+  final _this = this as Game;
+  return Object.hash(runtimeType,_this.gameId,_this.gameType,_this.config,_this.startTime,_this.endTime,_this.winnerCompetitorId,_this.isComplete);
+}
 
 @override
 String toString() {
-  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete)';
+  final _this = this as Game;
+  return 'Game(gameId: ${_this.gameId}, gameType: ${_this.gameType}, config: ${_this.config}, startTime: ${_this.startTime}, endTime: ${_this.endTime}, winnerCompetitorId: ${_this.winnerCompetitorId}, isComplete: ${_this.isComplete})';
 }
 
 
@@ -66,7 +72,7 @@ class _$GameCopyWithImpl<$Res>
 /// Create a copy of Game
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? gameId = null,Object? gameType = null,Object? config = null,Object? startTime = null,Object? endTime = freezed,Object? winnerCompetitorId = freezed,Object? isComplete = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Game(
 gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
 as GameType,config: null == config ? _self.config : config // ignore: cast_nullable_to_non_nullable
@@ -248,16 +254,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Game&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&(identical(other.startTime, startTime) || other.startTime == startTime)&&(identical(other.endTime, endTime) || other.endTime == endTime)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.isComplete, isComplete) || other.isComplete == isComplete));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete);
+int get hashCode {
+    return Object.hash(runtimeType,gameId,gameType,config,startTime,endTime,winnerCompetitorId,isComplete);
+}
 
 @override
 String toString() {
-  return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete)';
+    return 'Game(gameId: $gameId, gameType: $gameType, config: $config, startTime: $startTime, endTime: $endTime, winnerCompetitorId: $winnerCompetitorId, isComplete: $isComplete)';
 }
 
 

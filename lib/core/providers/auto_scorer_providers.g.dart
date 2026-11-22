@@ -299,8 +299,10 @@ abstract class _$ActiveCaptureCorrectionSink
   }
 }
 
-/// A monotonically increasing counter bumped by the auto-scorer each time a
-/// training frame is actually written to the capture store (#762).
+/// A monotonically increasing counter bumped by the auto-scorer when a training
+/// frame is written to the capture store while the overlay that ordered it is
+/// still running (#762) — the same guard the in-game counter has carried since
+/// #742, so the two always move together.
 ///
 /// The acknowledgement of a contribution has to happen where the player is
 /// looking — the dart band they just tapped — but the band belongs to the game
@@ -315,8 +317,10 @@ abstract class _$ActiveCaptureCorrectionSink
 @ProviderFor(TrainingCaptureSignal)
 final trainingCaptureSignalProvider = TrainingCaptureSignalProvider._();
 
-/// A monotonically increasing counter bumped by the auto-scorer each time a
-/// training frame is actually written to the capture store (#762).
+/// A monotonically increasing counter bumped by the auto-scorer when a training
+/// frame is written to the capture store while the overlay that ordered it is
+/// still running (#762) — the same guard the in-game counter has carried since
+/// #742, so the two always move together.
 ///
 /// The acknowledgement of a contribution has to happen where the player is
 /// looking — the dart band they just tapped — but the band belongs to the game
@@ -329,8 +333,10 @@ final trainingCaptureSignalProvider = TrainingCaptureSignalProvider._();
 /// capture store is a stub), so a listener needs no guard of its own.
 final class TrainingCaptureSignalProvider
     extends $NotifierProvider<TrainingCaptureSignal, int> {
-  /// A monotonically increasing counter bumped by the auto-scorer each time a
-  /// training frame is actually written to the capture store (#762).
+  /// A monotonically increasing counter bumped by the auto-scorer when a training
+  /// frame is written to the capture store while the overlay that ordered it is
+  /// still running (#762) — the same guard the in-game counter has carried since
+  /// #742, so the two always move together.
   ///
   /// The acknowledgement of a contribution has to happen where the player is
   /// looking — the dart band they just tapped — but the band belongs to the game
@@ -371,8 +377,10 @@ final class TrainingCaptureSignalProvider
 String _$trainingCaptureSignalHash() =>
     r'1864c0d378199ecbeb49a9882b5a63b238914f15';
 
-/// A monotonically increasing counter bumped by the auto-scorer each time a
-/// training frame is actually written to the capture store (#762).
+/// A monotonically increasing counter bumped by the auto-scorer when a training
+/// frame is written to the capture store while the overlay that ordered it is
+/// still running (#762) — the same guard the in-game counter has carried since
+/// #742, so the two always move together.
 ///
 /// The acknowledgement of a contribution has to happen where the player is
 /// looking — the dart band they just tapped — but the band belongs to the game

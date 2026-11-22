@@ -4972,28 +4972,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ]);
 }
 
-typedef $$AccountsTableCreateCompanionBuilder =
-    AccountsCompanion Function({
-      required String accountId,
-      required String email,
-      Value<String?> accessToken,
-      Value<String?> refreshToken,
-      required String backendUrl,
-      required String createdAt,
-      Value<String?> lastLoginAt,
-      Value<int> rowid,
-    });
-typedef $$AccountsTableUpdateCompanionBuilder =
-    AccountsCompanion Function({
-      Value<String> accountId,
-      Value<String> email,
-      Value<String?> accessToken,
-      Value<String?> refreshToken,
-      Value<String> backendUrl,
-      Value<String> createdAt,
-      Value<String?> lastLoginAt,
-      Value<int> rowid,
-    });
+typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
+  required String accountId,
+  required String email,
+  Value<String?> accessToken,
+  Value<String?> refreshToken,
+  required String backendUrl,
+  required String createdAt,
+  Value<String?> lastLoginAt,
+  Value<int> rowid,
+});
+typedef $$AccountsTableUpdateCompanionBuilder = AccountsCompanion Function({
+  Value<String> accountId,
+  Value<String> email,
+  Value<String?> accessToken,
+  Value<String?> refreshToken,
+  Value<String> backendUrl,
+  Value<String> createdAt,
+  Value<String?> lastLoginAt,
+  Value<int> rowid,
+});
 
 final class $$AccountsTableReferences
     extends BaseReferences<_$AppDatabase, $AccountsTable, Account> {
@@ -5267,7 +5265,7 @@ class $$AccountsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$AccountsTable, Account>(table),
                   $$AccountsTableReferences(db, table, e),
                 ),
               )
@@ -5314,26 +5312,24 @@ typedef $$AccountsTableProcessedTableManager =
       Account,
       PrefetchHooks Function({bool playersRefs})
     >;
-typedef $$PlayersTableCreateCompanionBuilder =
-    PlayersCompanion Function({
-      required String playerId,
-      required String name,
-      required String createdAt,
-      required String lastActive,
-      Value<String?> accountId,
-      Value<String?> avatarUrl,
-      Value<int> rowid,
-    });
-typedef $$PlayersTableUpdateCompanionBuilder =
-    PlayersCompanion Function({
-      Value<String> playerId,
-      Value<String> name,
-      Value<String> createdAt,
-      Value<String> lastActive,
-      Value<String?> accountId,
-      Value<String?> avatarUrl,
-      Value<int> rowid,
-    });
+typedef $$PlayersTableCreateCompanionBuilder = PlayersCompanion Function({
+  required String playerId,
+  required String name,
+  required String createdAt,
+  required String lastActive,
+  Value<String?> accountId,
+  Value<String?> avatarUrl,
+  Value<int> rowid,
+});
+typedef $$PlayersTableUpdateCompanionBuilder = PlayersCompanion Function({
+  Value<String> playerId,
+  Value<String> name,
+  Value<String> createdAt,
+  Value<String> lastActive,
+  Value<String?> accountId,
+  Value<String?> avatarUrl,
+  Value<int> rowid,
+});
 
 final class $$PlayersTableReferences
     extends BaseReferences<_$AppDatabase, $PlayersTable, Player> {
@@ -5960,7 +5956,7 @@ class $$PlayersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$PlayersTable, Player>(table),
                   $$PlayersTableReferences(db, table, e),
                 ),
               )
@@ -6000,17 +5996,15 @@ class $$PlayersTableTableManager
                         >
                       >(state) {
                         if (accountId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.accountId,
-                                    referencedTable: $$PlayersTableReferences
-                                        ._accountIdTable(db),
-                                    referencedColumn: $$PlayersTableReferences
-                                        ._accountIdTable(db)
-                                        .accountId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.accountId,
+                            referencedTable: $$PlayersTableReferences
+                                ._accountIdTable(db),
+                            referencedColumn: $$PlayersTableReferences
+                                ._accountIdTable(db)
+                                .accountId,
+                          ) as T;
                         }
 
                         return state;
@@ -6151,30 +6145,28 @@ typedef $$PlayersTableProcessedTableManager =
         bool unlockedAchievementsRefs,
       })
     >;
-typedef $$GamesTableCreateCompanionBuilder =
-    GamesCompanion Function({
-      required String gameId,
-      required String gameType,
-      required String configJson,
-      required String startTime,
-      Value<String?> endTime,
-      Value<String?> winnerCompetitorId,
-      Value<int> isComplete,
-      Value<String?> gameStateJson,
-      Value<int> rowid,
-    });
-typedef $$GamesTableUpdateCompanionBuilder =
-    GamesCompanion Function({
-      Value<String> gameId,
-      Value<String> gameType,
-      Value<String> configJson,
-      Value<String> startTime,
-      Value<String?> endTime,
-      Value<String?> winnerCompetitorId,
-      Value<int> isComplete,
-      Value<String?> gameStateJson,
-      Value<int> rowid,
-    });
+typedef $$GamesTableCreateCompanionBuilder = GamesCompanion Function({
+  required String gameId,
+  required String gameType,
+  required String configJson,
+  required String startTime,
+  Value<String?> endTime,
+  Value<String?> winnerCompetitorId,
+  Value<int> isComplete,
+  Value<String?> gameStateJson,
+  Value<int> rowid,
+});
+typedef $$GamesTableUpdateCompanionBuilder = GamesCompanion Function({
+  Value<String> gameId,
+  Value<String> gameType,
+  Value<String> configJson,
+  Value<String> startTime,
+  Value<String?> endTime,
+  Value<String?> winnerCompetitorId,
+  Value<int> isComplete,
+  Value<String?> gameStateJson,
+  Value<int> rowid,
+});
 
 final class $$GamesTableReferences
     extends BaseReferences<_$AppDatabase, $GamesTable, Game> {
@@ -6749,8 +6741,10 @@ class $$GamesTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$GamesTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$GamesTable, Game>(table),
+                  $$GamesTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -7285,7 +7279,7 @@ class $$CompetitorsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CompetitorsTable, Competitor>(table),
                   $$CompetitorsTableReferences(db, table, e),
                 ),
               )
@@ -7319,19 +7313,15 @@ class $$CompetitorsTableTableManager
                         >
                       >(state) {
                         if (gameId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.gameId,
-                                    referencedTable:
-                                        $$CompetitorsTableReferences
-                                            ._gameIdTable(db),
-                                    referencedColumn:
-                                        $$CompetitorsTableReferences
-                                            ._gameIdTable(db)
-                                            .gameId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.gameId,
+                            referencedTable: $$CompetitorsTableReferences
+                                ._gameIdTable(db),
+                            referencedColumn: $$CompetitorsTableReferences
+                                ._gameIdTable(db)
+                                .gameId,
+                          ) as T;
                         }
 
                         return state;
@@ -7712,7 +7702,7 @@ class $$CompetitorPlayersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CompetitorPlayersTable, CompetitorPlayer>(table),
                   $$CompetitorPlayersTableReferences(db, table, e),
                 ),
               )
@@ -7738,34 +7728,26 @@ class $$CompetitorPlayersTableTableManager
                     >
                   >(state) {
                     if (competitorId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.competitorId,
-                                referencedTable:
-                                    $$CompetitorPlayersTableReferences
-                                        ._competitorIdTable(db),
-                                referencedColumn:
-                                    $$CompetitorPlayersTableReferences
-                                        ._competitorIdTable(db)
-                                        .competitorId,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.competitorId,
+                        referencedTable: $$CompetitorPlayersTableReferences
+                            ._competitorIdTable(db),
+                        referencedColumn: $$CompetitorPlayersTableReferences
+                            ._competitorIdTable(db)
+                            .competitorId,
+                      ) as T;
                     }
                     if (playerId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.playerId,
-                                referencedTable:
-                                    $$CompetitorPlayersTableReferences
-                                        ._playerIdTable(db),
-                                referencedColumn:
-                                    $$CompetitorPlayersTableReferences
-                                        ._playerIdTable(db)
-                                        .playerId,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.playerId,
+                        referencedTable: $$CompetitorPlayersTableReferences
+                            ._playerIdTable(db),
+                        referencedColumn: $$CompetitorPlayersTableReferences
+                            ._playerIdTable(db)
+                            .playerId,
+                      ) as T;
                     }
 
                     return state;
@@ -7793,34 +7775,32 @@ typedef $$CompetitorPlayersTableProcessedTableManager =
       CompetitorPlayer,
       PrefetchHooks Function({bool competitorId, bool playerId})
     >;
-typedef $$DartThrowsTableCreateCompanionBuilder =
-    DartThrowsCompanion Function({
-      required String dartId,
-      required String gameId,
-      required String competitorId,
-      required String playerId,
-      required int turnNumber,
-      required int dartNumber,
-      required String segment,
-      required int score,
-      Value<double?> x,
-      Value<double?> y,
-      Value<int> rowid,
-    });
-typedef $$DartThrowsTableUpdateCompanionBuilder =
-    DartThrowsCompanion Function({
-      Value<String> dartId,
-      Value<String> gameId,
-      Value<String> competitorId,
-      Value<String> playerId,
-      Value<int> turnNumber,
-      Value<int> dartNumber,
-      Value<String> segment,
-      Value<int> score,
-      Value<double?> x,
-      Value<double?> y,
-      Value<int> rowid,
-    });
+typedef $$DartThrowsTableCreateCompanionBuilder = DartThrowsCompanion Function({
+  required String dartId,
+  required String gameId,
+  required String competitorId,
+  required String playerId,
+  required int turnNumber,
+  required int dartNumber,
+  required String segment,
+  required int score,
+  Value<double?> x,
+  Value<double?> y,
+  Value<int> rowid,
+});
+typedef $$DartThrowsTableUpdateCompanionBuilder = DartThrowsCompanion Function({
+  Value<String> dartId,
+  Value<String> gameId,
+  Value<String> competitorId,
+  Value<String> playerId,
+  Value<int> turnNumber,
+  Value<int> dartNumber,
+  Value<String> segment,
+  Value<int> score,
+  Value<double?> x,
+  Value<double?> y,
+  Value<int> rowid,
+});
 
 final class $$DartThrowsTableReferences
     extends BaseReferences<_$AppDatabase, $DartThrowsTable, DartThrow> {
@@ -8296,7 +8276,7 @@ class $$DartThrowsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$DartThrowsTable, DartThrow>(table),
                   $$DartThrowsTableReferences(db, table, e),
                 ),
               )
@@ -8323,46 +8303,37 @@ class $$DartThrowsTableTableManager
                         >
                       >(state) {
                         if (gameId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.gameId,
-                                    referencedTable: $$DartThrowsTableReferences
-                                        ._gameIdTable(db),
-                                    referencedColumn:
-                                        $$DartThrowsTableReferences
-                                            ._gameIdTable(db)
-                                            .gameId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.gameId,
+                            referencedTable: $$DartThrowsTableReferences
+                                ._gameIdTable(db),
+                            referencedColumn: $$DartThrowsTableReferences
+                                ._gameIdTable(db)
+                                .gameId,
+                          ) as T;
                         }
                         if (competitorId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.competitorId,
-                                    referencedTable: $$DartThrowsTableReferences
-                                        ._competitorIdTable(db),
-                                    referencedColumn:
-                                        $$DartThrowsTableReferences
-                                            ._competitorIdTable(db)
-                                            .competitorId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.competitorId,
+                            referencedTable: $$DartThrowsTableReferences
+                                ._competitorIdTable(db),
+                            referencedColumn: $$DartThrowsTableReferences
+                                ._competitorIdTable(db)
+                                .competitorId,
+                          ) as T;
                         }
                         if (playerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.playerId,
-                                    referencedTable: $$DartThrowsTableReferences
-                                        ._playerIdTable(db),
-                                    referencedColumn:
-                                        $$DartThrowsTableReferences
-                                            ._playerIdTable(db)
-                                            .playerId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.playerId,
+                            referencedTable: $$DartThrowsTableReferences
+                                ._playerIdTable(db),
+                            referencedColumn: $$DartThrowsTableReferences
+                                ._playerIdTable(db)
+                                .playerId,
+                          ) as T;
                         }
 
                         return state;
@@ -8390,34 +8361,32 @@ typedef $$DartThrowsTableProcessedTableManager =
       DartThrow,
       PrefetchHooks Function({bool gameId, bool competitorId, bool playerId})
     >;
-typedef $$GameEventsTableCreateCompanionBuilder =
-    GameEventsCompanion Function({
-      required String eventId,
-      required String gameId,
-      required String eventType,
-      required int localSequence,
-      required String occurredAt,
-      required String payloadJson,
-      Value<int> synced,
-      required String actorId,
-      Value<int?> globalSequence,
-      Value<int> source,
-      Value<int> rowid,
-    });
-typedef $$GameEventsTableUpdateCompanionBuilder =
-    GameEventsCompanion Function({
-      Value<String> eventId,
-      Value<String> gameId,
-      Value<String> eventType,
-      Value<int> localSequence,
-      Value<String> occurredAt,
-      Value<String> payloadJson,
-      Value<int> synced,
-      Value<String> actorId,
-      Value<int?> globalSequence,
-      Value<int> source,
-      Value<int> rowid,
-    });
+typedef $$GameEventsTableCreateCompanionBuilder = GameEventsCompanion Function({
+  required String eventId,
+  required String gameId,
+  required String eventType,
+  required int localSequence,
+  required String occurredAt,
+  required String payloadJson,
+  Value<int> synced,
+  required String actorId,
+  Value<int?> globalSequence,
+  Value<int> source,
+  Value<int> rowid,
+});
+typedef $$GameEventsTableUpdateCompanionBuilder = GameEventsCompanion Function({
+  Value<String> eventId,
+  Value<String> gameId,
+  Value<String> eventType,
+  Value<int> localSequence,
+  Value<String> occurredAt,
+  Value<String> payloadJson,
+  Value<int> synced,
+  Value<String> actorId,
+  Value<int?> globalSequence,
+  Value<int> source,
+  Value<int> rowid,
+});
 
 final class $$GameEventsTableReferences
     extends BaseReferences<_$AppDatabase, $GameEventsTable, GameEvent> {
@@ -8746,7 +8715,7 @@ class $$GameEventsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GameEventsTable, GameEvent>(table),
                   $$GameEventsTableReferences(db, table, e),
                 ),
               )
@@ -8772,17 +8741,15 @@ class $$GameEventsTableTableManager
                     >
                   >(state) {
                     if (gameId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.gameId,
-                                referencedTable: $$GameEventsTableReferences
-                                    ._gameIdTable(db),
-                                referencedColumn: $$GameEventsTableReferences
-                                    ._gameIdTable(db)
-                                    .gameId,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.gameId,
+                        referencedTable: $$GameEventsTableReferences
+                            ._gameIdTable(db),
+                        referencedColumn: $$GameEventsTableReferences
+                            ._gameIdTable(db)
+                            .gameId,
+                      ) as T;
                     }
 
                     return state;
@@ -8810,34 +8777,32 @@ typedef $$GameEventsTableProcessedTableManager =
       GameEvent,
       PrefetchHooks Function({bool gameId})
     >;
-typedef $$SyncQueueTableCreateCompanionBuilder =
-    SyncQueueCompanion Function({
-      required String operationId,
-      required String entityType,
-      required String entityId,
-      required String operationType,
-      required String payloadJson,
-      Value<String> status,
-      Value<int> attemptCount,
-      required String createdAt,
-      Value<String?> lastAttempt,
-      Value<String?> errorMessage,
-      Value<int> rowid,
-    });
-typedef $$SyncQueueTableUpdateCompanionBuilder =
-    SyncQueueCompanion Function({
-      Value<String> operationId,
-      Value<String> entityType,
-      Value<String> entityId,
-      Value<String> operationType,
-      Value<String> payloadJson,
-      Value<String> status,
-      Value<int> attemptCount,
-      Value<String> createdAt,
-      Value<String?> lastAttempt,
-      Value<String?> errorMessage,
-      Value<int> rowid,
-    });
+typedef $$SyncQueueTableCreateCompanionBuilder = SyncQueueCompanion Function({
+  required String operationId,
+  required String entityType,
+  required String entityId,
+  required String operationType,
+  required String payloadJson,
+  Value<String> status,
+  Value<int> attemptCount,
+  required String createdAt,
+  Value<String?> lastAttempt,
+  Value<String?> errorMessage,
+  Value<int> rowid,
+});
+typedef $$SyncQueueTableUpdateCompanionBuilder = SyncQueueCompanion Function({
+  Value<String> operationId,
+  Value<String> entityType,
+  Value<String> entityId,
+  Value<String> operationType,
+  Value<String> payloadJson,
+  Value<String> status,
+  Value<int> attemptCount,
+  Value<String> createdAt,
+  Value<String?> lastAttempt,
+  Value<String?> errorMessage,
+  Value<int> rowid,
+});
 
 class $$SyncQueueTableFilterComposer
     extends Composer<_$AppDatabase, $SyncQueueTable> {
@@ -9095,7 +9060,16 @@ class $$SyncQueueTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SyncQueueTable, SyncQueueData>(table),
+                  BaseReferences<_$AppDatabase, $SyncQueueTable, SyncQueueData>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9581,7 +9555,7 @@ class $$GameSessionsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$GameSessionsTable, GameSession>(table),
                   $$GameSessionsTableReferences(db, table, e),
                 ),
               )
@@ -9612,49 +9586,37 @@ class $$GameSessionsTableTableManager
                         >
                       >(state) {
                         if (gameId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.gameId,
-                                    referencedTable:
-                                        $$GameSessionsTableReferences
-                                            ._gameIdTable(db),
-                                    referencedColumn:
-                                        $$GameSessionsTableReferences
-                                            ._gameIdTable(db)
-                                            .gameId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.gameId,
+                            referencedTable: $$GameSessionsTableReferences
+                                ._gameIdTable(db),
+                            referencedColumn: $$GameSessionsTableReferences
+                                ._gameIdTable(db)
+                                .gameId,
+                          ) as T;
                         }
                         if (hostPlayerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.hostPlayerId,
-                                    referencedTable:
-                                        $$GameSessionsTableReferences
-                                            ._hostPlayerIdTable(db),
-                                    referencedColumn:
-                                        $$GameSessionsTableReferences
-                                            ._hostPlayerIdTable(db)
-                                            .playerId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.hostPlayerId,
+                            referencedTable: $$GameSessionsTableReferences
+                                ._hostPlayerIdTable(db),
+                            referencedColumn: $$GameSessionsTableReferences
+                                ._hostPlayerIdTable(db)
+                                .playerId,
+                          ) as T;
                         }
                         if (currentTurnPlayerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.currentTurnPlayerId,
-                                    referencedTable:
-                                        $$GameSessionsTableReferences
-                                            ._currentTurnPlayerIdTable(db),
-                                    referencedColumn:
-                                        $$GameSessionsTableReferences
-                                            ._currentTurnPlayerIdTable(db)
-                                            .playerId,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.currentTurnPlayerId,
+                            referencedTable: $$GameSessionsTableReferences
+                                ._currentTurnPlayerIdTable(db),
+                            referencedColumn: $$GameSessionsTableReferences
+                                ._currentTurnPlayerIdTable(db)
+                                .playerId,
+                          ) as T;
                         }
 
                         return state;
@@ -10014,7 +9976,9 @@ class $$UnlockedAchievementsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$UnlockedAchievementsTable, UnlockedAchievement>(
+                    table,
+                  ),
                   $$UnlockedAchievementsTableReferences(db, table, e),
                 ),
               )
@@ -10040,34 +10004,26 @@ class $$UnlockedAchievementsTableTableManager
                     >
                   >(state) {
                     if (playerId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.playerId,
-                                referencedTable:
-                                    $$UnlockedAchievementsTableReferences
-                                        ._playerIdTable(db),
-                                referencedColumn:
-                                    $$UnlockedAchievementsTableReferences
-                                        ._playerIdTable(db)
-                                        .playerId,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.playerId,
+                        referencedTable: $$UnlockedAchievementsTableReferences
+                            ._playerIdTable(db),
+                        referencedColumn: $$UnlockedAchievementsTableReferences
+                            ._playerIdTable(db)
+                            .playerId,
+                      ) as T;
                     }
                     if (gameId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.gameId,
-                                referencedTable:
-                                    $$UnlockedAchievementsTableReferences
-                                        ._gameIdTable(db),
-                                referencedColumn:
-                                    $$UnlockedAchievementsTableReferences
-                                        ._gameIdTable(db)
-                                        .gameId,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.gameId,
+                        referencedTable: $$UnlockedAchievementsTableReferences
+                            ._gameIdTable(db),
+                        referencedColumn: $$UnlockedAchievementsTableReferences
+                            ._gameIdTable(db)
+                            .gameId,
+                      ) as T;
                     }
 
                     return state;

@@ -8,27 +8,30 @@ part of 'session_recording_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The "Record sessions (debug)" opt-in (#490) — distinct from the training
-/// "Collect data" toggle. Default **off**: recording is a debugging aid the user
-/// turns on before reproducing a bug; off means zero trace files are written.
-/// The trace is lightweight (detection boxes, no photos), so this is a separate,
-/// lighter-footprint switch.
+/// The session-recording opt-in (#490): persist the detection trace (detection
+/// boxes, no photos) so a scoring bug can be replayed off-device. Default
+/// **off** — off means zero trace files are written. A distinct provider from
+/// [DataCollectionEnabled] (different pipeline), but since #686 a single
+/// "Record for debugging & training" Settings toggle drives both together (see
+/// `_setRecording`), so enabling recording also enables photo capture.
 
 @ProviderFor(SessionRecordingEnabled)
 final sessionRecordingEnabledProvider = SessionRecordingEnabledProvider._();
 
-/// The "Record sessions (debug)" opt-in (#490) — distinct from the training
-/// "Collect data" toggle. Default **off**: recording is a debugging aid the user
-/// turns on before reproducing a bug; off means zero trace files are written.
-/// The trace is lightweight (detection boxes, no photos), so this is a separate,
-/// lighter-footprint switch.
+/// The session-recording opt-in (#490): persist the detection trace (detection
+/// boxes, no photos) so a scoring bug can be replayed off-device. Default
+/// **off** — off means zero trace files are written. A distinct provider from
+/// [DataCollectionEnabled] (different pipeline), but since #686 a single
+/// "Record for debugging & training" Settings toggle drives both together (see
+/// `_setRecording`), so enabling recording also enables photo capture.
 final class SessionRecordingEnabledProvider
     extends $AsyncNotifierProvider<SessionRecordingEnabled, bool> {
-  /// The "Record sessions (debug)" opt-in (#490) — distinct from the training
-  /// "Collect data" toggle. Default **off**: recording is a debugging aid the user
-  /// turns on before reproducing a bug; off means zero trace files are written.
-  /// The trace is lightweight (detection boxes, no photos), so this is a separate,
-  /// lighter-footprint switch.
+  /// The session-recording opt-in (#490): persist the detection trace (detection
+  /// boxes, no photos) so a scoring bug can be replayed off-device. Default
+  /// **off** — off means zero trace files are written. A distinct provider from
+  /// [DataCollectionEnabled] (different pipeline), but since #686 a single
+  /// "Record for debugging & training" Settings toggle drives both together (see
+  /// `_setRecording`), so enabling recording also enables photo capture.
   SessionRecordingEnabledProvider._()
     : super(
         from: null,
@@ -51,11 +54,12 @@ final class SessionRecordingEnabledProvider
 String _$sessionRecordingEnabledHash() =>
     r'85e2becec3e9ea4851519a5cb16816dc538a8a24';
 
-/// The "Record sessions (debug)" opt-in (#490) — distinct from the training
-/// "Collect data" toggle. Default **off**: recording is a debugging aid the user
-/// turns on before reproducing a bug; off means zero trace files are written.
-/// The trace is lightweight (detection boxes, no photos), so this is a separate,
-/// lighter-footprint switch.
+/// The session-recording opt-in (#490): persist the detection trace (detection
+/// boxes, no photos) so a scoring bug can be replayed off-device. Default
+/// **off** — off means zero trace files are written. A distinct provider from
+/// [DataCollectionEnabled] (different pipeline), but since #686 a single
+/// "Record for debugging & training" Settings toggle drives both together (see
+/// `_setRecording`), so enabling recording also enables photo capture.
 
 abstract class _$SessionRecordingEnabled extends $AsyncNotifier<bool> {
   FutureOr<bool> build();

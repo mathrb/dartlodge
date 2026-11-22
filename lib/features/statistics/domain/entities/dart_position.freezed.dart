@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'dart_position.dart';
@@ -9,6 +9,7 @@ part of 'dart_position.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DartPositionCopyWith<DartPosition> get copyWith => _$DartPositionCopyWithImpl<D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartPosition&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y)&&(identical(other.segment, segment) || other.segment == segment));
+  final _this = this as DartPosition;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartPosition&&(identical(other.x, _this.x) || other.x == _this.x)&&(identical(other.y, _this.y) || other.y == _this.y)&&(identical(other.segment, _this.segment) || other.segment == _this.segment));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,x,y,segment);
+int get hashCode {
+  final _this = this as DartPosition;
+  return Object.hash(runtimeType,_this.x,_this.y,_this.segment);
+}
 
 @override
 String toString() {
-  return 'DartPosition(x: $x, y: $y, segment: $segment)';
+  final _this = this as DartPosition;
+  return 'DartPosition(x: ${_this.x}, y: ${_this.y}, segment: ${_this.segment})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DartPositionCopyWithImpl<$Res>
 /// Create a copy of DartPosition
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? x = null,Object? y = null,Object? segment = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(DartPosition(
 x: null == x ? _self.x : x // ignore: cast_nullable_to_non_nullable
 as double,y: null == y ? _self.y : y // ignore: cast_nullable_to_non_nullable
 as double,segment: freezed == segment ? _self.segment : segment // ignore: cast_nullable_to_non_nullable
@@ -225,16 +231,18 @@ _$DartPositionCopyWith<_DartPosition> get copyWith => __$DartPositionCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartPosition&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y)&&(identical(other.segment, segment) || other.segment == segment));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartPosition&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y)&&(identical(other.segment, segment) || other.segment == segment));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,x,y,segment);
+int get hashCode {
+    return Object.hash(runtimeType,x,y,segment);
+}
 
 @override
 String toString() {
-  return 'DartPosition(x: $x, y: $y, segment: $segment)';
+    return 'DartPosition(x: $x, y: $y, segment: $segment)';
 }
 
 

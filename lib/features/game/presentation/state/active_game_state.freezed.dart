@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'active_game_state.dart';
@@ -9,6 +9,7 @@ part of 'active_game_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $ActiveGameStateCopyWith<ActiveGameState> get copyWith => _$ActiveGameStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.pendingCapSelection, pendingCapSelection) || other.pendingCapSelection == pendingCapSelection));
+  final _this = this as ActiveGameState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ActiveGameState&&(identical(other.gameState, _this.gameState) || other.gameState == _this.gameState)&&(identical(other.showBust, _this.showBust) || other.showBust == _this.showBust)&&(identical(other.pendingLegWinnerId, _this.pendingLegWinnerId) || other.pendingLegWinnerId == _this.pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, _this.pendingGameWinnerId) || other.pendingGameWinnerId == _this.pendingGameWinnerId)&&(identical(other.pendingCapSelection, _this.pendingCapSelection) || other.pendingCapSelection == _this.pendingCapSelection));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,showBust,pendingLegWinnerId,pendingGameWinnerId,pendingCapSelection);
+int get hashCode {
+  final _this = this as ActiveGameState;
+  return Object.hash(runtimeType,_this.gameState,_this.showBust,_this.pendingLegWinnerId,_this.pendingGameWinnerId,_this.pendingCapSelection);
+}
 
 @override
 String toString() {
-  return 'ActiveGameState(gameState: $gameState, showBust: $showBust, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId, pendingCapSelection: $pendingCapSelection)';
+  final _this = this as ActiveGameState;
+  return 'ActiveGameState(gameState: ${_this.gameState}, showBust: ${_this.showBust}, pendingLegWinnerId: ${_this.pendingLegWinnerId}, pendingGameWinnerId: ${_this.pendingGameWinnerId}, pendingCapSelection: ${_this.pendingCapSelection})';
 }
 
 
@@ -63,7 +69,7 @@ class _$ActiveGameStateCopyWithImpl<$Res>
 /// Create a copy of ActiveGameState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? gameState = null,Object? showBust = null,Object? pendingLegWinnerId = freezed,Object? pendingGameWinnerId = freezed,Object? pendingCapSelection = null,}) {
-  return _then(_self.copyWith(
+  return _then(ActiveGameState(
 gameState: null == gameState ? _self.gameState : gameState // ignore: cast_nullable_to_non_nullable
 as GameState,showBust: null == showBust ? _self.showBust : showBust // ignore: cast_nullable_to_non_nullable
 as bool,pendingLegWinnerId: freezed == pendingLegWinnerId ? _self.pendingLegWinnerId : pendingLegWinnerId // ignore: cast_nullable_to_non_nullable
@@ -238,16 +244,18 @@ _$ActiveGameStateCopyWith<_ActiveGameState> get copyWith => __$ActiveGameStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.pendingCapSelection, pendingCapSelection) || other.pendingCapSelection == pendingCapSelection));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ActiveGameState&&(identical(other.gameState, gameState) || other.gameState == gameState)&&(identical(other.showBust, showBust) || other.showBust == showBust)&&(identical(other.pendingLegWinnerId, pendingLegWinnerId) || other.pendingLegWinnerId == pendingLegWinnerId)&&(identical(other.pendingGameWinnerId, pendingGameWinnerId) || other.pendingGameWinnerId == pendingGameWinnerId)&&(identical(other.pendingCapSelection, pendingCapSelection) || other.pendingCapSelection == pendingCapSelection));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameState,showBust,pendingLegWinnerId,pendingGameWinnerId,pendingCapSelection);
+int get hashCode {
+    return Object.hash(runtimeType,gameState,showBust,pendingLegWinnerId,pendingGameWinnerId,pendingCapSelection);
+}
 
 @override
 String toString() {
-  return 'ActiveGameState(gameState: $gameState, showBust: $showBust, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId, pendingCapSelection: $pendingCapSelection)';
+    return 'ActiveGameState(gameState: $gameState, showBust: $showBust, pendingLegWinnerId: $pendingLegWinnerId, pendingGameWinnerId: $pendingGameWinnerId, pendingCapSelection: $pendingCapSelection)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_event.dart';
@@ -9,6 +9,7 @@ part of 'game_event.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $GameEventCopyWith<GameEvent> get copyWith => _$GameEventCopyWithImpl<GameEvent>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameEvent&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.localSequence, localSequence) || other.localSequence == localSequence)&&(identical(other.occurredAt, occurredAt) || other.occurredAt == occurredAt)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.synced, synced) || other.synced == synced)&&(identical(other.actorId, actorId) || other.actorId == actorId)&&(identical(other.globalSequence, globalSequence) || other.globalSequence == globalSequence)&&(identical(other.source, source) || other.source == source));
+  final _this = this as GameEvent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameEvent&&(identical(other.eventId, _this.eventId) || other.eventId == _this.eventId)&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.eventType, _this.eventType) || other.eventType == _this.eventType)&&(identical(other.localSequence, _this.localSequence) || other.localSequence == _this.localSequence)&&(identical(other.occurredAt, _this.occurredAt) || other.occurredAt == _this.occurredAt)&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&(identical(other.synced, _this.synced) || other.synced == _this.synced)&&(identical(other.actorId, _this.actorId) || other.actorId == _this.actorId)&&(identical(other.globalSequence, _this.globalSequence) || other.globalSequence == _this.globalSequence)&&(identical(other.source, _this.source) || other.source == _this.source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,eventId,gameId,eventType,localSequence,occurredAt,const DeepCollectionEquality().hash(payload),synced,actorId,globalSequence,source);
+int get hashCode {
+  final _this = this as GameEvent;
+  return Object.hash(runtimeType,_this.eventId,_this.gameId,_this.eventType,_this.localSequence,_this.occurredAt,const DeepCollectionEquality().hash(_this.payload),_this.synced,_this.actorId,_this.globalSequence,_this.source);
+}
 
 @override
 String toString() {
-  return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced, actorId: $actorId, globalSequence: $globalSequence, source: $source)';
+  final _this = this as GameEvent;
+  return 'GameEvent(eventId: ${_this.eventId}, gameId: ${_this.gameId}, eventType: ${_this.eventType}, localSequence: ${_this.localSequence}, occurredAt: ${_this.occurredAt}, payload: ${_this.payload}, synced: ${_this.synced}, actorId: ${_this.actorId}, globalSequence: ${_this.globalSequence}, source: ${_this.source})';
 }
 
 
@@ -66,7 +72,7 @@ class _$GameEventCopyWithImpl<$Res>
 /// Create a copy of GameEvent
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? eventId = null,Object? gameId = null,Object? eventType = null,Object? localSequence = null,Object? occurredAt = null,Object? payload = null,Object? synced = null,Object? actorId = null,Object? globalSequence = freezed,Object? source = null,}) {
-  return _then(_self.copyWith(
+  return _then(GameEvent(
 eventId: null == eventId ? _self.eventId : eventId // ignore: cast_nullable_to_non_nullable
 as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
@@ -218,7 +224,7 @@ return $default(_that.eventId,_that.gameId,_that.eventType,_that.localSequence,_
 @JsonSerializable()
 
 class _GameEvent implements GameEvent {
-  const _GameEvent({@JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'event_type') required this.eventType, @JsonKey(name: 'local_sequence') required this.localSequence, @JsonKey(name: 'occurred_at') required this.occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) required final  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) required this.synced, @JsonKey(name: 'actor_id') required this.actorId, @JsonKey(name: 'global_sequence') this.globalSequence, @JsonKey(name: 'source', fromJson: _parseSource, toJson: _sourceToInt) required this.source}): _payload = payload;
+  const _GameEvent({@JsonKey(name: 'event_id') required this.eventId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'event_type') required this.eventType, @JsonKey(name: 'local_sequence') required this.localSequence, @JsonKey(name: 'occurred_at') required this.occurredAt, @JsonKey(name: 'payload_json', fromJson: _parsePayload, toJson: _stringifyPayload) required  Map<String, dynamic> payload, @JsonKey(name: 'synced', fromJson: _parseBool, toJson: _boolToInt) required this.synced, @JsonKey(name: 'actor_id') required this.actorId, @JsonKey(name: 'global_sequence') this.globalSequence, @JsonKey(name: 'source', fromJson: _parseSource, toJson: _sourceToInt) required this.source}): _payload = payload;
   factory _GameEvent.fromJson(Map<String, dynamic> json) => _$GameEventFromJson(json);
 
 @override@JsonKey(name: 'event_id') final  String eventId;
@@ -251,16 +257,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameEvent&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.localSequence, localSequence) || other.localSequence == localSequence)&&(identical(other.occurredAt, occurredAt) || other.occurredAt == occurredAt)&&const DeepCollectionEquality().equals(other._payload, _payload)&&(identical(other.synced, synced) || other.synced == synced)&&(identical(other.actorId, actorId) || other.actorId == actorId)&&(identical(other.globalSequence, globalSequence) || other.globalSequence == globalSequence)&&(identical(other.source, source) || other.source == source));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameEvent&&(identical(other.eventId, eventId) || other.eventId == eventId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&(identical(other.localSequence, localSequence) || other.localSequence == localSequence)&&(identical(other.occurredAt, occurredAt) || other.occurredAt == occurredAt)&&const DeepCollectionEquality().equals(other.payload, _payload)&&(identical(other.synced, synced) || other.synced == synced)&&(identical(other.actorId, actorId) || other.actorId == actorId)&&(identical(other.globalSequence, globalSequence) || other.globalSequence == globalSequence)&&(identical(other.source, source) || other.source == source));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,eventId,gameId,eventType,localSequence,occurredAt,const DeepCollectionEquality().hash(_payload),synced,actorId,globalSequence,source);
+int get hashCode {
+    return Object.hash(runtimeType,eventId,gameId,eventType,localSequence,occurredAt,const DeepCollectionEquality().hash(_payload),synced,actorId,globalSequence,source);
+}
 
 @override
 String toString() {
-  return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced, actorId: $actorId, globalSequence: $globalSequence, source: $source)';
+    return 'GameEvent(eventId: $eventId, gameId: $gameId, eventType: $eventType, localSequence: $localSequence, occurredAt: $occurredAt, payload: $payload, synced: $synced, actorId: $actorId, globalSequence: $globalSequence, source: $source)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_setup_state.dart';
@@ -9,6 +9,7 @@ part of 'game_setup_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$GameSetupState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameSetupState);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GameSetupState);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GameSetupState()';
+    return 'GameSetupState()';
 }
 
 
@@ -209,7 +210,7 @@ class _SelectingType implements GameSetupState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectingType);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectingType);
 }
 
 
@@ -218,7 +219,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GameSetupState.selectingType()';
+    return 'GameSetupState.selectingType()';
 }
 
 
@@ -247,16 +248,18 @@ _$ConfiguringGameCopyWith<_ConfiguringGame> get copyWith => __$ConfiguringGameCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfiguringGame&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfiguringGame&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameType,config);
+int get hashCode {
+    return Object.hash(runtimeType,gameType,config);
+}
 
 @override
 String toString() {
-  return 'GameSetupState.configuringGame(gameType: $gameType, config: $config)';
+    return 'GameSetupState.configuringGame(gameType: $gameType, config: $config)';
 }
 
 
@@ -308,7 +311,7 @@ $GameConfigCopyWith<$Res> get config {
 
 
 class _SelectingPlayers implements GameSetupState {
-  const _SelectingPlayers({required this.gameType, required this.config, required final  List<String> selectedPlayerIds, final  Map<String, int> playerHandicaps = const <String, int>{}}): _selectedPlayerIds = selectedPlayerIds,_playerHandicaps = playerHandicaps;
+  const _SelectingPlayers({required this.gameType, required this.config, required  List<String> selectedPlayerIds,  Map<String, int> playerHandicaps = const <String, int>{}}): _selectedPlayerIds = selectedPlayerIds,_playerHandicaps = playerHandicaps;
   
 
  final  GameType gameType;
@@ -338,16 +341,18 @@ _$SelectingPlayersCopyWith<_SelectingPlayers> get copyWith => __$SelectingPlayer
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectingPlayers&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other._selectedPlayerIds, _selectedPlayerIds)&&const DeepCollectionEquality().equals(other._playerHandicaps, _playerHandicaps));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SelectingPlayers&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other.selectedPlayerIds, _selectedPlayerIds)&&const DeepCollectionEquality().equals(other.playerHandicaps, _playerHandicaps));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds),const DeepCollectionEquality().hash(_playerHandicaps));
+int get hashCode {
+    return Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds),const DeepCollectionEquality().hash(_playerHandicaps));
+}
 
 @override
 String toString() {
-  return 'GameSetupState.selectingPlayers(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds, playerHandicaps: $playerHandicaps)';
+    return 'GameSetupState.selectingPlayers(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds, playerHandicaps: $playerHandicaps)';
 }
 
 
@@ -401,7 +406,7 @@ $GameConfigCopyWith<$Res> get config {
 
 
 class _FormingTeams implements GameSetupState {
-  const _FormingTeams({required this.gameType, required this.config, required final  List<String> selectedPlayerIds}): _selectedPlayerIds = selectedPlayerIds;
+  const _FormingTeams({required this.gameType, required this.config, required  List<String> selectedPlayerIds}): _selectedPlayerIds = selectedPlayerIds;
   
 
  final  GameType gameType;
@@ -424,16 +429,18 @@ _$FormingTeamsCopyWith<_FormingTeams> get copyWith => __$FormingTeamsCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FormingTeams&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other._selectedPlayerIds, _selectedPlayerIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FormingTeams&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other.selectedPlayerIds, _selectedPlayerIds));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds));
+int get hashCode {
+    return Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds));
+}
 
 @override
 String toString() {
-  return 'GameSetupState.formingTeams(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds)';
+    return 'GameSetupState.formingTeams(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds)';
 }
 
 
@@ -486,7 +493,7 @@ $GameConfigCopyWith<$Res> get config {
 
 
 class _Ready implements GameSetupState {
-  const _Ready({required this.gameType, required this.config, required final  List<String> selectedPlayerIds, final  Map<String, int> playerHandicaps = const <String, int>{}}): _selectedPlayerIds = selectedPlayerIds,_playerHandicaps = playerHandicaps;
+  const _Ready({required this.gameType, required this.config, required  List<String> selectedPlayerIds,  Map<String, int> playerHandicaps = const <String, int>{}}): _selectedPlayerIds = selectedPlayerIds,_playerHandicaps = playerHandicaps;
   
 
  final  GameType gameType;
@@ -516,16 +523,18 @@ _$ReadyCopyWith<_Ready> get copyWith => __$ReadyCopyWithImpl<_Ready>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other._selectedPlayerIds, _selectedPlayerIds)&&const DeepCollectionEquality().equals(other._playerHandicaps, _playerHandicaps));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.config, config) || other.config == config)&&const DeepCollectionEquality().equals(other.selectedPlayerIds, _selectedPlayerIds)&&const DeepCollectionEquality().equals(other.playerHandicaps, _playerHandicaps));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds),const DeepCollectionEquality().hash(_playerHandicaps));
+int get hashCode {
+    return Object.hash(runtimeType,gameType,config,const DeepCollectionEquality().hash(_selectedPlayerIds),const DeepCollectionEquality().hash(_playerHandicaps));
+}
 
 @override
 String toString() {
-  return 'GameSetupState.ready(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds, playerHandicaps: $playerHandicaps)';
+    return 'GameSetupState.ready(gameType: $gameType, config: $config, selectedPlayerIds: $selectedPlayerIds, playerHandicaps: $playerHandicaps)';
 }
 
 
