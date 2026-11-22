@@ -1,4 +1,4 @@
-import 'package:dart_lodge/features/auto_scorer/domain/sharing/export_destination.dart';
+import 'package:dart_lodge/core/feedback/contact_email.dart';
 import 'package:dart_lodge/features/auto_scorer/presentation/widgets/auto_scorer_pre_send_view.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -61,7 +61,7 @@ void main() {
     // The privacy reminder is the point of the screen.
     expect(find.textContaining('your room'), findsOneWidget);
     // The destination, and why it cannot simply be e-mailed.
-    expect(find.textContaining(kAutoScorerExportContact), findsOneWidget);
+    expect(find.textContaining(kDartLodgeContactEmail), findsOneWidget);
     expect(find.textContaining('too big to send as an e-mail attachment'),
         findsOneWidget);
   });
@@ -123,7 +123,7 @@ void main() {
     await tester.tap(find.text('Copy the address'));
     await tester.pumpAndSettle();
 
-    expect(copied, kAutoScorerExportContact);
+    expect(copied, kDartLodgeContactEmail);
     expect(find.text('Address copied'), findsOneWidget);
   });
 

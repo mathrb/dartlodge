@@ -23,6 +23,8 @@
   "settingsReportBugSubtitle": "Facci sapere se qualcosa non ha funzionato",
   "settingsReportBugHint": "Descrivi cosa è andato storto…",
   "settingsReportBugThanks": "Grazie! Il tuo feedback è stato inviato.",
+  "settingsContact": "Contattaci",
+  "settingsContactNoMailApp": "Nessuna app e-mail trovata. Indirizzo copiato.",
   "settingsCrashReportingTitle": "Segnalazione arresti anomali",
   "settingsCrashReportingSubtitle": "Invia diagnostica anonima sugli arresti anomali per aiutare a correggere i bug",
   "settingsCrashReportingRestartNote": "Ha effetto dopo il riavvio dell'app",

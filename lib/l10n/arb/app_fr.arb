@@ -23,6 +23,8 @@
   "settingsReportBugSubtitle": "Dites-nous si quelque chose n'a pas fonctionné",
   "settingsReportBugHint": "Décrivez ce qui s'est mal passé…",
   "settingsReportBugThanks": "Merci ! Votre retour a été envoyé.",
+  "settingsContact": "Nous contacter",
+  "settingsContactNoMailApp": "Aucune application e-mail trouvée. Adresse copiée.",
   "settingsCrashReportingTitle": "Rapports de plantage",
   "settingsCrashReportingSubtitle": "Envoyer des diagnostics de plantage anonymes pour aider à corriger les bugs",
   "settingsCrashReportingRestartNote": "Prend effet après le redémarrage de l'application",

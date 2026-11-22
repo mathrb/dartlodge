@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/app/app_router.dart';
+import 'package:dart_lodge/core/feedback/contact_email.dart';
+import 'package:dart_lodge/core/feedback/contact_us.dart';
 import 'package:dart_lodge/core/feedback/report_bug.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
 import 'package:dart_lodge/core/providers/players_providers.dart';
@@ -162,6 +164,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             subtitle: Text(l10n.settingsCrashReportingSubtitle),
             value: crashReportingEnabled,
             onChanged: _setCrashReporting,
+          ),
+          // Always enabled: unlike Report a Bug it does not need Sentry, so
+          // it is the way to reach the project with crash reporting off.
+          ListTile(
+            leading: const Icon(Icons.mail_outline),
+            title: Text(l10n.settingsContact),
+            subtitle: const Text(kDartLodgeContactEmail),
+            onTap: () => openContactEmail(
+              context,
+              version: ref.read(appVersionProvider).value,
+            ),
           ),
           ListTile(
             leading: const Icon(Icons.bug_report_outlined),

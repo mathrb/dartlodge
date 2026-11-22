@@ -92,6 +92,14 @@
   "@settingsReportBugThanks": {
     "description": "Confirmation shown after sending bug feedback"
   },
+  "settingsContact": "Contact us",
+  "@settingsContact": {
+    "description": "Settings row title that opens a draft e-mail to the project contact address (shown as the subtitle)"
+  },
+  "settingsContactNoMailApp": "No e-mail app found. Address copied.",
+  "@settingsContactNoMailApp": {
+    "description": "Snackbar shown when no mail app can open the contact e-mail; the address was copied to the clipboard instead"
+  },
   "settingsCrashReportingTitle": "Crash reporting",
   "@settingsCrashReportingTitle": {
     "description": "Title of the crash-reporting (Sentry) opt-out switch"

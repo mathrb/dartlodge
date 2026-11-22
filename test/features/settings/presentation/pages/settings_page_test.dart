@@ -134,4 +134,18 @@ void main() {
       findsOneWidget,
     );
   });
+
+  testWidgets(
+      'Contact us shows the project address and stays enabled with Sentry off',
+      (tester) async {
+    await pump(tester, const Locale('en'));
+
+    final contactTile = find.ancestor(
+      of: find.text('Contact us'),
+      matching: find.byType(ListTile),
+    );
+    expect(contactTile, findsOneWidget);
+    expect(find.text('dartlodge@gmail.com'), findsOneWidget);
+    expect(tester.widget<ListTile>(contactTile).enabled, isTrue);
+  });
 }
