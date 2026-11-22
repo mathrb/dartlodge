@@ -1,17 +1,102 @@
 name: Release
 
+# Build once, promote the tested binary.
+#
+# - A pre-release tag (contains a hyphen, e.g. v1.0.0-rc5; auto-rc.yml cuts one
+#   for every green main commit) builds a signed APK + AAB, publishes them as a
+#   GitHub pre-release and uploads the AAB to the Google Play closed testing
+#   track.
+# - A stable tag (vX.Y.Z) builds nothing. It takes the RC that was cut for the
+#   same commit, republishes that RC's APK + AAB as the stable GitHub release,
+#   and assigns the RC's versionCode to the Play production track as a staged
+#   rollout. What testers validated is exactly what ships.
+#
+# The Play jobs skip cleanly (green, with a notice) while the
+# PLAY_SERVICE_ACCOUNT_JSON secret is not set. See docs/RELEASES.md
+# ("Google Play tracks").
+
 on:
   push:
     tags: ['v*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build (e.g. v0.2.0 or v0.2.0-rc1)'
+        description: 'Existing tag to release (e.g. v0.2.0 or v0.2.0-rc1)'
         required: true
 
+permissions:
+  contents: read
+
 jobs:
-  release:
-    name: Build and publish release
+  resolve:
+    name: Resolve tag
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      sha: ${{ steps.tag.outputs.sha }}
+      version: ${{ steps.tag.outputs.version }}
+      asset_label: ${{ steps.tag.outputs.asset_label }}
+      is_prerelease: ${{ steps.tag.outputs.is_prerelease }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0   # full history + tags: resolve the tag, verify it is on main
+
+      - name: Resolve tag
+        id: tag
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            TAG="$INPUT_TAG"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          # The tagged commit, not GITHUB_SHA: a manual dispatch from the
+          # Actions UI runs on the branch head, not on the tag.
+          if ! SHA=$(git rev-parse --verify --quiet "refs/tags/$TAG^{commit}"); then
+            echo "::error::Tag $TAG does not exist." >&2
+            exit 1
+          fi
+          # asset_label names the files (1.0.0-rc5); version is the plain
+          # X.Y.Z that becomes the versionName (the OS, Play and Sentry never
+          # see "-rcN": that lives in the tag, release title and file names).
+          ASSET_LABEL="${TAG#v}"
+          VERSION="${ASSET_LABEL%%-*}"
+          # Pre-release tags contain a hyphen (e.g. v0.2.0-rc1).
+          if [[ "$TAG" == *-* ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
+          {
+            echo "tag=$TAG"
+            echo "sha=$SHA"
+            echo "version=$VERSION"
+            echo "asset_label=$ASSET_LABEL"
+            echo "is_prerelease=$IS_PRERELEASE"
+          } >> "$GITHUB_OUTPUT"
+          echo "Releasing $TAG at $SHA (versionName=$VERSION, prerelease=$IS_PRERELEASE)"
+
+      - name: Verify tag is reachable from main
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          SHA: ${{ steps.tag.outputs.sha }}
+        run: |
+          # Refuses to release a commit that was never on main.
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$SHA" origin/main; then
+            echo "::error::Tag $TAG ($SHA) is not on main. Refusing to release." >&2
+            exit 1
+          fi
+
+  build-rc:
+    name: Build and publish pre-release
+    needs: resolve
+    if: needs.resolve.outputs.is_prerelease == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write   # required to create GitHub Releases
@@ -20,39 +105,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          fetch-depth: 0   # need full history to verify tag is on main
-
-      - name: Resolve tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag }}"
-          else
-            TAG="${GITHUB_REF#refs/tags/}"
-          fi
-          VERSION_NAME="${TAG#v}"
-          # Pre-release tags contain a hyphen (e.g. v0.2.0-rc1).
-          if [[ "$TAG" == *-* ]]; then
-            IS_PRERELEASE=true
-          else
-            IS_PRERELEASE=false
-          fi
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "version_code=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
-          echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
-          echo "Building $TAG (versionName=$VERSION_NAME, versionCode=$GITHUB_RUN_NUMBER, prerelease=$IS_PRERELEASE)"
-
-      - name: Verify tag is reachable from main
-        run: |
-          # Refuses to build a release from a commit that was never on main.
-          # If you need to ship a hotfix from a release-tag branch, remove
-          # this step or extend it to allow hotfix/* branches.
-          git fetch origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "::error::Tag ${{ steps.tag.outputs.tag }} ($GITHUB_SHA) is not on main. Refusing to release." >&2
-            exit 1
-          fi
+          ref: ${{ needs.resolve.outputs.sha }}
 
       - name: Set up Java
         uses: actions/setup-java@v6
@@ -112,52 +165,243 @@ jobs:
       #   - AAB  → uploaded to Google Play (Play's required publishing format)
       # The release signingConfig patched in by configure-android-signing.sh
       # applies to both `build apk` and `build appbundle`.
+      # versionCode = run number: strictly increasing across releases. A
+      # stable release reuses its RC's versionCode, it never builds.
       - name: Build signed release APK + AAB
         env:
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           SENTRY_ENVIRONMENT: production
+          VERSION: ${{ needs.resolve.outputs.version }}
         run: |
           flutter build apk --release \
-            --build-name="${{ steps.tag.outputs.version_name }}" \
-            --build-number="${{ steps.tag.outputs.version_code }}" \
+            --build-name="$VERSION" \
+            --build-number="$GITHUB_RUN_NUMBER" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
           flutter build appbundle --release \
-            --build-name="${{ steps.tag.outputs.version_name }}" \
-            --build-number="${{ steps.tag.outputs.version_code }}" \
+            --build-name="$VERSION" \
+            --build-number="$GITHUB_RUN_NUMBER" \
             --dart-define=SENTRY_DSN="$SENTRY_DSN" \
             --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT"
 
       - name: Rename and checksum artifacts
         id: artifacts
+        env:
+          ASSET_LABEL: ${{ needs.resolve.outputs.asset_label }}
         run: |
           APK_DIR=build/app/outputs/flutter-apk
           AAB_DIR=build/app/outputs/bundle/release
-          VERSION="${{ steps.tag.outputs.version_name }}"
-          APK_NAME="dartlodge-$VERSION.apk"
-          AAB_NAME="dartlodge-$VERSION.aab"
+          APK_NAME="dartlodge-$ASSET_LABEL.apk"
+          AAB_NAME="dartlodge-$ASSET_LABEL.aab"
           mv "$APK_DIR/app-release.apk" "$APK_DIR/$APK_NAME"
           mv "$AAB_DIR/app-release.aab" "$AAB_DIR/$AAB_NAME"
           (cd "$APK_DIR" && sha256sum "$APK_NAME" > "$APK_NAME.sha256")
           (cd "$AAB_DIR" && sha256sum "$AAB_NAME" > "$AAB_NAME.sha256")
-          echo "apk_path=$APK_DIR/$APK_NAME" >> "$GITHUB_OUTPUT"
-          echo "sha_path=$APK_DIR/$APK_NAME.sha256" >> "$GITHUB_OUTPUT"
-          echo "aab_path=$AAB_DIR/$AAB_NAME" >> "$GITHUB_OUTPUT"
-          echo "aab_sha_path=$AAB_DIR/$AAB_NAME.sha256" >> "$GITHUB_OUTPUT"
+          {
+            echo "apk_path=$APK_DIR/$APK_NAME"
+            echo "sha_path=$APK_DIR/$APK_NAME.sha256"
+            echo "aab_path=$AAB_DIR/$AAB_NAME"
+            echo "aab_sha_path=$AAB_DIR/$AAB_NAME.sha256"
+          } >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub Release
+      - name: Create GitHub pre-release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          APK_PATH: ${{ steps.artifacts.outputs.apk_path }}
+          SHA_PATH: ${{ steps.artifacts.outputs.sha_path }}
+          AAB_PATH: ${{ steps.artifacts.outputs.aab_path }}
+          AAB_SHA_PATH: ${{ steps.artifacts.outputs.aab_sha_path }}
         run: |
-          PRERELEASE_FLAG=""
-          if [ "${{ steps.tag.outputs.is_prerelease }}" = "true" ]; then
-            PRERELEASE_FLAG="--prerelease"
-          fi
-          gh release create "${{ steps.tag.outputs.tag }}" \
-            --title "${{ steps.tag.outputs.tag }}" \
+          gh release create "$TAG" \
+            --title "$TAG" \
             --generate-notes \
-            $PRERELEASE_FLAG \
-            "${{ steps.artifacts.outputs.apk_path }}" \
-            "${{ steps.artifacts.outputs.sha_path }}" \
-            "${{ steps.artifacts.outputs.aab_path }}" \
-            "${{ steps.artifacts.outputs.aab_sha_path }}"
+            --prerelease \
+            --verify-tag \
+            "$APK_PATH" "$SHA_PATH" "$AAB_PATH" "$AAB_SHA_PATH"
+
+  play-rc:
+    name: Upload pre-release to Google Play testing
+    needs: [resolve, build-rc]
+    if: needs.resolve.outputs.is_prerelease == 'true'
+    runs-on: ubuntu-latest
+    # One upload at a time. A newer queued RC replaces an older queued one,
+    # which is fine: the newest RC is the one testers should get.
+    concurrency:
+      group: play-rc
+      cancel-in-progress: false
+    env:
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+    steps:
+      - name: Skip without a Play service account
+        if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
+        run: |
+          echo "::notice::Play upload skipped: PLAY_SERVICE_ACCOUNT_JSON not set"
+
+      - name: Download the pre-release AAB
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          ASSET_LABEL: ${{ needs.resolve.outputs.asset_label }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "dartlodge-$ASSET_LABEL.aab" --dir dist
+
+      - name: Upload to the closed testing track
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: app.dartlodge
+          releaseFiles: dist/dartlodge-${{ needs.resolve.outputs.asset_label }}.aab
+          track: ${{ vars.PLAY_RC_TRACK || 'alpha' }}
+          status: completed
+          releaseName: ${{ needs.resolve.outputs.tag }}
+
+  stable-release:
+    name: Publish stable release from its RC
+    needs: resolve
+    if: needs.resolve.outputs.is_prerelease == 'false'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # required to create GitHub Releases
+    outputs:
+      version_code: ${{ steps.badging.outputs.version_code }}
+      rc_tag: ${{ steps.rc.outputs.rc_tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          fetch-depth: 0   # tags: find the RC on this commit and the previous stable
+
+      - name: Find the RC for this commit
+        id: rc
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          SHA: ${{ needs.resolve.outputs.sha }}
+        run: bash tools/release/find-rc-for-commit.sh "$TAG" "$SHA" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Download and verify the RC assets
+        id: download
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RC_TAG: ${{ steps.rc.outputs.rc_tag }}
+        run: |
+          RC_LABEL="${RC_TAG#v}"
+          mkdir rc
+          for f in "dartlodge-$RC_LABEL.apk" "dartlodge-$RC_LABEL.apk.sha256" \
+                   "dartlodge-$RC_LABEL.aab" "dartlodge-$RC_LABEL.aab.sha256"; do
+            if ! gh release download "$RC_TAG" --repo "$GITHUB_REPOSITORY" --pattern "$f" --dir rc; then
+              echo "::error::$RC_TAG has no $f asset (did its release run fail?)." >&2
+              exit 1
+            fi
+          done
+          (cd rc && sha256sum -c "dartlodge-$RC_LABEL.apk.sha256" "dartlodge-$RC_LABEL.aab.sha256")
+          echo "rc_label=$RC_LABEL" >> "$GITHUB_OUTPUT"
+
+      - name: Read versionCode and versionName from the RC APK
+        id: badging
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+          RC_TAG: ${{ steps.rc.outputs.rc_tag }}
+          RC_LABEL: ${{ steps.download.outputs.rc_label }}
+        run: |
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          BADGING=$("$BUILD_TOOLS/aapt2" dump badging "rc/dartlodge-$RC_LABEL.apk")
+          PACKAGE_LINE=$(grep -m1 '^package:' <<<"$BADGING")
+          PACKAGE=$(sed -n -E "s/.* name='([^']*)'.*/\1/p" <<<"$PACKAGE_LINE")
+          VERSION_CODE=$(sed -n -E "s/.* versionCode='([^']*)'.*/\1/p" <<<"$PACKAGE_LINE")
+          VERSION_NAME=$(sed -n -E "s/.* versionName='([^']*)'.*/\1/p" <<<"$PACKAGE_LINE")
+          echo "RC APK: package=$PACKAGE versionCode=$VERSION_CODE versionName=$VERSION_NAME"
+          if [ "$PACKAGE" != "app.dartlodge" ]; then
+            echo "::error::$RC_TAG APK has package '$PACKAGE', expected app.dartlodge." >&2
+            exit 1
+          fi
+          if [ "$VERSION_NAME" != "$VERSION" ]; then
+            echo "::error::$RC_TAG APK has versionName '$VERSION_NAME', expected '$VERSION'. RCs built before versionName dropped the -rc suffix cannot be promoted; merge to main and wait for a new RC." >&2
+            exit 1
+          fi
+          if ! [[ "$VERSION_CODE" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not read the versionCode of the $RC_TAG APK." >&2
+            exit 1
+          fi
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+
+      - name: Stage the RC binaries under the stable name
+        env:
+          VERSION: ${{ needs.resolve.outputs.version }}
+          RC_LABEL: ${{ steps.download.outputs.rc_label }}
+        run: |
+          mkdir dist
+          for ext in apk aab; do
+            cp "rc/dartlodge-$RC_LABEL.$ext" "dist/dartlodge-$VERSION.$ext"
+            # The .sha256 files embed the file name, so they are regenerated;
+            # the hash itself must not change.
+            (cd dist && sha256sum "dartlodge-$VERSION.$ext" > "dartlodge-$VERSION.$ext.sha256")
+            if [ "$(cut -d' ' -f1 "dist/dartlodge-$VERSION.$ext.sha256")" != "$(cut -d' ' -f1 "rc/dartlodge-$RC_LABEL.$ext.sha256")" ]; then
+              echo "::error::dartlodge-$VERSION.$ext differs from the RC binary." >&2
+              exit 1
+            fi
+          done
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+          RC_TAG: ${{ steps.rc.outputs.rc_tag }}
+          PREVIOUS_STABLE: ${{ steps.rc.outputs.previous_stable }}
+          VERSION_CODE: ${{ steps.badging.outputs.version_code }}
+        run: |
+          NOTES_START=()
+          if [ -n "$PREVIOUS_STABLE" ]; then
+            # Notes cover every change since the last stable, not just the last RC.
+            NOTES_START=(--notes-start-tag "$PREVIOUS_STABLE")
+          fi
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes "Same binaries as $RC_TAG (versionCode $VERSION_CODE)." \
+            --generate-notes \
+            "${NOTES_START[@]}" \
+            --verify-tag \
+            "dist/dartlodge-$VERSION.apk" "dist/dartlodge-$VERSION.apk.sha256" \
+            "dist/dartlodge-$VERSION.aab" "dist/dartlodge-$VERSION.aab.sha256"
+
+  play-promote:
+    name: Promote to Google Play production
+    needs: [resolve, stable-release]
+    if: needs.resolve.outputs.is_prerelease == 'false'
+    runs-on: ubuntu-latest
+    # Separate from play-rc, so a queued RC upload never displaces a promote.
+    concurrency:
+      group: play-production
+      cancel-in-progress: false
+    env:
+      PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+
+    steps:
+      - name: Skip without a Play service account
+        if: env.PLAY_SERVICE_ACCOUNT_JSON == ''
+        run: |
+          echo "::notice::Play promotion skipped: PLAY_SERVICE_ACCOUNT_JSON not set"
+
+      - name: Checkout repository
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+
+      # No upload: Play already has this versionCode from the RC upload. The
+      # release starts as a staged rollout; raise, complete or halt it in the
+      # Play Console.
+      - name: Start the staged production rollout
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION_CODE: ${{ needs.stable-release.outputs.version_code }}
+          USER_FRACTION: ${{ vars.PLAY_PRODUCTION_ROLLOUT || '0.1' }}
+        run: bash tools/release/play-promote.sh app.dartlodge "$VERSION_CODE" "$TAG" "$USER_FRACTION" production
