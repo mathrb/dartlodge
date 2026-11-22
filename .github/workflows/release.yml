@@ -10,6 +10,9 @@ name: Release
 #   same commit, republishes that RC's APK + AAB as the stable GitHub release,
 #   and assigns the RC's versionCode to the Play production track as a staged
 #   rollout. What testers validated is exactly what ships.
+# - Play release notes: RCs get notes generated from the PR titles since the
+#   previous RC; production gets the curated, per-language notes committed in
+#   distribution/whatsnew.
 #
 # The Play jobs skip cleanly (green, with a notice) while the
 # PLAY_SERVICE_ACCOUNT_JSON secret is not set. See docs/RELEASES.md
@@ -247,6 +250,21 @@ jobs:
         run: |
           echo "::notice::Play upload skipped: PLAY_SERVICE_ACCOUNT_JSON not set"
 
+      - name: Checkout repository
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.resolve.outputs.sha }}
+          fetch-depth: 0   # tags + history: the PR titles since the previous RC
+
+      # "What's new" for testers: the feat / fix / hotfix PR titles merged
+      # since the previous RC, at most 500 characters, never empty.
+      - name: Write RC release notes
+        if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+        run: bash tools/release/rc-whatsnew.sh "$TAG" "$RUNNER_TEMP/whatsnew"
+
       - name: Download the pre-release AAB
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
         env:
@@ -267,6 +285,7 @@ jobs:
           track: ${{ vars.PLAY_RC_TRACK || 'alpha' }}
           status: completed
           releaseName: ${{ needs.resolve.outputs.tag }}
+          whatsNewDirectory: ${{ runner.temp }}/whatsnew
 
   stable-release:
     name: Publish stable release from its RC
@@ -292,6 +311,15 @@ jobs:
           TAG: ${{ needs.resolve.outputs.tag }}
           SHA: ${{ needs.resolve.outputs.sha }}
         run: bash tools/release/find-rc-for-commit.sh "$TAG" "$SHA" | tee -a "$GITHUB_OUTPUT"
+
+      # Before anything is published: the curated Play production notes
+      # (distribution/whatsnew) exist for every app language, fit Play's
+      # 500-character limit and were rewritten since the previous stable.
+      - name: Check the production release notes
+        env:
+          SHA: ${{ needs.resolve.outputs.sha }}
+          PREVIOUS_STABLE: ${{ steps.rc.outputs.previous_stable }}
+        run: bash tools/release/check-whatsnew.sh distribution/whatsnew "$PREVIOUS_STABLE" "$SHA"
 
       - name: Download and verify the RC assets
         id: download
@@ -417,7 +445,8 @@ jobs:
 
       # Normally no upload: Play already has this versionCode from the RC
       # upload. The release starts as a staged rollout; raise, complete or
-      # halt it in the Play Console.
+      # halt it in the Play Console. The release notes are the committed
+      # distribution/whatsnew files, already checked by stable-release.
       - name: Start the staged production rollout
         if: env.PLAY_SERVICE_ACCOUNT_JSON != ''
         env:
@@ -427,4 +456,4 @@ jobs:
           USER_FRACTION: ${{ vars.PLAY_PRODUCTION_ROLLOUT || '0.1' }}
         run: |
           bash tools/release/play-promote.sh app.dartlodge "$VERSION_CODE" "$TAG" "$USER_FRACTION" \
-            production "dist/dartlodge-$VERSION.aab"
+            production "dist/dartlodge-$VERSION.aab" distribution/whatsnew

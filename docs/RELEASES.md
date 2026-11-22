@@ -65,7 +65,7 @@ Four workflows in `.github/workflows/`:
 | `test.yml` | PR + push to `main` | `flutter analyze` + `flutter test --coverage`. Matrix is ubuntu-only on PRs; ubuntu + macos on push to main. Codecov upload on push only. |
 | `build-apk.yml` | PR + push to `main` + manual | PRs build a debug APK as a compile check (no upload). Push to main builds a release APK and uploads it as a 7-day artifact for internal testing. |
 | `auto-rc.yml` | `Test` run on a push to `main` completes | If that run passed, creates tag `v<pubspec-version>-rc<N>` (N = next-available rc number for the current version) on the tested merge commit and dispatches `release.yml` to publish a pre-release. |
-| `release.yml` | Tag push `v*` + manual | Pre-release tag (`v1.0.0-rc5`): builds a signed APK **and AAB**, publishes both as a GitHub pre-release, uploads the AAB to the Play closed testing track. Stable tag (`v1.0.0`): builds nothing; republishes the APK + AAB of the RC on the same commit as the stable GitHub release and promotes that RC's versionCode to Play production. See "Google Play tracks". |
+| `release.yml` | Tag push `v*` + manual | Pre-release tag (`v1.0.0-rc5`): builds a signed APK **and AAB**, publishes both as a GitHub pre-release, uploads the AAB to the Play closed testing track with generated release notes. Stable tag (`v1.0.0`): builds nothing; checks the curated release notes, republishes the APK + AAB of the RC on the same commit as the stable GitHub release and promotes that RC's versionCode to Play production with those notes. See "Google Play tracks". |
 
 **Required checks for merge:** `Test (ubuntu-latest)` and `Build APK`. macos tests run post-merge but don't block PRs.
 
@@ -147,7 +147,7 @@ https://github.com/<org>/dartlodge/releases/tag/v0.2.0-rc<N>
 
 Every subsequent PR merge produces the next RC in sequence (`-rc<N+1>`, `-rc<N+2>`, …). No manual tagging required.
 
-**Cut a stable release (once an RC is validated):** tag the **same commit** as that RC.
+**Cut a stable release (once an RC is validated):** first rewrite the Play release notes in `distribution/whatsnew/` (all 7 files, see "Release notes (What's new)") and merge them; the RC that merge produces is the one to validate and tag. Then tag the **same commit** as that RC.
 
 ```bash
 git fetch --tags
@@ -158,10 +158,11 @@ git push origin v0.2.0
 `release.yml` then builds nothing (`tools/release/find-rc-for-commit.sh` does the lookup):
 
 1. Checks that the tag matches the commit's `pubspec.yaml` version, and finds the highest `v0.2.0-rc<N>` tag on that commit. No RC on the commit → the run fails. Merge to `main` and wait for `auto-rc.yml`, there is no rebuild fallback.
-2. Downloads that RC's APK + AAB + checksums from its GitHub pre-release and verifies them.
-3. Reads the RC APK's versionCode and versionName (`aapt2 dump badging`). A versionName other than `0.2.0` fails the run: RCs built before versionName dropped the `-rcN` suffix cannot be promoted.
-4. Publishes the same binaries as `dartlodge-0.2.0.apk` / `.aab` (new `.sha256` files, same hashes) in the stable GitHub release. Notes are generated from the previous stable tag, so they cover every RC since then.
-5. Promotes the RC's versionCode to Play production, uploading the AAB first if Play does not have it (see "Google Play tracks").
+2. Checks the Play release notes (`tools/release/check-whatsnew.sh`): one non-empty file of at most 500 characters per app language, each changed since the previous stable tag. Any problem fails the run before anything is published.
+3. Downloads that RC's APK + AAB + checksums from its GitHub pre-release and verifies them.
+4. Reads the RC APK's versionCode and versionName (`aapt2 dump badging`). A versionName other than `0.2.0` fails the run: RCs built before versionName dropped the `-rcN` suffix cannot be promoted.
+5. Publishes the same binaries as `dartlodge-0.2.0.apk` / `.aab` (new `.sha256` files, same hashes) in the stable GitHub release. Notes are generated from the previous stable tag, so they cover every RC since then.
+6. Promotes the RC's versionCode to Play production with the release notes, uploading the AAB first if Play does not have it (see "Google Play tracks").
 
 Re-running a failed stable run is safe up to the step that failed; if the GitHub release was already created, delete it first or re-run only the Play job.
 
@@ -186,7 +187,7 @@ Tagging directly off a hotfix branch no longer releases anything: `release.yml` 
 
 | What | Play track | How |
 |---|---|---|
-| Every RC (`vX.Y.Z-rcN`, i.e. every green merge to `main`) | Closed testing: `alpha`, or the `PLAY_RC_TRACK` repo variable | `play-rc` job: uploads the RC's AAB with [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play), status `completed`, release name = the tag. The newest RC replaces the previous one for testers. |
+| Every RC (`vX.Y.Z-rcN`, i.e. every green merge to `main`) | Closed testing: `alpha`, or the `PLAY_RC_TRACK` repo variable | `play-rc` job: uploads the RC's AAB with [`r0adkll/upload-google-play`](https://github.com/r0adkll/upload-google-play), status `completed`, release name = the tag, generated release notes. The newest RC replaces the previous one for testers. |
 | Stable (`vX.Y.Z`) | Production, staged rollout | `play-promote` job: `tools/release/play-promote.sh` assigns the RC's existing versionCode to `production` through the Play Developer API (`edits.insert` → `edits.tracks.update` with `status: inProgress` and `userFraction` = `PLAY_PRODUCTION_ROLLOUT`, default `0.1` → `edits.commit`). Nothing is re-uploaded, unless Play does not have that versionCode (its RC upload was skipped, dropped from the queue or failed): then the stable AAB is uploaded in the same edit first. |
 | Internal testing | unused | — |
 
@@ -194,6 +195,26 @@ Tagging directly off a hotfix branch no longer releases anything: `release.yml` 
 - Production access is gated by Google (closed test with ≥12 testers for ≥14 days on a new personal account). Until it is granted, `play-promote` fails with the API error; the stable GitHub release is already published by then.
 - **Both Play jobs skip cleanly while the `PLAY_SERVICE_ACCOUNT_JSON` secret is not set**: the job passes and the run shows the notice "Play upload skipped" / "Play promotion skipped". The GitHub release part never depends on Play.
 - The two Play jobs have their own concurrency groups (`play-rc`, `play-production`), so a queued RC upload never displaces a production promotion. A newer queued RC upload can replace an older queued one, which is the intent; such an RC can still be tagged stable, since `play-promote` then uploads its AAB.
+
+#### Release notes (What's new)
+
+Play shows at most **500 characters per language**.
+
+- **RCs (closed testing), generated, English only.** `tools/release/rc-whatsnew.sh` lists the `feat` / `fix` / `hotfix` PR titles merged to `main` since the previous RC (the nearest earlier `v*-rc*` tag; `chore` and `docs` are left out, the `(#123)` suffix is dropped), newest first. When the list does not fit, whole lines are dropped from the oldest end and the last line says `- and N more changes`. With no such title the note is "Maintenance and internal improvements."; with no earlier RC it is "Test build <tag>." The `play-rc` job writes it as `whatsnew-en-US` and prints it in the log.
+- **Production (stable tag), curated, one file per app language** in `distribution/whatsnew/`, named `whatsnew-<Play language code>` with no extension:
+
+  | App language (`lib/l10n/arb`) | File |
+  |---|---|
+  | `en` | `whatsnew-en-US` |
+  | `fr` | `whatsnew-fr-FR` |
+  | `es` | `whatsnew-es-ES` |
+  | `de` | `whatsnew-de-DE` |
+  | `pt` | `whatsnew-pt-PT` (European Portuguese, like the store listing) |
+  | `it` | `whatsnew-it-IT` |
+  | `nl` | `whatsnew-nl-NL` |
+
+  Plain text; leading and trailing whitespace is dropped. Each code must also be a language of the Play store listing. Before each stable release, rewrite **every** file and merge the change to `main` before the RC you will promote, so the notes are on the tagged commit. `tools/release/check-whatsnew.sh` holds the language table and fails on a missing, empty or too-long file, a file for no app language, an app language without a code (adding a language means adding its row and its file), and, on a stable tag, a file unchanged since the previous stable tag. `test.yml` runs it without the change check on every PR; `release.yml` runs the full check before publishing anything. `play-promote.sh` sends the files as the release's `releaseNotes`, also when it uploads the AAB itself.
+- The GitHub release notes are unchanged: generated from the PR titles (since the previous stable for a stable release).
 
 **Service account setup (one-time, project owner):**
 
@@ -273,7 +294,7 @@ gh pr create --fill
 
 # RC pre-releases are created automatically for every merge to main that passes Test (see auto-rc.yml).
 
-# Cut a stable release: tag the validated RC's commit
+# Cut a stable release: merge rewritten distribution/whatsnew/ notes, then tag the validated RC's commit
 git fetch --tags && git tag v0.2.0 'v0.2.0-rc7^{commit}' && git push origin v0.2.0
 
 # Build a local debug APK for sideloading
