@@ -200,7 +200,7 @@ Tagging directly off a hotfix branch no longer releases anything: `release.yml` 
 
 Play shows at most **500 characters per language**.
 
-- **RCs (closed testing), generated, English only.** `tools/release/rc-whatsnew.sh` lists the `feat` / `fix` / `hotfix` PR titles merged to `main` since the previous RC (the nearest earlier `v*-rc*` tag; `chore` and `docs` are left out, the `(#123)` suffix is dropped), newest first. When the list does not fit, whole lines are dropped from the oldest end and the last line says `- and N more changes`. With no such title the note is "Maintenance and internal improvements."; with no earlier RC it is "Test build <tag>." The `play-rc` job writes it as `whatsnew-en-US` and prints it in the log.
+- **RCs (closed testing), generated, English only.** `tools/release/rc-whatsnew.sh` lists the `feat` / `fix` / `hotfix` PR titles merged to `main` since the previous RC (the nearest earlier `v*-rc*` tag; `chore` and `docs` are left out, the `(#123)` suffix is dropped), newest first. When the list does not fit, whole lines are dropped from the oldest end and the last line says `- and N more changes`. With no such title the note is "Maintenance and internal improvements."; with no earlier RC it is "Test build <tag>." The `play-rc` job writes it as `whatsnew-en-US` and prints it in the log. The base is the previous RC *tag*, whether or not that RC reached Play: when an RC's upload was dropped from the queue or failed, its titles appear in no tester note.
 - **Production (stable tag), curated, one file per app language** in `distribution/whatsnew/`, named `whatsnew-<Play language code>` with no extension:
 
   | App language (`lib/l10n/arb`) | File |
