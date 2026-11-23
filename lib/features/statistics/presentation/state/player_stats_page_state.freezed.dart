@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'player_stats_page_state.dart';
@@ -9,6 +9,7 @@ part of 'player_stats_page_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PlayerStatsPageStateCopyWith<PlayerStatsPageState> get copyWith => _$PlayerStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerStatsPageState&&(identical(other.activeTab, activeTab) || other.activeTab == activeTab)&&(identical(other.selectedStartingScore, selectedStartingScore) || other.selectedStartingScore == selectedStartingScore)&&(identical(other.selectedCricketVariant, selectedCricketVariant) || other.selectedCricketVariant == selectedCricketVariant)&&(identical(other.selectedCricketTargetMode, selectedCricketTargetMode) || other.selectedCricketTargetMode == selectedCricketTargetMode)&&(identical(other.selectedPracticeGameType, selectedPracticeGameType) || other.selectedPracticeGameType == selectedPracticeGameType)&&(identical(other.timeRange, timeRange) || other.timeRange == timeRange));
+  final _this = this as PlayerStatsPageState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerStatsPageState&&(identical(other.activeTab, _this.activeTab) || other.activeTab == _this.activeTab)&&(identical(other.selectedStartingScore, _this.selectedStartingScore) || other.selectedStartingScore == _this.selectedStartingScore)&&(identical(other.selectedCricketVariant, _this.selectedCricketVariant) || other.selectedCricketVariant == _this.selectedCricketVariant)&&(identical(other.selectedCricketTargetMode, _this.selectedCricketTargetMode) || other.selectedCricketTargetMode == _this.selectedCricketTargetMode)&&(identical(other.selectedPracticeGameType, _this.selectedPracticeGameType) || other.selectedPracticeGameType == _this.selectedPracticeGameType)&&(identical(other.timeRange, _this.timeRange) || other.timeRange == _this.timeRange));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,activeTab,selectedStartingScore,selectedCricketVariant,selectedCricketTargetMode,selectedPracticeGameType,timeRange);
+int get hashCode {
+  final _this = this as PlayerStatsPageState;
+  return Object.hash(runtimeType,_this.activeTab,_this.selectedStartingScore,_this.selectedCricketVariant,_this.selectedCricketTargetMode,_this.selectedPracticeGameType,_this.timeRange);
+}
 
 @override
 String toString() {
-  return 'PlayerStatsPageState(activeTab: $activeTab, selectedStartingScore: $selectedStartingScore, selectedCricketVariant: $selectedCricketVariant, selectedCricketTargetMode: $selectedCricketTargetMode, selectedPracticeGameType: $selectedPracticeGameType, timeRange: $timeRange)';
+  final _this = this as PlayerStatsPageState;
+  return 'PlayerStatsPageState(activeTab: ${_this.activeTab}, selectedStartingScore: ${_this.selectedStartingScore}, selectedCricketVariant: ${_this.selectedCricketVariant}, selectedCricketTargetMode: ${_this.selectedCricketTargetMode}, selectedPracticeGameType: ${_this.selectedPracticeGameType}, timeRange: ${_this.timeRange})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PlayerStatsPageStateCopyWithImpl<$Res>
 /// Create a copy of PlayerStatsPageState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? activeTab = null,Object? selectedStartingScore = freezed,Object? selectedCricketVariant = freezed,Object? selectedCricketTargetMode = null,Object? selectedPracticeGameType = null,Object? timeRange = null,}) {
-  return _then(_self.copyWith(
+  return _then(PlayerStatsPageState(
 activeTab: null == activeTab ? _self.activeTab : activeTab // ignore: cast_nullable_to_non_nullable
 as StatsTabIndex,selectedStartingScore: freezed == selectedStartingScore ? _self.selectedStartingScore : selectedStartingScore // ignore: cast_nullable_to_non_nullable
 as int?,selectedCricketVariant: freezed == selectedCricketVariant ? _self.selectedCricketVariant : selectedCricketVariant // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ _$PlayerStatsPageStateCopyWith<_PlayerStatsPageState> get copyWith => __$PlayerS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerStatsPageState&&(identical(other.activeTab, activeTab) || other.activeTab == activeTab)&&(identical(other.selectedStartingScore, selectedStartingScore) || other.selectedStartingScore == selectedStartingScore)&&(identical(other.selectedCricketVariant, selectedCricketVariant) || other.selectedCricketVariant == selectedCricketVariant)&&(identical(other.selectedCricketTargetMode, selectedCricketTargetMode) || other.selectedCricketTargetMode == selectedCricketTargetMode)&&(identical(other.selectedPracticeGameType, selectedPracticeGameType) || other.selectedPracticeGameType == selectedPracticeGameType)&&(identical(other.timeRange, timeRange) || other.timeRange == timeRange));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerStatsPageState&&(identical(other.activeTab, activeTab) || other.activeTab == activeTab)&&(identical(other.selectedStartingScore, selectedStartingScore) || other.selectedStartingScore == selectedStartingScore)&&(identical(other.selectedCricketVariant, selectedCricketVariant) || other.selectedCricketVariant == selectedCricketVariant)&&(identical(other.selectedCricketTargetMode, selectedCricketTargetMode) || other.selectedCricketTargetMode == selectedCricketTargetMode)&&(identical(other.selectedPracticeGameType, selectedPracticeGameType) || other.selectedPracticeGameType == selectedPracticeGameType)&&(identical(other.timeRange, timeRange) || other.timeRange == timeRange));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,activeTab,selectedStartingScore,selectedCricketVariant,selectedCricketTargetMode,selectedPracticeGameType,timeRange);
+int get hashCode {
+    return Object.hash(runtimeType,activeTab,selectedStartingScore,selectedCricketVariant,selectedCricketTargetMode,selectedPracticeGameType,timeRange);
+}
 
 @override
 String toString() {
-  return 'PlayerStatsPageState(activeTab: $activeTab, selectedStartingScore: $selectedStartingScore, selectedCricketVariant: $selectedCricketVariant, selectedCricketTargetMode: $selectedCricketTargetMode, selectedPracticeGameType: $selectedPracticeGameType, timeRange: $timeRange)';
+    return 'PlayerStatsPageState(activeTab: $activeTab, selectedStartingScore: $selectedStartingScore, selectedCricketVariant: $selectedCricketVariant, selectedCricketTargetMode: $selectedCricketTargetMode, selectedPracticeGameType: $selectedPracticeGameType, timeRange: $timeRange)';
 }
 
 

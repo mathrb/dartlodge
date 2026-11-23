@@ -21,7 +21,7 @@ sed -i 's/app\.dart_lodge/app.dartlodge/g' "$GRADLE"
 # `flutter.targetSdkVersion` / `flutter.compileSdkVersion` placeholders, which
 # Flutter resolves to its own defaults (FlutterExtension.kt).
 #
-# - minSdk: on the pinned Flutter 3.44.9 the default is API 24 (Android 7.0),
+# - minSdk: on the pinned Flutter 3.47.9 the default is API 24 (Android 7.0),
 #   which is also the floor Flutter itself supports. It covers every plugin we
 #   ship (ultralytics_yolo/LiteRT needs 23, and the 0.7.x line needs 24;
 #   sentry_flutter 10.4+ needs 24). Earlier versions of this script pinned 23,
@@ -29,7 +29,7 @@ sed -i 's/app\.dart_lodge/app.dartlodge/g' "$GRADLE"
 #   that pin in an android/ folder scaffolded by such a version, so re-running
 #   the script lands on the placeholder again.
 # - targetSdk / compileSdk: the default is "always the latest available stable
-#   version". On Flutter 3.44.9 that is API 36, which already satisfies Google
+#   version". On Flutter 3.47.9 that is API 36, which already satisfies Google
 #   Play's target-API floor (API 35 today, API 36 from 2026-08-31 for new
 #   apps/updates).
 #

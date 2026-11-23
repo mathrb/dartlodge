@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'dart_heatmap_provider.dart';
@@ -9,6 +9,7 @@ part of 'dart_heatmap_provider.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DartHeatmapFilterCopyWith<DartHeatmapFilter> get copyWith => _$DartHeatmapFilte
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartHeatmapFilter&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to));
+  final _this = this as DartHeatmapFilter;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartHeatmapFilter&&(identical(other.playerId, _this.playerId) || other.playerId == _this.playerId)&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.gameType, _this.gameType) || other.gameType == _this.gameType)&&(identical(other.from, _this.from) || other.from == _this.from)&&(identical(other.to, _this.to) || other.to == _this.to));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,playerId,gameId,gameType,from,to);
+int get hashCode {
+  final _this = this as DartHeatmapFilter;
+  return Object.hash(runtimeType,_this.playerId,_this.gameId,_this.gameType,_this.from,_this.to);
+}
 
 @override
 String toString() {
-  return 'DartHeatmapFilter(playerId: $playerId, gameId: $gameId, gameType: $gameType, from: $from, to: $to)';
+  final _this = this as DartHeatmapFilter;
+  return 'DartHeatmapFilter(playerId: ${_this.playerId}, gameId: ${_this.gameId}, gameType: ${_this.gameType}, from: ${_this.from}, to: ${_this.to})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DartHeatmapFilterCopyWithImpl<$Res>
 /// Create a copy of DartHeatmapFilter
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? gameId = freezed,Object? gameType = freezed,Object? from = freezed,Object? to = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(DartHeatmapFilter(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,gameId: freezed == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String?,gameType: freezed == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -229,16 +235,18 @@ _$DartHeatmapFilterCopyWith<_DartHeatmapFilter> get copyWith => __$DartHeatmapFi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartHeatmapFilter&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartHeatmapFilter&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.gameType, gameType) || other.gameType == gameType)&&(identical(other.from, from) || other.from == from)&&(identical(other.to, to) || other.to == to));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,playerId,gameId,gameType,from,to);
+int get hashCode {
+    return Object.hash(runtimeType,playerId,gameId,gameType,from,to);
+}
 
 @override
 String toString() {
-  return 'DartHeatmapFilter(playerId: $playerId, gameId: $gameId, gameType: $gameType, from: $from, to: $to)';
+    return 'DartHeatmapFilter(playerId: $playerId, gameId: $gameId, gameType: $gameType, from: $from, to: $to)';
 }
 
 

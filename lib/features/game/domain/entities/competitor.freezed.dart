@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'competitor.dart';
@@ -9,6 +9,7 @@ part of 'competitor.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $CompetitorCopyWith<Competitor> get copyWith => _$CompetitorCopyWithImpl<Competi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Competitor&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.players, players));
+  final _this = this as Competitor;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Competitor&&(identical(other.competitorId, _this.competitorId) || other.competitorId == _this.competitorId)&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.name, _this.name) || other.name == _this.name)&&const DeepCollectionEquality().equals(other.players, _this.players));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,gameId,type,name,const DeepCollectionEquality().hash(players));
+int get hashCode {
+  final _this = this as Competitor;
+  return Object.hash(runtimeType,_this.competitorId,_this.gameId,_this.type,_this.name,const DeepCollectionEquality().hash(_this.players));
+}
 
 @override
 String toString() {
-  return 'Competitor(competitorId: $competitorId, gameId: $gameId, type: $type, name: $name, players: $players)';
+  final _this = this as Competitor;
+  return 'Competitor(competitorId: ${_this.competitorId}, gameId: ${_this.gameId}, type: ${_this.type}, name: ${_this.name}, players: ${_this.players})';
 }
 
 
@@ -66,7 +72,7 @@ class _$CompetitorCopyWithImpl<$Res>
 /// Create a copy of Competitor
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? gameId = null,Object? type = null,Object? name = null,Object? players = null,}) {
-  return _then(_self.copyWith(
+  return _then(Competitor(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -213,7 +219,7 @@ return $default(_that.competitorId,_that.gameId,_that.type,_that.name,_that.play
 @JsonSerializable()
 
 class _Competitor implements Competitor {
-  const _Competitor({@JsonKey(name: 'competitor_id') required this.competitorId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'type') required this.type, @JsonKey(name: 'name') required this.name, @JsonKey(name: 'players') required final  List<CompetitorPlayer> players}): _players = players;
+  const _Competitor({@JsonKey(name: 'competitor_id') required this.competitorId, @JsonKey(name: 'game_id') required this.gameId, @JsonKey(name: 'type') required this.type, @JsonKey(name: 'name') required this.name, @JsonKey(name: 'players') required  List<CompetitorPlayer> players}): _players = players;
   factory _Competitor.fromJson(Map<String, dynamic> json) => _$CompetitorFromJson(json);
 
 @override@JsonKey(name: 'competitor_id') final  String competitorId;
@@ -241,16 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Competitor&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other._players, _players));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Competitor&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.type, type) || other.type == type)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.players, _players));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,gameId,type,name,const DeepCollectionEquality().hash(_players));
+int get hashCode {
+    return Object.hash(runtimeType,competitorId,gameId,type,name,const DeepCollectionEquality().hash(_players));
+}
 
 @override
 String toString() {
-  return 'Competitor(competitorId: $competitorId, gameId: $gameId, type: $type, name: $name, players: $players)';
+    return 'Competitor(competitorId: $competitorId, gameId: $gameId, type: $type, name: $name, players: $players)';
 }
 
 
@@ -309,16 +317,21 @@ $CompetitorPlayerCopyWith<CompetitorPlayer> get copyWith => _$CompetitorPlayerCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorPlayer&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.rotationPosition, rotationPosition) || other.rotationPosition == rotationPosition));
+  final _this = this as CompetitorPlayer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorPlayer&&(identical(other.playerId, _this.playerId) || other.playerId == _this.playerId)&&(identical(other.rotationPosition, _this.rotationPosition) || other.rotationPosition == _this.rotationPosition));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,rotationPosition);
+int get hashCode {
+  final _this = this as CompetitorPlayer;
+  return Object.hash(runtimeType,_this.playerId,_this.rotationPosition);
+}
 
 @override
 String toString() {
-  return 'CompetitorPlayer(playerId: $playerId, rotationPosition: $rotationPosition)';
+  final _this = this as CompetitorPlayer;
+  return 'CompetitorPlayer(playerId: ${_this.playerId}, rotationPosition: ${_this.rotationPosition})';
 }
 
 
@@ -347,7 +360,7 @@ class _$CompetitorPlayerCopyWithImpl<$Res>
 /// Create a copy of CompetitorPlayer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? rotationPosition = null,}) {
-  return _then(_self.copyWith(
+  return _then(CompetitorPlayer(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,rotationPosition: null == rotationPosition ? _self.rotationPosition : rotationPosition // ignore: cast_nullable_to_non_nullable
 as int,
@@ -510,16 +523,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorPlayer&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.rotationPosition, rotationPosition) || other.rotationPosition == rotationPosition));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorPlayer&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.rotationPosition, rotationPosition) || other.rotationPosition == rotationPosition));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,rotationPosition);
+int get hashCode {
+    return Object.hash(runtimeType,playerId,rotationPosition);
+}
 
 @override
 String toString() {
-  return 'CompetitorPlayer(playerId: $playerId, rotationPosition: $rotationPosition)';
+    return 'CompetitorPlayer(playerId: $playerId, rotationPosition: $rotationPosition)';
 }
 
 

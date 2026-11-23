@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_detail_state.dart';
@@ -9,6 +9,7 @@ part of 'game_detail_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $GameDetailStateCopyWith<GameDetailState> get copyWith => _$GameDetailStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other.competitors, competitors)&&const DeepCollectionEquality().equals(other.events, events)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other.legStats, legStats));
+  final _this = this as GameDetailState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameDetailState&&(identical(other.game, _this.game) || other.game == _this.game)&&const DeepCollectionEquality().equals(other.competitors, _this.competitors)&&const DeepCollectionEquality().equals(other.events, _this.events)&&(identical(other.gameStats, _this.gameStats) || other.gameStats == _this.gameStats)&&const DeepCollectionEquality().equals(other.legStats, _this.legStats));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(competitors),const DeepCollectionEquality().hash(events),gameStats,const DeepCollectionEquality().hash(legStats));
+int get hashCode {
+  final _this = this as GameDetailState;
+  return Object.hash(runtimeType,_this.game,const DeepCollectionEquality().hash(_this.competitors),const DeepCollectionEquality().hash(_this.events),_this.gameStats,const DeepCollectionEquality().hash(_this.legStats));
+}
 
 @override
 String toString() {
-  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, gameStats: $gameStats, legStats: $legStats)';
+  final _this = this as GameDetailState;
+  return 'GameDetailState(game: ${_this.game}, competitors: ${_this.competitors}, events: ${_this.events}, gameStats: ${_this.gameStats}, legStats: ${_this.legStats})';
 }
 
 
@@ -63,7 +69,7 @@ class _$GameDetailStateCopyWithImpl<$Res>
 /// Create a copy of GameDetailState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? game = freezed,Object? competitors = null,Object? events = null,Object? gameStats = freezed,Object? legStats = null,}) {
-  return _then(_self.copyWith(
+  return _then(GameDetailState(
 game: freezed == game ? _self.game : game // ignore: cast_nullable_to_non_nullable
 as Game?,competitors: null == competitors ? _self.competitors : competitors // ignore: cast_nullable_to_non_nullable
 as List<Competitor>,events: null == events ? _self.events : events // ignore: cast_nullable_to_non_nullable
@@ -234,7 +240,7 @@ return $default(_that.game,_that.competitors,_that.events,_that.gameStats,_that.
 
 
 class _GameDetailState implements GameDetailState {
-  const _GameDetailState({this.game, final  List<Competitor> competitors = const <Competitor>[], final  List<GameEvent> events = const <GameEvent>[], this.gameStats, final  List<LegStatsBreakdown> legStats = const <LegStatsBreakdown>[]}): _competitors = competitors,_events = events,_legStats = legStats;
+  const _GameDetailState({this.game,  List<Competitor> competitors = const <Competitor>[],  List<GameEvent> events = const <GameEvent>[], this.gameStats,  List<LegStatsBreakdown> legStats = const <LegStatsBreakdown>[]}): _competitors = competitors,_events = events,_legStats = legStats;
   
 
 @override final  Game? game;
@@ -271,16 +277,18 @@ _$GameDetailStateCopyWith<_GameDetailState> get copyWith => __$GameDetailStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other._competitors, _competitors)&&const DeepCollectionEquality().equals(other._events, _events)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other._legStats, _legStats));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameDetailState&&(identical(other.game, game) || other.game == game)&&const DeepCollectionEquality().equals(other.competitors, _competitors)&&const DeepCollectionEquality().equals(other.events, _events)&&(identical(other.gameStats, gameStats) || other.gameStats == gameStats)&&const DeepCollectionEquality().equals(other.legStats, _legStats));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,game,const DeepCollectionEquality().hash(_competitors),const DeepCollectionEquality().hash(_events),gameStats,const DeepCollectionEquality().hash(_legStats));
+int get hashCode {
+    return Object.hash(runtimeType,game,const DeepCollectionEquality().hash(_competitors),const DeepCollectionEquality().hash(_events),gameStats,const DeepCollectionEquality().hash(_legStats));
+}
 
 @override
 String toString() {
-  return 'GameDetailState(game: $game, competitors: $competitors, events: $events, gameStats: $gameStats, legStats: $legStats)';
+    return 'GameDetailState(game: $game, competitors: $competitors, events: $events, gameStats: $gameStats, legStats: $legStats)';
 }
 
 

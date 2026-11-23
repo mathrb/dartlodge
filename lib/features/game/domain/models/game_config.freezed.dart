@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_config.dart';
@@ -9,6 +9,7 @@ part of 'game_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 GameConfig _$GameConfigFromJson(
@@ -75,16 +76,21 @@ $GameConfigCopyWith<GameConfig> get copyWith => _$GameConfigCopyWithImpl<GameCon
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+  final _this = this as GameConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameConfig&&(identical(other.startingPlayerId, _this.startingPlayerId) || other.startingPlayerId == _this.startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingPlayerId);
+int get hashCode {
+  final _this = this as GameConfig;
+  return Object.hash(runtimeType,_this.startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig(startingPlayerId: $startingPlayerId)';
+  final _this = this as GameConfig;
+  return 'GameConfig(startingPlayerId: ${_this.startingPlayerId})';
 }
 
 
@@ -298,7 +304,7 @@ return countUp(_that.totalRounds,_that.handicaps,_that.startingPlayerId);case _:
 @JsonSerializable()
 
 class X01GameConfig implements GameConfig {
-  const X01GameConfig({required this.startingScore, required this.inStrategy, required this.outStrategy, this.legsToWin = 1, this.totalRounds = null, this.startingPlayerId = null, final  Map<String, int> handicaps = const <String, int>{}, final  String? $type}): _handicaps = handicaps,$type = $type ?? 'x01';
+  const X01GameConfig({required this.startingScore, required this.inStrategy, required this.outStrategy, this.legsToWin = 1, this.totalRounds = null, this.startingPlayerId = null,  Map<String, int> handicaps = const <String, int>{},  String? $type}): _handicaps = handicaps,$type = $type ?? 'x01';
   factory X01GameConfig.fromJson(Map<String, dynamic> json) => _$X01GameConfigFromJson(json);
 
  final  int startingScore;
@@ -332,16 +338,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is X01GameConfig&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.inStrategy, inStrategy) || other.inStrategy == inStrategy)&&(identical(other.outStrategy, outStrategy) || other.outStrategy == outStrategy)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&const DeepCollectionEquality().equals(other._handicaps, _handicaps));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is X01GameConfig&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.inStrategy, inStrategy) || other.inStrategy == inStrategy)&&(identical(other.outStrategy, outStrategy) || other.outStrategy == outStrategy)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&const DeepCollectionEquality().equals(other.handicaps, _handicaps));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingScore,inStrategy,outStrategy,legsToWin,totalRounds,startingPlayerId,const DeepCollectionEquality().hash(_handicaps));
+int get hashCode {
+    return Object.hash(runtimeType,startingScore,inStrategy,outStrategy,legsToWin,totalRounds,startingPlayerId,const DeepCollectionEquality().hash(_handicaps));
+}
 
 @override
 String toString() {
-  return 'GameConfig.x01(startingScore: $startingScore, inStrategy: $inStrategy, outStrategy: $outStrategy, legsToWin: $legsToWin, totalRounds: $totalRounds, startingPlayerId: $startingPlayerId, handicaps: $handicaps)';
+    return 'GameConfig.x01(startingScore: $startingScore, inStrategy: $inStrategy, outStrategy: $outStrategy, legsToWin: $legsToWin, totalRounds: $totalRounds, startingPlayerId: $startingPlayerId, handicaps: $handicaps)';
 }
 
 
@@ -389,7 +397,7 @@ as Map<String, int>,
 @JsonSerializable()
 
 class CricketGameConfig implements GameConfig {
-  const CricketGameConfig({@JsonKey(readValue: _readCricketScoring) this.scoring = 'standard', @JsonKey(readValue: _readCricketTargetMode) this.targetMode = 'fixed', final  List<String> numbers = const <String>['15', '16', '17', '18', '19', '20', 'bull'], this.legsToWin = 1, this.totalRounds = null, this.startingPlayerId = null, final  String? $type}): _numbers = numbers,$type = $type ?? 'cricket';
+  const CricketGameConfig({@JsonKey(readValue: _readCricketScoring) this.scoring = 'standard', @JsonKey(readValue: _readCricketTargetMode) this.targetMode = 'fixed',  List<String> numbers = const <String>['15', '16', '17', '18', '19', '20', 'bull'], this.legsToWin = 1, this.totalRounds = null, this.startingPlayerId = null,  String? $type}): _numbers = numbers,$type = $type ?? 'cricket';
   factory CricketGameConfig.fromJson(Map<String, dynamic> json) => _$CricketGameConfigFromJson(json);
 
 @JsonKey(readValue: _readCricketScoring) final  String scoring;
@@ -422,16 +430,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CricketGameConfig&&(identical(other.scoring, scoring) || other.scoring == scoring)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&const DeepCollectionEquality().equals(other._numbers, _numbers)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CricketGameConfig&&(identical(other.scoring, scoring) || other.scoring == scoring)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&const DeepCollectionEquality().equals(other.numbers, _numbers)&&(identical(other.legsToWin, legsToWin) || other.legsToWin == legsToWin)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,scoring,targetMode,const DeepCollectionEquality().hash(_numbers),legsToWin,totalRounds,startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,scoring,targetMode,const DeepCollectionEquality().hash(_numbers),legsToWin,totalRounds,startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.cricket(scoring: $scoring, targetMode: $targetMode, numbers: $numbers, legsToWin: $legsToWin, totalRounds: $totalRounds, startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.cricket(scoring: $scoring, targetMode: $targetMode, numbers: $numbers, legsToWin: $legsToWin, totalRounds: $totalRounds, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -478,7 +488,7 @@ as String?,
 @JsonSerializable()
 
 class AroundTheClockGameConfig implements GameConfig {
-  const AroundTheClockGameConfig({this.variant = 'standard', this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'aroundTheClock';
+  const AroundTheClockGameConfig({this.variant = 'standard', this.startingPlayerId = null,  String? $type}): $type = $type ?? 'aroundTheClock';
   factory AroundTheClockGameConfig.fromJson(Map<String, dynamic> json) => _$AroundTheClockGameConfigFromJson(json);
 
 @JsonKey() final  String variant;
@@ -501,16 +511,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockGameConfig&&(identical(other.variant, variant) || other.variant == variant)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockGameConfig&&(identical(other.variant, variant) || other.variant == variant)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,variant,startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,variant,startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.aroundTheClock(variant: $variant, startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.aroundTheClock(variant: $variant, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -553,7 +565,7 @@ as String?,
 @JsonSerializable()
 
 class ShanghaiGameConfig implements GameConfig {
-  const ShanghaiGameConfig({this.totalRounds = 7, this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'shanghai';
+  const ShanghaiGameConfig({this.totalRounds = 7, this.startingPlayerId = null,  String? $type}): $type = $type ?? 'shanghai';
   factory ShanghaiGameConfig.fromJson(Map<String, dynamic> json) => _$ShanghaiGameConfigFromJson(json);
 
 @JsonKey() final  int totalRounds;
@@ -576,16 +588,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiGameConfig&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiGameConfig&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalRounds,startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,totalRounds,startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.shanghai(totalRounds: $totalRounds, startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.shanghai(totalRounds: $totalRounds, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -628,7 +642,7 @@ as String?,
 @JsonSerializable()
 
 class Catch40GameConfig implements GameConfig {
-  const Catch40GameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'catch40';
+  const Catch40GameConfig({this.startingPlayerId = null,  String? $type}): $type = $type ?? 'catch40';
   factory Catch40GameConfig.fromJson(Map<String, dynamic> json) => _$Catch40GameConfigFromJson(json);
 
 @override@JsonKey() final  String? startingPlayerId;
@@ -650,16 +664,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Catch40GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Catch40GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.catch40(startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.catch40(startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -701,7 +717,7 @@ as String?,
 @JsonSerializable()
 
 class Bobs27GameConfig implements GameConfig {
-  const Bobs27GameConfig({this.startingPlayerId = null, final  String? $type}): $type = $type ?? 'bobs27';
+  const Bobs27GameConfig({this.startingPlayerId = null,  String? $type}): $type = $type ?? 'bobs27';
   factory Bobs27GameConfig.fromJson(Map<String, dynamic> json) => _$Bobs27GameConfigFromJson(json);
 
 @override@JsonKey() final  String? startingPlayerId;
@@ -723,16 +739,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bobs27GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Bobs27GameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.bobs27(startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.bobs27(startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -774,7 +792,7 @@ as String?,
 @JsonSerializable()
 
 class CheckoutPracticeGameConfig implements GameConfig {
-  const CheckoutPracticeGameConfig({this.startingPlayerId = null, this.randomOrder = false, this.targetSuccesses = null, @JsonKey(readValue: _readCheckoutTargetMode) this.targetMode = 'fixed', this.fixedTarget = 170, this.minTarget = 40, this.maxTarget = 170, this.progressionStep = 10, final  String? $type}): $type = $type ?? 'checkoutPractice';
+  const CheckoutPracticeGameConfig({this.startingPlayerId = null, this.randomOrder = false, this.targetSuccesses = null, @JsonKey(readValue: _readCheckoutTargetMode) this.targetMode = 'fixed', this.fixedTarget = 170, this.minTarget = 40, this.maxTarget = 170, this.progressionStep = 10,  String? $type}): $type = $type ?? 'checkoutPractice';
   factory CheckoutPracticeGameConfig.fromJson(Map<String, dynamic> json) => _$CheckoutPracticeGameConfigFromJson(json);
 
 @override@JsonKey() final  String? startingPlayerId;
@@ -803,16 +821,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&(identical(other.randomOrder, randomOrder) || other.randomOrder == randomOrder)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&(identical(other.fixedTarget, fixedTarget) || other.fixedTarget == fixedTarget)&&(identical(other.minTarget, minTarget) || other.minTarget == minTarget)&&(identical(other.maxTarget, maxTarget) || other.maxTarget == maxTarget)&&(identical(other.progressionStep, progressionStep) || other.progressionStep == progressionStep));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeGameConfig&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId)&&(identical(other.randomOrder, randomOrder) || other.randomOrder == randomOrder)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&(identical(other.fixedTarget, fixedTarget) || other.fixedTarget == fixedTarget)&&(identical(other.minTarget, minTarget) || other.minTarget == minTarget)&&(identical(other.maxTarget, maxTarget) || other.maxTarget == maxTarget)&&(identical(other.progressionStep, progressionStep) || other.progressionStep == progressionStep));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,startingPlayerId,randomOrder,targetSuccesses,targetMode,fixedTarget,minTarget,maxTarget,progressionStep);
+int get hashCode {
+    return Object.hash(runtimeType,startingPlayerId,randomOrder,targetSuccesses,targetMode,fixedTarget,minTarget,maxTarget,progressionStep);
+}
 
 @override
 String toString() {
-  return 'GameConfig.checkoutPractice(startingPlayerId: $startingPlayerId, randomOrder: $randomOrder, targetSuccesses: $targetSuccesses, targetMode: $targetMode, fixedTarget: $fixedTarget, minTarget: $minTarget, maxTarget: $maxTarget, progressionStep: $progressionStep)';
+    return 'GameConfig.checkoutPractice(startingPlayerId: $startingPlayerId, randomOrder: $randomOrder, targetSuccesses: $targetSuccesses, targetMode: $targetMode, fixedTarget: $fixedTarget, minTarget: $minTarget, maxTarget: $maxTarget, progressionStep: $progressionStep)';
 }
 
 
@@ -861,7 +881,7 @@ as int,
 @JsonSerializable()
 
 class CountUpGameConfig implements GameConfig {
-  const CountUpGameConfig({this.totalRounds = 8, final  Map<String, int> handicaps = const <String, int>{}, this.startingPlayerId = null, final  String? $type}): _handicaps = handicaps,$type = $type ?? 'countUp';
+  const CountUpGameConfig({this.totalRounds = 8,  Map<String, int> handicaps = const <String, int>{}, this.startingPlayerId = null,  String? $type}): _handicaps = handicaps,$type = $type ?? 'countUp';
   factory CountUpGameConfig.fromJson(Map<String, dynamic> json) => _$CountUpGameConfigFromJson(json);
 
 @JsonKey() final  int totalRounds;
@@ -891,16 +911,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CountUpGameConfig&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&const DeepCollectionEquality().equals(other._handicaps, _handicaps)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CountUpGameConfig&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds)&&const DeepCollectionEquality().equals(other.handicaps, _handicaps)&&(identical(other.startingPlayerId, startingPlayerId) || other.startingPlayerId == startingPlayerId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,totalRounds,const DeepCollectionEquality().hash(_handicaps),startingPlayerId);
+int get hashCode {
+    return Object.hash(runtimeType,totalRounds,const DeepCollectionEquality().hash(_handicaps),startingPlayerId);
+}
 
 @override
 String toString() {
-  return 'GameConfig.countUp(totalRounds: $totalRounds, handicaps: $handicaps, startingPlayerId: $startingPlayerId)';
+    return 'GameConfig.countUp(totalRounds: $totalRounds, handicaps: $handicaps, startingPlayerId: $startingPlayerId)';
 }
 
 
@@ -949,7 +971,7 @@ mixin _$Segment {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Segment);
 }
 
 
@@ -958,7 +980,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Segment()';
+    return 'Segment()';
 }
 
 
@@ -1149,16 +1171,18 @@ $SingleSegmentCopyWith<SingleSegment> get copyWith => _$SingleSegmentCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SingleSegment&&(identical(other.number, number) || other.number == number));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SingleSegment&&(identical(other.number, number) || other.number == number));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,number);
+int get hashCode {
+    return Object.hash(runtimeType,number);
+}
 
 @override
 String toString() {
-  return 'Segment.single(number: $number)';
+    return 'Segment.single(number: $number)';
 }
 
 
@@ -1215,16 +1239,18 @@ $DoubleSegmentCopyWith<DoubleSegment> get copyWith => _$DoubleSegmentCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleSegment&&(identical(other.number, number) || other.number == number));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleSegment&&(identical(other.number, number) || other.number == number));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,number);
+int get hashCode {
+    return Object.hash(runtimeType,number);
+}
 
 @override
 String toString() {
-  return 'Segment.doubleSegment(number: $number)';
+    return 'Segment.doubleSegment(number: $number)';
 }
 
 
@@ -1281,16 +1307,18 @@ $TripleSegmentCopyWith<TripleSegment> get copyWith => _$TripleSegmentCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TripleSegment&&(identical(other.number, number) || other.number == number));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is TripleSegment&&(identical(other.number, number) || other.number == number));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,number);
+int get hashCode {
+    return Object.hash(runtimeType,number);
+}
 
 @override
 String toString() {
-  return 'Segment.triple(number: $number)';
+    return 'Segment.triple(number: $number)';
 }
 
 
@@ -1342,7 +1370,7 @@ class SingleBullSegment extends Segment {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SingleBullSegment);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is SingleBullSegment);
 }
 
 
@@ -1351,7 +1379,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Segment.singleBull()';
+    return 'Segment.singleBull()';
 }
 
 
@@ -1374,7 +1402,7 @@ class DoubleBullSegment extends Segment {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleBullSegment);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is DoubleBullSegment);
 }
 
 
@@ -1383,7 +1411,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Segment.doubleBull()';
+    return 'Segment.doubleBull()';
 }
 
 
@@ -1406,7 +1434,7 @@ class MissSegment extends Segment {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MissSegment);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is MissSegment);
 }
 
 
@@ -1415,7 +1443,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'Segment.miss()';
+    return 'Segment.miss()';
 }
 
 

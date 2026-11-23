@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_history_state.dart';
@@ -9,6 +9,7 @@ part of 'game_history_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $GameHistoryStateCopyWith<GameHistoryState> get copyWith => _$GameHistoryStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameHistoryState&&const DeepCollectionEquality().equals(other.games, games)&&const DeepCollectionEquality().equals(other.competitorsByGameId, competitorsByGameId)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.filterGameType, filterGameType) || other.filterGameType == filterGameType)&&(identical(other.filterDateFrom, filterDateFrom) || other.filterDateFrom == filterDateFrom)&&(identical(other.filterDateTo, filterDateTo) || other.filterDateTo == filterDateTo));
+  final _this = this as GameHistoryState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameHistoryState&&const DeepCollectionEquality().equals(other.games, _this.games)&&const DeepCollectionEquality().equals(other.competitorsByGameId, _this.competitorsByGameId)&&(identical(other.isLoadingMore, _this.isLoadingMore) || other.isLoadingMore == _this.isLoadingMore)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.filterGameType, _this.filterGameType) || other.filterGameType == _this.filterGameType)&&(identical(other.filterDateFrom, _this.filterDateFrom) || other.filterDateFrom == _this.filterDateFrom)&&(identical(other.filterDateTo, _this.filterDateTo) || other.filterDateTo == _this.filterDateTo));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(games),const DeepCollectionEquality().hash(competitorsByGameId),isLoadingMore,hasMore,filterGameType,filterDateFrom,filterDateTo);
+int get hashCode {
+  final _this = this as GameHistoryState;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.games),const DeepCollectionEquality().hash(_this.competitorsByGameId),_this.isLoadingMore,_this.hasMore,_this.filterGameType,_this.filterDateFrom,_this.filterDateTo);
+}
 
 @override
 String toString() {
-  return 'GameHistoryState(games: $games, competitorsByGameId: $competitorsByGameId, isLoadingMore: $isLoadingMore, hasMore: $hasMore, filterGameType: $filterGameType, filterDateFrom: $filterDateFrom, filterDateTo: $filterDateTo)';
+  final _this = this as GameHistoryState;
+  return 'GameHistoryState(games: ${_this.games}, competitorsByGameId: ${_this.competitorsByGameId}, isLoadingMore: ${_this.isLoadingMore}, hasMore: ${_this.hasMore}, filterGameType: ${_this.filterGameType}, filterDateFrom: ${_this.filterDateFrom}, filterDateTo: ${_this.filterDateTo})';
 }
 
 
@@ -63,7 +69,7 @@ class _$GameHistoryStateCopyWithImpl<$Res>
 /// Create a copy of GameHistoryState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? games = null,Object? competitorsByGameId = null,Object? isLoadingMore = null,Object? hasMore = null,Object? filterGameType = freezed,Object? filterDateFrom = freezed,Object? filterDateTo = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(GameHistoryState(
 games: null == games ? _self.games : games // ignore: cast_nullable_to_non_nullable
 as List<Game>,competitorsByGameId: null == competitorsByGameId ? _self.competitorsByGameId : competitorsByGameId // ignore: cast_nullable_to_non_nullable
 as Map<String, List<Competitor>>,isLoadingMore: null == isLoadingMore ? _self.isLoadingMore : isLoadingMore // ignore: cast_nullable_to_non_nullable
@@ -212,7 +218,7 @@ return $default(_that.games,_that.competitorsByGameId,_that.isLoadingMore,_that.
 
 
 class _GameHistoryState implements GameHistoryState {
-  const _GameHistoryState({final  List<Game> games = const <Game>[], final  Map<String, List<Competitor>> competitorsByGameId = const <String, List<Competitor>>{}, this.isLoadingMore = false, this.hasMore = true, this.filterGameType, this.filterDateFrom, this.filterDateTo}): _games = games,_competitorsByGameId = competitorsByGameId;
+  const _GameHistoryState({ List<Game> games = const <Game>[],  Map<String, List<Competitor>> competitorsByGameId = const <String, List<Competitor>>{}, this.isLoadingMore = false, this.hasMore = true, this.filterGameType, this.filterDateFrom, this.filterDateTo}): _games = games,_competitorsByGameId = competitorsByGameId;
   
 
  final  List<Game> _games;
@@ -245,16 +251,18 @@ _$GameHistoryStateCopyWith<_GameHistoryState> get copyWith => __$GameHistoryStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameHistoryState&&const DeepCollectionEquality().equals(other._games, _games)&&const DeepCollectionEquality().equals(other._competitorsByGameId, _competitorsByGameId)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.filterGameType, filterGameType) || other.filterGameType == filterGameType)&&(identical(other.filterDateFrom, filterDateFrom) || other.filterDateFrom == filterDateFrom)&&(identical(other.filterDateTo, filterDateTo) || other.filterDateTo == filterDateTo));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameHistoryState&&const DeepCollectionEquality().equals(other.games, _games)&&const DeepCollectionEquality().equals(other.competitorsByGameId, _competitorsByGameId)&&(identical(other.isLoadingMore, isLoadingMore) || other.isLoadingMore == isLoadingMore)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.filterGameType, filterGameType) || other.filterGameType == filterGameType)&&(identical(other.filterDateFrom, filterDateFrom) || other.filterDateFrom == filterDateFrom)&&(identical(other.filterDateTo, filterDateTo) || other.filterDateTo == filterDateTo));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_games),const DeepCollectionEquality().hash(_competitorsByGameId),isLoadingMore,hasMore,filterGameType,filterDateFrom,filterDateTo);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_games),const DeepCollectionEquality().hash(_competitorsByGameId),isLoadingMore,hasMore,filterGameType,filterDateFrom,filterDateTo);
+}
 
 @override
 String toString() {
-  return 'GameHistoryState(games: $games, competitorsByGameId: $competitorsByGameId, isLoadingMore: $isLoadingMore, hasMore: $hasMore, filterGameType: $filterGameType, filterDateFrom: $filterDateFrom, filterDateTo: $filterDateTo)';
+    return 'GameHistoryState(games: $games, competitorsByGameId: $competitorsByGameId, isLoadingMore: $isLoadingMore, hasMore: $hasMore, filterGameType: $filterGameType, filterDateFrom: $filterDateFrom, filterDateTo: $filterDateTo)';
 }
 
 

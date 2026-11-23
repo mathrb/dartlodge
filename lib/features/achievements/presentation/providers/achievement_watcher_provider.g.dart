@@ -71,7 +71,7 @@ final class AchievementWatcherProvider
 }
 
 String _$achievementWatcherHash() =>
-    r'295058c057024b0e7d24e807ac9d7bb77013d584';
+    r'd104a41c7344cc998b02d44128b54aaed0ef09c9';
 
 /// Reactive achievement detection + persistence (#521/#525).
 ///

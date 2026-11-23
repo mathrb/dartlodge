@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_result.dart';
@@ -9,6 +9,7 @@ part of 'game_result.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 GameResult _$GameResultFromJson(
@@ -58,7 +59,7 @@ mixin _$GameResult {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameResult);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is GameResult);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -67,7 +68,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'GameResult()';
+    return 'GameResult()';
 }
 
 
@@ -231,7 +232,7 @@ return shanghai(_that.competitors,_that.winnerCompetitorId,_that.totalRounds);ca
 @JsonSerializable()
 
 class AroundTheClockResult implements GameResult {
-  const AroundTheClockResult({required final  List<AtcCompetitorResult> competitors, required this.winnerCompetitorId, required this.doublesOnly, final  String? $type}): _competitors = competitors,$type = $type ?? 'aroundTheClock';
+  const AroundTheClockResult({required  List<AtcCompetitorResult> competitors, required this.winnerCompetitorId, required this.doublesOnly,  String? $type}): _competitors = competitors,$type = $type ?? 'aroundTheClock';
   factory AroundTheClockResult.fromJson(Map<String, dynamic> json) => _$AroundTheClockResultFromJson(json);
 
  final  List<AtcCompetitorResult> _competitors;
@@ -261,16 +262,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockResult&&const DeepCollectionEquality().equals(other._competitors, _competitors)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.doublesOnly, doublesOnly) || other.doublesOnly == doublesOnly));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AroundTheClockResult&&const DeepCollectionEquality().equals(other.competitors, _competitors)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.doublesOnly, doublesOnly) || other.doublesOnly == doublesOnly));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_competitors),winnerCompetitorId,doublesOnly);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_competitors),winnerCompetitorId,doublesOnly);
+}
 
 @override
 String toString() {
-  return 'GameResult.aroundTheClock(competitors: $competitors, winnerCompetitorId: $winnerCompetitorId, doublesOnly: $doublesOnly)';
+    return 'GameResult.aroundTheClock(competitors: $competitors, winnerCompetitorId: $winnerCompetitorId, doublesOnly: $doublesOnly)';
 }
 
 
@@ -314,7 +317,7 @@ as bool,
 @JsonSerializable()
 
 class Catch40Result implements GameResult {
-  const Catch40Result({required this.competitorName, required this.score, required this.targetsCleared, this.endedEarly = false, final  String? $type}): $type = $type ?? 'catch40';
+  const Catch40Result({required this.competitorName, required this.score, required this.targetsCleared, this.endedEarly = false,  String? $type}): $type = $type ?? 'catch40';
   factory Catch40Result.fromJson(Map<String, dynamic> json) => _$Catch40ResultFromJson(json);
 
  final  String competitorName;
@@ -341,16 +344,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Catch40Result&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.score, score) || other.score == score)&&(identical(other.targetsCleared, targetsCleared) || other.targetsCleared == targetsCleared)&&(identical(other.endedEarly, endedEarly) || other.endedEarly == endedEarly));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Catch40Result&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.score, score) || other.score == score)&&(identical(other.targetsCleared, targetsCleared) || other.targetsCleared == targetsCleared)&&(identical(other.endedEarly, endedEarly) || other.endedEarly == endedEarly));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorName,score,targetsCleared,endedEarly);
+int get hashCode {
+    return Object.hash(runtimeType,competitorName,score,targetsCleared,endedEarly);
+}
 
 @override
 String toString() {
-  return 'GameResult.catch40(competitorName: $competitorName, score: $score, targetsCleared: $targetsCleared, endedEarly: $endedEarly)';
+    return 'GameResult.catch40(competitorName: $competitorName, score: $score, targetsCleared: $targetsCleared, endedEarly: $endedEarly)';
 }
 
 
@@ -395,7 +400,7 @@ as bool,
 @JsonSerializable()
 
 class Bobs27Result implements GameResult {
-  const Bobs27Result({required this.competitorName, required this.finalScore, required this.roundReached, required this.bustedToZero, this.endedEarly = false, final  String? $type}): $type = $type ?? 'bobs27';
+  const Bobs27Result({required this.competitorName, required this.finalScore, required this.roundReached, required this.bustedToZero, this.endedEarly = false,  String? $type}): $type = $type ?? 'bobs27';
   factory Bobs27Result.fromJson(Map<String, dynamic> json) => _$Bobs27ResultFromJson(json);
 
  final  String competitorName;
@@ -427,16 +432,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Bobs27Result&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.finalScore, finalScore) || other.finalScore == finalScore)&&(identical(other.roundReached, roundReached) || other.roundReached == roundReached)&&(identical(other.bustedToZero, bustedToZero) || other.bustedToZero == bustedToZero)&&(identical(other.endedEarly, endedEarly) || other.endedEarly == endedEarly));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is Bobs27Result&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.finalScore, finalScore) || other.finalScore == finalScore)&&(identical(other.roundReached, roundReached) || other.roundReached == roundReached)&&(identical(other.bustedToZero, bustedToZero) || other.bustedToZero == bustedToZero)&&(identical(other.endedEarly, endedEarly) || other.endedEarly == endedEarly));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorName,finalScore,roundReached,bustedToZero,endedEarly);
+int get hashCode {
+    return Object.hash(runtimeType,competitorName,finalScore,roundReached,bustedToZero,endedEarly);
+}
 
 @override
 String toString() {
-  return 'GameResult.bobs27(competitorName: $competitorName, finalScore: $finalScore, roundReached: $roundReached, bustedToZero: $bustedToZero, endedEarly: $endedEarly)';
+    return 'GameResult.bobs27(competitorName: $competitorName, finalScore: $finalScore, roundReached: $roundReached, bustedToZero: $bustedToZero, endedEarly: $endedEarly)';
 }
 
 
@@ -482,7 +489,7 @@ as bool,
 @JsonSerializable()
 
 class CheckoutPracticeResult implements GameResult {
-  const CheckoutPracticeResult({required this.competitorName, required this.attempts, required this.successes, required this.dartsThrown, required this.fromScore, this.targetSuccesses, this.targetMode = 'fixed', this.fixedTarget = 170, this.minTarget = 40, this.maxTarget = 170, final  String? $type}): $type = $type ?? 'checkoutPractice';
+  const CheckoutPracticeResult({required this.competitorName, required this.attempts, required this.successes, required this.dartsThrown, required this.fromScore, this.targetSuccesses, this.targetMode = 'fixed', this.fixedTarget = 170, this.minTarget = 40, this.maxTarget = 170,  String? $type}): $type = $type ?? 'checkoutPractice';
   factory CheckoutPracticeResult.fromJson(Map<String, dynamic> json) => _$CheckoutPracticeResultFromJson(json);
 
  final  String competitorName;
@@ -513,16 +520,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeResult&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.successes, successes) || other.successes == successes)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown)&&(identical(other.fromScore, fromScore) || other.fromScore == fromScore)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&(identical(other.fixedTarget, fixedTarget) || other.fixedTarget == fixedTarget)&&(identical(other.minTarget, minTarget) || other.minTarget == minTarget)&&(identical(other.maxTarget, maxTarget) || other.maxTarget == maxTarget));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is CheckoutPracticeResult&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.successes, successes) || other.successes == successes)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown)&&(identical(other.fromScore, fromScore) || other.fromScore == fromScore)&&(identical(other.targetSuccesses, targetSuccesses) || other.targetSuccesses == targetSuccesses)&&(identical(other.targetMode, targetMode) || other.targetMode == targetMode)&&(identical(other.fixedTarget, fixedTarget) || other.fixedTarget == fixedTarget)&&(identical(other.minTarget, minTarget) || other.minTarget == minTarget)&&(identical(other.maxTarget, maxTarget) || other.maxTarget == maxTarget));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorName,attempts,successes,dartsThrown,fromScore,targetSuccesses,targetMode,fixedTarget,minTarget,maxTarget);
+int get hashCode {
+    return Object.hash(runtimeType,competitorName,attempts,successes,dartsThrown,fromScore,targetSuccesses,targetMode,fixedTarget,minTarget,maxTarget);
+}
 
 @override
 String toString() {
-  return 'GameResult.checkoutPractice(competitorName: $competitorName, attempts: $attempts, successes: $successes, dartsThrown: $dartsThrown, fromScore: $fromScore, targetSuccesses: $targetSuccesses, targetMode: $targetMode, fixedTarget: $fixedTarget, minTarget: $minTarget, maxTarget: $maxTarget)';
+    return 'GameResult.checkoutPractice(competitorName: $competitorName, attempts: $attempts, successes: $successes, dartsThrown: $dartsThrown, fromScore: $fromScore, targetSuccesses: $targetSuccesses, targetMode: $targetMode, fixedTarget: $fixedTarget, minTarget: $minTarget, maxTarget: $maxTarget)';
 }
 
 
@@ -573,7 +582,7 @@ as int,
 @JsonSerializable()
 
 class ShanghaiResult implements GameResult {
-  const ShanghaiResult({required final  List<ShanghaiCompetitorResult> competitors, required this.winnerCompetitorId, required this.totalRounds, final  String? $type}): _competitors = competitors,$type = $type ?? 'shanghai';
+  const ShanghaiResult({required  List<ShanghaiCompetitorResult> competitors, required this.winnerCompetitorId, required this.totalRounds,  String? $type}): _competitors = competitors,$type = $type ?? 'shanghai';
   factory ShanghaiResult.fromJson(Map<String, dynamic> json) => _$ShanghaiResultFromJson(json);
 
  final  List<ShanghaiCompetitorResult> _competitors;
@@ -603,16 +612,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiResult&&const DeepCollectionEquality().equals(other._competitors, _competitors)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiResult&&const DeepCollectionEquality().equals(other.competitors, _competitors)&&(identical(other.winnerCompetitorId, winnerCompetitorId) || other.winnerCompetitorId == winnerCompetitorId)&&(identical(other.totalRounds, totalRounds) || other.totalRounds == totalRounds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_competitors),winnerCompetitorId,totalRounds);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_competitors),winnerCompetitorId,totalRounds);
+}
 
 @override
 String toString() {
-  return 'GameResult.shanghai(competitors: $competitors, winnerCompetitorId: $winnerCompetitorId, totalRounds: $totalRounds)';
+    return 'GameResult.shanghai(competitors: $competitors, winnerCompetitorId: $winnerCompetitorId, totalRounds: $totalRounds)';
 }
 
 
@@ -669,16 +680,21 @@ $AtcCompetitorResultCopyWith<AtcCompetitorResult> get copyWith => _$AtcCompetito
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AtcCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.turnsCompleted, turnsCompleted) || other.turnsCompleted == turnsCompleted)&&(identical(other.totalDarts, totalDarts) || other.totalDarts == totalDarts)&&(identical(other.lastTargetHit, lastTargetHit) || other.lastTargetHit == lastTargetHit)&&(identical(other.finished, finished) || other.finished == finished));
+  final _this = this as AtcCompetitorResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AtcCompetitorResult&&(identical(other.competitorId, _this.competitorId) || other.competitorId == _this.competitorId)&&(identical(other.competitorName, _this.competitorName) || other.competitorName == _this.competitorName)&&(identical(other.turnsCompleted, _this.turnsCompleted) || other.turnsCompleted == _this.turnsCompleted)&&(identical(other.totalDarts, _this.totalDarts) || other.totalDarts == _this.totalDarts)&&(identical(other.lastTargetHit, _this.lastTargetHit) || other.lastTargetHit == _this.lastTargetHit)&&(identical(other.finished, _this.finished) || other.finished == _this.finished));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,turnsCompleted,totalDarts,lastTargetHit,finished);
+int get hashCode {
+  final _this = this as AtcCompetitorResult;
+  return Object.hash(runtimeType,_this.competitorId,_this.competitorName,_this.turnsCompleted,_this.totalDarts,_this.lastTargetHit,_this.finished);
+}
 
 @override
 String toString() {
-  return 'AtcCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, turnsCompleted: $turnsCompleted, totalDarts: $totalDarts, lastTargetHit: $lastTargetHit, finished: $finished)';
+  final _this = this as AtcCompetitorResult;
+  return 'AtcCompetitorResult(competitorId: ${_this.competitorId}, competitorName: ${_this.competitorName}, turnsCompleted: ${_this.turnsCompleted}, totalDarts: ${_this.totalDarts}, lastTargetHit: ${_this.lastTargetHit}, finished: ${_this.finished})';
 }
 
 
@@ -707,7 +723,7 @@ class _$AtcCompetitorResultCopyWithImpl<$Res>
 /// Create a copy of AtcCompetitorResult
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? competitorName = null,Object? turnsCompleted = null,Object? totalDarts = null,Object? lastTargetHit = null,Object? finished = null,}) {
-  return _then(_self.copyWith(
+  return _then(AtcCompetitorResult(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
 as String,turnsCompleted: null == turnsCompleted ? _self.turnsCompleted : turnsCompleted // ignore: cast_nullable_to_non_nullable
@@ -872,16 +888,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AtcCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.turnsCompleted, turnsCompleted) || other.turnsCompleted == turnsCompleted)&&(identical(other.totalDarts, totalDarts) || other.totalDarts == totalDarts)&&(identical(other.lastTargetHit, lastTargetHit) || other.lastTargetHit == lastTargetHit)&&(identical(other.finished, finished) || other.finished == finished));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AtcCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.turnsCompleted, turnsCompleted) || other.turnsCompleted == turnsCompleted)&&(identical(other.totalDarts, totalDarts) || other.totalDarts == totalDarts)&&(identical(other.lastTargetHit, lastTargetHit) || other.lastTargetHit == lastTargetHit)&&(identical(other.finished, finished) || other.finished == finished));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,turnsCompleted,totalDarts,lastTargetHit,finished);
+int get hashCode {
+    return Object.hash(runtimeType,competitorId,competitorName,turnsCompleted,totalDarts,lastTargetHit,finished);
+}
 
 @override
 String toString() {
-  return 'AtcCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, turnsCompleted: $turnsCompleted, totalDarts: $totalDarts, lastTargetHit: $lastTargetHit, finished: $finished)';
+    return 'AtcCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, turnsCompleted: $turnsCompleted, totalDarts: $totalDarts, lastTargetHit: $lastTargetHit, finished: $finished)';
 }
 
 
@@ -941,16 +959,21 @@ $ShanghaiCompetitorResultCopyWith<ShanghaiCompetitorResult> get copyWith => _$Sh
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.totalScore, totalScore) || other.totalScore == totalScore)&&(identical(other.shanghaiBonuses, shanghaiBonuses) || other.shanghaiBonuses == shanghaiBonuses)&&(identical(other.bestRound, bestRound) || other.bestRound == bestRound)&&(identical(other.roundsPlayed, roundsPlayed) || other.roundsPlayed == roundsPlayed));
+  final _this = this as ShanghaiCompetitorResult;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShanghaiCompetitorResult&&(identical(other.competitorId, _this.competitorId) || other.competitorId == _this.competitorId)&&(identical(other.competitorName, _this.competitorName) || other.competitorName == _this.competitorName)&&(identical(other.totalScore, _this.totalScore) || other.totalScore == _this.totalScore)&&(identical(other.shanghaiBonuses, _this.shanghaiBonuses) || other.shanghaiBonuses == _this.shanghaiBonuses)&&(identical(other.bestRound, _this.bestRound) || other.bestRound == _this.bestRound)&&(identical(other.roundsPlayed, _this.roundsPlayed) || other.roundsPlayed == _this.roundsPlayed));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,totalScore,shanghaiBonuses,bestRound,roundsPlayed);
+int get hashCode {
+  final _this = this as ShanghaiCompetitorResult;
+  return Object.hash(runtimeType,_this.competitorId,_this.competitorName,_this.totalScore,_this.shanghaiBonuses,_this.bestRound,_this.roundsPlayed);
+}
 
 @override
 String toString() {
-  return 'ShanghaiCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, totalScore: $totalScore, shanghaiBonuses: $shanghaiBonuses, bestRound: $bestRound, roundsPlayed: $roundsPlayed)';
+  final _this = this as ShanghaiCompetitorResult;
+  return 'ShanghaiCompetitorResult(competitorId: ${_this.competitorId}, competitorName: ${_this.competitorName}, totalScore: ${_this.totalScore}, shanghaiBonuses: ${_this.shanghaiBonuses}, bestRound: ${_this.bestRound}, roundsPlayed: ${_this.roundsPlayed})';
 }
 
 
@@ -979,7 +1002,7 @@ class _$ShanghaiCompetitorResultCopyWithImpl<$Res>
 /// Create a copy of ShanghaiCompetitorResult
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? competitorName = null,Object? totalScore = null,Object? shanghaiBonuses = null,Object? bestRound = null,Object? roundsPlayed = null,}) {
-  return _then(_self.copyWith(
+  return _then(ShanghaiCompetitorResult(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
 as String,totalScore: null == totalScore ? _self.totalScore : totalScore // ignore: cast_nullable_to_non_nullable
@@ -1144,16 +1167,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShanghaiCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.totalScore, totalScore) || other.totalScore == totalScore)&&(identical(other.shanghaiBonuses, shanghaiBonuses) || other.shanghaiBonuses == shanghaiBonuses)&&(identical(other.bestRound, bestRound) || other.bestRound == bestRound)&&(identical(other.roundsPlayed, roundsPlayed) || other.roundsPlayed == roundsPlayed));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShanghaiCompetitorResult&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&(identical(other.totalScore, totalScore) || other.totalScore == totalScore)&&(identical(other.shanghaiBonuses, shanghaiBonuses) || other.shanghaiBonuses == shanghaiBonuses)&&(identical(other.bestRound, bestRound) || other.bestRound == bestRound)&&(identical(other.roundsPlayed, roundsPlayed) || other.roundsPlayed == roundsPlayed));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,competitorId,competitorName,totalScore,shanghaiBonuses,bestRound,roundsPlayed);
+int get hashCode {
+    return Object.hash(runtimeType,competitorId,competitorName,totalScore,shanghaiBonuses,bestRound,roundsPlayed);
+}
 
 @override
 String toString() {
-  return 'ShanghaiCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, totalScore: $totalScore, shanghaiBonuses: $shanghaiBonuses, bestRound: $bestRound, roundsPlayed: $roundsPlayed)';
+    return 'ShanghaiCompetitorResult(competitorId: $competitorId, competitorName: $competitorName, totalScore: $totalScore, shanghaiBonuses: $shanghaiBonuses, bestRound: $bestRound, roundsPlayed: $roundsPlayed)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'game_stats.dart';
@@ -9,6 +9,7 @@ part of 'game_stats.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $GameStatsCopyWith<GameStats> get copyWith => _$GameStatsCopyWithImpl<GameStats>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameStats&&(identical(other.gameId, gameId) || other.gameId == gameId)&&const DeepCollectionEquality().equals(other.byCompetitor, byCompetitor)&&(identical(other.gameType, gameType) || other.gameType == gameType));
+  final _this = this as GameStats;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GameStats&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&const DeepCollectionEquality().equals(other.byCompetitor, _this.byCompetitor)&&(identical(other.gameType, _this.gameType) || other.gameType == _this.gameType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,const DeepCollectionEquality().hash(byCompetitor),gameType);
+int get hashCode {
+  final _this = this as GameStats;
+  return Object.hash(runtimeType,_this.gameId,const DeepCollectionEquality().hash(_this.byCompetitor),_this.gameType);
+}
 
 @override
 String toString() {
-  return 'GameStats(gameId: $gameId, byCompetitor: $byCompetitor, gameType: $gameType)';
+  final _this = this as GameStats;
+  return 'GameStats(gameId: ${_this.gameId}, byCompetitor: ${_this.byCompetitor}, gameType: ${_this.gameType})';
 }
 
 
@@ -66,7 +72,7 @@ class _$GameStatsCopyWithImpl<$Res>
 /// Create a copy of GameStats
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? gameId = null,Object? byCompetitor = null,Object? gameType = null,}) {
-  return _then(_self.copyWith(
+  return _then(GameStats(
 gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,byCompetitor: null == byCompetitor ? _self.byCompetitor : byCompetitor // ignore: cast_nullable_to_non_nullable
 as List<CompetitorStats>,gameType: null == gameType ? _self.gameType : gameType // ignore: cast_nullable_to_non_nullable
@@ -211,7 +217,7 @@ return $default(_that.gameId,_that.byCompetitor,_that.gameType);case _:
 @JsonSerializable()
 
 class _GameStats implements GameStats {
-  const _GameStats({required this.gameId, required final  List<CompetitorStats> byCompetitor, this.gameType = ''}): _byCompetitor = byCompetitor;
+  const _GameStats({required this.gameId, required  List<CompetitorStats> byCompetitor, this.gameType = ''}): _byCompetitor = byCompetitor;
   factory _GameStats.fromJson(Map<String, dynamic> json) => _$GameStatsFromJson(json);
 
 @override final  String gameId;
@@ -237,16 +243,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameStats&&(identical(other.gameId, gameId) || other.gameId == gameId)&&const DeepCollectionEquality().equals(other._byCompetitor, _byCompetitor)&&(identical(other.gameType, gameType) || other.gameType == gameType));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GameStats&&(identical(other.gameId, gameId) || other.gameId == gameId)&&const DeepCollectionEquality().equals(other.byCompetitor, _byCompetitor)&&(identical(other.gameType, gameType) || other.gameType == gameType));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,gameId,const DeepCollectionEquality().hash(_byCompetitor),gameType);
+int get hashCode {
+    return Object.hash(runtimeType,gameId,const DeepCollectionEquality().hash(_byCompetitor),gameType);
+}
 
 @override
 String toString() {
-  return 'GameStats(gameId: $gameId, byCompetitor: $byCompetitor, gameType: $gameType)';
+    return 'GameStats(gameId: $gameId, byCompetitor: $byCompetitor, gameType: $gameType)';
 }
 
 
@@ -303,16 +311,21 @@ $CompetitorStatsCopyWith<CompetitorStats> get copyWith => _$CompetitorStatsCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other.byPlayer, byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns)&&(identical(other.marksPerRound, marksPerRound) || other.marksPerRound == marksPerRound)&&(identical(other.firstNineMarksPerRound, firstNineMarksPerRound) || other.firstNineMarksPerRound == firstNineMarksPerRound)&&(identical(other.fiveMarkTurns, fiveMarkTurns) || other.fiveMarkTurns == fiveMarkTurns)&&(identical(other.sixMarkTurns, sixMarkTurns) || other.sixMarkTurns == sixMarkTurns)&&(identical(other.sevenMarkTurns, sevenMarkTurns) || other.sevenMarkTurns == sevenMarkTurns)&&(identical(other.eightMarkTurns, eightMarkTurns) || other.eightMarkTurns == eightMarkTurns)&&(identical(other.nineMarkTurns, nineMarkTurns) || other.nineMarkTurns == nineMarkTurns)&&(identical(other.finalScore, finalScore) || other.finalScore == finalScore));
+  final _this = this as CompetitorStats;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CompetitorStats&&(identical(other.competitorId, _this.competitorId) || other.competitorId == _this.competitorId)&&(identical(other.competitorName, _this.competitorName) || other.competitorName == _this.competitorName)&&const DeepCollectionEquality().equals(other.byPlayer, _this.byPlayer)&&(identical(other.threeDartAverage, _this.threeDartAverage) || other.threeDartAverage == _this.threeDartAverage)&&(identical(other.legsWon, _this.legsWon) || other.legsWon == _this.legsWon)&&(identical(other.totalDartsThrown, _this.totalDartsThrown) || other.totalDartsThrown == _this.totalDartsThrown)&&(identical(other.checkoutPercentage, _this.checkoutPercentage) || other.checkoutPercentage == _this.checkoutPercentage)&&(identical(other.highestCheckout, _this.highestCheckout) || other.highestCheckout == _this.highestCheckout)&&(identical(other.oneEightyTurns, _this.oneEightyTurns) || other.oneEightyTurns == _this.oneEightyTurns)&&(identical(other.sixtyPlusTurns, _this.sixtyPlusTurns) || other.sixtyPlusTurns == _this.sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, _this.oneHundredPlusTurns) || other.oneHundredPlusTurns == _this.oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, _this.oneFortyPlusTurns) || other.oneFortyPlusTurns == _this.oneFortyPlusTurns)&&(identical(other.marksPerRound, _this.marksPerRound) || other.marksPerRound == _this.marksPerRound)&&(identical(other.firstNineMarksPerRound, _this.firstNineMarksPerRound) || other.firstNineMarksPerRound == _this.firstNineMarksPerRound)&&(identical(other.fiveMarkTurns, _this.fiveMarkTurns) || other.fiveMarkTurns == _this.fiveMarkTurns)&&(identical(other.sixMarkTurns, _this.sixMarkTurns) || other.sixMarkTurns == _this.sixMarkTurns)&&(identical(other.sevenMarkTurns, _this.sevenMarkTurns) || other.sevenMarkTurns == _this.sevenMarkTurns)&&(identical(other.eightMarkTurns, _this.eightMarkTurns) || other.eightMarkTurns == _this.eightMarkTurns)&&(identical(other.nineMarkTurns, _this.nineMarkTurns) || other.nineMarkTurns == _this.nineMarkTurns)&&(identical(other.finalScore, _this.finalScore) || other.finalScore == _this.finalScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,highestCheckout,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns,marksPerRound,firstNineMarksPerRound,fiveMarkTurns,sixMarkTurns,sevenMarkTurns,eightMarkTurns,nineMarkTurns,finalScore]);
+int get hashCode {
+  final _this = this as CompetitorStats;
+  return Object.hashAll([runtimeType,_this.competitorId,_this.competitorName,const DeepCollectionEquality().hash(_this.byPlayer),_this.threeDartAverage,_this.legsWon,_this.totalDartsThrown,_this.checkoutPercentage,_this.highestCheckout,_this.oneEightyTurns,_this.sixtyPlusTurns,_this.oneHundredPlusTurns,_this.oneFortyPlusTurns,_this.marksPerRound,_this.firstNineMarksPerRound,_this.fiveMarkTurns,_this.sixMarkTurns,_this.sevenMarkTurns,_this.eightMarkTurns,_this.nineMarkTurns,_this.finalScore]);
+}
 
 @override
 String toString() {
-  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns, marksPerRound: $marksPerRound, firstNineMarksPerRound: $firstNineMarksPerRound, fiveMarkTurns: $fiveMarkTurns, sixMarkTurns: $sixMarkTurns, sevenMarkTurns: $sevenMarkTurns, eightMarkTurns: $eightMarkTurns, nineMarkTurns: $nineMarkTurns, finalScore: $finalScore)';
+  final _this = this as CompetitorStats;
+  return 'CompetitorStats(competitorId: ${_this.competitorId}, competitorName: ${_this.competitorName}, byPlayer: ${_this.byPlayer}, threeDartAverage: ${_this.threeDartAverage}, legsWon: ${_this.legsWon}, totalDartsThrown: ${_this.totalDartsThrown}, checkoutPercentage: ${_this.checkoutPercentage}, highestCheckout: ${_this.highestCheckout}, oneEightyTurns: ${_this.oneEightyTurns}, sixtyPlusTurns: ${_this.sixtyPlusTurns}, oneHundredPlusTurns: ${_this.oneHundredPlusTurns}, oneFortyPlusTurns: ${_this.oneFortyPlusTurns}, marksPerRound: ${_this.marksPerRound}, firstNineMarksPerRound: ${_this.firstNineMarksPerRound}, fiveMarkTurns: ${_this.fiveMarkTurns}, sixMarkTurns: ${_this.sixMarkTurns}, sevenMarkTurns: ${_this.sevenMarkTurns}, eightMarkTurns: ${_this.eightMarkTurns}, nineMarkTurns: ${_this.nineMarkTurns}, finalScore: ${_this.finalScore})';
 }
 
 
@@ -341,7 +354,7 @@ class _$CompetitorStatsCopyWithImpl<$Res>
 /// Create a copy of CompetitorStats
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? competitorId = null,Object? competitorName = null,Object? byPlayer = null,Object? threeDartAverage = null,Object? legsWon = null,Object? totalDartsThrown = null,Object? checkoutPercentage = freezed,Object? highestCheckout = freezed,Object? oneEightyTurns = null,Object? sixtyPlusTurns = null,Object? oneHundredPlusTurns = null,Object? oneFortyPlusTurns = null,Object? marksPerRound = freezed,Object? firstNineMarksPerRound = freezed,Object? fiveMarkTurns = null,Object? sixMarkTurns = null,Object? sevenMarkTurns = null,Object? eightMarkTurns = null,Object? nineMarkTurns = null,Object? finalScore = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(CompetitorStats(
 competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
 as String,competitorName: null == competitorName ? _self.competitorName : competitorName // ignore: cast_nullable_to_non_nullable
 as String,byPlayer: null == byPlayer ? _self.byPlayer : byPlayer // ignore: cast_nullable_to_non_nullable
@@ -503,7 +516,7 @@ return $default(_that.competitorId,_that.competitorName,_that.byPlayer,_that.thr
 @JsonSerializable()
 
 class _CompetitorStats implements CompetitorStats {
-  const _CompetitorStats({required this.competitorId, required this.competitorName, required final  List<PlayerTurnStats> byPlayer, required this.threeDartAverage, required this.legsWon, required this.totalDartsThrown, this.checkoutPercentage, this.highestCheckout, this.oneEightyTurns = 0, this.sixtyPlusTurns = 0, this.oneHundredPlusTurns = 0, this.oneFortyPlusTurns = 0, this.marksPerRound, this.firstNineMarksPerRound, this.fiveMarkTurns = 0, this.sixMarkTurns = 0, this.sevenMarkTurns = 0, this.eightMarkTurns = 0, this.nineMarkTurns = 0, this.finalScore}): _byPlayer = byPlayer;
+  const _CompetitorStats({required this.competitorId, required this.competitorName, required  List<PlayerTurnStats> byPlayer, required this.threeDartAverage, required this.legsWon, required this.totalDartsThrown, this.checkoutPercentage, this.highestCheckout, this.oneEightyTurns = 0, this.sixtyPlusTurns = 0, this.oneHundredPlusTurns = 0, this.oneFortyPlusTurns = 0, this.marksPerRound, this.firstNineMarksPerRound, this.fiveMarkTurns = 0, this.sixMarkTurns = 0, this.sevenMarkTurns = 0, this.eightMarkTurns = 0, this.nineMarkTurns = 0, this.finalScore}): _byPlayer = byPlayer;
   factory _CompetitorStats.fromJson(Map<String, dynamic> json) => _$CompetitorStatsFromJson(json);
 
 @override final  String competitorId;
@@ -546,16 +559,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other._byPlayer, _byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns)&&(identical(other.marksPerRound, marksPerRound) || other.marksPerRound == marksPerRound)&&(identical(other.firstNineMarksPerRound, firstNineMarksPerRound) || other.firstNineMarksPerRound == firstNineMarksPerRound)&&(identical(other.fiveMarkTurns, fiveMarkTurns) || other.fiveMarkTurns == fiveMarkTurns)&&(identical(other.sixMarkTurns, sixMarkTurns) || other.sixMarkTurns == sixMarkTurns)&&(identical(other.sevenMarkTurns, sevenMarkTurns) || other.sevenMarkTurns == sevenMarkTurns)&&(identical(other.eightMarkTurns, eightMarkTurns) || other.eightMarkTurns == eightMarkTurns)&&(identical(other.nineMarkTurns, nineMarkTurns) || other.nineMarkTurns == nineMarkTurns)&&(identical(other.finalScore, finalScore) || other.finalScore == finalScore));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CompetitorStats&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.competitorName, competitorName) || other.competitorName == competitorName)&&const DeepCollectionEquality().equals(other.byPlayer, _byPlayer)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.legsWon, legsWon) || other.legsWon == legsWon)&&(identical(other.totalDartsThrown, totalDartsThrown) || other.totalDartsThrown == totalDartsThrown)&&(identical(other.checkoutPercentage, checkoutPercentage) || other.checkoutPercentage == checkoutPercentage)&&(identical(other.highestCheckout, highestCheckout) || other.highestCheckout == highestCheckout)&&(identical(other.oneEightyTurns, oneEightyTurns) || other.oneEightyTurns == oneEightyTurns)&&(identical(other.sixtyPlusTurns, sixtyPlusTurns) || other.sixtyPlusTurns == sixtyPlusTurns)&&(identical(other.oneHundredPlusTurns, oneHundredPlusTurns) || other.oneHundredPlusTurns == oneHundredPlusTurns)&&(identical(other.oneFortyPlusTurns, oneFortyPlusTurns) || other.oneFortyPlusTurns == oneFortyPlusTurns)&&(identical(other.marksPerRound, marksPerRound) || other.marksPerRound == marksPerRound)&&(identical(other.firstNineMarksPerRound, firstNineMarksPerRound) || other.firstNineMarksPerRound == firstNineMarksPerRound)&&(identical(other.fiveMarkTurns, fiveMarkTurns) || other.fiveMarkTurns == fiveMarkTurns)&&(identical(other.sixMarkTurns, sixMarkTurns) || other.sixMarkTurns == sixMarkTurns)&&(identical(other.sevenMarkTurns, sevenMarkTurns) || other.sevenMarkTurns == sevenMarkTurns)&&(identical(other.eightMarkTurns, eightMarkTurns) || other.eightMarkTurns == eightMarkTurns)&&(identical(other.nineMarkTurns, nineMarkTurns) || other.nineMarkTurns == nineMarkTurns)&&(identical(other.finalScore, finalScore) || other.finalScore == finalScore));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hashAll([runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(_byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,highestCheckout,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns,marksPerRound,firstNineMarksPerRound,fiveMarkTurns,sixMarkTurns,sevenMarkTurns,eightMarkTurns,nineMarkTurns,finalScore]);
+int get hashCode {
+    return Object.hashAll([runtimeType,competitorId,competitorName,const DeepCollectionEquality().hash(_byPlayer),threeDartAverage,legsWon,totalDartsThrown,checkoutPercentage,highestCheckout,oneEightyTurns,sixtyPlusTurns,oneHundredPlusTurns,oneFortyPlusTurns,marksPerRound,firstNineMarksPerRound,fiveMarkTurns,sixMarkTurns,sevenMarkTurns,eightMarkTurns,nineMarkTurns,finalScore]);
+}
 
 @override
 String toString() {
-  return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns, marksPerRound: $marksPerRound, firstNineMarksPerRound: $firstNineMarksPerRound, fiveMarkTurns: $fiveMarkTurns, sixMarkTurns: $sixMarkTurns, sevenMarkTurns: $sevenMarkTurns, eightMarkTurns: $eightMarkTurns, nineMarkTurns: $nineMarkTurns, finalScore: $finalScore)';
+    return 'CompetitorStats(competitorId: $competitorId, competitorName: $competitorName, byPlayer: $byPlayer, threeDartAverage: $threeDartAverage, legsWon: $legsWon, totalDartsThrown: $totalDartsThrown, checkoutPercentage: $checkoutPercentage, highestCheckout: $highestCheckout, oneEightyTurns: $oneEightyTurns, sixtyPlusTurns: $sixtyPlusTurns, oneHundredPlusTurns: $oneHundredPlusTurns, oneFortyPlusTurns: $oneFortyPlusTurns, marksPerRound: $marksPerRound, firstNineMarksPerRound: $firstNineMarksPerRound, fiveMarkTurns: $fiveMarkTurns, sixMarkTurns: $sixMarkTurns, sevenMarkTurns: $sevenMarkTurns, eightMarkTurns: $eightMarkTurns, nineMarkTurns: $nineMarkTurns, finalScore: $finalScore)';
 }
 
 
@@ -629,16 +644,21 @@ $PlayerTurnStatsCopyWith<PlayerTurnStats> get copyWith => _$PlayerTurnStatsCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerTurnStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown));
+  final _this = this as PlayerTurnStats;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerTurnStats&&(identical(other.playerId, _this.playerId) || other.playerId == _this.playerId)&&(identical(other.threeDartAverage, _this.threeDartAverage) || other.threeDartAverage == _this.threeDartAverage)&&(identical(other.dartsThrown, _this.dartsThrown) || other.dartsThrown == _this.dartsThrown));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,threeDartAverage,dartsThrown);
+int get hashCode {
+  final _this = this as PlayerTurnStats;
+  return Object.hash(runtimeType,_this.playerId,_this.threeDartAverage,_this.dartsThrown);
+}
 
 @override
 String toString() {
-  return 'PlayerTurnStats(playerId: $playerId, threeDartAverage: $threeDartAverage, dartsThrown: $dartsThrown)';
+  final _this = this as PlayerTurnStats;
+  return 'PlayerTurnStats(playerId: ${_this.playerId}, threeDartAverage: ${_this.threeDartAverage}, dartsThrown: ${_this.dartsThrown})';
 }
 
 
@@ -667,7 +687,7 @@ class _$PlayerTurnStatsCopyWithImpl<$Res>
 /// Create a copy of PlayerTurnStats
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? playerId = null,Object? threeDartAverage = null,Object? dartsThrown = null,}) {
-  return _then(_self.copyWith(
+  return _then(PlayerTurnStats(
 playerId: null == playerId ? _self.playerId : playerId // ignore: cast_nullable_to_non_nullable
 as String,threeDartAverage: null == threeDartAverage ? _self.threeDartAverage : threeDartAverage // ignore: cast_nullable_to_non_nullable
 as double,dartsThrown: null == dartsThrown ? _self.dartsThrown : dartsThrown // ignore: cast_nullable_to_non_nullable
@@ -832,16 +852,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerTurnStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerTurnStats&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.threeDartAverage, threeDartAverage) || other.threeDartAverage == threeDartAverage)&&(identical(other.dartsThrown, dartsThrown) || other.dartsThrown == dartsThrown));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,playerId,threeDartAverage,dartsThrown);
+int get hashCode {
+    return Object.hash(runtimeType,playerId,threeDartAverage,dartsThrown);
+}
 
 @override
 String toString() {
-  return 'PlayerTurnStats(playerId: $playerId, threeDartAverage: $threeDartAverage, dartsThrown: $dartsThrown)';
+    return 'PlayerTurnStats(playerId: $playerId, threeDartAverage: $threeDartAverage, dartsThrown: $dartsThrown)';
 }
 
 

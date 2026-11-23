@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'player_leg_snapshot.dart';
@@ -9,6 +9,7 @@ part of 'player_leg_snapshot.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PlayerLegSnapshotCopyWith<PlayerLegSnapshot> get copyWith => _$PlayerLegSnapsho
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerLegSnapshot&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.legIndex, legIndex) || other.legIndex == legIndex)&&(identical(other.gameDate, gameDate) || other.gameDate == gameDate)&&(identical(other.ppr, ppr) || other.ppr == ppr)&&(identical(other.checkoutPct, checkoutPct) || other.checkoutPct == checkoutPct)&&(identical(other.checkoutScore, checkoutScore) || other.checkoutScore == checkoutScore)&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.mpt, mpt) || other.mpt == mpt)&&(identical(other.practiceScore, practiceScore) || other.practiceScore == practiceScore));
+  final _this = this as PlayerLegSnapshot;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PlayerLegSnapshot&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.legIndex, _this.legIndex) || other.legIndex == _this.legIndex)&&(identical(other.gameDate, _this.gameDate) || other.gameDate == _this.gameDate)&&(identical(other.ppr, _this.ppr) || other.ppr == _this.ppr)&&(identical(other.checkoutPct, _this.checkoutPct) || other.checkoutPct == _this.checkoutPct)&&(identical(other.checkoutScore, _this.checkoutScore) || other.checkoutScore == _this.checkoutScore)&&(identical(other.startingScore, _this.startingScore) || other.startingScore == _this.startingScore)&&(identical(other.mpt, _this.mpt) || other.mpt == _this.mpt)&&(identical(other.practiceScore, _this.practiceScore) || other.practiceScore == _this.practiceScore));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameId,legIndex,gameDate,ppr,checkoutPct,checkoutScore,startingScore,mpt,practiceScore);
+int get hashCode {
+  final _this = this as PlayerLegSnapshot;
+  return Object.hash(runtimeType,_this.gameId,_this.legIndex,_this.gameDate,_this.ppr,_this.checkoutPct,_this.checkoutScore,_this.startingScore,_this.mpt,_this.practiceScore);
+}
 
 @override
 String toString() {
-  return 'PlayerLegSnapshot(gameId: $gameId, legIndex: $legIndex, gameDate: $gameDate, ppr: $ppr, checkoutPct: $checkoutPct, checkoutScore: $checkoutScore, startingScore: $startingScore, mpt: $mpt, practiceScore: $practiceScore)';
+  final _this = this as PlayerLegSnapshot;
+  return 'PlayerLegSnapshot(gameId: ${_this.gameId}, legIndex: ${_this.legIndex}, gameDate: ${_this.gameDate}, ppr: ${_this.ppr}, checkoutPct: ${_this.checkoutPct}, checkoutScore: ${_this.checkoutScore}, startingScore: ${_this.startingScore}, mpt: ${_this.mpt}, practiceScore: ${_this.practiceScore})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PlayerLegSnapshotCopyWithImpl<$Res>
 /// Create a copy of PlayerLegSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? gameId = null,Object? legIndex = null,Object? gameDate = null,Object? ppr = null,Object? checkoutPct = freezed,Object? checkoutScore = freezed,Object? startingScore = freezed,Object? mpt = freezed,Object? practiceScore = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(PlayerLegSnapshot(
 gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,legIndex: null == legIndex ? _self.legIndex : legIndex // ignore: cast_nullable_to_non_nullable
 as int,gameDate: null == gameDate ? _self.gameDate : gameDate // ignore: cast_nullable_to_non_nullable
@@ -237,16 +243,18 @@ _$PlayerLegSnapshotCopyWith<_PlayerLegSnapshot> get copyWith => __$PlayerLegSnap
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerLegSnapshot&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.legIndex, legIndex) || other.legIndex == legIndex)&&(identical(other.gameDate, gameDate) || other.gameDate == gameDate)&&(identical(other.ppr, ppr) || other.ppr == ppr)&&(identical(other.checkoutPct, checkoutPct) || other.checkoutPct == checkoutPct)&&(identical(other.checkoutScore, checkoutScore) || other.checkoutScore == checkoutScore)&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.mpt, mpt) || other.mpt == mpt)&&(identical(other.practiceScore, practiceScore) || other.practiceScore == practiceScore));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PlayerLegSnapshot&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.legIndex, legIndex) || other.legIndex == legIndex)&&(identical(other.gameDate, gameDate) || other.gameDate == gameDate)&&(identical(other.ppr, ppr) || other.ppr == ppr)&&(identical(other.checkoutPct, checkoutPct) || other.checkoutPct == checkoutPct)&&(identical(other.checkoutScore, checkoutScore) || other.checkoutScore == checkoutScore)&&(identical(other.startingScore, startingScore) || other.startingScore == startingScore)&&(identical(other.mpt, mpt) || other.mpt == mpt)&&(identical(other.practiceScore, practiceScore) || other.practiceScore == practiceScore));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,gameId,legIndex,gameDate,ppr,checkoutPct,checkoutScore,startingScore,mpt,practiceScore);
+int get hashCode {
+    return Object.hash(runtimeType,gameId,legIndex,gameDate,ppr,checkoutPct,checkoutScore,startingScore,mpt,practiceScore);
+}
 
 @override
 String toString() {
-  return 'PlayerLegSnapshot(gameId: $gameId, legIndex: $legIndex, gameDate: $gameDate, ppr: $ppr, checkoutPct: $checkoutPct, checkoutScore: $checkoutScore, startingScore: $startingScore, mpt: $mpt, practiceScore: $practiceScore)';
+    return 'PlayerLegSnapshot(gameId: $gameId, legIndex: $legIndex, gameDate: $gameDate, ppr: $ppr, checkoutPct: $checkoutPct, checkoutScore: $checkoutScore, startingScore: $startingScore, mpt: $mpt, practiceScore: $practiceScore)';
 }
 
 

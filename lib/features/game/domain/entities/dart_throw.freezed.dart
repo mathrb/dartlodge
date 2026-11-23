@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'dart_throw.dart';
@@ -9,6 +9,7 @@ part of 'dart_throw.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $DartThrowCopyWith<DartThrow> get copyWith => _$DartThrowCopyWithImpl<DartThrow>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartThrow&&(identical(other.dartId, dartId) || other.dartId == dartId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.turnNumber, turnNumber) || other.turnNumber == turnNumber)&&(identical(other.dartNumber, dartNumber) || other.dartNumber == dartNumber)&&(identical(other.segment, segment) || other.segment == segment)&&(identical(other.score, score) || other.score == score)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
+  final _this = this as DartThrow;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DartThrow&&(identical(other.dartId, _this.dartId) || other.dartId == _this.dartId)&&(identical(other.gameId, _this.gameId) || other.gameId == _this.gameId)&&(identical(other.competitorId, _this.competitorId) || other.competitorId == _this.competitorId)&&(identical(other.playerId, _this.playerId) || other.playerId == _this.playerId)&&(identical(other.turnNumber, _this.turnNumber) || other.turnNumber == _this.turnNumber)&&(identical(other.dartNumber, _this.dartNumber) || other.dartNumber == _this.dartNumber)&&(identical(other.segment, _this.segment) || other.segment == _this.segment)&&(identical(other.score, _this.score) || other.score == _this.score)&&(identical(other.x, _this.x) || other.x == _this.x)&&(identical(other.y, _this.y) || other.y == _this.y));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,dartId,gameId,competitorId,playerId,turnNumber,dartNumber,segment,score,x,y);
+int get hashCode {
+  final _this = this as DartThrow;
+  return Object.hash(runtimeType,_this.dartId,_this.gameId,_this.competitorId,_this.playerId,_this.turnNumber,_this.dartNumber,_this.segment,_this.score,_this.x,_this.y);
+}
 
 @override
 String toString() {
-  return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
+  final _this = this as DartThrow;
+  return 'DartThrow(dartId: ${_this.dartId}, gameId: ${_this.gameId}, competitorId: ${_this.competitorId}, playerId: ${_this.playerId}, turnNumber: ${_this.turnNumber}, dartNumber: ${_this.dartNumber}, segment: ${_this.segment}, score: ${_this.score}, x: ${_this.x}, y: ${_this.y})';
 }
 
 
@@ -66,7 +72,7 @@ class _$DartThrowCopyWithImpl<$Res>
 /// Create a copy of DartThrow
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? dartId = null,Object? gameId = null,Object? competitorId = null,Object? playerId = null,Object? turnNumber = null,Object? dartNumber = null,Object? segment = null,Object? score = null,Object? x = freezed,Object? y = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(DartThrow(
 dartId: null == dartId ? _self.dartId : dartId // ignore: cast_nullable_to_non_nullable
 as String,gameId: null == gameId ? _self.gameId : gameId // ignore: cast_nullable_to_non_nullable
 as String,competitorId: null == competitorId ? _self.competitorId : competitorId // ignore: cast_nullable_to_non_nullable
@@ -245,16 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartThrow&&(identical(other.dartId, dartId) || other.dartId == dartId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.turnNumber, turnNumber) || other.turnNumber == turnNumber)&&(identical(other.dartNumber, dartNumber) || other.dartNumber == dartNumber)&&(identical(other.segment, segment) || other.segment == segment)&&(identical(other.score, score) || other.score == score)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DartThrow&&(identical(other.dartId, dartId) || other.dartId == dartId)&&(identical(other.gameId, gameId) || other.gameId == gameId)&&(identical(other.competitorId, competitorId) || other.competitorId == competitorId)&&(identical(other.playerId, playerId) || other.playerId == playerId)&&(identical(other.turnNumber, turnNumber) || other.turnNumber == turnNumber)&&(identical(other.dartNumber, dartNumber) || other.dartNumber == dartNumber)&&(identical(other.segment, segment) || other.segment == segment)&&(identical(other.score, score) || other.score == score)&&(identical(other.x, x) || other.x == x)&&(identical(other.y, y) || other.y == y));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,dartId,gameId,competitorId,playerId,turnNumber,dartNumber,segment,score,x,y);
+int get hashCode {
+    return Object.hash(runtimeType,dartId,gameId,competitorId,playerId,turnNumber,dartNumber,segment,score,x,y);
+}
 
 @override
 String toString() {
-  return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
+    return 'DartThrow(dartId: $dartId, gameId: $gameId, competitorId: $competitorId, playerId: $playerId, turnNumber: $turnNumber, dartNumber: $dartNumber, segment: $segment, score: $score, x: $x, y: $y)';
 }
 
 

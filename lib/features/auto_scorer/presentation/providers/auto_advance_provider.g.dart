@@ -13,7 +13,9 @@ part of 'auto_advance_provider.dart';
 /// removed from the board (board-clear → `TrackerPhase.rebaselined`), so the
 /// player doesn't press NEXT. Default **off**: changing the game flow
 /// automatically is opt-in, like the other auto-scorer switches. Only consulted
-/// on the YOLOView live-game path (X01 + Cricket).
+/// on the YOLOView live-game path (every board with a `DartInputSink`: X01,
+/// Cricket, practice, count-up). How long "cleared" takes is the separate
+/// `BoardClearWaitSetting` preset (#800).
 
 @ProviderFor(AutoAdvanceOnClearEnabled)
 final autoAdvanceOnClearEnabledProvider = AutoAdvanceOnClearEnabledProvider._();
@@ -23,7 +25,9 @@ final autoAdvanceOnClearEnabledProvider = AutoAdvanceOnClearEnabledProvider._();
 /// removed from the board (board-clear → `TrackerPhase.rebaselined`), so the
 /// player doesn't press NEXT. Default **off**: changing the game flow
 /// automatically is opt-in, like the other auto-scorer switches. Only consulted
-/// on the YOLOView live-game path (X01 + Cricket).
+/// on the YOLOView live-game path (every board with a `DartInputSink`: X01,
+/// Cricket, practice, count-up). How long "cleared" takes is the separate
+/// `BoardClearWaitSetting` preset (#800).
 final class AutoAdvanceOnClearEnabledProvider
     extends $AsyncNotifierProvider<AutoAdvanceOnClearEnabled, bool> {
   /// The "Auto-advance turn when board is cleared" opt-in. When on, the auto-scorer
@@ -31,7 +35,9 @@ final class AutoAdvanceOnClearEnabledProvider
   /// removed from the board (board-clear → `TrackerPhase.rebaselined`), so the
   /// player doesn't press NEXT. Default **off**: changing the game flow
   /// automatically is opt-in, like the other auto-scorer switches. Only consulted
-  /// on the YOLOView live-game path (X01 + Cricket).
+  /// on the YOLOView live-game path (every board with a `DartInputSink`: X01,
+  /// Cricket, practice, count-up). How long "cleared" takes is the separate
+  /// `BoardClearWaitSetting` preset (#800).
   AutoAdvanceOnClearEnabledProvider._()
     : super(
         from: null,
@@ -59,7 +65,9 @@ String _$autoAdvanceOnClearEnabledHash() =>
 /// removed from the board (board-clear → `TrackerPhase.rebaselined`), so the
 /// player doesn't press NEXT. Default **off**: changing the game flow
 /// automatically is opt-in, like the other auto-scorer switches. Only consulted
-/// on the YOLOView live-game path (X01 + Cricket).
+/// on the YOLOView live-game path (every board with a `DartInputSink`: X01,
+/// Cricket, practice, count-up). How long "cleared" takes is the separate
+/// `BoardClearWaitSetting` preset (#800).
 
 abstract class _$AutoAdvanceOnClearEnabled extends $AsyncNotifier<bool> {
   FutureOr<bool> build();
