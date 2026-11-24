@@ -351,12 +351,15 @@ class GetGameResultUseCase {
   /// prevents sharing the scan; both use the core `isOnADoubleFinish`
   /// predicate). Each run starts at that run's checkout target (the `from_score`
   /// stamp; 170 for legacy fixed games), resets on checkout, reverts on a bust,
-  /// so `remaining` is reconstructable from events (#636).
+  /// so `remaining` is reconstructable from events (#636). A visit still open
+  /// when the drill ends (End Drill writes no closing `TurnEnded`) counts too
+  /// when the player threw at a double in it.
   int _countCheckoutAttempts(List<GameEvent> events, String competitorId) {
     var attempts = 0;
     var remaining = 170;
     var visitStart = 170;
     var threwAtDouble = false;
+    var visitOpen = false;
     // A run-start TurnStarted resets `remaining` to that run's checkout target,
     // read from its `from_score` stamp (#636); defaults to 170 for legacy
     // fixed-170 games. Run-start = first turn, or the turn after a checkout.
@@ -371,10 +374,12 @@ class GetGameResultUseCase {
           prevWasCheckout = false;
           visitStart = remaining;
           threwAtDouble = false;
+          visitOpen = true;
         case 'DartThrown':
           if (isOnADoubleFinish(remaining)) threwAtDouble = true;
           remaining -= (e.payload['score'] as num?)?.toInt() ?? 0;
         case 'TurnEnded':
+          visitOpen = false;
           if (e.payload['reason'] == 'checkout') {
             attempts++;
             prevWasCheckout = true; // next TurnStarted starts a new run
@@ -384,6 +389,8 @@ class GetGameResultUseCase {
           }
       }
     }
+    // End Drill mid-visit: the open visit never got its TurnEnded.
+    if (visitOpen && threwAtDouble) attempts++;
     return attempts;
   }
 

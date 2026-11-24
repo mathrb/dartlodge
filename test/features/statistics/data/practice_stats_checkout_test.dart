@@ -34,12 +34,18 @@ void main() {
 
     tearDown(() async => base.tearDown());
 
-    Future<void> _setupGame(List<Map<String, dynamic>> events) async {
+    Future<void> _setupGame(
+      List<Map<String, dynamic>> events, {
+      String gameId = gameId,
+      String competitorId = competitorId,
+      String startTime = '',
+    }) async {
       await db.rawInsert('games', {
         'game_id': gameId,
         'game_type': GameType.checkoutPractice.name,
         'config_json': jsonEncode({}),
-        'start_time': DateTime.now().toIso8601String(),
+        'start_time':
+            startTime.isEmpty ? DateTime.now().toIso8601String() : startTime,
         'is_complete': 1,
       });
       await db.rawInsert('competitors', {
@@ -58,7 +64,7 @@ void main() {
         final eventType = payload['__type'] as String;
         final cleaned = Map<String, dynamic>.from(payload)..remove('__type');
         await db.rawInsert('game_events', {
-          'event_id': 'evt-$seq',
+          'event_id': 'evt-$gameId-$seq',
           'game_id': gameId,
           'event_type': eventType,
           'local_sequence': seq++,
@@ -197,6 +203,59 @@ void main() {
     });
 
     // Regression for #254: production checkout practice ends a drill with
+    // End Drill appends only GameCompleted: the visit in progress gets no
+    // closing TurnEnded. It is still an attempt when it was thrown at a double.
+    test('counts the open visit End Drill leaves unclosed', () async {
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 40},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 2, 'score': 40},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 40},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 0, 'multiplier': 1, 'score': 0},
+        {'__type': 'GameCompleted', 'winner_competitor_id': null},
+      ]);
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.checkoutPractice,
+      );
+
+      expect(stats.checkoutSuccesses, 1);
+      expect(stats.checkoutAttempts, 2,
+          reason: 'the unclosed visit threw three darts at D20 from 40');
+      expect(stats.checkoutSuccessRate, closeTo(0.5, 0.001));
+    });
+
+    test('flushes an open visit at each game boundary', () async {
+      // Game A ends mid-visit on a bust from 40; game B is a clean checkout.
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 40},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 20, 'multiplier': 3, 'score': 60},
+        {'__type': 'GameCompleted', 'winner_competitor_id': null},
+      ], startTime: '2026-01-01T10:00:00.000');
+      await _setupGame([
+        {'__type': 'TurnStarted', 'player_id': playerId, 'from_score': 32},
+        {'__type': 'DartThrown', 'player_id': playerId, 'segment': 16, 'multiplier': 2, 'score': 32},
+        {'__type': 'TurnEnded', 'player_id': playerId, 'reason': 'checkout'},
+        {'__type': 'GameCompleted', 'winner_competitor_id': 'comp-co-2'},
+      ],
+          gameId: 'game-co-2',
+          competitorId: 'comp-co-2',
+          startTime: '2026-01-02T10:00:00.000');
+
+      final stats = await statsRepo.getPlayerStats(
+        playerId,
+        gameType: GameType.checkoutPractice,
+      );
+
+      expect(stats.totalGames, 2);
+      expect(stats.checkoutSuccesses, 1);
+      expect(stats.checkoutAttempts, 2,
+          reason: "game A's open bust visit (from 40) + game B's checkout");
+    });
+
     // `GameCompleted` (no `LegCompleted` — solo, 1-leg drill). The closing
     // TurnEnded MUST be tagged `reason: 'checkout'` for the success to
     // count. Before the fix the producer stamped `reason: 'normal'` for
