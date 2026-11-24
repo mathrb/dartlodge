@@ -4,7 +4,7 @@
 // Crash-reporting handlers (FlutterError.onError + PlatformDispatcher.instance.
 // onError) are auto-installed by SentryFlutter.init via FlutterErrorIntegration
 // and OnErrorIntegration respectively (sentry_flutter >= ~7.x; current pin is
-// 9.19.0). Do NOT add manual handlers here — they would override Sentry's and
+// ^10.6.0). Do NOT add manual handlers here — they would override Sentry's and
 // silence the crash pipeline.
 //
 // Crash reporting is OPT-OUT: enabled by default, disableable in Settings. The
