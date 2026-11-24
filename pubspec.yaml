@@ -38,7 +38,11 @@ dependencies:
   fl_chart: ">=0.69.0 <2.0.0"
 
   # Error monitoring
-  sentry_flutter: ^9.16.1
+  # ^10.6.0: 10.x migrated the Android plugin to Flutter's built-in Kotlin
+  # support (no Kotlin Gradle Plugin). 9.x still applies KGP, which Flutter
+  # 3.47+ warns will fail future builds, and Sentry will not backport the fix.
+  # 10.4+ is also back on minSdk 24 (Flutter's default).
+  sentry_flutter: ^10.6.0
 
   # Screen wakelock
   wakelock_plus: ^1.6.0
@@ -58,7 +62,12 @@ dependencies:
   # Auto-scorer on-device detection (#378). ultralytics_yolo: the first-party
   # YOLO Flutter plugin (mobile only — the YOLOView impl is web-stubbed behind
   # a conditional import).
-  ultralytics_yolo: ^0.6.4
+  # Floor ^0.6.16 = the newest 0.6.x. Every release up to 0.7.x still applies
+  # the Kotlin Gradle Plugin behind an `android.builtInKotlin` guard, so the
+  # Flutter KGP warning still lists it. 0.7.x is not adopted here: it swaps
+  # LiteRT and changes model export/NMS defaults, which needs its own
+  # on-device validation.
+  ultralytics_yolo: ^0.6.16
 
   # Settings / preferences
   shared_preferences: ^2.3.4

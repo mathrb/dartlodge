@@ -80,6 +80,22 @@ else
   printf '\n# Disable R8 shrinking: it strips WorkManager/Room reflection classes and\n# crashes the release APK at startup. See tools/post-create-android.sh.\nshrink=false\n' >> "$GRADLE_PROPS"
 fi
 
+# Opt in to Flutter's built-in Kotlin support. The Flutter 3.47 app template
+# writes `android.builtInKotlin=false`, so plugins that guard their Kotlin
+# Gradle Plugin (KGP) apply on that property (ultralytics_yolo) really apply
+# KGP. Flutter 3.50 will set the property to true itself and break apps whose
+# plugins are not migrated (flutter/flutter#189235); AGP 10 removes the
+# opt-out. Flipping it here runs the built-in path now, so any breakage shows
+# up on our schedule rather than on the next Flutter bump. `android.newDsl`
+# stays as the template writes it, per the Flutter migration guide:
+# https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers
+# Upsert, like shrink= above, so re-running always lands on true.
+if grep -q '^android\.builtInKotlin=' "$GRADLE_PROPS"; then
+  sed -i 's/^android\.builtInKotlin=.*/android.builtInKotlin=true/' "$GRADLE_PROPS"
+else
+  printf '\n# Use Flutter built-in Kotlin support. See tools/post-create-android.sh.\nandroid.builtInKotlin=true\n' >> "$GRADLE_PROPS"
+fi
+
 # `flutter create` regenerates the default counter-app smoke test that
 # references a non-existent `MyApp` class. Drop it so `flutter analyze` stays
 # clean — but only if the file is the generated smoke test (matches `MyApp`).
@@ -89,4 +105,4 @@ if [[ -f test/widget_test.dart ]] && grep -q "MyApp" test/widget_test.dart; then
   rm -f test/widget_test.dart
 fi
 
-echo "android applicationId set to app.dartlodge, label set to DartLodge, minSdk left at Flutter's default, R8 shrinking disabled"
+echo "android applicationId set to app.dartlodge, label set to DartLodge, minSdk left at Flutter's default, R8 shrinking disabled, built-in Kotlin enabled"
