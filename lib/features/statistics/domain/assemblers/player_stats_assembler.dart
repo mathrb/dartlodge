@@ -2283,16 +2283,27 @@ class PlayerStatsAssembler {
     // A run starts at the first turn of a game or the turn after a checkout;
     // mid-run turns keep `remaining`. Reset at each game boundary (career stats
     // span games). `remaining` is reconstructed from events — no stored stat.
+    // A visit still open when its game ends (End Drill writes no closing
+    // TurnEnded) is flushed at the game boundary and after the loop; it counts
+    // when the player threw at a double in it. GameCompleted carries no
+    // player_id, so the flush cannot hang off it.
     int attempts = 0;
     int successes = 0;
     var remaining = 170;
     var visitStart = 170;
     var threwAtDouble = false;
+    var visitOpen = false;
     var prevWasCheckout = true; // first turn of a game is a run-start
     String? lastGameId;
 
+    void flushOpenVisit() {
+      if (visitOpen && threwAtDouble) attempts++;
+      visitOpen = false;
+    }
+
     for (final event in events) {
       if (event.gameId != lastGameId) {
+        flushOpenVisit();
         lastGameId = event.gameId;
         remaining = 170;
         visitStart = 170;
@@ -2309,10 +2320,12 @@ class PlayerStatsAssembler {
           prevWasCheckout = false;
           visitStart = remaining;
           threwAtDouble = false;
+          visitOpen = true;
         case 'DartThrown':
           if (isOnADoubleFinish(remaining)) threwAtDouble = true;
           remaining -= (event.payload['score'] as num?)?.toInt() ?? 0;
         case 'TurnEnded':
+          visitOpen = false;
           final reason = event.payload['reason'] as String?;
           if (reason == 'checkout') {
             successes++;
@@ -2326,6 +2339,7 @@ class PlayerStatsAssembler {
           break;
       }
     }
+    flushOpenVisit();
 
     return (attempts: attempts, successes: successes);
   }

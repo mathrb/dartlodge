@@ -954,6 +954,117 @@ void main() {
       expect(result.fixedTarget, 50);
     }));
 
+    group('checkoutPractice: End Drill mid-visit', () {
+      const competitorId = 'c1';
+      const playerId = 'p1';
+
+      GameEvent turnStartedFrom(String gameId, int seq, int fromScore) =>
+          GameEvent(
+            eventId: '$gameId-ts-$seq',
+            gameId: gameId,
+            eventType: 'TurnStarted',
+            localSequence: seq,
+            occurredAt: DateTime.utc(2026, 1, 1),
+            payload: {
+              'competitor_id': competitorId,
+              'player_id': playerId,
+              'from_score': fromScore,
+              'turn_index': 0,
+              'leg_index': 0,
+            },
+            synced: false,
+            actorId: 'system',
+            source: EventSource.client,
+          );
+
+      Future<CheckoutPracticeResult> run(
+        String gameId,
+        List<GameEvent> events,
+      ) async {
+        await seedGame(
+          gameId: gameId,
+          gameType: GameType.checkoutPractice,
+          config: const GameConfig.checkoutPractice(
+            targetMode: 'fixed',
+            fixedTarget: 40,
+          ),
+          playerId: playerId,
+          playerName: 'Nora',
+          competitorId: competitorId,
+        );
+        await completeWithEvents(gameId, null, events);
+        return await useCase.execute(gameId) as CheckoutPracticeResult;
+      }
+
+      test('the open visit thrown at a double counts as an attempt',
+          (() async {
+        const gameId = 'g-co-open-miss';
+        var seq = 1;
+        final result = await run(gameId, [
+          turnStartedFrom(gameId, seq++, 40),
+          dart(gameId, competitorId, playerId, seq++, 20, 2), // D20 checkout
+          buildTurnEndedEvent(
+            gameId: gameId,
+            competitorId: competitorId,
+            playerId: playerId,
+            localSequence: seq++,
+            reason: 'checkout',
+          ),
+          // Next run from 40: three misses at D20, then End Drill. There is
+          // no closing TurnEnded, only GameCompleted.
+          turnStartedFrom(gameId, seq++, 40),
+          dart(gameId, competitorId, playerId, seq++, 0, 1),
+          dart(gameId, competitorId, playerId, seq++, 0, 1),
+          dart(gameId, competitorId, playerId, seq++, 0, 1),
+          buildGameCompletedEvent(
+            gameId: gameId,
+            winnerCompetitorId: null,
+            localSequence: seq++,
+          ),
+        ]);
+
+        expect(result.successes, 1);
+        expect(result.dartsThrown, 4);
+        expect(result.attempts, 2,
+            reason: 'the unclosed visit threw three darts at D20 from 40');
+      }));
+
+      test('an open bust visit counts as one attempt', (() async {
+        const gameId = 'g-co-open-bust';
+        var seq = 1;
+        final result = await run(gameId, [
+          turnStartedFrom(gameId, seq++, 40),
+          dart(gameId, competitorId, playerId, seq++, 20, 3), // T20: bust
+          buildGameCompletedEvent(
+            gameId: gameId,
+            winnerCompetitorId: null,
+            localSequence: seq++,
+          ),
+        ]);
+
+        expect(result.successes, 0);
+        expect(result.attempts, 1,
+            reason: 'the bust dart was thrown from 40 (on D20)');
+      }));
+
+      test('an open visit with no dart at a double is not an attempt',
+          (() async {
+        const gameId = 'g-co-open-setup';
+        var seq = 1;
+        final result = await run(gameId, [
+          turnStartedFrom(gameId, seq++, 170),
+          dart(gameId, competitorId, playerId, seq++, 20, 3), // 170 → 110
+          buildGameCompletedEvent(
+            gameId: gameId,
+            winnerCompetitorId: null,
+            localSequence: seq++,
+          ),
+        ]);
+
+        expect(result.attempts, 0);
+      }));
+    });
+
     test('shanghai: bestRound observes max single-round score', (() async {
       const gameId = 'g-sh';
       const competitorId = 'c1';
