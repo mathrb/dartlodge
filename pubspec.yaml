@@ -106,7 +106,7 @@ dev_dependencies:
   json_serializable: ^6.15.2
   # Kept on the 2.34 line to match the drift runtime (drift ^2.34.0 above);
   # 2.34.6 is the first 2.34 patch that accepts analyzer 14.
-  drift_dev: ">=2.34.6 <2.35.0"
+  drift_dev: ^2.34.6
   
   # Linting
   flutter_lints: ^6.0.0
