@@ -135,6 +135,7 @@ on the left → run the tag(s) on the right before merging.
 | Around the Clock engine / use cases | `@atc` |
 | Checkout Practice engine / use cases | `@checkout` |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
+| Simplified scoring keypad (`simplifiedInputProvider`, `simplified_dart_input_grid_widget.dart`, `dot_row_widget.dart`, `ManualScoringInput`, its Settings switch) | `@x01` + `@countup` (`x01_simplified_input.spec.ts`, `count_up_simplified_input.spec.ts`) |
 | `statistics/` assemblers, projections, stats pages | `@stats` |
 | `history/` pages / providers | `@history` |
 | `lib/l10n/` ARB files, localized UI strings | `@i18n` |
@@ -153,7 +154,7 @@ on the left → run the tag(s) on the right before merging.
 | `cricket_scoring_modes.spec.ts` | `@cricket @autoscorer` |
 | `cricket_structure.spec.ts` | `@cricket @autoscorer` (manual-entry test is `@cricket` only) |
 | `cricket_correction.spec.ts` | `@cricket @autoscorer @correction` |
-| `cricket_correction_history.spec.ts` | `@cricket @correction @history` *(scaffold — `test.fixme`)* |
+| `cricket_correction_history.spec.ts` | `@cricket @correction @history` |
 | `shanghai_multiplayer_completion.spec.ts` | `@shanghai` |
 | `shanghai_undo.spec.ts` | `@shanghai @correction` |
 | `bobs27_bull_round.spec.ts` | `@bobs27` |
@@ -161,12 +162,14 @@ on the left → run the tag(s) on the right before merging.
 | `count_up_i18n.spec.ts` | `@countup @i18n` |
 | `countup_undo.spec.ts` | `@countup @correction` |
 | `countup_correction.spec.ts` | `@countup @correction` |
+| `count_up_simplified_input.spec.ts` | `@countup` |
 | `x01_ppr_bust.spec.ts` | `@x01 @stats` |
 | `x01_checkout.spec.ts` | `@x01 @stats @autoscorer` |
 | `x01_strategy.spec.ts` | `@x01 @autoscorer` |
 | `x01_match.spec.ts` | `@x01 @autoscorer` |
 | `x01_manual_entry.spec.ts` | `@x01 @correction` |
 | `x01_auto_score_correction.spec.ts` | `@x01 @autoscorer @correction` |
+| `x01_simplified_input.spec.ts` | `@x01` |
 | `atc_standard.spec.ts` | `@atc @autoscorer` |
 | `atc_variants.spec.ts` | `@atc @autoscorer` |
 | `atc_manual_entry.spec.ts` | `@atc` |
@@ -188,7 +191,9 @@ on the left → run the tag(s) on the right before merging.
   `describe` title (`(#NNN)`). For a bug that is **not yet fixed**, assert the
   *correct* invariant and mark the test `test.fail()` — it passes as an expected
   failure today and flags ("unexpectedly passed") once the bug is fixed, prompting
-  removal of the annotation (`countup_undo` / `shanghai_undo` do this for #656).
+  removal of the annotation. No spec carries `test.fail()` today; drop the
+  annotation in the PR that fixes the bug, as was done for #656 in
+  `countup_undo` / `shanghai_undo`.
 - **New tag → add it to the taxonomy and the coverage map here** (and the CLAUDE.md
   rule's area list if it's a new code area).
 - **Scratch never gets committed.** `.gitignore` excludes `e2e/test-results/`,
@@ -208,8 +213,11 @@ on the left → run the tag(s) on the right before merging.
   - **Crazy full playthrough** — only launch is asserted; Crazy re-rolls open
     targets every turn, so closing all is non-deterministic without seeding.
   - **Band→sheet dart correction** (incl. the #590 crazy closed-target case) —
-    tied to the `cricket_correction_history` `test.fixme` scaffold, which is
-    still blocked on rendering the turn breakdown before the leg completes.
+    not automated. Undo → history is covered: `cricket_correction_history`
+    undoes a dart, completes the solo leg through the sim bridge (the history
+    turn breakdown only renders completed legs) and asserts the superseded dart
+    is gone from the game detail. A band→sheet correction spec can reuse that
+    close-all flow.
 - `@checkout` — covered (`checkout_practice_*`): double-out checkout (score → 0)
   + multi-attempt reset, bust revert, target-mode launch (fixed/progressive/
   random), and manual entry. Remaining gap: **quota-based completion → post-game
