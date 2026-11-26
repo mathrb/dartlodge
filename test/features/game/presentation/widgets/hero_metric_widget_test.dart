@@ -6,12 +6,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/hero_metric_widget.dart';
 
-Widget _wrap(Widget child) {
+Widget _wrap(Widget child, {bool dark = false}) {
   return MaterialApp(
-    theme: AppTheme.light(),
+    theme: dark ? AppTheme.dark() : AppTheme.light(),
     home: Scaffold(body: child),
   );
 }
@@ -58,5 +59,23 @@ void main() {
     expect(find.text('1001'), findsOneWidget);
     final text = tester.widget<Text>(find.text('1001'));
     expect(text.maxLines, 1);
+  });
+  // The over-line used the brand neon `primaryFixed` in both themes (~1.2:1
+  // on the light board surfaces); it is accent text, so it goes through
+  // `AppTheme.boardAccent`.
+  testWidgets('over-line is primary on light and the neon on dark',
+      (tester) async {
+    Color? overline() =>
+        tester.widget<Text>(find.text('TARGET')).style?.color;
+
+    await tester.pumpWidget(
+        _wrap(const HeroMetricWidget(value: '14', label: 'Target')));
+    expect(overline(), AppColors.primary);
+
+    await tester.pumpWidget(_wrap(
+        const HeroMetricWidget(value: '14', label: 'Target'),
+        dark: true));
+    await tester.pumpAndSettle();
+    expect(overline(), AppColorsDark.primaryFixed);
   });
 }

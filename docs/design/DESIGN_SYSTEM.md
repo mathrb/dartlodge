@@ -147,7 +147,7 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `activePlayerBg` | `surfaceContainerHigh` (`#EAEAEA`) | `surfaceContainerHigh` (`#1E2124`) | Panel background tint for active player — *game board widgets use `cs.surfaceContainerLow` directly* |
 | `inactiveScore` | `onSurfaceVariant` (`#6B6E72`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
 | `cricketClosed` | `primary` (`#006D45`) | `primaryFixed` | Cricket number closed indicator — *board widgets use `AppTheme.boardAccent(context)`* |
-| `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots (full and simplified keypad), BULL subtext, X01 checkout route, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
+| `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots (full and simplified keypad), BULL subtext, X01 checkout route, hero metric over-line, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
 | `accentForeground` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent text / icons on plain surfaces: post-game hero emphasised stat and badge icon, breakdown winner column, selected stats tab label, section titles such as the impact heatmap title, the variant page's LATEST PLAYED over-line and selected variant title, the player setup NEW PLAYER link, empty-roster button and active HCP chip text. Same rule as `boardAccent` (which delegates to it); neon fills (pills, accent bars, tab indicators) stay `primaryFixed` |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
@@ -228,7 +228,7 @@ runtime fetching off a missing variant crashes the app instead of falling back.
 | `body-sm` | Inter | Regular (400) | 0.75rem / 12px | 16/12 | 0 | Captions, metadata |
 | `label-lg` | Space Grotesk | Medium (500) | 0.875rem / 14px | 20/14 | 0.05em | Upper label — navigation rows |
 | `label-md` | Space Grotesk | Bold (700) | 0.75rem / 12px | 1.3 | 0.05em | Button text, chips, tab labels — ALL CAPS |
-| `label-sm` | Space Grotesk | Bold (700) | 0.6875rem / 11px | 1.45 | 0.05em | Over-line text above a headline. Use `primaryFixed` color. |
+| `label-sm` | Space Grotesk | Bold (700) | 0.6875rem / 11px | 1.45 | 0.05em | Over-line text above a headline. Use the accent color (`accentForeground` / `boardAccent`: `primaryFixed` in dark, `primary` in light). |
 | `player-name` | Inter | SemiBold (600) | 1rem / 16px | 20/16 | 0.075em | Player names in player selection roster |
 
 **Game-specific score tokens:**
@@ -260,7 +260,7 @@ Both active and inactive scores scale with player count.
 - **Game board player names** use `label-md` (Space Grotesk Bold 12px) rendered ALL CAPS with `letterSpacing: 1.2`. Active players in `boardAccent` (neon in dark, `primary` in light), inactive in `onSurfaceVariant`.
 - `player-name` (Inter 16px SemiBold) is for player selection roster cells, not the in-game scoreboard.
 - `label-md` is the correct token for all interactive control labels — buttons, chips, tab labels.
-- `label-sm` in `primaryFixed` color is used for "over-line" text (small text above a headline).
+- `label-sm` in the accent color (`primaryFixed` in dark, `primary` in light, via `AppTheme.accentForeground` / `boardAccent`) is used for "over-line" text (small text above a headline).
 - Minimum rendered size is 11px. Never go below this.
 - Score numerals must never truncate or wrap. Constrain the container width, not the text size.
 - Never mix Space Grotesk and Inter within the same UI element (e.g. a single label line).
@@ -543,7 +543,7 @@ are not interchangeable when the intent differs.
 Auto-scoring mounts the phone near the board while the player stands at the oche (~2.4 m), where the compact match-mode chrome is illegible. The camera-first board layout (epic #477; see `docs/plans/2026-06-12-camera-first-distance-readability-design.md`) enlarges the primary state for at-distance reading. These components are presentational and game-agnostic — X01 / Cricket / Practice layouts compose them with no per-game branching; manual-mode layouts keep the compact chrome.
 
 - **Prominent dart band** (`ProminentDartBandWidget`): the 3-dart turn indicator rendered as three large slots, each **110px tall**. Each thrown segment uses the `scoreMedium` (48px) score token in a `FittedBox(fit: scaleDown)` — long labels (e.g. `MISS`) scale **down** to fit; short numerals never inflate. Thrown slots use the `primaryFixed` @ 10% fill + @ 20% ghost border (dart-badge pattern, §2.5); empty slots are an inert `surfaceContainer` placeholder, or a tappable manual-entry affordance when missed-dart entry is enabled.
-- **Hero metric** (`HeroMetricWidget`): the single primary value (X01 remaining score, current practice target) rendered with the `scoreActive` (80px) token, tinted `onSurface` by default. An optional caption renders above it as an **over-line**: `label-sm` (`labelSmall`) in `primaryFixed` color (per §3.3). The numeral is `maxLines: 1` and never scales or wraps — the consumer constrains the container. The one exception is the camera-first body (`CameraFirstBody`, #801): the game content never scrolls and the camera region gives way first (down to a 140dp floor); past that, the whole content block, hero included, scales down as one.
+- **Hero metric** (`HeroMetricWidget`): the single primary value (X01 remaining score, current practice target) rendered with the `scoreActive` (80px) token, tinted `onSurface` by default. An optional caption renders above it as an **over-line**: `label-sm` (`labelSmall`) in `boardAccent` (neon in dark, `primary` in light; per §3.3). The numeral is `maxLines: 1` and never scales or wraps — the consumer constrains the container. The one exception is the camera-first body (`CameraFirstBody`, #801): the game content never scrolls and the camera region gives way first (down to a 140dp floor); past that, the whole content block, hero included, scales down as one.
 - **At-distance per-game strips**: each game type supplies a compact secondary strip for the other players' state (X01 other-players strip, Cricket marks strip, Practice players strip) so the hero value stays uncontested.
 - **Cricket marks**: the shared `CricketMarkPainter` draws the open/slash/circle marks with a stroke weight tuned for legibility at distance.
 
@@ -564,7 +564,7 @@ The dart-impact density heatmap (epic #571; see `docs/plans/2026-06-19-heatmap-d
 
 - **Asymmetric Spacing (Admin):** Use `spacing-16` for top padding and `spacing-8` for sides for a "gallery" feel.
 - **Context-appropriate radii:** Use `radiusSmall` for game board cells, `radiusLarge` for cards, `radiusMedium` for primary buttons, `radiusFull` for chips.
-- **Typographic Hierarchy:** Use `label-sm` in `primaryFixed` color for over-line text to ground the technical feel.
+- **Typographic Hierarchy:** Use `label-sm` in the accent color (`primaryFixed` in dark, `primary` in light) for over-line text to ground the technical feel.
 - **No-Line Separation:** Replace dividers with a 12dp gap (`space3`) or a subtle `surface` → `surfaceContainerLow` tonal shift.
 - Apply `primaryFixed` (`#00FFAB`) as the single brand neon accent.
 - Use the ghost border (`outlineVariant` at 10–20% opacity) only when tone alone cannot provide a boundary.
