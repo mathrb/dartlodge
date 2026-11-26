@@ -91,11 +91,19 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
                 ),
               ),
             ),
-            Text(
-              l10n.setupGameConfig,
-              style: tt.headlineMedium?.copyWith(
-                color: cs.onSurface,
-                letterSpacing: -0.5,
+            // Scales down on one line rather than breaking mid-word at
+            // large text sizes (DESIGN_SYSTEM §13).
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                l10n.setupGameConfig,
+                maxLines: 1,
+                softWrap: false,
+                style: tt.headlineMedium?.copyWith(
+                  color: cs.onSurface,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.space4),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,9 +11,14 @@ import 'package:dart_lodge/l10n/supported_locales.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  Future<void> pump(WidgetTester tester, Locale locale) async {
+  Future<void> pump(
+    WidgetTester tester,
+    Locale locale, {
+    double scale = 1.0,
+    Size size = const Size(1080, 3200),
+  }) async {
     SharedPreferences.setMockInitialValues({});
-    tester.view.physicalSize = const Size(1080, 3200);
+    tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -23,12 +29,74 @@ void main() {
           locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: kSupportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(scale)),
+            child: child!,
+          ),
           home: const SettingsPage(),
         ),
       ),
     );
     await tester.pumpAndSettle();
   }
+
+  // ── Theme selector at large text (DESIGN_SYSTEM §13) ──────────────────────
+
+  RenderParagraph themeLabel(WidgetTester tester, String text) =>
+      tester.renderObject<RenderParagraph>(
+        find.descendant(
+          of: find.byType(SegmentedButton<ThemeMode>),
+          matching: find.text(text),
+        ),
+      );
+
+  // The test font draws every glyph 1 em wide, far wider than the app font,
+  // so at 2.0x a 412 dp page also overflows unrelated rows (the language
+  // tile) in tests although they fit on a device. The 2.0x case runs on a
+  // 700 dp surface, where "Système" still breaks on one segment without the
+  // fix but the rest of the page lays out.
+  for (final (scale, width) in [(1.3, 412.0), (2.0, 700.0)]) {
+    testWidgets('fr theme labels stay on one line at ${scale}x', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const Locale('fr'),
+        scale: scale,
+        size: Size(width, 3200),
+      );
+
+      expect(tester.takeException(), isNull);
+      for (final label in ['Clair', 'Système', 'Sombre']) {
+        final p = themeLabel(tester, label);
+        expect(_lineCount(p), 1, reason: '"$label" must not break mid-word');
+        expect(p.didExceedMaxLines, isFalse);
+      }
+    });
+  }
+
+  testWidgets('en theme labels are not scaled down at 1.0x', (tester) async {
+    // A wide surface: the test font is wider than the app font, so 412 dp
+    // would already squeeze the labels here.
+    await pump(tester, const Locale('en'));
+
+    for (final label in ['Light', 'System', 'Dark']) {
+      final p = themeLabel(tester, label);
+      expect(_lineCount(p), 1);
+      final fitted = find.ancestor(
+        of: find.text(label),
+        matching: find.byType(FittedBox),
+      );
+      expect(fitted, findsOneWidget);
+      final box = tester.renderObject<RenderBox>(fitted);
+      expect(
+        box.size.width,
+        closeTo(p.size.width, 0.01),
+        reason: '"$label" fits, so the FittedBox must not shrink it',
+      );
+    }
+  });
 
   testWidgets('renders English strings', (tester) async {
     await pump(tester, const Locale('en'));
@@ -148,4 +216,17 @@ void main() {
     expect(find.text('dartlodge@gmail.com'), findsOneWidget);
     expect(tester.widget<ListTile>(contactTile).enabled, isTrue);
   });
+}
+
+/// The number of laid-out lines of [p]: its height over one line's height.
+int _lineCount(RenderParagraph p) {
+  final oneLine = TextPainter(
+    text: p.text,
+    textScaler: p.textScaler,
+    textDirection: p.textDirection,
+    maxLines: 1,
+  )..layout();
+  final lines = (p.size.height / oneLine.height).round();
+  oneLine.dispose();
+  return lines;
 }
