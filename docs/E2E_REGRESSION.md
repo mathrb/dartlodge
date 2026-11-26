@@ -135,7 +135,7 @@ on the left → run the tag(s) on the right before merging.
 | Around the Clock engine / use cases | `@atc` |
 | Checkout Practice engine / use cases | `@checkout` |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
-| Simplified scoring keypad (`simplifiedInputProvider`, `simplified_dart_input_grid_widget.dart`, `dot_row_widget.dart`, `ManualScoringInput`, its Settings switch) | `@x01` + `@countup` (`x01_simplified_input.spec.ts`, `count_up_simplified_input.spec.ts`) |
+| Simplified scoring keypad (`simplifiedInputEnabledProvider` (`core/settings/simplified_input_provider.dart`), `simplified_dart_input_grid_widget.dart`, `dot_row_widget.dart`, `ManualScoringInput`, its Settings switch) | `@x01` + `@countup` (`x01_simplified_input.spec.ts`, `count_up_simplified_input.spec.ts`) |
 | `statistics/` assemblers, projections, stats pages | `@stats` |
 | `history/` pages / providers | `@history` |
 | `lib/l10n/` ARB files, localized UI strings | `@i18n` |
