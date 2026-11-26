@@ -1,8 +1,8 @@
 /**
  * End-to-End: a solo Standard Cricket game played to completion (#661).
  *
- * Fills the documented `@cricket` runtime gap — until now the only `@cricket`
- * spec was the `test.fixme` scaffold in cricket_correction_history.spec.ts.
+ * Filled the documented `@cricket` runtime gap (#661). Its close-all flow is
+ * reused by cricket_correction_history.spec.ts to complete a leg.
  * Driven through the sim bridge (`window.dartlodgeSim`) exactly like the X01
  * auto-scoring specs: emit detected darts, advance the turn at the 3-dart
  * boundary. Closing all targets (20·19·18·17·16·15·Bull, 3 marks each) in a

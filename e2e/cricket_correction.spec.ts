@@ -7,7 +7,7 @@
  * the camera-first marks strip by row geometry.
  *
  * (Band→sheet dart CORRECTION on cricket — incl. the #590 crazy closed-target
- * case — stays with the open cricket_correction_history fixme gap; see
+ * case — is not automated yet; see the Known coverage gaps in
  * docs/E2E_REGRESSION.md.)
  *
  * Serve a sim-enabled web build on :6780 (see docs/E2E_REGRESSION.md).

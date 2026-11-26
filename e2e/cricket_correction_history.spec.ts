@@ -6,21 +6,16 @@
  * a turn that had a dart undone/corrected still rendered the stale dart (and its
  * marks). The fix routes the breakdown through `stripSupersededEvents`.
  *
- * STATUS: test.fixme — scaffold, not yet runnable end-to-end.
+ * Flow: undo a stray T18 on the board (DartCorrected), then close every
+ * target through the sim bridge (emit + advance, as in cricket_solo_standard)
+ * so the solo leg completes. The history turn breakdown only renders COMPLETED
+ * legs (an abandoned game shows "No legs completed"), so ending the game early
+ * would leave nothing to assert. From the post-game summary, DONE returns Home;
+ * Sessions opens the game's detail page, whose leg breakdown lists the darts.
+ * 18 is closed with D18 + 18, so no live dart reads "T18".
  *
- * The flow below is verified up to the game's history *detail* page: the board
- * undo (DartCorrected), re-throw, End-Game-to-history, Sessions nav and the
- * game-card tap all work. The blocker is the assertion target: the per-turn
- * breakdown is keyed on COMPLETED legs, and an abandoned game shows
- * "No legs completed" — so the dart-chip rows never render. Asserting the
- * corrected dart needs a fully *completed* cricket leg (close 15–20 + Bull
- * across alternating Cric597/OPPONENT turns, with turn-active gating + the
- * leg-complete modal), which is long and click-fragile on CanvasKit/web.
- *
- * The underlying fix is unit-covered (turn_breakdown_test.dart, cricket
- * DartCorrected cases). Finish this spec by replacing the End-Game step with a
- * full leg completion, then switch to the "BREAKDOWN" tab on the detail page
- * before the chip assertions. Best validated/stabilised on the device rail.
+ * The underlying fix is also unit-covered (turn_breakdown_test.dart, cricket
+ * DartCorrected cases).
  *
  * Build/serve a RELEASE web build with the sim flag:
  *   flutter build web --dart-define=AUTOSCORER_SIM=true
@@ -42,10 +37,7 @@ async function emit(page: Page, seg: string) {
 }
 
 test.describe('Cricket history reflects corrected darts (#597)', { tag: ['@cricket', '@correction', '@history'] }, () => {
-  // Scaffold: navigates correctly to the game detail, but the turn breakdown
-  // only renders for COMPLETED legs (see header). Unblock by completing a full
-  // cricket leg, then switch to the BREAKDOWN tab before asserting.
-  test.fixme('an undone dart does not appear in the turn breakdown', async ({
+  test('an undone dart does not appear in the turn breakdown', async ({
     browser,
   }) => {
     test.setTimeout(150000);
@@ -76,27 +68,42 @@ test.describe('Cricket history reflects corrected darts (#597)', { tag: ['@crick
 
     await page.waitForTimeout(2000);
 
+    // Gate on the camera-first board being mounted (sink bound) before the
+    // first emit, exactly like cricket_solo_standard: the player name renders a
+    // frame before the postFrame sink-bind, and emits sent then are dropped.
+    await expect(page.getByRole('button', { name: /Start camera/i }))
+      .toBeVisible({ timeout: 15000 });
+
     // Throw T18 (a stray), then UNDO it via the board's undo button — this
     // appends a DartCorrected that supersedes the T18.
     await emit(page, 'T18');
     await page.getByRole('button', { name: /Undo last dart/i }).click();
     await page.waitForTimeout(400);
 
-    // Re-throw three T20s (closes 20), then end the turn so it lands as a
-    // completed turn in history.
+    // Then close every target, as in cricket_solo_standard, so the leg
+    // completes (the history breakdown only renders completed legs). 18 is
+    // closed with D18 + 18 so no live dart is a T18.
+    // Turn 1: T20 · T19 · D18.
     await emit(page, 'T20');
-    await emit(page, 'T20');
-    await emit(page, 'T20');
+    await emit(page, 'T19');
+    await emit(page, 'D18');
     await sim(page, 'advance()');
-    await page.waitForTimeout(600);
+    // Turn 2: 18 · T17 · T16.
+    await emit(page, '18');
+    await emit(page, 'T17');
+    await emit(page, 'T16');
+    await sim(page, 'advance()');
+    // Turn 3: T15 · DB · DB — closing the Bull wins the solo leg.
+    await emit(page, 'T15');
+    await emit(page, 'DB');
+    await emit(page, 'DB');
 
-    // Abandon the game (End Game) so it appears in history.
-    await page.getByRole('button', { name: /Game options/i }).click();
-    await page.getByRole('menuitem', { name: /End Game/i }).click();
-    // The confirm dialog's primary action is also labelled "End Game".
-    await page.getByRole('button', { name: /End Game/i }).last().click();
+    // The game completes → post-game summary → DONE back to Home.
+    await expect(page.getByText('STATISTICS BREAKDOWN')).toBeVisible({ timeout: 15000 });
+    await page.getByRole('button', { name: /DONE/i }).click();
+    await page.waitForTimeout(1000);
 
-    // Lands on Home → open Sessions (history) → the game's detail.
+    // Home → open Sessions (history) → the game's detail.
     await page.getByRole('button', { name: /Sessions/i }).click();
     await page.waitForTimeout(1000);
     await page.getByText('Cric597').first().click();
