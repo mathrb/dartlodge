@@ -104,6 +104,7 @@ ShanghaiResult _$ShanghaiResultFromJson(Map<String, dynamic> json) =>
           .toList(),
       winnerCompetitorId: json['winnerCompetitorId'] as String?,
       totalRounds: (json['totalRounds'] as num).toInt(),
+      endedEarly: json['endedEarly'] as bool? ?? false,
       $type: json['runtimeType'] as String?,
     );
 
@@ -112,6 +113,7 @@ Map<String, dynamic> _$ShanghaiResultToJson(ShanghaiResult instance) =>
       'competitors': instance.competitors,
       'winnerCompetitorId': instance.winnerCompetitorId,
       'totalRounds': instance.totalRounds,
+      'endedEarly': instance.endedEarly,
       'runtimeType': instance.$type,
     };
 

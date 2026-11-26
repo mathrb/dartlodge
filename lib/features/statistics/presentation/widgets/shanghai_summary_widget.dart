@@ -33,20 +33,32 @@ class ShanghaiSummaryWidget extends StatelessWidget {
     // (already sorted top to bottom by `_buildShanghaiCompetitors`).
     final lead = winner ?? competitors.first;
 
+    // A game closed from the menu is not a result: badge it and mute the
+    // card. With several players, nobody headlines it (the first-listed
+    // leader is only ahead so far); the breakdown below still shows every
+    // player's score. A solo game keeps the player's name, like the solo
+    // drills.
+    final endedEarly = result.endedEarly;
+    final noHeadliner = endedEarly && competitors.length > 1;
+
     final hero = PostGameHeroCard(
-      headline: lead.competitorName,
+      badge: endedEarly ? l10n.summaryEndedEarly.toUpperCase() : null,
+      headline: noHeadliner ? l10n.summaryNoWinner : lead.competitorName,
       subline: 'Shanghai',
-      sideStats: [
-        PostGameHeroStat(
-          label: l10n.summaryTotalScore.toUpperCase(),
-          value: '${lead.totalScore}',
-          emphasize: true,
-        ),
-        PostGameHeroStat(
-          label: l10n.statsShanghais.toUpperCase(),
-          value: '${lead.shanghaiBonuses}',
-        ),
-      ],
+      muted: endedEarly,
+      sideStats: noHeadliner
+          ? const <PostGameHeroStat>[]
+          : [
+              PostGameHeroStat(
+                label: l10n.summaryTotalScore.toUpperCase(),
+                value: '${lead.totalScore}',
+                emphasize: !endedEarly,
+              ),
+              PostGameHeroStat(
+                label: l10n.statsShanghais.toUpperCase(),
+                value: '${lead.shanghaiBonuses}',
+              ),
+            ],
     );
 
     // Solo path: keep the previous single-column breakdown unchanged.

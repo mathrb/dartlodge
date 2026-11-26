@@ -1129,6 +1129,8 @@ void main() {
       expect(faye.bestRound, 6);
       expect(faye.shanghaiBonuses, 0);
       expect(faye.roundsPlayed, 7);
+      expect(sh.endedEarly, isFalse,
+          reason: 'all 7 rounds played: the engine completed the game');
     }));
 
     test('shanghai: instant-win counts the shanghai bonus and ends early',
@@ -1170,6 +1172,8 @@ void main() {
       expect(gus.roundsPlayed, 1);
       // bestRound captures the entire round-1 score: 1+2+3 = 6.
       expect(gus.bestRound, 6);
+      expect(result.endedEarly, isFalse,
+          reason: 'a Shanghai instant win is a natural end');
     }));
 
     test(
@@ -1260,6 +1264,137 @@ void main() {
               'practiceRound to 2 but she did not start a second round');
       expect(bob.roundsPlayed, 1,
           reason: 'Bob played one round, winning via Shanghai');
+      expect(result.endedEarly, isFalse);
+    }));
+
+    test('shanghai: solo End game mid-game -> endedEarly', (() async {
+      const gameId = 'g-sh-solo-early';
+      const competitorId = 'c1';
+      const playerId = 'p1';
+      await seedGame(
+        gameId: gameId,
+        gameType: GameType.shanghai,
+        config: const GameConfig.shanghai(),
+        playerId: playerId,
+        playerName: 'Hal',
+        competitorId: competitorId,
+      );
+      var seq = 1;
+      final events = <GameEvent>[];
+      // Rounds 1 and 2 of 7, then closed from the menu.
+      for (var round = 1; round <= 2; round++) {
+        events.add(buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ));
+        events.add(dart(gameId, competitorId, playerId, seq++, round, 1));
+        events.add(dart(gameId, competitorId, playerId, seq++, 0, 1));
+        events.add(dart(gameId, competitorId, playerId, seq++, 0, 1));
+        events.add(buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: competitorId,
+          playerId: playerId,
+          localSequence: seq++,
+        ));
+      }
+      events.add(buildGameCompletedEvent(
+        gameId: gameId,
+        winnerCompetitorId: null,
+        localSequence: seq++,
+      ));
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as ShanghaiResult;
+      expect(result.endedEarly, isTrue);
+      expect(result.competitors.single.totalScore, 3);
+    }));
+
+    test('shanghai: multi-player End game mid-round -> endedEarly, no winner',
+        (() async {
+      const gameId = 'g-sh-multi-early';
+      final playerRepo = await base.createPlayerRepository();
+      final gameRepo = await base.createGameRepository();
+      for (final p in [('p1', 'Ana'), ('p2', 'Ben')]) {
+        await playerRepo.createPlayer(Player(
+          playerId: p.$1,
+          name: p.$2,
+          createdAt: DateTime.now(),
+          lastActive: DateTime.now(),
+        ));
+      }
+      await gameRepo.createGame(
+        Game(
+          gameId: gameId,
+          gameType: GameType.shanghai,
+          config: const GameConfig.shanghai(),
+          startTime: DateTime.now(),
+          isComplete: false,
+        ),
+        const [
+          Competitor(
+            competitorId: 'c1',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Ana',
+            players: [CompetitorPlayer(playerId: 'p1', rotationPosition: 0)],
+          ),
+          Competitor(
+            competitorId: 'c2',
+            gameId: gameId,
+            type: CompetitorType.solo,
+            name: 'Ben',
+            players: [CompetitorPlayer(playerId: 'p2', rotationPosition: 1)],
+          ),
+        ],
+      );
+
+      var seq = 1;
+      final events = <GameEvent>[
+        // Ana round 1: T1 -> 3, TurnEnded.
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: 'c1',
+          playerId: 'p1',
+          localSequence: seq++,
+          turnIndex: 0,
+          legIndex: 0,
+        ),
+        dart(gameId, 'c1', 'p1', seq++, 1, 3),
+        dart(gameId, 'c1', 'p1', seq++, 0, 1),
+        dart(gameId, 'c1', 'p1', seq++, 0, 1),
+        buildTurnEndedEvent(
+          gameId: gameId,
+          competitorId: 'c1',
+          playerId: 'p1',
+          localSequence: seq++,
+        ),
+        // Ben round 1: one dart, then End game from the menu mid-turn.
+        buildTurnStartedEvent(
+          gameId: gameId,
+          competitorId: 'c2',
+          playerId: 'p2',
+          localSequence: seq++,
+          turnIndex: 1,
+          legIndex: 0,
+        ),
+        dart(gameId, 'c2', 'p2', seq++, 1, 1),
+        buildGameCompletedEvent(
+          gameId: gameId,
+          winnerCompetitorId: null,
+          localSequence: seq++,
+        ),
+      ];
+      await completeWithEvents(gameId, null, events);
+
+      final result = await useCase.execute(gameId) as ShanghaiResult;
+      expect(result.endedEarly, isTrue);
+      expect(result.winnerCompetitorId, isNull);
+      expect(result.competitors.first.competitorName, 'Ana',
+          reason: 'still sorted by score for the breakdown');
     }));
   });
 }

@@ -78,6 +78,13 @@ sealed class GameResult with _$GameResult {
     required List<ShanghaiCompetitorResult> competitors,
     required String? winnerCompetitorId,
     required int totalRounds,
+
+    /// True when the game was closed from the menu ("End game") before the
+    /// engine completed it (the last round played by everyone, or a Shanghai
+    /// instant win). `winnerCompetitorId == null` cannot carry this: a solo
+    /// game that finishes naturally has no winner either. See
+    /// [GameResult.bobs27].
+    @Default(false) bool endedEarly,
   }) = ShanghaiResult;
 
   factory GameResult.fromJson(Map<String, dynamic> json) =>

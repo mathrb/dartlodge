@@ -94,6 +94,7 @@ class GetGameResultUseCase {
           ),
           winnerCompetitorId: finalState.winnerCompetitorId,
           totalRounds: finalState.shanghaiTotalRounds,
+          endedEarly: _endedEarly(initial, events, engine),
         ),
       // Solo drills (maxPlayers == 1): keep the single-subject result shape.
       GameType.catch40 ||
@@ -114,7 +115,8 @@ class GetGameResultUseCase {
 
   /// Whether the drill was closed from the menu before the engine completed
   /// it. A natural end (Bob's 27 bust or round-21 finale, Catch 40's 40th
-  /// target) is decided by the engine on a dart / turn event, BEFORE the
+  /// target, Shanghai's last round or instant win) is decided by the engine
+  /// on a dart / turn event, BEFORE the
   /// closing `GameCompleted`; "End drill" (`EndPracticeUseCase`) only appends
   /// that `GameCompleted`. So replaying without `GameCompleted` reaches
   /// `isComplete` only for a natural end.
