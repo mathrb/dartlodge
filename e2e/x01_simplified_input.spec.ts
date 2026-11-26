@@ -32,7 +32,7 @@ async function boot(browser: Browser): Promise<Page> {
 /** Home → Settings → toggle the simplified keypad on → back to Home. */
 async function enableSimplifiedKeypad(page: Page): Promise<void> {
   await page.getByRole('button', { name: /Settings/i }).first().click();
-  await page.getByText('Simplified scoring keypad').click();
+  await page.getByRole('switch', { name: /Simplified scoring keypad/ }).click();
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByRole('button', { name: /X01/i })).toBeVisible({
     timeout: 15000,
@@ -43,7 +43,7 @@ async function enableSimplifiedKeypad(page: Page): Promise<void> {
 async function startSimplifiedSolo301(page: Page, player: string): Promise<void> {
   await page.getByRole('button', { name: /X01/i }).click();
   await page.getByRole('button', { name: /Select 301/i }).click();
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();

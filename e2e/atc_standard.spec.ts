@@ -37,7 +37,7 @@ async function startAtc(page: Page, player: string): Promise<void> {
   await sim(page, 'enableAutoScoring()');
   await page.getByRole('button', { name: /Practice/i }).click();
   await page.getByRole('button', { name: /Select Around the Clock/i }).click();
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();

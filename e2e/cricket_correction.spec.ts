@@ -64,7 +64,7 @@ test.describe('Cricket undo', { tag: ['@cricket', '@autoscorer', '@correction'] 
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Standard/i }).click();
     for (const p of ['Yan', 'Zoe']) {
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill(p);
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     }

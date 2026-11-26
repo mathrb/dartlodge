@@ -48,9 +48,9 @@ test.describe('Count-Up board is localized (#596)', { tag: ['@countup', '@i18n']
 
     await sim(page, 'enableAutoScoring()');
 
-    // Home → Casual ("Casual" is a hardcoded category label, locale-independent)
+    // Home → Casual (the tile is localized: "DÉTENTE" in French)
     // → Count-Up (variant select semantic is localized: "Sélectionner Count-Up").
-    await page.getByRole('button', { name: /Casual/i }).click();
+    await page.getByRole('button', { name: /DÉTENTE/i }).click();
     await page.getByRole('button', { name: /Sélectionner Count-Up/i }).click();
 
     // Player selection (French): "NOUVEAU JOUEUR" / "Nom du joueur" /

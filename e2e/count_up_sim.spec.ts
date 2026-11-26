@@ -44,7 +44,7 @@ test.describe('Count-Up sim bridge (#601)', { tag: ['@countup'] }, () => {
     // Home → Casual → Count-Up → create a player → start.
     await page.getByRole('button', { name: /Casual/i }).click();
     await page.getByRole('button', { name: /Select Count-Up/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Alice601');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

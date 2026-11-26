@@ -58,7 +58,7 @@ test.describe("Bob's 27 Double-Bull finale (#588)", { tag: ['@bobs27'] }, () => 
     await page.getByRole('button', { name: /Select Bob's 27/i }).click();
 
     // One player + start.
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Bull588');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

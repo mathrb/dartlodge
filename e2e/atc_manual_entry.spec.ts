@@ -35,7 +35,7 @@ test.describe('Around the Clock — manual entry', { tag: ['@atc'] }, () => {
     const page = await boot(browser); // no auto-scoring → manual ATC input bar
     await page.getByRole('button', { name: /Practice/i }).click();
     await page.getByRole('button', { name: /Select Around the Clock/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Eli');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

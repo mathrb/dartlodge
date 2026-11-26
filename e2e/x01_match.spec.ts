@@ -76,7 +76,7 @@ test.describe('X01 match structure', { tag: ['@x01'] }, () => {
     await expect(page.getByText('2', { exact: true }).first()).toBeVisible();
     await page.getByRole('button', { name: /APPLY/i }).click({ force: true });
 
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Lena');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();
@@ -111,10 +111,10 @@ test.describe('X01 match structure', { tag: ['@x01'] }, () => {
     await page.getByRole('button', { name: /Select 301/i }).click();
 
     // Create two players (each CREATE PLAYER auto-selects into the lineup).
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Pia');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Quinn');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

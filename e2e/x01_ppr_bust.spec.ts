@@ -68,7 +68,7 @@ test.describe('X01 PPR busts as a 3-dart visit (#634)', { tag: ['@x01', '@stats'
     // accessible name includes its subtitle, so match "X01" as a substring.)
     await page.getByRole('button', { name: /X01/i }).first().click();
     await page.getByRole('button', { name: /Select 301/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Bust634');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

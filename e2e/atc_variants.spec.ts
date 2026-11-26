@@ -48,7 +48,7 @@ async function startAtcVariant(
   await expect(page.getByText('VARIANT')).toBeVisible({ timeout: 10000 });
   await page.getByRole('button', { name: variantLabel }).click({ force: true });
   await page.getByRole('button', { name: /APPLY/i }).click({ force: true });
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();

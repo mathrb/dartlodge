@@ -66,7 +66,7 @@ for (const theme of ['light', 'dark'] as const) {
       const page = await boot(browser, theme);
       await page.getByRole('button', { name: /X01/i }).click();
       await page.getByRole('button', { name: /Select 501/i }).click();
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();
@@ -84,10 +84,10 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: /Cricket/i }).click();
       await page.getByRole('button', { name: /Standard/i }).first().click({ force: true });
       // Two players → both columns populate.
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Fallon');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();
@@ -113,7 +113,7 @@ for (const theme of ['light', 'dark'] as const) {
       // history, then open its detail page.
       await page.getByRole('button', { name: /X01/i }).click();
       await page.getByRole('button', { name: /Select 301/i }).click();
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();
@@ -155,7 +155,7 @@ for (const theme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Increase legs to win' }).click({ force: true });
       await page.getByRole('button', { name: /APPLY/i }).click({ force: true });
 
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();
@@ -229,7 +229,7 @@ test.describe('Store screenshots — stats page', { tag: '@screenshots' }, () =>
       await page.getByRole('button', { name: /X01/i }).click();
       await page.getByRole('button', { name: /Select 301/i }).click();
       if (create) {
-        await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+        await page.getByRole('button', { name: /NEW PLAYER/ }).click();
         await page.getByRole('textbox', { name: /Player name/i }).fill('Luke');
         await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       }

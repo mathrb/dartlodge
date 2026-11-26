@@ -54,7 +54,7 @@ test.describe('Auto-scorer camera-first (sim bridge)', { tag: ['@autoscorer'] },
     //    screens). A fresh context has an empty roster, so create the player.
     await page.getByRole('button', { name: /X01/i }).click();
     await page.getByRole('button', { name: /Select 501/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill(PLAYER);
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click(); // auto-selects
     await page.getByRole('button', { name: /START GAME/i }).click();

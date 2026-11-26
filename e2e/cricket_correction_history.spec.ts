@@ -69,7 +69,7 @@ test.describe('Cricket history reflects corrected darts (#597)', { tag: ['@crick
     // Home → Cricket → Standard → one player → start.
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Standard/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Cric597');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();
