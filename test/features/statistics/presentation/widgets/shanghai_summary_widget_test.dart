@@ -112,4 +112,139 @@ void main() {
     // Per-player score row visible.
     expect(find.text('30'), findsOneWidget);
   });
+
+  group('ended early from the menu', () {
+    Color onSurface() => AppTheme.light().colorScheme.onSurface;
+
+    // A 9-9 tie in round 2 of 7: the first-listed leader is only ahead by
+    // list order, not a winner.
+    const fourPlayers = [
+      ShanghaiCompetitorResult(
+        competitorId: 'c1',
+        competitorName: 'Ana',
+        totalScore: 9,
+        shanghaiBonuses: 0,
+        bestRound: 6,
+        roundsPlayed: 2,
+      ),
+      ShanghaiCompetitorResult(
+        competitorId: 'c2',
+        competitorName: 'Ben',
+        totalScore: 9,
+        shanghaiBonuses: 0,
+        bestRound: 6,
+        roundsPlayed: 2,
+      ),
+      ShanghaiCompetitorResult(
+        competitorId: 'c3',
+        competitorName: 'Cal',
+        totalScore: 3,
+        shanghaiBonuses: 0,
+        bestRound: 3,
+        roundsPlayed: 1,
+      ),
+      ShanghaiCompetitorResult(
+        competitorId: 'c4',
+        competitorName: 'Dee',
+        totalScore: 2,
+        shanghaiBonuses: 0,
+        bestRound: 2,
+        roundsPlayed: 1,
+      ),
+    ];
+
+    testWidgets(
+        'multi-player: badge + "No winner" hero, nobody headlined, '
+        'breakdown keeps every player', (tester) async {
+      await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
+        result: ShanghaiResult(
+          competitors: fourPlayers,
+          winnerCompetitorId: null,
+          totalRounds: 7,
+          endedEarly: true,
+        ),
+      )));
+
+      expect(find.text('ENDED EARLY'), findsOneWidget);
+      expect(find.text('NO WINNER'), findsOneWidget);
+      // The hero uppercases its headline; the breakdown keeps names as-is.
+      expect(find.text('ANA'), findsNothing,
+          reason: 'the first-listed leader must not headline the hero');
+      expect(find.text('WINNER'), findsNothing);
+      // No hero side stats: TOTAL SCORE appears only as the table row.
+      expect(find.text('SHANGHAIS'), findsNothing);
+      expect(find.text('TOTAL SCORE'), findsOneWidget);
+      for (final name in ['Ana', 'Ben', 'Cal', 'Dee']) {
+        expect(find.text(name), findsOneWidget);
+      }
+    });
+
+    testWidgets('solo: badge, player still named, score not emphasised',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
+        result: ShanghaiResult(
+          competitors: [
+            ShanghaiCompetitorResult(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              totalScore: 14,
+              shanghaiBonuses: 0,
+              bestRound: 8,
+              roundsPlayed: 3,
+            ),
+          ],
+          winnerCompetitorId: null,
+          totalRounds: 7,
+          endedEarly: true,
+        ),
+      )));
+
+      expect(find.text('ENDED EARLY'), findsOneWidget);
+      expect(find.text('ALICE'), findsOneWidget);
+      // Hero stat + table cell both read 14; neither may be accent-coloured.
+      for (final t in tester.widgetList<Text>(find.text('14'))) {
+        expect(t.style?.color, onSurface());
+      }
+    });
+
+    testWidgets('a natural end keeps the emphasised hero and no badge',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
+        result: ShanghaiResult(
+          competitors: [
+            ShanghaiCompetitorResult(
+              competitorId: 'c1',
+              competitorName: 'Alice',
+              totalScore: 248,
+              shanghaiBonuses: 0,
+              bestRound: 80,
+              roundsPlayed: 7,
+            ),
+          ],
+          winnerCompetitorId: null,
+          totalRounds: 7,
+        ),
+      )));
+
+      expect(find.text('ENDED EARLY'), findsNothing);
+      final heroScore = tester.widgetList<Text>(find.text('248')).first;
+      expect(heroScore.style?.color, isNot(onSurface()));
+    });
+
+    testWidgets('a multi-player win keeps the winner hero and no badge',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const ShanghaiSummaryWidget(
+        result: ShanghaiResult(
+          competitors: fourPlayers,
+          winnerCompetitorId: 'c2',
+          totalRounds: 7,
+        ),
+      )));
+
+      expect(find.text('ENDED EARLY'), findsNothing);
+      expect(find.text('NO WINNER'), findsNothing);
+      expect(find.text('BEN'), findsOneWidget);
+      expect(find.text('WINNER'), findsOneWidget);
+    });
+  });
 }
