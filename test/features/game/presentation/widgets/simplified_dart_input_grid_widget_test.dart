@@ -7,14 +7,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:dart_lodge/core/utils/app_colors.dart';
 import 'package:dart_lodge/core/utils/app_theme.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/dot_row_widget.dart';
 import 'package:dart_lodge/features/game/presentation/widgets/simplified_dart_input_grid_widget.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 
-Widget _wrap(Widget child) {
+Widget _wrap(Widget child, {bool dark = false}) {
   return MaterialApp(
-    theme: AppTheme.light(),
+    theme: dark ? AppTheme.dark() : AppTheme.light(),
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
@@ -260,6 +261,34 @@ void main() {
       await tester.pump();
 
       expect(thrown, isEmpty);
+    });
+  });
+  // The dots and the Bull "25" sub-label used the brand neon `primaryFixed`
+  // at 70% in both themes (~1.1:1 on the light keys). They now go through
+  // `AppTheme.boardAccent`, like the full keypad.
+  group('accent colour', () {
+    List<Color> dotColours(WidgetTester tester) => tester
+        .widgetList<DotRow>(find.byType(DotRow))
+        .map((d) => d.color)
+        .toList();
+
+    testWidgets('light theme: dots are primary, never the neon',
+        (tester) async {
+      await tester.pumpWidget(
+          _wrap(SimplifiedDartInputGridWidget(onSegmentTapped: (_) {})));
+
+      final colours = dotColours(tester);
+      expect(colours, isNotEmpty);
+      expect(colours, everyElement(AppColors.primary));
+    });
+
+    testWidgets('dark theme: dots keep the neon at 70%', (tester) async {
+      await tester.pumpWidget(_wrap(
+          SimplifiedDartInputGridWidget(onSegmentTapped: (_) {}),
+          dark: true));
+
+      expect(dotColours(tester),
+          everyElement(AppColorsDark.primaryFixed.withValues(alpha: 0.7)));
     });
   });
 }

@@ -199,7 +199,7 @@ class _SimplifiedDartInputGridWidgetState
               const SizedBox(height: 4),
               DotRow(
                 count: _dotCount,
-                color: cs.primaryFixed.withValues(alpha: 0.7),
+                color: AppTheme.boardAccent(context, darkAlpha: 0.7),
               ),
             ],
           ),
@@ -271,7 +271,7 @@ class _SimplifiedDartInputGridWidgetState
         child = _bullLabel(
           '25',
           cs.onSurface,
-          cs.primaryFixed.withValues(alpha: 0.7),
+          AppTheme.boardAccent(context, darkAlpha: 0.7),
           dots: 1,
         );
     }

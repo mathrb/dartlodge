@@ -147,8 +147,8 @@ These aliases exist in `AppColors` / `AppColorsDark` but game board widgets ofte
 | `activePlayerBg` | `surfaceContainerHigh` (`#EAEAEA`) | `surfaceContainerHigh` (`#1E2124`) | Panel background tint for active player — *game board widgets use `cs.surfaceContainerLow` directly* |
 | `inactiveScore` | `onSurfaceVariant` (`#6B6E72`) | `onSurfaceVariant` (`#ACABAA`) | Score numeral for non-active players — *game board widgets use `cs.onSurfaceVariant` directly* |
 | `cricketClosed` | `primary` (`#006D45`) | `primaryFixed` | Cricket number closed indicator — *board widgets use `AppTheme.boardAccent(context)`* |
-| `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots, BULL subtext, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
-| `accentForeground` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent text / icons on plain surfaces: post-game hero emphasised stat and badge icon, breakdown winner column, selected stats tab label, section titles such as the impact heatmap title, the player setup NEW PLAYER link, empty-roster button and active HCP chip text. Same rule as `boardAccent` (which delegates to it); neon fills (pills, accent bars, tab indicators) stay `primaryFixed` |
+| `boardAccent` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent foreground on game boards: closed Cricket mark, keypad double/triple dots (full and simplified keypad), BULL subtext, X01 checkout route, dart-badge text, active player name and turn score. The neon is 1.2–1.3:1 on the light greys, below WCAG 1.4.11 / 1.4.3. Neon fills (NEXT, 50 BULL key, accent bars, ghost borders) stay `primaryFixed` in both themes |
+| `accentForeground` | `primary` (`#006D45`) | `primaryFixed` (optionally dimmed) | Accent text / icons on plain surfaces: post-game hero emphasised stat and badge icon, breakdown winner column, selected stats tab label, section titles such as the impact heatmap title, the variant page's LATEST PLAYED over-line and selected variant title, the player setup NEW PLAYER link, empty-roster button and active HCP chip text. Same rule as `boardAccent` (which delegates to it); neon fills (pills, accent bars, tab indicators) stay `primaryFixed` |
 | `win` | `primary` | `primary` | Win banner, end-game highlight |
 | `winContainer` | `surfaceContainerLow` | `surfaceContainerLow` | Win screen card background |
 | `award` | `#B58A00` | `#FFC957` | Trophy / medal / 1st-place accent — game history winner icons, podium badges |
@@ -426,8 +426,8 @@ are not interchangeable when the intent differs.
 - Border-radius: `radiusSmall` (8dp)
 - Padding: `16h / 12v`
 - Left accent: 2dp solid `primaryFixed` (visible only when checkout is active)
-- Label: `label-sm`, `onSurfaceVariant`, letterSpacing 1.2
-- Suggestions: `label-lg`, `primaryFixed`
+- Label: `label-sm`, `onSurfaceVariant` (@ 80% while no route is reachable), letterSpacing 1.2, localized (`gameCheckoutBandLabel`)
+- Suggestions: `label-lg`, `boardAccent`; the out-of-range placeholder is `onSurfaceVariant` at full opacity
 - Entry animation: 200ms opacity/size transition
 
 **Bottom Action Bar**

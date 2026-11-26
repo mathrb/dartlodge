@@ -6,6 +6,10 @@ import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dart_lodge/core/persistence/database_provider.dart';
+import 'package:dart_lodge/core/utils/app_colors.dart';
+import 'package:dart_lodge/core/utils/app_theme.dart';
+import 'package:dart_lodge/core/utils/constants.dart';
+import 'package:dart_lodge/features/game/domain/models/game_config.dart';
 import 'package:dart_lodge/features/game/presentation/pages/variant_selection_page.dart';
 import 'package:dart_lodge/features/game/presentation/providers/game_setup_provider.dart';
 import 'package:dart_lodge/features/game/presentation/state/game_setup_state.dart';
@@ -40,6 +44,15 @@ class _FixedGameSetupNotifier extends GameSetupNotifier {
   GameSetupState build() => _fixedState;
 }
 
+/// Last-played override: always reports [_config], no SharedPreferences.
+class _FixedLastGameConfig extends LastGameConfig {
+  _FixedLastGameConfig(this._config);
+  final GameConfig _config;
+
+  @override
+  Future<GameConfig?> build(String category) async => _config;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /// Builds a testable app for [category] with optional [setupState].
@@ -49,6 +62,8 @@ Widget _buildApp(
   GameSetupState? setupState,
   List<String>? pushedRoutes,
   Locale? locale,
+  bool dark = false,
+  GameConfig? lastConfig,
 }) {
   final captured = pushedRoutes ?? [];
   final router = GoRouter(
@@ -76,8 +91,10 @@ Widget _buildApp(
     overrides: [
       playerRepositoryProvider.overrideWithValue(_FakePlayerRepository()),
       gameSetupProvider.overrideWith(() => _FixedGameSetupNotifier(initialState)),
+      if (lastConfig != null)
+        lastGameConfigProvider.overrideWith(() => _FixedLastGameConfig(lastConfig)),
     ],
-    child: MaterialApp.router(locale: locale, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
+    child: MaterialApp.router(theme: dark ? AppTheme.dark() : AppTheme.light(), locale: locale, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
   );
 }
 
@@ -278,6 +295,51 @@ void main() {
 
       expect(find.text('Cricket: Standard'), findsOneWidget);
       expect(find.text('player-selection'), findsNothing);
+    });
+  });
+  // The "LATEST PLAYED" over-line and the selected variant title used the
+  // brand neon `primaryFixed` in both themes (~1.2:1 on the light cards).
+  // They are accent TEXT, so they go through `AppTheme.accentForeground`.
+  group('VariantSelectionPage — accent text colour', () {
+    const config501 = GameConfig.x01(
+      startingScore: 501,
+      inStrategy: 'straight',
+      outStrategy: 'double',
+      legsToWin: 1,
+    );
+    // A different last-played config, so the selected row's "501" title is
+    // the only "501" text on the page.
+    const config301 = GameConfig.x01(
+      startingScore: 301,
+      inStrategy: 'straight',
+      outStrategy: 'double',
+      legsToWin: 1,
+    );
+    const selected = GameSetupState.configuringGame(
+      gameType: GameType.x01,
+      config: config501,
+    );
+
+    Color? colourOf(WidgetTester tester, String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+
+    testWidgets('light theme: latest-played over-line and selected title are '
+        'primary', (tester) async {
+      await tester.pumpWidget(
+          _buildApp('x01', setupState: selected, lastConfig: config301));
+      await tester.pumpAndSettle();
+
+      expect(colourOf(tester, '✦ LATEST PLAYED'), AppColors.primary);
+      expect(colourOf(tester, '501'), AppColors.primary);
+    });
+
+    testWidgets('dark theme: both keep the neon', (tester) async {
+      await tester.pumpWidget(_buildApp('x01',
+          setupState: selected, lastConfig: config301, dark: true));
+      await tester.pumpAndSettle();
+
+      expect(colourOf(tester, '✦ LATEST PLAYED'), AppColorsDark.primaryFixed);
+      expect(colourOf(tester, '501'), AppColorsDark.primaryFixed);
     });
   });
 }

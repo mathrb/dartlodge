@@ -209,10 +209,21 @@ List<RouteBase> _testRoutes({String gameId = 'game-1'}) => [
       ),
     ];
 
+/// WCAG 2.x contrast ratio of [fg] composited over the opaque [bg].
+double _contrast(Color fg, Color bg) {
+  final over = Color.alphaBlend(fg, bg);
+  final a = over.computeLuminance();
+  final b = bg.computeLuminance();
+  final hi = a > b ? a : b;
+  final lo = a > b ? b : a;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
 /// Standard builder using [ProviderScope] with override.
 Widget _buildApp(
   _FakeActiveGameNotifier notifier, {
   String gameId = 'game-1',
+  bool dark = false,
 }) {
   final router = GoRouter(
     initialLocation: '/game/active/x01/$gameId',
@@ -225,7 +236,7 @@ Widget _buildApp(
     child: MaterialApp.router(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: kSupportedLocales,
-      theme: AppTheme.light(),
+      theme: dark ? AppTheme.dark() : AppTheme.light(),
       routerConfig: router,
     ),
   );
@@ -769,6 +780,60 @@ void main() {
     expect(find.text('DB'), findsWidgets);
     expect(
         find.text('Suggestions appear in checkout range'), findsNothing);
+  });
+
+  // ── 13d. Checkout band readable in the light theme ────────────────────────
+  // The route used the brand neon `primaryFixed` in both themes (1.16:1 on
+  // the light grey band) and the idle label/placeholder were at alpha
+  // 0.35/0.25 (1.56:1 / 1.36:1).
+
+  testWidgets('13d. Light theme: checkout route uses primary, not the neon',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(competitors: [_competitor(score: 141)]);
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final route = tester.widget<Text>(find.text('T20 · T19 · D12'));
+    expect(route.style?.color, AppColors.primary);
+    expect(_contrast(route.style!.color!, AppColors.surfaceContainer),
+        greaterThanOrEqualTo(4.5));
+  });
+
+  testWidgets('13e. Dark theme: checkout route keeps the neon',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(competitors: [_competitor(score: 141)]);
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier, dark: true));
+    await tester.pumpAndSettle();
+
+    final route = tester.widget<Text>(find.text('T20 · T19 · D12'));
+    expect(route.style?.color, AppColorsDark.primaryFixed);
+  });
+
+  testWidgets(
+      '13f. Light theme: idle placeholder is the full hint colour, dimmed label 3:1',
+      (tester) async {
+    _setPhoneViewport(tester);
+    final gs = _gameState(competitors: [_competitor(score: 301)]);
+    final notifier = _FakeActiveGameNotifier(_activeState(gameState: gs));
+    await tester.pumpWidget(_buildApp(notifier));
+    await tester.pumpAndSettle();
+
+    final hint =
+        tester.widget<Text>(find.text('Suggestions appear in checkout range'));
+    // Full-opacity hint token, like every other onSurfaceVariant text on
+    // this surface (~4.5:1; it was 1.36:1 at alpha 0.25).
+    expect(hint.style?.color, AppColors.onSurfaceVariant);
+    expect(_contrast(hint.style!.color!, AppColors.surfaceContainer),
+        greaterThan(4.4));
+    final label = tester.widget<Text>(find.text('CHECKOUT'));
+    expect(label.style!.color!.a, lessThan(1.0),
+        reason: 'the idle label stays dimmed');
+    expect(_contrast(label.style!.color!, AppColors.surfaceContainer),
+        greaterThanOrEqualTo(3.0));
   });
 
   // ── 14. Grid row 0: MISS, SB, DB ──────────────────────────────────────────

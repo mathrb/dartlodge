@@ -664,16 +664,19 @@ class _CheckoutBanner extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'CHECKOUT',
+                        AppLocalizations.of(context).gameCheckoutBandLabel,
                         style:
                             (large
                                     ? AppTextStyles.labelMedium
                                     : AppTextStyles.labelSmall)
                                 .copyWith(
+                                  // Dimmed while there is no reachable
+                                  // route, but at 0.8 it still reads on the
+                                  // light grey (3.1:1; 0.35 was 1.56:1).
                                   color: highlight
                                       ? cs.onSurfaceVariant
                                       : cs.onSurfaceVariant.withValues(
-                                          alpha: 0.35,
+                                          alpha: 0.8,
                                         ),
                                   letterSpacing: 1.2,
                                 ),
@@ -693,11 +696,14 @@ class _CheckoutBanner extends StatelessWidget {
                                       ? AppTextStyles.headlineMedium
                                       : AppTextStyles.labelLarge)
                                   .copyWith(
+                                    // The route is accent TEXT: the neon
+                                    // on dark, `primary` on light (the neon
+                                    // is 1.16:1 on the light grey). The
+                                    // placeholder is a full-opacity hint
+                                    // (~4.5:1 on light; 0.25 was 1.36:1).
                                     color: highlight
-                                        ? cs.primaryFixed
-                                        : cs.onSurfaceVariant.withValues(
-                                            alpha: 0.25,
-                                          ),
+                                        ? AppTheme.boardAccent(context)
+                                        : cs.onSurfaceVariant,
                                   ),
                           textAlign: TextAlign.end,
                           maxLines: 1,

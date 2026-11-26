@@ -2654,5 +2654,9 @@
   "gameTurnCheckout": "CHECKOUT",
   "@gameTurnCheckout": {
     "description": "Short flag for the visit that checked out (game-detail turn breakdown)"
+  },
+  "gameCheckoutBandLabel": "CHECKOUT",
+  "@gameCheckoutBandLabel": {
+    "description": "Label of the X01 board band that shows the suggested checkout route"
   }
 }
