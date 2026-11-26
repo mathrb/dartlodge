@@ -51,7 +51,7 @@ test.describe('Shanghai undo preserves round and score (#656)', { tag: ['@shangh
 
     await page.getByRole('button', { name: /Casual/i }).click();
     await page.getByRole('button', { name: /Select Shanghai/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Undo656S');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

@@ -30,7 +30,7 @@ async function boot(browser: Browser): Promise<Page> {
 /** Home → Settings → toggle the simplified keypad on → back to Home. */
 async function enableSimplifiedKeypad(page: Page): Promise<void> {
   await page.getByRole('button', { name: /Settings/i }).first().click();
-  await page.getByText('Simplified scoring keypad').click();
+  await page.getByRole('switch', { name: /Simplified scoring keypad/ }).click();
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByRole('button', { name: /Casual/i })).toBeVisible({
     timeout: 15000,
@@ -48,7 +48,7 @@ test.describe('Count-Up simplified keypad (#720)', { tag: ['@countup'] }, () => 
       // off (default), so the manual simplified keypad is up.
       await page.getByRole('button', { name: /Casual/i }).click();
       await page.getByRole('button', { name: /Select Count-Up/i }).click();
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill('Cody720');
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await page.getByRole('button', { name: /START GAME/i }).click();

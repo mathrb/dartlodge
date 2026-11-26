@@ -95,7 +95,7 @@ test.describe('Around the Clock — multiplayer', { tag: ['@atc', '@correction']
     await page.getByRole('button', { name: /Practice/i }).click();
     await page.getByRole('button', { name: /Select Around the Clock/i }).click();
     for (const name of ['Ana', 'Ben', 'Cal']) {
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill(name);
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
       await expect(page.getByRole('button', { name: `Remove ${name}` }))

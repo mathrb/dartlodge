@@ -36,7 +36,7 @@ test.describe('Checkout Practice — manual entry', { tag: ['@checkout'] }, () =
     const page = await boot(browser); // no auto-scoring → manual segment grid
     await page.getByRole('button', { name: /Practice/i }).click();
     await page.getByRole('button', { name: /Select Checkout/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Jo');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

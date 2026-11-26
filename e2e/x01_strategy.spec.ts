@@ -63,7 +63,7 @@ async function setDoubleIn(page: Page): Promise<void> {
 
 /** Create a solo player and start the game. */
 async function createPlayerAndStart(page: Page, player: string): Promise<void> {
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();

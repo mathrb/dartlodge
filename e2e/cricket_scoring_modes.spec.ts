@@ -48,7 +48,7 @@ async function startCricket(
   await page.getByRole('button', { name: /Cricket/i }).first().click();
   await page.getByRole('button', { name: variant }).click();
   for (const p of players) {
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill(p);
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   }

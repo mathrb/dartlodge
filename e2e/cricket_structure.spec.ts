@@ -43,7 +43,7 @@ test.describe('Cricket structure & target modes', { tag: ['@cricket'] }, () => {
     const page = await boot(browser); // no auto-scoring → manual unified table
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Standard/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Mara');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();
@@ -92,7 +92,7 @@ test.describe('Cricket structure & target modes', { tag: ['@cricket'] }, () => {
     await sim(page, 'enableAutoScoring()');
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Random/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Nora');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();
@@ -114,7 +114,7 @@ test.describe('Cricket structure & target modes', { tag: ['@cricket'] }, () => {
     await sim(page, 'enableAutoScoring()');
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Crazy/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Otis');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

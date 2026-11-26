@@ -67,7 +67,7 @@ async function startAutoSolo(
   await sim(page, 'enableAutoScoring()'); // boards mount camera-first
   await page.getByRole('button', { name: /X01/i }).click();
   await page.getByRole('button', { name: scoreLabel }).click();
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click(); // auto-selects
   await page.getByRole('button', { name: /START GAME/i }).click();
@@ -131,7 +131,7 @@ test.describe('X01 checkout → win → summary', { tag: ['@x01', '@stats'] }, (
     const page = await boot(browser);
     await page.getByRole('button', { name: /X01/i }).click();
     await page.getByRole('button', { name: /Select 301/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Mira');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

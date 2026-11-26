@@ -46,7 +46,7 @@ test.describe('Count Up undo preserves round (#656)', { tag: ['@countup', '@corr
 
     await page.getByRole('button', { name: /Casual/i }).click();
     await page.getByRole('button', { name: /Select Count-Up/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Undo656');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

@@ -69,7 +69,7 @@ test.describe('Shanghai multi-player natural completion (#595)', { tag: ['@shang
 
     // Player selection: create two players and start.
     for (const name of ['Alice595', 'Bob595']) {
-      await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+      await page.getByRole('button', { name: /NEW PLAYER/ }).click();
       await page.getByRole('textbox', { name: /Player name/i }).fill(name);
       await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     }

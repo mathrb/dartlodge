@@ -52,7 +52,7 @@ test.describe('Cricket solo standard playthrough (#661)', { tag: ['@cricket', '@
     // Home → Cricket → Standard → solo player → start.
     await page.getByRole('button', { name: /Cricket/i }).first().click();
     await page.getByRole('button', { name: /Select Standard/i }).click();
-    await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+    await page.getByRole('button', { name: /NEW PLAYER/ }).click();
     await page.getByRole('textbox', { name: /Player name/i }).fill('Crispin');
     await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
     await page.getByRole('button', { name: /START GAME/i }).click();

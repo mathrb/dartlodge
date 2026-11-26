@@ -71,7 +71,7 @@ async function startSolo501(browser: Browser, player: string): Promise<Page> {
 
   await page.getByRole('button', { name: /X01/i }).click();
   await page.getByRole('button', { name: /Select 501/i }).click();
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click(); // auto-selects
   await page.getByRole('button', { name: /START GAME/i }).click();
@@ -103,7 +103,7 @@ async function startSolo301(browser: Browser, player: string): Promise<Page> {
   await sim(page, 'enableAutoScoring()');
   await page.getByRole('button', { name: /X01/i }).click();
   await page.getByRole('button', { name: /Select 301/i }).click();
-  await page.getByRole('button', { name: /NEW PLAYER/i }).click();
+  await page.getByRole('button', { name: /NEW PLAYER/ }).click();
   await page.getByRole('textbox', { name: /Player name/i }).fill(player);
   await page.getByRole('button', { name: /CREATE PLAYER/i }).click();
   await page.getByRole('button', { name: /START GAME/i }).click();
