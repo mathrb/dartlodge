@@ -224,14 +224,14 @@ Dart indicator: [60] [T20] [○] [○]
 Segment input grid:
   [ MISS ]  [ 25 ]  [ 50 ]           ← row 0 (miss / SB / DB)
   [ 20 ][ 19 ]…[ 12 ][ 11 ]         ← rows 1–2 (singles 20→1)
-  [ 20 ][ 19 ]…[ 12 ][ 11 ]         ← rows 3–4 (doubles ·· )
-  [ 20 ][ 19 ]…[ 12 ][ 11 ]         ← rows 5–6 (triples ···)
+  [D20 ][D19 ]…[D12 ][D11 ]         ← rows 3–4 (doubles ·· )
+  [T20 ][T19 ]…[T12 ][T11 ]         ← rows 5–6 (triples ···)
 ──────────────────────────────────────────────
 [↩ Undo]                    [NEXT ROUND]
 ```
 
 - Segment grid is grouped by **multiplier** (not by number): singles / doubles / triples, each spanning 2 rows of 10.
-- Dots below numbers are purely visual: 2 filled dots = double, 3 filled dots = triple; no text label.
+- Double and triple keys carry a small `D` / `T` prefix before the number (the notation of the checkout route, dart chips and history), plus dots below it as a secondary cue: 2 = double, 3 = triple. The prefix is visual only: the key's screen-reader name stays "Double 12" / "Triple 19".
 - Checkout banner collapses to zero height when not relevant.
 - Active player column: `colorActivePlayerBg` background, 4dp `colorActivePlayer` left border.
 - Singles: `colorSurface`; doubles: `colorPrimaryContainer`; triples: `colorPrimary` background.

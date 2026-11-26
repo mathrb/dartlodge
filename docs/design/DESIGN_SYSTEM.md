@@ -387,8 +387,8 @@ are not interchangeable when the intent differs.
 | Tier | Background | Text color | Dots |
 |---|---|---|---|
 | Singles (10–20) | `surfaceContainerHighest` | `onSurface` | None |
-| Doubles (D1–D20) | `surfaceContainerLow` | `onSurfaceVariant` | 2 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
-| Triples (T1–T20) | `surfaceContainer` | `onSurfaceVariant` | 3 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
+| Doubles (D1–D20) | `surfaceContainerLow` | `onSurfaceVariant`; `D` prefix in `multiplierLabel` bold, `boardAccent` | 2 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
+| Triples (T1–T20) | `surfaceContainer` | `onSurfaceVariant`; `T` prefix in `multiplierLabel` bold, `boardAccent` | 3 × 4dp `boardAccent` (dark: `primaryFixed` @ 70%) |
 | MISS | `surfaceContainerLowest` | `onSurface` | None |
 | Bull 25 (Outer) | `surfaceContainerHighest` | `onSurface` | `boardAccent` subtext (dark: `primaryFixed` @ 70%) |
 | Bull 50 (Double) | `primaryFixed` | `onPrimaryFixed` | `onPrimaryFixed` subtext |

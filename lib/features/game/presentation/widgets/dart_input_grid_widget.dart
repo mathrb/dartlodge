@@ -284,6 +284,7 @@ class _NumberRow extends StatelessWidget {
           Expanded(
             child: _GridCell(
               label: '${numbers[i]}',
+              prefix: prefix,
               segment: '$prefix${numbers[i]}',
               semanticLabel: semanticLabelFor(numbers[i]),
               bgColor: bgColor,
@@ -303,6 +304,7 @@ class _NumberRow extends StatelessWidget {
 class _GridCell extends StatelessWidget {
   const _GridCell({
     required this.label,
+    required this.prefix,
     required this.segment,
     required this.semanticLabel,
     required this.bgColor,
@@ -314,6 +316,10 @@ class _GridCell extends StatelessWidget {
   });
 
   final String label;
+
+  /// '' for singles, 'D' / 'T' for doubles / triples: the same notation
+  /// as the checkout route, the dart chips and the history.
+  final String prefix;
   final String segment;
   final String semanticLabel;
   final Color bgColor;
@@ -348,11 +354,34 @@ class _GridCell extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  label,
-                  style: AppTextStyles.segmentButton.copyWith(color: textColor),
-                  maxLines: 1,
-                  softWrap: false,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    if (prefix.isNotEmpty)
+                      // Visual only: the cell's Semantics label already
+                      // says "Double 12" / "Triple 19", and the e2e suite
+                      // selects keys by that name ("Triple 20 20").
+                      ExcludeSemantics(
+                        child: Text(
+                          prefix,
+                          style: AppTextStyles.multiplierLabel.copyWith(
+                            color: dotColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 1,
+                          softWrap: false,
+                        ),
+                      ),
+                    Text(
+                      label,
+                      style: AppTextStyles.segmentButton
+                          .copyWith(color: textColor),
+                      maxLines: 1,
+                      softWrap: false,
+                    ),
+                  ],
                 ),
                 if (dots > 0) ...[
                   const SizedBox(height: 4),
