@@ -655,5 +655,6 @@
   "gameMultiplierDouble": "Dubbel",
   "gameMultiplierTriple": "Triple",
   "gameTurnBust": "BUST",
-  "gameTurnCheckout": "CHECKOUT"
+  "gameTurnCheckout": "CHECKOUT",
+  "gameCheckoutBandLabel": "CHECKOUT"
 }

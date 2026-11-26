@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/utils/app_text_styles.dart';
+import '../../../../core/utils/app_theme.dart';
 
 /// Large, at-distance-readable primary game-state value for auto-scoring mode
 /// (#442 / epic #440).
@@ -46,12 +47,13 @@ class HeroMetricWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (label != null) ...[
-          // Over-line above the hero numeral → label-sm in primaryFixed
-          // (DESIGN_SYSTEM §3); the token already carries the over-line tracking.
+          // Over-line above the hero numeral → label-sm in the board accent
+          // (DESIGN_SYSTEM §3): the neon on dark, `primary` on light, where
+          // the neon is ~1.2:1. The token carries the over-line tracking.
           Text(
             label!.toUpperCase(),
             style: AppTextStyles.labelSmall.copyWith(
-              color: cs.primaryFixed,
+              color: AppTheme.boardAccent(context),
             ),
             textAlign: TextAlign.center,
           ),

@@ -371,7 +371,9 @@ class _LastPlayedCard extends StatelessWidget {
                 children: [
                   Text(
                     AppLocalizations.of(context).setupLatestPlayed,
-                    style: AppTextStyles.labelSmall.copyWith(color: cs.primaryFixed),
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppTheme.accentForeground(context),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -520,7 +522,9 @@ class _VariantRow extends StatelessWidget {
                     style: AppTextStyles.scoreMedium.copyWith(
                       fontWeight: FontWeight.w900,
                       letterSpacing: -2.4,
-                      color: isSelected ? cs.primaryFixed : cs.onSurface,
+                      color: isSelected
+                          ? AppTheme.accentForeground(context)
+                          : cs.onSurface,
                     ),
                   ),
                 ),
