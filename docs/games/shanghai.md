@@ -68,7 +68,9 @@ wins (depending on the variant).
   break ties by **number of triples** (then bull-up / draw). Tie-break divergence → finding or
   accepted simplification. **Maintainer decision.**
 - **D-3 (note)** — **configurable** number of rounds N (default 7): a legitimate design choice (the canonical rules
-  allow 7 or 20). Not a bug; to confirm as intentional.
+  allow 7 or 20). Not a bug; to confirm as intentional. The setup picker offers N ∈ {7, 10, 15, 20}
+  (`GameConfigurationConstants.shanghaiAllowedRounds`): round n targets board number n and there is no number
+  above 20, so N is capped at 20.
 - **D-4 (note)** — the engine also records a Shanghai as `practiceSuccesses++` (hybrid
   drill/match semantics). To clarify whether Shanghai is positioned as a competitive game or a drill.
 

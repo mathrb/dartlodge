@@ -76,6 +76,10 @@ class GameConfigurationConstants {
     'bull',
   ];
 
+  // Shanghai: round n targets board number n, and the board stops at 20,
+  // so a game can have at most 20 rounds. 7 is the default.
+  static const List<int> shanghaiAllowedRounds = [7, 10, 15, 20];
+
   // Count-up game (rounds-based, additive scoring with optional handicap).
   static const List<int> countUpAllowedRounds = [8, 12, 16, 20];
   static const int countUpDefaultRounds = 8;

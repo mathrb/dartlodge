@@ -439,9 +439,15 @@ class _GameConfigPanelState extends State<GameConfigPanel> {
           // classic Shanghai rule plays the 20→bull set in 7 rounds), so
           // it must be selectable in the dropdown — otherwise the config
           // chip badge ("Shanghai · 7 Rounds") and the picker disagree
-          // (#259).
-          value: c.totalRounds,
-          items: const [7, 10, 15, 20, 25, 50],
+          // (#259). Round n targets board number n, and there is no
+          // number above 20, so the list stops at 20. A draft that still
+          // carries more rounds shows 20, because `DropdownButton` asserts
+          // when its value is not one of its items.
+          value: c.totalRounds >
+                  GameConfigurationConstants.shanghaiAllowedRounds.last
+              ? GameConfigurationConstants.shanghaiAllowedRounds.last
+              : c.totalRounds,
+          items: GameConfigurationConstants.shanghaiAllowedRounds,
           onChanged: (v) {
             if (v == null) return;
             setState(() => _draftConfig = c.copyWith(totalRounds: v));
