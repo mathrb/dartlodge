@@ -3,6 +3,7 @@
 // the panel rendered an empty body for ATC before this PR.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:dart_lodge/l10n/gen/app_localizations.dart';
 import 'package:dart_lodge/l10n/supported_locales.dart';
@@ -194,4 +195,87 @@ void main() {
       expect(find.bySemanticsLabel('Decrease legs to win'), findsOneWidget);
     });
   });
+
+  // ── Large text (DESIGN_SYSTEM §13) ────────────────────────────────────────
+
+  group('Sheet title at large text', () {
+    const titles = {
+      'fr': 'CONFIGURATION',
+      'de': 'KONFIGURATION',
+      'it': 'CONFIGURAZIONE',
+    };
+    for (final entry in titles.entries) {
+      testWidgets('${entry.key} title "${entry.value}" stays on one line at '
+          '2.0x', (tester) async {
+        tester.view.physicalSize = const Size(412, 915);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(entry.key),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: kSupportedLocales,
+            theme: AppTheme.light(),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2.0)),
+              child: child!,
+            ),
+            home: Scaffold(
+              body: Builder(
+                builder: (context) => Center(
+                  child: ElevatedButton(
+                    onPressed: () => showModalBottomSheet<GameConfig>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const GameConfigPanel(
+                        initialConfig: GameConfig.x01(
+                          startingScore: 501,
+                          inStrategy: 'straight',
+                          outStrategy: 'double',
+                          legsToWin: 1,
+                        ),
+                      ),
+                    ),
+                    child: const Text('Open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.text('Open'));
+        await tester.pumpAndSettle();
+
+        final title = tester.renderObject<RenderParagraph>(
+          find.text(entry.value),
+        );
+        expect(
+          _lineCount(title),
+          1,
+          reason: 'the title must not break mid-word',
+        );
+        final rect = _globalRect(title);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(412));
+      });
+    }
+  });
 }
+
+/// The number of laid-out lines of [p]: its height over one line's height.
+int _lineCount(RenderParagraph p) {
+  final oneLine = TextPainter(
+    text: p.text,
+    textScaler: p.textScaler,
+    textDirection: p.textDirection,
+    maxLines: 1,
+  )..layout();
+  final lines = (p.size.height / oneLine.height).round();
+  oneLine.dispose();
+  return lines;
+}
+
+/// [box]'s painted rect in global coordinates (including FittedBox scaling).
+Rect _globalRect(RenderBox box) =>
+    MatrixUtils.transformRect(box.getTransformTo(null), Offset.zero & box.size);

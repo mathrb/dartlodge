@@ -84,6 +84,8 @@ Widget _buildApp({
   List<String> capturedRoutes = const [],
   ThemeData? theme,
   List<Override> extraOverrides = const [],
+  Locale? locale,
+  double textScale = 1.0,
 }) {
   final router = GoRouter(
     initialLocation: '/game/player-selection',
@@ -129,7 +131,20 @@ Widget _buildApp({
       ),
       ...extraOverrides,
     ],
-    child: MaterialApp.router(theme: theme, localizationsDelegates: AppLocalizations.localizationsDelegates, supportedLocales: kSupportedLocales, routerConfig: router),
+    child: MaterialApp.router(
+      theme: theme,
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: kSupportedLocales,
+      routerConfig: router,
+      builder: textScale == 1.0
+          ? null
+          : (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(textScale)),
+                child: child!,
+              ),
+    ),
   );
 }
 
@@ -1172,6 +1187,83 @@ void main() {
           AppColors.primary);
     });
   });
+
+  // ── Large text (DESIGN_SYSTEM §13) ────────────────────────────────────────
+
+  group('Config chip at large text', () {
+    Future<void> pumpAt(
+      WidgetTester tester, {
+      required Locale locale,
+      required double scale,
+      required double width,
+    }) async {
+      tester.view.physicalSize = Size(width, 915);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(_buildApp(
+        setupState: _selectingPlayersState(),
+        locale: locale,
+        textScale: scale,
+      ));
+      await tester.pumpAndSettle();
+    }
+
+    Finder chipRow() => find
+        .ancestor(
+          of: find.byIcon(Icons.edit_outlined),
+          matching: find.byType(Row),
+        )
+        .first;
+
+    RenderParagraph summaryParagraph(WidgetTester tester) {
+      // The summary is the only Text sharing a Row with the edit icon
+      // (icons paint a RichText too, but are not Text widgets).
+      final text = find.descendant(of: chipRow(), matching: find.byType(Text));
+      expect(text, findsOneWidget);
+      return tester.renderObject<RenderParagraph>(
+        find.descendant(of: text, matching: find.byType(RichText)),
+      );
+    }
+
+    // The test font draws every glyph 1 em wide, far wider than the app
+    // font: at 412 dp the default fr summary would need three lines and the
+    // lineup headers would overflow, neither of which happens on a device.
+    // A 700 dp surface still pushes the edit icon off screen without the fix
+    // (the one-line summary is ~880 dp wide at 2.0x) while the rest of the
+    // page lays out.
+    const width = 700.0;
+    for (final scale in [1.7, 2.0]) {
+      testWidgets('fr at ${scale}x keeps the edit icon on screen and the '
+          'summary whole', (tester) async {
+        await pumpAt(tester,
+            locale: const Locale('fr'), scale: scale, width: width);
+
+        expect(tester.takeException(), isNull);
+        final icon = _globalRect(
+          tester.renderObject<RenderBox>(find.byIcon(Icons.edit_outlined)),
+        );
+        expect(icon.left, greaterThanOrEqualTo(0));
+        expect(icon.right, lessThanOrEqualTo(width));
+
+        final summary = summaryParagraph(tester);
+        expect(summary.didExceedMaxLines, isFalse,
+            reason: 'the summary must not be truncated');
+        final rect = _globalRect(summary);
+        expect(rect.left, greaterThanOrEqualTo(0));
+        expect(rect.right, lessThanOrEqualTo(width));
+      });
+    }
+
+    testWidgets('en at 1.0x keeps the summary on one line', (tester) async {
+      // A wide surface: the test font is wider than the app font.
+      await pumpAt(tester,
+          locale: const Locale('en'), scale: 1.0, width: 1080);
+
+      final summary = summaryParagraph(tester);
+      expect(_lineCount(summary), 1);
+      expect(find.text('501 · Double Out · ∞ Rounds · 1 leg'), findsOneWidget);
+    });
+  });
 }
 
 // ── Stub notifiers for startGame scenarios ────────────────────────────────────
@@ -1282,3 +1374,20 @@ class _TrackingPlayerRepository implements PlayerRepository {
   @override
   Stream<List<Player>> watchAllPlayers() => const Stream.empty();
 }
+
+/// The number of laid-out lines of [p]: its height over one line's height.
+int _lineCount(RenderParagraph p) {
+  final oneLine = TextPainter(
+    text: p.text,
+    textScaler: p.textScaler,
+    textDirection: p.textDirection,
+    maxLines: 1,
+  )..layout();
+  final lines = (p.size.height / oneLine.height).round();
+  oneLine.dispose();
+  return lines;
+}
+
+/// [box]'s painted rect in global coordinates (including FittedBox scaling).
+Rect _globalRect(RenderBox box) =>
+    MatrixUtils.transformRect(box.getTransformTo(null), Offset.zero & box.size);

@@ -237,10 +237,18 @@ class _PlayerSelectionPageState extends ConsumerState<PlayerSelectionPage> {
             // tapping the chip opens an empty bottom sheet with a disabled
             // APPLY, which looks broken (#261).
             if (config != null && _configHasEditableFields(config))
-              Center(
-                child: _ConfigSummaryChip(
-                  summary: _configSummaryFor(l10n, config, selectedIds.length),
-                  onTap: () => _openConfigSheet(context, setupState),
+              Padding(
+                // Keeps the chip off the screen edge when its summary wraps
+                // at large text sizes.
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.space4,
+                ),
+                child: Center(
+                  child: _ConfigSummaryChip(
+                    summary:
+                        _configSummaryFor(l10n, config, selectedIds.length),
+                    onTap: () => _openConfigSheet(context, setupState),
+                  ),
                 ),
               ),
 
@@ -579,11 +587,18 @@ class _ConfigSummaryChip extends StatelessWidget {
               semanticLabel: l10n.setupGameConfigSemantic,
             ),
             const SizedBox(width: AppSpacing.space3),
-            Text(
-              summary,
-              style: tt.labelMedium?.copyWith(
-                color: cs.onSurface,
-                letterSpacing: 1.0,
+            // Flexible + two lines keep the edit icon on screen at large
+            // text sizes; the summary wraps at its " · " separators.
+            Flexible(
+              child: Text(
+                summary,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onSurface,
+                  letterSpacing: 1.0,
+                ),
               ),
             ),
             const SizedBox(width: AppSpacing.space3),

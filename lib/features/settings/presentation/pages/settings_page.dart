@@ -264,17 +264,17 @@ class _ThemeModeSelector extends StatelessWidget {
         segments: [
           ButtonSegment(
             value: ThemeMode.light,
-            label: Text(l10n.settingsThemeLight),
+            label: _ThemeSegmentLabel(l10n.settingsThemeLight),
             icon: const Icon(Icons.light_mode_outlined),
           ),
           ButtonSegment(
             value: ThemeMode.system,
-            label: Text(l10n.settingsThemeSystem),
+            label: _ThemeSegmentLabel(l10n.settingsThemeSystem),
             icon: const Icon(Icons.brightness_auto_outlined),
           ),
           ButtonSegment(
             value: ThemeMode.dark,
-            label: Text(l10n.settingsThemeDark),
+            label: _ThemeSegmentLabel(l10n.settingsThemeDark),
             icon: const Icon(Icons.dark_mode_outlined),
           ),
         ],
@@ -283,6 +283,20 @@ class _ThemeModeSelector extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A theme segment label that scales down on one line instead of breaking
+/// mid-word at large text sizes (DESIGN_SYSTEM §13).
+class _ThemeSegmentLabel extends StatelessWidget {
+  const _ThemeSegmentLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(text, maxLines: 1, softWrap: false),
+      );
 }
 
 class _InfoRow extends StatelessWidget {
