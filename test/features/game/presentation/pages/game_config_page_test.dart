@@ -126,6 +126,41 @@ void main() {
       expect(find.text('15'), findsWidgets);
     });
 
+    testWidgets('Shanghai rounds dropdown stops at 20 (no 25 or 50)',
+        (tester) async {
+      // Round n targets board number n, and the board has no number above
+      // 20, so rounds 21+ could never be scored. The menu must not offer
+      // them.
+      await _openPanel(tester, initial: const GameConfig.shanghai());
+
+      await tester.tap(find.byType(DropdownButton<int?>));
+      await tester.pumpAndSettle();
+
+      for (final rounds in const ['7', '10', '15', '20']) {
+        expect(find.text(rounds), findsWidgets, reason: 'menu offers $rounds');
+      }
+      expect(find.text('25'), findsNothing);
+      expect(find.text('50'), findsNothing);
+    });
+
+    testWidgets('Shanghai draft above 20 rounds opens and shows 20',
+        (tester) async {
+      // `DropdownButton` asserts when its value is not one of its items,
+      // so a config that still carries 25 rounds must not break the sheet.
+      await _openPanel(
+        tester,
+        initial: const GameConfig.shanghai(totalRounds: 25),
+      );
+
+      expect(tester.takeException(), isNull);
+      final dropdown = tester.widget<DropdownButton<int?>>(
+        find.byType(DropdownButton<int?>),
+      );
+      expect(dropdown.value, 20);
+      expect(find.text('20'), findsOneWidget);
+      expect(find.text('25'), findsNothing);
+    });
+
     testWidgets('DOUBLES ONLY selection persists', (tester) async {
       GameConfig? applied;
       await tester.binding.setSurfaceSize(const Size(800, 1200));
