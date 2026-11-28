@@ -573,6 +573,115 @@ void main() {
     expect(afterAdvance.gameState.competitors[0].score, 0);
   });
 
+  // ── 13b. Catch 40: a short visit is padded to 3 darts on NEXT ──────────
+  //
+  // The camera board-clear calls startNextTurn after 1-2 detected darts.
+  // While the target is open the missing darts count as MISS, so a visit is
+  // always 3 darts: the 6-dart allowance holds and darts_on_target is the
+  // number of darts actually spent (the #253 skip applies only at remaining 0).
+
+  List<GameEvent> capturedEvents() => verify(mockEventRepo.appendEvents(
+        captureAny,
+      ))
+          .captured
+          .expand((c) => c as List<GameEvent>)
+          .toList();
+
+  test('Catch 40: NEXT after 1 dart pads the visit; the checkout scores 1',
+      () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T19'); // 61 - 57 = 4
+    await notifier.startNextTurn(); // board-clear after 1 detected dart
+
+    final afterClear = container.read(activePracticeProvider('g1')).value!;
+    expect(afterClear.gameState.catch40DartsOnTarget, 3,
+        reason: 'The 2 undetected darts count toward the 6-dart allowance.');
+    expect(afterClear.gameState.catch40TargetRemaining, 4);
+    expect(afterClear.gameState.dartsThrownInTurn, 0);
+    expect(afterClear.gameState.turnActive, isTrue);
+    expect(afterClear.gameState.competitors[0].practiceRound, 1,
+        reason: 'Visit 2 on the same target opens.');
+
+    await notifier.processDart('D2'); // checkout on the 4th dart
+    await notifier.startNextTurn();
+
+    final afterCheckout = container.read(activePracticeProvider('g1')).value!;
+    expect(afterCheckout.gameState.competitors[0].score, 1,
+        reason: 'A 4-dart checkout is worth 1 point, not 3.');
+    expect(afterCheckout.gameState.competitors[0].practiceRound, 2);
+
+    final events = capturedEvents();
+    final padded = events
+        .where((e) => e.eventType == 'DartThrown' && e.payload['segment'] == 0)
+        .toList();
+    expect(padded, hasLength(2));
+    final turnEnds = events.where((e) => e.eventType == 'TurnEnded').toList();
+    expect(turnEnds, hasLength(2));
+    expect(turnEnds[0].payload['reason'], 'normal');
+    expect(turnEnds[0].payload['darts_on_target'], 3);
+    expect(turnEnds[1].payload['reason'], 'checkout');
+    expect(turnEnds[1].payload['darts_on_target'], 4);
+  });
+
+  test('Catch 40: NEXT after 1 dart in visit 2 fails the target at 6 darts',
+      () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    // Visit 1: 3 MISSes (auto-advance fires after dart 3).
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    await notifier.processDart('MISS');
+    // Visit 2: 1 dart, then a board-clear.
+    await notifier.processDart('1');
+    await notifier.startNextTurn();
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    final comp = after.gameState.competitors[0];
+    expect(comp.practiceRound, 2, reason: 'No third visit on target 61.');
+    expect(comp.score, 0);
+    expect(comp.practiceAttempts, 1);
+    expect(comp.practiceSuccesses, 0);
+    expect(after.gameState.catch40TargetRemaining, 62);
+    expect(after.gameState.catch40DartsOnTarget, 0);
+
+    final failed = capturedEvents().singleWhere(
+      (e) => e.eventType == 'TurnEnded' && e.payload['reason'] == 'failed',
+    );
+    expect(failed.payload['darts_on_target'], 6);
+  });
+
+  test('Catch 40: NEXT after a bust pads the visit without a new bust',
+      () async {
+    stubBuild(
+      game: makeCatch40Game(),
+      events: [turnStartedEvent(seq: 1)],
+    );
+    await container.read(activePracticeProvider('g1').future);
+    final notifier = container.read(activePracticeProvider('g1').notifier);
+
+    await notifier.processDart('T20'); // 61 - 60 = 1 -> bust, back to 61
+    await notifier.startNextTurn();
+
+    final after = container.read(activePracticeProvider('g1')).value!;
+    expect(after.showBust, isFalse,
+        reason: 'The padded MISS darts are not busts.');
+    expect(after.gameState.catch40TargetRemaining, 61);
+    expect(after.gameState.catch40DartsOnTarget, 3);
+    expect(after.gameState.turnActive, isTrue);
+    expect(after.gameState.competitors[0].practiceRound, 1);
+  });
+
   // ── 13. Catch 40 bust feedback (#325) ────────────────────────────────────
   //
   // Bust signature in Catch 40: a non-zero dart was applied but
