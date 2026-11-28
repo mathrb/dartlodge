@@ -1,6 +1,6 @@
 /**
  * Catch 40 drill: scoring table, bust reset, undo across a target boundary,
- * a full 40-target drill and End Drill.
+ * a full 40-target drill, a camera board-clear on a short visit and End Drill.
  *
  * Catch 40 is a solo finishing drill: targets 61..100, up to six darts
  * (two visits of three) per target, double-out. A checkout in 1-2 darts
@@ -226,6 +226,37 @@ test.describe('Catch 40 drill', { tag: ['@catch40'] }, () => {
     await expect(page.getByText(`${score} / 120`, { exact: true })).toBeVisible({ timeout: 10000 });
     await expect(page.getByText(`${successes} / 40`, { exact: true })).toBeVisible();
     await expect(page.getByText('ENDED EARLY')).toHaveCount(0);
+
+    await page.context().close();
+  });
+
+  test('a camera board-clear after 1 dart counts the visit as 3 darts', async ({ browser }) => {
+    test.setTimeout(120000);
+    const page = await boot(browser);
+    await sim(page, 'enableAutoScoring()');
+    await startDrill(page, 'C40clear');
+
+    // 61: T19 leaves 4, then the board is cleared with 2 darts undetected.
+    await sim(page, "emit('T19')");
+    await page.waitForTimeout(150);
+    await sim(page, 'advance()');
+    await expect(progress(page, 61, 2, 0)).toBeVisible({ timeout: 10000 });
+
+    // D2 checks out on the 4th dart: 1 point, not the 2-dart 3.
+    await sim(page, "emit('D2')");
+    await page.waitForTimeout(150);
+    await sim(page, 'advance()');
+    await expect(progress(page, 62, 1, 1)).toBeVisible({ timeout: 10000 });
+
+    // 62: one dart per visit, cleared each time -> the target fails after
+    // two visits (6 darts), not five.
+    for (let v = 1; v <= 2; v++) {
+      await expect(progress(page, 62, v, 1)).toBeVisible({ timeout: 10000 });
+      await sim(page, "emit('1')");
+      await page.waitForTimeout(150);
+      await sim(page, 'advance()');
+    }
+    await expect(progress(page, 63, 1, 1)).toBeVisible({ timeout: 10000 });
 
     await page.context().close();
   });

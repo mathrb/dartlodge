@@ -26,6 +26,7 @@ points according to how fast each finish is. Goal: finish each score in as few d
 - Starts at out **61**, then 62, …, up to **100**.
 - For each out: up to 6 darts to bring the score to 0 (on a double).
 - Failure within 6 darts → 0 points, move on to the next out.
+- A visit is always 3 darts: closing a visit early while the out is still open (a camera board-clear after 1-2 detected darts) counts the missing darts as misses. After a checkout the visit simply ends.
 
 ## 4. Scoring
 

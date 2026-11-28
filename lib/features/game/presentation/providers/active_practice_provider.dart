@@ -488,16 +488,18 @@ class ActivePracticeNotifier extends _$ActivePracticeNotifier {
   /// Fills any unfilled dart slots in the current turn with MISS darts,
   /// persisting them as events. Stops early if the game completes.
   ///
-  /// Skipped for Catch 40: feeding MISS through `ProcessPracticeDartUseCase`
-  /// would route through `_applyDartThrownWithOutcome`, which treats
-  /// `newRemaining == 0 && !isDouble` as a bust and silently resets the
-  /// target. After a sub-3-dart checkout that flips `catch40TargetRemaining`
-  /// to non-zero, so `_applyTurnEnded` sees `checkedOut = false` and awards
-  /// 0 points — exactly the symptom in #253. The engine advances the target
-  /// purely from `catch40DartsOnTarget >= 6 || catch40TargetRemaining == 0`
-  /// at TurnEnded time, so the fill is unnecessary anyway.
+  /// Catch 40 skips the fill only once the target is checked out
+  /// (`catch40TargetRemaining == 0`): a MISS at remaining 0 is a bust (0 on a
+  /// non-double), which would reset the target and turn a sub-3-dart checkout
+  /// into a 0-point target (#253). While the target is still open the fill is
+  /// required: a visit is always 3 darts, so a camera board-clear after 1-2
+  /// detected darts must count the missing darts, or the 6-dart allowance and
+  /// the `darts_on_target` written on TurnEnded come out too low. A MISS
+  /// cannot bust there (remaining stays unchanged, and is never 0 or 1).
   Future<GameState> _fillTurnWithMisses(GameState gs) async {
-    if (gs.gameType == GameType.catch40) return gs;
+    if (gs.gameType == GameType.catch40 && gs.catch40TargetRemaining == 0) {
+      return gs;
+    }
     var current = gs;
     while (current.dartsThrownInTurn < 3 && !current.isComplete) {
       final competitor = current.competitors[current.currentTurnIndex];

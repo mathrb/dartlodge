@@ -133,7 +133,7 @@ on the left → run the tag(s) on the right before merging.
 | Shanghai engine / use cases | `@shanghai` |
 | Bob's 27 engine / use cases | `@bobs27` |
 | Count-Up engine / use cases | `@countup` |
-| Catch 40 engine / use cases | `@catch40` (`catch40_drill.spec.ts`) |
+| Catch 40 engine / use cases, Catch 40 board-clear fill (`_fillTurnWithMisses` in `active_practice_provider.dart`) | `@catch40` (`catch40_drill.spec.ts`) |
 | Around the Clock engine / use cases | `@atc` |
 | Checkout Practice engine / use cases | `@checkout` |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
