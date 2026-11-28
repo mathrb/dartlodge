@@ -627,6 +627,65 @@ void main() {
       expect(stats.atcCompletions, 0,
           reason: "non-winner didn't reach 20 — no completion");
     });
+
+    // One drill = one turn of [darts] in game [drillId], then GameCompleted.
+    List<GameEvent> drill(String drillId, List<GameEvent> darts) => [
+          turnStarted(),
+          ...darts,
+          turnEnded(),
+          gameCompleted(),
+        ].map((e) => e.copyWith(gameId: drillId)).toList();
+
+    test('each drill replays with its own variant from atcVariantsByGameId',
+        () {
+      final events = [
+        // Reverse: 20, 19, 18 -> 3 hits / 3.
+        ...drill('g-rev', [dart(20, 1), dart(19, 1), dart(18, 1)]),
+        // Doubles Only: S1 (no hit), D1 (hit) -> 1 / 2.
+        ...drill('g-dbl', [dart(1, 1), dart(1, 2)]),
+        // Standard: 1, 5 -> 1 / 2.
+        ...drill('g-std', [dart(1, 1), dart(5, 1)]),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.aroundTheClock,
+        events: events,
+        totalGames: 3,
+        totalDartsThrown: 7,
+        atcVariantsByGameId: const {
+          'g-rev': 'reverse',
+          'g-dbl': 'doublesOnly',
+          'g-std': 'standard',
+        },
+      );
+
+      expect(stats.atcHitRate, closeTo(5 / 7, 0.001));
+      expect(stats.atcSegmentHits, {20: 1, 19: 1, 18: 1, 1: 2});
+      expect(stats.atcSegmentAttempts, {20: 1, 19: 1, 18: 1, 1: 3, 2: 1});
+    });
+
+    test('a drill missing from atcVariantsByGameId falls back to atcVariant',
+        () {
+      final events = [
+        ...drill('g-std', [dart(1, 1)]),
+        // Not in the map: replayed with the fallback 'reverse'.
+        ...drill('g-other', [dart(20, 1), dart(1, 1)]),
+      ];
+
+      final stats = assembler.fromEvents(
+        playerId: playerId,
+        gameType: GameType.aroundTheClock,
+        events: events,
+        totalGames: 2,
+        totalDartsThrown: 3,
+        atcVariant: 'reverse',
+        atcVariantsByGameId: const {'g-std': 'standard'},
+      );
+
+      expect(stats.atcSegmentHits, {1: 1, 20: 1});
+      expect(stats.atcHitRate, closeTo(2 / 3, 0.001));
+    });
   });
 
   group("practice — Bob's 27", () {

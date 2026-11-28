@@ -357,10 +357,9 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           ? gameIds.length
           : events.map((e) => e.gameId).toSet().length;
 
-      // 6. Extract in/out strategy + ATC variant from latest game's config.
+      // 6. Extract in/out strategy from the latest game's config.
       String inStrategy = 'straight';
       String outStrategy = 'double';
-      String atcVariant = 'standard';
       final sortedGames = [...games]
         ..sort((a, b) => b.startTime.compareTo(a.startTime));
       final latestConfigJson = sortedGames.first.configJson;
@@ -369,8 +368,25 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
           final cfg = jsonDecode(latestConfigJson) as Map<String, dynamic>;
           inStrategy = cfg['inStrategy'] as String? ?? inStrategy;
           outStrategy = cfg['outStrategy'] as String? ?? outStrategy;
-          atcVariant = cfg['variant'] as String? ?? atcVariant;
         } catch (_) {}
+      }
+
+      // 6b. Around the Clock replays each drill with its own variant (a
+      // player can mix Standard / Reverse / Doubles Only), read from every
+      // game's config like getPlayerLegHistory does.
+      final atcVariantsByGameId = <String, String>{};
+      if (gameType == GameType.aroundTheClock) {
+        for (final game in games) {
+          String variant = 'standard';
+          final configJson = game.configJson;
+          if (configJson != null) {
+            try {
+              final cfg = jsonDecode(configJson) as Map<String, dynamic>;
+              variant = cfg['variant'] as String? ?? variant;
+            } catch (_) {}
+          }
+          atcVariantsByGameId[game.gameId] = variant;
+        }
       }
 
       // 7. Delegate projection replay + snapshot mapping to the assembler.
@@ -382,7 +398,7 @@ class StatisticsRepositoryDrift implements StatisticsRepository {
         totalDartsThrown: totalDartsThrown,
         inStrategy: inStrategy,
         outStrategy: outStrategy,
-        atcVariant: atcVariant,
+        atcVariantsByGameId: atcVariantsByGameId,
         soloGameIds: soloGameIds,
       );
     } on RepositoryException {

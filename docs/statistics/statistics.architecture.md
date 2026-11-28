@@ -338,6 +338,11 @@ Career stats are simply:
 
 No special architecture required.
 
+A stream's rules come from its own game's config, not from the newest
+game: the Around the Clock aggregate replays each drill with that drill's
+`variant` (Standard / Reverse / Doubles Only), so a player who mixes
+variants gets each drill scored by the rules it was played under.
+
 ---
 
 ## 12. Anti-Patterns Explicitly Forbidden
