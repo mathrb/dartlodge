@@ -14,7 +14,7 @@ Strategy rationale: `docs/plans/2026-06-23-e2e-regression-strategy-design.md`.
 ## Running
 
 The suite needs a web build served on `http://localhost:6780`. The `@autoscorer`,
-`@countup` sim, and `@correction` specs use the `AUTOSCORER_SIM` debug bridge, so
+`@countup` and `@catch40` sim, and `@correction` specs use the `AUTOSCORER_SIM` debug bridge, so
 serve a sim-enabled build (harmless for the others — serve one build for all):
 
 ```bash
@@ -101,7 +101,8 @@ Lessons from driving the web build in a spec (see the `x01_*`, `count_up_sim`,
 | `@cricket` | Cricket (all scoring × target modes) |
 | `@shanghai` | Shanghai |
 | `@bobs27` | Bob's 27 |
-| `@countup` | Catch 40 / Count Up |
+| `@countup` | Count-Up |
+| `@catch40` | Catch 40 |
 | `@atc` | Around the Clock (Standard / Reverse / Doubles Only) |
 | `@checkout` | Checkout Practice (170 / target modes) |
 
@@ -131,7 +132,8 @@ on the left → run the tag(s) on the right before merging.
 | Cricket engine / use cases / projections (`stateless_cricket_engine*`, `ProcessCricketDartUseCase`) | `@cricket` |
 | Shanghai engine / use cases | `@shanghai` |
 | Bob's 27 engine / use cases | `@bobs27` |
-| Catch 40 / Count Up engine / use cases | `@countup` |
+| Count-Up engine / use cases | `@countup` |
+| Catch 40 engine / use cases | `@catch40` (`catch40_drill.spec.ts`) |
 | Around the Clock engine / use cases | `@atc` |
 | Checkout Practice engine / use cases | `@checkout` |
 | `UndoLastDartUseCase`, `DartCorrected`, correction/undo UI (band→sheet edit) | `@correction` |
@@ -141,7 +143,7 @@ on the left → run the tag(s) on the right before merging.
 | `lib/l10n/` ARB files, localized UI strings | `@i18n` |
 | auto-scorer sink, camera-first board, `DartInputSink`, sim bridge | `@autoscorer` |
 | `main.dart`, router (`app_router.dart`), app shell, home | `@smoke` |
-| Board exit / End Game flow (`onExit` guards, board `_confirmBack`, `endGame`/`endDrill`) | `@atc` + `@countup` (`exit_end_game.spec.ts`) |
+| Board exit / End Game flow (`onExit` guards, board `_confirmBack`, `endGame`/`endDrill`) | `@atc` + `@countup` (`exit_end_game.spec.ts`) + `@catch40` (End Drill from the board menu) |
 
 ---
 
@@ -179,6 +181,7 @@ on the left → run the tag(s) on the right before merging.
 | `checkout_practice_manual.spec.ts` | `@checkout` |
 | `auto_scorer_sim.spec.ts` | `@autoscorer` |
 | `exit_end_game.spec.ts` | `@atc @countup` |
+| `catch40_drill.spec.ts` | `@catch40` |
 
 ---
 
