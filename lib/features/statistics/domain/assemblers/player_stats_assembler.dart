@@ -365,9 +365,12 @@ class PlayerStatsAssembler {
   /// loaded, filtered to the player's completed games of [gameType], and
   /// (if applicable) leg-limit-trimmed.
   ///
-  /// [inStrategy] / [outStrategy] / [atcVariant] are extracted by the
-  /// caller from the latest game's config. The assembler does no JSON
-  /// parsing.
+  /// [inStrategy] / [outStrategy] are extracted by the caller from the
+  /// latest game's config. The assembler does no JSON parsing.
+  ///
+  /// Around the Clock replays each drill with its own variant:
+  /// [atcVariantsByGameId] maps a gameId to that drill's config `variant`,
+  /// and [atcVariant] is the fallback for a gameId missing from the map.
   PlayerStats fromEvents({
     required String playerId,
     required GameType gameType,
@@ -377,6 +380,7 @@ class PlayerStatsAssembler {
     String inStrategy = 'straight',
     String outStrategy = 'double',
     String atcVariant = 'standard',
+    Map<String, String> atcVariantsByGameId = const {},
     Set<String> soloGameIds = const {},
   }) {
     // Strip corrected darts upfront so both the practice branch and the
@@ -391,6 +395,7 @@ class PlayerStatsAssembler {
         totalGames: totalGames,
         totalDartsThrown: totalDartsThrown,
         atcVariant: atcVariant,
+        atcVariantsByGameId: atcVariantsByGameId,
       );
     }
 
@@ -1786,10 +1791,11 @@ class PlayerStatsAssembler {
     required int totalGames,
     required int totalDartsThrown,
     required String atcVariant,
+    required Map<String, String> atcVariantsByGameId,
   }) {
     return switch (gameType) {
-      GameType.aroundTheClock => _computeAtcStats(
-          playerId, events, totalGames, totalDartsThrown, atcVariant),
+      GameType.aroundTheClock => _computeAtcStats(playerId, events,
+          totalGames, totalDartsThrown, atcVariant, atcVariantsByGameId),
       GameType.bobs27 =>
         _computeBobs27Stats(playerId, events, totalGames, totalDartsThrown),
       GameType.shanghai =>
@@ -1822,14 +1828,26 @@ class PlayerStatsAssembler {
     List<GameEvent> events,
     int totalGames,
     int totalDartsThrown,
-    String variant,
+    String fallbackVariant,
+    Map<String, String> variantsByGameId,
   ) {
     // Variant target-progression mirrors StatelessAroundTheClockEngine:
     //   'standard' / 'doublesOnly': ascend 1→20, completion when target > 20
     //   'reverse':                 descend 20→1, completion when target < 1
     // 'doublesOnly' additionally requires multiplier == 2 to register a hit.
-    final isReverse = variant == 'reverse';
-    final initialTarget = isReverse ? 20 : 1;
+    // The variant is per drill: it is re-read at each gameId boundary, so a
+    // player who mixes variants gets each drill replayed by its own rules.
+    bool isReverse = false;
+    bool isDoublesOnly = false;
+    int initialTarget = 1;
+    void useVariantOf(String? gameId) {
+      final variant = variantsByGameId[gameId] ?? fallbackVariant;
+      isReverse = variant == 'reverse';
+      isDoublesOnly = variant == 'doublesOnly';
+      initialTarget = isReverse ? 20 : 1;
+    }
+
+    useVariantOf(null);
     bool sequenceActive(int t) => isReverse ? t >= 1 : t <= 20;
     bool sequenceComplete(int t) => isReverse ? t < 1 : t > 20;
     int advance(int t) => isReverse ? t - 1 : t + 1;
@@ -1853,6 +1871,7 @@ class PlayerStatsAssembler {
       // written, #280).
       if (event.gameId != currentGameId) {
         currentGameId = event.gameId;
+        useVariantOf(currentGameId);
         currentTarget = initialTarget;
         gameTurns = 0;
         inPlayerTurn = false;
@@ -1875,7 +1894,7 @@ class PlayerStatsAssembler {
           if (sequenceActive(currentTarget)) {
             totalDartsAtTargets++;
             segAttempts[currentTarget] = (segAttempts[currentTarget] ?? 0) + 1;
-            final hit = variant == 'doublesOnly'
+            final hit = isDoublesOnly
                 ? (seg == currentTarget && mult == 2)
                 : (seg == currentTarget);
             if (hit) {
